@@ -257,29 +257,25 @@ test("student-admin score popovers use the shared radius ladder", () => {
 test("grades-tabulator reuses the shared admin chrome skeleton", () => {
   const source = readFile("web-asset/admin/grades-tabulator.html")
   for (const token of [
-    '<div class="header-bar" data-surface-role="content">',
+    '<div class="header-bar portal-login-header" data-surface-role="content">',
     '<div class="wrap">',
     '<main class="section-stack" id="appMain" data-surface-role="content">',
-    '<div class="content app-page-header" id="appPageHeader" data-surface-role="content">',
+    '<section class="content topbar" data-surface-role="content">',
     '<div class="content" data-surface-role="content">',
     '<section class="control-card portal-theme-panel">',
     '<section class="metrics" aria-label="Grade data snapshot">',
     '<section id="gradeGridCard" class="grid-card portal-theme-card">',
-    '<div class="app-brand-strip">',
-    '<h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>',
-    '<button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="adminThemeToggle"',
-    '<div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">',
-    '<button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-warning" data-text-zoom-action="reset" aria-label="Reset global text size">',
+    '<div class="brand-head">',
+    '<h1>THE EAGLES CLUB</h1>',
+    '<button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle"',
+    '<div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">',
+    '<button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning"',
     '<footer class="hub-footer" aria-label="Site footer">',
   ]) {
     assert.ok(source.includes(token), `grades-tabulator.html should include ${token}`)
   }
 
-  assert.match(
-    source,
-    /<button\s+id="menuToggleBtn"\s+type="button"\s+class="menu-toggle-btn app-header-menu-toggle portal-button portal-button-immutable-chrome"[^>]*>/,
-    "grades-tabulator.html should include the shared menu toggle button",
-  )
+  assert.match(source, /<button\s+class="portal-theme-toggle portal-button portal-button-immutable-chrome"\s+id="studentThemeToggle"/, "grades-tabulator.html should include the shared theme toggle button")
 
   assert.match(
     source,

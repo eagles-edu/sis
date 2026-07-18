@@ -297,7 +297,7 @@ test(
       const parentMobile = await measureGeometry(
         page,
         `http://127.0.0.1:${port}/web-asset/parent/parent-portal.html?geo=mobile`,
-        { menu: "#parentMenuBtn", header: ".hero", logo: ".brand-logo-wrap" }
+        { menu: "#parentMenuBtn", header: ".topbar", logo: ".brand-logo-wrap" }
       );
       const studentMobile = await measureGeometry(
         page,
@@ -348,7 +348,7 @@ test(
       const parentDesktop = await measureGeometry(
         page,
         `http://127.0.0.1:${port}/web-asset/parent/parent-portal.html?geo=desktop`,
-        { menu: "#parentMenuBtn", header: ".hero", logo: ".brand-logo-wrap" }
+        { menu: "#parentMenuBtn", header: ".topbar", logo: ".brand-logo-wrap" }
       );
       const studentDesktop = await measureGeometry(
         page,

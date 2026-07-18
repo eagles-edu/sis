@@ -10131,6 +10131,22 @@
         if (topSearchResultsPanel)
           topSearchResultsPanel.classList.toggle("hidden", showStudentListPanel);
         if (gridMain) gridMain.classList.toggle("overview-full", !showStudentListPanel);
+        const studentListPages = new Set([
+          "student-admin",
+          "attendance",
+          "attendance-admin",
+          "assignments",
+          "assignments-data",
+          "grades",
+          "grades-data",
+          "grades-tabulator",
+          "parent-tracking",
+          "performance-data",
+          "performance-engagement",
+          "reports",
+        ]);
+        if (studentListPages.has(slug) && canReadData() && !state.students.length)
+          loadStudents().catch(handleError);
         if (slug === "attendance" || slug === "attendance-admin") {
           ensureAttendanceLandingFormDefaults();
           refreshAttendanceLanding({ reloadRows: true }).catch(handleError);
@@ -12499,6 +12515,9 @@
       async function autoPopulateHomeworkProgressForLevel(levelDetail = {}) {
         const level = resolveSystemLevelName(levelDetail?.level || "");
         if (!level) return;
+
+        if (!Array.isArray(state.assignmentTemplates) || !state.assignmentTemplates.length)
+          await loadAssignmentTemplatesFromServer();
 
         const assignmentInput = document.getElementById("levelReminderAssignment");
         const linkInput = document.getElementById("levelReminderLink");
@@ -15531,6 +15550,15 @@
       async function loadDashboardSummary() {
         try {
           const summary = await api(ADMIN_DASHBOARD_PATH);
+          if (
+            !Array.isArray(summary?.levelCompletion) ||
+            !summary.levelCompletion.length
+          ) {
+            const currentTemplates = Array.isArray(state.assignmentTemplates) ?
+              state.assignmentTemplates
+            : [];
+            if (!currentTemplates.length) await loadAssignmentTemplatesFromServer();
+          }
           state.dashboardSummary = summary || {};
           const effectiveCompletionRows = effectiveDashboardLevelCompletionRows(
             state.dashboardSummary,
@@ -22357,6 +22385,7 @@
             dataHydrationTasks.push(() => loadFilters().catch(handleError));
           }
           if (activePage === "overview") {
+            dataHydrationTasks.push(() => loadDashboardStudents().catch(handleError));
             dataHydrationTasks.push(async () => {
               await loadDashboardSummary();
               renderHubConnectionStatus();
@@ -22501,7 +22530,9 @@
         };
       })();
       bindById("searchQ", "input", () => liveNameSearch());
-      bindById("searchBtn", "click", () => loadStudents().catch(handleError));
+      bindById("searchBtn", "click", () => {
+        Promise.all([loadStudents(), loadFilters()]).catch(handleError);
+      });
       bindById("clearFiltersBtn", "click", () => clearTopControls().catch(handleError));
       bindById("filterLevel", "change", () => loadStudents().catch(handleError));
       bindById("includeUnenrolled", "change", () => loadStudents().catch(handleError));

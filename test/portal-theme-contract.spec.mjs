@@ -551,15 +551,6 @@ test("hub keeps its own theme toggle chrome and shared theme stays scoped off it
 })
 
 test("parent, student, and admin theme toggles keep the shared portal visual contract", () => {
-  const hubToggleRules = [
-    "class=\"theme-toggle\"",
-    "data-theme-toggle",
-    "aria-pressed=\"false\"",
-    "aria-label=\"Chuyển sang giao diện tối\"",
-    "data-theme-toggle-icon",
-    "size=\"110%\"",
-  ]
-
   const portalToggleMarkupRules = [
     "class=\"portal-theme-toggle portal-button portal-button-immutable-chrome\"",
     "aria-pressed=\"false\"",
@@ -577,7 +568,7 @@ test("parent, student, and admin theme toggles keep the shared portal visual con
   ]
 
   const sources = [
-    ["admin hub", fs.readFileSync(path.resolve(rootDir, "web-asset/admin/portal-hub.html"), "utf8"), hubToggleRules],
+    ["admin hub", fs.readFileSync(path.resolve(rootDir, "web-asset/admin/portal-hub.html"), "utf8"), portalToggleMarkupRules],
     ["parent portal", parentPortal, portalToggleMarkupRules],
     ["student portal", studentPortal, portalToggleMarkupRules],
   ]

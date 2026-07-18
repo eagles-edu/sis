@@ -600,7 +600,7 @@ test(
             h: Math.round(box.height),
           }
         }
-        const headerControls = Array.from(globalThis.document.querySelectorAll("#appPageHeader button")).map((node) => {
+        const headerControls = Array.from(globalThis.document.querySelectorAll(".topbar button")).map((node) => {
           if (!(node instanceof globalThis.HTMLElement)) return null
           const box = node.getBoundingClientRect()
           return { x: Math.round(box.x), y: Math.round(box.y), w: Math.round(box.width) }
@@ -613,7 +613,7 @@ test(
         return {
           viewportWidth: globalThis.window.innerWidth,
           scrollWidth: globalThis.document.documentElement.scrollWidth,
-          header: rect("#appPageHeader"),
+          header: rect(".topbar"),
           page: rect('.page-section[data-page="performance-data"]'),
           toolbar: rect('.page-section[data-page="performance-data"] .table-toolbar'),
           footer: rect(".hub-footer:not(#authFooter)"),

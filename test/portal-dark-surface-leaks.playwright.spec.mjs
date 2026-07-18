@@ -237,7 +237,7 @@ test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolve
       url: "/web-asset/parent/parent-portal.html",
       checks: [
         ["parent login card", "#loginCard"],
-        ["parent env badge", "#envBadgeParent"],
+        ["parent env badge", "#envBadge"],
         ["parent draft actions", ".draft-actions"],
         ["parent logo wrap", ".brand-logo-wrap.brand-logo-wrap--sm"],
       ],
@@ -247,7 +247,7 @@ test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolve
       checks: [
         ["hub page body", "body.portal-hub-page"],
         ["hub wash layer", ".portal-hub-bg__wash"],
-        ["hub logo wrap", ".brand-logo-wrap.brand-logo-wrap--lg"],
+        ["hub logo wrap", ".brand-logo-wrap.brand-logo-wrap--sm"],
         ["hub prefooter", ".hub-prefooter"],
       ],
     },

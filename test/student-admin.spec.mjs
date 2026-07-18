@@ -1112,12 +1112,12 @@ test("GET /admin returns HTML UI", async () => {
   assert.match(responseHtml, /<script[^>]+id="admin-app-loader"/i)
   assert.match(responseHtml, /script\.src\s*=\s*"\/web-asset\/admin\/student-admin(?:\.min)?\.js(?:\?v=[^"]+)?"/i)
   assert.match(responseHtml, /script\.defer\s*=\s*true/i)
-  assert.match(responseHtml, /<button\s+class="portal-theme-toggle portal-button portal-button-immutable-chrome"\s+id="adminThemeToggle"\s+type="button"[^>]*aria-label="Switch to dark theme"/i)
-  assert.match(responseHtml, /<span\s+class="portal-theme-toggle__icon"[^>]*id="adminThemeToggleIcon"[^>]*data-theme-icon="moon"/i)
-  assert.match(responseHtml, /<svg\s+class="portal-theme-toggle__icon-moon"[\s\S]*?<svg\s+class="portal-theme-toggle__icon-sun"/i)
-  assert.doesNotMatch(responseHtml, /<svg-icon\b/i)
+  assert.match(responseHtml, /<button\s+class="portal-theme-toggle portal-button portal-button-immutable-chrome"\s+id="studentThemeToggle"\s+type="button"[^>]*aria-label="Chuyển sang giao diện tối"/i)
+  assert.match(responseHtml, /<span\s+class="portal-theme-toggle__icon"[^>]*aria-hidden="true"[\s\S]*?<svg-icon\s+name="theme-moon"[^>]*id="studentThemeToggleIcon"/i)
+  assert.doesNotMatch(responseHtml, /id="adminThemeToggle"/i)
+  assert.doesNotMatch(responseHtml, /portal-theme-toggle__icon-moon|portal-theme-toggle__icon-sun/i)
   assert.match(responseHtml, /requestIdleCallback\(loadAdminApp,\s*\{\s*timeout:\s*50\s*\}\)/i)
-  assert.doesNotMatch(responseHtml, /svg-icon\.js/i)
+  assert.match(responseHtml, /svg-icon\.js/i)
   assert.match(responseHtml, /href="\/admin"[^>]*data-page-link="overview"/i)
   assert.match(responseHtml, /href="\/admin\/queue-hub"[^>]*data-page-link="queue-hub"/i)
   assert.match(responseHtml, /href="\/admin\/attendance"[^>]*data-page-link="attendance"/i)
@@ -1230,7 +1230,10 @@ test("GET /admin/news-reports returns section page HTML with slug config", async
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"news-reports"/i)
   assert.match(html, /__SIS_ADMIN_NEWS_REPORTS_PATH/i)
-  assert.match(html, /class="small global-text-label">Global Text</i)
+  assert.match(
+    html,
+    /<div class="text-zoom-controls"[^>]*role="toolbar"[^>]*aria-label="Global text size controls"/i,
+  )
   assert.match(
     html,
     /@media\s*\(max-width:\s*560px\)\s*\{[\s\S]*\.text-zoom-controls\s+\.global-text-label\s*\{[\s\S]*display:\s*none;/i

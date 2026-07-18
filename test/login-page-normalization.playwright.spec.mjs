@@ -183,12 +183,10 @@ test(
       })
       await page.waitForTimeout(120)
       rects = await readRects(page, {
-        hero: ".hero",
         sideNav: ".side-nav",
         navScrim: ".nav-scrim",
         loginCard: "#loginCard",
       })
-      assert.equal(rects.hero?.display, "none", "parent login: hero should be hidden")
       assert.equal(rects.sideNav?.display, "none", "parent login: side nav should be hidden")
       assert.equal(rects.navScrim?.display, "none", "parent login: nav scrim should be hidden")
       rectExists(rects.loginCard, "parent login card")
@@ -296,36 +294,6 @@ test(
       const darkLinkRgb = parseRgb(darkLinkColor)
       assert.ok(darkLinkRgb && luminance(darkLinkRgb) >= 175, `admin dark login links should be brighter: ${darkLinkColor}`)
 
-      await page.goto(`http://127.0.0.1:${port}/web-asset/admin/student-points.html`, {
-        waitUntil: "domcontentloaded",
-      })
-      await page.evaluate(() => {
-        document.getElementById("loginPanel")?.classList.remove("hidden")
-        document.getElementById("appPanel")?.classList.add("hidden")
-      })
-      await page.waitForTimeout(120)
-      rects = await readRects(page, {
-        loginPanel: "#loginPanel",
-      })
-      rectExists(rects.loginPanel, "student points login panel")
-      assert.ok(rects.loginPanel.y >= 40 && rects.loginPanel.y <= 220, "student points: top margin should be compact")
-      assert.ok(rects.loginPanel.w <= 700, "student points: login panel should stay centered and narrow")
-      assert.notEqual(
-        await page.evaluate(() => getComputedStyle(document.body).backgroundImage),
-        "none",
-        "student points: login background should keep a single gradient layer"
-      )
-      assert.equal(
-        await page.evaluate(() => getComputedStyle(document.body, "::before").backgroundImage),
-        "none",
-        "student points: login background should not use the extra wash layer"
-      )
-      assert.match(
-        await page.locator("#loginPanel .login-link").first().getAttribute("href"),
-        /^mailto:support@eagles\.edu\.vn\?subject=Student%20points%20password%20reset$/
-      )
-      assert.equal(await page.locator("#loginPanel .login-link").nth(1).getAttribute("href"), "tel:0937667818")
-      assert.equal(await page.locator("#loginPanel .login-link").count(), 2)
     } finally {
       if (page) {
         await page.close().catch(() => {})

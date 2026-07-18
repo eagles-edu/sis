@@ -2237,7 +2237,7 @@
       const INITIAL_AUTH_STATE = window.__SIS_PARENT_INITIAL_AUTH__
 
       function updateEnvBadgeParent() {
-        const badge = document.getElementById("envBadgeParent")
+        const badge = document.getElementById("envBadge")
         if (!badge) return
         const envLabel = RUNTIME_ENV === "development" ? "DEV" : "LIVE"
         badge.dataset.env =

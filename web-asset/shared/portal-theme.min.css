@@ -154,6 +154,7 @@ html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #portalCa
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .hero,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .nav-scrim,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .side-nav,
+html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .topbar,
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .nav-overlay,
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .side-nav,
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .status-strip,html[data-student-auth-state="unauthenticated"] body.student-portal-page .topbar{display:none!important}

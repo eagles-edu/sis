@@ -1528,6 +1528,7 @@ html[data-student-auth-state="unauthenticated"] body.student-portal-page .status
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .hero,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .side-nav,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .nav-scrim,
+html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .topbar,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #portalCard {
   display: none !important;
 }

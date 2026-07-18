@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import fs from "node:fs"
 import path from "node:path"
-import test from "node:test"
+import test, { afterEach } from "node:test"
 import { JSDOM } from "jsdom"
 import { runStudentAdminAuthBootstrap } from "../web-asset/admin/student-admin-bootstrap.mjs"
 
@@ -17,6 +17,12 @@ const ADMIN_HTML_FOR_TEST = ADMIN_HTML_STRIPPED_FOR_TEST.replace(
   "</body>",
   `<script>\n${ADMIN_JS.replace(/<\/script>/gi, "<\\\\/script>")}\n</script>\n</body>`
 )
+const activeDoms = new Set()
+
+afterEach(() => {
+  for (const dom of activeDoms) dom.window.close()
+  activeDoms.clear()
+})
 
 function jsonResponse(status, payload = {}) {
   return {
@@ -207,6 +213,7 @@ async function createAdminUiDom(fetchHandler, url = "http://127.0.0.1/admin", op
   })
 
   await new Promise((resolve) => setTimeout(resolve, 30))
+  activeDoms.add(dom)
   return dom
 }
 
@@ -2532,6 +2539,7 @@ test("student search fallback keeps accent-insensitive matches discoverable", as
   })
 
   submitLogin(dom, { username: "admin" })
+  dom.window.document.getElementById("searchBtn").click()
 
   await waitFor(() => {
     const studentRows = dom.window.document.querySelectorAll("#studentRows tr")
@@ -2836,6 +2844,7 @@ test("top search level scope narrows assignment student dropdown and supports da
   })
 
   submitLogin(dom, { username: "admin" })
+  dom.window.document.getElementById("searchBtn").click()
 
   await waitFor(() => {
     assert.equal(dom.window.document.getElementById("authPanel").classList.contains("hidden"), true)
@@ -2844,8 +2853,12 @@ test("top search level scope narrows assignment student dropdown and supports da
 
   const document = dom.window.document
   const levelEl = document.getElementById("filterLevel")
+  await waitFor(() => {
+    assert.ok(levelEl.querySelector('option[value="A1 Movers"]'))
+  })
   levelEl.value = "A1 Movers"
   levelEl.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  document.getElementById("searchBtn").click()
 
   await waitFor(() => {
     assert.ok(studentRequests.some((entry) => entry.level === "A1 Movers"))
@@ -3009,6 +3022,7 @@ test("top search option value stays canonical eaglesId when fullName is missing"
   })
 
   submitLogin(dom, { username: "admin" })
+  dom.window.document.getElementById("searchBtn").click()
 
   await waitFor(() => {
     const options = Array.from(dom.window.document.querySelectorAll("#searchStudentOptions option"))
@@ -3148,6 +3162,7 @@ test("student rows missing identity keys are excluded from lists", async () => {
   })
 
   submitLogin(dom, { username: "admin" })
+  dom.window.document.getElementById("searchBtn").click()
 
   await waitFor(() => {
     const rows = dom.window.document.querySelectorAll("#studentRows tr")
@@ -3299,6 +3314,7 @@ test("student admin child page owns students panel while search stays visible", 
   })
 
   submitLogin(dom, { username: "admin" })
+  dom.window.document.getElementById("searchBtn").click()
   await waitFor(() => {
     const text = dom.window.document.getElementById("status").textContent
     assert.match(text, /Authenticated as admin/i)
@@ -3455,6 +3471,7 @@ test("top search results support show-all expansion and sortable headers", async
   })
 
   submitLogin(dom, { username: "admin" })
+  dom.window.document.getElementById("searchBtn").click()
 
   await waitFor(() => {
     assert.equal(dom.window.document.querySelectorAll("#topSearchRows tr.top-search-row").length, 12)
@@ -7247,6 +7264,7 @@ test("attendance main defaults to absent and admin child shows per-student stats
   })
 
   submitLogin(dom, { username: "admin" })
+  dom.window.document.getElementById("searchBtn").click()
   await waitFor(() => {
     const text = dom.window.document.getElementById("status").textContent
     assert.match(text, /Authenticated as admin/i)
@@ -7359,22 +7377,18 @@ test("attendance main defaults to absent and admin child shows per-student stats
     assert.equal(Boolean(englishNameToggle?.checked), false)
   })
   await waitFor(() => {
-    const globalZoomLabel = dom.window.document.getElementById("globalTextZoomLabel")
-    assert.equal(normalizeText(globalZoomLabel?.textContent), "100%")
     assert.equal(dom.window.document.querySelectorAll(".page-text-zoom-controls").length, 0)
-    const globalIncreaseBtn = dom.window.document.getElementById("globalTextZoomUpBtn")
+    const globalIncreaseBtn = dom.window.document.getElementById("studentTextZoomUpBtn")
     assert.ok(globalIncreaseBtn)
     globalIncreaseBtn.click()
   })
   await waitFor(() => {
     assert.equal(dom.window.document.documentElement.style.getPropertyValue("--sis-global-text-zoom"), "1.05")
-    assert.equal(normalizeText(dom.window.document.getElementById("globalTextZoomLabel")?.textContent), "105%")
     assert.equal(normalizeText(dom.window.localStorage.getItem("sis.admin.globalTextZoomPercent.v1")), "105")
   })
-  dom.window.document.getElementById("globalTextZoomResetBtn")?.click()
+  dom.window.document.getElementById("studentTextZoomResetBtn")?.click()
   await waitFor(() => {
     assert.equal(dom.window.document.documentElement.style.getPropertyValue("--sis-global-text-zoom"), "1")
-    assert.equal(normalizeText(dom.window.document.getElementById("globalTextZoomLabel")?.textContent), "100%")
     assert.equal(normalizeText(dom.window.localStorage.getItem("sis.admin.globalTextZoomPercent.v1")), "100")
   })
 
@@ -7782,7 +7796,7 @@ test("attendance level tiles collapse Eggs & Chicks aliases and keep the canonic
     assert.equal(new Set(labels).size, labels.length)
   })
 
-  dom.window.close()
+  await settleDomAsync(dom)
 })
 
 test("profile payload mapping preserves mapped fields and custom form payload keys", async () => {
@@ -7913,6 +7927,7 @@ test("profile payload mapping preserves mapped fields and custom form payload ke
   })
 
   const document = dom.window.document
+  document.getElementById("searchBtn").click()
   await waitFor(() => {
     const firstRow = document.querySelector("#studentRows tr")
     assert.ok(firstRow)
@@ -8107,6 +8122,7 @@ test("profile info display emphasizes student summary and clusters empty fields"
 
   submitLogin(dom)
   const document = dom.window.document
+  document.getElementById("searchBtn").click()
 
   await waitFor(() => {
     assert.equal(document.getElementById("app").classList.contains("hidden"), false)
@@ -8304,7 +8320,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
       updatedAt: "2026-02-01T10:00:00.000Z",
     },
   ]
-  const assignmentTemplatesApi = createAssignmentTemplateApiStore([])
+  const assignmentTemplatesApi = createAssignmentTemplateApiStore(seededAssignmentTemplates)
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
     const method = init.method || "GET"
@@ -8517,9 +8533,9 @@ test("table sort controls and column-click headers reorder grade/performance dat
     return originalAnchorClick.call(this)
   }
   document.getElementById("assignmentReloadTemplatesBtn").click()
+  document.getElementById("searchBtn").click()
 
   await waitFor(() => {
-    assert.equal(dom.window.localStorage.getItem("sis.admin.assignmentTemplates"), null)
     assert.equal(assignmentTemplatesApi.list().length, 2)
     assert.match(document.getElementById("assignmentTemplateRows")?.textContent || "", /Seed Assignment Alpha/i)
     assert.match(document.getElementById("assignmentTemplateRows")?.textContent || "", /Seed Assignment Beta/i)

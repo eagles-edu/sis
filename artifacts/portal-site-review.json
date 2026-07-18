@@ -45,7 +45,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3448
+              "height": 3517
             },
             ".portal-card": null,
             ".panel": {
@@ -333,7 +333,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2858
+              "height": 2927
             },
             ".wrap": {
               "selector": ".wrap",
@@ -345,7 +345,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2810
+              "height": 2879
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -357,7 +357,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2726
+              "height": 2795
             },
             ".panel": {
               "selector": ".panel",
@@ -473,7 +473,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3447
+              "height": 3516
             },
             ".wrap": {
               "selector": ".wrap",
@@ -485,7 +485,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3399
+              "height": 3468
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -497,7 +497,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3315
+              "height": 3384
             },
             ".panel": {
               "selector": ".panel",
@@ -613,7 +613,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3526
+              "height": 3406
             },
             ".wrap": {
               "selector": ".wrap",
@@ -625,7 +625,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3478
+              "height": 3358
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -637,7 +637,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3394
+              "height": 3274
             },
             ".panel": {
               "selector": ".panel",
@@ -765,7 +765,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 739
+              "height": 808
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -777,7 +777,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 655
+              "height": 724
             },
             ".panel": {
               "selector": ".panel",
@@ -875,146 +875,6 @@
             "text": "Attendance data",
             "href": "/admin/attendance-admin",
             "pageLink": "attendance-admin"
-          },
-          "state": {
-            "bodyClass": "admin-portal-page page",
-            "title": "The Eagles Club Student Information System",
-            "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
-          },
-          "surfaces": {
-            "body": {
-              "selector": "body",
-              "id": "top",
-              "className": "admin-portal-page page",
-              "bg": "rgb(232, 238, 244)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgb(0, 0, 0)",
-              "display": "block",
-              "width": 1425,
-              "height": 1156
-            },
-            ".wrap": {
-              "selector": ".wrap",
-              "id": "",
-              "className": "wrap",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgb(0, 0, 0)",
-              "display": "grid",
-              "width": 1425,
-              "height": 1108
-            },
-            ".app-shell": {
-              "selector": ".app-shell",
-              "id": "",
-              "className": "app-shell",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgb(0, 0, 0)",
-              "display": "grid",
-              "width": 1393,
-              "height": 1024
-            },
-            ".panel": {
-              "selector": ".panel",
-              "id": "authBootPanel",
-              "className": "panel hidden",
-              "bg": "rgb(252, 253, 255)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgb(95, 115, 145)",
-              "display": "none",
-              "width": 0,
-              "height": 0
-            },
-            ".card": {
-              "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
-              "bg": "rgb(252, 253, 255)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            ".queue-modal-card": {
-              "selector": ".queue-modal-card",
-              "id": "",
-              "className": "queue-modal-card",
-              "bg": "rgb(251, 255, 255)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgb(95, 115, 145)",
-              "display": "grid",
-              "width": 0,
-              "height": 0
-            },
-            ".grade-chart-shell": {
-              "selector": ".grade-chart-shell",
-              "id": "gradeChartShell",
-              "className": "grade-chart-shell panel",
-              "bg": "rgb(227, 233, 240)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            ".grade-chart-empty": {
-              "selector": ".grade-chart-empty",
-              "id": "",
-              "className": "grade-chart-empty",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgb(0, 0, 0)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            "#newsReviewViewerModal .queue-modal-card": {
-              "selector": "#newsReviewViewerModal .queue-modal-card",
-              "id": "",
-              "className": "queue-modal-card content",
-              "bg": "rgb(251, 255, 255)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgba(115, 136, 163, 0.96)",
-              "display": "grid",
-              "width": 0,
-              "height": 0
-            },
-            "#newsReviewViewerBody .news-review-viewer-block": null,
-            "#newsReviewViewerNote": {
-              "selector": "#newsReviewViewerNote",
-              "id": "newsReviewViewerNote",
-              "className": "card",
-              "bg": "rgb(252, 253, 255)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            ".news-review-note-line.pending": null,
-            ".news-review-note-line.fixed": null,
-            "#reloadBtn": null
-          },
-          "axe": []
-        },
-        {
-          "link": {
-            "text": "Assignments",
-            "href": "/admin/assignments",
-            "pageLink": "assignments"
           },
           "state": {
             "bodyClass": "admin-portal-page page",
@@ -1152,6 +1012,146 @@
         },
         {
           "link": {
+            "text": "Assignments",
+            "href": "/admin/assignments",
+            "pageLink": "assignments"
+          },
+          "state": {
+            "bodyClass": "admin-portal-page page",
+            "title": "The Eagles Club Student Information System",
+            "htmlTheme": "light",
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
+          },
+          "surfaces": {
+            "body": {
+              "selector": "body",
+              "id": "top",
+              "className": "admin-portal-page page",
+              "bg": "rgb(232, 238, 244)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "block",
+              "width": 1425,
+              "height": 1294
+            },
+            ".wrap": {
+              "selector": ".wrap",
+              "id": "",
+              "className": "wrap",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "grid",
+              "width": 1425,
+              "height": 1246
+            },
+            ".app-shell": {
+              "selector": ".app-shell",
+              "id": "",
+              "className": "app-shell",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "grid",
+              "width": 1393,
+              "height": 1162
+            },
+            ".panel": {
+              "selector": ".panel",
+              "id": "authBootPanel",
+              "className": "panel hidden",
+              "bg": "rgb(252, 253, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(95, 115, 145)",
+              "display": "none",
+              "width": 0,
+              "height": 0
+            },
+            ".card": {
+              "selector": ".card",
+              "id": "",
+              "className": "stat-card stat-card--student card",
+              "bg": "rgb(252, 253, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".queue-modal-card": {
+              "selector": ".queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card",
+              "bg": "rgb(251, 255, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(95, 115, 145)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            ".grade-chart-shell": {
+              "selector": ".grade-chart-shell",
+              "id": "gradeChartShell",
+              "className": "grade-chart-shell panel",
+              "bg": "rgb(227, 233, 240)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".grade-chart-empty": {
+              "selector": ".grade-chart-empty",
+              "id": "",
+              "className": "grade-chart-empty",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerModal .queue-modal-card": {
+              "selector": "#newsReviewViewerModal .queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card content",
+              "bg": "rgb(251, 255, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerBody .news-review-viewer-block": null,
+            "#newsReviewViewerNote": {
+              "selector": "#newsReviewViewerNote",
+              "id": "newsReviewViewerNote",
+              "className": "card",
+              "bg": "rgb(252, 253, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".news-review-note-line.pending": null,
+            ".news-review-note-line.fixed": null,
+            "#reloadBtn": null
+          },
+          "axe": []
+        },
+        {
+          "link": {
             "text": "Assignments data",
             "href": "/admin/assignments-data",
             "pageLink": "assignments-data"
@@ -1185,7 +1185,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 856
+              "height": 925
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1197,7 +1197,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 772
+              "height": 841
             },
             ".panel": {
               "selector": ".panel",
@@ -1325,7 +1325,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 747
+              "height": 816
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1337,7 +1337,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 663
+              "height": 732
             },
             ".panel": {
               "selector": ".panel",
@@ -1453,7 +1453,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1394
+              "height": 2606
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1465,7 +1465,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1346
+              "height": 2558
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1477,7 +1477,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1262
+              "height": 2474
             },
             ".panel": {
               "selector": ".panel",
@@ -1525,7 +1525,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1363,
-              "height": 497
+              "height": 1086
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -1536,8 +1536,8 @@
               "color": "rgb(0, 0, 0)",
               "border": "rgb(0, 0, 0)",
               "display": "block",
-              "width": 664,
-              "height": 19
+              "width": 0,
+              "height": 0
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -1593,7 +1593,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1687
+              "height": 1754
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1605,7 +1605,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1687
+              "height": 1754
             },
             ".app-shell": null,
             ".panel": {
@@ -1679,7 +1679,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3867
+              "height": 3936
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1691,7 +1691,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3819
+              "height": 3888
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1703,7 +1703,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3735
+              "height": 3804
             },
             ".panel": {
               "selector": ".panel",
@@ -1839,7 +1839,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2126
+              "height": 2195
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1851,7 +1851,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2078
+              "height": 2147
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1863,7 +1863,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1994
+              "height": 2063
             },
             ".panel": {
               "selector": ".panel",
@@ -1991,7 +1991,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 762
+              "height": 831
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2003,7 +2003,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 678
+              "height": 747
             },
             ".panel": {
               "selector": ".panel",
@@ -2119,7 +2119,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 8227
+              "height": 8296
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2131,7 +2131,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 8179
+              "height": 8248
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2143,7 +2143,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 8095
+              "height": 8164
             },
             ".panel": {
               "selector": ".panel",
@@ -2259,7 +2259,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1770
+              "height": 1839
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2271,7 +2271,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1722
+              "height": 1791
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2283,7 +2283,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1638
+              "height": 1707
             },
             ".panel": {
               "selector": ".panel",
@@ -2411,7 +2411,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1044
+              "height": 924
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2423,7 +2423,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 960
+              "height": 840
             },
             ".panel": {
               "selector": ".panel",
@@ -2526,7 +2526,7 @@
             "bodyClass": "admin-portal-page page student-enrollment-page",
             "title": "The Eagles Club Student Enrollment",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Admin session required Enrollment uses the current admin session. Sign in through the main admin page, then return here. Open Admin Login Back to Profile Navigation TE Shared admin navigation k"
+            "bodyText": "The Eagles Club Student Enrollment 0937‑667‑818 eagles.edu.vn Admin session required Enrollment uses the current admin session. Sign in through the main admin page, then return here. Open Admin Login Back to Profile Navi"
           },
           "surfaces": {
             "body": {
@@ -2539,7 +2539,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "flex",
               "width": 1440,
-              "height": 17181
+              "height": 17221
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2551,7 +2551,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 17133
+              "height": 17173
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2563,7 +2563,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1250,
-              "height": 16957
+              "height": 16928
             },
             ".panel": {
               "selector": ".panel",
@@ -2659,7 +2659,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1630
+              "height": 1699
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2671,7 +2671,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1582
+              "height": 1651
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2683,7 +2683,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1498
+              "height": 1567
             },
             ".panel": {
               "selector": ".panel",
@@ -2822,7 +2822,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2957
+              "height": 3026
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2834,7 +2834,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2909
+              "height": 2978
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2846,7 +2846,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2825
+              "height": 2894
             },
             ".panel": {
               "selector": ".panel",
@@ -2974,7 +2974,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1118
+              "height": 1187
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2986,7 +2986,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1070
+              "height": 1139
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2998,7 +2998,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 986
+              "height": 1055
             },
             ".panel": {
               "selector": ".panel",
@@ -3114,7 +3114,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2334
+              "height": 2403
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3126,7 +3126,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2286
+              "height": 2355
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3138,7 +3138,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2202
+              "height": 2271
             },
             ".panel": {
               "selector": ".panel",
@@ -3254,7 +3254,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2468
+              "height": 2537
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3266,7 +3266,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2420
+              "height": 2489
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3278,7 +3278,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2336
+              "height": 2405
             },
             ".panel": {
               "selector": ".panel",
@@ -3452,7 +3452,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1687
+              "height": 1754
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3464,7 +3464,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1687
+              "height": 1754
             },
             ".app-shell": null,
             ".panel": {
@@ -3538,7 +3538,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2126
+              "height": 2195
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3550,7 +3550,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2078
+              "height": 2147
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3562,7 +3562,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1994
+              "height": 2063
             },
             ".panel": {
               "selector": ".panel",
@@ -3727,7 +3727,7 @@
         "bodyClass": "student-points-page",
         "title": "Student Points Management",
         "htmlTheme": "light",
-        "bodyText": "Points Management School YTD trend + student point ledger controls. Admin session active. Username Password Sign In Reset password 0937 667 818 Start Date End Date Refresh Chart Logout 0326597129 2025-08-012025-09-282025"
+        "bodyText": "0937‑667‑818 eagles.edu.vn THE EAGLES CLUB Points Management School YTD trend + student point ledger controls. Admin session active. Username Password Sign In Reset password 0937 667 818 Start Date End Date Refresh Chart"
       },
       "pointsSurfaces": {
         "body": {
@@ -3740,7 +3740,7 @@
           "border": "rgb(0, 0, 0)",
           "display": "block",
           "width": 1440,
-          "height": 15590
+          "height": 15717
         },
         "#loginPanel": {
           "selector": "#loginPanel",
@@ -3810,19 +3810,19 @@
           "help": "All page content should be contained by landmarks",
           "nodes": [
             {
-              "target": "section:nth-child(1)",
+              "target": ".header-bar",
+              "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+            },
+            {
+              "target": ".topbar",
+              "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+            },
+            {
+              "target": "section:nth-child(3)",
               "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
             },
             {
               "target": ".c3.field:nth-child(1)",
-              "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-            },
-            {
-              "target": ".card.portal-theme-card:nth-child(1) > .row > .c3.field:nth-child(2)",
-              "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-            },
-            {
-              "target": "#chartSummary",
               "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
             }
           ]
@@ -3845,7 +3845,7 @@
           "border": "rgb(0, 0, 0)",
           "display": "block",
           "width": 1440,
-          "height": 1687
+          "height": 1754
         },
         "#reloadBtn": null,
         "#gradesTable": null,
@@ -3957,7 +3957,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1647
+              "height": 1640
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4071,7 +4071,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 3747
+              "height": 4058
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4315,7 +4315,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1490
+              "height": 1483
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4445,7 +4445,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1490
+              "height": 1483
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4575,7 +4575,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 2731
+              "height": 2724
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4705,7 +4705,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1554
+              "height": 1547
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4835,7 +4835,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1245
+              "height": 1239
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4949,7 +4949,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1821
+              "height": 1814
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5085,7 +5085,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "grid",
               "width": 726,
-              "height": 1066
+              "height": 1504
             },
             "#newsWeekSetModal .portal-modal-close": {
               "selector": "#newsWeekSetModal .portal-modal-close",
@@ -5457,7 +5457,7 @@
           "x": 0,
           "y": 24,
           "w": 1440,
-          "h": 1599,
+          "h": 1592,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -5523,7 +5523,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3448
+              "height": 3517
             },
             ".portal-card": null,
             ".panel": {
@@ -5811,7 +5811,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3169
+              "height": 3238
             },
             ".wrap": {
               "selector": ".wrap",
@@ -5823,7 +5823,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3121
+              "height": 3190
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -5835,7 +5835,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3037
+              "height": 3106
             },
             ".panel": {
               "selector": ".panel",
@@ -5951,7 +5951,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3447
+              "height": 3516
             },
             ".wrap": {
               "selector": ".wrap",
@@ -5963,7 +5963,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3399
+              "height": 3468
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -5975,7 +5975,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3315
+              "height": 3384
             },
             ".panel": {
               "selector": ".panel",
@@ -6091,7 +6091,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3526
+              "height": 3406
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6103,7 +6103,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3478
+              "height": 3358
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6115,7 +6115,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3394
+              "height": 3274
             },
             ".panel": {
               "selector": ".panel",
@@ -6243,7 +6243,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 739
+              "height": 808
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6255,7 +6255,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 655
+              "height": 724
             },
             ".panel": {
               "selector": ".panel",
@@ -6353,146 +6353,6 @@
             "text": "Attendance data",
             "href": "/admin/attendance-admin",
             "pageLink": "attendance-admin"
-          },
-          "state": {
-            "bodyClass": "admin-portal-page page",
-            "title": "The Eagles Club Student Information System",
-            "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
-          },
-          "surfaces": {
-            "body": {
-              "selector": "body",
-              "id": "top",
-              "className": "admin-portal-page page",
-              "bg": "rgb(0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgb(251, 255, 255)",
-              "display": "block",
-              "width": 1425,
-              "height": 1156
-            },
-            ".wrap": {
-              "selector": ".wrap",
-              "id": "",
-              "className": "wrap",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgb(251, 255, 255)",
-              "display": "grid",
-              "width": 1425,
-              "height": 1108
-            },
-            ".app-shell": {
-              "selector": ".app-shell",
-              "id": "",
-              "className": "app-shell",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgb(251, 255, 255)",
-              "display": "grid",
-              "width": 1393,
-              "height": 1024
-            },
-            ".panel": {
-              "selector": ".panel",
-              "id": "authBootPanel",
-              "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "none",
-              "width": 0,
-              "height": 0
-            },
-            ".card": {
-              "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
-              "bg": "rgb(76, 76, 76)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            ".queue-modal-card": {
-              "selector": ".queue-modal-card",
-              "id": "",
-              "className": "queue-modal-card",
-              "bg": "rgb(76, 76, 76)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.36)",
-              "display": "grid",
-              "width": 0,
-              "height": 0
-            },
-            ".grade-chart-shell": {
-              "selector": ".grade-chart-shell",
-              "id": "gradeChartShell",
-              "className": "grade-chart-shell panel",
-              "bg": "rgb(59, 60, 62)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            ".grade-chart-empty": {
-              "selector": ".grade-chart-empty",
-              "id": "",
-              "className": "grade-chart-empty",
-              "bg": "rgb(82, 82, 82)",
-              "bgImage": "none",
-              "color": "rgb(229, 245, 255)",
-              "border": "rgba(255, 255, 255, 0.36)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            "#newsReviewViewerModal .queue-modal-card": {
-              "selector": "#newsReviewViewerModal .queue-modal-card",
-              "id": "",
-              "className": "queue-modal-card content",
-              "bg": "rgb(45, 45, 45)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.36)",
-              "display": "grid",
-              "width": 0,
-              "height": 0
-            },
-            "#newsReviewViewerBody .news-review-viewer-block": null,
-            "#newsReviewViewerNote": {
-              "selector": "#newsReviewViewerNote",
-              "id": "newsReviewViewerNote",
-              "className": "card",
-              "bg": "rgb(76, 76, 76)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            ".news-review-note-line.pending": null,
-            ".news-review-note-line.fixed": null,
-            "#reloadBtn": null
-          },
-          "axe": []
-        },
-        {
-          "link": {
-            "text": "Assignments",
-            "href": "/admin/assignments",
-            "pageLink": "assignments"
           },
           "state": {
             "bodyClass": "admin-portal-page page",
@@ -6630,6 +6490,146 @@
         },
         {
           "link": {
+            "text": "Assignments",
+            "href": "/admin/assignments",
+            "pageLink": "assignments"
+          },
+          "state": {
+            "bodyClass": "admin-portal-page page",
+            "title": "The Eagles Club Student Information System",
+            "htmlTheme": "dark",
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
+          },
+          "surfaces": {
+            "body": {
+              "selector": "body",
+              "id": "top",
+              "className": "admin-portal-page page",
+              "bg": "rgb(0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "block",
+              "width": 1425,
+              "height": 1294
+            },
+            ".wrap": {
+              "selector": ".wrap",
+              "id": "",
+              "className": "wrap",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "grid",
+              "width": 1425,
+              "height": 1246
+            },
+            ".app-shell": {
+              "selector": ".app-shell",
+              "id": "",
+              "className": "app-shell",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "grid",
+              "width": 1393,
+              "height": 1162
+            },
+            ".panel": {
+              "selector": ".panel",
+              "id": "authBootPanel",
+              "className": "panel hidden",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "none",
+              "width": 0,
+              "height": 0
+            },
+            ".card": {
+              "selector": ".card",
+              "id": "",
+              "className": "stat-card stat-card--student card",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".queue-modal-card": {
+              "selector": ".queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.36)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            ".grade-chart-shell": {
+              "selector": ".grade-chart-shell",
+              "id": "gradeChartShell",
+              "className": "grade-chart-shell panel",
+              "bg": "rgb(59, 60, 62)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".grade-chart-empty": {
+              "selector": ".grade-chart-empty",
+              "id": "",
+              "className": "grade-chart-empty",
+              "bg": "rgb(82, 82, 82)",
+              "bgImage": "none",
+              "color": "rgb(229, 245, 255)",
+              "border": "rgba(255, 255, 255, 0.36)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerModal .queue-modal-card": {
+              "selector": "#newsReviewViewerModal .queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card content",
+              "bg": "rgb(45, 45, 45)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.36)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerBody .news-review-viewer-block": null,
+            "#newsReviewViewerNote": {
+              "selector": "#newsReviewViewerNote",
+              "id": "newsReviewViewerNote",
+              "className": "card",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".news-review-note-line.pending": null,
+            ".news-review-note-line.fixed": null,
+            "#reloadBtn": null
+          },
+          "axe": []
+        },
+        {
+          "link": {
             "text": "Assignments data",
             "href": "/admin/assignments-data",
             "pageLink": "assignments-data"
@@ -6663,7 +6663,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 856
+              "height": 925
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6675,7 +6675,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 772
+              "height": 841
             },
             ".panel": {
               "selector": ".panel",
@@ -6819,7 +6819,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 747
+              "height": 816
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6831,7 +6831,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 663
+              "height": 732
             },
             ".panel": {
               "selector": ".panel",
@@ -6947,7 +6947,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1394
+              "height": 1463
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6959,7 +6959,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1346
+              "height": 1415
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6971,7 +6971,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1262
+              "height": 1331
             },
             ".panel": {
               "selector": ".panel",
@@ -7087,7 +7087,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1687
+              "height": 1754
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7099,7 +7099,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1687
+              "height": 1754
             },
             ".app-shell": null,
             ".panel": {
@@ -7173,7 +7173,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3867
+              "height": 3936
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7185,7 +7185,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3819
+              "height": 3888
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7197,7 +7197,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3735
+              "height": 3804
             },
             ".panel": {
               "selector": ".panel",
@@ -7333,7 +7333,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2126
+              "height": 2195
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7345,7 +7345,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2078
+              "height": 2147
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7357,7 +7357,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1994
+              "height": 2063
             },
             ".panel": {
               "selector": ".panel",
@@ -7485,7 +7485,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 762
+              "height": 831
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7497,7 +7497,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 678
+              "height": 747
             },
             ".panel": {
               "selector": ".panel",
@@ -7613,7 +7613,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 8227
+              "height": 8296
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7625,7 +7625,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 8179
+              "height": 8248
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7637,7 +7637,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 8095
+              "height": 8164
             },
             ".panel": {
               "selector": ".panel",
@@ -7753,7 +7753,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1770
+              "height": 1839
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7765,7 +7765,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1722
+              "height": 1791
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7777,7 +7777,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1638
+              "height": 1707
             },
             ".panel": {
               "selector": ".panel",
@@ -7905,7 +7905,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1044
+              "height": 924
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7917,7 +7917,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 960
+              "height": 840
             },
             ".panel": {
               "selector": ".panel",
@@ -8020,7 +8020,7 @@
             "bodyClass": "admin-portal-page page student-enrollment-page",
             "title": "The Eagles Club Student Enrollment",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Admin session required Enrollment uses the current admin session. Sign in through the main admin page, then return here. Open Admin Login Back to Profile Navigation TE Shared admin navigation k"
+            "bodyText": "The Eagles Club Student Enrollment 0937‑667‑818 eagles.edu.vn Admin session required Enrollment uses the current admin session. Sign in through the main admin page, then return here. Open Admin Login Back to Profile Navi"
           },
           "surfaces": {
             "body": {
@@ -8033,7 +8033,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "flex",
               "width": 1440,
-              "height": 17181
+              "height": 17221
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8045,7 +8045,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 17133
+              "height": 17173
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8057,7 +8057,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1250,
-              "height": 16957
+              "height": 16928
             },
             ".panel": {
               "selector": ".panel",
@@ -8153,7 +8153,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1630
+              "height": 1699
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8165,7 +8165,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1582
+              "height": 1651
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8177,7 +8177,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1498
+              "height": 1567
             },
             ".panel": {
               "selector": ".panel",
@@ -8316,7 +8316,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2957
+              "height": 3026
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8328,7 +8328,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2909
+              "height": 2978
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8340,7 +8340,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2825
+              "height": 2894
             },
             ".panel": {
               "selector": ".panel",
@@ -8468,7 +8468,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1118
+              "height": 1187
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8480,7 +8480,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1070
+              "height": 1139
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8492,7 +8492,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 986
+              "height": 1055
             },
             ".panel": {
               "selector": ".panel",
@@ -8608,7 +8608,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2334
+              "height": 2403
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8620,7 +8620,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2286
+              "height": 2355
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8632,7 +8632,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2202
+              "height": 2271
             },
             ".panel": {
               "selector": ".panel",
@@ -8748,7 +8748,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2468
+              "height": 2537
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8760,7 +8760,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2420
+              "height": 2489
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8772,7 +8772,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2336
+              "height": 2405
             },
             ".panel": {
               "selector": ".panel",
@@ -8946,7 +8946,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1687
+              "height": 1754
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8958,7 +8958,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1687
+              "height": 1754
             },
             ".app-shell": null,
             ".panel": {
@@ -9032,7 +9032,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2126
+              "height": 2195
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9044,7 +9044,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2078
+              "height": 2147
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9056,7 +9056,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1994
+              "height": 2063
             },
             ".panel": {
               "selector": ".panel",
@@ -9221,7 +9221,7 @@
         "bodyClass": "student-points-page",
         "title": "Student Points Management",
         "htmlTheme": "dark",
-        "bodyText": "Points Management School YTD trend + student point ledger controls. Admin session active. Username Password Sign In Reset password 0937 667 818 Start Date End Date Refresh Chart Logout 0326597129 2025-08-012025-09-282025"
+        "bodyText": "0937‑667‑818 eagles.edu.vn THE EAGLES CLUB Points Management School YTD trend + student point ledger controls. Admin session active. Username Password Sign In Reset password 0937 667 818 Start Date End Date Refresh Chart"
       },
       "pointsSurfaces": {
         "body": {
@@ -9234,7 +9234,7 @@
           "border": "rgb(251, 255, 255)",
           "display": "block",
           "width": 1440,
-          "height": 15590
+          "height": 15717
         },
         "#loginPanel": {
           "selector": "#loginPanel",
@@ -9304,19 +9304,19 @@
           "help": "All page content should be contained by landmarks",
           "nodes": [
             {
-              "target": "section:nth-child(1)",
+              "target": ".header-bar",
+              "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+            },
+            {
+              "target": ".topbar",
+              "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+            },
+            {
+              "target": "section:nth-child(3)",
               "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
             },
             {
               "target": ".c3.field:nth-child(1)",
-              "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-            },
-            {
-              "target": ".card.portal-theme-card:nth-child(1) > .row > .c3.field:nth-child(2)",
-              "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-            },
-            {
-              "target": "#chartSummary",
               "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
             }
           ]
@@ -9339,7 +9339,7 @@
           "border": "rgb(251, 255, 255)",
           "display": "block",
           "width": 1440,
-          "height": 1687
+          "height": 1754
         },
         "#reloadBtn": null,
         "#gradesTable": null,
@@ -9451,7 +9451,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1647
+              "height": 1640
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -9565,7 +9565,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 3747
+              "height": 4059
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -9809,7 +9809,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1492
+              "height": 1485
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -9939,7 +9939,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1492
+              "height": 1485
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10069,7 +10069,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 2733
+              "height": 2726
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10199,7 +10199,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1556
+              "height": 1549
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10329,7 +10329,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1245
+              "height": 1239
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10443,7 +10443,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1823
+              "height": 1816
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10579,7 +10579,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "grid",
               "width": 726,
-              "height": 1066
+              "height": 1504
             },
             "#newsWeekSetModal .portal-modal-close": {
               "selector": "#newsWeekSetModal .portal-modal-close",
@@ -10951,7 +10951,7 @@
           "x": 0,
           "y": 24,
           "w": 1440,
-          "h": 1599,
+          "h": 1592,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",

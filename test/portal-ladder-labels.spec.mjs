@@ -23,15 +23,15 @@ const sharedPortalThemeCss = fs.readFileSync(
 
 test("portal ladder surfaces are labeled explicitly in markup", () => {
   assert.match(hubHtml, /<body class="portal-hub-page" id="top" data-surface-role="page">/)
-  assert.match(hubHtml, /<div class="header-bar" data-surface-role="content">/)
-  assert.match(hubHtml, /<section class="card hero" aria-labelledby="hub-title" data-surface-role="content">/)
+  assert.match(hubHtml, /<div class="header-bar portal-login-header" data-surface-role="content">/)
+  assert.match(hubHtml, /<section class="content topbar" data-surface-role="content">/)
   assert.match(hubHtml, /<section class="card section-card section-card--primary" aria-labelledby="primary-portals" data-surface-role="content">/)
   assert.match(hubHtml, /<section class="card hub-prefooter" aria-label="Support links" data-surface-role="content">/)
   assert.match(hubHtml, /data-surface-role="card"/)
 
   assert.match(studentAdminHtml, /<div class="content page-section" data-page="profile" data-surface-role="content">/)
   assert.match(studentAdminHtml, /<main class="section-stack" id="appMain" data-surface-role="content">/)
-  assert.match(studentAdminHtml, /<div class="content app-page-header" id="appPageHeader" data-surface-role="content">/)
+  assert.match(studentAdminHtml, /<section class="content topbar" data-surface-role="content">/)
   assert.match(studentAdminHtml, /<div class="content(?: hidden)?" id="topControlsPanel" data-surface-role="content">/)
   assert.match(studentAdminHtml, /<select id="filterLevel" data-surface-role="card">/)
   assert.match(studentAdminHtml, /<select id="filterSchool" data-surface-role="card">/)
