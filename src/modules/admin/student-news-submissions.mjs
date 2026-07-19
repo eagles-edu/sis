@@ -77,7 +77,12 @@ function parseDateOrNull(value) {
   if (value instanceof Date) return Number.isNaN(value.valueOf()) ? null : value
   const text = normalizeText(value)
   if (!text) return null
-  const parsed = new Date(text)
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(text)
+    ? `${text}T00:00:00+07:00`
+    : /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(text)
+      ? `${text}+07:00`
+      : text
+  const parsed = new Date(normalized)
   return Number.isNaN(parsed.valueOf()) ? null : parsed
 }
 
@@ -322,7 +327,7 @@ const STUDENT_NEWS_REVIEW_STATUS_COLOR = {
 }
 
 const STUDENT_NEWS_DEFAULT_DAYS = 14
-const STUDENT_NEWS_MAX_DAYS = 60
+const STUDENT_NEWS_MAX_DAYS = 120
 const STUDENT_NEWS_FIELD_MAX_LENGTHS = Object.freeze({
   sourceLink: 2048,
   articleTitle: 240,
@@ -1040,19 +1045,28 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     biasAssessment,
     vocabulary,
   }
-  const [minimumRequirements, compliance] = await Promise.all([
-    evaluateStudentNewsMinimumRequirements(validationPayload, { validationConfig }),
-    evaluateStudentNewsCompliance(validationPayload, { validationConfig }),
-  ])
+  const [minimumRequirements, compliance] = mode === "draft"
+    ? [
+        { passed: false, failedFields: {}, requiredTasks: [] },
+        { warningFields: {}, warningTasks: [], details: {}, config: {} },
+      ]
+    : await Promise.all([
+        evaluateStudentNewsMinimumRequirements(validationPayload, { validationConfig }),
+        evaluateStudentNewsCompliance(validationPayload, { validationConfig }),
+      ])
   const previousIssues = normalizeValidationIssueMap(
     /** @type {Record<string, unknown> | null | undefined} */ (existing?.validationIssuesJson)
   )
-  const updatedIssues = updateStudentNewsValidationIssues(previousIssues, compliance)
+  const updatedIssues = mode === "draft"
+    ? { issues: previousIssues, newlyFixed: [] }
+    : updateStudentNewsValidationIssues(previousIssues, compliance)
   const mergedReviewNote = mergeStudentNewsReviewNoteWithCompliance(
     /** @type {string | undefined} */ (existing?.reviewNote),
     updatedIssues.issues
   )
-  const mmrPassed = minimumRequirements.passed === true
+  const mmrPassed = mode === "draft"
+    ? Boolean(existing?.mmrPassedAt || existing?.dateSatisfiedAt)
+    : minimumRequirements.passed === true
   const existingStatus = normalizeStudentNewsReviewStatus(
     existing?.reviewStatus,
     STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
@@ -1068,7 +1082,9 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     reviewNote = addAwaitingReReviewMarker(reviewNote)
   }
 
-  const submittedAt = new Date(nowDate.getTime())
+  const submittedAt = mode === "draft"
+    ? parseDateOrNull(existing?.submittedAt) || new Date(nowDate.getTime())
+    : new Date(nowDate.getTime())
   let reviewStatus = existingStatus
   let submissionState = existingSubmissionState
   let draftCheckedAt = parseDateOrNull(existing?.draftCheckedAt)
@@ -1080,7 +1096,9 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
   let editableUntil = parseDateOrNull(existing?.editableUntil)
   const computedEditableUntil = resolveStudentNewsEditableUntil(reportDateDate)
 
-  if (mode === "check") {
+  if (mode === "draft") {
+    submissionState = existingSubmissionState || STUDENT_NEWS_SUBMISSION_STATE_DRAFT
+  } else if (mode === "check") {
     draftCheckedAt = submittedAt
     if (mmrPassed) {
       if (!(mmrPassedAt instanceof Date)) mmrPassedAt = submittedAt
@@ -1168,8 +1186,10 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     reviewStatus,
     reviewNote: normalizeNullableText(reviewNote),
     validationIssuesJson: updatedIssues.issues,
-    reviewedAt: null,
-    reviewedByUsername: null,
+    reviewedAt: mode === "draft" ? parseDateOrNull(existing?.reviewedAt) : null,
+    reviewedByUsername: mode === "draft"
+      ? normalizeNullableText(existing?.reviewedByUsername)
+      : null,
   }
 
   /** @type {Record<string, unknown> | null} */
@@ -1225,7 +1245,7 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
   if (!saved) {
     const fallbackSaved = upsertStudentNewsReportInFallbackStore(id, reportDateText, {
       ...reportData,
-      submittedAt: submittedAt.toISOString(),
+      submittedAt: submittedAt?.toISOString?.() || null,
       draftCheckedAt: draftCheckedAt?.toISOString?.() || null,
       mmrPassedAt: mmrPassedAt?.toISOString?.() || null,
       dateSatisfiedAt: dateSatisfiedAt?.toISOString?.() || null,
@@ -1249,7 +1269,9 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     mode === "submit" && reviewStatus === STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
       ? resolveStudentNewsAutoApproveDueAt(saved, autoApproveConfig)
       : null
-  const responseMessage = mode === "check"
+  const responseMessage = mode === "draft"
+    ? "Draft saved."
+    : mode === "check"
     ? mmrPassed
       ? !(existing?.mmrPassedAt)
         ? "Minimum requirements met. Today's report date is satisfied and locked. You may keep improving before submit."
@@ -1266,7 +1288,7 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     message: responseMessage,
     item: mappedItem,
     mmrPassed,
-    mmrFailedFields: minimumRequirements.failedFields || {},
+    mmrFailedFields: mode === "draft" ? {} : minimumRequirements.failedFields || {},
     warningFields: compliance.warningFields || {},
     requiredTasks: minimumRequirements.requiredTasks || [],
     warningTasks: compliance.warningTasks || [],
@@ -1294,6 +1316,14 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
  */
 export async function saveStudentNewsDraftCheck(studentRefId, payload = {}, options = {}) {
   return persistStudentNewsReport(studentRefId, payload, options, "check")
+}
+
+/**
+ * Save the current report without running MMR or changing submit eligibility.
+ * This endpoint is used by the explicit Save button and background autosave.
+ */
+export async function saveStudentNewsDraft(studentRefId, payload = {}, options = {}) {
+  return persistStudentNewsReport(studentRefId, payload, options, "draft")
 }
 
 /**

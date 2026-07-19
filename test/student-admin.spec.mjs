@@ -262,6 +262,7 @@ test("student news save/check flow lives in the submissions module with separate
   assert.match(submissions, /export function resolveStudentNewsSubmissionWindow\(/)
   assert.match(submissions, /export function buildStudentNewsCalendarRows\(/)
   assert.match(submissions, /export async function listStudentNewsCalendar\(/)
+  assert.match(submissions, /export async function saveStudentNewsDraft\(/)
   assert.match(submissions, /export async function saveStudentNewsDraftCheck\(/)
   assert.match(submissions, /export async function saveStudentNewsReport\(/)
   assert.match(compliance, /export function buildStudentNewsComplianceBlock\(/)
@@ -291,9 +292,17 @@ test("student news save/check flow lives in the submissions module with separate
 
   assert.match(routes, /error\.payload/)
   assert.match(routes, /STUDENT_NEWS_REPORTS_CHECK_PATH/)
+  assert.match(routes, /STUDENT_NEWS_REPORTS_PATH}\/draft/)
   assert.match(routes, /saveStudentNewsDraftCheck/)
   assert.match(routes, /column `\(not available\)` does not exist in the current database/)
   assert.match(routes, /Database schema mismatch detected/)
+})
+
+test("admin quarter controls share the attendance quarter safety default", () => {
+  const source = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
+  assert.match(source, /function normalizeQuarterDropdownDefaults\(/)
+  assert.match(source, /\["a_quarter", "g_quarter", "r_quarter", "gradeChartQuarter"\]/)
+  assert.match(source, /updateAttendanceQuarterWarning\(\)/)
 })
 
 test("student portal login resolver keeps DB-first auth with env fallback", () => {
@@ -493,7 +502,7 @@ test("news review status/action rules and revise chip label keep locked admin ui
   const gitignoreSource = fs.readFileSync(path.resolve(process.cwd(), ".gitignore"), "utf8")
   const statusStart = ADMIN_JS_SOURCE.indexOf("function newsReviewWeekSetStatusToken(")
   assert.ok(statusStart >= 0, "newsReviewWeekSetStatusToken is present")
-  const statusChunk = ADMIN_JS_SOURCE.slice(statusStart, statusStart + 1400)
+  const statusChunk = ADMIN_JS_SOURCE.slice(statusStart, statusStart + 1800)
   assert.match(statusChunk, /if \(reportCount >= requiredReports && approved >= requiredReports\) return "approved";/)
   assert.match(statusChunk, /return "waiting";/)
   assert.match(statusChunk, /if \(submitted === 0 && revisionRequested === 0\) return "checked";/)
@@ -1282,7 +1291,7 @@ test("GET /parent returns parent portal HTML with runtime config", async () => {
   assert.match(html, /function formatQueueDateTimeTz7\(/)
   assert.match(html, /function formatQueueLatestSubmissionHtml\(/)
   assert.match(html, /queue-compact-datetime/)
-  assert.match(html, /\$\{hour\}:\$\{minute\}:\$\{second\} \+7/)
+  assert.match(html, /\$\{hour\}:\$\{minute\}:\$\{second\} \+07/)
   assert.match(html, /<th scope="col">#<\/th>/i)
   assert.match(
     SHARED_PORTAL_THEME_SOURCE,
@@ -1390,7 +1399,7 @@ test("GET /student returns student portal HTML with runtime config", async () =>
   assert.match(html, /function formatQueueDateTimeTz7\(/)
   assert.match(html, /function formatQueueLatestSubmissionHtml\(/)
   assert.match(html, /queue-compact-datetime/)
-  assert.match(html, /\$\{hour\}:\$\{minute\}:\$\{second\} \+7/)
+    assert.match(html, /\$\{hour\}:\$\{minute\}:\$\{second\} \+07/)
   assert.match(html, /<th scope="col">#<\/th>/i)
   assert.match(html, /\.queue-table-wrap table\.news-queue-table th,\s*[\s\S]*?padding:\s*4px 6px;/i)
   assert.match(
@@ -1869,6 +1878,43 @@ test("POST /api/admin/login rejects alias with a different teacher password", as
   assert.equal(res.status, 401)
   const body = await res.json()
   assert.match(body.error, /invalid username or password/i)
+})
+
+test("all configured teacher accounts receive the same read/write attendance policy", async () => {
+  for (const account of [
+    { username: "teacher", password: "teacher-pass-123" },
+    { username: "carole01", password: "carole-pass-123" },
+  ]) {
+    const login = await fetchLocal(port, "/api/admin/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(account),
+    })
+    assert.equal(login.status, 200)
+    const cookie = (login.headers.get("set-cookie") || "").split(";")[0]
+    assert.match(cookie, /student_admin_sid=/i)
+
+    const permissions = await fetchLocal(port, "/api/admin/permissions", {
+      headers: { Cookie: cookie },
+    })
+    assert.equal(permissions.status, 200)
+    const permissionBody = await permissions.json()
+    assert.equal(permissionBody.roles?.teacher?.canRead, true)
+    assert.equal(permissionBody.roles?.teacher?.canWrite, true)
+
+    const attendance = await fetchLocal(port, "/api/admin/students/abc/attendance", {
+      method: "POST",
+      headers: { Cookie: cookie, "content-type": "application/json" },
+      body: JSON.stringify({
+        className: "A2 KET",
+        schoolYear: "2026-2027",
+        quarter: "q2",
+        attendanceDate: "2026-07-19",
+        status: "present",
+      }),
+    })
+    assert.equal(attendance.status, 503)
+  }
 })
 
 test("GET /api/admin/auth/me works for teacher session", async () => {

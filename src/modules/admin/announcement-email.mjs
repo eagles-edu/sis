@@ -192,7 +192,7 @@ function buildReportDayText(value = "") {
   if (!text) return ""
   const date = new Date(text)
   if (Number.isNaN(date.valueOf())) return ""
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("vi-VN", {
     weekday: "long",
     timeZone: "Asia/Ho_Chi_Minh",
   }).format(date)

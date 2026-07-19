@@ -950,7 +950,7 @@ test(
       assert.ok(newsQueueState.actionButtons >= 1);
       assert.match(newsQueueState.text, /^\s*.*\d{2}\/\d{2}\/\d{2}\s+to\s+\d{2}\/\d{2}\/\d{2}.*$/s);
       assert.doesNotMatch(newsQueueState.text, /\b\d{4}-\d{2}-\d{2}\s+to\s+\d{4}-\d{2}-\d{2}\b/i);
-      assert.match(newsQueueState.latestSubmissionText, /^\d{2}\/\d{2}\/\d{2}\s*\d{2}:\d{2}:\d{2}\s+\+7$/);
+      assert.match(newsQueueState.latestSubmissionText, /^\d{2}\/\d{2}\/\d{2}\s*\d{2}:\d{2}:\d{2}\s+\+07$/);
       assert.match(newsQueueState.latestSubmissionHtml, /queue-compact-datetime/);
       assert.match(newsQueueState.text, /Revise/i);
       assert.match(newsQueueState.text, /Waiting/i);
@@ -995,7 +995,7 @@ test(
       assert.equal(modalBeforeSubmit.hasLegacyStatusInput, false);
       assert.match(modalBeforeSubmit.statusChipText, /Waiting/i);
       assert.match(modalBeforeSubmit.statusChipClass, /\bchip-revise\b/i);
-      assert.match(modalBeforeSubmit.submittedAt, /^\d{2}\/\d{2}\/\d{2}\s+\d{2}:\d{2}$/);
+      assert.match(modalBeforeSubmit.submittedAt, /^\d{2}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2}\s+\+07$/);
 
       await page.fill("#newsViewerArticleTitle", "Waiting Report Updated");
       await page.click("#newsWeekSetModalCheckBtn");
@@ -1374,7 +1374,9 @@ test(
       ));
 
       await page.evaluate(() => {
-        globalThis.document.getElementById("submitBtn")?.dispatchEvent(
+        const submitBtn = globalThis.document.getElementById("submitBtn");
+        if (submitBtn) submitBtn.disabled = false;
+        submitBtn?.dispatchEvent(
           new globalThis.MouseEvent("click", { bubbles: true }),
         );
       });

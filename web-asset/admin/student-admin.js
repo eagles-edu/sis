@@ -1840,13 +1840,13 @@
       }
 
       function nowClockStamp() {
-        return new Intl.DateTimeFormat(undefined, {
+        return `${new Intl.DateTimeFormat("vi-VN", {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
           hour12: false,
           timeZone: FIXED_TIME_ZONE,
-        }).format(new Date());
+        }).format(new Date())} +07`;
       }
 
       function monotonicNowMs() {
@@ -6664,7 +6664,7 @@
         const source = filters && typeof filters === "object" ? filters : {};
         const status = normalizeLower(source.status || "all");
         const normalizedStatus =
-          (["all", "approved", "waiting", "checked"].includes(status)) ?
+          (["all", "approved", "waiting", "checked", "draft"].includes(status)) ?
             status
           : ["submitted", "revise", "revision-requested", "open", "none-submitted"].includes(status) ?
             "waiting"
@@ -6825,6 +6825,7 @@
         if (normalized === "approved") return "Approved";
         if (normalized === "waiting") return "Waiting";
         if (normalized === "checked") return "Checked";
+        if (normalized === "draft") return "Saved Drafts";
         if (normalized === "revise" || normalized === "revision-requested")
           return "Revise";
         if (normalized === "open") return "Open";
@@ -7024,6 +7025,10 @@
       }
 
       function newsReviewWeekSetStatusToken(set = {}) {
+        const drafts = Math.max(
+          0,
+          Number.parseInt(String(set?.draftCount || 0), 10) || 0,
+        );
         const submitted = Math.max(
           0,
           Number.parseInt(String(set?.submittedCount || 0), 10) || 0,
@@ -7049,6 +7054,7 @@
         );
         const uncheckedInitial = Math.max(0, submitted - awaitingReReview);
         const requiredReports = weeklyMinimumNewsReports();
+        if (drafts > 0 && submitted === 0 && approved === 0 && revisionRequested === 0) return "draft";
         if (reportCount >= requiredReports && approved >= requiredReports) return "approved";
         if (
           awaitingReReview > 0 &&
@@ -7067,6 +7073,7 @@
         const hasCountSignals =
           Object.prototype.hasOwnProperty.call(source, "reportCount") ||
           Object.prototype.hasOwnProperty.call(source, "approvedCount") ||
+          Object.prototype.hasOwnProperty.call(source, "draftCount") ||
           Object.prototype.hasOwnProperty.call(source, "submittedCount") ||
           Object.prototype.hasOwnProperty.call(source, "revisionRequestedCount") ||
           Object.prototype.hasOwnProperty.call(source, "awaitingReReviewCount");
@@ -7076,6 +7083,7 @@
         const normalized = normalizeLower(statusToken);
         if (normalized === "approved") return "approved";
         if (normalized === "checked") return "checked";
+        if (normalized === "draft") return "draft";
         return "waiting";
       }
 
@@ -7237,6 +7245,7 @@
             student: normalizedReport.student,
             reports: [],
             reportCount: 0,
+            draftCount: 0,
             submittedCount: 0,
             approvedCount: 0,
             revisionRequestedCount: 0,
@@ -7254,7 +7263,9 @@
           if (reportDate) existing._reportDateSet.add(reportDate);
 
           const status = normalizeLower(normalizedReport?.reviewStatus);
-          if (status === "approved") existing.approvedCount += 1;
+          const submissionState = normalizeLower(normalizedReport?.submissionState);
+          if (submissionState === "draft") existing.draftCount += 1;
+          else if (status === "approved") existing.approvedCount += 1;
           else if (status === "revision-requested")
             existing.revisionRequestedCount += 1;
           else {
@@ -7309,6 +7320,7 @@
               student: weekSet.student,
               reports: reportsSorted,
               reportCount,
+              draftCount: weekSet.draftCount,
               submittedCount: weekSet.submittedCount,
               approvedCount: weekSet.approvedCount,
               revisionRequestedCount: weekSet.revisionRequestedCount,
@@ -9476,11 +9488,13 @@
         const quarterEl = document.getElementById("a_quarter");
         if (yearEl) yearEl.value = defaultAttendanceSchoolYear(classDate);
         if (quarterEl) quarterEl.value = quarterFromIsoDate(classDate);
+        updateAttendanceQuarterWarning();
       }
 
       function applyUiSettings() {
         const multiSchool = Boolean(state.uiSettings?.multiSchool);
         state.uiSettings = normalizeUiSettings(state.uiSettings);
+        normalizeQuarterDropdownDefaults();
         const schoolFilterCol = document.getElementById("schoolFilterCol");
         const profileSchoolCol = document.getElementById("profileSchoolCol");
         if (schoolFilterCol) schoolFilterCol.classList.toggle("hidden", !multiSchool);
@@ -10462,7 +10476,7 @@
         const minute = pick("minute");
         const second = pick("second");
         if (!day || !month || !year || !hour || !minute || !second) return text;
-        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+        return `${day}/${month}/${year} ${hour}:${minute}:${second} +07`;
       }
 
       function formatPortalWeekRange(startValue = "", endValue = "") {
@@ -13531,7 +13545,7 @@
       function queueHubQueuedPerformanceReportSummary(item = {}) {
         const daySource = normalizeText(item?.scheduledFor || item?.queuedAt);
         const dayOfWeek = daySource ?
-          new Date(daySource).toLocaleDateString(undefined, { weekday: "long" })
+              new Date(daySource).toLocaleDateString("vi-VN", { weekday: "long", timeZone: FIXED_TIME_ZONE })
           : "";
         const recipients = Array.isArray(item?.recipients) ? item.recipients : [];
         const payload = item?.payloadJson && typeof item.payloadJson === "object" ? item.payloadJson : {};
@@ -14789,7 +14803,7 @@
         }
         const daySource = item.scheduledFor || item.queuedAt;
         const dayOfWeek = daySource ?
-          new Date(daySource).toLocaleDateString(undefined, { weekday: "long" })
+              new Date(daySource).toLocaleDateString("vi-VN", { weekday: "long", timeZone: FIXED_TIME_ZONE })
           : "";
         const summaryParts = [
           eaglesId ? `eaglesId=${eaglesId}` : "",
@@ -16424,6 +16438,19 @@
 
       function currentQuarterFromToday() {
         return quarterFromIsoDate(localIsoDate(new Date()));
+      }
+
+      function normalizeQuarterDropdownDefaults() {
+        const currentQuarter = normalizeLower(currentQuarterFromToday());
+        if (!currentQuarter) return "";
+        ["a_quarter", "g_quarter", "r_quarter", "gradeChartQuarter"].forEach((id) => {
+          const select = document.getElementById(id);
+          if (!(select instanceof HTMLSelectElement)) return;
+          const value = normalizeLower(select.value);
+          if (!/^q[1-4]$/.test(value)) select.value = currentQuarter;
+        });
+        updateAttendanceQuarterWarning();
+        return currentQuarter;
       }
 
       function parentTrackingSummaryKey(levelName, classDate) {
@@ -21006,6 +21033,19 @@
         };
       }
 
+      function updateAttendanceQuarterWarning() {
+        const warningEl = document.getElementById("attendanceQuarterWarning");
+        if (!warningEl) return;
+        const dateValue = normalizeText(document.getElementById("a_date")?.value).slice(0, 10);
+        const formQuarter = normalizeLower(document.getElementById("a_quarter")?.value);
+        const expectedQuarter = normalizeLower(quarterFromIsoDate(dateValue));
+        const mismatch = Boolean(expectedQuarter && formQuarter && expectedQuarter !== formQuarter);
+        warningEl.classList.toggle("hidden", !mismatch);
+        warningEl.textContent = mismatch ?
+          `Warning: ${dateValue} is in ${expectedQuarter}, but this form is set to ${formQuarter}.` : "";
+        warningEl.style.color = mismatch ? "#bd2f2f" : "";
+      }
+
       function ensureAttendanceLandingFormDefaults() {
         const dateEl = document.getElementById("a_date");
         const yearEl = document.getElementById("a_schoolYear");
@@ -21017,8 +21057,9 @@
         ).slice(0, 10);
         if (yearEl && !normalizeText(yearEl.value))
           yearEl.value = defaultAttendanceSchoolYear(classDate);
-        if (quarterEl && !normalizeText(quarterEl.value))
+        if (quarterEl && !normalizeText(document.getElementById("a_id")?.value))
           quarterEl.value = quarterFromIsoDate(classDate);
+        updateAttendanceQuarterWarning();
       }
 
       function syncAttendanceLevelEditorInputs() {
@@ -24048,6 +24089,7 @@
           state.attendanceLanding.selectionsByStudentId = {};
           refreshAttendanceLandingRows({ hydrate: false }).catch(handleError);
         });
+        bindById("a_quarter", "change", updateAttendanceQuarterWarning);
         bindById("attendanceClearBtn", "click", () => {
           clearAttendanceForm();
           setStatus("Attendance form cleared.");
@@ -24318,6 +24360,9 @@
                 syncAttendanceDateDerivedFields();
                 state.attendanceLanding.selectionsByStudentId = {};
                 refreshAttendanceLandingRows({ hydrate: false }).catch(handleError);
+              },
+              onAttendanceQuarterChange() {
+                updateAttendanceQuarterWarning();
               },
               onAttendanceClear() {
                 clearAttendanceForm();

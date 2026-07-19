@@ -2738,9 +2738,9 @@
         if (displayMatch) {
           return `${displayMatch[3]}-${displayMatch[2]}-${displayMatch[1]}`
         }
-        const date = new Date(text)
-        if (Number.isNaN(date.getTime())) return text
-        const parts = new Intl.DateTimeFormat("en-GB", {
+        const date = parsePortalDateTimeValue(text)
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) return text
+        const parts = new Intl.DateTimeFormat("vi-VN", {
           day: "2-digit",
           month: "2-digit",
           year: "numeric",
@@ -2764,7 +2764,7 @@
           const [year, month, day] = iso.split("-")
           return `${day}/${month}/${year}`
         }
-        const parsed = text ? new Date(text) : null
+        const parsed = text ? parsePortalDateTimeValue(text) : null
         if (!parsed || Number.isNaN(parsed.getTime())) return text
         const parts = portalDateParts(parsed)
         if (!parts) return text
@@ -3317,9 +3317,9 @@
           raw instanceof Date ? new Date(raw.getTime())
           : /^\d{4}-\d{2}-\d{2}$/.test(text) ?
             new Date(`${text}T00:00:00+07:00`)
-          : new Date(text)
-        if (Number.isNaN(date.getTime())) return null
-        const parts = new Intl.DateTimeFormat("en-GB", {
+          : parsePortalDateTimeValue(text)
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null
+        const parts = new Intl.DateTimeFormat("vi-VN", {
           year: "numeric",
           month: "2-digit",
           day: "2-digit",
@@ -3338,6 +3338,18 @@
           return null
         }
         return { year, month, day }
+      }
+
+      function parsePortalDateTimeValue(value) {
+        if (value instanceof Date) return new Date(value.getTime())
+        const raw = normalizeText(value)
+        if (!raw) return null
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(`${raw}T00:00:00+07:00`)
+        const normalized = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(raw)
+          ? `${raw}+07:00`
+          : raw
+        const parsed = new Date(normalized)
+        return Number.isNaN(parsed.getTime()) ? null : parsed
       }
 
       function portalQuarterForMonth(month = 0) {
@@ -3588,7 +3600,7 @@
       function parseQuarterEndTimestamp(endDate = "") {
         const endDateText = normalizeText(endDate).slice(0, 10)
         if (!endDateText) return null
-        const parsed = new Date(`${endDateText}T23:59:59.999`)
+        const parsed = new Date(`${endDateText}T23:59:59.999+07:00`)
         return Number.isNaN(parsed.valueOf()) ? null : parsed.valueOf()
       }
 
@@ -3601,8 +3613,8 @@
         const submittedText = normalizeText(
           row.submittedAt || row.submittedDate,
         ).slice(0, 10)
-        const dueAt = dueText ? new Date(dueText) : null
-        const submittedAt = submittedText ? new Date(submittedText) : null
+        const dueAt = dueText ? parsePortalDateTimeValue(dueText) : null
+        const submittedAt = submittedText ? parsePortalDateTimeValue(submittedText) : null
         const dueAtMs =
           dueAt instanceof Date && !Number.isNaN(dueAt.valueOf()) ?
             dueAt.valueOf()
@@ -4477,7 +4489,7 @@
       function parseHomeworkDueMs(row = {}) {
         const dueAtRaw = normalizeText(row?.dueAt)
         if (dueAtRaw) {
-          const dueAt = new Date(dueAtRaw)
+          const dueAt = parsePortalDateTimeValue(dueAtRaw)
           if (!Number.isNaN(dueAt.getTime())) return dueAt.getTime()
         }
         const dueDateRaw = normalizeText(row?.dueDate)
@@ -4739,8 +4751,10 @@
 
       function sortedReportArchiveRows(rows = []) {
         return (Array.isArray(rows) ? rows : []).slice().sort((left, right) => {
-          const leftMs = new Date(normalizeText(left?.generatedAt)).getTime()
-          const rightMs = new Date(normalizeText(right?.generatedAt)).getTime()
+          const leftDate = parsePortalDateTimeValue(left?.generatedAt)
+          const rightDate = parsePortalDateTimeValue(right?.generatedAt)
+          const leftMs = leftDate instanceof Date ? leftDate.getTime() : Number.NaN
+          const rightMs = rightDate instanceof Date ? rightDate.getTime() : Number.NaN
           const safeLeft = Number.isNaN(leftMs) ? 0 : leftMs
           const safeRight = Number.isNaN(rightMs) ? 0 : rightMs
           return safeRight - safeLeft
@@ -5011,7 +5025,7 @@
       function formatReportGeneratedMeta(value) {
         const raw = normalizeText(value)
         if (!raw) return "Ngày: - | Thứ: - | Giờ: -"
-        const date = new Date(raw)
+        const date = parsePortalDateTimeValue(raw)
         if (Number.isNaN(date.getTime())) return "Ngày: - | Thứ: - | Giờ: -"
         const datePart = formatPortalDate(date)
         const dayPart = new Intl.DateTimeFormat("vi-VN", {
@@ -5021,9 +5035,11 @@
         const timePart = new Intl.DateTimeFormat("vi-VN", {
           hour: "2-digit",
           minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
           timeZone: PORTAL_TIME_ZONE,
         }).format(date)
-        return `Ngày: ${datePart} | Thứ: ${dayPart} | Giờ: ${timePart}`
+        return `Ngày: ${datePart} | Thứ: ${dayPart} | Giờ: ${timePart} +07`
       }
 
       function reportVisionStatusLabel(value = "") {
@@ -5737,7 +5753,7 @@
         const date =
           raw instanceof Date ? new Date(raw.getTime())
           : /^\d{4}-\d{2}-\d{2}$/.test(raw) ? new Date(`${raw}T00:00:00+07:00`)
-          : new Date(raw)
+          : parsePortalDateTimeValue(raw)
         if (Number.isNaN(date.getTime())) return "Không có ngày"
         return new Intl.DateTimeFormat("vi-VN", {
           day: "2-digit",
@@ -5751,7 +5767,7 @@
         const raw = value instanceof Date ? value : normalizeText(value)
         if (!raw) return "Không có thời gian"
         const date =
-          raw instanceof Date ? new Date(raw.getTime()) : new Date(raw)
+          raw instanceof Date ? new Date(raw.getTime()) : parsePortalDateTimeValue(raw)
         if (Number.isNaN(date.getTime())) return "Không có thời gian"
         const parts = new Intl.DateTimeFormat("vi-VN", {
           day: "2-digit",
@@ -5759,6 +5775,7 @@
           year: "2-digit",
           hour: "2-digit",
           minute: "2-digit",
+          second: "2-digit",
           hour12: false,
           timeZone: PORTAL_TIME_ZONE,
         }).formatToParts(date)
@@ -5769,9 +5786,10 @@
         const year = pick("year")
         const hour = pick("hour")
         const minute = pick("minute")
-        if (!day || !month || !year || !hour || !minute)
+        const second = pick("second")
+        if (!day || !month || !year || !hour || !minute || !second)
           return "Không có thời gian"
-        return `${day}/${month}/${year} ${hour}:${minute}`
+        return `${day}/${month}/${year} ${hour}:${minute}:${second} +07`
       }
 
       function formatPortalWeekRange(startValue = "", endValue = "") {
@@ -5781,8 +5799,8 @@
           if (!value) return null
           const parsed =
             /^\d{4}-\d{2}-\d{2}$/.test(value) ?
-              new Date(`${value}T00:00:00+07:00`)
-            : new Date(value)
+              parsePortalDateTimeValue(value)
+            : parsePortalDateTimeValue(value)
           return Number.isNaN(parsed.getTime()) ? null : parsed
         }
         const startDate = parse(startRaw)
@@ -5796,11 +5814,11 @@
       function formatQueueDateTimeTz7(value) {
         const raw = normalizeText(value)
         const date =
-          /^\d{4}-\d{2}-\d{2}$/.test(raw) ? new Date(`${raw}T00:00:00+07:00`)
-          : raw ? new Date(raw)
+          /^\d{4}-\d{2}-\d{2}$/.test(raw) ? parsePortalDateTimeValue(raw)
+          : raw ? parsePortalDateTimeValue(raw)
           : null
         if (!date || Number.isNaN(date.getTime())) return null
-        const parts = new Intl.DateTimeFormat("en-GB", {
+        const parts = new Intl.DateTimeFormat("vi-VN", {
           day: "2-digit",
           month: "2-digit",
           year: "2-digit",
@@ -5821,7 +5839,7 @@
         if (!day || !month || !year || !hour || !minute || !second) return null
         return {
           dateLabel: `${day}/${month}/${year}`,
-          timeLabel: `${hour}:${minute}:${second} +7`,
+          timeLabel: `${hour}:${minute}:${second} +07`,
         }
       }
 
@@ -5834,7 +5852,7 @@
       function formatPortalWeekdayDateTime(value) {
         const raw = normalizeText(value)
         if (!raw) return "Không có thời gian"
-        const date = new Date(raw)
+        const date = parsePortalDateTimeValue(raw)
         if (Number.isNaN(date.getTime())) return "Không có thời gian"
         const dateLabel = formatPortalDate(date)
         const weekdayLabel = new Intl.DateTimeFormat("vi-VN", {

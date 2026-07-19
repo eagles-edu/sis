@@ -61,3 +61,8 @@ test("student news submissions module exposes the calendar/save API surface", ()
   assert.match(source, /export async function saveStudentNewsDraftCheck\(/)
   assert.match(source, /export async function saveStudentNewsReport\(/)
 })
+
+test("student news calendar supports quarter-to-date lookback beyond seven weeks", () => {
+  const source = fs.readFileSync(new URL("../src/modules/admin/student-news-submissions.mjs", import.meta.url), "utf8")
+  assert.match(source, /const STUDENT_NEWS_MAX_DAYS = 120/)
+})

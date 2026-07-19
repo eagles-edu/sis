@@ -4607,17 +4607,6 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
         },
       })
     }
-    if (url.includes("/api/admin/settings/ui")) {
-      return jsonResponse(200, {
-        uiSettings: attendanceSchoolSetupFixture(),
-        meta: {
-          schoolSetupStoredQuarterCount: 4,
-          schoolSetupStoredQuartersPresent: true,
-          schoolSetupStoredQuartersMissing: false,
-          schoolSetupState: "ok",
-        },
-      })
-    }
     if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
     if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Eggs & Chicks", "Pre-A1 Starters"], schools: [] })
     if (url.includes("/api/admin/students?")) {
@@ -7220,6 +7209,17 @@ test("attendance main defaults to absent and admin child shows per-student stats
 
     if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
     if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: [] })
+    if (url.includes("/api/admin/settings/ui")) {
+      return jsonResponse(200, {
+        uiSettings: attendanceSchoolSetupFixture(),
+        meta: {
+          schoolSetupStoredQuarterCount: 4,
+          schoolSetupStoredQuartersPresent: true,
+          schoolSetupStoredQuartersMissing: false,
+          schoolSetupState: "ok",
+        },
+      })
+    }
     if (url.includes("/api/admin/students/stu-01")) {
       return jsonResponse(200, {
         id: "stu-01",
@@ -7299,6 +7299,11 @@ test("attendance main defaults to absent and admin child shows per-student stats
     )
     assert.ok(absentChecked)
   })
+  assert.equal(
+    dom.window.document.getElementById("a_quarter").value,
+    dom.window.currentQuarterFromToday(),
+  )
+  assert.equal(dom.window.currentQuarterFromToday(), "q2")
   await waitFor(() => {
     const summaryText = normalizeText(dom.window.document.getElementById("attendanceLandingSummary")?.textContent)
     assert.match(summaryText, /students=1/i)
@@ -7310,6 +7315,11 @@ test("attendance main defaults to absent and admin child shows per-student stats
   dom.window.document.getElementById("a_date").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   dom.window.document.getElementById("a_schoolYear").value = "2025-2026"
   dom.window.document.getElementById("a_quarter").value = "q3"
+  dom.window.document.getElementById("a_quarter").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  assert.match(
+    normalizeText(dom.window.document.getElementById("attendanceQuarterWarning")?.textContent),
+    /Warning: .* is in .* but this form is set to q3/i,
+  )
   const dashboardCallsBeforeSave = dashboardCalls
   dom.window.document.getElementById("attendanceLandingSaveAllBtn")?.click()
   await waitFor(() => {

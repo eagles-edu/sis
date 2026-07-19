@@ -47,14 +47,15 @@ test("student news review helpers normalize status, action, and selection rules"
   assert.equal(reviewSelect.submissionState, true)
 })
 
-test("student news admin review keeps admin statuses unchanged and only excludes pre-submit states", () => {
+test("student news admin review keeps admin statuses unchanged and can expose saved drafts", () => {
   const source = fs.readFileSync(new URL("../src/modules/admin/student-news-review.mjs", import.meta.url), "utf8")
-  assert.match(source, /where\.submissionState = STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED/)
-  assert.match(source, /return !submissionState \|\| submissionState === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED/)
+  assert.match(source, /const requestedSubmissionState = rawStatus === "draft" \? "draft" : ""/)
+  assert.match(source, /rawStatus === "all" \|\| !submissionState \|\| submissionState === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED/)
   assert.match(source, /const STUDENT_NEWS_REVIEW_STATUS_SUBMITTED = "submitted"/)
   assert.match(source, /const STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED = "revision-requested"/)
   assert.match(source, /const STUDENT_NEWS_REVIEW_STATUS_APPROVED = "approved"/)
   assert.match(source, /await reconcileStudentNewsAutoApprovals\(\)/)
+  assert.match(source, /editablePayload\.vocabularyJson = existingReport\.vocabularyJson/)
   assert.match(source, /evaluateStudentNewsAutoApprovalState\(entry/)
   assert.match(source, /autoApprovalState\?\.enabled && autoApprovalState\.candidate && !autoApprovalState\.due/)
 })

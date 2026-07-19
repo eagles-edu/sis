@@ -397,6 +397,33 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
     data.enrollmentPeriodId = normalizeNullableText(period?.id)
   }
 
+  // The UI normally sends the existing id, but repeated saves can race with a
+  // refresh. Reuse the unique student/class/date row so the operation remains
+  // idempotent instead of creating a duplicate or losing the visible status.
+  const attendanceDayStart = new Date(attendanceDate)
+  attendanceDayStart.setUTCHours(0, 0, 0, 0)
+  const attendanceDayEnd = new Date(attendanceDayStart)
+  attendanceDayEnd.setUTCDate(attendanceDayEnd.getUTCDate() + 1)
+  const existingByDate = await prisma.studentAttendance.findFirst({
+    where: {
+      studentRefId: studentRef,
+      className,
+      attendanceDate: {
+        gte: attendanceDayStart,
+        lt: attendanceDayEnd,
+      },
+    },
+  })
+  if (existingByDate) {
+    if (!data.enrollmentPeriodId) {
+      data.enrollmentPeriodId = normalizeNullableText(existingByDate.enrollmentPeriodId)
+    }
+    return prisma.studentAttendance.update({
+      where: { id: existingByDate.id },
+      data,
+    })
+  }
+
   return prisma.studentAttendance.create({
     data: {
       studentRefId: studentRef,

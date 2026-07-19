@@ -82,7 +82,7 @@ test("student and parent queue compact chip/button and datetime helpers stay ali
     assert.match(html, /function formatQueueDateTimeTz7\(/)
     assert.match(html, /function formatQueueLatestSubmissionHtml\(/)
     assert.match(html, /queue-compact-datetime/)
-    assert.match(html, /\$\{hour\}:\$\{minute\}:\$\{second\} \+7/)
+    assert.match(html, /\$\{hour\}:\$\{minute\}:\$\{second\} \+07/)
   }
 
   assert.match(

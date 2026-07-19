@@ -37,7 +37,12 @@ function parseDateOrNull(value) {
   if (value instanceof Date) return Number.isNaN(value.valueOf()) ? null : value
   const text = normalizeText(value)
   if (!text) return null
-  const parsed = new Date(text)
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(text)
+    ? `${text}T00:00:00+07:00`
+    : /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(text)
+      ? `${text}+07:00`
+      : text
+  const parsed = new Date(normalized)
   return Number.isNaN(parsed.valueOf()) ? null : parsed
 }
 

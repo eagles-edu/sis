@@ -9,6 +9,7 @@ export function initAttendanceGradeControlsIsland({
   onAttendanceLevelReset,
   onAttendanceLevelImageChange,
   onAttendanceDateChange,
+  onAttendanceQuarterChange,
   onAttendanceClear,
   onAttendanceSortFieldChange,
   onAttendanceSortDirToggle,
@@ -88,6 +89,9 @@ export function initAttendanceGradeControlsIsland({
     });
   document?.getElementById("a_date")?.addEventListener("change", () => {
     if (typeof onAttendanceDateChange === "function") onAttendanceDateChange();
+  });
+  document?.getElementById("a_quarter")?.addEventListener("change", () => {
+    if (typeof onAttendanceQuarterChange === "function") onAttendanceQuarterChange();
   });
   document?.getElementById("attendanceClearBtn")?.addEventListener("click", () => {
     if (typeof onAttendanceClear === "function") onAttendanceClear();

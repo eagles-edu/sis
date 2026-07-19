@@ -26,7 +26,7 @@ function formatDayLabel(dateKey = "") {
   if (!normalized) return ""
   const parsed = new Date(`${normalized}T00:00:00+07:00`)
   if (Number.isNaN(parsed.valueOf())) return ""
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("vi-VN", {
     weekday: "long",
     timeZone: "Asia/Ho_Chi_Minh",
   }).format(parsed)

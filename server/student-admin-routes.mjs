@@ -19,6 +19,7 @@ import {
   isStudentAdminStoreEnabled,
   listStudentNewsCalendar,
   saveStudentNewsDraftCheck,
+  saveStudentNewsDraft,
   saveStudentNewsReport,
 } from "./student-admin-store.mjs"
 import {
@@ -7634,6 +7635,16 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const validationConfig = resolveStudentNewsValidationConfigFromSettings()
     const result = await saveStudentNewsReport(studentRefId, payload, {
+      validationConfig,
+    })
+    sendJson(response, 200, result)
+    return true
+  }
+
+  if (method === "POST" && pathname === `${STUDENT_NEWS_REPORTS_PATH}/draft`) {
+    const payload = await parseBody(request)
+    const validationConfig = resolveStudentNewsValidationConfigFromSettings()
+    const result = await saveStudentNewsDraft(studentRefId, payload, {
       validationConfig,
     })
     sendJson(response, 200, result)

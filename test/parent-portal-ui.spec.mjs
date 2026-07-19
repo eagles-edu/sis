@@ -1909,7 +1909,7 @@ test("parent portal news queue chips use canonical Approved/Waiting/Revise label
     assert.doesNotMatch(queueText, /Submitted|None Submitted|Waiting|Revise/i)
     assert.match(normalizeText(firstWeekSetCell?.textContent), /^\d{2}\/\d{2}\/\d{2}\s+-\s+\d{2}\/\d{2}\/\d{2}$/)
     assert.doesNotMatch(normalizeText(firstWeekSetCell?.textContent), /đến/i)
-    assert.match(latestSubmissionText, /^\d{2}\/\d{2}\/\d{2}\s*\d{2}:\d{2}:\d{2}\s+\+7$/)
+    assert.match(latestSubmissionText, /^\d{2}\/\d{2}\/\d{2}\s*\d{2}:\d{2}:\d{2}\s+\+07$/)
     assert.match(latestSubmissionHtml, /queue-compact-datetime/)
     const summaryText = normalizeText(document.getElementById("newsQueueSummary")?.textContent)
     const summaryLabel = normalizeText(document.getElementById("newsQueueSummary")?.getAttribute("aria-label"))

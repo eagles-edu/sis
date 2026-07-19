@@ -125,6 +125,13 @@ test("student vocabulary rows provide lookup controls for initial and added rows
   assert.match(STUDENT_HTML, /portal-button-danger news-vocabulary-remove/)
 })
 
+test("student part-of-speech selectors use a fixed longest-option width", () => {
+  assert.match(STUDENT_HTML, /<option value="">POS<\/option>/)
+  assert.match(SHARED_THEME, /select\[data-vocabulary-field="partOfSpeech"\][\s\S]*?field-sizing: initial;/)
+  assert.match(SHARED_THEME, /select\[data-vocabulary-field="partOfSpeech"\][\s\S]*?inline-size: 12ch;/)
+  assert.doesNotMatch(SHARED_THEME, /select\[data-vocabulary-field="partOfSpeech"\][\s\S]*?field-sizing: content;/)
+})
+
 test("parent and admin vocabulary mirrors contain no student lookup controls", () => {
   assert.match(PARENT_HTML, /id="newsWeekSetModalVocabularyRows"/)
   assert.match(PARENT_HTML, /active\?\.vocabulary/)
@@ -186,6 +193,16 @@ test("student New Words page exposes editable, sortable, paginated vocabulary", 
   assert.match(STUDENT_HTML, /id="newNewsFormBtn"/)
   assert.match(STUDENT_HTML, /id="newNewsFormConfirmModal"/)
   assert.match(STUDENT_HTML, /id="checkBtn" class="portal-button portal-button-info"[^>]*title="Kiểm tra từng trường bắt buộc/)
+  assert.match(STUDENT_HTML, /id="saveDraftBtn" class="portal-button portal-button-affirm"[^>]*Save/)
+  assert.match(STUDENT_HTML, /STUDENT_NEWS_REPORTS_PATH\}\/draft/)
+  assert.match(STUDENT_HTML, /}, 80000\)/)
+  assert.match(STUDENT_HTML, /Save never runs MMR/)
+  assert.match(STUDENT_HTML, /Intl\.DateTimeFormat\("vi-VN"/)
+  assert.match(STUDENT_HTML, /second: "2-digit"/)
+  assert.match(STUDENT_HTML, /pick\("second"\)\} \+07/)
+  assert.doesNotMatch(STUDENT_HTML, /url: `#news-\$\{date\}`/)
+  assert.match(STUDENT_HTML, /function studentNewsCalendarLookbackDays\(/)
+  assert.match(STUDENT_HTML, /Math\.max\(49, quarterToDateDays\)/)
   assert.match(STUDENT_HTML, /id="submitBtn" class="portal-button portal-button-primary"[^>]*title="Nộp báo cáo tin tức sau khi/)
   assert.match(STUDENT_HTML, /id="newNewsFormSaveBtn"[^>]*portal-button-affirm/)
   assert.match(STUDENT_HTML, /id="newNewsFormIgnoreBtn"[^>]*portal-button-danger/)

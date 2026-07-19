@@ -84,7 +84,12 @@ function parseDateOrNull(value) {
   if (value instanceof Date) return Number.isNaN(value.valueOf()) ? null : value
   const text = normalizeText(value)
   if (!text) return null
-  const parsed = new Date(text)
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(text)
+    ? `${text}T00:00:00+07:00`
+    : /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(text)
+      ? `${text}+07:00`
+      : text
+  const parsed = new Date(normalized)
   return Number.isNaN(parsed.valueOf()) ? null : parsed
 }
 
@@ -504,6 +509,7 @@ function mapStudentNewsReportRow(row = {}) {
       ? null
       : Array.isArray(row.vocabularyJson) ? row.vocabularyJson : [],
     submittedAt: parseDateOrNull(row?.submittedAt)?.toISOString?.() || "",
+    submissionState: normalizeText(row?.submissionState),
     reviewStatus,
     awaitingReReview,
     statusColor: resolveStudentNewsStatusColor(reviewStatus),
@@ -785,7 +791,10 @@ export async function listStudentNewsReportsForReview({
   const toDate = normalizeStudentNewsReviewDateFilter(dateTo)
 
   const where = {}
-  where.submissionState = STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+  const rawStatus = normalizeLower(status)
+  const requestedSubmissionState = rawStatus === "draft" ? "draft" : ""
+  if (requestedSubmissionState) where.submissionState = requestedSubmissionState
+  else if (rawStatus !== "all") where.submissionState = STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
   if (requestedStudentRefId) where.studentRefId = requestedStudentRefId
   if (fromDate || toDate) {
     where.reportDate = {}
@@ -840,7 +849,9 @@ export async function listStudentNewsReportsForReview({
     reportRows = readStudentNewsFallbackEntries()
       .filter((entry) => {
         const submissionState = normalizeLower(entry?.submissionState)
-        return !submissionState || submissionState === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+        return requestedSubmissionState
+          ? submissionState === requestedSubmissionState
+          : rawStatus === "all" || !submissionState || submissionState === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
       })
       .filter((entry) => !requestedStudentRefId || normalizeText(entry?.studentRefId) === requestedStudentRefId)
       .filter((entry) => !fromDateKey || normalizeText(entry?.reportDate) >= fromDateKey)
@@ -992,6 +1003,11 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
       "Approved news reports cannot be edited",
     )
     const editablePayload = normalizeStudentNewsReviewEditablePayload(payload)
+    // The admin viewer edits report prose, not vocabulary. Preserve the
+    // stored vocabulary when the viewer save payload does not include it.
+    if (Array.isArray(existingReport?.vocabularyJson)) {
+      editablePayload.vocabularyJson = existingReport.vocabularyJson
+    }
     const existingValidationIssues =
       existingReport?.validationIssuesJson && typeof existingReport.validationIssuesJson === "object" && !Array.isArray(existingReport.validationIssuesJson)
         ? normalizeValidationIssueMap(/** @type {Record<string, unknown>} */ (existingReport.validationIssuesJson))

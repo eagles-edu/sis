@@ -5624,9 +5624,9 @@ body.student-portal-page .news-vocabulary-row {
   grid-template-columns: max-content 1.25fr 1.25fr 1.5fr;
 }
 body.student-portal-page .news-vocabulary-row select[data-vocabulary-field="partOfSpeech"] {
-  field-sizing: content;
-  inline-size: max-content;
-  max-inline-size: 100%;
+  field-sizing: initial;
+  inline-size: 12ch;
+  max-inline-size: 12ch;
 }
 body.student-portal-page .news-vocabulary-definition-row {
   align-items: start;
