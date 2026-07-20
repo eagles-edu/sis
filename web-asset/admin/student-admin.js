@@ -21993,7 +21993,7 @@
         );
         state.currentStudent = result.student;
         fillStudentForm(state.currentStudent);
-        document.getElementById("g_id").value = "";
+        document.getElementById("g_id").value = normalizeText(result.record?.id);
         setStatus("Grade record saved.");
       }
 

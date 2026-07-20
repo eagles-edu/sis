@@ -3,6 +3,7 @@ set -euo pipefail
 
 SOURCE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEMPLATE_DIR="${SOURCE_ROOT}/ops/systemd"
+BACKUP_SOURCE_ROOT="${SIS_BACKUP_SOURCE_ROOT:-${SOURCE_ROOT}}"
 
 RUNTIME_ROOT="${SIS_RUNTIME_ROOT:-/home/admin.eagles.edu.vn/sis}"
 ENV_FILE="${SIS_ENV_FILE:-${RUNTIME_ROOT}/.env}"
@@ -25,6 +26,8 @@ Usage: tools/install-maintenance-systemd.sh [options]
 
 Options:
   --runtime-root PATH     Runtime root (default: /home/admin.eagles.edu.vn/sis)
+  --backup-source-root PATH
+                           Source root containing the backup tool (default: this repo)
   --env-file PATH         Environment file for units (default: <runtime-root>/.env)
   --user NAME             Service user (default: eagles)
   --group NAME            Service group (default: eagles)
@@ -43,6 +46,7 @@ EOF
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --runtime-root) RUNTIME_ROOT="${2:-}"; shift 2 ;;
+    --backup-source-root) BACKUP_SOURCE_ROOT="${2:-}"; shift 2 ;;
     --env-file) ENV_FILE="${2:-}"; shift 2 ;;
     --user) USER_NAME="${2:-}"; shift 2 ;;
     --group) GROUP_NAME="${2:-}"; shift 2 ;;
@@ -78,6 +82,7 @@ render_template() {
   local input="$1"
   sed \
     -e "s/{{RUNTIME_ROOT}}/$(escape_sed "${RUNTIME_ROOT}")/g" \
+    -e "s/{{SOURCE_ROOT}}/$(escape_sed "${BACKUP_SOURCE_ROOT}")/g" \
     -e "s/{{ENV_FILE}}/$(escape_sed "${ENV_FILE}")/g" \
     -e "s/{{USER}}/$(escape_sed "${USER_NAME}")/g" \
     -e "s/{{GROUP}}/$(escape_sed "${GROUP_NAME}")/g" \

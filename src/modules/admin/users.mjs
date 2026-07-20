@@ -97,7 +97,7 @@ function parseScryptHash(hashValue) {
  * @param {unknown} password
  * @returns {string}
  */
-function hashScryptPassword(password) {
+export function hashScryptPassword(password) {
   const normalizedPassword = normalizeText(password)
   assertWithStatus(normalizedPassword.length >= 8, 400, "password must be at least 8 characters")
 

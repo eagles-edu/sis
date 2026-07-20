@@ -6965,7 +6965,10 @@ async function handleApiRequest(request, response, pathname, url) {
   if (method === "POST" && pathname === ADMIN_STUDENTS_PREFIX) {
     assertStoreEnabled()
     const payload = await parseBody(request)
-    const result = await saveStudent(payload)
+    const result = await saveStudent(payload, "", {
+      updatedByUsername: session?.username,
+      updatedByRole: session?.role,
+    })
     sendJson(response, 200, result)
     return true
   }
@@ -7105,7 +7108,10 @@ async function handleApiRequest(request, response, pathname, url) {
 
     if (method === "PUT") {
       const payload = await parseBody(request)
-      const result = await saveStudent(payload, studentRefId)
+      const result = await saveStudent(payload, studentRefId, {
+        updatedByUsername: session?.username,
+        updatedByRole: session?.role,
+      })
       sendJson(response, 200, result)
       return true
     }

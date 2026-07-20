@@ -84,18 +84,42 @@ function makeMockTransport() {
   }
 }
 
-async function fetchLocal(port, pathname, init = {}) {
-  return fetch(`http://127.0.0.1:${port}${pathname}`, init)
+async function fetchLocal(requestPort, pathname, init = {}) {
+  await ensureAdminTestServer({ unref: true })
+  const effectivePort = Number.isInteger(requestPort) && requestPort > 0 ? requestPort : port
+  return fetch(`http://127.0.0.1:${effectivePort}${pathname}`, init)
 }
 
 let server
 let port
+let serverStartPromise
 let adminSessionCookie = ""
 let teacherSessionCookie = ""
 let parentSessionCookie = ""
 let studentSessionCookie = ""
 let assignmentAnnouncementPreviewPath = ""
 let persistedUiSettingsPath = ""
+
+async function ensureAdminTestServer({ unref = false } = {}) {
+  if (server && Number.isInteger(port) && port > 0) return
+  if (serverStartPromise) {
+    await serverStartPromise
+    return
+  }
+  serverStartPromise = (async () => {
+    const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
+    server = await startExerciseMailer({ transporter: makeMockTransport(), port: 0 })
+    await new Promise((resolve) => server.once("listening", resolve))
+    port = server.address().port
+    assert.ok(Number.isInteger(port) && port > 0)
+    if (unref) server.unref()
+  })()
+  try {
+    await serverStartPromise
+  } finally {
+    serverStartPromise = null
+  }
+}
 
 test("parseSpreadsheetRowsFromUploadPayload parses xlsx payload", () => {
   const workbook = XLSX.utils.book_new()
@@ -1038,11 +1062,7 @@ test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinishe
 })
 
 test("start server for admin routes", async () => {
-  const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
-  server = await startExerciseMailer({ transporter: makeMockTransport(), port: 0 })
-  await new Promise((resolve) => server.once("listening", resolve))
-  port = server.address().port
-  assert.ok(Number.isInteger(port) && port > 0)
+  await ensureAdminTestServer()
 })
 
 test("admin auth CORS allows loopback preview origins", async () => {

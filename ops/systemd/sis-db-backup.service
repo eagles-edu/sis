@@ -10,4 +10,4 @@ Group={{GROUP}}
 WorkingDirectory={{RUNTIME_ROOT}}
 EnvironmentFile={{ENV_FILE}}
 Environment=DOTENV_CONFIG_PATH={{ENV_FILE}}
-ExecStart={{NODE_BIN}} -r dotenv/config {{RUNTIME_ROOT}}/tools/db-backup-failsafe.mjs
+ExecStart={{NODE_BIN}} -r dotenv/config {{SOURCE_ROOT}}/tools/db-backup-failsafe.mjs

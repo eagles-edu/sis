@@ -4,6 +4,8 @@ import { getConfiguredDatabaseUrlSync } from "./sis-config-store.mjs"
 import { invalidateLevelAndSchoolFiltersCache } from "./student-admin-queries.mjs"
 import { getStudentById as getStudentRosterById } from "./student-roster.mjs"
 import { canonicalizeLevel as canonicalizeCatalogLevel } from "./level-catalog.mjs"
+import { hashScryptPassword } from "./users.mjs"
+import { writeStudentProfileBackupSnapshot } from "./student-profile-backups.mjs"
 
 /**
  * @typedef {{
@@ -21,6 +23,8 @@ import { canonicalizeLevel as canonicalizeCatalogLevel } from "./level-catalog.m
  *
  * @typedef {{
  *   skipFilterCacheInvalidation?: boolean,
+ *   updatedByUsername?: unknown,
+ *   updatedByRole?: unknown,
  * }} SaveStudentOptions
  */
 
@@ -884,6 +888,22 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
 
   const studentEmail = normalizeNullableEmail(payload.email)
   const profilePayload = normalizeProfilePayload(payload.profile || {})
+  const rawFormPayload =
+    profilePayload.rawFormPayload && typeof profilePayload.rawFormPayload === "object" ?
+      { ...profilePayload.rawFormPayload }
+    : {}
+  const normalizedFormPayload =
+    profilePayload.normalizedFormPayload && typeof profilePayload.normalizedFormPayload === "object" ?
+      { ...profilePayload.normalizedFormPayload }
+    : {}
+  const portalPassword = normalizeText(
+    rawFormPayload.password || normalizedFormPayload.password || payload.password,
+  )
+  delete rawFormPayload.password
+  delete normalizedFormPayload.password
+  profilePayload.rawFormPayload = rawFormPayload
+  profilePayload.normalizedFormPayload = normalizedFormPayload
+  const portalPasswordHash = portalPassword ? hashScryptPassword(portalPassword) : ""
   const profileEmail = profilePayload.studentEmail || null
   const persistedEmail = profileEmail || studentEmail
   const requestedStudentNumber = requestedStudentNumberFromPayload(payload)
@@ -936,6 +956,22 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
         ...profilePayload,
       },
     })
+    if (portalPasswordHash) {
+      await client.studentPortalAccount.upsert({
+        where: { eaglesId: student.eaglesId },
+        update: {
+          passwordHash: portalPasswordHash,
+          status: "active",
+          studentRefId: student.id,
+        },
+        create: {
+          eaglesId: student.eaglesId,
+          passwordHash: portalPasswordHash,
+          status: "active",
+          studentRefId: student.id,
+        },
+      })
+    }
 
     return {
       action: "updated",
@@ -964,6 +1000,16 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
       ...profilePayload,
     },
   })
+  if (portalPasswordHash) {
+    await client.studentPortalAccount.create({
+      data: {
+        eaglesId: student.eaglesId,
+        passwordHash: portalPasswordHash,
+        status: "active",
+        studentRefId: student.id,
+      },
+    })
+  }
 
   return {
     action: "created",
@@ -999,15 +1045,47 @@ async function resolveNextStudentNumberForClient(client, floor = STUDENT_NUMBER_
 export async function saveStudent(payload = {}, studentRefId = "", options = {}) {
   const prisma = await getPrismaClient()
   const skipFilterCacheInvalidation = options.skipFilterCacheInvalidation === true
+  const requestedId = normalizeText(studentRefId)
+  const existing = requestedId
+    ? await prisma.student.findUnique({
+        where: { id: requestedId },
+        include: { profile: true, studentPortalAccount: true },
+      })
+    : null
+  await writeStudentProfileBackupSnapshot({
+    studentRefId: requestedId || normalizeText(payload.eaglesId) || "new-student",
+    action: requestedId ? "updated" : "created",
+    phase: "pre-save",
+    actorUsername: options.updatedByUsername,
+    actorRole: options.updatedByRole,
+    data: existing || payload,
+  })
   const result = await prisma.$transaction((tx) => saveStudentWithClient(tx, payload, studentRefId))
 
   if (!skipFilterCacheInvalidation) {
     await invalidateLevelAndSchoolFiltersCache()
   }
 
+  const savedStudent = await getStudentRosterById(result.studentRefId)
+  try {
+    await writeStudentProfileBackupSnapshot({
+      studentRefId: result.studentRefId,
+      action: result.action,
+      phase: "post-save",
+      actorUsername: options.updatedByUsername,
+      actorRole: options.updatedByRole,
+      data: savedStudent,
+    })
+  } catch (error) {
+    console.error("student profile post-save backup failed", {
+      studentRefId: result.studentRefId,
+      error: normalizeText(error?.message || error),
+    })
+  }
+
   return {
     action: result.action,
-    student: await getStudentRosterById(result.studentRefId),
+    student: savedStudent,
   }
 }
 
@@ -1026,6 +1104,13 @@ export async function deleteStudent(studentRefId) {
     await tx.studentAttendance.deleteMany({ where: { studentRefId: id } })
     await tx.exerciseSubmission.deleteMany({ where: { studentRefId: id } })
     await tx.studentIntakeSubmission.deleteMany({ where: { studentRefId: id } })
+    await tx.studentNewsReport.deleteMany({ where: { studentRefId: id } })
+    await tx.studentPointsAdjustment.deleteMany({ where: { studentRefId: id } })
+    await tx.parentPortalStudentLink.deleteMany({ where: { studentRefId: id } })
+    await tx.parentProfileSubmissionQueue.deleteMany({ where: { studentRefId: id } })
+    await tx.parentProfileFieldLock.deleteMany({ where: { studentRefId: id } })
+    await tx.studentEnrollmentPeriod.deleteMany({ where: { studentRefId: id } })
+    await tx.studentPortalAccount.deleteMany({ where: { studentRefId: id } })
     await tx.studentProfile.deleteMany({ where: { studentRefId: id } })
     await tx.student.delete({ where: { id } })
   })
