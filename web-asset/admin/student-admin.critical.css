@@ -348,8 +348,8 @@ body.admin-portal-page #authBootPanel .small,
 body.student-portal-page #loginPanel .muted,
 body.parent-portal-page #loginCard .muted,
 body.admin-portal-page #authPanel .muted {
-  font-size: 0.98rem;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.4;
 }
 body.student-portal-page #loginPanel p,
 body.parent-portal-page #loginCard p,

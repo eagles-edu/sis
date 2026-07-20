@@ -69,6 +69,7 @@
           selectionsByStudentId: {},
           studentDetailsByStudentId: {},
           tileConfigByLevel: {},
+          saveBusy: false,
         },
         parentTracking: {
           selectedLevel: "",
@@ -2795,6 +2796,20 @@
         ["g8", "B1 PET"],
         ["g9", "B2+ IELTS"],
         ["g10", "C1+ TAYK"],
+        ["grade4", "Pre-A1 Starters"],
+        ["grade5", "A1 Movers"],
+        ["grade6", "A2 Flyers"],
+        ["grade7", "A2 KET"],
+        ["grade8", "B1 PET"],
+        ["grade9", "B2+ IELTS"],
+        ["grade10", "C1+ TAYK"],
+        ["level4", "Pre-A1 Starters"],
+        ["level5", "A1 Movers"],
+        ["level6", "A2 Flyers"],
+        ["level7", "A2 KET"],
+        ["level8", "B1 PET"],
+        ["level9", "B2+ IELTS"],
+        ["level10", "C1+ TAYK"],
       ]);
 
       const LEVEL_THEME_LOOKUP = new Map(
@@ -8780,7 +8795,7 @@
       }
 
       async function hydrateUiSettingsFromServer() {
-        if (!canManageSettings()) return null;
+        if (!canReadData()) return null;
         try {
           const result = await api(ADMIN_UI_SETTINGS_PATH);
           const candidate =
@@ -8831,6 +8846,7 @@
       const CLASS_LEVEL_TILE_STYLE_STORAGE_KEY = "sis.admin.levelTiles.v1";
       const LEGACY_ATTENDANCE_LEVEL_TILE_STORAGE_KEY =
         "sis.admin.attendance.levelTiles.v1";
+      const ATTENDANCE_FORM_STORAGE_KEY = "sis.admin.attendance.form.v1";
       const ATTENDANCE_STATUS_CHOICES = ["absent", "present", "tardy10", "tardy30"];
 
       function attendanceTodayIsoDate() {
@@ -8892,6 +8908,34 @@
           void error;
         }
         return normalized;
+      }
+
+      function loadAttendanceFormContextFromStorage() {
+        try {
+          const raw = window.localStorage.getItem(ATTENDANCE_FORM_STORAGE_KEY);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+          return {
+            selectedLevel: normalizeText(parsed.selectedLevel),
+          };
+        } catch (error) {
+          void error;
+          return {};
+        }
+      }
+
+      function persistAttendanceFormContext() {
+        try {
+          window.localStorage.setItem(
+            ATTENDANCE_FORM_STORAGE_KEY,
+            JSON.stringify({
+              selectedLevel: normalizeText(state.attendanceLanding?.selectedLevel),
+            }),
+          );
+        } catch (error) {
+          void error;
+        }
       }
 
       state.uiSettings = loadUiSettingsFromStorage();
@@ -20435,7 +20479,14 @@
 
         if (levelSelect)
           levelSelect.innerHTML = '<option value="">All levels</option>';
-        if (schoolSelect) schoolSelect.innerHTML = '<option value="">All schools</option>';
+        const configuredSchoolName = normalizeText(state.uiSettings?.schoolProfile?.schoolName);
+        const singleSchoolMode = state.uiSettings?.multiSchool !== true && Boolean(configuredSchoolName);
+        if (schoolSelect) {
+          schoolSelect.innerHTML = singleSchoolMode ?
+            `<option value="${escapeHtml(configuredSchoolName)}">${escapeHtml(configuredSchoolName)}</option>`
+            : '<option value="">All schools</option>';
+          if (singleSchoolMode) schoolSelect.value = configuredSchoolName;
+        }
 
         const filterLevels = (data.levels || []).map((entry) =>
           normalizeLevelName(entry),
@@ -20461,11 +20512,11 @@
             unenrolledOption.selected = true;
           levelSelect.appendChild(unenrolledOption);
         }
-        (data.schools || []).forEach((school) => {
+        (singleSchoolMode ? [configuredSchoolName] : (data.schools || [])).forEach((school) => {
           const option = document.createElement("option");
           option.value = school;
           option.textContent = school;
-          if (normalizeLower(option.value) === normalizeLower(currentSchool))
+          if (singleSchoolMode || normalizeLower(option.value) === normalizeLower(currentSchool))
             option.selected = true;
           if (schoolSelect) schoolSelect.appendChild(option);
         });
@@ -21047,19 +21098,37 @@
       }
 
       function ensureAttendanceLandingFormDefaults() {
+        const stored = loadAttendanceFormContextFromStorage();
         const dateEl = document.getElementById("a_date");
         const yearEl = document.getElementById("a_schoolYear");
         const quarterEl = document.getElementById("a_quarter");
-        if (dateEl && !normalizeText(dateEl.value))
-          dateEl.value = attendanceTodayIsoDate();
+        if (!normalizeText(state.attendanceLanding?.selectedLevel) && stored.selectedLevel) {
+          state.attendanceLanding.selectedLevel = resolveSystemLevelName(stored.selectedLevel);
+        }
+        if (dateEl) dateEl.value = attendanceTodayIsoDate();
         const classDate = normalizeText(
           dateEl?.value || attendanceTodayIsoDate(),
         ).slice(0, 10);
-        if (yearEl && !normalizeText(yearEl.value))
-          yearEl.value = defaultAttendanceSchoolYear(classDate);
-        if (quarterEl && !normalizeText(document.getElementById("a_id")?.value))
-          quarterEl.value = quarterFromIsoDate(classDate);
+        if (yearEl) yearEl.value = defaultAttendanceSchoolYear(classDate);
+        if (quarterEl) quarterEl.value = quarterFromIsoDate(classDate);
         updateAttendanceQuarterWarning();
+        persistAttendanceFormContext();
+      }
+
+      function setAttendanceSaveResult(message = "", isError = false) {
+        const resultEl = document.getElementById("attendanceSaveResult");
+        if (!resultEl) return;
+        resultEl.style.color = isError ? "#bd2f2f" : "";
+        resultEl.textContent = normalizeText(message);
+      }
+
+      function setAttendanceSaveBusy(isBusy, processed = 0, total = 0) {
+        state.attendanceLanding.saveBusy = Boolean(isBusy);
+        const button = document.getElementById("attendanceLandingSaveAllBtn");
+        if (!button) return;
+        button.disabled = Boolean(isBusy);
+        button.setAttribute("aria-busy", String(Boolean(isBusy)));
+        button.textContent = isBusy ? `Saving ${processed}/${total}...` : "Save All";
       }
 
       function syncAttendanceLevelEditorInputs() {
@@ -21154,6 +21223,7 @@
                 return;
               state.attendanceLanding.selectedLevel = canonicalLevel;
               state.attendanceLanding.selectionsByStudentId = {};
+              persistAttendanceFormContext();
               renderAttendanceLevelTiles();
               refreshAttendanceLanding({ reloadRows: true }).catch(handleError);
             });
@@ -21429,8 +21499,10 @@
           renderAttendanceAdminRows([]);
           return;
         }
-        const hydratePromise =
-          hydrate ? hydrateAttendanceLandingDetails(students) : Promise.resolve();
+        // A fresh page has no detail cache.  Load it before deriving the radio
+        // selections: rendering defaults first made saved attendance look blank
+        // after a reload, because the later fetch only re-rendered those defaults.
+        if (hydrate) await hydrateAttendanceLandingDetails(students);
         students.forEach((student) => {
           if (state.attendanceLanding.selectionsByStudentId[student.id]) return;
           if (!dateValue) {
@@ -21448,19 +21520,6 @@
         });
         renderAttendanceLandingRows(students);
         renderAttendanceAdminRows(students);
-        if (hydrate) {
-          void hydratePromise
-            .then(() => {
-              if (!hasLiveDom()) return;
-              const latestLevel = resolveSystemLevelName(
-                state.attendanceLanding?.selectedLevel || "",
-              );
-              if (!levelNamesMatch(latestLevel, selectedLevel)) return;
-              renderAttendanceLandingRows(students);
-              renderAttendanceAdminRows(students);
-            })
-            .catch(handleError);
-        }
       }
 
       async function refreshAttendanceLanding({ reloadRows = false } = {}) {
@@ -21485,6 +21544,7 @@
       }
 
       async function saveAttendanceLandingForSelectedLevel() {
+        if (state.attendanceLanding.saveBusy) return;
         if (!canWriteData())
           throw new Error("Attendance updates are read-only for this role.");
         const selectedLevel = resolveSystemLevelName(
@@ -21504,71 +21564,94 @@
         await hydrateAttendanceLandingDetails(students);
 
         let saved = 0;
-        let skipped = 0;
-        for (let i = 0; i < students.length; i += 1) {
-          const student = students[i];
-          const choice =
-            state.attendanceLanding.selectionsByStudentId[student.id] || "absent";
-          const mapped = attendanceChoiceToRecord(choice);
-          const detail =
-            state.attendanceLanding.studentDetailsByStudentId[student.id] || student;
-          const existing = attendanceRecordForDate(
-            detail?.attendanceRecords || [],
-            payload.attendanceDate,
-          );
-          const previousChoice = existing ? attendanceChoiceFromRecord(existing) : "";
-          const sameClass =
-            normalizeLower(existing?.className || "") ===
-            normalizeLower(payload.className || "");
-          const sameQuarter =
-            normalizeLower(existing?.quarter || "") ===
-            normalizeLower(payload.quarter || "");
-          const sameYear =
-            normalizeLower(existing?.schoolYear || "") ===
-            normalizeLower(payload.schoolYear || "");
-          if (
-            existing &&
-            previousChoice === choice &&
-            sameClass &&
-            sameQuarter &&
-            sameYear
-          ) {
-            skipped += 1;
-            continue;
-          }
-
-          const result = await api(
-            `/api/admin/students/${encodeURIComponent(student.id)}/attendance`,
-            {
-              method: "POST",
-              body: {
-                id: existing?.id || "",
-                className: payload.className,
-                schoolYear: payload.schoolYear,
-                quarter: payload.quarter,
-                attendanceDate: payload.attendanceDate,
-                status: mapped.status,
-                comments: mapped.comments,
-                level: selectedLevel,
-              },
-            },
-          );
-          if (result?.student?.id) {
-            state.attendanceLanding.studentDetailsByStudentId[student.id] =
-              result.student;
-            if (state.currentStudent?.id === result.student.id) {
-              state.currentStudent = result.student;
-              fillStudentForm(state.currentStudent);
+        let corrected = 0;
+        let unchanged = 0;
+        const total = students.length;
+        const scopeLabel = `${fullLevelLabel(selectedLevel)}, ${formatDate(payload.attendanceDate)}`;
+        setAttendanceSaveResult(`Saving 0/${total} for ${scopeLabel}...`);
+        setAttendanceSaveBusy(true, 0, total);
+        try {
+          for (let i = 0; i < students.length; i += 1) {
+            const student = students[i];
+            const choice =
+              state.attendanceLanding.selectionsByStudentId[student.id] || "absent";
+            const mapped = attendanceChoiceToRecord(choice);
+            const detail =
+              state.attendanceLanding.studentDetailsByStudentId[student.id] || student;
+            const existing = attendanceRecordForDate(
+              detail?.attendanceRecords || [],
+              payload.attendanceDate,
+            );
+            const previousChoice = existing ? attendanceChoiceFromRecord(existing) : "";
+            const sameClass =
+              normalizeLower(existing?.className || "") ===
+              normalizeLower(payload.className || "");
+            const sameQuarter =
+              normalizeLower(existing?.quarter || "") ===
+              normalizeLower(payload.quarter || "");
+            const sameYear =
+              normalizeLower(existing?.schoolYear || "") ===
+              normalizeLower(payload.schoolYear || "");
+            if (
+              existing &&
+              previousChoice === choice &&
+              sameClass &&
+              sameQuarter &&
+              sameYear
+            ) {
+              unchanged += 1;
+              setAttendanceSaveBusy(true, i + 1, total);
+              continue;
             }
-          }
-          saved += 1;
-        }
 
-        await refreshAttendanceLandingRows({ hydrate: false });
-        await refreshDashboardSummaryAfterAttendanceChange();
-        setStatus(
-          `Attendance saved for ${fullLevelLabel(selectedLevel)} (saved=${saved}, skipped=${skipped}).`,
-        );
+            let result;
+            try {
+              result = await api(
+                `/api/admin/students/${encodeURIComponent(student.id)}/attendance`,
+                {
+                  method: "POST",
+                  body: {
+                    id: existing?.id || "",
+                    className: payload.className,
+                    schoolYear: payload.schoolYear,
+                    quarter: payload.quarter,
+                    attendanceDate: payload.attendanceDate,
+                    status: mapped.status,
+                    comments: mapped.comments,
+                    level: selectedLevel,
+                  },
+                },
+              );
+            } catch (error) {
+              const studentLabel = studentDisplayName(student, { preferEnglish: true }) || normalizeText(student?.eaglesId) || "this student";
+              const message = `Attendance could not be saved for ${studentLabel} — ${scopeLabel}. ${error?.message || String(error)}`;
+              setAttendanceSaveResult(message, true);
+              throw new Error(message);
+            }
+            if (result?.student?.id) {
+              state.attendanceLanding.studentDetailsByStudentId[student.id] =
+                result.student;
+              if (state.currentStudent?.id === result.student.id) {
+                state.currentStudent = result.student;
+                fillStudentForm(state.currentStudent);
+              }
+            }
+            if (existing) corrected += 1;
+            else saved += 1;
+            setAttendanceSaveBusy(true, i + 1, total);
+          }
+
+          await refreshAttendanceLandingRows({ hydrate: false });
+          await refreshDashboardSummaryAfterAttendanceChange();
+          persistAttendanceFormContext();
+          const summary = saved || corrected ?
+            `Saved ${saved}; corrected ${corrected}; unchanged ${unchanged} — ${scopeLabel}.` :
+            `No changes — all ${unchanged} records already match — ${scopeLabel}.`;
+          setAttendanceSaveResult(summary);
+          setStatus(summary);
+        } finally {
+          setAttendanceSaveBusy(false);
+        }
       }
 
       function applyAttendanceLevelTileStyle() {
@@ -21714,6 +21797,7 @@
         renderAttendanceLandingSummary(selectedAttendanceLevelStudents());
         renderAttendanceLandingRows(selectedAttendanceLevelStudents());
         renderAttendanceAdminRows(selectedAttendanceLevelStudents());
+        persistAttendanceFormContext();
       }
 
       async function saveAttendance() {
@@ -22354,11 +22438,9 @@
             showUserPanel();
           });
         }
-        if (canManageSettings()) {
-          bootConfigTasks.push(async () => {
-            await hydrateUiSettingsFromServer();
-            applyUiSettings();
-          });
+        if (canReadData()) {
+          await hydrateUiSettingsFromServer();
+          applyUiSettings();
         }
         const activePage = normalizePageSlug(state.activePage);
         const pageNeedsStudentList = new Set([
@@ -22412,6 +22494,8 @@
           syncUrl: shouldSyncPagePathInHistory(),
           historyMode: "replace",
         });
+
+        ensureAttendanceLandingFormDefaults();
 
         if (bootConfigTasks.length) {
           bootConfigTasks.forEach((task) => scheduleAfterFirstPaint(task, 2500));
@@ -24087,9 +24171,14 @@
         bindById("a_date", "change", () => {
           syncAttendanceDateDerivedFields();
           state.attendanceLanding.selectionsByStudentId = {};
+          persistAttendanceFormContext();
           refreshAttendanceLandingRows({ hydrate: false }).catch(handleError);
         });
-        bindById("a_quarter", "change", updateAttendanceQuarterWarning);
+        bindById("a_schoolYear", "change", persistAttendanceFormContext);
+        bindById("a_quarter", "change", () => {
+          updateAttendanceQuarterWarning();
+          persistAttendanceFormContext();
+        });
         bindById("attendanceClearBtn", "click", () => {
           clearAttendanceForm();
           setStatus("Attendance form cleared.");

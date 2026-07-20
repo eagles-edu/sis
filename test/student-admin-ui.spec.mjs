@@ -7136,8 +7136,9 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
   dom.window.close()
 })
 
-test("attendance main defaults to absent and admin child shows per-student stats", async () => {
+test("attendance main reloads saved statuses and admin child shows per-student stats", async () => {
   let dashboardCalls = 0
+  const attendanceToday = localIsoDate(new Date())
   const attendanceSaturday = (() => {
     const now = new Date()
     const day = now.getDay()
@@ -7227,6 +7228,7 @@ test("attendance main defaults to absent and admin child shows per-student stats
         studentNumber: 1001,
         profile: { fullName: "Student One", currentGrade: "Eggs & Chicks" },
         attendanceRecords: [
+          { id: "att-0", attendanceDate: attendanceToday, status: "present", comments: "" },
           { id: "att-1", attendanceDate: attendanceFriday, status: "present", comments: "" },
           { id: "att-2", attendanceDate: attendanceSaturday, status: "absent", comments: "" },
           { id: "att-3", attendanceDate: attendanceSunday, status: "late", comments: "tardy 10m" },
@@ -7294,10 +7296,10 @@ test("attendance main defaults to absent and admin child shows per-student stats
     eggsLevelTile.click()
   })
   await waitFor(() => {
-    const absentChecked = dom.window.document.querySelector(
-      '#attendanceLandingRows input[type="radio"][value="absent"]:checked'
+    const presentChecked = dom.window.document.querySelector(
+      '#attendanceLandingRows input[type="radio"][value="present"]:checked'
     )
-    assert.ok(absentChecked)
+    assert.ok(presentChecked)
   })
   assert.equal(
     dom.window.document.getElementById("a_quarter").value,
@@ -7307,8 +7309,8 @@ test("attendance main defaults to absent and admin child shows per-student stats
   await waitFor(() => {
     const summaryText = normalizeText(dom.window.document.getElementById("attendanceLandingSummary")?.textContent)
     assert.match(summaryText, /students=1/i)
-    assert.match(summaryText, /present=0 \(0\.0%\)/i)
-    assert.match(summaryText, /absent=1/i)
+    assert.match(summaryText, /present=1 \(100\.0%\)/i)
+    assert.match(summaryText, /absent=0/i)
     assert.match(summaryText, /totalTardy=0 \(0\.0%\)/i)
   })
   dom.window.document.getElementById("a_date").value = attendanceSunday
@@ -7324,7 +7326,9 @@ test("attendance main defaults to absent and admin child shows per-student stats
   dom.window.document.getElementById("attendanceLandingSaveAllBtn")?.click()
   await waitFor(() => {
     const statusText = normalizeText(dom.window.document.getElementById("status")?.textContent)
-    assert.match(statusText, /Attendance saved for Eggs & Chicks/i)
+    const saveResultText = normalizeText(dom.window.document.getElementById("attendanceSaveResult")?.textContent)
+    assert.match(statusText, /Saved 0; corrected 1; unchanged 0 — Eggs & Chicks, 19\/07\/26/i)
+    assert.equal(saveResultText, statusText)
     assert.ok(dashboardCalls > dashboardCallsBeforeSave)
   })
 
@@ -7337,20 +7341,20 @@ test("attendance main defaults to absent and admin child shows per-student stats
     assert.ok(row)
     const cells = row.querySelectorAll("td")
     assert.equal(cells.length, 7)
-    assert.equal((cells[1].textContent || "").trim(), "2")
+    assert.equal((cells[1].textContent || "").trim(), "3")
     assert.equal((cells[2].textContent || "").trim(), "1")
     assert.equal((cells[3].textContent || "").trim(), "1")
     assert.equal((cells[4].textContent || "").trim(), "0")
-    assert.equal((cells[5].textContent || "").trim(), "66.7%")
-    assert.equal((cells[6].textContent || "").trim(), "33.3%")
+    assert.equal((cells[5].textContent || "").trim(), "75.0%")
+    assert.equal((cells[6].textContent || "").trim(), "25.0%")
   })
   await waitFor(() => {
     const summaryText = normalizeText(dom.window.document.getElementById("attendanceAdminSummary")?.textContent)
     assert.match(summaryText, /students=1/i)
-    assert.match(summaryText, /present=2 \(66\.7%\)/i)
+    assert.match(summaryText, /present=3 \(75\.0%\)/i)
     assert.match(summaryText, /absent=1/i)
     assert.match(summaryText, /tardy10=1/i)
-    assert.match(summaryText, /totalTardy=1 \(33\.3%\)/i)
+    assert.match(summaryText, /totalTardy=1 \(25\.0%\)/i)
   })
   await waitFor(() => {
     const riskSummary = normalizeText(dom.window.document.getElementById("attendanceAdminRiskSummary")?.textContent)

@@ -5,6 +5,7 @@ import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { resolveEnrollmentPeriodForStudent } from "./enrollment-periods.mjs"
 import { buildStudentReportCardPayload } from "../../../server/student-report-card-pdf.mjs"
 import { recordParentClassReportEvent } from "./parent-report-events.mjs"
+import { canonicalizeLevel as canonicalizeCatalogLevel } from "./level-catalog.mjs"
 
 /**
  * @param {unknown} value
@@ -253,10 +254,7 @@ const PARENT_REPORT_PARTICIPATION_POINTS_MAX = 32
  * @returns {string}
  */
 function canonicalizeLevel(value) {
-  const text = normalizeText(value)
-  if (!text) return ""
-  const key = normalizeLevelKey(text)
-  return LEVEL_ALIAS_MAP.get(key) || text
+  return canonicalizeCatalogLevel(value)
 }
 
 /**
@@ -505,6 +503,8 @@ export function mapParentClassReport(report) {
         : null
   return {
     ...report,
+    className: canonicalizeLevel(report?.className),
+    level: canonicalizeLevel(report?.level),
     enrollmentPeriodId: normalizeText(report?.enrollmentPeriodId),
     workflowState: normalizeParentReportWorkflowState(report?.workflowState),
     submittedAt: parseDateOrNull(report?.submittedAt)?.toISOString?.() || normalizeText(report?.submittedAt),
@@ -633,7 +633,7 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
   const studentRef = normalizeText(studentRefId)
   assertWithStatus(Boolean(studentRef), 400, "studentRefId is required")
 
-  const className = normalizeText(payload.className)
+  const className = canonicalizeLevel(payload.className)
   const schoolYear = normalizeText(payload.schoolYear)
   const quarter = normalizeQuarter(payload.quarter)
 
@@ -667,7 +667,7 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
   const participationPointsAward = normalizeReportParticipationPoints(payload.participationPointsAward)
   const reportData = {
     className,
-    level: normalizeNullableText(payload.level),
+    level: normalizeNullableText(canonicalizeLevel(payload.level)),
     schoolYear,
     quarter,
     enrollmentPeriodId: normalizeNullableText(payload.enrollmentPeriodId),
@@ -843,7 +843,7 @@ export async function generateParentClassReportFromGrades(studentRefId, payload 
   const studentRef = normalizeText(studentRefId)
   assertWithStatus(Boolean(studentRef), 400, "studentRefId is required")
 
-  const className = normalizeText(payload.className)
+  const className = canonicalizeLevel(payload.className)
   const schoolYear = normalizeText(payload.schoolYear)
   const quarter = normalizeQuarter(payload.quarter)
 
@@ -874,7 +874,7 @@ export async function generateParentClassReportFromGrades(studentRefId, payload 
 
   const reportPayload = {
     className,
-    level: normalizeNullableText(payload.level),
+    level: normalizeNullableText(canonicalizeLevel(payload.level)),
     schoolYear,
     quarter,
     homeworkCompletionRate: percentage(homeworkCompleted, homeworkTotal),

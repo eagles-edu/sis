@@ -132,6 +132,22 @@ test("student part-of-speech selectors use a fixed longest-option width", () => 
   assert.doesNotMatch(SHARED_THEME, /select\[data-vocabulary-field="partOfSpeech"\][\s\S]*?field-sizing: content;/)
 })
 
+test("student Save clears stale MMR UI without clearing saved form data", () => {
+  assert.match(STUDENT_HTML, /if \(saved\?\.item\) applyOpenReport\(saved\.item, \{ preserveExistingValidation: false \}\)/)
+  assert.match(STUDENT_HTML, /applyNewsFieldValidationUi\(\{\}, \[\], \{\}, \[\]\)/)
+  assert.match(STUDENT_HTML, /setNewsComplianceModalOpen\(false\)/)
+  assert.match(STUDENT_HTML, /setFormStatus\(auto \? "Draft autosaved\." : "Draft saved\. Check when you are ready to run MMR\."\)/)
+})
+
+test("student news report dates render Vietnamese text while retaining ISO payload values", () => {
+  assert.match(STUDENT_HTML, /id="reportDate" type="text"[^>]*placeholder="dd\/mm\/yy"/)
+  assert.match(STUDENT_HTML, /id="newsViewerReportDate" type="text"[^>]*placeholder="dd\/mm\/yy"/)
+  assert.match(STUDENT_HTML, /function setPortalReportDateInput\(id, value\)/)
+  assert.match(STUDENT_HTML, /el\.dataset\.isoDate = isoDate/)
+  assert.match(STUDENT_HTML, /reportDate: t\(field\("reportDate"\)\?\.dataset\?\.isoDate/)
+  assert.match(STUDENT_HTML, /formatPortalDate\(openDate\)/)
+})
+
 test("parent and admin vocabulary mirrors contain no student lookup controls", () => {
   assert.match(PARENT_HTML, /id="newsWeekSetModalVocabularyRows"/)
   assert.match(PARENT_HTML, /active\?\.vocabulary/)

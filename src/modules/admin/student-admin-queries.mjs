@@ -8,6 +8,10 @@ import {
   ensureEnrollmentPeriodsBackfilled,
 } from "./enrollment-periods.mjs"
 import { getConfiguredSchoolYear } from "./school-setup-store.mjs"
+import {
+  canonicalizeLevel as canonicalizeCatalogLevel,
+  resolveLevelVariants as resolveCatalogLevelVariants,
+} from "./level-catalog.mjs"
 
 /**
  * @param {unknown} value
@@ -122,10 +126,7 @@ const LEVEL_ALIAS_MAP = (() => {
  * @returns {string}
  */
 function canonicalizeLevel(value) {
-  const text = normalizeText(value)
-  if (!text) return ""
-  const key = normalizeLevelKey(text)
-  return LEVEL_ALIAS_MAP.get(key) || text
+  return canonicalizeCatalogLevel(value)
 }
 
 /**
@@ -133,14 +134,7 @@ function canonicalizeLevel(value) {
  * @returns {string[]}
  */
 function resolveLevelVariants(value) {
-  const text = normalizeText(value)
-  if (!text) return []
-  const canonical = canonicalizeLevel(text)
-  const definition = LEVEL_DEFINITIONS.find(
-    (entry) => normalizeLower(entry.canonical) === normalizeLower(canonical)
-  )
-  if (!definition) return [text]
-  return Array.from(new Set([definition.canonical, ...(definition.aliases || [])]))
+  return resolveCatalogLevelVariants(value)
 }
 
 /**

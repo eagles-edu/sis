@@ -8,6 +8,7 @@ import {
 } from "./parent-reports.mjs"
 import { listStudents } from "./student-roster.mjs"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { canonicalizeLevel as canonicalizeCatalogLevel } from "./level-catalog.mjs"
 
 /**
  * @param {unknown} value
@@ -252,10 +253,7 @@ const LEVEL_ALIAS_MAP = (() => {
  * @returns {string}
  */
 function canonicalizeLevel(value) {
-  const text = normalizeText(value)
-  if (!text) return ""
-  const key = normalizeLevelKey(text)
-  return LEVEL_ALIAS_MAP.get(key) || text
+  return canonicalizeCatalogLevel(value)
 }
 
 /**

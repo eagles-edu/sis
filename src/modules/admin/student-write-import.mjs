@@ -3,6 +3,7 @@ import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { getConfiguredDatabaseUrlSync } from "./sis-config-store.mjs"
 import { invalidateLevelAndSchoolFiltersCache } from "./student-admin-queries.mjs"
 import { getStudentById as getStudentRosterById } from "./student-roster.mjs"
+import { canonicalizeLevel as canonicalizeCatalogLevel } from "./level-catalog.mjs"
 
 /**
  * @typedef {{
@@ -259,10 +260,7 @@ const LEVEL_ALIAS_MAP = (() => {
  * @returns {string}
  */
 function canonicalizeLevel(value) {
-  const text = normalizeText(value)
-  if (!text) return ""
-  const key = normalizeLevelKey(text)
-  return LEVEL_ALIAS_MAP.get(key) || text
+  return canonicalizeCatalogLevel(value)
 }
 
 /**

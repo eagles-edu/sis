@@ -15,6 +15,18 @@ const parentPortal = read("web-asset/parent/parent-portal.html")
 const studentPortal = read("web-asset/student/student-portal.html")
 const adminScript = read("web-asset/admin/student-admin.js")
 
+test("date-input pages declare Vietnam locale for native controls", () => {
+  for (const relPath of [
+    "web-asset/admin/student-admin.html",
+    "web-asset/admin/grades-tabulator.html",
+    "web-asset/admin/student-points.html",
+    "web-asset/student/student-portal.html",
+    "web-asset/parent/parent-portal.html",
+  ]) {
+    assert.match(read(relPath), /^<html lang="vi(?:-VN)?">/m)
+  }
+})
+
 test("portal date helpers use VN dd/mm/yy display", () => {
   assert.match(
     serverRoutes,
@@ -26,7 +38,7 @@ test("portal date helpers use VN dd/mm/yy display", () => {
   )
   assert.match(
     parentPortal,
-    /function formatPortalDateTime\(value\)[\s\S]*?return `\$\{day\}\/\$\{month\}\/\$\{year\} \$\{hour\}:\$\{minute\}`/,
+    /function formatPortalDateTime\(value\)[\s\S]*?return `\$\{day\}\/\$\{month\}\/\$\{year\} \$\{hour\}:\$\{minute\}:\$\{second\} \+07`/,
   )
   assert.match(
     studentPortal,
@@ -34,7 +46,7 @@ test("portal date helpers use VN dd/mm/yy display", () => {
   )
   assert.match(
     studentPortal,
-    /function formatPortalDateTime\(value\)[\s\S]*?return `\$\{day\}\/\$\{month\}\/\$\{year\} \$\{hour\}:\$\{minute\}`/,
+    /function formatPortalDateTime\(value\)[\s\S]*?return `\$\{day\}\/\$\{month\}\/\$\{year\} \$\{hour\}:\$\{minute\}:\$\{second\} \+07`/,
   )
   assert.match(
     adminScript,
@@ -42,7 +54,7 @@ test("portal date helpers use VN dd/mm/yy display", () => {
   )
   assert.match(
     adminScript,
-    /function formatDateTime\(value\)[\s\S]*?return `\$\{day\}\/\$\{month\}\/\$\{year\} \$\{hour\}:\$\{minute\}:\$\{second\}`/,
+    /function formatDateTime\(value\)[\s\S]*?return `\$\{day\}\/\$\{month\}\/\$\{year\} \$\{hour\}:\$\{minute\}:\$\{second\} \+07`/,
   )
   assert.match(
     reportCardPdf,

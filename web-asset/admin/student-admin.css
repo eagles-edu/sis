@@ -143,13 +143,13 @@
         margin: 0;
       }
       h1 {
-        font-size: 20px;
+        font-size: 22px;
       }
       h2 {
-        font-size: 16px;
+        font-size: 18px;
       }
       h3 {
-        font-size: 14px;
+        font-size: 16px;
       }
       .muted {
         color: var(--ink-muted);
@@ -1461,7 +1461,7 @@
       .table-column-controls .small,
       .attendance-column-controls .small {
         color: var(--portal-support-message);
-        font-size: 11px;
+        font-size: 15px;
         font-weight: 700;
         letter-spacing: 0.04em;
         margin: 1rem 0 .55rem 0 !important;
@@ -3186,7 +3186,8 @@
       }
       .small {
         color: var(--tertiary-color);
-        font-size: 13px;
+        font-size: 15px;
+        line-height: 1.4;
       }
       #status {
         color: var(--ink-muted);
@@ -3214,7 +3215,7 @@
       }
       .parent-tracking-save-notice .small {
         color: inherit;
-        font-size: 11px;
+        font-size: 15px;
         font-weight: 500;
       }
       .news-review-viewer-grid {

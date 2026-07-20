@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi-VN">
 
 <head>
   <meta charset="UTF-8">
@@ -1487,7 +1487,7 @@ box-shadow:
           <div class="field">
             <label for="schoolYear">School year</label>
             <select id="schoolYear">
-              <option value="current">Current school year</option>
+              <option value="2026-2027">2026-2027</option>
             </select>
           </div>
           <div class="field">
@@ -1514,7 +1514,7 @@ box-shadow:
           <div class="field">
             <label for="schoolFilter">School</label>
             <select id="schoolFilter">
-              <option value="all">All schools</option>
+              <option value="The Eagles Club">The Eagles Club</option>
             </select>
           </div>
           <div class="field">
@@ -1644,6 +1644,8 @@ box-shadow:
         uiSettingsMeta: null,
         schoolSetup: {
           schoolYear: "",
+          schoolName: "",
+          multiSchool: false,
           startDate: "",
           endDate: "",
           quarters: [],
@@ -2032,8 +2034,12 @@ box-shadow:
         })
         const startDate = normalizeText(setup?.startDate).slice(0, 10)
         const endDate = normalizeText(setup?.endDate).slice(0, 10)
+        const schoolProfile = settings && typeof settings === "object" && settings.schoolProfile && typeof settings.schoolProfile === "object" ?
+          settings.schoolProfile : {}
         state.schoolSetup = {
           schoolYear: isSchoolYearKey(schoolYear) ? schoolYear : "",
+          schoolName: normalizeText(schoolProfile.schoolName),
+          multiSchool: settings?.multiSchool === true,
           startDate: parseIsoDate(startDate) ? startDate : "",
           endDate: parseIsoDate(endDate) ? endDate : "",
           quarters: normalizeSchoolSetupQuarters(setup?.quarters),
@@ -3203,16 +3209,19 @@ box-shadow:
         }
         const schoolYearSelect = document.getElementById("schoolYear")
         if (!(schoolYearSelect instanceof HTMLSelectElement)) return
-        const hasCurrentOption = Array.from(schoolYearSelect.options || [])
-          .some((option) => normalizeText(option?.value) === "current")
-        if (!hasCurrentOption) {
+        const currentOption = Array.from(schoolYearSelect.options || [])
+          .find((option) => ["current", currentYear].includes(normalizeText(option?.value)))
+        if (currentOption) {
+          currentOption.value = currentYear
+          currentOption.textContent = currentYear
+        } else {
           const option = document.createElement("option")
-          option.value = "current"
-          option.textContent = "Current school year"
+          option.value = currentYear
+          option.textContent = currentYear
           schoolYearSelect.appendChild(option)
         }
         const selectedYear = normalizeSchoolYearFilter(state.filters.schoolYear)
-        schoolYearSelect.value = isSchoolYearKey(selectedYear) ? selectedYear : "current"
+        schoolYearSelect.value = isSchoolYearKey(selectedYear) ? selectedYear : currentYear
       }
 
       function currentQuarterForFilters() {
@@ -4584,9 +4593,24 @@ box-shadow:
             sensitivity: "base"
           }))
         replaceSelectOptions(document.getElementById("classFilter"), classValues, state.filters.classKey, "All class levels")
-        replaceSelectOptions(document.getElementById("schoolFilter"), schoolValues, state.filters.schoolKey, "All schools")
-        replaceSelectOptions(document.getElementById("schoolYear"), yearValues, state.filters.schoolYear, "Current school year", {
-          topValue: "current",
+        const schoolFilter = document.getElementById("schoolFilter")
+        const configuredSchoolName = normalizeText(state.schoolSetup?.schoolName)
+        const singleSchoolMode = state.schoolSetup?.multiSchool !== true && Boolean(configuredSchoolName)
+        if (singleSchoolMode) {
+          replaceSelectOptions(schoolFilter, [configuredSchoolName], configuredSchoolName, configuredSchoolName, {
+            includeAll: false,
+          })
+          state.filters.schoolKey = configuredSchoolName
+        } else {
+          replaceSelectOptions(schoolFilter, schoolValues, state.filters.schoolKey, "All schools")
+        }
+        const schoolYearSelect = document.getElementById("schoolYear")
+        const explicitSchoolYear = Array.from(schoolYearSelect?.options || [])
+          .map((option) => normalizeText(option?.value))
+          .find((value) => isSchoolYearKey(value)) || ""
+        const visibleSchoolYear = currentYear || explicitSchoolYear
+        replaceSelectOptions(schoolYearSelect, yearValues, state.filters.schoolYear, visibleSchoolYear || "School year", {
+          topValue: visibleSchoolYear || "current",
         })
         const studentFilter = document.getElementById("studentFilter")
         if (studentFilter instanceof HTMLSelectElement) {
@@ -4607,7 +4631,7 @@ box-shadow:
         } else if (currentYear && (activeSchoolYear === "current" || !isSchoolYearKey(activeSchoolYear) || !yearValues.includes(activeSchoolYear))) {
           state.filters.schoolYear = "current"
           const yearSelect = document.getElementById("schoolYear")
-          if (yearSelect instanceof HTMLSelectElement) yearSelect.value = state.filters.schoolYear
+          if (yearSelect instanceof HTMLSelectElement) yearSelect.value = currentYear || state.filters.schoolYear
         }
         const selectedSchoolYear = normalizeSchoolYearFilter(state.filters.schoolYear)
         const resolvedSchoolYear = normalizeOperationalSchoolYear(selectedSchoolYear)
@@ -4919,7 +4943,14 @@ box-shadow:
         const schoolYear = document.getElementById("schoolYear")
         const quarter = document.getElementById("quarter")
         if (schoolYear instanceof HTMLSelectElement) {
-          schoolYear.value = normalizeSchoolYearFilter(state.filters.schoolYear) || "current"
+          const configuredYear = currentOperationalSchoolYear()
+          const explicitSchoolYear = Array.from(schoolYear.options || [])
+            .map((option) => normalizeText(option?.value))
+            .find((value) => isSchoolYearKey(value)) || ""
+          const visibleSchoolYear = configuredYear || explicitSchoolYear
+          const selectedSchoolYear = normalizeSchoolYearFilter(state.filters.schoolYear)
+          if (isSchoolYearKey(selectedSchoolYear)) schoolYear.value = selectedSchoolYear
+          else if (visibleSchoolYear) schoolYear.value = visibleSchoolYear
         }
         if (quarter instanceof HTMLSelectElement) {
           const currentQuarter = currentQuarterForFilters()
@@ -5229,8 +5260,18 @@ box-shadow:
         state.loading = true
         try {
           await hydrateLetterGradeRanges()
+          const params = new URLSearchParams(window.location.search || "")
+          applyCurrentSchoolYearDefault({
+            force: !params.has("schoolYear"),
+          })
+          applyCurrentQuarterDefault({
+            force: !params.has("quarter"),
+          })
           await loadGradeRows()
           refreshFilterOptionLists()
+          applyCurrentQuarterDefault({
+            force: !params.has("quarter"),
+          })
           readControlValues()
           syncPeriodButtons()
           applyFilterControlState()
@@ -5253,7 +5294,9 @@ box-shadow:
           })
           applyFilterQueryOverrides()
           applyCurrentSchoolYearDefault()
-          applyCurrentQuarterDefault()
+          applyCurrentQuarterDefault({
+            force: !new URLSearchParams(window.location.search || "").has("quarter"),
+          })
           bindMenuControls()
           bindControls()
           bindTableModalControls()

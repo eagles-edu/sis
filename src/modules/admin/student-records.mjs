@@ -1,6 +1,7 @@
 // @ts-check
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { resolveEnrollmentPeriodForStudent } from "./enrollment-periods.mjs"
+import { canonicalizeLevel } from "./level-catalog.mjs"
 
 /**
  * @param {unknown} value
@@ -287,6 +288,8 @@ export function mapGradeRecordForApi(record = {}) {
   if (!record || typeof record !== "object") return record
   return {
     ...record,
+    className: canonicalizeLevel(record?.className),
+    level: canonicalizeLevel(record?.level),
     source: inferGradeRecordSource(record),
     enrollmentPeriodId: normalizeText(record?.enrollmentPeriodId),
   }
@@ -353,7 +356,7 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
   const studentRef = normalizeText(studentRefId)
   assertWithStatus(Boolean(studentRef), 400, "studentRefId is required")
 
-  const className = normalizeText(payload.className)
+  const className = canonicalizeLevel(payload.className)
   const schoolYear = normalizeText(payload.schoolYear)
   const quarter = normalizeQuarter(payload.quarter)
   const attendanceDate = normalizeDate(payload.attendanceDate)
@@ -365,7 +368,7 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
 
   const data = {
     className,
-    level: normalizeNullableText(payload.level),
+    level: normalizeNullableText(canonicalizeLevel(payload.level)),
     schoolYear,
     quarter,
     enrollmentPeriodId: normalizeNullableText(payload.enrollmentPeriodId),
@@ -484,7 +487,7 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
   const studentRef = normalizeText(studentRefId)
   assertWithStatus(Boolean(studentRef), 400, "studentRefId is required")
 
-  const className = normalizeText(payload.className)
+  const className = canonicalizeLevel(payload.className)
   const schoolYear = normalizeText(payload.schoolYear)
   const quarter = normalizeQuarter(payload.quarter)
   const assignmentName = normalizeText(payload.assignmentName)
@@ -496,7 +499,7 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
 
   const data = {
     className,
-    level: normalizeNullableText(payload.level),
+    level: normalizeNullableText(canonicalizeLevel(payload.level)),
     schoolYear,
     quarter,
     enrollmentPeriodId: normalizeNullableText(payload.enrollmentPeriodId),

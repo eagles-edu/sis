@@ -5,6 +5,10 @@ import {
   getConfiguredSchoolYear,
   getConfiguredSchoolYearStartDate,
 } from "./school-setup-store.mjs"
+import {
+  canonicalizeLevel as canonicalizeCatalogLevel,
+  resolveLevelVariants as resolveCatalogLevelVariants,
+} from "./level-catalog.mjs"
 
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
@@ -96,18 +100,11 @@ export const STUDENT_UNENROLLMENT_REASONS = Object.freeze([
 ])
 
 function canonicalizeLevel(value) {
-  const text = normalizeText(value)
-  if (!text) return ""
-  return LEVEL_ALIAS_MAP.get(normalizeKnownLevelAnomalyKey(text)) || text
+  return canonicalizeCatalogLevel(value)
 }
 
 function resolveLevelVariants(value) {
-  const text = normalizeText(value)
-  if (!text) return []
-  const canonical = canonicalizeLevel(text)
-  const definition = LEVEL_DEFINITIONS.find((entry) => normalizeLower(entry.canonical) === normalizeLower(canonical))
-  if (!definition) return [text]
-  return Array.from(new Set([definition.canonical, ...(definition.aliases || [])]))
+  return resolveCatalogLevelVariants(value)
 }
 
 function normalizeEnrollmentStatus(value, fallback = ENROLLMENT_STATUS_ACTIVE) {

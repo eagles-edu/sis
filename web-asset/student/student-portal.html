@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi-VN">
 
 <head>
   <meta charset="utf-8">
@@ -1039,7 +1039,7 @@
                     <div class="row">
                       <div class="field c4">
                         <label for="newsViewerReportDate">1. Report Date</label>
-                        <input id="newsViewerReportDate" type="date" readonly aria-readonly="true">
+                        <input id="newsViewerReportDate" type="text" readonly aria-readonly="true" inputmode="numeric" placeholder="dd/mm/yy">
                       </div>
                       <div class="field c4">
                         <h5>Status</h5>
@@ -1379,7 +1379,7 @@
               <div class="row">
                 <div class="field c3">
                   <label for="reportDate">1. Report Date</label>
-                  <input id="reportDate" type="date" readonly aria-readonly="true">
+                  <input id="reportDate" type="text" readonly aria-readonly="true" inputmode="numeric" placeholder="dd/mm/yy">
                 </div>
               </div>
 
@@ -5207,7 +5207,7 @@
               `${formatPortalDate(weekSet.weekStart)} - ${formatPortalDate(weekSet.weekEnd)} | ${studentLabel} | ${level}`;
           }
         }
-        setInputValue("newsViewerReportDate", active?.reportDate || "");
+        setPortalReportDateInput("newsViewerReportDate", active?.reportDate || "");
         setNewsViewerStatusChip(active || {});
         setInputValue(
           "newsViewerSubmittedAt",
@@ -5415,6 +5415,14 @@
         const el = field(id);
         if (!el) return;
         el.value = t(value);
+      }
+
+      function setPortalReportDateInput(id, value) {
+        const el = field(id);
+        if (!el) return;
+        const isoDate = t(value).slice(0, 10);
+        el.dataset.isoDate = isoDate;
+        el.value = isoDate ? formatPortalDate(isoDate) : "";
       }
 
       function vocabularyMinimumWords() {
@@ -5701,7 +5709,7 @@
 
       function reportPayload() {
         return {
-          reportDate: t(field("reportDate")?.value),
+          reportDate: t(field("reportDate")?.dataset?.isoDate || field("reportDate")?.value),
           sourceLink: t(field("sourceLink")?.value),
           articleTitle: t(field("articleTitle")?.value),
           byline: t(field("byline")?.value),
@@ -6197,7 +6205,7 @@
         state.newsItems = Array.isArray(data?.items) ? data.items : [];
         state.newsWeekSets = [];
         renderNewsQueue();
-        setInputValue("reportDate", t(data?.window?.reportDate));
+        setPortalReportDateInput("reportDate", t(data?.window?.reportDate));
         if (state.activeView === "news") renderCalendar(state.calendarRows);
         applyOpenReport(data?.openReport || null, {
           preserveExistingValidation: options?.preserveValidation === true,
@@ -6205,7 +6213,7 @@
         const openDate = t(data?.window?.reportDate);
         const closesAt = t(data?.window?.closesAt);
         field("windowSummary").textContent = openDate ?
-          `Open entry date: ${openDate} (window closes at ${closesAt || "today 23:59"}).` :
+          `Open entry date: ${formatPortalDate(openDate)} (window closes at ${closesAt ? formatPortalDateTime(closesAt) : "today 23:59 +07"}).` :
           "No open date currently.";
         updateSubmitAvailability();
       }
@@ -6287,7 +6295,12 @@
             method: "POST",
             body: payload,
           });
-          if (saved?.item) applyOpenReport(saved.item, { preserveExistingValidation: true });
+          if (saved?.item) applyOpenReport(saved.item, { preserveExistingValidation: false });
+          // Save is a draft-only operation. Clear stale Check/MMR markers so
+          // incomplete saved work is not presented as a new validation result.
+          applyNewsFieldValidationUi({}, [], {}, []);
+          state.newsComplianceSummary = "";
+          setNewsComplianceModalOpen(false);
           // Save never runs MMR. Any changed content must be checked again.
           state.newsCurrentMmrPassed = false;
           state.newsFormDirty = false;

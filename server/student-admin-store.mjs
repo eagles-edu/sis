@@ -14,6 +14,7 @@ import { mapGradeRecordForApi } from "../src/modules/admin/student-records.mjs"
 import { getStudentById as getStudentRosterById } from "../src/modules/admin/student-roster.mjs"
 import { getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
 import { getConfiguredDatabaseUrlSync } from "../src/modules/admin/sis-config-store.mjs"
+import { canonicalizeLevel as canonicalizeCatalogLevel } from "../src/modules/admin/level-catalog.mjs"
 export {
   buildStudentNewsCalendarRows,
   listStudentNewsCalendar,
@@ -509,10 +510,7 @@ const LEVEL_ALIAS_MAP = (() => {
 
 /** @param {unknown} value @returns {string} */
 function canonicalizeLevel(value) {
-  const text = normalizeText(value)
-  if (!text) return ""
-  const key = normalizeLevelKey(text)
-  return LEVEL_ALIAS_MAP.get(key) || text
+  return canonicalizeCatalogLevel(value)
 }
 
 /** @param {unknown} value @returns {number} */

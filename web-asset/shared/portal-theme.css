@@ -7726,8 +7726,8 @@ body.admin-portal-page #authBootPanel .small,
 body.student-portal-page #loginPanel .muted,
 body.parent-portal-page #loginCard .muted,
 body.admin-portal-page #authPanel .muted {
-  font-size: 0.98rem;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.4;
 }
 body.student-portal-page #loginPanel .field-hint,
 body.parent-portal-page #loginCard .field-hint {
@@ -9182,7 +9182,8 @@ body.admin-portal-page .app-sidebar h2 {
 }
 body.admin-portal-page .app-sidebar .small {
   color: var(--portal-text-soft);
-  line-height: 1.45;
+  font-size: 15px;
+  line-height: 1.4;
   margin: 0;
 }
 html[data-theme="dark"] body.admin-portal-page .app-sidebar h2,
@@ -11293,6 +11294,7 @@ body.student-portal-page #newsWeekSetModal {
 }
 body.student-portal-page #newsWeekSetModal .portal-modal-dialog {
   border-radius: 10px;
+  box-sizing: border-box;
   gap: 10px;
   max-height: calc(100dvh - 16px);
   padding: 12px;
@@ -11344,6 +11346,7 @@ body.student-portal-page #newsReportFormCard .student-news-form-actions > .porta
   }
   body.student-portal-page #newsWeekSetModal .portal-modal-dialog {
     border-radius: 12px;
+    box-sizing: border-box;
     max-height: calc(100vh - 36px);
     padding: 16px;
     width: min(760px, calc(100vw - 36px));
@@ -11424,6 +11427,7 @@ body.parent-portal-page #newsWeekSetModal {
 }
 body.parent-portal-page #newsWeekSetModal .portal-modal-dialog {
   border-radius: 10px;
+  box-sizing: border-box;
   gap: 10px;
   max-height: calc(100dvh - 16px);
   padding: 12px;
@@ -11462,6 +11466,7 @@ body.parent-portal-page #newsWeekSetModal .news-review-vocabulary-row {
   }
   body.parent-portal-page #newsWeekSetModal .portal-modal-dialog {
     border-radius: 12px;
+    box-sizing: border-box;
     max-height: calc(100vh - 36px);
     padding: 16px;
     width: min(760px, calc(100vw - 36px));

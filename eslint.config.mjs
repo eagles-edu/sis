@@ -29,6 +29,7 @@ export default [
       "src/**/*.mjs",
       "test/**/*.mjs",
       "tools/**/*.mjs",
+      "node_modules/**/*.mjs",
     ],
     languageOptions: {
       ecmaVersion: 2023,

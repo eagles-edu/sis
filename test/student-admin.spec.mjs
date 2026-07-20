@@ -12,12 +12,25 @@ import {
   parseSpreadsheetRowsFromUploadPayload,
 } from "../server/student-admin-routes.mjs"
 import { buildStudentReportCardPayload, generateStudentReportCardPdf } from "../server/student-report-card-pdf.mjs"
+import { LEVEL_DEFINITIONS, canonicalizeLevel } from "../src/modules/admin/level-catalog.mjs"
 
 const TEST_ADMIN_UI_SETTINGS_FILE = `/tmp/sis-admin-ui-settings-${process.pid}.json`
 const ADMIN_HTML_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.html", import.meta.url), "utf8")
 const ADMIN_CSS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.css", import.meta.url), "utf8")
 const ADMIN_JS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
 const SHARED_PORTAL_THEME_SOURCE = fs.readFileSync(new URL("../web-asset/shared/portal-theme.css", import.meta.url), "utf8")
+
+test("class and level aliases resolve to one canonical catalog value", () => {
+  assert.ok(LEVEL_DEFINITIONS.length > 0)
+  for (const entry of LEVEL_DEFINITIONS) {
+    for (const variant of [entry.canonical, ...(entry.aliases || [])]) {
+      assert.equal(canonicalizeLevel(variant), entry.canonical, variant)
+    }
+  }
+  assert.equal(canonicalizeLevel("  eggchicks  "), "Eggs & Chicks")
+  assert.equal(canonicalizeLevel("grade 6"), "A2 Flyers")
+  assert.equal(canonicalizeLevel("  custom   class  "), "custom class")
+})
 
 function withAdminAssets(html = "") {
   return `${String(html || "")}\n${ADMIN_CSS_SOURCE}\n${ADMIN_JS_SOURCE}`
@@ -303,6 +316,43 @@ test("admin quarter controls share the attendance quarter safety default", () =>
   assert.match(source, /function normalizeQuarterDropdownDefaults\(/)
   assert.match(source, /\["a_quarter", "g_quarter", "r_quarter", "gradeChartQuarter"\]/)
   assert.match(source, /updateAttendanceQuarterWarning\(\)/)
+})
+
+test("admin attendance restores only the selected level and always derives the current date context", () => {
+  const source = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
+  assert.match(source, /const ATTENDANCE_FORM_STORAGE_KEY = "sis\.admin\.attendance\.form\.v1"/)
+  assert.match(source, /function loadAttendanceFormContextFromStorage\(/)
+  assert.match(source, /function persistAttendanceFormContext\(/)
+  assert.match(source, /state\.attendanceLanding\.selectedLevel = resolveSystemLevelName\(/)
+  assert.match(source, /if \(dateEl\) dateEl\.value = attendanceTodayIsoDate\(\)/)
+  assert.match(source, /if \(yearEl\) yearEl\.value = defaultAttendanceSchoolYear\(classDate\)/)
+  assert.match(source, /if \(quarterEl\) quarterEl\.value = quarterFromIsoDate\(classDate\)/)
+  assert.doesNotMatch(source, /stored\.attendanceDate/)
+  assert.doesNotMatch(source, /stored\.schoolYear/)
+  assert.doesNotMatch(source, /stored\.quarter/)
+})
+
+test("admin attendance save feedback exposes progress, result state, and duplicate-save guard", () => {
+  const source = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
+  const html = fs.readFileSync(new URL("../web-asset/admin/student-admin.html", import.meta.url), "utf8")
+  assert.match(html, /id="attendanceSaveResult"/)
+  assert.match(html, /aria-live="polite"/)
+  assert.match(source, /function setAttendanceSaveBusy\(/)
+  assert.match(source, /Saving \$\{processed\}\/\$\{total\}/)
+  assert.match(source, /if \(state\.attendanceLanding\.saveBusy\) return;/)
+  assert.match(source, /No changes — all \$\{unchanged\} records already match/)
+})
+
+test("admin attendance loads saved records before deriving fresh-page radio selections", () => {
+  const source = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
+  const refreshStart = source.indexOf("async function refreshAttendanceLandingRows")
+  assert.ok(refreshStart >= 0, "attendance row refresh is present")
+  const refreshChunk = source.slice(refreshStart, refreshStart + 2600)
+  const hydrateIndex = refreshChunk.indexOf("if (hydrate) await hydrateAttendanceLandingDetails(students);")
+  const selectionIndex = refreshChunk.indexOf("students.forEach((student) => {")
+  assert.ok(hydrateIndex >= 0, "fresh attendance rows hydrate saved details")
+  assert.ok(selectionIndex >= 0, "attendance row selections are derived")
+  assert.ok(hydrateIndex < selectionIndex, "saved details load before defaults are assigned")
 })
 
 test("student portal login resolver keeps DB-first auth with env fallback", () => {
@@ -1515,7 +1565,9 @@ test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async 
   assert.match(html, /function renderDistributionMiniCell\(/)
   assert.match(html, /function openDistributionModal\(/)
   assert.match(html, /data-period=\"archive\"/)
-  assert.match(html, /Current school year/)
+  assert.match(html, /2026-2027/)
+  assert.match(html, /configuredSchoolName/)
+  assert.match(html, /singleSchoolMode/)
   assert.match(html, /function setTableModalOpen\(/)
   assert.match(html, /function bindTableModalControls\(/)
   assert.match(html, /function setDistributionDialogFullscreen\(/)
@@ -2392,13 +2444,22 @@ test("admin rejects school setup ui settings without explicit quarters", async (
   assert.match(body.error, /four explicit quarters/i)
 })
 
-test("teacher cannot access persisted ui settings endpoint", async () => {
+test("teacher can read persisted ui settings but cannot update them", async () => {
   const res = await fetchLocal(port, "/api/admin/settings/ui", {
     headers: { Cookie: teacherSessionCookie },
   })
-  assert.equal(res.status, 403)
+  assert.equal(res.status, 200)
   const body = await res.json()
-  assert.match(body.error, /Forbidden/i)
+  assert.equal(body.ok, true)
+  const put = await fetchLocal(port, "/api/admin/settings/ui", {
+    method: "PUT",
+    headers: {
+      Cookie: teacherSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ uiSettings: {} }),
+  })
+  assert.equal(put.status, 403)
 })
 
 test("teacher cannot update role policies", async () => {

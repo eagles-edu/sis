@@ -3697,14 +3697,25 @@
               "width": 932,
               "height": 75
             },
-            ".news-review-note-line.pending": null,
+            ".news-review-note-line.pending": {
+              "selector": ".news-review-note-line.pending",
+              "id": "",
+              "className": "news-review-note-line pending",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(124, 18, 29)",
+              "border": "rgb(124, 18, 29)",
+              "display": "block",
+              "width": 912,
+              "height": 57
+            },
             ".news-review-note-line.fixed": null
           },
           "modalAxe": [],
           "viewerBlock": {
             "bg": "rgb(250, 252, 255)",
             "color": "rgb(0, 0, 0)",
-            "text": "Report IDcmrm0nzm30000ayg0hzkm4x8z"
+            "text": "Report IDcmrq28op90000e8g0rt6z3zag"
           }
         },
         {
@@ -5811,7 +5822,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3238
+              "height": 2927
             },
             ".wrap": {
               "selector": ".wrap",
@@ -5823,7 +5834,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3190
+              "height": 2879
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -5835,7 +5846,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3106
+              "height": 2795
             },
             ".panel": {
               "selector": ".panel",
@@ -6947,7 +6958,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1463
+              "height": 2606
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6959,7 +6970,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1415
+              "height": 2558
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6971,7 +6982,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1331
+              "height": 2474
             },
             ".panel": {
               "selector": ".panel",
@@ -7019,7 +7030,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
               "width": 1363,
-              "height": 497
+              "height": 1086
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -7030,8 +7041,8 @@
               "color": "rgb(229, 245, 255)",
               "border": "rgba(255, 255, 255, 0.36)",
               "display": "block",
-              "width": 664,
-              "height": 19
+              "width": 0,
+              "height": 0
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -9191,14 +9202,25 @@
               "width": 932,
               "height": 75
             },
-            ".news-review-note-line.pending": null,
+            ".news-review-note-line.pending": {
+              "selector": ".news-review-note-line.pending",
+              "id": "",
+              "className": "news-review-note-line pending",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "block",
+              "width": 912,
+              "height": 57
+            },
             ".news-review-note-line.fixed": null
           },
           "modalAxe": [],
           "viewerBlock": {
             "bg": "rgb(76, 76, 76)",
             "color": "rgb(251, 255, 255)",
-            "text": "Report IDcmrm0nzm30000ayg0hzkm4x8z"
+            "text": "Report IDcmrq28op90000e8g0rt6z3zag"
           }
         },
         {

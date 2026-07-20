@@ -1,7 +1,7 @@
 <!-- @format -->
 <!-- web-asset/admin/student-admin.html -->
 <!doctype html>
-<html lang="en">
+<html lang="vi-VN">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -421,8 +421,8 @@ body.admin-portal-page #authBootPanel .small,
 body.student-portal-page #loginPanel .muted,
 body.parent-portal-page #loginCard .muted,
 body.admin-portal-page #authPanel .muted {
-  font-size: 0.98rem;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.4;
 }
 body.student-portal-page #loginPanel p,
 body.parent-portal-page #loginCard p,
@@ -1087,9 +1087,7 @@ html[data-theme="dark"] body.admin-portal-page #performanceQueueSection .section
                 </div>
                 <div class="col-2" id="schoolFilterCol">
                   <label for="filterSchool">School</label>
-                  <select id="filterSchool" data-surface-role="card">
-                    <option value="">All schools</option>
-                  </select>
+                  <select id="filterSchool" data-surface-role="card"></select>
                 </div>
                 <div class="col-3">
                   <label for="familyPhone">Family phone lookup</label>
@@ -2002,6 +2000,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           Clear
                         </button>
                       </div>
+                      <p
+                        class="small"
+                        id="attendanceSaveResult"
+                        role="status"
+                        aria-live="polite"
+                        aria-atomic="true"></p>
                       <p class="small" id="attendanceLandingSummary">
                         Select a class level. Today's default status is Absent.
                       </p>

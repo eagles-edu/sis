@@ -23,7 +23,7 @@ const ADMIN_UI_SETTINGS_KEY = "sis.admin.uiSettings"
 
 function selectHasCurrentOption(selectEl) {
   if (!selectEl || typeof selectEl !== "object" || !("options" in selectEl)) return false
-  return Array.from(selectEl.options).some((entry) => String(entry.value) === "current")
+  return Array.from(selectEl.options).some((entry) => String(entry.value) === "2026-2027")
 }
 
 function jsonResponse(status, payload = {}) {
@@ -189,10 +189,10 @@ test("tabulator query filters override persisted preferences for school-year and
   const quarterEl = document.getElementById("quarter")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
   assert.ok(quarterEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, "current")
+  assert.equal(schoolYearEl.value, "2026-2027")
   assert.equal(quarterEl.value, "q1")
   assert.equal(
-    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "current"),
+    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "2026-2027"),
     true,
   )
   assert.equal(selectHasCurrentOption(schoolYearEl), true)
@@ -309,10 +309,10 @@ test("tabulator seeds current school-year even when auth is required", async () 
   const quarterEl = document.getElementById("quarter")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
   assert.ok(quarterEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, "current")
+  assert.equal(schoolYearEl.value, "2026-2027")
   assert.equal(quarterEl.value, "q1")
   assert.equal(
-    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "current"),
+    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "2026-2027"),
     true,
   )
   assert.equal(selectHasCurrentOption(schoolYearEl), true)
@@ -348,9 +348,9 @@ test("tabulator no-query load seeds current school-year over stale all preferenc
   const document = dom.window.document
   const schoolYearEl = document.getElementById("schoolYear")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, "current")
+  assert.equal(schoolYearEl.value, "2026-2027")
   assert.equal(
-    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "current"),
+    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "2026-2027"),
     true,
   )
 
@@ -394,9 +394,9 @@ test("tabulator no-query load uses school setup year from local settings", async
   const document = dom.window.document
   const schoolYearEl = document.getElementById("schoolYear")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, "current")
+  assert.equal(schoolYearEl.value, "2026-2027")
   assert.equal(
-    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "current"),
+    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "2026-2027"),
     true,
   )
 
@@ -419,10 +419,10 @@ test("tabulator query schoolYear=current still resolves current school-year defa
   const quarterEl = document.getElementById("quarter")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
   assert.ok(quarterEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, "current")
+  assert.equal(schoolYearEl.value, "2026-2027")
   assert.equal(quarterEl.value, "q3")
   assert.equal(
-    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "current"),
+    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "2026-2027"),
     true,
   )
   assert.equal(selectHasCurrentOption(schoolYearEl), true)
@@ -496,7 +496,7 @@ test("tabulator schoolYear=current quarter query preserves the explicit quarter"
   const quarterEl = document.getElementById("quarter")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
   assert.ok(quarterEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, "current")
+  assert.equal(schoolYearEl.value, "2026-2027")
   assert.equal(quarterEl.value, "q3")
   assert.equal(selectHasCurrentOption(schoolYearEl), true)
 
@@ -548,7 +548,7 @@ test("tabulator archive period keeps archive mode and excludes current school-ye
   const schoolYearEl = document.getElementById("schoolYear")
   const rowCountEl = document.getElementById("metricRows")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, "current")
+  assert.equal(schoolYearEl.value, "2026-2027")
   assert.equal(String(rowCountEl?.textContent || ""), "1")
   assert.equal(
     document.querySelector('[data-period="archive"]')?.classList.contains("is-active"),
@@ -697,7 +697,7 @@ test("tabulator sytd query quarter=q3 preserves the explicit quarter", async () 
   const quarterEl = document.getElementById("quarter")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
   assert.ok(quarterEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, "current")
+  assert.equal(schoolYearEl.value, "2026-2027")
   assert.equal(quarterEl.value, "q3")
 
   dom.window.close()
@@ -813,9 +813,9 @@ test("tabulator authenticated bootstrap promotes server school setup year over s
   const schoolYearEl = document.getElementById("schoolYear")
   const rowCountEl = document.getElementById("metricRows")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, "current")
+  assert.equal(schoolYearEl.value, "2026-2027")
   assert.equal(
-    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "current"),
+    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "2026-2027"),
     true,
   )
   assert.equal(String(rowCountEl?.textContent || ""), "1")

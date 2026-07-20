@@ -1,0 +1,41 @@
+{
+  "status": "ok",
+  "checkedAt": "2026-07-19T19:42:28.618Z",
+  "thresholds": {
+    "backupStaleMinutes": 1560,
+    "maxQueryLatencyMs": 500,
+    "maxIncomingUnmatched": 0,
+    "maxOrphanCount": 0
+  },
+  "db": {
+    "status": "ok",
+    "connected": true,
+    "queryLatencyMs": 48,
+    "error": ""
+  },
+  "backup": {
+    "status": "ok",
+    "latestMetadataPath": "/home/eagles/dockerz/backups/postgres/latest.json",
+    "latestBackupPath": "/home/eagles/dockerz/backups/postgres/postgres-20260719-130405Z.dump",
+    "lastBackupAt": "2026-07-19T13:04:05.469Z",
+    "ageMinutes": 398,
+    "staleThresholdMinutes": 1560,
+    "isStale": false
+  },
+  "incoming": {
+    "status": "ok",
+    "queuedCount": 0,
+    "temporaryCount": 0,
+    "unmatchedCount": 0,
+    "latestVacuumReportPath": "/home/eagles/dockerz/sis/runtime-data/maintenance-reports/incoming-vacuum-20260322-111135Z.json",
+    "lastIncomingVacuumAt": "2026-03-22T11:11:34.902Z",
+    "manualReviewCount": 0
+  },
+  "orphans": {
+    "status": "ok",
+    "exerciseSubmissionMissingStudent": 0,
+    "exerciseSubmissionMissingExercise": 0,
+    "studentGradeRecordMissingStudent": 0,
+    "total": 0
+  }
+}

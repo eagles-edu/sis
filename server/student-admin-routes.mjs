@@ -6090,9 +6090,12 @@ async function handleApiRequest(request, response, pathname, url) {
   }
 
   if (pathname === ADMIN_UI_SETTINGS_PATH) {
-    assertCanManageSettings(rolePolicy)
-
     if (method === "GET") {
+      if (!rolePolicy.canRead) {
+        const error = new Error("Forbidden")
+        error.statusCode = 403
+        throw error
+      }
       const result = readPersistedUiSettings()
       sendJson(response, 200, {
         ok: true,
@@ -6102,6 +6105,7 @@ async function handleApiRequest(request, response, pathname, url) {
     }
 
     if (method === "PUT") {
+      assertCanManageSettings(rolePolicy)
       const payload = await parseBody(request)
       const result = await writePersistedUiSettings(payload, session?.username)
       sendJson(response, 200, {

@@ -3,6 +3,7 @@
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { getConfiguredDatabaseUrlSync } from "./sis-config-store.mjs"
+import { canonicalizeLevel } from "./level-catalog.mjs"
 
 const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
 const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
@@ -252,7 +253,7 @@ export function buildAssignmentTemplateBundle(template = {}) {
   return {
     assignmentTemplateId: normalizeText(source.id || source.assignmentTemplateId),
     eaglesId: normalizeText(source.eaglesId),
-    level: normalizeText(source.level),
+    level: canonicalizeLevel(source.level),
     assignmentTitle: normalizeText(source.assignmentTitle || source.title || source.exerciseTitle),
     assignedAt: normalizeText(source.assignedAt || source.dateAssigned),
     dueAt: normalizeText(source.dueAt || source.dueDate),
@@ -341,7 +342,7 @@ function normalizeAssignmentTemplate(source = {}) {
   const assignedAt = normalizeText(template.assignedAt || template.dateAssigned)
   const dueAt = normalizeText(template.dueAt || template.dueDate)
   const exerciseTitle = normalizeText(template.exerciseTitle)
-  const level = normalizeText(template.level)
+  const level = canonicalizeLevel(template.level)
   const eaglesId = normalizeText(template.eaglesId)
   const message = normalizeText(template.message)
   const items = normalizeAssignmentItems(rawItems)
@@ -602,7 +603,7 @@ export function buildAssignmentDashboardSlices({
 
   sourceTemplates.forEach((entry) => {
     const template = normalizeAssignmentTemplate(entry)
-    const level = normalizeText(template.level)
+    const level = canonicalizeLevel(template.level)
     if (!level) return
     if (!currentWeekTemplateTouchesWeek(template, now)) return
 
@@ -619,7 +620,7 @@ export function buildAssignmentDashboardSlices({
   const enrollmentOnlyLevels = normalizeAssignmentTemplateLevelOrder(
     (Array.isArray(classEnrollmentAttendance) ? classEnrollmentAttendance : [])
       .map((entry) => ({
-        level: normalizeText(entry?.level),
+        level: canonicalizeLevel(entry?.level),
         enrolled: Number.parseInt(String(entry?.enrolled || 0), 10) || 0,
       }))
       .filter((entry) => entry.level && entry.enrolled > 0 && !currentAssignmentLevels.has(entry.level))
