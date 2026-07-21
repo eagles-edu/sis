@@ -6,6 +6,8 @@ import { resolveEnrollmentPeriodForStudent } from "./enrollment-periods.mjs"
 import { buildStudentReportCardPayload } from "../../../server/student-report-card-pdf.mjs"
 import { recordParentClassReportEvent } from "./parent-report-events.mjs"
 import { canonicalizeLevel as canonicalizeCatalogLevel } from "./level-catalog.mjs"
+import { getSisConfigSnapshotSync } from "./sis-config-store.mjs"
+import { courseWeekNumberForSchoolSetupDate } from "./course-week-calendar.mjs"
 
 /**
  * @param {unknown} value
@@ -665,11 +667,14 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
         }
   )
   const participationPointsAward = normalizeReportParticipationPoints(payload.participationPointsAward)
+  const reportDateForWeek = normalizeText(normalizedMetaPayload?.classDate) || normalizeText(payload.generatedAt)
+  const configuredSchoolSetup = getSisConfigSnapshotSync()?.uiSettings?.schoolSetup || {}
   const reportData = {
     className,
     level: normalizeNullableText(canonicalizeLevel(payload.level)),
     schoolYear,
     quarter,
+    weekNumber: courseWeekNumberForSchoolSetupDate(reportDateForWeek, schoolYear, configuredSchoolSetup),
     enrollmentPeriodId: normalizeNullableText(payload.enrollmentPeriodId),
     homeworkCompletionRate: normalizeFloat(payload.homeworkCompletionRate),
     homeworkOnTimeRate: normalizeFloat(payload.homeworkOnTimeRate),

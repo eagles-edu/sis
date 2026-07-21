@@ -6,6 +6,7 @@ import path from "node:path"
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { getConfiguredDatabaseUrlSync, getSisConfigSnapshotSync } from "../admin/sis-config-store.mjs"
+import { courseWeekNumberForSchoolSetupDate } from "../admin/course-week-calendar.mjs"
 
 /**
  * @typedef {{
@@ -799,6 +800,13 @@ async function ensureExerciseRecord(tx, pageTitle) {
 }
 
 function buildExerciseSubmissionRecordData(studentRefId, exerciseRefId, submission, summary) {
+  const completedAt = submission.completedAt instanceof Date ? submission.completedAt : parseCompletedAt(submission.completedAt)
+  const schoolYear = resolveCurrentSchoolYear(completedAt)
+  const weekNumber = courseWeekNumberForSchoolSetupDate(
+    completedAt?.toISOString?.()?.slice(0, 10),
+    schoolYear,
+    getSisConfigSnapshotSync()?.uiSettings?.schoolSetup || {},
+  )
   return {
     studentRefId,
     exerciseRefId,
@@ -809,6 +817,7 @@ function buildExerciseSubmissionRecordData(studentRefId, exerciseRefId, submissi
     sourceOriginLabel: normalizeSourceOriginLabel(submission.sourceOriginLabel),
     sourceOriginHost: normalizeSourceOriginHost(submission.sourceOriginHost),
     completedAt: submission.completedAt,
+    weekNumber,
     totalQuestions: summary.totalQuestions,
     correctCount: summary.correctCount,
     pendingCount: summary.pendingCount,
@@ -887,6 +896,11 @@ function buildExerciseGradeRecordData(student, submission, summary) {
   const assignmentBundleJson = buildAssignmentBundleFromSubmission(submission)
 
   const schoolYear = resolveCurrentSchoolYear(completedAt)
+  const weekNumber = courseWeekNumberForSchoolSetupDate(
+    completedAt?.toISOString?.()?.slice(0, 10),
+    schoolYear,
+    getSisConfigSnapshotSync()?.uiSettings?.schoolSetup || {},
+  )
   return {
     studentRefId: student.id,
     className,
@@ -895,6 +909,7 @@ function buildExerciseGradeRecordData(student, submission, summary) {
     quarter: quarterFromDate(completedAt, schoolYear),
     assignmentName: className,
     dueAt: completedAt,
+    weekNumber,
     submittedAt: completedAt,
     score: scorePercent,
     maxScore: 100,
@@ -910,6 +925,12 @@ function buildExerciseGradeRecordData(student, submission, summary) {
 }
 
 function buildIncomingQueueRecordData(submission, summary, options = {}) {
+  const completedAt = submission.completedAt instanceof Date ? submission.completedAt : parseCompletedAt(submission.completedAt)
+  const weekNumber = courseWeekNumberForSchoolSetupDate(
+    completedAt?.toISOString?.()?.slice(0, 10),
+    resolveCurrentSchoolYear(completedAt),
+    getSisConfigSnapshotSync()?.uiSettings?.schoolSetup || {},
+  )
   return {
     status: INCOMING_EXERCISE_RESULT_STATUS_QUEUED,
     submittedEaglesId: submission.submittedEaglesId,
@@ -918,6 +939,7 @@ function buildIncomingQueueRecordData(submission, summary, options = {}) {
     sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),
     pageTitle: submission.pageTitle,
     completedAt: submission.completedAt,
+    weekNumber,
     totalQuestions: summary.totalQuestions,
     correctCount: summary.correctCount,
     pendingCount: summary.pendingCount,
@@ -954,6 +976,7 @@ function buildExerciseSubmissionSummary(item) {
 }
 
 function buildIncomingDuplicateUpdateData(submission, summary, options = {}) {
+  const completedAt = submission.completedAt instanceof Date ? submission.completedAt : parseCompletedAt(submission.completedAt)
   return {
     submittedEaglesId: submission.submittedEaglesId,
     submittedEmail: submission.submittedEmail || null,
@@ -961,6 +984,11 @@ function buildIncomingDuplicateUpdateData(submission, summary, options = {}) {
     sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),
     pageTitle: submission.pageTitle,
     completedAt: submission.completedAt,
+    weekNumber: courseWeekNumberForSchoolSetupDate(
+      completedAt?.toISOString?.()?.slice(0, 10),
+      resolveCurrentSchoolYear(completedAt),
+      getSisConfigSnapshotSync()?.uiSettings?.schoolSetup || {},
+    ),
     totalQuestions: summary.totalQuestions,
     correctCount: summary.correctCount,
     pendingCount: summary.pendingCount,
@@ -1083,6 +1111,7 @@ function mapIncomingExerciseResult(item) {
     sourceOriginHost: normalizeString(item.sourceOriginHost),
     pageTitle: normalizeString(item.pageTitle),
     completedAt: item.completedAt ? new Date(item.completedAt).toISOString() : "",
+    weekNumber: Number.isInteger(Number(item.weekNumber)) ? Number(item.weekNumber) : null,
     totalQuestions: Number.parseInt(String(item.totalQuestions || 0), 10) || 0,
     correctCount: Number.parseInt(String(item.correctCount || 0), 10) || 0,
     pendingCount: Number.parseInt(String(item.pendingCount || 0), 10) || 0,
@@ -1247,6 +1276,18 @@ export async function persistExerciseSubmission(payload, options = {}) {
       summary,
     }
   })
+
+  if (submission.assignmentTemplateId && prisma.assignmentReminderEngagement?.updateMany) {
+    await prisma.assignmentReminderEngagement.updateMany({
+      where: {
+        dispatch: {
+          assignmentTemplateId: submission.assignmentTemplateId,
+          studentRefId: matchedStudent.id,
+        },
+      },
+      data: { actionCompletedAt: new Date() },
+    }).catch(() => null)
+  }
 
   return {
     saved: true,

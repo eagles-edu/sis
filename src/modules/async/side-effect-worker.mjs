@@ -18,6 +18,7 @@ import {
   buildReportCardFilename,
   generateStudentReportCardPdf,
 } from "../../../server/student-report-card-pdf.mjs"
+import { markAssignmentReminderEngagementSent } from "../admin/assignment-reminder-dispatcher.mjs"
 
 /**
  * @param {unknown} value
@@ -71,6 +72,9 @@ export async function processAnnouncementEmailSideEffectJob(job = {}) {
   const result = await sendAnnouncementEmail(announcementPayload)
   const queueType = normalizeText(payload.queueType || announcementPayload.queueType || "")
   const reportId = normalizeText(payload.reportId || payload.parentReportId)
+  if (normalizeText(payload.queueId)) {
+    await markAssignmentReminderEngagementSent(normalizeText(payload.queueId), true)
+  }
   if (queueType === "parent-report" && reportId) {
     try {
       const prisma = await getSharedPrismaClient()

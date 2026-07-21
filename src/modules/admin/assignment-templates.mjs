@@ -2,7 +2,8 @@
 // @ts-check
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
-import { getConfiguredDatabaseUrlSync } from "./sis-config-store.mjs"
+import { getConfiguredDatabaseUrlSync, getSisConfigSnapshotSync } from "./sis-config-store.mjs"
+import { courseWeekNumberForSchoolSetupDate } from "./course-week-calendar.mjs"
 import { canonicalizeLevel } from "./level-catalog.mjs"
 
 const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
@@ -273,7 +274,9 @@ export function validateAssignmentTemplateBundle(template = {}) {
   const raw = template && typeof template === "object" ? template : {}
 
   if (!bundle.assignmentTemplateId) issues.push("assignmentTemplateId")
-  if (!normalizeText(raw.eaglesId)) issues.push("eaglesId")
+  // A blank eaglesId means the assignment targets the whole selected level.
+  // It is only required for a student-specific assignment.
+  if (!normalizeText(raw.eaglesId) && !bundle.level) issues.push("target")
   if (!normalizeText(raw.level)) issues.push("level")
   if (!normalizeText(raw.assignedAt || raw.dateAssigned)) issues.push("assignedAt")
   if (!normalizeText(raw.dueAt || raw.dueDate)) issues.push("dueAt")
@@ -374,12 +377,21 @@ function normalizeAssignmentTemplate(source = {}) {
       dueAt,
       items: normalizedItems,
     })
+  const persistedWeekNumber = Number.parseInt(String(template.weekNumber || ""), 10)
+  const weekNumber = Number.isInteger(persistedWeekNumber)
+    ? persistedWeekNumber
+    : courseWeekNumberForSchoolSetupDate(
+        assignedAt,
+        normalizeText(template.schoolYear || getSisConfigSnapshotSync()?.uiSettings?.schoolSetup?.schoolYear),
+        getSisConfigSnapshotSync()?.uiSettings?.schoolSetup || {},
+      )
 
   return {
     id,
     assignmentTitle,
     exerciseTitle: exerciseTitle || normalizedItems[0]?.title || "",
     assignedAt,
+    weekNumber,
     dueAt,
     level,
     eaglesId,
@@ -532,6 +544,7 @@ function mapAssignmentTemplateRow(row = {}) {
     assignmentTitle: row.assignmentTitle,
     exerciseTitle: row.exerciseTitle,
     assignedAt: row.assignedAt,
+    weekNumber: row.weekNumber,
     dueAt: row.dueAt,
     level: row.level,
     eaglesId: row.eaglesId,
@@ -746,6 +759,7 @@ export async function saveAssignmentTemplate(payload = {}, options = {}) {
           assignmentTitle: nextTemplate.assignmentTitle,
           exerciseTitle: nextTemplate.exerciseTitle || null,
           assignedAt: nextTemplate.assignedAt || null,
+          weekNumber: nextTemplate.weekNumber,
           dueAt: nextTemplate.dueAt || null,
           level: nextTemplate.level || null,
           eaglesId: nextTemplate.eaglesId || null,
@@ -759,6 +773,7 @@ export async function saveAssignmentTemplate(payload = {}, options = {}) {
           assignmentTitle: nextTemplate.assignmentTitle,
           exerciseTitle: nextTemplate.exerciseTitle || null,
           assignedAt: nextTemplate.assignedAt || null,
+          weekNumber: nextTemplate.weekNumber,
           dueAt: nextTemplate.dueAt || null,
           level: nextTemplate.level || null,
           eaglesId: nextTemplate.eaglesId || null,

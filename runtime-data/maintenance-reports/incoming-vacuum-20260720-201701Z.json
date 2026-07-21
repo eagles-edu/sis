@@ -1,6 +1,6 @@
 {
-  "runStartedAt": "2026-03-22T11:11:34.902Z",
-  "mode": "dry-run",
+  "runStartedAt": "2026-07-20T20:17:01.325Z",
+  "mode": "apply",
   "options": {
     "deleteUnmatched": true,
     "deleteMalformed": true,

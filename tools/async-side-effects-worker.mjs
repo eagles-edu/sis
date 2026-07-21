@@ -6,6 +6,7 @@ import {
   ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF,
 } from "../src/modules/async/side-effect-jobs.mjs"
 import { updateQueuedAnnouncement, nowIso } from "../src/modules/admin/notification-queue.mjs"
+import { markAssignmentReminderEngagementSent } from "../src/modules/admin/assignment-reminder-dispatcher.mjs"
 import path from "node:path"
 import process from "node:process"
 import { fileURLToPath } from "node:url"
@@ -96,6 +97,9 @@ async function updateAnnouncementQueueItem(job, result, failure = null) {
       }
     )
   void result
+  if (queueId) {
+    await markAssignmentReminderEngagementSent(queueId, true)
+  }
 }
 
 /**

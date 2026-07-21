@@ -46,6 +46,9 @@ LIVE_RUNTIME_CODE_FILES=(
   "package-lock.json"
   "prisma.config.ts"
   ".nvmrc"
+  "tools/run-assignment-reminder-dispatcher.mjs"
+  "ops/systemd/sis-assignment-reminders.service"
+  "ops/systemd/sis-assignment-reminders.timer"
 )
 
 LIVE_RUNTIME_DATA_FILES=(

@@ -116,6 +116,7 @@ import {
   buildAssignmentTemplateBundle,
   validateAssignmentTemplateBundle,
 } from "../src/modules/admin/assignment-templates.mjs"
+import { dispatchAssignmentCreated } from "../src/modules/admin/assignment-reminder-dispatcher.mjs"
 import {
   listStudentNewsReportsForReview,
   reviewStudentNewsReportsBulk,
@@ -149,6 +150,11 @@ import {
   ensureSisConfigLoaded,
   saveSisConfigSnapshot,
 } from "../src/modules/admin/sis-config-store.mjs"
+import {
+  courseWeekCalendarForSchoolYear,
+  generateCourseWeekCalendar,
+  normalizeCourseWeekCalendar,
+} from "../src/modules/admin/course-week-calendar.mjs"
 import {
   deleteAttendanceRecord,
   deleteGradeRecord,
@@ -192,6 +198,7 @@ const ADMIN_PAGE_SECTIONS = [
   "parent-tracking",
   "performance-data",
   "performance-engagement",
+  "assignment-engagement",
   "grades",
   "grades-data",
   "grades-tabulator",
@@ -221,6 +228,7 @@ const ADMIN_EXERCISE_TITLES_PATH = `${ADMIN_API_PREFIX}/exercise-titles`
 const ADMIN_EXPORT_XLSX_PATH = `${ADMIN_API_PREFIX}/exports/xlsx`
 const ADMIN_NOTIFY_EMAIL_PATH = `${ADMIN_API_PREFIX}/notifications/email`
 const ADMIN_NOTIFY_BATCH_STATUS_PATH = `${ADMIN_API_PREFIX}/notifications/batch-status`
+const ADMIN_ASSIGNMENT_REMINDER_ENGAGEMENT_PATH = `${ADMIN_API_PREFIX}/assignment-reminder-engagement`
 const ADMIN_INCOMING_EXERCISE_RESULTS_PATH = `${ADMIN_API_PREFIX}/exercise-results/incoming`
 const ADMIN_PROFILE_SUBMISSIONS_PATH = `${ADMIN_API_PREFIX}/profile-submissions`
 const ADMIN_RUNTIME_HEALTH_PATH = `${ADMIN_API_PREFIX}/runtime/health`
@@ -249,6 +257,8 @@ const STUDENT_NEW_WORDS_PATH = `${STUDENT_API_PREFIX}/new-words`
 const STUDENT_REPORT_PAGE_PREFIX = `${STUDENT_PORTAL_PAGE_PATH}/reports`
 const GENERIC_REPORT_ACCESS_PAGE_PREFIX = "/reports/access"
 const REPORT_EVENT_EMAIL_OPEN_PATH = "/api/report-events/email-open.gif"
+const ASSIGNMENT_REMINDER_CLICK_PATH_RE = /^\/api\/assignment-reminders\/track\/click\/([^/]+)$/
+const ASSIGNMENT_REMINDER_OPEN_PATH_RE = /^\/api\/assignment-reminders\/track\/open\/([^/]+)$/
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH = normalizePathPrefix(
   process.env.STUDENT_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH,
   "/assignment-announcements/volatile"
@@ -678,11 +688,13 @@ const PARENT_PROFILE_EDITABLE_FIELDS = new Set([
   "currentSchoolGrade",
   "motherName",
   "motherEmail",
+  "maIsHomeworkProctor",
   "motherPhone",
   "motherEmergencyContact",
   "motherMessenger",
   "fatherName",
   "fatherEmail",
+  "baIsHomeworkProctor",
   "fatherPhone",
   "fatherEmergencyContact",
   "fatherMessenger",
@@ -1328,7 +1340,7 @@ function setInitialAdminLayoutState(html, pageSlug) {
   const hideTopSearch = new Set([
     "overview", "queue-hub", "attendance", "attendance-admin", "assignments",
     "assignments-data", "grades", "grades-data", "parent-tracking", "performance-data",
-    "performance-engagement", "news-reports", "school-setup", "settings",
+    "performance-engagement", "assignment-engagement", "news-reports", "school-setup", "settings",
   ]).has(normalizedSlug)
   let nextHtml = html.replace(
     /(<[^>]+\bclass=")([^"]*\bgrid-main\b[^"]*)("[^>]*>)/i,
@@ -2619,9 +2631,53 @@ function readPersistedUiSettings() {
   }
 }
 
+function attachCourseWeekCalendarToSchoolSetup(uiSettings = {}) {
+  const source = uiSettings && typeof uiSettings === "object" ? uiSettings : {}
+  const schoolSetup = source?.schoolSetup && typeof source.schoolSetup === "object" ? source.schoolSetup : null
+  if (!schoolSetup) return source
+  const quarters = Array.isArray(schoolSetup.quarters) ? schoolSetup.quarters : []
+  const q1 = quarters.find((entry) => normalizeLower(entry?.quarter) === "q1")
+  const existingCalendars = Array.isArray(schoolSetup.courseWeekCalendars)
+    ? schoolSetup.courseWeekCalendars.map((entry) => normalizeCourseWeekCalendar(entry)).filter(Boolean)
+    : []
+  const existing = courseWeekCalendarForSchoolYear(existingCalendars, schoolSetup.schoolYear)
+  if (existing && existing.q1StartDate === normalizeText(q1?.startDate).slice(0, 10) && existing.q1EndDate === normalizeText(q1?.endDate).slice(0, 10)) {
+    return {
+      ...source,
+      schoolSetup: {
+        ...schoolSetup,
+        courseWeekCalendars: existingCalendars,
+      },
+    }
+  }
+  const generated = generateCourseWeekCalendar({
+    schoolYear: schoolSetup.schoolYear,
+    q1StartDate: q1?.startDate,
+    q1EndDate: q1?.endDate,
+  })
+  if (!generated) {
+    const error = new Error("Q1 start date must be a valid Saturday before course weeks can be generated.")
+    error.statusCode = 422
+    throw error
+  }
+  const calendars = [
+    ...existingCalendars.filter((entry) => entry.schoolYear !== generated.schoolYear),
+    generated,
+  ].slice(-8)
+  return {
+    ...source,
+    schoolSetup: {
+      ...schoolSetup,
+      courseWeekCalendars: calendars,
+    },
+  }
+}
+
 async function writePersistedUiSettings(payload = {}, updatedByUsername = "") {
   const candidate = payload && typeof payload === "object" ? payload : {}
-  const uiSettings = normalizeUiSettingsPayload(candidate?.uiSettings || candidate)
+  const uiSettings = attachCourseWeekCalendarToSchoolSetup(
+    normalizeUiSettingsPayload(candidate?.uiSettings || candidate),
+  )
   if (Object.prototype.hasOwnProperty.call(uiSettings, "schoolSetup")) {
     const schoolSetupState = normalizeText(uiSettings?.schoolSetup?.schoolSetupState)
     if (schoolSetupState && schoolSetupState !== "ok") {
@@ -3663,6 +3719,7 @@ function parseParentPortalAccountsJson(value) {
     return parsed
       .map((entry) => ({
         parentsId: normalizeText(entry?.parentsId || entry?.username),
+        email: normalizeLower(entry?.email),
         password: normalizeText(entry?.password),
         passwordHash: normalizeText(entry?.passwordHash),
         status: normalizeLower(entry?.status) || "active",
@@ -3682,6 +3739,7 @@ function configuredParentPortalAccounts() {
   if (fallbackParentsId && (fallbackPassword || fallbackPasswordHash)) {
     accounts.push({
       parentsId: fallbackParentsId,
+      email: normalizeLower(process.env.STUDENT_PARENT_EMAIL),
       password: fallbackPassword,
       passwordHash: fallbackPasswordHash,
       status: "active",
@@ -3692,14 +3750,20 @@ function configuredParentPortalAccounts() {
 
 async function verifyParentPortalCredentials(parentsId, password) {
   const requestedParentsId = normalizeText(parentsId)
+  const requestedEmail = normalizeLower(parentsId)
   const inputPassword = normalizeText(password)
   if (!requestedParentsId || !inputPassword) return null
 
   if (isStudentAdminStoreEnabled()) {
     const dbResult = await runParentPortalDbOperation(
       async (prisma) => {
-        const account = await prisma.parentPortalAccount.findUnique({
-          where: { parentsId: requestedParentsId },
+        const account = await prisma.parentPortalAccount.findFirst({
+          where: {
+            OR: [
+              { parentsId: requestedParentsId },
+              ...(requestedEmail ? [{ email: requestedEmail }] : []),
+            ],
+          },
         })
         if (!account) return null
         if (normalizeLower(account.status) !== "active") return null
@@ -3707,6 +3771,7 @@ async function verifyParentPortalCredentials(parentsId, password) {
         return {
           accountId: account.id,
           parentsId: account.parentsId,
+          email: normalizeLower(account.email),
           source: "database",
         }
       },
@@ -3718,12 +3783,16 @@ async function verifyParentPortalCredentials(parentsId, password) {
   const accounts = configuredParentPortalAccounts()
   for (let i = 0; i < accounts.length; i += 1) {
     const account = accounts[i]
-    if (!timingSafeEqualText(requestedParentsId, account.parentsId)) continue
+    if (
+      !timingSafeEqualText(requestedParentsId, account.parentsId)
+      && (!account.email || !timingSafeEqualText(requestedEmail, account.email))
+    ) continue
     if (normalizeLower(account.status) !== "active") return null
     if (!verifyPassword(account.password, account.passwordHash, inputPassword)) return null
     return {
       accountId: `env:${account.parentsId}`,
       parentsId: account.parentsId,
+      email: account.email,
       source: "env",
     }
   }
@@ -3890,8 +3959,23 @@ async function listParentLinkedStudents({ parentsId = "", parentAccountId = "" }
         return linkedStudents.map((student) => mapStudentToParentChildSummary(student))
       }
 
+      const account = parentAccountId
+        ? await prisma.parentPortalAccount.findUnique({
+            where: { id: normalizeText(parentAccountId) },
+            select: { email: true },
+          })
+        : null
+      const parentEmail = normalizeLower(account?.email)
+
       const rows = await prisma.studentProfile.findMany({
-        where: { parentsId: normalizedParentsId },
+        where: {
+          OR: [
+            { parentsId: normalizedParentsId },
+            ...(parentEmail
+              ? [{ motherEmail: parentEmail }, { fatherEmail: parentEmail }]
+              : []),
+          ],
+        },
         select: {
           studentRefId: true,
           fullName: true,
@@ -4641,6 +4725,10 @@ function normalizeSchoolSetupSnapshot(source = {}) {
   const normalized = validateSchoolSetupSnapshot(source)
   return {
     ...normalized,
+    courseWeekCalendars: (Array.isArray(source?.courseWeekCalendars) ? source.courseWeekCalendars : [])
+      .map((entry) => normalizeCourseWeekCalendar(entry))
+      .filter(Boolean)
+      .slice(-8),
   }
 }
 
@@ -4874,6 +4962,7 @@ function serializeAttendanceRows(rows = []) {
       schoolYear: normalizeText(row?.schoolYear),
       quarter: normalizeText(row?.quarter),
       attendanceDate: toPortalDateKey(row?.attendanceDate),
+      weekNumber: Number.isInteger(Number(row?.weekNumber)) ? Number(row.weekNumber) : null,
       status: normalizeLower(row?.status) || "present",
       comments: normalizeText(row?.comments),
     }))
@@ -4894,6 +4983,7 @@ function serializeGradeRows(rows = [], now = new Date()) {
         assignmentName: normalizeText(row?.assignmentName),
         dueAt: toIsoOrEmpty(dueAt),
         dueDate: toPortalDateKey(dueAt),
+        weekNumber: Number.isInteger(Number(row?.weekNumber)) ? Number(row.weekNumber) : null,
         submittedAt: toIsoOrEmpty(submittedAt),
         submittedDate: toPortalDateKey(submittedAt),
         score: toFiniteNumberOrNull(row?.score),
@@ -6228,9 +6318,21 @@ async function handleApiRequest(request, response, pathname, url) {
       const result = await saveAssignmentTemplate(payload, {
         updatedByUsername: normalizeText(session?.username),
       })
+      let creationNotifications = null
+      if (!normalizeText(payload?.id) && result?.item?.id) {
+        try {
+          creationNotifications = await dispatchAssignmentCreated(result.item.id)
+        } catch (error) {
+          creationNotifications = {
+            ok: false,
+            error: normalizeText(error?.message || error) || "Assignment email dispatch failed",
+          }
+        }
+      }
       sendJson(response, 200, {
         ok: true,
         ...result,
+        creationNotifications,
       })
       return true
     }
@@ -6601,6 +6703,53 @@ async function handleApiRequest(request, response, pathname, url) {
       hasMore: listed.hasMore,
       items: listed.items,
       ...status,
+    })
+    return true
+  }
+
+  if (method === "GET" && pathname === ADMIN_ASSIGNMENT_REMINDER_ENGAGEMENT_PATH) {
+    assertCanManageUsers(rolePolicy)
+    assertStoreEnabled()
+    const take = Math.max(1, Math.min(Number.parseInt(String(url.searchParams.get("take") || "200"), 10) || 200, 1000))
+    const prisma = await getSharedPrismaClient()
+    const items = prisma?.assignmentReminderEngagement
+      ? await prisma.assignmentReminderEngagement.findMany({
+          orderBy: { queuedAt: "desc" },
+          take,
+          include: { dispatch: true },
+        })
+      : []
+    const studentIds = Array.from(new Set(items.map((item) => normalizeText(item.dispatch?.studentRefId)).filter(Boolean)))
+    const students = prisma?.student && studentIds.length
+      ? await prisma.student.findMany({
+          where: { id: { in: studentIds } },
+          select: { id: true, eaglesId: true },
+        })
+      : []
+    const eaglesIdsByStudentRef = new Map(students.map((student) => [student.id, normalizeText(student.eaglesId)]))
+    sendJson(response, 200, {
+      ok: true,
+      total: items.length,
+      items: items.map((item) => ({
+        id: item.id,
+        audience: item.audience,
+        recipientEmail: item.recipientEmail,
+        actionUrl: item.actionUrl,
+        queuedAt: item.queuedAt?.toISOString?.() || "",
+        sentAt: item.sentAt?.toISOString?.() || "",
+        deliveredAt: item.deliveredAt?.toISOString?.() || "",
+        openedAt: item.openedAt?.toISOString?.() || "",
+        clickedAt: item.clickedAt?.toISOString?.() || "",
+        actionCompletedAt: item.actionCompletedAt?.toISOString?.() || "",
+        dispatch: {
+          assignmentTemplateId: item.dispatch?.assignmentTemplateId || "",
+          studentRefId: item.dispatch?.studentRefId || "",
+          eaglesId: eaglesIdsByStudentRef.get(normalizeText(item.dispatch?.studentRefId)) || "",
+          reminderKind: item.dispatch?.reminderKind || "",
+          localDate: item.dispatch?.localDate || "",
+          status: item.dispatch?.status || "",
+        },
+      })),
     })
     return true
   }
@@ -7303,6 +7452,7 @@ async function handleParentApiRequest(request, response, pathname, url) {
       username: principal.parentsId,
       role: "parent",
       parentsId: principal.parentsId,
+      email: principal.email,
       accountId: principal.accountId,
     })
     if (!session?.id) {
@@ -7680,6 +7830,50 @@ export async function handleStudentAdminRequest(request, response) {
   const url = new URL(request.url || "/", `http://${host}`)
   const pathname = url.pathname
   const requestOrigin = resolveRequestOrigin(request)
+
+  const reminderClickMatch = pathname.match(ASSIGNMENT_REMINDER_CLICK_PATH_RE)
+  if (method === "GET" && reminderClickMatch) {
+    const token = decodeURIComponent(reminderClickMatch[1])
+    const prisma = await getSharedPrismaClient().catch(() => null)
+    const engagement = prisma?.assignmentReminderEngagement
+      ? await prisma.assignmentReminderEngagement.findUnique({ where: { trackingToken: token } })
+      : null
+    if (!engagement) {
+      sendJson(response, 404, { error: "Reminder link not found" })
+      return true
+    }
+    await prisma.assignmentReminderEngagement.update({
+      where: { id: engagement.id },
+      data: { clickedAt: engagement.clickedAt || new Date() },
+    })
+    const target = normalizeText(engagement.actionUrl)
+    if (!/^https:\/\//iu.test(target)) {
+      sendJson(response, 400, { error: "Reminder target is invalid" })
+      return true
+    }
+    sendRedirect(response, 302, target)
+    return true
+  }
+
+  const reminderOpenMatch = pathname.match(ASSIGNMENT_REMINDER_OPEN_PATH_RE)
+  if (method === "GET" && reminderOpenMatch) {
+    const token = decodeURIComponent(reminderOpenMatch[1])
+    const prisma = await getSharedPrismaClient().catch(() => null)
+    if (prisma?.assignmentReminderEngagement) {
+      await prisma.assignmentReminderEngagement.updateMany({
+        where: { trackingToken: token, openedAt: null },
+        data: { openedAt: new Date() },
+      })
+    }
+    const pixel = Buffer.from("R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=", "base64")
+    response.writeHead(200, {
+      "Content-Type": "image/gif",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      "Content-Length": String(pixel.length),
+    })
+    response.end(pixel)
+    return true
+  }
 
   const previewMatch = pathname.match(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH_RE)
   if (method === "GET" && previewMatch) {

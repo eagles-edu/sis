@@ -2763,7 +2763,13 @@
       .performance-engagement-grid {
         display: grid;
         gap: 12px;
-        grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+        grid-template-columns: minmax(230px, 260px) minmax(0, 1fr);
+        margin-top: 10px;
+      }
+      .assignment-engagement-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: minmax(230px, 260px) minmax(0, 1fr);
         margin-top: 10px;
       }
       .performance-engagement-home,
@@ -2782,9 +2788,10 @@
         align-items: start;
         color: inherit;
         cursor: pointer;
-        display: grid;
-        gap: 4px;
-        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 8px 10px;
         text-align: left;
         transition:
           border-color 160ms ease,
@@ -2809,18 +2816,55 @@
         pointer-events: none;
       }
       .performance-engagement-day-card strong {
-        font-size: 14px;
-        font-weight: 800;
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.25;
+        width: 100%;
+      }
+      .performance-engagement-day-card-rule {
+        display: none;
+      }
+      .performance-engagement-day-card .performance-engagement-day-card-rule {
+        display: none;
       }
       .performance-engagement-day-card span {
         display: block;
+        font-size: 12px;
+        font-weight: 400;
         line-height: 1.35;
+        margin-top: 3px;
+        width: 100%;
       }
-      .performance-engagement-table {
+.performance-engagement-table {
         border-collapse: collapse;
         min-width: 900px;
         width: 100%;
-      }
+}
+
+.assignment-engagement-table {
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 1120px;
+  width: 100%;
+}
+
+.assignment-engagement-table th,
+.assignment-engagement-table td {
+  border: 1px solid var(--portal-border);
+  line-height: 1.35;
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.assignment-engagement-table th {
+  background: transparent;
+  color: var(--portal-ods-accent-border);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
       .performance-engagement-table th,
       .performance-engagement-table td {
         border: 1px solid var(--portal-ods-accent-border);
@@ -2838,11 +2882,20 @@
         text-transform: uppercase;
       }
       .performance-engagement-table tbody tr:hover {
-        background: var(--portal-ods-accent-warning-bg);
+        background: transparent;
       }
       .performance-engagement-table tbody tr:hover > :is(th, td),
       .performance-engagement-table tbody tr:focus-within > :is(th, td) {
-        background: var(--portal-ods-accent-warning-bg);
+        border-bottom-color: var(--portal-ods-accent-border);
+        border-top-color: var(--portal-ods-accent-border);
+      }
+      .performance-engagement-table tbody tr:hover > :is(th, td):first-child,
+      .performance-engagement-table tbody tr:focus-within > :is(th, td):first-child {
+        border-left-color: var(--portal-ods-accent-border);
+      }
+      .performance-engagement-table tbody tr:hover > :is(th, td):last-child,
+      .performance-engagement-table tbody tr:focus-within > :is(th, td):last-child {
+        border-right-color: var(--portal-ods-accent-border);
       }
       .performance-engagement-table td.performance-engagement-reviewed-cell {
         font-weight: 700;
@@ -3527,6 +3580,9 @@
           min-width: 680px;
         }
         .performance-engagement-grid {
+          grid-template-columns: 1fr;
+        }
+        .assignment-engagement-grid {
           grid-template-columns: 1fr;
         }
         .performance-engagement-table {

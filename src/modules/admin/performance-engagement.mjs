@@ -2,6 +2,9 @@
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { isParentReportPortalVisible, mapParentClassReport } from "./parent-reports.mjs"
+import { parentProctorEmails } from "./proctor-recipient-routing.mjs"
+import { courseWeekNumberForSchoolSetupDate } from "./course-week-calendar.mjs"
+import { getSisConfigSnapshotSync } from "./sis-config-store.mjs"
 
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
@@ -54,7 +57,7 @@ function studentRecipientEmails(student = {}) {
 function parentRecipientEmails(student = {}) {
   const profile = student?.profile && typeof student.profile === "object" ? student.profile : {}
   const studentEmails = new Set(studentRecipientEmails(student))
-  return uniqueText([profile?.motherEmail, profile?.fatherEmail, profile?.signatureEmail]).filter(
+  return uniqueText([...parentProctorEmails(profile), profile?.signatureEmail]).filter(
     (email) => isEmail(email) && !studentEmails.has(email),
   )
 }
@@ -68,6 +71,7 @@ function rowSearchText(row = {}) {
   return [
     row.reviewed,
     row.id,
+    row.emailUsed,
     row.englishName,
     row.level,
     row.sentOkReturned,
@@ -95,6 +99,14 @@ function buildRoleRow({
   const profile = student?.profile && typeof student.profile === "object" ? student.profile : {}
   const reportId = normalizeText(report?.id)
   const classDate = normalizeDateKey(report?.classDate || report?.generatedAt)
+  const setup = getSisConfigSnapshotSync()?.uiSettings?.schoolSetup || {}
+  const weekNumber = Number.isInteger(Number(report?.weekNumber))
+    ? Number(report.weekNumber)
+    : courseWeekNumberForSchoolSetupDate(
+        classDate,
+        normalizeText(report?.schoolYear || setup?.schoolYear),
+        setup,
+      )
   const classDay = normalizeText(report?.classDay) || formatDayLabel(classDate)
   const className = normalizeText(report?.className)
   const level = role === "student" ? normalizeText(report?.level || profile?.currentGrade) : ""
@@ -137,6 +149,7 @@ function buildRoleRow({
   const row = {
     reviewed: role,
     id: role === "student" ? normalizeText(student?.eaglesId) : normalizeText(profile?.parentsId),
+    emailUsed: normalizeText(recipientEmails?.[0]),
     englishName,
     level,
     sentOkReturned,
@@ -149,6 +162,7 @@ function buildRoleRow({
     pdfDownloadedAt,
     acknowledgedAt,
     classDate,
+    weekNumber,
     classDay,
     className,
     reportId,

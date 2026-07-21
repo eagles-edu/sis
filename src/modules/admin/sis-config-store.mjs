@@ -2,6 +2,7 @@
 
 import fs from "node:fs"
 import path from "node:path"
+import { normalizeCourseWeekCalendar } from "./course-week-calendar.mjs"
 
 const SIS_CONFIG_FILE_NAME = "SIS_CONFIG.json"
 const SIS_CONFIG_MIRROR_ID = "sis-config"
@@ -368,6 +369,13 @@ function normalizeSchoolSetupQuarters(value) {
     .filter((entry) => entry !== null)
 }
 
+function normalizeCourseWeekCalendars(value) {
+  return (Array.isArray(value) ? value : [])
+    .map((entry) => normalizeCourseWeekCalendar(entry))
+    .filter(Boolean)
+    .slice(-8)
+}
+
 function defaultLevelTileStyle(levelName = "") {
   const normalized = normalizeLower(levelName)
   const themeEntry = DEFAULT_LEVEL_THEME_BY_LEVEL.get(normalized)
@@ -420,6 +428,7 @@ function normalizeUiSettings(source = {}) {
       endDate: normalizeText(schoolSetup.endDate).slice(0, 10),
       schoolYear: normalizeText(schoolSetup.schoolYear),
       quarters: normalizeSchoolSetupQuarters(schoolSetup.quarters),
+      courseWeekCalendars: normalizeCourseWeekCalendars(schoolSetup.courseWeekCalendars),
       letterGradeRanges: Array.isArray(schoolSetup.letterGradeRanges) ?
         schoolSetup.letterGradeRanges.map((entry) => ({ ...toPlainObject(entry) })) :
         [],

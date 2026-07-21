@@ -944,6 +944,9 @@ html[data-theme="dark"] body.admin-portal-page #performanceQueueSection .section
                   <a href="/admin/assignments-data" class="menu-link menu-sublink" data-page-link="assignments-data" data-admin-submenu="tracking-data">
                     Assignments data
                   </a>
+                  <a href="/admin/assignment-engagement" class="menu-link menu-sublink" data-page-link="assignment-engagement" data-admin-submenu="tracking-data">
+                    Assignment engagement
+                  </a>
                 </div>
                 <a href="/admin/grades" class="menu-link" data-page-link="grades">
                   Grades
@@ -2143,6 +2146,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <input id="attendanceDataDateTo" type="date">
                     </div>
                     <div class="toolbar-field">
+                      <label for="attendanceDataWeek">Week</label>
+                      <input id="attendanceDataWeek" type="number" min="1" max="52" placeholder="1-52">
+                    </div>
+                    <div class="toolbar-field">
                       <label for="attendanceDataSearch">Free text search</label>
                       <input
                         id="attendanceDataSearch"
@@ -2221,6 +2228,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         data-attendance-col-toggle="attendanceDate"
                         checked>Date</label
                     >
+                    <label><input id="attendanceColToggleWeek" type="checkbox" data-attendance-col-toggle="weekNumber" checked>Week</label>
                     <label
                       ><input
                         id="attendanceColToggleClassName"
@@ -2305,6 +2313,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                             aria-sort="none">
                             Date
                           </th>
+                          <th scope="col" data-attendance-col="weekNumber" data-table-sort="attendance" data-sort-field="weekNumber" tabindex="0" aria-sort="none">Week</th>
                           <th
                             scope="col"
                             data-attendance-col="className"
@@ -2506,6 +2515,89 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
                 <div
                   class="content page-section"
+                  data-page="assignment-engagement"
+                  data-surface-role="content">
+                  <h2>Assignment engagement</h2>
+                  <p class="small page-note">
+                    Track assignment creation and reminder delivery separately
+                    from performance engagement.
+                  </p>
+                  <div class="table-toolbar">
+                    <div class="toolbar-field">
+                      <label for="assignmentEngagementSearch">Free text search</label>
+                      <input id="assignmentEngagementSearch" type="search" placeholder="assignment | student | recipient | status">
+                    </div>
+                    <div class="toolbar-field">
+                      <label for="assignmentEngagementAudienceFilter">Audience</label>
+                      <select id="assignmentEngagementAudienceFilter">
+                        <option value="">All audiences</option>
+                        <option value="student">Student</option>
+                        <option value="parent">Parent</option>
+                      </select>
+                    </div>
+                    <div class="toolbar-field">
+                      <label for="assignmentEngagementReminderFilter">Reminder</label>
+                      <select id="assignmentEngagementReminderFilter">
+                        <option value="">All reminder types</option>
+                        <option value="assignment-created">Assignment created</option>
+                        <option value="wednesday">Wednesday</option>
+                        <option value="friday">Friday</option>
+                        <option value="mmr-daily">MMR daily</option>
+                      </select>
+                    </div>
+                    <div class="toolbar-field">
+                      <label for="assignmentEngagementStatusFilter">Status</label>
+                      <select id="assignmentEngagementStatusFilter">
+                        <option value="">All statuses</option>
+                        <option value="queued">Queued</option>
+                        <option value="sent">Sent</option>
+                        <option value="failed">Failed</option>
+                      </select>
+                    </div>
+                    <div class="toolbar-field compact">
+                      <div class="small">Tracker summary</div>
+                      <p class="small" id="assignmentEngagementSummary">Loading engagement records...</p>
+                    </div>
+                    <div class="toolbar-field compact">
+                      <button id="assignmentEngagementReloadBtn" type="button" class="portal-button portal-button-teal-refresh">Reload</button>
+                    </div>
+                  </div>
+                  <div class="assignment-engagement-grid">
+                    <section class="performance-engagement-home panel" data-surface-role="panel">
+                      <h3 class="section-title">Class days</h3>
+                      <p class="small" id="assignmentEngagementHomeSummary">Loading class day list...</p>
+                      <div id="assignmentEngagementDayList" class="performance-engagement-day-list"></div>
+                    </section>
+                    <section class="performance-engagement-detail panel" data-surface-role="panel">
+                      <h3 class="section-title">Tracked metric table</h3>
+                      <p class="small" id="assignmentEngagementTableSummary">Select a reminder day to inspect its recipients.</p>
+                      <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
+                        <table class="performance-engagement-table">
+                      <thead>
+                        <tr>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="assignment" tabindex="0" aria-sort="none">Assignment</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="student" tabindex="0" aria-sort="none">Student</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="audience" tabindex="0" aria-sort="none">Audience</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="recipient" tabindex="0" aria-sort="none">Email used</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="reminder" tabindex="0" aria-sort="none">Reminder</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="queuedAt" tabindex="0" aria-sort="none">Queued</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="status" tabindex="0" aria-sort="none">Status</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="openedAt" tabindex="0" aria-sort="none">Opened</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="clickedAt" tabindex="0" aria-sort="none">Clicked</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="actionCompletedAt" tabindex="0" aria-sort="none">Completed</th>
+                        </tr>
+                      </thead>
+                      <tbody id="assignmentEngagementRows">
+                        <tr><td colspan="10">Loading engagement records...</td></tr>
+                      </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+
+                <div
+                  class="content page-section"
                   data-page="assignments-data"
                   data-surface-role="content">
                   <h2>Assignments data</h2>
@@ -2559,6 +2651,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <div class="toolbar-field">
                       <label for="assignmentDataDateTo">Date to</label>
                       <input id="assignmentDataDateTo" type="date">
+                    </div>
+                    <div class="toolbar-field">
+                      <label for="assignmentDataWeek">Week</label>
+                      <input id="assignmentDataWeek" type="number" min="1" max="52" placeholder="1-52">
                     </div>
                     <div class="toolbar-field">
                       <label for="assignmentDataSearch">Free text search</label>
@@ -2648,6 +2744,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         data-assignments-col-toggle="dueAt"
                         checked>Due</label
                     >
+                    <label><input id="assignmentsColToggleWeek" type="checkbox" data-assignments-col-toggle="weekNumber" checked>Week</label>
                     <label
                       ><input
                         id="assignmentsColToggleItems"
@@ -2726,6 +2823,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                             aria-sort="none">
                             Due
                           </th>
+                          <th scope="col" data-assignments-col="weekNumber" data-table-sort="assignments" data-sort-field="weekNumber" tabindex="0" aria-sort="none">Week</th>
                           <th scope="col" data-assignments-col="items">
                             Items
                           </th>
@@ -3756,6 +3854,10 @@ Select a homework link to inspect details.</pre>
                       <input id="performanceDataDateTo" type="date">
                     </div>
                     <div class="toolbar-field">
+                      <label for="performanceDataWeek">Week</label>
+                      <input id="performanceDataWeek" type="number" min="1" max="52" placeholder="1-52">
+                    </div>
+                    <div class="toolbar-field">
                       <label for="performanceDataSearch"
                         >Free text search</label
                       >
@@ -4047,12 +4149,43 @@ Select a homework link to inspect details.</pre>
                   <div class="table-toolbar">
                     <div class="toolbar-field">
                       <label class="bm-p25rem" for="performanceEngagementSearch"
-                        >Search engagement rows</label
+                        >Free text search</label
                       >
                       <input
                         id="performanceEngagementSearch"
                         type="search"
-                        placeholder="class day, student, parent, email, metrics">
+                        placeholder="class day | student | parent | email">
+                    </div>
+                    <div class="toolbar-field">
+                      <label for="performanceEngagementRoleFilter">Audience</label>
+                      <select id="performanceEngagementRoleFilter">
+                        <option value="">All audiences</option>
+                        <option value="parent">Parent</option>
+                        <option value="student">Student</option>
+                      </select>
+                    </div>
+                    <div class="toolbar-field">
+                      <label for="performanceEngagementLevelFilter">Class Level</label>
+                      <select id="performanceEngagementLevelFilter">
+                        <option value="">All levels</option>
+                        <option value="Eggs &amp; Chicks">Eggs &amp; Chicks</option>
+                        <option value="Pre-A1 Starters">Pre-A1 Starters</option>
+                        <option value="A1 Movers">A1 Movers</option>
+                        <option value="A2 Flyers">A2 Flyers</option>
+                        <option value="A2 KET">A2 KET</option>
+                        <option value="B1 PET">B1 PET</option>
+                        <option value="B2+ IELTS">B2+ IELTS</option>
+                      </select>
+                    </div>
+                    <div class="toolbar-field">
+                      <label for="performanceEngagementDeliveryFilter">Delivery</label>
+                      <select id="performanceEngagementDeliveryFilter">
+                        <option value="">All delivery states</option>
+                        <option value="not-opened">Not opened</option>
+                        <option value="opened">Opened</option>
+                        <option value="clicked">Clicked</option>
+                        <option value="acknowledged">Acknowledged</option>
+                      </select>
                     </div>
                     <div class="toolbar-field compact">
                       <div class="small">Selected day</div>
@@ -4108,7 +4241,7 @@ Select a homework link to inspect details.</pre>
                                 data-performance-engagement-sort="id"
                                 tabindex="0"
                                 aria-sort="none">
-                                Id
+                                eaglesId
                               </th>
                               <th
                                 scope="col"
@@ -4129,28 +4262,28 @@ Select a homework link to inspect details.</pre>
                                 data-performance-engagement-sort="sentOkReturned"
                                 tabindex="0"
                                 aria-sort="none">
-                                sent-ok_returned
+                                sent-ok?
                               </th>
                               <th
                                 scope="col"
                                 data-performance-engagement-sort="emailOpened"
                                 tabindex="0"
                                 aria-sort="none">
-                                Email-opened?
+                                Email-open?
                               </th>
                               <th
                                 scope="col"
                                 data-performance-engagement-sort="linkClicked"
                                 tabindex="0"
                                 aria-sort="none">
-                                Link-clicked
+                                Link-click
                               </th>
                               <th
                                 scope="col"
                                 data-performance-engagement-sort="pdfDownloaded"
                                 tabindex="0"
                                 aria-sort="none">
-                                Pdf-downloaded
+                                PDF-DL?
                               </th>
                               <th
                                 scope="col"
@@ -4159,11 +4292,12 @@ Select a homework link to inspect details.</pre>
                                 aria-sort="none">
                                 acknowledged
                               </th>
+                              <th scope="col">Email used</th>
                             </tr>
                           </thead>
                           <tbody id="performanceEngagementRows">
                             <tr>
-                              <td colspan="9">
+                              <td colspan="10">
                                 Select a class day to load engagement rows.
                               </td>
                             </tr>
@@ -4614,6 +4748,10 @@ Select a homework link to inspect details.</pre>
                       <input id="gradeDataDateTo" type="date">
                     </div>
                     <div class="toolbar-field">
+                      <label for="gradeDataWeek">Week</label>
+                      <input id="gradeDataWeek" type="number" min="1" max="52" placeholder="1-52">
+                    </div>
+                    <div class="toolbar-field">
                       <label for="gradeDataSearch">Free text search</label>
                       <input
                         id="gradeDataSearch"
@@ -4684,6 +4822,7 @@ Select a homework link to inspect details.</pre>
                         data-grades-col-toggle="englishName">English
                       Name</label
                     >
+                    <label><input id="gradesColToggleWeek" type="checkbox" data-grades-col-toggle="weekNumber" checked>Week</label>
                     <label
                       ><input
                         id="gradesColToggleDueAt"
@@ -4801,6 +4940,7 @@ Select a homework link to inspect details.</pre>
                               aria-sort="none">
                               Due
                             </th>
+                            <th scope="col" data-grades-col="weekNumber" data-table-sort="grades" data-sort-field="weekNumber" tabindex="0" aria-sort="none">Week</th>
                             <th
                               scope="col"
                               data-grades-col="className"
@@ -5000,6 +5140,10 @@ Select a homework link to inspect details.</pre>
                       <input id="reportDataDateTo" type="date">
                     </div>
                     <div class="toolbar-field">
+                      <label for="reportDataWeek">Week</label>
+                      <input id="reportDataWeek" type="number" min="1" max="52" placeholder="1-52">
+                    </div>
+                    <div class="toolbar-field">
                       <label for="reportDataSearch">Free text search</label>
                       <input
                         id="reportDataSearch"
@@ -5067,6 +5211,7 @@ Select a homework link to inspect details.</pre>
                         data-reports-col-toggle="englishName">English
                       Name</label
                     >
+                    <label><input id="reportsColToggleWeek" type="checkbox" data-reports-col-toggle="weekNumber" checked>Week</label>
                     <label
                       ><input
                         id="reportsColToggleGeneratedAt"
@@ -5169,15 +5314,16 @@ Select a homework link to inspect details.</pre>
                         <th scope="col" data-reports-col="englishName">
                           English Name
                         </th>
-                        <th
-                          scope="col"
-                          data-reports-col="generatedAt"
+                          <th
+                            scope="col"
+                            data-reports-col="generatedAt"
                           data-table-sort="reports"
                           data-sort-field="generatedAt"
                           tabindex="0"
                           aria-sort="none">
-                          Generated
-                        </th>
+                            Generated
+                          </th>
+                          <th scope="col" data-reports-col="weekNumber" data-table-sort="reports" data-sort-field="weekNumber" tabindex="0" aria-sort="none">Week</th>
                         <th
                           scope="col"
                           data-reports-col="className"
@@ -6590,7 +6736,7 @@ No family lookup yet.</pre>
       ;(() => {
         const loadAdminApp = () => {
           const script = document.createElement("script")
-          script.src = "/web-asset/admin/student-admin.min.js?v=20260706b"
+          script.src = "/web-asset/admin/student-admin.min.js?v=20260720-assignment-engagement"
           script.defer = true
           document.body.appendChild(script)
         }

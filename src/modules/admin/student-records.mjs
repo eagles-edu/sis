@@ -1,5 +1,7 @@
 // @ts-check
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { getSisConfigSnapshotSync } from "./sis-config-store.mjs"
+import { courseWeekNumberForSchoolSetupDate } from "./course-week-calendar.mjs"
 import { resolveEnrollmentPeriodForStudent } from "./enrollment-periods.mjs"
 import { canonicalizeLevel } from "./level-catalog.mjs"
 
@@ -74,6 +76,13 @@ function parseDateOrNull(value) {
   if (!text) return null
   const parsed = new Date(text)
   return Number.isNaN(parsed.valueOf()) ? null : parsed
+}
+
+function configuredWeekNumber(value, schoolYear = "") {
+  const date = parseDateOrNull(value)
+  if (!date) return null
+  const setup = getSisConfigSnapshotSync()?.uiSettings?.schoolSetup || {}
+  return courseWeekNumberForSchoolSetupDate(date.toISOString().slice(0, 10), schoolYear, setup)
 }
 
 /**
@@ -373,6 +382,7 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
     quarter,
     enrollmentPeriodId: normalizeNullableText(payload.enrollmentPeriodId),
     attendanceDate,
+    weekNumber: configuredWeekNumber(attendanceDate, schoolYear),
     status: normalizeAttendanceStatus(payload.status),
     comments: normalizeNullableText(payload.comments),
   }
@@ -505,6 +515,7 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
     enrollmentPeriodId: normalizeNullableText(payload.enrollmentPeriodId),
     assignmentName,
     dueAt: normalizeDate(payload.dueAt),
+    weekNumber: configuredWeekNumber(payload.dueAt, schoolYear),
     submittedAt: normalizeDate(payload.submittedAt),
     score: normalizeFloat(payload.score),
     maxScore: normalizeFloat(payload.maxScore),

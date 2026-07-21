@@ -1057,6 +1057,8 @@ export async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUse
               ? parentReportEmailBodyFromPayload(item?.payloadJson || {}) || item.message
               : item.message,
           senderName: item.senderName,
+          requestOrigin: normalizeText(item?.payloadJson?.requestOrigin),
+          reminderEngagementToken: normalizeText(item?.payloadJson?.reminderEngagementToken),
         },
       },
       { dedupeKey: item.id }

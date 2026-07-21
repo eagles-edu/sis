@@ -176,6 +176,7 @@
           grades: { field: "dueAt", dir: "desc" },
           reports: { field: "generatedAt", dir: "desc" },
           newsReview: { field: "weekSet", dir: "desc" },
+          assignmentEngagement: { field: "queuedAt", dir: "desc" },
         },
         tableSearch: {
           attendance: "",
@@ -185,11 +186,11 @@
           reports: "",
         },
         tableFilters: {
-          attendance: { level: "", studentRefId: "", dateFrom: "", dateTo: "" },
-          assignments: { level: "", studentRefId: "", dateFrom: "", dateTo: "" },
-          performance: { level: "", studentRefId: "", dateFrom: "", dateTo: "" },
-          grades: { level: "", studentRefId: "", dateFrom: "", dateTo: "" },
-          reports: { level: "", studentRefId: "", dateFrom: "", dateTo: "" },
+          attendance: { level: "", studentRefId: "", dateFrom: "", dateTo: "", weekNumber: "" },
+          assignments: { level: "", studentRefId: "", dateFrom: "", dateTo: "", weekNumber: "" },
+          performance: { level: "", studentRefId: "", dateFrom: "", dateTo: "", weekNumber: "" },
+          grades: { level: "", studentRefId: "", dateFrom: "", dateTo: "", weekNumber: "" },
+          reports: { level: "", studentRefId: "", dateFrom: "", dateTo: "", weekNumber: "" },
         },
         tableShowArchived: {
           attendance: false,
@@ -217,6 +218,19 @@
           search: "",
           sortField: "classDate",
           sortDir: "desc",
+          role: "",
+          level: "",
+          delivery: "",
+        },
+        assignmentEngagement: {
+          loaded: false,
+          loading: false,
+          rows: [],
+          search: "",
+          audience: "",
+          reminderKind: "",
+          status: "",
+          selectedDayKey: "",
         },
         visibleTableRows: {
           attendance: [],
@@ -3100,6 +3114,7 @@
           quarter: true,
           status: true,
           comments: true,
+          weekNumber: true,
         }),
         assignments: Object.freeze({
           studentNumber: true,
@@ -3110,6 +3125,7 @@
           dueAt: true,
           items: true,
           completion: true,
+          weekNumber: true,
         }),
         performance: Object.freeze({
           studentNumber: true,
@@ -3124,6 +3140,7 @@
           behaviorScore: true,
           participationScore: true,
           inClassScore: true,
+          weekNumber: true,
         }),
         grades: Object.freeze({
           studentNumber: true,
@@ -3138,6 +3155,7 @@
           behaviorScore: true,
           participationScore: true,
           inClassScore: true,
+          weekNumber: true,
         }),
         reports: Object.freeze({
           studentNumber: true,
@@ -3152,6 +3170,7 @@
           behaviorScore: true,
           participationScore: true,
           inClassScore: true,
+          weekNumber: true,
         }),
       });
       const STUDENT_ID_SEARCH_PATTERN = /^(?:[a-z]{1,10}\d{3}|\d{1,12})$/;
@@ -3196,30 +3215,35 @@
           student: "attendanceDataStudent",
           dateFrom: "attendanceDataDateFrom",
           dateTo: "attendanceDataDateTo",
+          weekNumber: "attendanceDataWeek",
         },
         assignments: {
           level: "assignmentDataLevel",
           student: "assignmentDataStudent",
           dateFrom: "assignmentDataDateFrom",
           dateTo: "assignmentDataDateTo",
+          weekNumber: "assignmentDataWeek",
         },
         performance: {
           level: "performanceDataLevel",
           student: "performanceDataStudent",
           dateFrom: "performanceDataDateFrom",
           dateTo: "performanceDataDateTo",
+          weekNumber: "performanceDataWeek",
         },
         grades: {
           level: "gradeDataLevel",
           student: "gradeDataStudent",
           dateFrom: "gradeDataDateFrom",
           dateTo: "gradeDataDateTo",
+          weekNumber: "gradeDataWeek",
         },
         reports: {
           level: "reportDataLevel",
           student: "reportDataStudent",
           dateFrom: "reportDataDateFrom",
           dateTo: "reportDataDateTo",
+          weekNumber: "reportDataWeek",
         },
       };
       const ADMIN_DATA_SUMMARY_IDS = {
@@ -4244,6 +4268,8 @@
             compareValue = compareTableText(left?.quarter, right?.quarter);
           else if (sortField === "status")
             compareValue = compareTableText(left?.status, right?.status);
+          else if (sortField === "weekNumber")
+            compareValue = compareTableNumber(rowWeekNumber("attendance", left), rowWeekNumber("attendance", right));
           else
             compareValue = compareTableIsoDate(
               left?.attendanceDate,
@@ -4286,6 +4312,8 @@
               assignmentCompletionPercent(left),
               assignmentCompletionPercent(right),
             );
+          else if (sortField === "weekNumber")
+            compareValue = compareTableNumber(rowWeekNumber("assignments", left), rowWeekNumber("assignments", right));
           else compareValue = compareTableIsoDate(left?.dueAt, right?.dueAt);
           if (compareValue === 0)
             compareValue = compareTableIsoDate(left?.dueAt, right?.dueAt);
@@ -4330,6 +4358,8 @@
             );
           else if (sortField === "className")
             compareValue = compareTableText(left?.className, right?.className);
+          else if (sortField === "weekNumber")
+            compareValue = compareTableNumber(rowWeekNumber("grades", left), rowWeekNumber("grades", right));
           else compareValue = compareTableIsoDate(left?.dueAt, right?.dueAt);
           if (compareValue === 0)
             compareValue = compareTableIsoDate(left?.dueAt, right?.dueAt);
@@ -4382,6 +4412,8 @@
               left?.behaviorScore,
               right?.behaviorScore,
             );
+          else if (sortField === "weekNumber")
+            compareValue = compareTableNumber(rowWeekNumber("reports", left), rowWeekNumber("reports", right));
           else
             compareValue = compareTableIsoDate(left?.generatedAt, right?.generatedAt);
           if (compareValue === 0)
@@ -4431,6 +4463,8 @@
               left?.behaviorScore,
               right?.behaviorScore,
             );
+          else if (sortField === "weekNumber")
+            compareValue = compareTableNumber(rowWeekNumber("performance", left), rowWeekNumber("performance", right));
           else
             compareValue = compareTableIsoDate(left?.generatedAt, right?.generatedAt);
           if (compareValue === 0)
@@ -4476,6 +4510,7 @@
             if (!normalized) return null;
             normalized.reviewed = normalizeText(normalized.reviewed);
             normalized.id = normalizeText(normalized.id);
+            normalized.emailUsed = normalizeText(normalized.emailUsed);
             normalized.englishName = normalizeText(normalized.englishName);
             normalized.level = normalizeText(normalized.level);
             normalized.sentOkReturned = normalizeText(normalized.sentOkReturned);
@@ -4494,6 +4529,190 @@
           .filter(Boolean);
       }
 
+      function assignmentEngagementSearchText(row = {}) {
+        return [
+          row.dispatch?.assignmentTemplateId,
+          row.dispatch?.studentRefId,
+          row.dispatch?.eaglesId,
+          row.audience,
+          row.recipientEmail,
+          row.dispatch?.reminderKind,
+          row.dispatch?.localDate,
+          row.dispatch?.status,
+        ].map((value) => normalizeLower(value)).filter(Boolean).join(" ");
+      }
+
+      function assignmentEngagementDayKey(row = {}) {
+        const dispatch = row.dispatch || {};
+        return `${normalizeText(dispatch.localDate) || "unknown"}:${normalizeText(dispatch.reminderKind) || "unknown"}`;
+      }
+
+      function engagementDayWeekLabel(value = "", weekNumber = null) {
+        const week = Number.parseInt(String(weekNumber ?? ""), 10);
+        return Number.isInteger(week) && week >= 1 && week <= 52 ? `WEEK ${week}` : "WEEK -";
+      }
+
+      function engagementDayHeading(value = "", weekNumber = null) {
+        const dateText = normalizeText(value) || "-";
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateText)) return `${dateText} | - | WEEK -`;
+        const date = new Date(`${dateText}T00:00:00Z`);
+        const weekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+        return `${dateText} | ${weekdays[date.getUTCDay()]} | ${engagementDayWeekLabel(dateText, weekNumber)}`;
+      }
+
+      function assignmentEngagementRowsForDisplay(includeSelectedDay = true) {
+        const searchTerms = normalizeText(state.assignmentEngagement?.search)
+          .split("|").map((term) => normalizeLower(term)).filter(Boolean);
+        const audience = normalizeLower(state.assignmentEngagement?.audience);
+        const reminderKind = normalizeLower(state.assignmentEngagement?.reminderKind);
+        const status = normalizeLower(state.assignmentEngagement?.status);
+        const selectedDayKey = normalizeText(state.assignmentEngagement?.selectedDayKey);
+        const sortField = normalizeText(state.tableSort?.assignmentEngagement?.field) || "queuedAt";
+        const sortDir = normalizeLower(state.tableSort?.assignmentEngagement?.dir) === "asc" ? "asc" : "desc";
+        const filtered = (Array.isArray(state.assignmentEngagement?.rows) ? state.assignmentEngagement.rows : [])
+          .filter((row) => {
+            const dispatch = row.dispatch || {};
+            const haystack = assignmentEngagementSearchText(row);
+            return (!audience || normalizeLower(row.audience) === audience)
+              && (!reminderKind || normalizeLower(dispatch.reminderKind) === reminderKind)
+              && (!status || normalizeLower(dispatch.status) === status)
+              && (!includeSelectedDay || !selectedDayKey || assignmentEngagementDayKey(row) === selectedDayKey)
+              && searchTerms.every((term) => haystack.includes(term));
+          });
+        return filtered.sort((left, right) => {
+          const leftDispatch = left.dispatch || {};
+          const rightDispatch = right.dispatch || {};
+          const textField = (row, dispatch) => ({
+            assignment: dispatch.assignmentTemplateId,
+            student: dispatch.eaglesId || dispatch.studentRefId,
+            audience: row.audience,
+            recipient: row.recipientEmail,
+            reminder: dispatch.reminderKind,
+            status: dispatch.status,
+          }[sortField] || "");
+          const dateField = (row) => row[sortField] || "";
+          let compare = ["queuedAt", "openedAt", "clickedAt", "actionCompletedAt"].includes(sortField)
+            ? compareTableIsoDateTime(dateField(left), dateField(right))
+            : compareTableText(textField(left, leftDispatch), textField(right, rightDispatch));
+          if (!compare) compare = compareTableText(leftDispatch.studentRefId, rightDispatch.studentRefId);
+          return applySortDirection(compare, sortDir);
+        });
+      }
+
+      function assignmentEngagementStamp(value) {
+        return normalizeText(value) ? formatDateTime(value) : "-";
+      }
+
+      function renderAssignmentEngagementDayList() {
+        const listEl = document.getElementById("assignmentEngagementDayList");
+        const summaryEl = document.getElementById("assignmentEngagementHomeSummary");
+        if (!listEl || !summaryEl) return;
+        const rows = assignmentEngagementRowsForDisplay(false);
+        const grouped = new Map();
+        rows.forEach((row) => {
+          const dispatch = row.dispatch || {};
+          const key = assignmentEngagementDayKey(row);
+          const day = grouped.get(key) || {
+            key,
+            date: normalizeText(dispatch.localDate) || "unknown",
+            kind: normalizeText(dispatch.reminderKind) || "unknown",
+            weekNumber: rowWeekNumber("assignments", { dueAt: dispatch.localDate }),
+            assignments: new Set(),
+            recipients: 0,
+            sent: 0,
+            opened: 0,
+            clicked: 0,
+          };
+          if (normalizeText(dispatch.assignmentTemplateId)) day.assignments.add(normalizeText(dispatch.assignmentTemplateId));
+          day.recipients += 1;
+          if (row.sentAt) day.sent += 1;
+          if (row.openedAt) day.opened += 1;
+          if (row.clickedAt) day.clicked += 1;
+          grouped.set(key, day);
+        });
+        const days = Array.from(grouped.values()).sort((left, right) => `${right.date}:${right.kind}`.localeCompare(`${left.date}:${left.kind}`));
+        if (!state.assignmentEngagement.selectedDayKey && days.length) state.assignmentEngagement.selectedDayKey = days[0].key;
+        if (days.length && !days.some((day) => day.key === state.assignmentEngagement.selectedDayKey)) state.assignmentEngagement.selectedDayKey = days[0].key;
+        summaryEl.textContent = days.length ? `${days.length} reminder day${days.length === 1 ? "" : "s"} | ${rows.length} recipients` : "No reminder days match the current filters.";
+        listEl.replaceChildren();
+        days.forEach((day) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = day.key === state.assignmentEngagement.selectedDayKey
+            ? "performance-engagement-day-card card is-active"
+            : "performance-engagement-day-card card";
+          button.dataset.surfaceRole = "card";
+          const assignmentNames = Array.from(day.assignments).sort().join(", ");
+          button.innerHTML = `<strong>${escapeHtml(engagementDayHeading(day.date, day.weekNumber))}</strong><span class="performance-engagement-day-card-rule" aria-hidden="true"></span><span class="small">assignments=${day.assignments.size} | recipients=${day.recipients} | opens=${day.opened} | clicks=${day.clicked}</span><span class="small performance-engagement-day-card-assignment">assignment=${escapeHtml(assignmentNames || "-")}</span>`;
+          button.addEventListener("click", () => {
+            state.assignmentEngagement.selectedDayKey = day.key;
+            renderAssignmentEngagementPage();
+          });
+          listEl.appendChild(button);
+        });
+      }
+
+      function renderAssignmentEngagementPage() {
+        const rowsEl = document.getElementById("assignmentEngagementRows");
+        const summaryEl = document.getElementById("assignmentEngagementSummary");
+        const tableSummaryEl = document.getElementById("assignmentEngagementTableSummary");
+        if (!rowsEl || !summaryEl) return;
+        renderAssignmentEngagementDayList();
+        const rows = assignmentEngagementRowsForDisplay();
+        const allRows = Array.isArray(state.assignmentEngagement?.rows) ? state.assignmentEngagement.rows : [];
+        const sent = allRows.filter((row) => row.sentAt).length;
+        const opened = allRows.filter((row) => row.openedAt).length;
+        const clicked = allRows.filter((row) => row.clickedAt).length;
+        summaryEl.textContent = `${rows.length}/${allRows.length} shown | sent ${sent} | opened ${opened} | clicked ${clicked}`;
+        if (tableSummaryEl) tableSummaryEl.textContent = `${rows.length} recipient${rows.length === 1 ? "" : "s"} in the selected reminder group.`;
+        if (!rows.length) {
+          rowsEl.innerHTML = '<tr><td colspan="10">No assignment engagement records match the current search.</td></tr>';
+          return;
+        }
+        rowsEl.innerHTML = rows.map((row) => {
+          const dispatch = row.dispatch || {};
+          return `<tr>
+            <td>${escapeHtml(dispatch.assignmentTemplateId || "-")}</td>
+            <td title="Email used: ${escapeHtml(row.recipientEmail || "not available")}">${escapeHtml(dispatch.eaglesId || dispatch.studentRefId || "-")}</td>
+            <td>${escapeHtml(row.audience || "-")}</td>
+            <td>${escapeHtml(row.recipientEmail || "-")}</td>
+            <td>${escapeHtml(dispatch.reminderKind || "-")}</td>
+            <td>${escapeHtml(assignmentEngagementStamp(row.queuedAt))}</td>
+            <td>${escapeHtml(dispatch.status || "-")}</td>
+            <td>${escapeHtml(assignmentEngagementStamp(row.openedAt))}</td>
+            <td>${escapeHtml(assignmentEngagementStamp(row.clickedAt))}</td>
+            <td>${escapeHtml(assignmentEngagementStamp(row.actionCompletedAt))}</td>
+          </tr>`;
+        }).join("");
+        updateTableHeaderSortIndicators();
+      }
+
+      async function loadAssignmentEngagementData({ force = false } = {}) {
+        if (state.assignmentEngagement.loading) return;
+        if (state.assignmentEngagement.loaded && !force) {
+          renderAssignmentEngagementPage();
+          return;
+        }
+        state.assignmentEngagement.loading = true;
+        renderAssignmentEngagementPage();
+        try {
+          const payload = await api(`${ADMIN_ASSIGNMENT_ENGAGEMENT_PATH}?take=1000`);
+          state.assignmentEngagement.rows = Array.isArray(payload?.items) ? payload.items : [];
+          state.assignmentEngagement.loaded = true;
+          const searchEl = document.getElementById("assignmentEngagementSearch");
+          if (searchEl && searchEl.dataset.engagementSearchBound !== "true") {
+            searchEl.addEventListener("input", (event) => {
+              state.assignmentEngagement.search = normalizeText(event?.target?.value);
+              renderAssignmentEngagementPage();
+            });
+            searchEl.dataset.engagementSearchBound = "true";
+          }
+        } finally {
+          state.assignmentEngagement.loading = false;
+          renderAssignmentEngagementPage();
+        }
+      }
+
       function performanceEngagementGroupKey(row = {}) {
         return normalizeText(row?.reportId) || `${normalizeText(row?.classDate)}-${normalizeText(row?.id)}`
       }
@@ -4509,13 +4728,8 @@
 
       function performanceEngagementRowsForSelection() {
         const selectedDayKey = normalizeText(state.performanceEngagement?.selectedDayKey);
-        const search = normalizeLower(state.performanceEngagement?.search);
         const rows = normalizePerformanceEngagementRows(state.performanceEngagement?.rows);
-        const filtered = rows.filter((row) => {
-          if (selectedDayKey && normalizeText(row.classDate) !== selectedDayKey) return false;
-          if (search && !normalizeLower(row.searchText).includes(search)) return false;
-          return true;
-        });
+        const filtered = rows.filter((row) => performanceEngagementRowMatchesFilters(row, Boolean(selectedDayKey)));
         const grouped = new Map();
         filtered.forEach((row) => {
           const key = performanceEngagementGroupKey(row);
@@ -4569,20 +4783,50 @@
           });
       }
 
+      function performanceEngagementRowMatchesFilters(row = {}, includeSelectedDay = true) {
+        const searchTerms = normalizeText(state.performanceEngagement?.search)
+          .split("|").map((term) => normalizeLower(term)).filter(Boolean);
+        const role = normalizeLower(state.performanceEngagement?.role);
+        const level = normalizeLower(state.performanceEngagement?.level);
+        const delivery = normalizeLower(state.performanceEngagement?.delivery);
+        const selectedDayKey = normalizeText(state.performanceEngagement?.selectedDayKey);
+        const isTrue = (value) => ["yes", "true", "1"].includes(normalizeLower(value));
+        if (includeSelectedDay && selectedDayKey && normalizeText(row.classDate) !== selectedDayKey) return false;
+        if (role && normalizeLower(row.reviewed) !== role) return false;
+        if (level && normalizeLower(row.level) !== level) return false;
+        const searchHaystack = [
+          row.searchText,
+          row.reviewed,
+          row.id,
+          row.englishName,
+          row.level,
+          row.classDate,
+          row.classDay,
+          row.className,
+          row.reportId,
+        ].map((value) => normalizeLower(value)).filter(Boolean).join(" ");
+        if (searchTerms.length && !searchTerms.every((term) => searchHaystack.includes(term))) return false;
+        if (delivery === "not-opened" && isTrue(row.emailOpened)) return false;
+        if (delivery === "opened" && !isTrue(row.emailOpened)) return false;
+        if (delivery === "clicked" && !isTrue(row.linkClicked)) return false;
+        if (delivery === "acknowledged" && !isTrue(row.acknowledged)) return false;
+        return true;
+      }
+
       function renderPerformanceEngagementDayList() {
         const listEl = document.getElementById("performanceEngagementDayList");
         const summaryEl = document.getElementById("performanceEngagementHomeSummary");
         if (!listEl || !summaryEl) return;
         const rows = normalizePerformanceEngagementRows(state.performanceEngagement?.rows);
-        const search = normalizeLower(state.performanceEngagement?.search);
         const groupedDays = new Map();
         rows.forEach((row) => {
-          if (search && !normalizeLower(row.searchText).includes(search)) return;
+          if (!performanceEngagementRowMatchesFilters(row, false)) return;
           const dayKey = normalizeText(row.classDate) || "unknown";
           const day = groupedDays.get(dayKey) || {
             dayKey,
             classDate: normalizeText(row.classDate),
             classDay: normalizeText(row.classDay),
+            weekNumber: rowWeekNumber("performance", row),
             classNames: new Set(),
             reports: new Set(),
             rowCount: 0,
@@ -4631,8 +4875,8 @@
             : "performance-engagement-day-card card";
           button.dataset.surfaceRole = "card";
           button.innerHTML = `
-            <strong>${escapeHtml(day.classDay || "Day")}</strong>
-            <span>${escapeHtml(day.classDate || "-")}</span>
+            <strong>${escapeHtml(engagementDayHeading(day.classDate, day.weekNumber))}</strong>
+            <span class="performance-engagement-day-card-rule" aria-hidden="true"></span>
             <span class="small">${escapeHtml(`reports=${day.reports.size} | rows=${day.rowCount} | opens=${day.openCount} | clicks=${day.clickCount} | pdf=${day.pdfCount}`)}</span>
           `;
           button.addEventListener("click", () => {
@@ -4694,6 +4938,7 @@
               <td class="performance-engagement-event-cell ${linkClass}" title="${escapeHtml(row.linkClickedAt || "")}">${escapeHtml(row.linkClicked || "-")}</td>
               <td class="performance-engagement-event-cell ${pdfClass}" title="${escapeHtml(row.pdfDownloadedAt || "")}">${escapeHtml(row.pdfDownloaded || "-")}</td>
               <td class="performance-engagement-event-cell ${ackClass}" title="${escapeHtml(row.acknowledgedAt || "")}">${escapeHtml(row.acknowledged || "-")}</td>
+              <td>${escapeHtml(row.emailUsed || "-")}</td>
             `;
             rowsEl.appendChild(tr);
           });
@@ -4728,6 +4973,38 @@
             days: Array.isArray(response?.days) ? response.days : [],
             rows: Array.isArray(response?.rows) ? response.rows : [],
           };
+          const performanceSearchEl = document.getElementById("performanceEngagementSearch");
+          if (performanceSearchEl && performanceSearchEl.dataset.engagementSearchBound !== "true") {
+            performanceSearchEl.addEventListener("input", (event) => {
+              state.performanceEngagement.search = normalizeText(event?.target?.value);
+              renderPerformanceEngagementPage();
+            });
+            performanceSearchEl.dataset.engagementSearchBound = "true";
+          }
+          const performanceRoleEl = document.getElementById("performanceEngagementRoleFilter");
+          if (performanceRoleEl && performanceRoleEl.dataset.engagementFilterBound !== "true") {
+            performanceRoleEl.addEventListener("change", (event) => {
+              state.performanceEngagement.role = normalizeText(event?.target?.value);
+              renderPerformanceEngagementPage();
+            });
+            performanceRoleEl.dataset.engagementFilterBound = "true";
+          }
+          const performanceLevelEl = document.getElementById("performanceEngagementLevelFilter");
+          if (performanceLevelEl && performanceLevelEl.dataset.engagementFilterBound !== "true") {
+            performanceLevelEl.addEventListener("change", (event) => {
+              state.performanceEngagement.level = normalizeText(event?.target?.value);
+              renderPerformanceEngagementPage();
+            });
+            performanceLevelEl.dataset.engagementFilterBound = "true";
+          }
+          const performanceDeliveryEl = document.getElementById("performanceEngagementDeliveryFilter");
+          if (performanceDeliveryEl && performanceDeliveryEl.dataset.engagementFilterBound !== "true") {
+            performanceDeliveryEl.addEventListener("change", (event) => {
+              state.performanceEngagement.delivery = normalizeText(event?.target?.value);
+              renderPerformanceEngagementPage();
+            });
+            performanceDeliveryEl.dataset.engagementFilterBound = "true";
+          }
           if (
             state.performanceEngagement.selectedDayKey
             && !state.performanceEngagement.days.some(
@@ -4948,7 +5225,7 @@
 
       function setTableFilterValue(tableKey = "", field = "", value = "") {
         if (!DATA_TABLE_KEYS.includes(tableKey)) return;
-        if (!["level", "studentRefId", "dateFrom", "dateTo"].includes(field)) return;
+        if (!["level", "studentRefId", "dateFrom", "dateTo", "weekNumber"].includes(field)) return;
         if (!state.tableFilters || typeof state.tableFilters !== "object") return;
         if (
           !state.tableFilters[tableKey] ||
@@ -4959,6 +5236,7 @@
             studentRefId: "",
             dateFrom: "",
             dateTo: "",
+            weekNumber: "",
           };
         }
         let normalized = normalizeText(value);
@@ -4966,12 +5244,13 @@
         if (field === "studentRefId") normalized = normalizeText(normalized);
         if (field === "dateFrom" || field === "dateTo")
           normalized = normalizeText(normalized).slice(0, 10);
+        if (field === "weekNumber") normalized = normalizeText(normalized).replace(/[^0-9]/g, "");
         state.tableFilters[tableKey][field] = normalized;
       }
 
       function tableFilterValue(tableKey = "", field = "") {
         if (!DATA_TABLE_KEYS.includes(tableKey)) return "";
-        if (!["level", "studentRefId", "dateFrom", "dateTo"].includes(field)) return "";
+        if (!["level", "studentRefId", "dateFrom", "dateTo", "weekNumber"].includes(field)) return "";
         return normalizeText(state.tableFilters?.[tableKey]?.[field] || "");
       }
 
@@ -5536,6 +5815,24 @@
         return normalizeText(row?.generatedAt).slice(0, 10);
       }
 
+      function rowWeekNumber(tableKey = "", row = {}) {
+        const persisted = Number.parseInt(String(row?.weekNumber ?? ""), 10);
+        if (Number.isInteger(persisted) && persisted >= 1 && persisted <= 52) return persisted;
+        const setup = state.uiSettings?.schoolSetup || {};
+        const schoolYear = normalizeText(row?.schoolYear || setup?.schoolYear);
+        const calendar = (Array.isArray(setup?.courseWeekCalendars) ? setup.courseWeekCalendars : [])
+          .find((entry) => normalizeText(entry?.schoolYear) === schoolYear);
+        const date = tableRowDateValue(tableKey, row);
+        const week = (Array.isArray(calendar?.weeks) ? calendar.weeks : [])
+          .find((entry) => date && date >= entry.startDate && date <= entry.endDate);
+        return Number.isInteger(Number(week?.weekNumber)) ? Number(week.weekNumber) : null;
+      }
+
+      function weekSearchLabel(tableKey = "", row = {}) {
+        const week = rowWeekNumber(tableKey, row);
+        return week ? `Week ${week} W${week}` : "";
+      }
+
       function rowMatchesTableFilters(tableKey = "", row = {}) {
         if (!DATA_TABLE_KEYS.includes(tableKey)) return true;
         const context = tableRowFilterContext(tableKey, row);
@@ -5594,6 +5891,9 @@
           if (dateFrom && compareIsoDateText(rowDate, dateFrom) < 0) return false;
           if (dateTo && compareIsoDateText(rowDate, dateTo) > 0) return false;
         }
+
+        const weekFilter = Number.parseInt(tableFilterValue(tableKey, "weekNumber"), 10);
+        if (Number.isInteger(weekFilter) && rowWeekNumber(tableKey, row) !== weekFilter) return false;
 
         return true;
       }
@@ -5672,6 +5972,7 @@
           normalizeText(row?.quarter),
           normalizeText(row?.status),
           normalizeText(row?.comments),
+          weekSearchLabel("attendance", row),
         ].join(" ");
       }
 
@@ -5683,6 +5984,7 @@
           normalizeText(row?.assignedAt),
           normalizeText(row?.dueAt),
           assignmentItemsSummaryText(row),
+          weekSearchLabel("assignments", row),
         ].join(" ");
       }
 
@@ -5699,6 +6001,7 @@
           normalizeText(row?.score),
           normalizeText(row?.maxScore),
           normalizeText(row?.comments),
+          weekSearchLabel("grades", row),
         ].join(" ");
       }
 
@@ -5718,6 +6021,7 @@
           normalizeText(row?.participationScore),
           normalizeText(row?.inClassScore),
           normalizeText(row?.comments),
+          weekSearchLabel("reports", row),
         ].join(" ");
       }
 
@@ -5753,6 +6057,7 @@
             { key: "fullName", label: "Full Name" },
             { key: "englishName", label: "English Name" },
             { key: "date", label: "Date" },
+            { key: "weekNumber", label: "Week" },
             { key: "className", label: "Class" },
             { key: "quarter", label: "Quarter" },
             { key: "status", label: "Status" },
@@ -5769,6 +6074,7 @@
             { key: "englishName", label: "English Name" },
             { key: "assignedAt", label: "Assigned" },
             { key: "dueAt", label: "Due" },
+            { key: "weekNumber", label: "Week" },
             { key: "completion", label: "Completion" },
             { key: "items", label: "Items" },
           ];
@@ -5780,6 +6086,7 @@
             { key: "fullName", label: "Full Name" },
             { key: "englishName", label: "English Name" },
             { key: "dueAt", label: "Due" },
+            { key: "weekNumber", label: "Week" },
             { key: "className", label: "Class" },
             { key: "assignmentName", label: "Assignment" },
             { key: "score", label: "Score" },
@@ -5796,6 +6103,7 @@
           { key: "fullName", label: "Full Name" },
           { key: "englishName", label: "English Name" },
           { key: "generatedAt", label: "Generated" },
+          { key: "weekNumber", label: "Week" },
           { key: "className", label: "Class" },
           { key: "quarter", label: "Quarter" },
           { key: "homeworkCompletionRate", label: "HW %" },
@@ -5820,6 +6128,7 @@
             fullName: canonicalStudentFullNameFromRow(row),
             englishName: canonicalStudentEnglishNameFromRow(row),
             date: normalizeText(row?.attendanceDate).slice(0, 10),
+            weekNumber: rowWeekNumber("attendance", row) || "",
             className: normalizeText(row?.className),
             quarter: normalizeText(row?.quarter),
             status: normalizeText(row?.status),
@@ -5860,6 +6169,7 @@
             englishName,
             assignedAt: normalizeText(row?.assignedAt),
             dueAt: normalizeText(row?.dueAt),
+            weekNumber: rowWeekNumber("assignments", row) || "",
             completion: completionText,
             items: assignmentItemsSummaryText(row),
           };
@@ -5876,6 +6186,7 @@
             fullName: canonicalStudentFullNameFromRow(row),
             englishName: canonicalStudentEnglishNameFromRow(row),
             dueAt: normalizeText(row?.dueAt).slice(0, 10),
+            weekNumber: rowWeekNumber("grades", row) || "",
             className: normalizeText(row?.className),
             assignmentName: normalizeText(row?.assignmentName),
             score: `${normalizeText(row?.score)}/${normalizeText(row?.maxScore)}`,
@@ -5900,6 +6211,7 @@
           fullName: canonicalStudentFullNameFromRow(row),
           englishName: canonicalStudentEnglishNameFromRow(row),
           generatedAt: normalizeText(row?.generatedAt).slice(0, 10),
+          weekNumber: rowWeekNumber("reports", row) || "",
           className: normalizeText(row?.className),
           quarter: normalizeText(row?.quarter),
           homeworkCompletionRate: normalizeText(row?.homeworkCompletionRate),
@@ -6073,6 +6385,7 @@
         else if (sortKey === "grades") renderGradeRows(state.tableRows.grades);
         else if (sortKey === "reports") renderReportRows(state.tableRows.reports);
         else if (sortKey === "newsReview") renderNewsReviewRows();
+        else if (sortKey === "assignmentEngagement") renderAssignmentEngagementPage();
       }
 
       function bindColumnSortHeaderEvents() {
@@ -6654,11 +6967,13 @@
         const studentEl = document.getElementById(config.student);
         const fromEl = document.getElementById(config.dateFrom);
         const toEl = document.getElementById(config.dateTo);
+        const weekEl = document.getElementById(config.weekNumber);
         if (levelEl)
           levelEl.value = resolveSystemLevelName(tableFilterValue(tableKey, "level"));
         if (studentEl) studentEl.value = tableFilterValue(tableKey, "studentRefId");
         if (fromEl) fromEl.value = tableFilterValue(tableKey, "dateFrom");
         if (toEl) toEl.value = tableFilterValue(tableKey, "dateTo");
+        if (weekEl) weekEl.value = tableFilterValue(tableKey, "weekNumber");
       }
 
       function refreshTableSearchFilterControls(tableKey = "") {
@@ -8386,6 +8701,31 @@
           .sort((left, right) => quarterSortKey(left?.quarter) - quarterSortKey(right?.quarter));
       }
 
+      function normalizeCourseWeekCalendars(source = []) {
+        return (Array.isArray(source) ? source : [])
+          .map((calendar) => {
+            if (!calendar || typeof calendar !== "object" || !Array.isArray(calendar.weeks)) return null;
+            const weeks = calendar.weeks
+              .map((week) => ({
+                weekNumber: Number.parseInt(String(week?.weekNumber || ""), 10),
+                saturday: normalizeText(week?.saturday).slice(0, 10),
+                sunday: normalizeText(week?.sunday).slice(0, 10),
+                startDate: normalizeText(week?.startDate || week?.saturday).slice(0, 10),
+                endDate: normalizeText(week?.endDate || week?.sunday).slice(0, 10),
+              }))
+              .filter((week) => Number.isInteger(week.weekNumber) && week.weekNumber >= 1 && week.weekNumber <= 52);
+            if (weeks.length !== 52) return null;
+            return {
+              schoolYear: normalizeText(calendar.schoolYear),
+              q1StartDate: normalizeText(calendar.q1StartDate).slice(0, 10),
+              q1EndDate: normalizeText(calendar.q1EndDate).slice(0, 10),
+              generatedAt: normalizeText(calendar.generatedAt),
+              weeks,
+            };
+          })
+          .filter((calendar) => calendar && calendar.schoolYear);
+      }
+
       function quarterSortKey(value = "") {
         const normalized = quarterKey(value);
         if (normalized === "q1") return 1;
@@ -8441,6 +8781,7 @@
           endDate,
           schoolYear,
           quarters,
+          courseWeekCalendars: normalizeCourseWeekCalendars(normalizedSource.courseWeekCalendars),
           letterGradeRanges,
           schoolSetupState,
         };
@@ -9484,12 +9825,16 @@
           schoolProfile: profile,
           newsReportValidation,
         });
-        await persistUiSettingsToServer(state.uiSettings, state.sisConfig, {
+        const persisted = await persistUiSettingsToServer(state.uiSettings, state.sisConfig, {
           notifyOnFailure: notify,
         });
+        if (persisted?.uiSettings) {
+          persistUiSettings(persisted.uiSettings, persisted.meta || null);
+        }
         applyUiSettings();
+        const savedSetup = schoolSetupState();
         renderSchoolSetupPanel({
-          setup,
+          setup: savedSetup,
           profile,
           newsReportValidation,
           message: "School setup saved.",
@@ -9611,6 +9956,7 @@
       const ADMIN_NOTIFY_BATCH_STATUS_PATH =
         normalizeText(window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH) ||
         "/api/admin/notifications/batch-status";
+      const ADMIN_ASSIGNMENT_ENGAGEMENT_PATH = "/api/admin/assignment-reminder-engagement";
       const ADMIN_INCOMING_EXERCISE_RESULTS_PATH =
         normalizeText(window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH) ||
         "/api/admin/exercise-results/incoming";
@@ -9667,6 +10013,7 @@
           "parent-tracking",
           "performance-data",
           "performance-engagement",
+          "assignment-engagement",
           "news-reports",
           "reports",
         ],
@@ -9685,6 +10032,7 @@
         "parent-tracking",
         "performance-data",
         "performance-engagement",
+        "assignment-engagement",
         "news-reports",
         "school-setup",
         "settings",
@@ -10244,6 +10592,9 @@
         }
         if (slug === "performance-engagement") {
           loadPerformanceEngagementData({ force: false }).catch(handleError);
+        }
+        if (slug === "assignment-engagement") {
+          loadAssignmentEngagementData({ force: false }).catch(handleError);
         }
         if (slug === "news-reports") {
           loadNewsReviewQueue({ notify: false }).catch(handleError);
@@ -11075,13 +11426,23 @@
       function assignmentRecipientsForStudent(student) {
         if (!student) return [];
         const profile = student.profile || {};
+        const rawProfile = profile.rawFormPayload && typeof profile.rawFormPayload === "object" ? profile.rawFormPayload : {};
+        const proctorValue = (field) => normalizeText(profile[field] || rawProfile[field]);
+        const isTrue = (value) => ["1", "true", "yes", "on", "y", "có", "co", "si", "sí"].includes(normalizeLower(value));
+        const proctorCandidates = [
+          [profile.motherEmail, proctorValue("maIsHomeworkProctor")],
+          [profile.fatherEmail, proctorValue("baIsHomeworkProctor")],
+        ];
+        const hasExplicitProctorSelection = proctorCandidates.some(([, flag]) => Boolean(flag));
+        const parentEmails = proctorCandidates
+          .filter(([, flag]) => !hasExplicitProctorSelection || isTrue(flag))
+          .map(([address]) => normalizeLower(address));
         return Array.from(
           new Set(
             [
               student.email,
               profile.studentEmail,
-              profile.motherEmail,
-              profile.fatherEmail,
+              ...parentEmails,
               profile.signatureEmail,
             ]
               .map((entry) => normalizeLower(entry))
@@ -11629,6 +11990,7 @@
           <td data-assignments-col="student">${escapeHtml(studentLabel)}</td>
           <td data-assignments-col="assignedAt">${escapeHtml(template.assignedAt || "-")}</td>
           <td data-assignments-col="dueAt">${escapeHtml(template.dueAt || "-")}</td>
+          <td data-assignments-col="weekNumber">${rowWeekNumber("assignments", template) ? `Week ${rowWeekNumber("assignments", template)}` : "-"}</td>
           <td data-assignments-col="items">${assignmentRecordItemsHtml(template)}</td>
           <td data-assignments-col="completion">${assignmentCompletionPillHtml(template)}</td>
           <td class="table-row-options-cell">
@@ -21858,6 +22220,7 @@
           <td data-attendance-col="fullName">${escapeHtml(row.fullName || "")}</td>
           <td data-attendance-col="englishName">${escapeHtml(row.englishName || "")}</td>
           <td data-attendance-col="attendanceDate">${escapeHtml(formatDate(row.attendanceDate))}</td>
+          <td data-attendance-col="weekNumber">${rowWeekNumber("attendance", row) ? `Week ${rowWeekNumber("attendance", row)}` : "-"}</td>
           <td data-attendance-col="className">${row.className || ""}</td>
           <td data-attendance-col="quarter">${row.quarter || ""}</td>
           <td data-attendance-col="status">${row.status || ""}</td>
@@ -21904,7 +22267,7 @@
         });
         if (!filteredRows.length) {
           tbody.innerHTML =
-            '<tr><td colspan="10">No attendance rows match current search/archive filters.</td></tr>';
+            '<tr><td colspan="11">No attendance rows match current search/archive filters.</td></tr>';
         }
         applyAttendanceColumnVisibility();
       }
@@ -22036,6 +22399,7 @@
           <td data-grades-col="fullName">${escapeHtml(row.fullName || "")}</td>
           <td data-grades-col="englishName">${escapeHtml(row.englishName || "")}</td>
           <td data-grades-col="dueAt">${escapeHtml(formatDate(row.dueAt))}</td>
+          <td data-grades-col="weekNumber">${rowWeekNumber("grades", row) ? `Week ${rowWeekNumber("grades", row)}` : "-"}</td>
           <td data-grades-col="className">${row.className || ""}</td>
           <td data-grades-col="assignmentName">${row.assignmentName || ""}</td>
           <td data-grades-col="score">${row.score ?? ""}/${row.maxScore ?? ""}</td>
@@ -22101,7 +22465,7 @@
         });
         if (!filteredRows.length) {
           tbody.innerHTML =
-            '<tr><td colspan="13">No grade rows match current search/archive filters.</td></tr>';
+            '<tr><td colspan="14">No grade rows match current search/archive filters.</td></tr>';
         }
         applyTableColumnVisibility("grades");
         renderGradePulseChart(filteredRows);
@@ -22274,6 +22638,7 @@
           <td data-reports-col="fullName">${escapeHtml(row.fullName || "")}</td>
           <td data-reports-col="englishName">${escapeHtml(row.englishName || "")}</td>
           <td data-reports-col="generatedAt">${escapeHtml(formatDate(row.generatedAt))}</td>
+          <td data-reports-col="weekNumber">${rowWeekNumber("reports", row) ? `Week ${rowWeekNumber("reports", row)}` : "-"}</td>
           <td data-reports-col="className">${row.className || ""}</td>
           <td data-reports-col="quarter">${row.quarter || ""}</td>
           <td data-reports-col="homeworkCompletionRate">${row.homeworkCompletionRate ?? ""}</td>
@@ -22328,7 +22693,7 @@
         });
         if (!filteredRows.length) {
           tbody.innerHTML =
-            '<tr><td colspan="13">No report rows match current search/archive filters.</td></tr>';
+            '<tr><td colspan="14">No report rows match current search/archive filters.</td></tr>';
         }
         applyTableColumnVisibility("reports");
       }
@@ -22675,6 +23040,7 @@
         const studentEl = document.getElementById(config.student);
         const dateFromEl = document.getElementById(config.dateFrom);
         const dateToEl = document.getElementById(config.dateTo);
+        const weekEl = document.getElementById(config.weekNumber);
 
         levelEl?.addEventListener("change", () => {
           setTableFilterValue(tableKey, "level", levelEl.value);
@@ -22703,6 +23069,10 @@
         };
         dateFromEl?.addEventListener("change", applyDateRange);
         dateToEl?.addEventListener("change", applyDateRange);
+        weekEl?.addEventListener("input", () => {
+          setTableFilterValue(tableKey, "weekNumber", weekEl.value);
+          rerenderSortedTable(tableKey);
+        });
       });
       function bindNewsReviewIslandFallback() {
         const newsReviewStatusEl = document.getElementById("newsReviewStatusFilter");
@@ -23948,9 +24318,40 @@
         bindById("performanceEngagementReloadBtn", "click", () => {
           loadPerformanceEngagementData({ force: true }).catch(handleError);
         });
-        bindById("performanceEngagementSearch", "input", (value) => {
-          state.performanceEngagement.search = normalizeText(value);
+        bindById("performanceEngagementSearch", "input", (event) => {
+          state.performanceEngagement.search = normalizeText(event?.target?.value);
           renderPerformanceEngagementPage();
+        });
+        bindById("performanceEngagementRoleFilter", "change", (event) => {
+          state.performanceEngagement.role = normalizeText(event?.target?.value);
+          renderPerformanceEngagementPage();
+        });
+        bindById("performanceEngagementLevelFilter", "change", (event) => {
+          state.performanceEngagement.level = normalizeText(event?.target?.value);
+          renderPerformanceEngagementPage();
+        });
+        bindById("performanceEngagementDeliveryFilter", "change", (event) => {
+          state.performanceEngagement.delivery = normalizeText(event?.target?.value);
+          renderPerformanceEngagementPage();
+        });
+        bindById("assignmentEngagementReloadBtn", "click", () => {
+          loadAssignmentEngagementData({ force: true }).catch(handleError);
+        });
+        bindById("assignmentEngagementSearch", "input", (event) => {
+          state.assignmentEngagement.search = normalizeText(event?.target?.value);
+          renderAssignmentEngagementPage();
+        });
+        bindById("assignmentEngagementAudienceFilter", "change", (event) => {
+          state.assignmentEngagement.audience = normalizeText(event?.target?.value);
+          renderAssignmentEngagementPage();
+        });
+        bindById("assignmentEngagementReminderFilter", "change", (event) => {
+          state.assignmentEngagement.reminderKind = normalizeText(event?.target?.value);
+          renderAssignmentEngagementPage();
+        });
+        bindById("assignmentEngagementStatusFilter", "change", (event) => {
+          state.assignmentEngagement.status = normalizeText(event?.target?.value);
+          renderAssignmentEngagementPage();
         });
         bindById("parentQueueCloseBtn", "click", () => closeParentQueueModal());
         bindById("parentQueuePrevBtn", "click", () => {

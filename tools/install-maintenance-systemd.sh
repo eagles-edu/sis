@@ -101,6 +101,8 @@ unit_files=(
   "sis-incoming-vacuum.timer"
   "sis-db-backup.service"
   "sis-db-backup.timer"
+  "sis-assignment-reminders.service"
+  "sis-assignment-reminders.timer"
   "sis-db-health.service"
   "sis-db-health.timer"
 )
@@ -128,8 +130,8 @@ done
 systemctl daemon-reload
 
 if [[ ${ENABLE_NOW} -eq 1 ]]; then
-  systemctl enable --now sis-incoming-vacuum.timer sis-db-backup.timer sis-db-health.timer
-  systemctl list-timers --all | grep -E "sis-incoming-vacuum|sis-db-backup|sis-db-health" || true
+  systemctl enable --now sis-incoming-vacuum.timer sis-db-backup.timer sis-db-health.timer sis-assignment-reminders.timer
+  systemctl list-timers --all | grep -E "sis-incoming-vacuum|sis-db-backup|sis-db-health|sis-assignment-reminders" || true
 else
   echo "[install-maintenance-systemd] units installed but timers not enabled (--no-enable)"
 fi

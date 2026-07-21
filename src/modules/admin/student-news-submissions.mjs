@@ -26,6 +26,8 @@ import {
   listStudentNewsReportsFromFallbackStore,
   upsertStudentNewsReportInFallbackStore,
 } from "./student-news-fallback.mjs"
+import { getSisConfigSnapshotSync } from "./sis-config-store.mjs"
+import { courseWeekNumberForSchoolSetupDate } from "./course-week-calendar.mjs"
 
 /** @type {Promise<import("@prisma/client").PrismaClient> | null} */
 let prismaClientPromise = null
@@ -783,6 +785,7 @@ export function mapStudentNewsReportRow(row = {}) {
     studentRefId: normalizeText(row?.studentRefId),
     enrollmentPeriodId: normalizeText(row?.enrollmentPeriodId),
     reportDate: toLocalIsoDate(row?.reportDate),
+    weekNumber: Number.isInteger(Number(row?.weekNumber)) ? Number(row.weekNumber) : null,
     sourceLink,
     articleTitle,
     byline: normalizeText(row?.byline),
@@ -1162,6 +1165,11 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
 
   const reportData = {
     enrollmentPeriodId: enrollmentPeriodId || null,
+    weekNumber: courseWeekNumberForSchoolSetupDate(
+      reportDateText,
+      getConfiguredSchoolYear(),
+      getSisConfigSnapshotSync()?.uiSettings?.schoolSetup || {},
+    ),
     sourceLink,
     articleTitle,
     byline: normalizeNullableText(byline),

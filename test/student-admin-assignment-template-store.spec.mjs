@@ -159,10 +159,21 @@ test("deleteAssignmentTemplateById removes saved records", async () => {
   assert.equal(missing, null)
 })
 
-test("saveAssignmentTemplate rejects incomplete provenance bundles", async () => {
+test("saveAssignmentTemplate allows level-wide bundles without an eaglesId", async () => {
+  const saved = await saveAssignmentTemplate({
+    level: "A1 Movers",
+    assignmentTitle: "Level-wide Assignment",
+    assignedAt: "2026-03-09",
+    dueAt: "2026-03-12",
+    items: [{ title: "Task", url: "https://example.com/task" }],
+  })
+  assert.equal(saved.item.eaglesId, "")
+  await deleteAssignmentTemplateById(saved.item.id)
+})
+
+test("saveAssignmentTemplate rejects a bundle without a student or level target", async () => {
   await assert.rejects(
     saveAssignmentTemplate({
-      level: "A1 Movers",
       assignmentTitle: "Broken Assignment",
       assignedAt: "2026-03-09",
       dueAt: "2026-03-12",

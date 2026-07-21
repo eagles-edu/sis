@@ -30,7 +30,6 @@ model Student {
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
 
-  @@index([email])
 }
 
 model Exercise {
@@ -55,6 +54,7 @@ model ExerciseSubmission {
   sourceOriginLabel  String?
   sourceOriginHost   String?
   completedAt        DateTime
+  weekNumber         Int?
   totalQuestions     Int
   correctCount       Int
   pendingCount       Int
@@ -80,6 +80,7 @@ model IncomingExerciseResult {
   sourceOriginLabel  String?
   sourceOriginHost   String?
   completedAt        DateTime
+  weekNumber         Int?
   totalQuestions     Int
   correctCount       Int
   pendingCount       Int
@@ -107,6 +108,7 @@ model AssignmentTemplate {
   assignmentTitle String
   exerciseTitle  String?
   assignedAt     String?
+  weekNumber     Int?
   dueAt          String?
   level          String?
   eaglesId       String?
@@ -227,11 +229,13 @@ model StudentProfile {
   currentSchoolGrade         String?
   motherName                 String?
   motherEmail                String?
+  maIsHomeworkProctor        String?
   motherPhone                String?
   motherEmergencyContact     String?
   motherMessenger            String?
   fatherName                 String?
   fatherEmail                String?
+  baIsHomeworkProctor        String?
   fatherPhone                String?
   fatherEmergencyContact     String?
   fatherMessenger            String?
@@ -297,6 +301,7 @@ model StudentAttendance {
   schoolYear     String
   quarter        SchoolQuarter
   attendanceDate DateTime
+  weekNumber     Int?
   status         AttendanceStatus @default(present)
   comments       String?
   createdAt      DateTime         @default(now())
@@ -320,6 +325,7 @@ model StudentGradeRecord {
   quarter           SchoolQuarter
   assignmentName    String
   dueAt             DateTime?
+  weekNumber        Int?
   submittedAt       DateTime?
   score             Float?
   maxScore          Float?
@@ -379,6 +385,7 @@ model ParentClassReport {
   rubricPayload          Json?
   metaPayload            Json?
   generatedAt            DateTime      @default(now())
+  weekNumber             Int?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 
@@ -429,6 +436,7 @@ model StudentNewsReport {
   enrollmentPeriodId String?
   enrollmentPeriod   StudentEnrollmentPeriod? @relation("EnrollmentPeriodNewsReports", fields: [enrollmentPeriodId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   reportDate    DateTime
+  weekNumber    Int?
   sourceLink    String
   articleTitle  String
   byline        String?
@@ -555,6 +563,48 @@ model AdminNotificationQueue {
   @@index([status, scheduledFor, createdAt])
 }
 
+model AssignmentReminderDispatch {
+  id                   String   @id @default(cuid())
+  dispatchKey          String   @unique
+  assignmentTemplateId String
+  studentRefId         String
+  reminderKind         String
+  localDate            String
+  status               String   @default("pending")
+  audience             String   @default("combined")
+  queueId              String?
+  lastError            String?
+  engagements          AssignmentReminderEngagement[]
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([assignmentTemplateId, localDate, reminderKind])
+  @@index([studentRefId, localDate, reminderKind])
+  @@index([status, updatedAt])
+}
+
+model AssignmentReminderEngagement {
+  id             String   @id @default(cuid())
+  dispatchId     String
+  audience       String
+  recipientEmail String
+  trackingToken  String   @unique
+  actionUrl      String?
+  queuedAt       DateTime @default(now())
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+  actionCompletedAt DateTime?
+  metadataJson   Json?
+  dispatch       AssignmentReminderDispatch @relation(fields: [dispatchId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([dispatchId, audience, recipientEmail])
+  @@index([audience, queuedAt])
+  @@index([openedAt, clickedAt])
+  @@index([actionCompletedAt])
+}
+
 model AsyncSideEffectJob {
   id           String   @id
   jobType      String
@@ -580,6 +630,7 @@ model AsyncSideEffectJob {
 model ParentPortalAccount {
   id               String   @id @default(cuid())
   parentsId        String   @unique
+  email            String?  @unique
   passwordHash     String
   status           String   @default("active")
   lastLoginAt      DateTime?
@@ -589,6 +640,7 @@ model ParentPortalAccount {
   updatedAt        DateTime @updatedAt
 
   @@index([status])
+  @@index([email])
 }
 
 model ParentPortalStudentLink {

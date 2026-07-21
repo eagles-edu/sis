@@ -83,6 +83,8 @@ function resolveSmtpAuthMode(value) {
  *   artifactVersion?: unknown,
  *   requestOrigin?: unknown,
  *   reportSnapshot?: unknown,
+ *   requestOrigin?: unknown,
+ *   reminderEngagementToken?: unknown,
  * }} AnnouncementEmailPayload
  */
 
@@ -311,12 +313,17 @@ function buildAnnouncementEmailContent(payload = {}) {
   const level = normalizeText(payload.level)
   const customMessage = normalizeText(payload.message)
   const sender = normalizeText(payload.senderName) || "Eagles Student Admin"
+  const trackingOrigin = normalizeOrigin(payload.requestOrigin)
+  const reminderToken = normalizeText(payload.reminderEngagementToken)
+  const openPixelUrl = trackingOrigin && reminderToken
+    ? `${trackingOrigin}/api/assignment-reminders/track/open/${encodeURIComponent(reminderToken)}`
+    : ""
 
   const subjectParts = [assignmentTitle]
   if (exerciseTitle) subjectParts.push(`(${exerciseTitle})`)
   const subject = subjectParts.join(" ").trim()
 
-  const lines = [
+  const baseLines = [
     `${sender} announcement`,
     "",
     `Assignment: ${assignmentTitle}`,
@@ -324,17 +331,20 @@ function buildAnnouncementEmailContent(payload = {}) {
     level ? `Level/Class: ${level}` : "",
     dueAt ? `Due: ${dueAt}` : "",
     "",
-    customMessage || "Please review and complete this assignment.",
   ].filter(Boolean)
+  const message = customMessage || "Please review and complete this assignment."
+  const lines = [...baseLines, message]
 
-  const htmlLines = lines
+  const escapedMessage = escapeHtml(customMessage || "Please review and complete this assignment.")
+    .replace(/(https?:\/\/[^\s<]+)/giu, '<a href="$1">$1</a>')
+  const htmlLines = baseLines
     .map((line) => line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))
     .join("<br>")
 
   return {
     subject,
     lines,
-    htmlLines,
+    htmlLines: `${htmlLines}<br><br>${escapedMessage}${openPixelUrl ? `<img src="${escapeHtml(openPixelUrl)}" alt="" width="1" height="1" style="display:block;border:0;opacity:0;">` : ""}`,
   }
 }
 
@@ -424,7 +434,7 @@ export async function sendAnnouncementEmail(payload = {}) {
     }
   }
 
-  const emailContent = buildAnnouncementEmailContent(normalizedPayload)
+  const emailContent = buildAnnouncementEmailContent({ ...payload, ...normalizedPayload })
   await transporter.sendMail({
     from: smtp.from,
     to: smtp.from,
