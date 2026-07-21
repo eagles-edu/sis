@@ -475,6 +475,7 @@ export function mapImportRowToStudentPayload(row) {
     postCode: normalizeText(getImportValue(row, ["postCode"])),
     motherName: normalizeText(getImportValue(row, ["motherName", "fullNameMother"])),
     motherEmail: normalizeText(getImportValue(row, ["motherEmail", "emailMa"])),
+    maIsHomeworkProctor: normalizeText(getImportValue(row, ["maIsHomeworkProctor"])),
     motherPhone: normalizeText(getImportValue(row, ["motherPhone", "mothersPhone"])),
     motherEmergencyContact: normalizeText(
       getImportValue(row, ["motherEmergencyContact", "emergencyContactMother"])
@@ -482,6 +483,7 @@ export function mapImportRowToStudentPayload(row) {
     motherMessenger: normalizeText(getImportValue(row, ["motherMessenger", "zaloImIdMother"])),
     fatherName: normalizeText(getImportValue(row, ["fatherName", "fullNameFather"])),
     fatherEmail: normalizeText(getImportValue(row, ["fatherEmail", "emailBa"])),
+    baIsHomeworkProctor: normalizeText(getImportValue(row, ["baIsHomeworkProctor"])),
     fatherPhone: normalizeText(getImportValue(row, ["fatherPhone", "fathersPhone"])),
     fatherEmergencyContact: normalizeText(
       getImportValue(row, ["fatherEmergencyContact", "emergencyContactFather"])

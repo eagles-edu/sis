@@ -126,6 +126,7 @@ function createSummaryFormatter(fileNumber, emit) {
 let exitCode = 0
 if (summaryMode) {
   console.log(`[test-suite:${mode}:summary] running ${files.length} file(s)`)
+  const interactiveProgress = Boolean(process.stdout.isTTY)
   const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
   for (const [index, filePath] of files.entries()) {
     const position = `${index + fromPosition}/${allFiles.length}`
@@ -139,12 +140,8 @@ if (summaryMode) {
     const writeSpinner = () => {
       process.stdout.write(`\r[test-suite:${mode}:summary] ${position} ${spinnerFrames[spinnerIndex]} ${filePath}`)
     }
-    const formatter = createSummaryFormatter(index + fromPosition, (line) => {
-      clearSpinner()
-      process.stdout.write(`${line}\n`)
-      if (spinner) writeSpinner()
-    })
     const setRunning = (running) => {
+      if (!interactiveProgress) return
       if (running) {
         writeSpinner()
         spinner = setInterval(() => {
@@ -154,9 +151,15 @@ if (summaryMode) {
       } else if (spinner) {
         clearInterval(spinner)
         spinner = null
-        process.stdout.write("\r\x1b[2K")
+        clearSpinner()
       }
     }
+    if (!interactiveProgress) console.log(`[test-suite:${mode}:summary] ${position} running ${filePath}`)
+    const formatter = createSummaryFormatter(index + fromPosition, (line) => {
+      clearSpinner()
+      process.stdout.write(`${line}\n`)
+      if (spinner) writeSpinner()
+    })
     const result = await new Promise((resolve) => {
       const child = spawn(process.execPath, testArguments, {
         stdio: ["ignore", "pipe", "pipe"],

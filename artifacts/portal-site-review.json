@@ -45,7 +45,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3517
+              "height": 3438
             },
             ".portal-card": null,
             ".panel": {
@@ -224,6 +224,11 @@
           "pageLink": "assignments-data"
         },
         {
+          "text": "Assignment engagement",
+          "href": "/admin/assignment-engagement",
+          "pageLink": "assignment-engagement"
+        },
+        {
           "text": "Grades",
           "href": "/admin/grades",
           "pageLink": "grades"
@@ -333,7 +338,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2927
+              "height": 2852
             },
             ".wrap": {
               "selector": ".wrap",
@@ -345,7 +350,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2879
+              "height": 2804
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -357,7 +362,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2795
+              "height": 2720
             },
             ".panel": {
               "selector": ".panel",
@@ -381,7 +386,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 211,
-              "height": 77
+              "height": 71
             },
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
@@ -473,7 +478,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3516
+              "height": 3563
             },
             ".wrap": {
               "selector": ".wrap",
@@ -485,7 +490,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3468
+              "height": 3515
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -497,7 +502,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3384
+              "height": 3431
             },
             ".panel": {
               "selector": ".panel",
@@ -613,7 +618,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3406
+              "height": 3318
             },
             ".wrap": {
               "selector": ".wrap",
@@ -625,7 +630,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3358
+              "height": 3270
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -637,7 +642,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3274
+              "height": 3186
             },
             ".panel": {
               "selector": ".panel",
@@ -765,7 +770,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 808
+              "height": 872
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -777,7 +782,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 724
+              "height": 788
             },
             ".panel": {
               "selector": ".panel",
@@ -893,7 +898,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1225
+              "height": 1349
             },
             ".wrap": {
               "selector": ".wrap",
@@ -905,7 +910,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1177
+              "height": 1301
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -917,7 +922,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1093
+              "height": 1217
             },
             ".panel": {
               "selector": ".panel",
@@ -1033,7 +1038,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1294
+              "height": 1286
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1045,7 +1050,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1246
+              "height": 1238
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1057,7 +1062,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1162
+              "height": 1154
             },
             ".panel": {
               "selector": ".panel",
@@ -1173,7 +1178,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1100
+              "height": 1146
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1185,7 +1190,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 925
+              "height": 1098
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1197,7 +1202,147 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 841
+              "height": 1014
+            },
+            ".panel": {
+              "selector": ".panel",
+              "id": "authBootPanel",
+              "className": "panel hidden",
+              "bg": "rgb(252, 253, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(95, 115, 145)",
+              "display": "none",
+              "width": 0,
+              "height": 0
+            },
+            ".card": {
+              "selector": ".card",
+              "id": "",
+              "className": "stat-card stat-card--student card",
+              "bg": "rgb(252, 253, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".queue-modal-card": {
+              "selector": ".queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card",
+              "bg": "rgb(251, 255, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(95, 115, 145)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            ".grade-chart-shell": {
+              "selector": ".grade-chart-shell",
+              "id": "gradeChartShell",
+              "className": "grade-chart-shell panel",
+              "bg": "rgb(227, 233, 240)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".grade-chart-empty": {
+              "selector": ".grade-chart-empty",
+              "id": "",
+              "className": "grade-chart-empty",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerModal .queue-modal-card": {
+              "selector": "#newsReviewViewerModal .queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card content",
+              "bg": "rgb(251, 255, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerBody .news-review-viewer-block": null,
+            "#newsReviewViewerNote": {
+              "selector": "#newsReviewViewerNote",
+              "id": "newsReviewViewerNote",
+              "className": "card",
+              "bg": "rgb(252, 253, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".news-review-note-line.pending": null,
+            ".news-review-note-line.fixed": null,
+            "#reloadBtn": null
+          },
+          "axe": []
+        },
+        {
+          "link": {
+            "text": "Assignment engagement",
+            "href": "/admin/assignment-engagement",
+            "pageLink": "assignment-engagement"
+          },
+          "state": {
+            "bodyClass": "admin-portal-page page",
+            "title": "The Eagles Club Student Information System",
+            "htmlTheme": "light",
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
+          },
+          "surfaces": {
+            "body": {
+              "selector": "body",
+              "id": "top",
+              "className": "admin-portal-page page",
+              "bg": "rgb(232, 238, 244)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "block",
+              "width": 1425,
+              "height": 1459
+            },
+            ".wrap": {
+              "selector": ".wrap",
+              "id": "",
+              "className": "wrap",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "grid",
+              "width": 1425,
+              "height": 1411
+            },
+            ".app-shell": {
+              "selector": ".app-shell",
+              "id": "",
+              "className": "app-shell",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "grid",
+              "width": 1393,
+              "height": 1327
             },
             ".panel": {
               "selector": ".panel",
@@ -1325,7 +1470,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 816
+              "height": 823
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1337,7 +1482,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 732
+              "height": 739
             },
             ".panel": {
               "selector": ".panel",
@@ -1453,7 +1598,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2606
+              "height": 2670
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1465,7 +1610,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2558
+              "height": 2622
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1477,7 +1622,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2474
+              "height": 2538
             },
             ".panel": {
               "selector": ".panel",
@@ -1525,7 +1670,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1363,
-              "height": 1086
+              "height": 1081
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -1580,7 +1725,7 @@
             "bodyClass": "admin-portal-page page grades-tabulator-page",
             "title": "The Eagles Club SIS Grades Table",
             "htmlTheme": "light",
-            "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Grades Grades data Grade table Performance Performance data RC engagement News Reports All Reports SUPPORT Family L"
+            "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Assignment engagement Grades Grades data Grade table Performance Performance data RC engagement News Reports All Re"
           },
           "surfaces": {
             "body": {
@@ -1679,7 +1824,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3936
+              "height": 3861
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1691,7 +1836,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3888
+              "height": 3813
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1703,7 +1848,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3804
+              "height": 3729
             },
             ".panel": {
               "selector": ".panel",
@@ -1839,7 +1984,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2195
+              "height": 2281
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1851,7 +1996,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2147
+              "height": 2233
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1863,7 +2008,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2063
+              "height": 2149
             },
             ".panel": {
               "selector": ".panel",
@@ -1991,7 +2136,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 831
+              "height": 982
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2003,7 +2148,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 747
+              "height": 898
             },
             ".panel": {
               "selector": ".panel",
@@ -2119,7 +2264,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 8296
+              "height": 8309
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2131,7 +2276,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 8248
+              "height": 8261
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2143,7 +2288,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 8164
+              "height": 8177
             },
             ".panel": {
               "selector": ".panel",
@@ -2259,7 +2404,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1839
+              "height": 1840
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2271,7 +2416,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1791
+              "height": 1792
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2283,7 +2428,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1707
+              "height": 1708
             },
             ".panel": {
               "selector": ".panel",
@@ -2411,7 +2556,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 924
+              "height": 948
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2423,7 +2568,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 840
+              "height": 864
             },
             ".panel": {
               "selector": ".panel",
@@ -2539,7 +2684,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "flex",
               "width": 1440,
-              "height": 17221
+              "height": 18121
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2551,7 +2696,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 17173
+              "height": 18073
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2563,7 +2708,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1250,
-              "height": 16928
+              "height": 17828
             },
             ".panel": {
               "selector": ".panel",
@@ -2659,7 +2804,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1699
+              "height": 1712
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2671,7 +2816,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1651
+              "height": 1664
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2683,7 +2828,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1567
+              "height": 1580
             },
             ".panel": {
               "selector": ".panel",
@@ -2822,7 +2967,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3026
+              "height": 3072
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2834,7 +2979,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2978
+              "height": 3024
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2846,7 +2991,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2894
+              "height": 2940
             },
             ".panel": {
               "selector": ".panel",
@@ -2974,7 +3119,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1187
+              "height": 1205
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2986,7 +3131,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1139
+              "height": 1157
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2998,7 +3143,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1055
+              "height": 1073
             },
             ".panel": {
               "selector": ".panel",
@@ -3114,7 +3259,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2403
+              "height": 2371
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3126,7 +3271,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2355
+              "height": 2323
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3138,7 +3283,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2271
+              "height": 2239
             },
             ".panel": {
               "selector": ".panel",
@@ -3254,7 +3399,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2537
+              "height": 2556
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3266,7 +3411,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2489
+              "height": 2508
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3278,7 +3423,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2405
+              "height": 2424
             },
             ".panel": {
               "selector": ".panel",
@@ -3439,7 +3584,7 @@
             "bodyClass": "admin-portal-page page grades-tabulator-page",
             "title": "The Eagles Club SIS Grades Table",
             "htmlTheme": "light",
-            "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Grades Grades data Grade table Performance Performance data RC engagement News Reports All Reports SUPPORT Family L"
+            "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Assignment engagement Grades Grades data Grade table Performance Performance data RC engagement News Reports All Re"
           },
           "surfaces": {
             "body": {
@@ -3538,7 +3683,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2195
+              "height": 2281
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3550,7 +3695,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2147
+              "height": 2233
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3562,7 +3707,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2063
+              "height": 2149
             },
             ".panel": {
               "selector": ".panel",
@@ -3683,7 +3828,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 460,
-              "height": 77
+              "height": 71
             },
             "#newsReviewViewerNote": {
               "selector": "#newsReviewViewerNote",
@@ -3751,7 +3896,7 @@
           "border": "rgb(0, 0, 0)",
           "display": "block",
           "width": 1440,
-          "height": 15717
+          "height": 16522
         },
         "#loginPanel": {
           "selector": "#loginPanel",
@@ -3843,7 +3988,7 @@
         "bodyClass": "admin-portal-page page grades-tabulator-page",
         "title": "The Eagles Club SIS Grades Table",
         "htmlTheme": "light",
-        "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Grades Grades data Grade table Performance Performance data RC engagement News Reports All Reports SUPPORT Family L"
+        "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Assignment engagement Grades Grades data Grade table Performance Performance data RC engagement News Reports All Re"
       },
       "gradesSurfaces": {
         "body": {
@@ -4846,7 +4991,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1239
+              "height": 1688
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4960,7 +5105,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1814
+              "height": 1795
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5534,7 +5679,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3517
+              "height": 3438
             },
             ".portal-card": null,
             ".panel": {
@@ -5713,6 +5858,11 @@
           "pageLink": "assignments-data"
         },
         {
+          "text": "Assignment engagement",
+          "href": "/admin/assignment-engagement",
+          "pageLink": "assignment-engagement"
+        },
+        {
           "text": "Grades",
           "href": "/admin/grades",
           "pageLink": "grades"
@@ -5822,7 +5972,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2927
+              "height": 2852
             },
             ".wrap": {
               "selector": ".wrap",
@@ -5834,7 +5984,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2879
+              "height": 2804
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -5846,7 +5996,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2795
+              "height": 2720
             },
             ".panel": {
               "selector": ".panel",
@@ -5870,7 +6020,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
               "width": 211,
-              "height": 77
+              "height": 71
             },
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
@@ -5962,7 +6112,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3516
+              "height": 3563
             },
             ".wrap": {
               "selector": ".wrap",
@@ -5974,7 +6124,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3468
+              "height": 3515
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -5986,7 +6136,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3384
+              "height": 3431
             },
             ".panel": {
               "selector": ".panel",
@@ -6102,7 +6252,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3406
+              "height": 3318
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6114,7 +6264,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3358
+              "height": 3270
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6126,7 +6276,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3274
+              "height": 3186
             },
             ".panel": {
               "selector": ".panel",
@@ -6254,7 +6404,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 808
+              "height": 872
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6266,7 +6416,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 724
+              "height": 788
             },
             ".panel": {
               "selector": ".panel",
@@ -6382,7 +6532,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1225
+              "height": 1349
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6394,7 +6544,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1177
+              "height": 1301
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6406,7 +6556,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1093
+              "height": 1217
             },
             ".panel": {
               "selector": ".panel",
@@ -6522,7 +6672,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1294
+              "height": 1286
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6534,7 +6684,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1246
+              "height": 1238
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6546,7 +6696,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1162
+              "height": 1154
             },
             ".panel": {
               "selector": ".panel",
@@ -6662,7 +6812,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1100
+              "height": 1146
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6674,7 +6824,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 925
+              "height": 1098
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6686,7 +6836,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 841
+              "height": 1014
             },
             ".panel": {
               "selector": ".panel",
@@ -6784,16 +6934,164 @@
               "help": "Elements must meet minimum color contrast ratio thresholds",
               "nodes": [
                 {
-                  "target": ".assignment-record-item:nth-child(1) > .assignment-item-link[rel=\"noopener noreferrer\"][target=\"_blank\"]",
+                  "target": "tr:nth-child(1) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[rel=\"noopener noreferrer\"][target=\"_blank\"]",
                   "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
                 },
                 {
-                  "target": ".assignment-record-item:nth-child(2) > .assignment-item-link[rel=\"noopener noreferrer\"][target=\"_blank\"]",
+                  "target": "tr:nth-child(2) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[rel=\"noopener noreferrer\"][target=\"_blank\"]",
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+                },
+                {
+                  "target": "tr:nth-child(3) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[rel=\"noopener noreferrer\"][target=\"_blank\"]",
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+                },
+                {
+                  "target": "tr:nth-child(4) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item:nth-child(1) > .assignment-item-link[rel=\"noopener noreferrer\"][target=\"_blank\"]",
                   "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
                 }
               ]
             }
           ]
+        },
+        {
+          "link": {
+            "text": "Assignment engagement",
+            "href": "/admin/assignment-engagement",
+            "pageLink": "assignment-engagement"
+          },
+          "state": {
+            "bodyClass": "admin-portal-page page",
+            "title": "The Eagles Club Student Information System",
+            "htmlTheme": "dark",
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
+          },
+          "surfaces": {
+            "body": {
+              "selector": "body",
+              "id": "top",
+              "className": "admin-portal-page page",
+              "bg": "rgb(0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "block",
+              "width": 1425,
+              "height": 1459
+            },
+            ".wrap": {
+              "selector": ".wrap",
+              "id": "",
+              "className": "wrap",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "grid",
+              "width": 1425,
+              "height": 1411
+            },
+            ".app-shell": {
+              "selector": ".app-shell",
+              "id": "",
+              "className": "app-shell",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "grid",
+              "width": 1393,
+              "height": 1327
+            },
+            ".panel": {
+              "selector": ".panel",
+              "id": "authBootPanel",
+              "className": "panel hidden",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "none",
+              "width": 0,
+              "height": 0
+            },
+            ".card": {
+              "selector": ".card",
+              "id": "",
+              "className": "stat-card stat-card--student card",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".queue-modal-card": {
+              "selector": ".queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.36)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            ".grade-chart-shell": {
+              "selector": ".grade-chart-shell",
+              "id": "gradeChartShell",
+              "className": "grade-chart-shell panel",
+              "bg": "rgb(59, 60, 62)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".grade-chart-empty": {
+              "selector": ".grade-chart-empty",
+              "id": "",
+              "className": "grade-chart-empty",
+              "bg": "rgb(82, 82, 82)",
+              "bgImage": "none",
+              "color": "rgb(229, 245, 255)",
+              "border": "rgba(255, 255, 255, 0.36)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerModal .queue-modal-card": {
+              "selector": "#newsReviewViewerModal .queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card content",
+              "bg": "rgb(45, 45, 45)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.36)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerBody .news-review-viewer-block": null,
+            "#newsReviewViewerNote": {
+              "selector": "#newsReviewViewerNote",
+              "id": "newsReviewViewerNote",
+              "className": "card",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".news-review-note-line.pending": null,
+            ".news-review-note-line.fixed": null,
+            "#reloadBtn": null
+          },
+          "axe": []
         },
         {
           "link": {
@@ -6830,7 +7128,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 816
+              "height": 823
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6842,7 +7140,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 732
+              "height": 739
             },
             ".panel": {
               "selector": ".panel",
@@ -6958,7 +7256,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2606
+              "height": 2670
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6970,7 +7268,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2558
+              "height": 2622
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6982,7 +7280,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2474
+              "height": 2538
             },
             ".panel": {
               "selector": ".panel",
@@ -7030,7 +7328,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
               "width": 1363,
-              "height": 1086
+              "height": 1081
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -7085,7 +7383,7 @@
             "bodyClass": "admin-portal-page page grades-tabulator-page",
             "title": "The Eagles Club SIS Grades Table",
             "htmlTheme": "dark",
-            "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Grades Grades data Grade table Performance Performance data RC engagement News Reports All Reports SUPPORT Family L"
+            "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Assignment engagement Grades Grades data Grade table Performance Performance data RC engagement News Reports All Re"
           },
           "surfaces": {
             "body": {
@@ -7184,7 +7482,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3936
+              "height": 3861
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7196,7 +7494,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3888
+              "height": 3813
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7208,7 +7506,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3804
+              "height": 3729
             },
             ".panel": {
               "selector": ".panel",
@@ -7344,7 +7642,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2195
+              "height": 2281
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7356,7 +7654,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2147
+              "height": 2233
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7368,7 +7666,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2063
+              "height": 2149
             },
             ".panel": {
               "selector": ".panel",
@@ -7496,7 +7794,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 831
+              "height": 982
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7508,7 +7806,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 747
+              "height": 898
             },
             ".panel": {
               "selector": ".panel",
@@ -7624,7 +7922,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 8296
+              "height": 8309
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7636,7 +7934,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 8248
+              "height": 8261
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7648,7 +7946,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 8164
+              "height": 8177
             },
             ".panel": {
               "selector": ".panel",
@@ -7764,7 +8062,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1839
+              "height": 1840
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7776,7 +8074,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1791
+              "height": 1792
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7788,7 +8086,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1707
+              "height": 1708
             },
             ".panel": {
               "selector": ".panel",
@@ -7916,7 +8214,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 924
+              "height": 948
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7928,7 +8226,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 840
+              "height": 864
             },
             ".panel": {
               "selector": ".panel",
@@ -8044,7 +8342,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "flex",
               "width": 1440,
-              "height": 17221
+              "height": 18121
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8056,7 +8354,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 17173
+              "height": 18073
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8068,7 +8366,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1250,
-              "height": 16928
+              "height": 17828
             },
             ".panel": {
               "selector": ".panel",
@@ -8164,7 +8462,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1699
+              "height": 1712
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8176,7 +8474,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1651
+              "height": 1664
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8188,7 +8486,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1567
+              "height": 1580
             },
             ".panel": {
               "selector": ".panel",
@@ -8327,7 +8625,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3026
+              "height": 3072
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8339,7 +8637,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2978
+              "height": 3024
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8351,7 +8649,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2894
+              "height": 2940
             },
             ".panel": {
               "selector": ".panel",
@@ -8479,7 +8777,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1187
+              "height": 1205
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8491,7 +8789,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1139
+              "height": 1157
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8503,7 +8801,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1055
+              "height": 1073
             },
             ".panel": {
               "selector": ".panel",
@@ -8619,7 +8917,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2403
+              "height": 2371
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8631,7 +8929,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2355
+              "height": 2323
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8643,7 +8941,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2271
+              "height": 2239
             },
             ".panel": {
               "selector": ".panel",
@@ -8759,7 +9057,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2537
+              "height": 2556
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8771,7 +9069,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2489
+              "height": 2508
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8783,7 +9081,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2405
+              "height": 2424
             },
             ".panel": {
               "selector": ".panel",
@@ -8944,7 +9242,7 @@
             "bodyClass": "admin-portal-page page grades-tabulator-page",
             "title": "The Eagles Club SIS Grades Table",
             "htmlTheme": "dark",
-            "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Grades Grades data Grade table Performance Performance data RC engagement News Reports All Reports SUPPORT Family L"
+            "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Assignment engagement Grades Grades data Grade table Performance Performance data RC engagement News Reports All Re"
           },
           "surfaces": {
             "body": {
@@ -9043,7 +9341,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2195
+              "height": 2281
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9055,7 +9353,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2147
+              "height": 2233
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9067,7 +9365,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2063
+              "height": 2149
             },
             ".panel": {
               "selector": ".panel",
@@ -9188,7 +9486,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "grid",
               "width": 460,
-              "height": 77
+              "height": 71
             },
             "#newsReviewViewerNote": {
               "selector": "#newsReviewViewerNote",
@@ -9256,7 +9554,7 @@
           "border": "rgb(251, 255, 255)",
           "display": "block",
           "width": 1440,
-          "height": 15717
+          "height": 16522
         },
         "#loginPanel": {
           "selector": "#loginPanel",
@@ -9348,7 +9646,7 @@
         "bodyClass": "admin-portal-page page grades-tabulator-page",
         "title": "The Eagles Club SIS Grades Table",
         "htmlTheme": "dark",
-        "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Grades Grades data Grade table Performance Performance data RC engagement News Reports All Reports SUPPORT Family L"
+        "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Assignment engagement Grades Grades data Grade table Performance Performance data RC engagement News Reports All Re"
       },
       "gradesSurfaces": {
         "body": {
@@ -10351,7 +10649,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1239
+              "height": 1688
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10465,7 +10763,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1816
+              "height": 1797
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",

@@ -74,31 +74,31 @@ test("shared header and footer chrome use the shared radius ladder", () => {
 })
 
 test("student-admin school title stays dark text", () => {
-  const source = readFile("web-asset/admin/student-admin.css")
-  const titleBlock = sliceBetween(
+  const source = readFile("web-asset/shared/portal-theme.css")
+  const adminBodyBlock = sliceBetween(
     source,
-    ".app-school-name {",
-    "      .text-zoom-controls {",
-    "student-admin.css app-school-name",
+    "body.admin-portal-page {",
+    "body.parent-portal-page,",
+    "portal-theme.css admin body",
   )
-  assertIncludesAll(titleBlock, ["color: var(--portal-text)"], "student-admin.css app-school-name")
-  assertExcludesAll(titleBlock, ["color: #fff"], "student-admin.css app-school-name")
+  assertIncludesAll(adminBodyBlock, ["color: var(--portal-text)"], "portal-theme.css admin body")
+  assertExcludesAll(adminBodyBlock, ["color: #fff"], "portal-theme.css admin body")
 })
 
 test("student-admin school title stays readable in dark mode", () => {
-  const source = readFile("web-asset/admin/student-admin.css")
+  const source = readFile("web-asset/shared/portal-theme.css")
   const darkTitleBlock = sliceBetween(
     source,
-    "html[data-theme=\"dark\"] body.admin-portal-page .app-school-name {",
-    "      html[data-theme=\"dark\"] body.admin-portal-page .chart-svg {",
-    "student-admin.css dark app-school-name",
+    "html[data-theme=\"dark\"] .app-school-name,",
+    "html[data-theme=\"dark\"] .metric-table th,",
+    "portal-theme.css dark app-school-name",
   )
   assertIncludesAll(
     darkTitleBlock,
-    ["color: var(--portal-dark-text)"],
-    "student-admin.css dark app-school-name",
+    ["color: var(--portal-role-text) !important"],
+    "portal-theme.css dark app-school-name",
   )
-  assertExcludesAll(darkTitleBlock, ["color: #212121"], "student-admin.css dark app-school-name")
+  assertExcludesAll(darkTitleBlock, ["color: #212121"], "portal-theme.css dark app-school-name")
 })
 
 test("student-points chart render uses shared portal tokens", () => {

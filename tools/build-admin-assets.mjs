@@ -118,12 +118,13 @@ function renderCriticalCssHtml(html, criticalCss) {
  */
 async function buildAdminCss(sourcePath) {
   const source = await fs.readFile(sourcePath, "utf8")
+  const minifySelectors = sourcePath === path.join(REPO_ROOT, "web-asset/admin/student-admin.css")
   const processor = postcss([
     cssnano({
       preset: [
         "default",
         {
-          minifySelectors: false,
+          minifySelectors,
         },
       ],
     }),

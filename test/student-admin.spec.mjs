@@ -1214,9 +1214,9 @@ test("GET /admin returns HTML UI", async () => {
   assert.doesNotMatch(html, /function inferLocalPreviewApiOrigin\(/i)
   assert.match(html, /function setActivePage\(/i)
   assert.match(html, /function pageSlugFromLocationSearch\(/i)
-  assert.match(html, /\.chip\s*\{[\s\S]*?--chip-height:\s*30px;/i)
-  assert.match(html, /\.chip-ok\s*\{\s*background:\s*#d8f2e3;/i)
-  assert.match(html, /\.queue-hub-panel\s+\.chip\s*\{[\s\S]*?--chip-height:\s*24px;/i)
+  assert.match(SHARED_PORTAL_THEME_SOURCE, /body\.student-portal-page \.chip,[\s\S]*?--chip-height:\s*30px;/i)
+  assert.match(SHARED_PORTAL_THEME_SOURCE, /body\.student-portal-page \.chip-ok,[\s\S]*?background:\s*#d8f2e3;/i)
+  assert.match(SHARED_PORTAL_THEME_SOURCE, /\.portal-chip,[\s\S]*?min-block-size:\s*var\(--portal-chip-min-block\);/i)
   assert.match(html, /const ADMIN_PAGE_URL_MODE = resolveAdminPageUrlMode\(\);/i)
   assert.match(html, /params\.get\("page"\)\s*\|\|\s*params\.get\("pageSlug"\)/i)
   assert.match(html, /if \(params\.has\("page"\) \|\| params\.has\("pageSlug"\)\) return "query";/i)
@@ -1739,15 +1739,6 @@ test("admin runtime helpers preserve apiOrigin across all internal admin anchors
   assert.match(gradesTabulatorSource, /document\.querySelectorAll\('a\[href\^="\/admin"\]'\)/)
   assert.match(gradesTabulatorSource, /const INITIAL_AUTH_STATE =/)
   assert.match(gradesTabulatorSource, /if \(INITIAL_AUTH_STATE\?\.authenticated === true\)/)
-})
-
-test("GET /web-asset/admin/grades-tabulator-dev.html redirects to consolidated page", async () => {
-  const res = await fetchLocal(port, "/web-asset/admin/grades-tabulator-dev.html")
-  assert.equal(res.status, 200)
-  assert.match(res.headers.get("content-type") || "", /text\/html/i)
-  const html = await res.text()
-  assert.match(html, /\/admin\?page=grades-data/i)
-  assert.match(html, /window\.location\.replace\(\"\/admin\?page=grades-data\"\)/i)
 })
 
 test("GET /web-asset/vendor/tabulatorz/tabulator.min.js returns runtime static asset", async () => {

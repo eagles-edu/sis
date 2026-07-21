@@ -1085,9 +1085,11 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     reviewNote = addAwaitingReReviewMarker(reviewNote)
   }
 
-  const submittedAt = mode === "draft"
-    ? parseDateOrNull(existing?.submittedAt) || new Date(nowDate.getTime())
-    : new Date(nowDate.getTime())
+  const submittedAt = new Date(nowDate.getTime())
+  if (mode === "draft") {
+    const existingSubmittedAt = parseDateOrNull(existing?.submittedAt)
+    if (existingSubmittedAt instanceof Date) submittedAt.setTime(existingSubmittedAt.getTime())
+  }
   let reviewStatus = existingStatus
   let submissionState = existingSubmissionState
   let draftCheckedAt = parseDateOrNull(existing?.draftCheckedAt)

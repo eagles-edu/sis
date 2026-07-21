@@ -6140,7 +6140,7 @@ test("overview level buttons use full system level labels and natural grade orde
     const labels = Array.from(dom.window.document.querySelectorAll("#overviewBarDetailActions button")).map((btn) =>
       btn.textContent.trim()
     )
-    assert.deepEqual(labels, ["Grade 4", "Grade 7", "Grade 8", "Grade 9", "Grade 10"])
+    assert.deepEqual(labels, ["Pre-A1 Starters", "A2 KET", "B1 PET", "B2+ IELTS", "C1+ TAYK"])
   })
 
   await waitFor(() => {
@@ -8710,6 +8710,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
       ["fullName", "Full Name"],
       ["englishName", "English Name"],
       ["date", "Date"],
+      ["weekNumber", "Week"],
       ["className", "Class"],
       ["quarter", "Quarter"],
       ["status", "Status"],
@@ -8900,17 +8901,17 @@ test("table sort controls and column-click headers reorder grade/performance dat
   gradeSortField.value = "score"
   gradeSortField.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   await waitFor(() => {
-    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(8)")?.textContent || "").trim()
+    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(9)")?.textContent || "").trim()
     assert.equal(firstScore, "95/100")
   })
   await waitFor(() => {
-    const actionCellText = document.querySelector("#gradeRows tr td:nth-child(13)")?.textContent || ""
+    const actionCellText = document.querySelector("#gradeRows tr td:nth-child(14)")?.textContent || ""
     assert.match(actionCellText, /Actions/i)
   })
 
   document.getElementById("gradeSortDirBtn").click()
   await waitFor(() => {
-    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(8)")?.textContent || "").trim()
+    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(9)")?.textContent || "").trim()
     assert.equal(firstScore, "70/100")
   })
 
@@ -8918,7 +8919,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
   assert.ok(gradeScoreHeader)
   gradeScoreHeader.click()
   await waitFor(() => {
-    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(8)")?.textContent || "").trim()
+    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(9)")?.textContent || "").trim()
     assert.equal(firstScore, "95/100")
   })
 

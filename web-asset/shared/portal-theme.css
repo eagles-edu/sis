@@ -6799,6 +6799,10 @@ html[data-theme="dark"] body.parent-portal-page .report-archive-item {
 html[data-theme="dark"] body:is(.student-portal-page, .parent-portal-page) .metric:is(.metric-good, .metric-warn, .metric-bad, .metric-green, .metric-blue, .metric-red, .metric-purple, .metric-amber) {
   color: var(--portal-dark-text);
 }
+html[data-theme="dark"] body.student-portal-page .detail-item.warn .detail-link,
+html[data-theme="dark"] body.parent-portal-page .detail-item.warn .detail-link {
+  color: var(--portal-status-amber-bg);
+}
 html[data-theme="dark"] body.parent-portal-page .report-archive-link {
   color: var(--portal-dark-link);
 }

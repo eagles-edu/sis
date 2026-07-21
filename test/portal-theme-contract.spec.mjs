@@ -159,7 +159,6 @@ test("shared portal theme centralizes the admin users table frame and row separa
 
 test("repo app pages do not define raw theme colors in inline style or script blocks", () => {
   const appHtmlPaths = [
-    "web-asset/admin/grades-tabulator-dev.html",
     "web-asset/admin/grades-tabulator.html",
     "web-asset/admin/portal-hub.html",
     "web-asset/admin/student-admin.html",

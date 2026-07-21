@@ -2675,17 +2675,16 @@ function attachCourseWeekCalendarToSchoolSetup(uiSettings = {}) {
 
 async function writePersistedUiSettings(payload = {}, updatedByUsername = "") {
   const candidate = payload && typeof payload === "object" ? payload : {}
-  const uiSettings = attachCourseWeekCalendarToSchoolSetup(
-    normalizeUiSettingsPayload(candidate?.uiSettings || candidate),
-  )
-  if (Object.prototype.hasOwnProperty.call(uiSettings, "schoolSetup")) {
-    const schoolSetupState = normalizeText(uiSettings?.schoolSetup?.schoolSetupState)
+  const normalizedUiSettings = normalizeUiSettingsPayload(candidate?.uiSettings || candidate)
+  if (Object.prototype.hasOwnProperty.call(normalizedUiSettings, "schoolSetup")) {
+    const schoolSetupState = normalizeText(normalizedUiSettings?.schoolSetup?.schoolSetupState)
     if (schoolSetupState && schoolSetupState !== "ok") {
       const error = new Error("School setup must include four explicit quarters before saving.")
       error.statusCode = 422
       throw error
     }
   }
+  const uiSettings = attachCourseWeekCalendarToSchoolSetup(normalizedUiSettings)
   const runtimeSource =
     candidate?.sisConfig?.runtime && typeof candidate.sisConfig.runtime === "object" ?
       candidate.sisConfig.runtime :
