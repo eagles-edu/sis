@@ -529,7 +529,7 @@ html[data-theme="dark"] body.admin-portal-page #performanceQueueSection .section
         min-height: 108px;
       }
       #overviewRiskStudents {
-        min-height: 180px;
+        overflow: visible;
       }
       #levelDetailPanel .table-scroll-wrap table {
         min-width: 760px;
@@ -2528,14 +2528,6 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <input id="assignmentEngagementSearch" type="search" placeholder="assignment | student | recipient | status">
                     </div>
                     <div class="toolbar-field">
-                      <label for="assignmentEngagementAudienceFilter">Audience</label>
-                      <select id="assignmentEngagementAudienceFilter">
-                        <option value="">All audiences</option>
-                        <option value="student">Student</option>
-                        <option value="parent">Parent</option>
-                      </select>
-                    </div>
-                    <div class="toolbar-field">
                       <label for="assignmentEngagementReminderFilter">Reminder</label>
                       <select id="assignmentEngagementReminderFilter">
                         <option value="">All reminder types</option>
@@ -2570,21 +2562,21 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     </section>
                     <section class="performance-engagement-detail panel" data-surface-role="panel">
                       <h3 class="section-title">Tracked metric table</h3>
-                      <p class="small" id="assignmentEngagementTableSummary">Select a reminder day to inspect its recipients.</p>
+                      <p class="small" id="assignmentEngagementTableSummary">Select a class day to inspect its recipients.</p>
                       <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                         <table class="performance-engagement-table">
                       <thead>
                         <tr>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="assignment" tabindex="0" aria-sort="none">Assignment</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="student" tabindex="0" aria-sort="none">Student</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="audience" tabindex="0" aria-sort="none">Audience</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="recipient" tabindex="0" aria-sort="none">Email used</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="reminder" tabindex="0" aria-sort="none">Reminder</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="queuedAt" tabindex="0" aria-sort="none">Queued</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="status" tabindex="0" aria-sort="none">Status</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="openedAt" tabindex="0" aria-sort="none">Opened</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="clickedAt" tabindex="0" aria-sort="none">Clicked</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="actionCompletedAt" tabindex="0" aria-sort="none">Completed</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="reviewed" tabindex="0" aria-sort="none">reviewed</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="id" tabindex="0" aria-sort="none">eaglesId</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="englishName" tabindex="0" aria-sort="none">english-name</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="level" tabindex="0" aria-sort="none">level</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="sentOkReturned" tabindex="0" aria-sort="none">sent-ok?</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="emailOpened" tabindex="0" aria-sort="none">Email-open?</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="linkClicked" tabindex="0" aria-sort="none">Link-click</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="pdfDownloaded" tabindex="0" aria-sort="none">PDF-DL?</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="acknowledged" tabindex="0" aria-sort="none">acknowledged</th>
+                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="emailUsed" tabindex="0" aria-sort="none">Email used</th>
                         </tr>
                       </thead>
                       <tbody id="assignmentEngagementRows">
@@ -4155,14 +4147,6 @@ Select a homework link to inspect details.</pre>
                         id="performanceEngagementSearch"
                         type="search"
                         placeholder="class day | student | parent | email">
-                    </div>
-                    <div class="toolbar-field">
-                      <label for="performanceEngagementRoleFilter">Audience</label>
-                      <select id="performanceEngagementRoleFilter">
-                        <option value="">All audiences</option>
-                        <option value="parent">Parent</option>
-                        <option value="student">Student</option>
-                      </select>
                     </div>
                     <div class="toolbar-field">
                       <label for="performanceEngagementLevelFilter">Class Level</label>

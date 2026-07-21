@@ -1940,7 +1940,7 @@ body.report-template-page .card > :not(:first-child),
 body.student-portal-page .card > :not(:first-child),
 body.admin-portal-page .panel > :not(:first-child),
 body.report-template-page .panel > :not(:first-child) {
-  margin-top: 12px;
+  margin-top: 6px;
 }
 body.student-portal-page .card.homework-card,
 body.parent-portal-page .card.homework-card {

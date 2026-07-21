@@ -1685,7 +1685,7 @@
         min-height: 108px;
       }
       #overviewRiskStudents {
-        min-height: 180px;
+        overflow: visible;
       }
       .overview-group>details {
         min-width: 0;
@@ -2764,12 +2764,14 @@
         display: grid;
         gap: 12px;
         grid-template-columns: minmax(230px, 260px) minmax(0, 1fr);
+        align-items: start;
         margin-top: 10px;
       }
       .assignment-engagement-grid {
         display: grid;
         gap: 12px;
         grid-template-columns: minmax(230px, 260px) minmax(0, 1fr);
+        align-items: start;
         margin-top: 10px;
       }
       .performance-engagement-home,
@@ -2781,8 +2783,10 @@
         padding: 14px;
       }
       .performance-engagement-day-list {
+        align-content: start;
         display: grid;
         gap: 8px;
+        justify-items: stretch;
       }
       .performance-engagement-day-card {
         align-items: start;
@@ -2793,10 +2797,6 @@
         gap: 0;
         padding: 8px 10px;
         text-align: left;
-        transition:
-          border-color 160ms ease,
-          box-shadow 160ms ease,
-          transform 160ms ease;
       }
       .performance-engagement-day-card:hover,
       .performance-engagement-day-card:focus-visible,
@@ -2804,10 +2804,6 @@
         border-color: var(--portal-ods-accent-border);
         box-shadow: 0 10px 24px var(--portal-color-b0e4f2e1c7);
         transform: translateY(-1px);
-      }
-      .performance-engagement-day-card:active:not(:disabled) {
-        box-shadow: var(--portal-button-shadow-active);
-        transform: translateY(1px);
       }
       .performance-engagement-day-card:disabled,
       .performance-engagement-day-card.is-disabled {
@@ -2822,23 +2818,17 @@
         line-height: 1.25;
         width: 100%;
       }
-      .performance-engagement-day-card-rule {
-        display: none;
-      }
-      .performance-engagement-day-card .performance-engagement-day-card-rule {
-        display: none;
-      }
       .performance-engagement-day-card span {
         display: block;
         font-size: 12px;
         font-weight: 400;
         line-height: 1.35;
         margin-top: 3px;
-        width: 100%;
       }
-.performance-engagement-table {
-        border-collapse: collapse;
-        min-width: 900px;
+body.admin-portal-page .performance-engagement-table {
+        border-collapse: separate !important;
+        border-spacing: 0;
+        min-width: 820px !important;
         width: 100%;
 }
 
@@ -2867,7 +2857,7 @@
 }
       .performance-engagement-table th,
       .performance-engagement-table td {
-        border: 1px solid var(--portal-ods-accent-border);
+        border: 1px solid var(--portal-border);
         line-height: 1.35;
         padding: 8px 10px;
         text-align: left;
@@ -2896,6 +2886,86 @@
       .performance-engagement-table tbody tr:hover > :is(th, td):last-child,
       .performance-engagement-table tbody tr:focus-within > :is(th, td):last-child {
         border-right-color: var(--portal-ods-accent-border);
+      }
+      .performance-engagement-table tbody tr.pair-end > :is(th, td) {
+        border-bottom-color: var(--portal-border);
+      }
+      .performance-engagement-table tbody tr.performance-engagement-pair-spacer > td {
+        background: var(--portal-surface-support);
+        border: 0;
+        height: 12px;
+        padding: 0;
+      }
+      .performance-engagement-table tbody tr.pair-start > :is(th, td) {
+        border-top: 2px solid var(--tertiary-color) !important;
+        border-bottom-color: var(--portal-border) !important;
+      }
+      .performance-engagement-table tbody tr.pair-end > :is(th, td) {
+        border-bottom: 2px solid var(--tertiary-color) !important;
+        border-top-color: var(--portal-border) !important;
+      }
+      .performance-engagement-table tbody tr.pair-start > :first-child,
+      .performance-engagement-table tbody tr.pair-end > :first-child,
+      .performance-engagement-table tbody tr:not(.performance-engagement-pair-spacer):has(+ tr.pair-end) > :first-child {
+        border-left: 2px solid var(--tertiary-color) !important;
+      }
+      .performance-engagement-table tbody tr.pair-start > :last-child,
+      .performance-engagement-table tbody tr.pair-end > :last-child,
+      .performance-engagement-table tbody tr:not(.performance-engagement-pair-spacer):has(+ tr.pair-end) > :last-child {
+        border-right: 2px solid var(--tertiary-color) !important;
+      }
+      .performance-engagement-table tbody tr.pair-start > :first-child {
+        border-top-left-radius: 10px;
+      }
+      .performance-engagement-table tbody tr.pair-start > :last-child {
+        border-top-right-radius: 10px;
+      }
+      .performance-engagement-table tbody tr.pair-end > :first-child {
+        border-bottom-left-radius: 10px;
+      }
+      .performance-engagement-table tbody tr.pair-end > :last-child {
+        border-bottom-right-radius: 10px;
+      }
+      .performance-engagement-table tbody tr.pair-start:hover > :is(th, td),
+      .performance-engagement-table tbody tr.pair-start:focus-within > :is(th, td) {
+        border-top-color: var(--portal-ods-accent-border) !important;
+      }
+      .performance-engagement-table tbody tr.pair-end:hover > :is(th, td),
+      .performance-engagement-table tbody tr.pair-end:focus-within > :is(th, td) {
+        border-bottom-color: var(--portal-ods-accent-border) !important;
+      }
+      .performance-engagement-table tbody tr.pair-start:hover > :first-child,
+      .performance-engagement-table tbody tr.pair-start:focus-within > :first-child,
+      .performance-engagement-table tbody tr.pair-end:hover > :first-child,
+      .performance-engagement-table tbody tr.pair-end:focus-within > :first-child {
+        border-left-color: var(--portal-ods-accent-border) !important;
+      }
+      .performance-engagement-table tbody tr.pair-start:hover > :last-child,
+      .performance-engagement-table tbody tr.pair-start:focus-within > :last-child,
+      .performance-engagement-table tbody tr.pair-end:hover > :last-child,
+      .performance-engagement-table tbody tr.pair-end:focus-within > :last-child {
+        border-right-color: var(--portal-ods-accent-border) !important;
+      }
+      html[data-theme="dark"] body.admin-portal-page .performance-engagement-table tbody tr.pair-start > :is(th, td),
+      html[data-theme="dark"] body.admin-portal-page .performance-engagement-table tbody tr.pair-end > :is(th, td) {
+        border-top-color: #ffd76a !important;
+        border-bottom-color: #ffd76a !important;
+      }
+      html[data-theme="dark"] body.admin-portal-page .performance-engagement-table tbody tr.pair-start > :is(th, td) {
+        border-bottom-color: var(--portal-dark-border) !important;
+      }
+      html[data-theme="dark"] body.admin-portal-page .performance-engagement-table tbody tr.pair-end > :is(th, td) {
+        border-top-color: var(--portal-dark-border) !important;
+      }
+      html[data-theme="dark"] body.admin-portal-page .performance-engagement-table tbody tr.pair-start > :first-child,
+      html[data-theme="dark"] body.admin-portal-page .performance-engagement-table tbody tr.pair-end > :first-child,
+      html[data-theme="dark"] body.admin-portal-page .performance-engagement-table tbody tr:not(.performance-engagement-pair-spacer):has(+ tr.pair-end) > :first-child {
+        border-left-color: #ffd76a !important;
+      }
+      html[data-theme="dark"] body.admin-portal-page .performance-engagement-table tbody tr.pair-start > :last-child,
+      html[data-theme="dark"] body.admin-portal-page .performance-engagement-table tbody tr.pair-end > :last-child,
+      html[data-theme="dark"] body.admin-portal-page .performance-engagement-table tbody tr:not(.performance-engagement-pair-spacer):has(+ tr.pair-end) > :last-child {
+        border-right-color: #ffd76a !important;
       }
       .performance-engagement-table td.performance-engagement-reviewed-cell {
         font-weight: 700;

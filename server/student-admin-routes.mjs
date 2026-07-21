@@ -6723,10 +6723,18 @@ async function handleApiRequest(request, response, pathname, url) {
     const students = prisma?.student && studentIds.length
       ? await prisma.student.findMany({
           where: { id: { in: studentIds } },
-          select: { id: true, eaglesId: true },
+          select: {
+            id: true,
+            eaglesId: true,
+            profile: { select: { englishName: true, currentGrade: true } },
+          },
         })
       : []
-    const eaglesIdsByStudentRef = new Map(students.map((student) => [student.id, normalizeText(student.eaglesId)]))
+    const studentIdentityByRef = new Map(students.map((student) => [student.id, {
+      eaglesId: normalizeText(student.eaglesId),
+      englishName: normalizeText(student.profile?.englishName),
+      level: normalizeText(student.profile?.currentGrade),
+    }]))
     sendJson(response, 200, {
       ok: true,
       total: items.length,
@@ -6744,7 +6752,7 @@ async function handleApiRequest(request, response, pathname, url) {
         dispatch: {
           assignmentTemplateId: item.dispatch?.assignmentTemplateId || "",
           studentRefId: item.dispatch?.studentRefId || "",
-          eaglesId: eaglesIdsByStudentRef.get(normalizeText(item.dispatch?.studentRefId)) || "",
+          ...(studentIdentityByRef.get(normalizeText(item.dispatch?.studentRefId)) || {}),
           reminderKind: item.dispatch?.reminderKind || "",
           localDate: item.dispatch?.localDate || "",
           status: item.dispatch?.status || "",

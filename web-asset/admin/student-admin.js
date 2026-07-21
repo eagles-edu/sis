@@ -176,7 +176,7 @@
           grades: { field: "dueAt", dir: "desc" },
           reports: { field: "generatedAt", dir: "desc" },
           newsReview: { field: "weekSet", dir: "desc" },
-          assignmentEngagement: { field: "queuedAt", dir: "desc" },
+          assignmentEngagement: { field: "assignment", dir: "asc" },
         },
         tableSearch: {
           attendance: "",
@@ -227,7 +227,6 @@
           loading: false,
           rows: [],
           search: "",
-          audience: "",
           reminderKind: "",
           status: "",
           selectedDayKey: "",
@@ -4534,11 +4533,13 @@
           row.dispatch?.assignmentTemplateId,
           row.dispatch?.studentRefId,
           row.dispatch?.eaglesId,
-          row.audience,
+          row.dispatch?.englishName,
+          row.dispatch?.level,
           row.recipientEmail,
           row.dispatch?.reminderKind,
           row.dispatch?.localDate,
           row.dispatch?.status,
+          row.emailUsed,
         ].map((value) => normalizeLower(value)).filter(Boolean).join(" ");
       }
 
@@ -4547,9 +4548,22 @@
         return `${normalizeText(dispatch.localDate) || "unknown"}:${normalizeText(dispatch.reminderKind) || "unknown"}`;
       }
 
+      function engagementWeekNumberForDate(value = "") {
+        const dateText = normalizeText(value);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateText)) return null;
+        const date = new Date(`${dateText}T00:00:00Z`);
+        const anchor = new Date("2026-02-21T00:00:00Z");
+        const difference = Math.floor((date.getTime() - anchor.getTime()) / 86400000);
+        if (!Number.isFinite(difference) || difference < 0) return null;
+        return Math.floor(difference / 7) + 1;
+      }
+
       function engagementDayWeekLabel(value = "", weekNumber = null) {
-        const week = Number.parseInt(String(weekNumber ?? ""), 10);
-        return Number.isInteger(week) && week >= 1 && week <= 52 ? `WEEK ${week}` : "WEEK -";
+        const explicitWeek = Number.parseInt(String(weekNumber ?? ""), 10);
+        const week = Number.isInteger(explicitWeek) && explicitWeek >= 1
+          ? explicitWeek
+          : engagementWeekNumberForDate(value);
+        return Number.isInteger(week) && week >= 1 ? `WEEK ${week}` : "WEEK -";
       }
 
       function engagementDayHeading(value = "", weekNumber = null) {
@@ -4563,7 +4577,6 @@
       function assignmentEngagementRowsForDisplay(includeSelectedDay = true) {
         const searchTerms = normalizeText(state.assignmentEngagement?.search)
           .split("|").map((term) => normalizeLower(term)).filter(Boolean);
-        const audience = normalizeLower(state.assignmentEngagement?.audience);
         const reminderKind = normalizeLower(state.assignmentEngagement?.reminderKind);
         const status = normalizeLower(state.assignmentEngagement?.status);
         const selectedDayKey = normalizeText(state.assignmentEngagement?.selectedDayKey);
@@ -4572,20 +4585,34 @@
         const filtered = (Array.isArray(state.assignmentEngagement?.rows) ? state.assignmentEngagement.rows : [])
           .filter((row) => {
             const dispatch = row.dispatch || {};
-            const haystack = assignmentEngagementSearchText(row);
-            return (!audience || normalizeLower(row.audience) === audience)
-              && (!reminderKind || normalizeLower(dispatch.reminderKind) === reminderKind)
+            return (!reminderKind || normalizeLower(dispatch.reminderKind) === reminderKind)
               && (!status || normalizeLower(dispatch.status) === status)
-              && (!includeSelectedDay || !selectedDayKey || assignmentEngagementDayKey(row) === selectedDayKey)
-              && searchTerms.every((term) => haystack.includes(term));
+              && (!includeSelectedDay || !selectedDayKey || assignmentEngagementDayKey(row) === selectedDayKey);
           });
-        return filtered.sort((left, right) => {
+        const grouped = new Map();
+        filtered.forEach((row) => {
+          const dispatch = row.dispatch || {};
+          const key = `${normalizeText(dispatch.assignmentTemplateId)}:${normalizeText(dispatch.eaglesId || dispatch.studentRefId)}:${normalizeText(dispatch.reminderKind)}`;
+          const group = grouped.get(key) || [];
+          group.push(row);
+          grouped.set(key, group);
+        });
+        const paired = Array.from(grouped.values())
+          .filter((group) => {
+            const hasParent = group.some((row) => normalizeLower(row.audience) === "parent");
+            const hasStudent = group.some((row) => normalizeLower(row.audience) === "student");
+            return hasParent && hasStudent && (!searchTerms.length || group.some((row) => {
+              const haystack = assignmentEngagementSearchText(row);
+              return searchTerms.every((term) => haystack.includes(term));
+            }));
+          })
+          .flat();
+        return paired.sort((left, right) => {
           const leftDispatch = left.dispatch || {};
           const rightDispatch = right.dispatch || {};
           const textField = (row, dispatch) => ({
             assignment: dispatch.assignmentTemplateId,
             student: dispatch.eaglesId || dispatch.studentRefId,
-            audience: row.audience,
             recipient: row.recipientEmail,
             reminder: dispatch.reminderKind,
             status: dispatch.status,
@@ -4601,6 +4628,80 @@
 
       function assignmentEngagementStamp(value) {
         return normalizeText(value) ? formatDateTime(value) : "-";
+      }
+
+      function assignmentEngagementMetricRow(row = {}) {
+        const dispatch = row.dispatch || {};
+        const status = normalizeLower(dispatch.status);
+        const sentOkReturned = row.sentAt
+          ? "yes"
+          : status === "failed" ? "no" : status === "sent" ? "yes" : "queued";
+        return {
+          reviewed: normalizeText(row.audience),
+          id: normalizeText(dispatch.eaglesId || dispatch.studentRefId),
+          englishName: normalizeText(dispatch.englishName),
+          level: normalizeText(dispatch.level),
+          sentOkReturned,
+          emailOpened: row.openedAt ? "yes" : "",
+          linkClicked: row.clickedAt ? "yes" : "",
+          pdfDownloaded: "",
+          acknowledged: row.actionCompletedAt ? "yes" : "",
+          emailUsed: normalizeText(row.recipientEmail),
+          sentAt: row.sentAt,
+          emailOpenedAt: row.openedAt,
+          linkClickedAt: row.clickedAt,
+          acknowledgedAt: row.actionCompletedAt,
+        };
+      }
+
+      function assignmentEngagementGroupsForDisplay() {
+        const grouped = new Map();
+        assignmentEngagementRowsForDisplay().forEach((row) => {
+          const dispatch = row.dispatch || {};
+          const key = `${normalizeText(dispatch.assignmentTemplateId)}:${normalizeText(dispatch.eaglesId || dispatch.studentRefId)}:${normalizeText(dispatch.reminderKind)}`;
+          const group = grouped.get(key) || {
+            key,
+            assignment: normalizeText(dispatch.assignmentTemplateId),
+            rows: [],
+          };
+          group.rows.push(row);
+          grouped.set(key, group);
+        });
+        const sortField = normalizeText(state.tableSort?.assignmentEngagement?.field) || "assignment";
+        const sortDir = normalizeLower(state.tableSort?.assignmentEngagement?.dir) === "asc" ? "asc" : "desc";
+        return Array.from(grouped.values()).sort((left, right) => {
+          const leftRow = left.rows.find((row) => normalizeLower(row.audience) === "parent") || left.rows[0] || {};
+          const rightRow = right.rows.find((row) => normalizeLower(row.audience) === "parent") || right.rows[0] || {};
+          const leftMetric = assignmentEngagementMetricRow(leftRow);
+          const rightMetric = assignmentEngagementMetricRow(rightRow);
+          const leftDispatch = leftRow.dispatch || {};
+          const rightDispatch = rightRow.dispatch || {};
+          const values = {
+            assignment: [left.assignment, right.assignment],
+            reviewed: [leftMetric.reviewed, rightMetric.reviewed],
+            id: [leftMetric.id, rightMetric.id],
+            englishName: [leftMetric.englishName, rightMetric.englishName],
+            level: [leftMetric.level, rightMetric.level],
+            sentOkReturned: [leftMetric.sentOkReturned, rightMetric.sentOkReturned],
+            emailOpened: [leftMetric.emailOpenedAt, rightMetric.emailOpenedAt],
+            linkClicked: [leftMetric.linkClickedAt, rightMetric.linkClickedAt],
+            pdfDownloaded: [leftMetric.pdfDownloaded, rightMetric.pdfDownloaded],
+            acknowledged: [leftMetric.acknowledgedAt, rightMetric.acknowledgedAt],
+            emailUsed: [leftMetric.emailUsed, rightMetric.emailUsed],
+          }[sortField] || [left.assignment, right.assignment];
+          const compare = ["emailOpened", "linkClicked", "acknowledged"].includes(sortField)
+            ? compareTableIsoDateTime(values[0], values[1])
+            : compareTableText(values[0], values[1]);
+          if (compare) return applySortDirection(compare, sortDir);
+          return compareTableText(leftDispatch.studentRefId, rightDispatch.studentRefId);
+        }).map((group) => ({
+          ...group,
+          rows: group.rows.sort((left, right) => {
+            const leftParent = normalizeLower(left.audience) === "parent" ? 0 : 1;
+            const rightParent = normalizeLower(right.audience) === "parent" ? 0 : 1;
+            return leftParent - rightParent;
+          }),
+        }));
       }
 
       function renderAssignmentEngagementDayList() {
@@ -4633,7 +4734,7 @@
         const days = Array.from(grouped.values()).sort((left, right) => `${right.date}:${right.kind}`.localeCompare(`${left.date}:${left.kind}`));
         if (!state.assignmentEngagement.selectedDayKey && days.length) state.assignmentEngagement.selectedDayKey = days[0].key;
         if (days.length && !days.some((day) => day.key === state.assignmentEngagement.selectedDayKey)) state.assignmentEngagement.selectedDayKey = days[0].key;
-        summaryEl.textContent = days.length ? `${days.length} reminder day${days.length === 1 ? "" : "s"} | ${rows.length} recipients` : "No reminder days match the current filters.";
+        summaryEl.textContent = days.length ? `${days.length} class day${days.length === 1 ? "" : "s"} | ${rows.length} recipients` : "No class days match the current filters.";
         listEl.replaceChildren();
         days.forEach((day) => {
           const button = document.createElement("button");
@@ -4642,8 +4743,10 @@
             ? "performance-engagement-day-card card is-active"
             : "performance-engagement-day-card card";
           button.dataset.surfaceRole = "card";
-          const assignmentNames = Array.from(day.assignments).sort().join(", ");
-          button.innerHTML = `<strong>${escapeHtml(engagementDayHeading(day.date, day.weekNumber))}</strong><span class="performance-engagement-day-card-rule" aria-hidden="true"></span><span class="small">assignments=${day.assignments.size} | recipients=${day.recipients} | opens=${day.opened} | clicks=${day.clicked}</span><span class="small performance-engagement-day-card-assignment">assignment=${escapeHtml(assignmentNames || "-")}</span>`;
+          const assignmentNames = Array.from(day.assignments).sort();
+          const assignmentTitle = assignmentNames[0] || "-";
+          button.title = `Reminder: ${day.kind}${assignmentNames.length ? ` | ${assignmentNames.join(", ")}` : ""}`;
+          button.innerHTML = `<strong>${escapeHtml(engagementDayHeading(day.date, day.weekNumber))}</strong><span class="small">assignments=${day.assignments.size} | recipients=${day.recipients} | opens=${day.opened} | clicks=${day.clicked}</span><span class="small performance-engagement-day-card-assignment">assignment=${escapeHtml(assignmentTitle)}</span>`;
           button.addEventListener("click", () => {
             state.assignmentEngagement.selectedDayKey = day.key;
             renderAssignmentEngagementPage();
@@ -4659,6 +4762,7 @@
         if (!rowsEl || !summaryEl) return;
         renderAssignmentEngagementDayList();
         const rows = assignmentEngagementRowsForDisplay();
+        const groups = assignmentEngagementGroupsForDisplay();
         const allRows = Array.isArray(state.assignmentEngagement?.rows) ? state.assignmentEngagement.rows : [];
         const sent = allRows.filter((row) => row.sentAt).length;
         const opened = allRows.filter((row) => row.openedAt).length;
@@ -4669,21 +4773,33 @@
           rowsEl.innerHTML = '<tr><td colspan="10">No assignment engagement records match the current search.</td></tr>';
           return;
         }
-        rowsEl.innerHTML = rows.map((row) => {
-          const dispatch = row.dispatch || {};
-          return `<tr>
-            <td>${escapeHtml(dispatch.assignmentTemplateId || "-")}</td>
-            <td title="Email used: ${escapeHtml(row.recipientEmail || "not available")}">${escapeHtml(dispatch.eaglesId || dispatch.studentRefId || "-")}</td>
-            <td>${escapeHtml(row.audience || "-")}</td>
-            <td>${escapeHtml(row.recipientEmail || "-")}</td>
-            <td>${escapeHtml(dispatch.reminderKind || "-")}</td>
-            <td>${escapeHtml(assignmentEngagementStamp(row.queuedAt))}</td>
-            <td>${escapeHtml(dispatch.status || "-")}</td>
-            <td>${escapeHtml(assignmentEngagementStamp(row.openedAt))}</td>
-            <td>${escapeHtml(assignmentEngagementStamp(row.clickedAt))}</td>
-            <td>${escapeHtml(assignmentEngagementStamp(row.actionCompletedAt))}</td>
-          </tr>`;
-        }).join("");
+        rowsEl.innerHTML = groups.map((group, groupIndex) => group.rows.map((row, rowIndex) => {
+          const metric = assignmentEngagementMetricRow(row);
+          const reviewedClass = normalizeLower(metric.reviewed) === "parent" ? "is-parent"
+            : normalizeLower(metric.reviewed) === "student" ? "is-student" : "";
+          const sentClass = normalizeLower(metric.sentOkReturned) === "no" ? "is-no"
+            : normalizeLower(metric.sentOkReturned) === "yes" ? "is-yes" : "is-empty";
+          const emailClass = metric.emailOpenedAt ? "is-set" : "is-empty";
+          const linkClass = metric.linkClickedAt ? "is-set" : "is-empty";
+          const ackClass = metric.acknowledgedAt ? "is-set" : "is-empty";
+          const pairStartClass = group.rows.length > 1 && rowIndex === 0 ? " pair-start" : "";
+          const pairEndClass = group.rows.length > 1 && rowIndex === group.rows.length - 1 ? " pair-end" : "";
+          return `<tr class="${`${pairStartClass}${pairEndClass}`.trim()}">
+            <td class="performance-engagement-reviewed-cell ${reviewedClass}">${escapeHtml(metric.reviewed || "-")}</td>
+            <td title="Email used: ${escapeHtml(metric.emailUsed || "not available")}">${escapeHtml(metric.id || "-")}</td>
+            <td>${escapeHtml(metric.englishName || "-")}</td>
+            <td>${escapeHtml(metric.level || "-")}</td>
+            <td class="performance-engagement-status-cell ${sentClass}" title="${escapeHtml(row.dispatch?.status || "")}">${escapeHtml(metric.sentOkReturned || "-")}</td>
+            <td class="performance-engagement-event-cell ${emailClass}" title="${escapeHtml(metric.emailOpenedAt || "")}">${escapeHtml(metric.emailOpened || "-")}</td>
+            <td class="performance-engagement-event-cell ${linkClass}" title="${escapeHtml(metric.linkClickedAt || "")}">${escapeHtml(metric.linkClicked || "-")}</td>
+            <td class="performance-engagement-event-cell is-empty">-</td>
+            <td class="performance-engagement-event-cell ${ackClass}" title="${escapeHtml(metric.acknowledgedAt || "")}">${escapeHtml(metric.acknowledged || "-")}</td>
+            <td>${escapeHtml(metric.emailUsed || "-")}</td>
+          </tr>${rowIndex === group.rows.length - 1 && groupIndex < groups.length - 1 && group.rows.length > 1
+            && groups[groupIndex + 1]?.rows?.length > 1
+            ? '<tr class="performance-engagement-pair-spacer" aria-hidden="true"><td colspan="10"></td></tr>'
+            : ""}`;
+        }).join("" )).join("");
         updateTableHeaderSortIndicators();
       }
 
@@ -4729,7 +4845,7 @@
       function performanceEngagementRowsForSelection() {
         const selectedDayKey = normalizeText(state.performanceEngagement?.selectedDayKey);
         const rows = normalizePerformanceEngagementRows(state.performanceEngagement?.rows);
-        const filtered = rows.filter((row) => performanceEngagementRowMatchesFilters(row, Boolean(selectedDayKey)));
+        const filtered = rows.filter((row) => performanceEngagementRowMatchesFilters(row, Boolean(selectedDayKey), true));
         const grouped = new Map();
         filtered.forEach((row) => {
           const key = performanceEngagementGroupKey(row);
@@ -4748,6 +4864,13 @@
           grouped.set(key, entry);
         });
         return Array.from(grouped.values())
+          .filter((entry) => {
+            const hasParent = entry.rows.some((row) => row.reviewed === "parent");
+            const hasStudent = entry.rows.some((row) => row.reviewed === "student");
+            const searchMatches = !normalizeText(state.performanceEngagement?.search)
+              || entry.rows.some((row) => performanceEngagementRowMatchesFilters(row, Boolean(selectedDayKey), false));
+            return hasParent && hasStudent && searchMatches;
+          })
           .map((entry) => {
             entry.rows.sort(comparePerformanceEngagementGroupRows);
             entry.searchText = normalizeLower(entry.searchText);
@@ -4783,8 +4906,8 @@
           });
       }
 
-      function performanceEngagementRowMatchesFilters(row = {}, includeSelectedDay = true) {
-        const searchTerms = normalizeText(state.performanceEngagement?.search)
+      function performanceEngagementRowMatchesFilters(row = {}, includeSelectedDay = true, ignoreSearch = false) {
+        const searchTerms = ignoreSearch ? [] : normalizeText(state.performanceEngagement?.search)
           .split("|").map((term) => normalizeLower(term)).filter(Boolean);
         const role = normalizeLower(state.performanceEngagement?.role);
         const level = normalizeLower(state.performanceEngagement?.level);
@@ -4876,7 +4999,6 @@
           button.dataset.surfaceRole = "card";
           button.innerHTML = `
             <strong>${escapeHtml(engagementDayHeading(day.classDate, day.weekNumber))}</strong>
-            <span class="performance-engagement-day-card-rule" aria-hidden="true"></span>
             <span class="small">${escapeHtml(`reports=${day.reports.size} | rows=${day.rowCount} | opens=${day.openCount} | clicks=${day.clickCount} | pdf=${day.pdfCount}`)}</span>
           `;
           button.addEventListener("click", () => {
@@ -4913,9 +5035,11 @@
           rowsEl.innerHTML = '<tr><td colspan="9">No engagement rows for the selected class day.</td></tr>';
           return;
         }
-        engagementRows.forEach((group) => {
-          group.rows.forEach((row) => {
+        engagementRows.forEach((group, groupIndex) => {
+          group.rows.forEach((row, rowIndex) => {
             const tr = document.createElement("tr");
+            if (group.rows.length > 1 && rowIndex === 0) tr.classList.add("pair-start");
+            if (group.rows.length > 1 && rowIndex === group.rows.length - 1) tr.classList.add("pair-end");
             const reviewedClass =
               normalizeLower(row.reviewed) === "parent" ? "is-parent"
               : normalizeLower(row.reviewed) === "student" ? "is-student"
@@ -4930,7 +5054,7 @@
             const ackClass = row.acknowledgedAt ? "is-set" : "is-empty";
             tr.innerHTML = `
               <td class="performance-engagement-reviewed-cell ${reviewedClass}">${escapeHtml(row.reviewed || "-")}</td>
-              <td>${escapeHtml(row.id || "-")}</td>
+              <td title="Email used: ${escapeHtml(row.emailUsed || "not available")}">${escapeHtml(row.id || "-")}</td>
               <td>${escapeHtml(row.englishName || "-")}</td>
               <td>${escapeHtml(row.level || "-")}</td>
               <td class="performance-engagement-status-cell ${sentClass}" title="${escapeHtml(row.sentOkReturned)}">${escapeHtml(row.sentOkReturned || "-")}</td>
@@ -4942,6 +5066,14 @@
             `;
             rowsEl.appendChild(tr);
           });
+          if (groupIndex < engagementRows.length - 1 && group.rows.length > 1
+            && engagementRows[groupIndex + 1]?.rows?.length > 1) {
+            const spacer = document.createElement("tr");
+            spacer.className = "performance-engagement-pair-spacer";
+            spacer.setAttribute("aria-hidden", "true");
+            spacer.innerHTML = '<td colspan="10"></td>';
+            rowsEl.appendChild(spacer);
+          }
         });
       }
 
@@ -24322,10 +24454,6 @@
           state.performanceEngagement.search = normalizeText(event?.target?.value);
           renderPerformanceEngagementPage();
         });
-        bindById("performanceEngagementRoleFilter", "change", (event) => {
-          state.performanceEngagement.role = normalizeText(event?.target?.value);
-          renderPerformanceEngagementPage();
-        });
         bindById("performanceEngagementLevelFilter", "change", (event) => {
           state.performanceEngagement.level = normalizeText(event?.target?.value);
           renderPerformanceEngagementPage();
@@ -24339,10 +24467,6 @@
         });
         bindById("assignmentEngagementSearch", "input", (event) => {
           state.assignmentEngagement.search = normalizeText(event?.target?.value);
-          renderAssignmentEngagementPage();
-        });
-        bindById("assignmentEngagementAudienceFilter", "change", (event) => {
-          state.assignmentEngagement.audience = normalizeText(event?.target?.value);
           renderAssignmentEngagementPage();
         });
         bindById("assignmentEngagementReminderFilter", "change", (event) => {
@@ -25239,27 +25363,7 @@
         setStatus(staticPreviewHelpMessage(), true);
       } else {
         const initialAuthState = window.__SIS_ADMIN_INITIAL_AUTH__;
-        if (initialAuthState && typeof initialAuthState === "object") {
-          if (initialAuthState.authenticated) {
-            state.authUser = initialAuthState.user || null;
-            state.authRolePolicy = normalizeRolePolicy(
-              currentRoleName(),
-              initialAuthState.rolePolicy,
-              getCurrentRolePolicy(),
-            );
-            showApp();
-            setStatus("Loading dashboard...");
-            bootAfterLogin()
-              .then(() => {
-                setStatus(
-                  `Authenticated as ${state.authUser?.username || "admin"}. Student admin loaded.`,
-                );
-              })
-              .catch(handleError);
-          } else {
-            showLogin();
-          }
-        } else {
+        const runAuthBootstrap = () => {
           setAuthBootstrapping(true);
           const authBootstrap = window.__SIS_ADMIN_AUTH_BOOTSTRAP__;
           const authBootstrapArgs = {
@@ -25284,6 +25388,31 @@
               .then((mod) => mod.runStudentAdminAuthBootstrap(authBootstrapArgs))
               .catch(handleError);
           }
+        };
+        if (initialAuthState && typeof initialAuthState === "object") {
+          if (initialAuthState.authenticated) {
+            state.authUser = initialAuthState.user || null;
+            state.authRolePolicy = normalizeRolePolicy(
+              currentRoleName(),
+              initialAuthState.rolePolicy,
+              getCurrentRolePolicy(),
+            );
+            showApp();
+            setStatus("Loading dashboard...");
+            bootAfterLogin()
+              .then(() => {
+                setStatus(
+                  `Authenticated as ${state.authUser?.username || "admin"}. Student admin loaded.`,
+                );
+              })
+              .catch(handleError);
+          } else {
+            // A failed/slow server-side session peek is not proof that the
+            // browser cookie is invalid. Verify the cookie with the auth API.
+            runAuthBootstrap();
+          }
+        } else {
+          runAuthBootstrap();
         }
       }
     

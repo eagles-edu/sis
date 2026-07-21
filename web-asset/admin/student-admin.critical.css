@@ -456,7 +456,7 @@ html[data-theme="dark"] body.admin-portal-page #performanceQueueSection .section
         min-height: 108px;
       }
       #overviewRiskStudents {
-        min-height: 180px;
+        overflow: visible;
       }
       #levelDetailPanel .table-scroll-wrap table {
         min-width: 760px;

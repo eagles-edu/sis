@@ -250,7 +250,7 @@ body.admin-portal-page .card > :not(:first-child),
 body.admin-portal-page .panel > :not(:first-child),
 body.parent-portal-page .card > :not(:first-child),
 body.report-template-page .card > :not(:first-child),
-body.report-template-page .panel > :not(:first-child),body.student-portal-page .card > :not(:first-child){margin-top:12px}
+body.report-template-page .panel > :not(:first-child),body.student-portal-page .card > :not(:first-child){margin-top:6px}
 body.parent-portal-page .card.homework-card,body.student-portal-page .card.homework-card{background:var(--portal-surface-card);border-color:var(--portal-border)}body.admin-portal-page .panel,
 body.admin-portal-page .wrap .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-3);color:var(--ink);min-width:0;padding:12px}body.admin-portal-page :where(.profile-tabs-shell,
   .profile-info-tabs){background:var(--portal-role-panel-bg);border:1px solid var(--portal-role-border);border-radius:var(--radius-3);box-shadow:var(--portal-role-shadow);color:var(--portal-role-text)}body.admin-portal-page :where(.profile-info-summary,
