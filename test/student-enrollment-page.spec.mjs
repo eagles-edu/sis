@@ -4,12 +4,17 @@ import fs from "node:fs"
 import path from "node:path"
 
 const rootDir = process.cwd()
+const enrollmentJs = fs.readFileSync(
+  path.resolve(rootDir, "web-asset/admin/student-enrollment.js"),
+  "utf8",
+)
 
 test("student enrollment page ships as a standalone portal surface", () => {
-  const html = fs.readFileSync(
+  const htmlDocument = fs.readFileSync(
     path.resolve(rootDir, "web-asset/admin/student-enrollment.html"),
     "utf8",
   )
+  const html = `${htmlDocument}\n${enrollmentJs}`
 
   assert.match(html, /portal-theme\.min\.css/)
   assert.match(html, /class="header-bar[^"]*"/)
@@ -38,5 +43,5 @@ test("student enrollment page ships as a standalone portal surface", () => {
   assert.doesNotMatch(html, /1 note|HX notes/i)
   assert.doesNotMatch(html, /th scope="col">Same-year history<\/th>/)
   assert.doesNotMatch(html, /id="loginBtn"/)
-  assert.match(html, /\/api\/admin\/students\/\$\{encodeURIComponent\(row\.id\)\}\/enrollment/)
+  assert.match(`${html}\n${enrollmentJs}`, /\/api\/admin\/students\/\$\{encodeURIComponent\(row\.id\)\}\/enrollment/)
 })

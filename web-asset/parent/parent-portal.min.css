@@ -1,0 +1,16 @@
+.hidden{display:none!important}.row{gap:10px;grid-template-columns:repeat(12,minmax(0,1fr))}.field,.row{display:grid}.field{gap:6px}.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}.c12{grid-column:span 12}.form-row{display:grid;gap:6px}#performanceReportsList{display:none}
+      #performanceReportAttendanceBlock,#performanceReportHeader,
+      #performanceReportHomeworkBlock,
+      #performanceReportModalSections,
+      .report-grade-block{grid-column:1/-1}@media (max-width:520px){.homework-card-shell{gap:8px;grid-template-columns:86px minmax(0,1fr)}#performanceReportAttendanceMetrics,.attendance-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}.profile-groups{background:var(--portal-surface-support);display:grid;gap:12px}.profile-group{background:var(--portal-surface-card);border-top:1px solid var(--line);color:var(--portal-text-soft)}.profile-group h4{font-size:15px;line-height:1.2;margin:0}.field-header{align-items:start;display:grid;gap:6px}.detail-layout{align-content:start;display:grid;gap:12px}.detail-metrics{margin-top:0}.detail-list{display:grid;gap:10px}@media (min-width:720px){.toolbar{align-items:end;grid-template-columns:minmax(0,1fr) auto}.toolbar-actions{display:flex}.field-header{align-items:start;grid-template-columns:minmax(0,1fr)}.draft-actions{grid-template-columns:auto auto;justify-content:end}}@media (min-width:1000px){#overviewPanel,
+        #portalStatus{grid-column:1/-1}#identityPanel{grid-column:1}#metricsPanel{grid-column:2}.detail-layout{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-calendar-panel{grid-column:1/-1}.field-row{gap:12px;grid-template-columns:minmax(280px,38%) minmax(0,1fr)}}@media (max-width:560px){
+        .queue-summary-head,.section-head{justify-content:center;text-align:center}
+        .queue-summary-head > *,.section-head > *{margin-inline:auto;text-align:center}}@keyframes rise{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}html[data-parent-auth-state="authenticated"]
+        body.parent-portal-page
+        #loginCard{display:none!important}html[data-parent-auth-state="authenticated"]
+        body.parent-portal-page
+        #portalCard,html[data-parent-auth-state="unauthenticated"]
+        body.parent-portal-page
+        #loginCard{display:block!important}html[data-parent-auth-state="unauthenticated"]
+        body.parent-portal-page
+        #portalCard{display:none!important}

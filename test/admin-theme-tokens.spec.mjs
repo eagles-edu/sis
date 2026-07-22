@@ -5,6 +5,12 @@ import test from "node:test"
 
 const ROOT_DIR = process.cwd()
 
+const gradesTabulatorAssets = [
+  "web-asset/admin/grades-tabulator.html",
+  "web-asset/admin/grades-tabulator.css",
+  "web-asset/admin/grades-tabulator.js",
+].map((file) => fs.readFileSync(path.join(ROOT_DIR, file), "utf8")).join("\n")
+
 function readFile(relativePath) {
   return fs.readFileSync(path.join(ROOT_DIR, relativePath), "utf8")
 }
@@ -149,7 +155,7 @@ test("student-points container chrome uses the shared radius ladder", () => {
 })
 
 test("grades-tabulator chart render uses shared portal tokens", () => {
-  const source = readFile("web-asset/admin/grades-tabulator.html")
+  const source = gradesTabulatorAssets
   assert.ok(
     source.includes('<link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">'),
     "grades-tabulator.html should load portal-theme.min.css",
@@ -185,7 +191,7 @@ test("grades-tabulator chart render uses shared portal tokens", () => {
 })
 
 test("grades-tabulator container chrome uses the shared radius ladder", () => {
-  const source = readFile("web-asset/admin/grades-tabulator.html")
+  const source = gradesTabulatorAssets
   const cardBlock = sliceBetween(
     source,
     ".hero,\n    .control-card,\n    .grid-card {",
@@ -201,7 +207,7 @@ test("grades-tabulator container chrome uses the shared radius ladder", () => {
 })
 
 test("grades-tabulator table chrome stays on the shared table shell", () => {
-  const source = readFile("web-asset/admin/grades-tabulator.html")
+  const source = gradesTabulatorAssets
   assert.match(
     source,
     /id="gradeGrid" class="portal-theme-table-shell"/,
@@ -255,7 +261,7 @@ test("student-admin score popovers use the shared radius ladder", () => {
 })
 
 test("grades-tabulator reuses the shared admin chrome skeleton", () => {
-  const source = readFile("web-asset/admin/grades-tabulator.html")
+  const source = gradesTabulatorAssets
   for (const token of [
     '<div class="header-bar portal-login-header" data-surface-role="content">',
     '<div class="wrap">',
@@ -285,7 +291,7 @@ test("grades-tabulator reuses the shared admin chrome skeleton", () => {
 })
 
 test("grades-tabulator inherits shared dark text instead of redefining it locally", () => {
-  const source = readFile("web-asset/admin/grades-tabulator.html")
+  const source = gradesTabulatorAssets
   assertExcludesAll(
     source,
     [

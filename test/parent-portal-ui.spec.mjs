@@ -7,6 +7,8 @@ import { JSDOM } from "jsdom"
 const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
 const SHARED_THEME_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-theme.min.css")
 const PARENT_PORTAL_HTML = fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8")
+const PARENT_PORTAL_JS = fs.readFileSync(path.resolve(process.cwd(), "web-asset/parent/parent-portal.js"), "utf8")
+const PARENT_PORTAL_CSS = fs.readFileSync(path.resolve(process.cwd(), "web-asset/parent/parent-portal.css"), "utf8")
 const SHARED_THEME = fs.readFileSync(SHARED_THEME_PATH, "utf8")
 const PARENT_PORTAL_HTML_FOR_TEST = PARENT_PORTAL_HTML
   .replace(/<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>\s*/i, "")
@@ -20,6 +22,8 @@ const PARENT_PORTAL_HTML_FOR_TEST = PARENT_PORTAL_HTML
   .replace(/<script src="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
   .replace(/<script src="\.\.\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js"><\/script>\s*/i, "")
+  .replace(/<link rel="stylesheet" href="\/web-asset\/parent\/parent-portal\.min\.css">\s*/i, "")
+  .replace(/<script src="\/web-asset\/parent\/parent-portal\.min\.js"><\/script>/i, () => `<script>${PARENT_PORTAL_JS}</script>`)
   .replace(/<head>/i, `<head><style>${SHARED_THEME}</style>`)
 
 function installTabulatorStub(window) {
@@ -286,24 +290,25 @@ test("parent portal dark theme keeps identity, metric, profile, and homework sur
 })
 
 test("parent news week-set modal keeps student-clone visuals with only wired controls", () => {
-  assert.match(PARENT_PORTAL_HTML, /id="newsWeekSetModalPrevBtn"/)
-  assert.match(PARENT_PORTAL_HTML, /id="newsWeekSetModalNextBtn"/)
-  assert.match(PARENT_PORTAL_HTML, /id="closeNewsWeekSetModalBtn"/)
-  assert.match(PARENT_PORTAL_HTML, /id="newsWeekSetModalCloseActionBtn"/)
-  assert.match(PARENT_PORTAL_HTML, /openNewsQueueDetailBtn[\s\S]*scrollElementIntoView\?\.\("#portalDetailCard"\)/)
-  assert.doesNotMatch(PARENT_PORTAL_HTML, /id="newsQueueScrollTodayBtn"/)
-  assert.match(PARENT_PORTAL_HTML, /data-open-news-week-set[\s\S]*scrollElementIntoView\?\.\("#portalDetailCard"\)/)
-  assert.doesNotMatch(PARENT_PORTAL_HTML, /id="newsWeekSetModalSubmitBtn"/)
+  const source = `${PARENT_PORTAL_HTML}\n${PARENT_PORTAL_CSS}\n${PARENT_PORTAL_JS}`
+  assert.match(source, /id="newsWeekSetModalPrevBtn"/)
+  assert.match(source, /id="newsWeekSetModalNextBtn"/)
+  assert.match(source, /id="closeNewsWeekSetModalBtn"/)
+  assert.match(source, /id="newsWeekSetModalCloseActionBtn"/)
+  assert.match(source, /openNewsQueueDetailBtn[\s\S]*scrollElementIntoView\?\.\("#portalDetailCard"\)/)
+  assert.doesNotMatch(source, /id="newsQueueScrollTodayBtn"/)
+  assert.match(source, /data-open-news-week-set[\s\S]*scrollElementIntoView\?\.\("#portalDetailCard"\)/)
+  assert.doesNotMatch(source, /id="newsWeekSetModalSubmitBtn"/)
 
-  assert.match(PARENT_PORTAL_HTML, /getElementById\("newsWeekSetModalBackdrop"\)[\s\S]*closeNewsWeekSetModal\(\)/)
-  assert.match(PARENT_PORTAL_HTML, /getElementById\("closeNewsWeekSetModalBtn"\)[\s\S]*closeNewsWeekSetModal\(\)/)
-  assert.match(PARENT_PORTAL_HTML, /getElementById\("newsWeekSetModalCloseActionBtn"\)[\s\S]*closeNewsWeekSetModal\(\)/)
-  assert.match(PARENT_PORTAL_HTML, /getElementById\("newsWeekSetModalPrevBtn"\)[\s\S]*shiftNewsWeekSetViewer\(-1\)/)
-  assert.match(PARENT_PORTAL_HTML, /getElementById\("newsWeekSetModalNextBtn"\)[\s\S]*shiftNewsWeekSetViewer\(1\)/)
+  assert.match(source, /getElementById\("newsWeekSetModalBackdrop"\)[\s\S]*closeNewsWeekSetModal\(\)/)
+  assert.match(source, /getElementById\("closeNewsWeekSetModalBtn"\)[\s\S]*closeNewsWeekSetModal\(\)/)
+  assert.match(source, /getElementById\("newsWeekSetModalCloseActionBtn"\)[\s\S]*closeNewsWeekSetModal\(\)/)
+  assert.match(source, /getElementById\("newsWeekSetModalPrevBtn"\)[\s\S]*shiftNewsWeekSetViewer\(-1\)/)
+  assert.match(source, /getElementById\("newsWeekSetModalNextBtn"\)[\s\S]*shiftNewsWeekSetViewer\(1\)/)
 
-  assert.match(PARENT_PORTAL_HTML, /#newsWeekSetModal \.portal-modal-close/)
-  assert.match(PARENT_PORTAL_HTML, /#newsWeekSetModal button/)
-  assert.match(PARENT_PORTAL_HTML, /#newsWeekSetModal input,\s*#newsWeekSetModal textarea/)
+  assert.match(source, /#newsWeekSetModal \.portal-modal-close/)
+  assert.match(source, /#newsWeekSetModal button/)
+  assert.match(source, /#newsWeekSetModal input,\s*#newsWeekSetModal textarea/)
 })
 
 test("parent portal initial auth paints the dashboard without probing /me", async () => {

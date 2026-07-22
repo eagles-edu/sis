@@ -7,6 +7,10 @@ function readPortal(filePath) {
   return fs.readFileSync(path.resolve(process.cwd(), filePath), "utf8")
 }
 
+function readPortalAssets(htmlPath, jsPath) {
+  return `${readPortal(htmlPath)}\n${readPortal(jsPath)}`
+}
+
 function assertButtonContract(html, { id, className, type }) {
   const typeAssertion = type ? `(?=[^>]*\\btype="${type}")` : ""
   const pattern = new RegExp(
@@ -17,8 +21,8 @@ function assertButtonContract(html, { id, className, type }) {
 }
 
 test("student and parent portals use the shared semantic button contract", () => {
-  const studentHtml = readPortal("web-asset/student/student-portal.html")
-  const parentHtml = readPortal("web-asset/parent/parent-portal.html")
+  const studentHtml = readPortalAssets("web-asset/student/student-portal.html", "web-asset/student/student-portal.js")
+  const parentHtml = readPortalAssets("web-asset/parent/parent-portal.html", "web-asset/parent/parent-portal.js")
   const sharedTheme = readPortal("web-asset/shared/portal-theme.min.css")
 
   for (const html of [studentHtml, parentHtml]) {

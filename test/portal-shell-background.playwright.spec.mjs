@@ -153,14 +153,16 @@ test(
             }
           }, entry)
 
-          assert.equal(result.body.top, 0, `${theme}/${entry.label}: body should start at viewport top`)
+          const expectedBodyTop = entry.label === "admin" ? 24 : 0
+          assert.equal(result.body.top, expectedBodyTop, `${theme}/${entry.label}: body should start at the expected viewport offset`)
           assert.ok(
             result.body.bottom >= result.viewportHeight,
             `${theme}/${entry.label}: body should extend to viewport bottom`,
           )
           assert.ok(result.body.height >= result.viewportHeight, `${theme}/${entry.label}: body height should cover the viewport`)
           assert.ok(result.shell, `${theme}/${entry.label}: missing shell element`)
-          approx(result.shell.top, 24, 2, `${theme}/${entry.label}: shell top offset`)
+          const expectedShellTop = entry.label === "admin" ? 48 : 24
+          approx(result.shell.top, expectedShellTop, 2, `${theme}/${entry.label}: shell top offset`)
         }
       }
     } finally {

@@ -112,6 +112,16 @@ verify_target "admin-portal-css" "web-asset/admin/student-admin.css" "web-asset/
 verify_target "admin-portal-js" "web-asset/admin/student-admin.js" "web-asset/admin/student-admin.js" "web-asset/admin/student-admin.js" || status=1
 verify_target "admin-portal-min-css" "web-asset/admin/student-admin.min.css" "web-asset/admin/student-admin.min.css" "web-asset/admin/student-admin.min.css" || status=1
 verify_target "admin-portal-theme-min-css" "web-asset/admin/admin-portal-theme.min.css" "web-asset/admin/admin-portal-theme.min.css" "web-asset/admin/admin-portal-theme.min.css" || status=1
+verify_target "grades-tabulator-min-css" "web-asset/admin/grades-tabulator.min.css" "web-asset/admin/grades-tabulator.min.css" "web-asset/admin/grades-tabulator.min.css" || status=1
+verify_target "grades-tabulator-min-js" "web-asset/admin/grades-tabulator.min.js" "web-asset/admin/grades-tabulator.min.js" "web-asset/admin/grades-tabulator.min.js" || status=1
+verify_target "enrollment-min-css" "web-asset/admin/student-enrollment.min.css" "web-asset/admin/student-enrollment.min.css" "web-asset/admin/student-enrollment.min.css" || status=1
+verify_target "enrollment-min-js" "web-asset/admin/student-enrollment.min.js" "web-asset/admin/student-enrollment.min.js" "web-asset/admin/student-enrollment.min.js" || status=1
+verify_target "report-card-min-css" "web-asset/admin/report-card.min.css" "web-asset/admin/report-card.min.css" "web-asset/admin/report-card.min.css" || status=1
+verify_target "report-card-min-js" "web-asset/admin/report-card.min.js" "web-asset/admin/report-card.min.js" "web-asset/admin/report-card.min.js" || status=1
+verify_target "student-portal-min-css" "web-asset/student/student-portal.min.css" "web-asset/student/student-portal.min.css" "web-asset/student/student-portal.min.css" || status=1
+verify_target "student-portal-min-js" "web-asset/student/student-portal.min.js" "web-asset/student/student-portal.min.js" "web-asset/student/student-portal.min.js" || status=1
+verify_target "parent-portal-min-css" "web-asset/parent/parent-portal.min.css" "web-asset/parent/parent-portal.min.css" "web-asset/parent/parent-portal.min.css" || status=1
+verify_target "parent-portal-min-js" "web-asset/parent/parent-portal.min.js" "web-asset/parent/parent-portal.min.js" "web-asset/parent/parent-portal.min.js" || status=1
 verify_target "admin-portal-critical-css" "web-asset/admin/student-admin.critical.css" "web-asset/admin/student-admin.critical.css" "web-asset/admin/student-admin.critical.css" || status=1
 verify_target "admin-portal-min-js" "web-asset/admin/student-admin.min.js" "web-asset/admin/student-admin.min.js" "web-asset/admin/student-admin.min.js" || status=1
 verify_target "admin-portal-min-js-map" "web-asset/admin/student-admin.min.js.map" "web-asset/admin/student-admin.min.js.map" "web-asset/admin/student-admin.min.js.map" || status=1

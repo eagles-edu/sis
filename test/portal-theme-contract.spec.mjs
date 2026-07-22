@@ -27,8 +27,11 @@ const adminPortal = fs.readFileSync(adminPortalPath, "utf8")
 const assignmentEngagementIsland = fs.readFileSync(assignmentEngagementIslandPath, "utf8")
 const parentPortal = fs.readFileSync(parentPortalPath, "utf8")
 const studentPortal = fs.readFileSync(studentPortalPath, "utf8")
+const parentPortalAssets = `${parentPortal}\n${fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.css"), "utf8")}\n${fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.js"), "utf8")}`
+const studentPortalAssets = `${studentPortal}\n${fs.readFileSync(path.resolve(rootDir, "web-asset/student/student-portal.css"), "utf8")}\n${fs.readFileSync(path.resolve(rootDir, "web-asset/student/student-portal.js"), "utf8")}`
 const hubPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/portal-hub.html"), "utf8")
 const gradesTabulatorPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/grades-tabulator.html"), "utf8")
+const gradesTabulatorJs = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/grades-tabulator.js"), "utf8")
 const studentPointsPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-points.html"), "utf8")
 const denyLocalThemePropertyPattern = /\b(?:background(?:-color)?|border(?:-color)?|box-shadow|fill|stroke|color)\s*:/u
 const colorLiteralPattern = /#(?:[0-9a-fA-F]{3,8})\b|\b(?:rgba?|hsla?|color-mix)\([^)]*\)/g
@@ -170,6 +173,22 @@ test("admin theme split is generated from the shared theme and excludes portal-o
   assert.match(buildAdminAssets, /PERF-CONTRACT: ADMIN-THEME-SPLIT/)
   assert.match(adminTheme, /admin-portal-page/)
   assert.ok(adminTheme.length < sharedTheme.length, "admin theme should be smaller than the all-portal theme")
+})
+
+test("standalone portals reference route-owned external assets", () => {
+  assert.match(buildAdminAssets, /PERF-CONTRACT:\s*STANDALONE-ASSET-TASKS/)
+  const routes = [
+    ["web-asset/admin/grades-tabulator.html", "grades-tabulator"],
+    ["web-asset/admin/student-enrollment.html", "student-enrollment"],
+    ["web-asset/admin/report-card.html", "report-card"],
+    ["web-asset/student/student-portal.html", "student-portal"],
+    ["web-asset/parent/parent-portal.html", "parent-portal"],
+  ]
+  for (const [relativePath, assetName] of routes) {
+    const html = fs.readFileSync(path.resolve(rootDir, relativePath), "utf8")
+    assert.match(html, new RegExp(`${assetName}\\.min\\.css`), `${relativePath} should load route CSS`)
+    assert.match(html, new RegExp(`${assetName}\\.min\\.js`), `${relativePath} should load route JS`)
+  }
 })
 
 test("shared dark neutral ladder values stay pinned to the documented palette", () => {
@@ -424,14 +443,14 @@ test("portal pages fail closed on local theme ownership outside the explicit str
 })
 
 test("student and parent portals keep critical grade and quarter overrides local after vendor css", () => {
-  assert.match(studentPortal, /\/\*\s*portal-critical-theme:start\s*\*\//)
-  assert.match(parentPortal, /\/\*\s*portal-critical-theme:start\s*\*\//)
-  assert.match(studentPortal, /\.grade-quarter-picker-btn\s*\{/)
-  assert.match(parentPortal, /\.grade-quarter-picker-btn\s*\{/)
-  assert.match(studentPortal, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open\s*\{/)
-  assert.match(parentPortal, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open\s*\{/)
-  assert.match(studentPortal, /\.quarter-board-card\s*\{/)
-  assert.match(parentPortal, /\.quarter-board-card\s*\{/)
+  assert.match(studentPortalAssets, /\/\*\s*portal-critical-theme:start\s*\*\//)
+  assert.match(parentPortalAssets, /\/\*\s*portal-critical-theme:start\s*\*\//)
+  assert.match(studentPortalAssets, /\.grade-quarter-picker-btn\s*\{/)
+  assert.match(parentPortalAssets, /\.grade-quarter-picker-btn\s*\{/)
+  assert.match(studentPortalAssets, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open\s*\{/)
+  assert.match(parentPortalAssets, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open\s*\{/)
+  assert.match(studentPortalAssets, /\.quarter-board-card\s*\{/)
+  assert.match(parentPortalAssets, /\.quarter-board-card\s*\{/)
 })
 
 test("shared portal theme defines the common shell, header, and card system", () => {
@@ -480,7 +499,7 @@ test("shared portal theme owns reusable surface roles for columns, panels, cards
   assert.match(gradesTabulatorPortal, /class="distribution-chart-shell portal-theme-soft-card"/)
   assert.match(gradesTabulatorPortal, /class="distribution-hover portal-theme-tooltip"/)
   assert.match(
-    gradesTabulatorPortal,
+    gradesTabulatorJs,
     /button\.className\s*=\s*"distribution-mini-button portal-button portal-button-immutable-chrome"/,
   )
   for (const selector of [
@@ -587,13 +606,13 @@ test("parent identity panel reuses the student identity field ids", () => {
 })
 
 test("student report copy remains wired to the required archive and grades labels", () => {
-  assert.match(studentPortal, /Performance Reports SYTD Archive/)
+    assert.match(studentPortalAssets, /Performance Reports SYTD Archive/)
   assert.match(
-    studentPortal,
+    studentPortalAssets,
     /Performance reports SYTD: \$\{reportCount\}\. Archive access for prior school years is available through report exports\./,
   )
-  assert.match(studentPortal, /Grades YTD/)
-  assert.match(studentPortal, /Grade average YTD is not available yet\./)
+  assert.match(studentPortalAssets, /Grades YTD/)
+  assert.match(studentPortalAssets, /Grade average YTD is not available yet\./)
 })
 
 test("hub keeps its own theme toggle chrome and shared theme stays scoped off it", () => {

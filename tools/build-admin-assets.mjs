@@ -16,6 +16,8 @@ const { minify: uglifyMinify } = require("uglify-js")
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "..")
 
+// PERF-CONTRACT: STANDALONE-ASSET-TASKS
+// Route-owned pages keep their application CSS/JS out of unrelated portal shells.
 const ADMIN_ASSET_TASKS = [
   {
     kind: "css",
@@ -33,6 +35,29 @@ const ADMIN_ASSET_TASKS = [
     source: path.join(REPO_ROOT, "web-asset/shared/portal-theme.css"),
     output: path.join(REPO_ROOT, "web-asset/shared/portal-theme.min.css"),
   },
+  ...[
+    ["admin/grades-tabulator.css", "admin/grades-tabulator.min.css"],
+    ["admin/student-enrollment.css", "admin/student-enrollment.min.css"],
+    ["admin/report-card.css", "admin/report-card.min.css"],
+    ["student/student-portal.css", "student/student-portal.min.css"],
+    ["parent/parent-portal.css", "parent/parent-portal.min.css"],
+  ].map(([source, output]) => ({
+    kind: "css",
+    source: path.join(REPO_ROOT, "web-asset", source),
+    output: path.join(REPO_ROOT, "web-asset", output),
+  })),
+  ...[
+    ["admin/grades-tabulator.js", "admin/grades-tabulator.min.js"],
+    ["admin/student-enrollment.js", "admin/student-enrollment.min.js"],
+    ["admin/report-card.js", "admin/report-card.min.js"],
+    ["student/student-portal.js", "student/student-portal.min.js"],
+    ["parent/parent-portal.js", "parent/parent-portal.min.js"],
+  ].map(([source, output]) => ({
+    kind: "js",
+    source: path.join(REPO_ROOT, "web-asset", source),
+    output: path.join(REPO_ROOT, "web-asset", output),
+    mapOutput: path.join(REPO_ROOT, "web-asset", `${output}.map`),
+  })),
 ]
 
 const ADMIN_THEME_OUTPUT = path.join(REPO_ROOT, "web-asset/admin/admin-portal-theme.css")

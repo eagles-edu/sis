@@ -7,6 +7,10 @@ function readPortal(filePath) {
   return fs.readFileSync(path.resolve(process.cwd(), filePath), "utf8")
 }
 
+function readPortalAssets(htmlPath, jsPath) {
+  return `${readPortal(htmlPath)}\n${readPortal(jsPath)}`
+}
+
 function extractChunk(source, startMarker, endMarker) {
   const start = source.indexOf(startMarker)
   assert.notEqual(start, -1, `missing marker: ${startMarker}`)
@@ -16,7 +20,7 @@ function extractChunk(source, startMarker, endMarker) {
 }
 
 test("student modal chip mapper follows chips.md contract", () => {
-  const html = readPortal("web-asset/student/student-portal.html")
+  const html = readPortalAssets("web-asset/student/student-portal.html", "web-asset/student/student-portal.js")
   const chunk = extractChunk(
     html,
     "function newsViewerItemStatusChipModel(item = {}) {",
@@ -34,7 +38,7 @@ test("student modal chip mapper follows chips.md contract", () => {
 })
 
 test("parent modal chip mapper follows chips.md contract", () => {
-  const html = readPortal("web-asset/parent/parent-portal.html")
+  const html = readPortalAssets("web-asset/parent/parent-portal.html", "web-asset/parent/parent-portal.js")
   const chunk = extractChunk(
     html,
     "function newsViewerItemStatusChipModel(item = {}) {",
@@ -52,8 +56,8 @@ test("parent modal chip mapper follows chips.md contract", () => {
 })
 
 test("student and parent queue headers follow compact parity contract", () => {
-  const studentHtml = readPortal("web-asset/student/student-portal.html")
-  const parentHtml = readPortal("web-asset/parent/parent-portal.html")
+  const studentHtml = `${readPortalAssets("web-asset/student/student-portal.html", "web-asset/student/student-portal.js")}\n${readPortal("web-asset/student/student-portal.css")}`
+  const parentHtml = `${readPortalAssets("web-asset/parent/parent-portal.html", "web-asset/parent/parent-portal.js")}\n${readPortal("web-asset/parent/parent-portal.css")}`
 
   const studentQueueTable = extractChunk(studentHtml, '<table class="news-queue-table">', "</table>")
   const parentQueueTable = extractChunk(parentHtml, '<table class="news-queue-table">', "</table>")
@@ -74,8 +78,8 @@ test("student and parent queue headers follow compact parity contract", () => {
 })
 
 test("student and parent queue compact chip/button and datetime helpers stay aligned", () => {
-  const studentHtml = readPortal("web-asset/student/student-portal.html")
-  const parentHtml = readPortal("web-asset/parent/parent-portal.html")
+  const studentHtml = readPortalAssets("web-asset/student/student-portal.html", "web-asset/student/student-portal.js")
+  const parentHtml = readPortalAssets("web-asset/parent/parent-portal.html", "web-asset/parent/parent-portal.js")
   const sharedTheme = readPortal("web-asset/shared/portal-theme.css")
 
   for (const html of [studentHtml, parentHtml]) {
@@ -96,8 +100,8 @@ test("student and parent queue compact chip/button and datetime helpers stay ali
 })
 
 test("student and parent quarter tables keep late and missed status chips", () => {
-  const studentHtml = readPortal("web-asset/student/student-portal.html")
-  const parentHtml = readPortal("web-asset/parent/parent-portal.html")
+  const studentHtml = `${readPortalAssets("web-asset/student/student-portal.html", "web-asset/student/student-portal.js")}\n${readPortal("web-asset/student/student-portal.css")}`
+  const parentHtml = `${readPortalAssets("web-asset/parent/parent-portal.html", "web-asset/parent/parent-portal.js")}\n${readPortal("web-asset/parent/parent-portal.css")}`
   const sharedTheme = readPortal("web-asset/shared/portal-theme.min.css")
 
   for (const html of [studentHtml, parentHtml]) {

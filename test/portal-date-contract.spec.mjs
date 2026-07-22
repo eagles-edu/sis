@@ -9,10 +9,14 @@ function read(relPath) {
   return fs.readFileSync(path.resolve(ROOT, relPath), "utf8")
 }
 
+function readPortalAssets(htmlPath, jsPath) {
+  return `${read(htmlPath)}\n${read(jsPath)}`
+}
+
 const serverRoutes = read("server/student-admin-routes.mjs")
 const reportCardPdf = read("server/student-report-card-pdf.mjs")
-const parentPortal = read("web-asset/parent/parent-portal.html")
-const studentPortal = read("web-asset/student/student-portal.html")
+const parentPortal = readPortalAssets("web-asset/parent/parent-portal.html", "web-asset/parent/parent-portal.js")
+const studentPortal = readPortalAssets("web-asset/student/student-portal.html", "web-asset/student/student-portal.js")
 const adminScript = read("web-asset/admin/student-admin.js")
 
 test("date-input pages declare Vietnam locale for native controls", () => {

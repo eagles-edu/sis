@@ -5,6 +5,7 @@ import test from "node:test"
 import { JSDOM } from "jsdom"
 
 const TABULATOR_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/grades-tabulator.html")
+const TABULATOR_JS = fs.readFileSync(path.resolve(process.cwd(), "web-asset/admin/grades-tabulator.js"), "utf8")
 const TABULATOR_HTML = fs
   .readFileSync(TABULATOR_HTML_PATH, "utf8")
   .replace(/<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>\s*/i, "")
@@ -15,6 +16,8 @@ const TABULATOR_HTML = fs
   .replace(/<script src="\.\.\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/shared\/portal-environment\.js"><\/script>\s*/i, "")
+  .replace(/<link rel="stylesheet" href="\/web-asset\/admin\/grades-tabulator\.min\.css">\s*/i, "")
+  .replace(/<script src="\/web-asset\/admin\/grades-tabulator\.min\.js"><\/script>/i, () => `<script>${TABULATOR_JS}</script>`)
 const SHARED_THEME_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-theme.min.css")
 const SHARED_THEME = fs.readFileSync(SHARED_THEME_PATH, "utf8")
 const TABULATOR_HTML_FOR_TEST = TABULATOR_HTML.replace("</head>", `<style>${SHARED_THEME}</style></head>`)

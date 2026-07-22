@@ -19,6 +19,9 @@ const ADMIN_HTML_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-ad
 const ADMIN_CSS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.css", import.meta.url), "utf8")
 const ADMIN_JS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
 const SHARED_PORTAL_THEME_SOURCE = fs.readFileSync(new URL("../web-asset/shared/portal-theme.css", import.meta.url), "utf8")
+const ENROLLMENT_JS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-enrollment.js", import.meta.url), "utf8")
+const REPORT_CARD_JS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/report-card.js", import.meta.url), "utf8")
+const GRADES_TABULATOR_JS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/grades-tabulator.js", import.meta.url), "utf8")
 
 test("class and level aliases resolve to one canonical catalog value", () => {
   assert.ok(LEVEL_DEFINITIONS.length > 0)
@@ -1717,18 +1720,18 @@ test("admin runtime helpers preserve apiOrigin across all internal admin anchors
     new URL("../web-asset/admin/student-admin.js", import.meta.url),
     "utf8",
   )
-  const enrollmentSource = fs.readFileSync(
+  const enrollmentSource = `${fs.readFileSync(
     new URL("../web-asset/admin/student-enrollment.html", import.meta.url),
     "utf8",
-  )
-  const reportCardSource = fs.readFileSync(
+  )}\n${ENROLLMENT_JS_SOURCE}`
+  const reportCardSource = `${fs.readFileSync(
     new URL("../web-asset/admin/report-card.html", import.meta.url),
     "utf8",
-  )
-  const gradesTabulatorSource = fs.readFileSync(
+  )}\n${REPORT_CARD_JS_SOURCE}`
+  const gradesTabulatorSource = `${fs.readFileSync(
     new URL("../web-asset/admin/grades-tabulator.html", import.meta.url),
     "utf8",
-  )
+  )}\n${GRADES_TABULATOR_JS_SOURCE}`
 
   assert.match(adminSource, /document\.querySelectorAll\('a\[href\^="\/admin"\]'\)/)
   assert.match(adminSource, /function shouldPreserveAdminApiOriginParamFor\(apiOrigin = ""\)/)

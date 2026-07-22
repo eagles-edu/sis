@@ -29,8 +29,12 @@ function assertExcludesAll(source, tokens, label) {
   }
 }
 
+function readAssets(htmlPath, cssPath) {
+  return `${readFile(htmlPath)}\n${readFile(cssPath)}`
+}
+
 test("student portal surfaces follow the shared portal theme tokens", () => {
-  const source = readFile("web-asset/student/student-portal.html")
+  const source = readAssets("web-asset/student/student-portal.html", "web-asset/student/student-portal.css")
   const shared = readFile("web-asset/shared/portal-theme.css")
 
   assertIncludesAll(
@@ -61,7 +65,7 @@ test("student portal surfaces follow the shared portal theme tokens", () => {
 })
 
 test("parent portal surfaces follow the shared portal theme tokens", () => {
-  const source = readFile("web-asset/parent/parent-portal.html")
+  const source = readAssets("web-asset/parent/parent-portal.html", "web-asset/parent/parent-portal.css")
   const shared = readFile("web-asset/shared/portal-theme.css")
 
   assertIncludesAll(
@@ -176,7 +180,7 @@ test("semantic status palettes stay on shared portal tokens", () => {
     "student portal legacy status colors",
   )
 
-  const gradesTabulator = readFile("web-asset/admin/grades-tabulator.html")
+  const gradesTabulator = readAssets("web-asset/admin/grades-tabulator.html", "web-asset/admin/grades-tabulator.css")
   assertIncludesAll(
     gradesTabulator,
     [

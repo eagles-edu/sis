@@ -10,8 +10,8 @@ const portalThemeCssPath = path.resolve(rootDir, "web-asset/shared/portal-theme.
 const portalThemeCss = fs.readFileSync(portalThemeCssPath, "utf8")
 const sharedThemeMinPath = path.resolve(rootDir, "web-asset/shared/portal-theme.min.css")
 const sharedThemeMin = fs.readFileSync(sharedThemeMinPath, "utf8")
-const parentPortalHtml = fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.html"), "utf8")
-const studentPortalHtml = fs.readFileSync(path.resolve(rootDir, "web-asset/student/student-portal.html"), "utf8")
+const parentPortalHtml = `${fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.html"), "utf8")}\n${fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.js"), "utf8")}`
+const studentPortalHtml = `${fs.readFileSync(path.resolve(rootDir, "web-asset/student/student-portal.html"), "utf8")}\n${fs.readFileSync(path.resolve(rootDir, "web-asset/student/student-portal.js"), "utf8")}`
 
 test("portal hub falls back to the dev apiOrigin when runtime paths are unavailable", () => {
   assert.match(hubHtml, /const currentOrigin = window\.location\.origin/)
