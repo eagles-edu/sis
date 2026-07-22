@@ -5825,14 +5825,14 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
   }
 }
 
-async function buildQueueHubPayload() {
+async function buildQueueHubPayload({ compact = false } = {}) {
   assertStoreEnabled()
   const dashboard = await getAdminDashboardSummary()
   const [parentQueue, incomingQueue, submissions, newsReviewQueue] = await Promise.all([
     listQueuedAnnouncements({
       queueType: NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
       includeSent: false,
-      take: 20,
+      take: compact ? 1 : 20,
     }),
     listIncomingExerciseResults({
       statuses: [INCOMING_EXERCISE_RESULT_STATUS_QUEUED],
@@ -5843,7 +5843,7 @@ async function buildQueueHubPayload() {
       statuses: [PARENT_PROFILE_QUEUE_STATUS_SUBMITTED],
       take: 20,
     }),
-    (async () => {
+    compact ? Promise.resolve({ deferred: true, total: null, statusSummary: {}, items: [] }) : (async () => {
       try {
         await reconcileStudentNewsAutoApprovals()
         const prisma = await getSharedPrismaClient()
@@ -6088,6 +6088,7 @@ async function buildQueueHubPayload() {
         title: "Queued Performance Reports",
         total: parentQueue.total,
         items: parentQueue.items,
+        deferred: compact,
       },
       {
         id: "unmatched-exercise-submissions",
@@ -6129,6 +6130,7 @@ async function buildQueueHubPayload() {
         weeklyMinimumReports: getWeeklyMinimumReportsSync(),
         statusSummary: newsReviewQueue?.statusSummary || { submitted: 0, approved: 0, revisionRequested: 0 },
         items: Array.isArray(newsReviewQueue?.items) ? newsReviewQueue.items : [],
+        deferred: Boolean(newsReviewQueue?.deferred),
       },
       {
         id: "pending-profile-submissions",
@@ -6474,7 +6476,9 @@ async function handleApiRequest(request, response, pathname, url) {
 
   if (method === "GET" && pathname === ADMIN_QUEUE_HUB_PATH) {
     assertCanManageUsers(rolePolicy)
-    const payload = await buildQueueHubPayload()
+    const payload = await buildQueueHubPayload({
+      compact: url.searchParams.get("mode") === "compact",
+    })
     sendJson(response, 200, payload)
     return true
   }

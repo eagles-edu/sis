@@ -10,6 +10,7 @@ const sharedThemePath = path.resolve(rootDir, "web-asset/shared/portal-theme.min
 const sharedThemeSourcePath = path.resolve(rootDir, "web-asset/shared/portal-theme.css")
 const adminThemePath = path.resolve(rootDir, "web-asset/admin/student-admin.css")
 const adminPortalPath = path.resolve(rootDir, "web-asset/admin/student-admin.html")
+const assignmentEngagementIslandPath = path.resolve(rootDir, "web-asset/admin/assignment-engagement-island.mjs")
 const parentPortalPath = path.resolve(rootDir, "web-asset/parent/parent-portal.html")
 const studentPortalPath = path.resolve(rootDir, "web-asset/student/student-portal.html")
 const buildAdminAssets = fs.readFileSync(buildAdminAssetsPath, "utf8")
@@ -23,6 +24,7 @@ const sharedTheme = fs.readFileSync(sharedThemePath, "utf8")
 const sharedThemeSource = fs.readFileSync(sharedThemeSourcePath, "utf8")
 const adminTheme = fs.readFileSync(adminThemePath, "utf8")
 const adminPortal = fs.readFileSync(adminPortalPath, "utf8")
+const assignmentEngagementIsland = fs.readFileSync(assignmentEngagementIslandPath, "utf8")
 const parentPortal = fs.readFileSync(parentPortalPath, "utf8")
 const studentPortal = fs.readFileSync(studentPortalPath, "utf8")
 const hubPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/portal-hub.html"), "utf8")
@@ -56,22 +58,82 @@ test("portal pages load the shared portal theme stylesheet", () => {
     const html = fs.readFileSync(path.resolve(rootDir, relPath), "utf8")
     assert.match(
       html,
-      /<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css">/,
+      /portal-theme\.min\.css/,
       `${label} should link the shared portal theme`,
     )
   }
 })
 
-test("student admin loads shared theme state before its inline toggle wiring", () => {
+test("admin performance contract markers protect first-paint mitigations", () => {
+  assert.match(
+    adminTheme,
+    /PERF-CONTRACT: CRITICAL-ADMIN-SHELL/,
+    "admin source CSS must retain the protected critical-shell marker",
+  )
   assert.match(
     adminPortal,
-    /<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>[\s\S]*?const themeState = window\.SIS_PORTAL_THEME/,
-    "student-admin.html must expose shared theme state before its inline toggle handler runs"
+    /PERF-CONTRACT: ADMIN-FIRST-PAINT-LOADER/,
+    "admin HTML must retain the protected deferred app-loader marker",
+  )
+  assert.match(
+    adminPortal,
+    /PERF-CONTRACT: ADMIN-POST-PAINT/,
+    "admin HTML must retain the protected post-paint marker",
+  )
+  const adminJs = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.js"), "utf8")
+  assert.match(
+    adminJs,
+    /PERF-CONTRACT: ADMIN-DEFERRED-HYDRATION/,
+    "admin JS must retain the protected hydration boundary marker",
+  )
+  assert.match(
+    buildAdminAssets,
+    /PERF-CONTRACT: ADMIN-ASSET-PARITY/,
+    "the admin asset builder must retain the generated-parity marker",
+  )
+  const criticalCss = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.critical.css"), "utf8")
+  assert.match(
+    criticalCss,
+    /#top\.admin-portal-page \.wrap[\s\S]*#appMain \.grid-main[\s\S]*#floatingMenuBtn\.floating-menu-btn/,
+    "generated critical CSS must retain the protected shell geometry",
+  )
+})
+
+test("assignment engagement stays outside the critical admin bundle", () => {
+  const adminJs = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.js"), "utf8")
+  const adminMinJs = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.min.js"), "utf8")
+  assert.match(
+    assignmentEngagementIsland,
+    /PERF-CONTRACT: ASSIGNMENT-ENGAGEMENT-ISLAND/,
+    "assignment engagement island must retain its performance boundary marker",
+  )
+  assert.match(
+    adminJs,
+    /assignment-engagement-island\.mjs/,
+    "admin startup must load assignment engagement through the island boundary",
+  )
+  assert.match(
+    adminJs,
+    /PERF-CONTRACT: ADMIN-ISLAND-IMPORTS/,
+    "admin JS must retain the post-paint island import boundary",
   )
   assert.doesNotMatch(
+    adminJs,
+    /function assignmentEngagementSearchText/,
+    "assignment engagement implementation must not remain in the main source bundle",
+  )
+  assert.doesNotMatch(
+    adminMinJs,
+    /assignmentEngagementSearchText|assignmentEngagementMetricRow/,
+    "assignment engagement implementation must not remain in the minified bundle",
+  )
+})
+
+test("student admin exposes theme state before its inline toggle wiring", () => {
+  assert.match(
     adminPortal,
-    /<script src="\/web-asset\/shared\/portal-theme-state\.js" defer>/,
-    "student-admin.html must not defer the state script used by its inline toggle handler"
+    /globalThis\.SIS_PORTAL_THEME[\s\S]*?const themeState = window\.SIS_PORTAL_THEME/,
+    "student-admin.html must expose theme state before its inline toggle handler runs"
   )
 })
 
@@ -99,6 +161,15 @@ test("shared portal theme minified asset is generated from portal-theme.css by t
     /task\.kind === "css" \? await buildAdminCss\(task\.source\) : await buildAdminJs\(task\.source\)/,
     "build-admin-assets.mjs should rebuild minified assets from source files",
   )
+})
+
+test("admin theme split is generated from the shared theme and excludes portal-only rules", () => {
+  const adminHtml = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.html"), "utf8")
+  const adminTheme = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/admin-portal-theme.min.css"), "utf8")
+  assert.match(adminHtml, /admin-portal-theme\.min\.css/)
+  assert.match(buildAdminAssets, /PERF-CONTRACT: ADMIN-THEME-SPLIT/)
+  assert.match(adminTheme, /admin-portal-page/)
+  assert.ok(adminTheme.length < sharedTheme.length, "admin theme should be smaller than the all-portal theme")
 })
 
 test("shared dark neutral ladder values stay pinned to the documented palette", () => {

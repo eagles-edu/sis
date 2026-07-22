@@ -111,6 +111,7 @@ verify_target "admin-enrollment-html" "web-asset/admin/student-enrollment.html" 
 verify_target "admin-portal-css" "web-asset/admin/student-admin.css" "web-asset/admin/student-admin.css" "web-asset/admin/student-admin.css" || status=1
 verify_target "admin-portal-js" "web-asset/admin/student-admin.js" "web-asset/admin/student-admin.js" "web-asset/admin/student-admin.js" || status=1
 verify_target "admin-portal-min-css" "web-asset/admin/student-admin.min.css" "web-asset/admin/student-admin.min.css" "web-asset/admin/student-admin.min.css" || status=1
+verify_target "admin-portal-theme-min-css" "web-asset/admin/admin-portal-theme.min.css" "web-asset/admin/admin-portal-theme.min.css" "web-asset/admin/admin-portal-theme.min.css" || status=1
 verify_target "admin-portal-critical-css" "web-asset/admin/student-admin.critical.css" "web-asset/admin/student-admin.critical.css" "web-asset/admin/student-admin.critical.css" || status=1
 verify_target "admin-portal-min-js" "web-asset/admin/student-admin.min.js" "web-asset/admin/student-admin.min.js" "web-asset/admin/student-admin.min.js" || status=1
 verify_target "admin-portal-min-js-map" "web-asset/admin/student-admin.min.js.map" "web-asset/admin/student-admin.min.js.map" "web-asset/admin/student-admin.min.js.map" || status=1

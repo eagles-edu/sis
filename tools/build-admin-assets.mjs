@@ -35,6 +35,47 @@ const ADMIN_ASSET_TASKS = [
   },
 ]
 
+const ADMIN_THEME_OUTPUT = path.join(REPO_ROOT, "web-asset/admin/admin-portal-theme.css")
+const ADMIN_THEME_MIN_OUTPUT = path.join(REPO_ROOT, "web-asset/admin/admin-portal-theme.min.css")
+
+// PERF-CONTRACT: ADMIN-THEME-SPLIT
+// Keep the shared source authoritative. The admin theme retains global rules,
+// admin selectors, and mixed selectors; parent/student-only rules stay out of
+// the admin critical path. Add a selector here only with authenticated visual
+// and Lighthouse proof that it belongs in the dashboard shell.
+const NON_ADMIN_PORTAL_PAGE_RE = /\b(?:student|parent|portal-hub|grades-tabulator)-portal-page\b/u
+
+/**
+ * @param {import("postcss").Container} container
+ * @returns {import("postcss").ChildNode[]}
+ */
+function extractAdminThemeChildren(container) {
+  /** @type {import("postcss").ChildNode[]} */
+  const kept = []
+  for (const node of container.nodes ?? []) {
+    if (node.type === "rule") {
+      if (!NON_ADMIN_PORTAL_PAGE_RE.test(node.selector) || node.selector.includes("admin-portal-page")) {
+        kept.push(node.clone())
+      }
+      continue
+    }
+    if (node.type !== "atrule" || !node.nodes) {
+      kept.push(node.clone())
+      continue
+    }
+    const children = extractAdminThemeChildren(node)
+    if (children.length === 0) continue
+    kept.push(node.clone({ nodes: children }))
+  }
+  return kept
+}
+
+/** @param {string} source */
+function buildAdminThemeSource(source) {
+  const root = postcss.parse(source)
+  return `${postcss.root({ nodes: extractAdminThemeChildren(root) }).toString()}\n`
+}
+
 const CRITICAL_CSS_TASK = {
   html: path.join(REPO_ROOT, "web-asset/admin/student-admin.html"),
   sources: [
@@ -43,6 +84,9 @@ const CRITICAL_CSS_TASK = {
   ],
   output: path.join(REPO_ROOT, "web-asset/admin/student-admin.critical.css"),
 }
+// PERF-CONTRACT: ADMIN-ASSET-PARITY
+// Critical CSS and generated admin assets must remain derived from source.
+// Do not bypass this build path or edit generated outputs as the source of truth.
 const CRITICAL_CSS_MARKER_RE = /(?:<!-- ADMIN_CRITICAL_CSS -->|<style id="admin-critical-css">[\s\S]*?<\/style>)/u
 
 const ADMIN_ASSET_SHARED_DEPENDENCIES = [
@@ -200,6 +244,27 @@ async function main() {
   const checkOnly = args.has("--check")
   const changedFiles = []
   const staleFiles = []
+
+  const sharedThemeSource = await fs.readFile(
+    path.join(REPO_ROOT, "web-asset/shared/portal-theme.css"),
+    "utf8",
+  )
+  const adminThemeSource = buildAdminThemeSource(sharedThemeSource)
+  if (checkOnly) {
+    if (await readFileIfExists(ADMIN_THEME_OUTPUT) !== adminThemeSource) {
+      staleFiles.push(path.relative(REPO_ROOT, ADMIN_THEME_OUTPUT))
+    }
+  } else if (await writeFileIfChanged(ADMIN_THEME_OUTPUT, adminThemeSource)) {
+    changedFiles.push(path.relative(REPO_ROOT, ADMIN_THEME_OUTPUT))
+  }
+  const adminThemeMinified = await buildAdminCss(ADMIN_THEME_OUTPUT)
+  if (checkOnly) {
+    if (await readFileIfExists(ADMIN_THEME_MIN_OUTPUT) !== adminThemeMinified.code) {
+      staleFiles.push(path.relative(REPO_ROOT, ADMIN_THEME_MIN_OUTPUT))
+    }
+  } else if (await writeFileIfChanged(ADMIN_THEME_MIN_OUTPUT, adminThemeMinified.code)) {
+    changedFiles.push(path.relative(REPO_ROOT, ADMIN_THEME_MIN_OUTPUT))
+  }
 
   const criticalHtmlSource = await fs.readFile(CRITICAL_CSS_TASK.html, "utf8")
   const criticalResults = []

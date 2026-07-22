@@ -2552,7 +2552,7 @@
         return { endpoint, response, body };
       }
 
-      async function loadRuntimeHealthSnapshotFromAdminApi(controller) {
+      async function loadRuntimeHealthSnapshotFromAdminApi(controller, { paint = true } = {}) {
         const now = Date.now();
         if (state.runtimeHealthRequest) return state.runtimeHealthRequest;
         if (state.runtimeHealth && now - state.runtimeHealthFetchedAt < 5000) return true;
@@ -2571,7 +2571,7 @@
           state.runtimeHealth = body;
           state.runtimeHealthFetchedAt = Date.now();
           renderOverviewRuntimeRestartButton();
-          renderSystemHealthPanel();
+          if (paint) renderSystemHealthPanel();
           return true;
         })();
         state.runtimeHealthRequest = request;
@@ -2608,12 +2608,12 @@
               body.studentAdminRuntime && typeof body.studentAdminRuntime === "object";
             if (hasRuntimeHealthPayload) state.runtimeHealth = body;
             renderOverviewRuntimeRestartButton();
-            renderSystemHealthPanel();
+            if (paint) renderSystemHealthPanel();
             if (canManageUsers()) {
-              await loadRuntimeHealthSnapshotFromAdminApi(controller).catch(() => false);
+              await loadRuntimeHealthSnapshotFromAdminApi(controller, { paint }).catch(() => false);
             }
           } else if (probeResult.response.ok) {
-            await loadRuntimeHealthSnapshotFromAdminApi(controller).catch(() => false);
+            await loadRuntimeHealthSnapshotFromAdminApi(controller, { paint }).catch(() => false);
           }
           const connected =
             probeConfig.mode === "auth" ?
@@ -2666,13 +2666,13 @@
           window.clearInterval(state.hubPollTimer);
           state.hubPollTimer = null;
         }
-        const runProbe = () => {
+        const runProbe = ({ paint = true } = {}) => {
           if (!state.hubPollTimer) return;
-          probeHubConnection({ notify: false }).catch(() => {});
+          probeHubConnection({ notify: false, paint }).catch(() => {});
         };
         state.hubPollTimer = window.setInterval(runProbe, 30000);
         const scheduleProbe = () => {
-          const runWhenIdle = () => runProbe();
+          const runWhenIdle = () => runProbe({ paint: false });
           if (typeof window.requestIdleCallback === "function") {
             window.requestIdleCallback(runWhenIdle, { timeout: 2000 });
           } else {
@@ -4528,307 +4528,6 @@
           .filter(Boolean);
       }
 
-      function assignmentEngagementSearchText(row = {}) {
-        return [
-          row.dispatch?.assignmentTemplateId,
-          row.dispatch?.studentRefId,
-          row.dispatch?.eaglesId,
-          row.dispatch?.englishName,
-          row.dispatch?.level,
-          row.recipientEmail,
-          row.dispatch?.reminderKind,
-          row.dispatch?.localDate,
-          row.dispatch?.status,
-          row.emailUsed,
-        ].map((value) => normalizeLower(value)).filter(Boolean).join(" ");
-      }
-
-      function assignmentEngagementDayKey(row = {}) {
-        const dispatch = row.dispatch || {};
-        return `${normalizeText(dispatch.localDate) || "unknown"}:${normalizeText(dispatch.reminderKind) || "unknown"}`;
-      }
-
-      function engagementWeekNumberForDate(value = "") {
-        const dateText = normalizeText(value);
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateText)) return null;
-        const date = new Date(`${dateText}T00:00:00Z`);
-        const anchor = new Date("2026-02-21T00:00:00Z");
-        const difference = Math.floor((date.getTime() - anchor.getTime()) / 86400000);
-        if (!Number.isFinite(difference) || difference < 0) return null;
-        return Math.floor(difference / 7) + 1;
-      }
-
-      function engagementDayWeekLabel(value = "", weekNumber = null) {
-        const explicitWeek = Number.parseInt(String(weekNumber ?? ""), 10);
-        const week = Number.isInteger(explicitWeek) && explicitWeek >= 1
-          ? explicitWeek
-          : engagementWeekNumberForDate(value);
-        return Number.isInteger(week) && week >= 1 ? `WEEK ${week}` : "WEEK -";
-      }
-
-      function engagementDayHeading(value = "", weekNumber = null) {
-        const dateText = normalizeText(value) || "-";
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateText)) return `${dateText} | - | WEEK -`;
-        const date = new Date(`${dateText}T00:00:00Z`);
-        const weekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-        return `${dateText} | ${weekdays[date.getUTCDay()]} | ${engagementDayWeekLabel(dateText, weekNumber)}`;
-      }
-
-      function assignmentEngagementRowsForDisplay(includeSelectedDay = true) {
-        const searchTerms = normalizeText(state.assignmentEngagement?.search)
-          .split("|").map((term) => normalizeLower(term)).filter(Boolean);
-        const reminderKind = normalizeLower(state.assignmentEngagement?.reminderKind);
-        const status = normalizeLower(state.assignmentEngagement?.status);
-        const selectedDayKey = normalizeText(state.assignmentEngagement?.selectedDayKey);
-        const sortField = normalizeText(state.tableSort?.assignmentEngagement?.field) || "queuedAt";
-        const sortDir = normalizeLower(state.tableSort?.assignmentEngagement?.dir) === "asc" ? "asc" : "desc";
-        const filtered = (Array.isArray(state.assignmentEngagement?.rows) ? state.assignmentEngagement.rows : [])
-          .filter((row) => {
-            const dispatch = row.dispatch || {};
-            return (!reminderKind || normalizeLower(dispatch.reminderKind) === reminderKind)
-              && (!status || normalizeLower(dispatch.status) === status)
-              && (!includeSelectedDay || !selectedDayKey || assignmentEngagementDayKey(row) === selectedDayKey);
-          });
-        const grouped = new Map();
-        filtered.forEach((row) => {
-          const dispatch = row.dispatch || {};
-          const key = `${normalizeText(dispatch.assignmentTemplateId)}:${normalizeText(dispatch.eaglesId || dispatch.studentRefId)}:${normalizeText(dispatch.reminderKind)}`;
-          const group = grouped.get(key) || [];
-          group.push(row);
-          grouped.set(key, group);
-        });
-        const paired = Array.from(grouped.values())
-          .filter((group) => {
-            const hasParent = group.some((row) => normalizeLower(row.audience) === "parent");
-            const hasStudent = group.some((row) => normalizeLower(row.audience) === "student");
-            return hasParent && hasStudent && (!searchTerms.length || group.some((row) => {
-              const haystack = assignmentEngagementSearchText(row);
-              return searchTerms.every((term) => haystack.includes(term));
-            }));
-          })
-          .flat();
-        return paired.sort((left, right) => {
-          const leftDispatch = left.dispatch || {};
-          const rightDispatch = right.dispatch || {};
-          const textField = (row, dispatch) => ({
-            assignment: dispatch.assignmentTemplateId,
-            student: dispatch.eaglesId || dispatch.studentRefId,
-            recipient: row.recipientEmail,
-            reminder: dispatch.reminderKind,
-            status: dispatch.status,
-          }[sortField] || "");
-          const dateField = (row) => row[sortField] || "";
-          let compare = ["queuedAt", "openedAt", "clickedAt", "actionCompletedAt"].includes(sortField)
-            ? compareTableIsoDateTime(dateField(left), dateField(right))
-            : compareTableText(textField(left, leftDispatch), textField(right, rightDispatch));
-          if (!compare) compare = compareTableText(leftDispatch.studentRefId, rightDispatch.studentRefId);
-          return applySortDirection(compare, sortDir);
-        });
-      }
-
-      function assignmentEngagementStamp(value) {
-        return normalizeText(value) ? formatDateTime(value) : "-";
-      }
-
-      function assignmentEngagementMetricRow(row = {}) {
-        const dispatch = row.dispatch || {};
-        const status = normalizeLower(dispatch.status);
-        const sentOkReturned = row.sentAt
-          ? "yes"
-          : status === "failed" ? "no" : status === "sent" ? "yes" : "queued";
-        return {
-          reviewed: normalizeText(row.audience),
-          id: normalizeText(dispatch.eaglesId || dispatch.studentRefId),
-          englishName: normalizeText(dispatch.englishName),
-          level: normalizeText(dispatch.level),
-          sentOkReturned,
-          emailOpened: row.openedAt ? "yes" : "",
-          linkClicked: row.clickedAt ? "yes" : "",
-          pdfDownloaded: "",
-          acknowledged: row.actionCompletedAt ? "yes" : "",
-          emailUsed: normalizeText(row.recipientEmail),
-          sentAt: row.sentAt,
-          emailOpenedAt: row.openedAt,
-          linkClickedAt: row.clickedAt,
-          acknowledgedAt: row.actionCompletedAt,
-        };
-      }
-
-      function assignmentEngagementGroupsForDisplay() {
-        const grouped = new Map();
-        assignmentEngagementRowsForDisplay().forEach((row) => {
-          const dispatch = row.dispatch || {};
-          const key = `${normalizeText(dispatch.assignmentTemplateId)}:${normalizeText(dispatch.eaglesId || dispatch.studentRefId)}:${normalizeText(dispatch.reminderKind)}`;
-          const group = grouped.get(key) || {
-            key,
-            assignment: normalizeText(dispatch.assignmentTemplateId),
-            rows: [],
-          };
-          group.rows.push(row);
-          grouped.set(key, group);
-        });
-        const sortField = normalizeText(state.tableSort?.assignmentEngagement?.field) || "assignment";
-        const sortDir = normalizeLower(state.tableSort?.assignmentEngagement?.dir) === "asc" ? "asc" : "desc";
-        return Array.from(grouped.values()).sort((left, right) => {
-          const leftRow = left.rows.find((row) => normalizeLower(row.audience) === "parent") || left.rows[0] || {};
-          const rightRow = right.rows.find((row) => normalizeLower(row.audience) === "parent") || right.rows[0] || {};
-          const leftMetric = assignmentEngagementMetricRow(leftRow);
-          const rightMetric = assignmentEngagementMetricRow(rightRow);
-          const leftDispatch = leftRow.dispatch || {};
-          const rightDispatch = rightRow.dispatch || {};
-          const values = {
-            assignment: [left.assignment, right.assignment],
-            reviewed: [leftMetric.reviewed, rightMetric.reviewed],
-            id: [leftMetric.id, rightMetric.id],
-            englishName: [leftMetric.englishName, rightMetric.englishName],
-            level: [leftMetric.level, rightMetric.level],
-            sentOkReturned: [leftMetric.sentOkReturned, rightMetric.sentOkReturned],
-            emailOpened: [leftMetric.emailOpenedAt, rightMetric.emailOpenedAt],
-            linkClicked: [leftMetric.linkClickedAt, rightMetric.linkClickedAt],
-            pdfDownloaded: [leftMetric.pdfDownloaded, rightMetric.pdfDownloaded],
-            acknowledged: [leftMetric.acknowledgedAt, rightMetric.acknowledgedAt],
-            emailUsed: [leftMetric.emailUsed, rightMetric.emailUsed],
-          }[sortField] || [left.assignment, right.assignment];
-          const compare = ["emailOpened", "linkClicked", "acknowledged"].includes(sortField)
-            ? compareTableIsoDateTime(values[0], values[1])
-            : compareTableText(values[0], values[1]);
-          if (compare) return applySortDirection(compare, sortDir);
-          return compareTableText(leftDispatch.studentRefId, rightDispatch.studentRefId);
-        }).map((group) => ({
-          ...group,
-          rows: group.rows.sort((left, right) => {
-            const leftParent = normalizeLower(left.audience) === "parent" ? 0 : 1;
-            const rightParent = normalizeLower(right.audience) === "parent" ? 0 : 1;
-            return leftParent - rightParent;
-          }),
-        }));
-      }
-
-      function renderAssignmentEngagementDayList() {
-        const listEl = document.getElementById("assignmentEngagementDayList");
-        const summaryEl = document.getElementById("assignmentEngagementHomeSummary");
-        if (!listEl || !summaryEl) return;
-        const rows = assignmentEngagementRowsForDisplay(false);
-        const grouped = new Map();
-        rows.forEach((row) => {
-          const dispatch = row.dispatch || {};
-          const key = assignmentEngagementDayKey(row);
-          const day = grouped.get(key) || {
-            key,
-            date: normalizeText(dispatch.localDate) || "unknown",
-            kind: normalizeText(dispatch.reminderKind) || "unknown",
-            weekNumber: rowWeekNumber("assignments", { dueAt: dispatch.localDate }),
-            assignments: new Set(),
-            recipients: 0,
-            sent: 0,
-            opened: 0,
-            clicked: 0,
-          };
-          if (normalizeText(dispatch.assignmentTemplateId)) day.assignments.add(normalizeText(dispatch.assignmentTemplateId));
-          day.recipients += 1;
-          if (row.sentAt) day.sent += 1;
-          if (row.openedAt) day.opened += 1;
-          if (row.clickedAt) day.clicked += 1;
-          grouped.set(key, day);
-        });
-        const days = Array.from(grouped.values()).sort((left, right) => `${right.date}:${right.kind}`.localeCompare(`${left.date}:${left.kind}`));
-        if (!state.assignmentEngagement.selectedDayKey && days.length) state.assignmentEngagement.selectedDayKey = days[0].key;
-        if (days.length && !days.some((day) => day.key === state.assignmentEngagement.selectedDayKey)) state.assignmentEngagement.selectedDayKey = days[0].key;
-        summaryEl.textContent = days.length ? `${days.length} class day${days.length === 1 ? "" : "s"} | ${rows.length} recipients` : "No class days match the current filters.";
-        listEl.replaceChildren();
-        days.forEach((day) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = day.key === state.assignmentEngagement.selectedDayKey
-            ? "performance-engagement-day-card card is-active"
-            : "performance-engagement-day-card card";
-          button.dataset.surfaceRole = "card";
-          const assignmentNames = Array.from(day.assignments).sort();
-          const assignmentTitle = assignmentNames[0] || "-";
-          button.title = `Reminder: ${day.kind}${assignmentNames.length ? ` | ${assignmentNames.join(", ")}` : ""}`;
-          button.innerHTML = `<strong>${escapeHtml(engagementDayHeading(day.date, day.weekNumber))}</strong><span class="small">assignments=${day.assignments.size} | recipients=${day.recipients} | opens=${day.opened} | clicks=${day.clicked}</span><span class="small performance-engagement-day-card-assignment">assignment=${escapeHtml(assignmentTitle)}</span>`;
-          button.addEventListener("click", () => {
-            state.assignmentEngagement.selectedDayKey = day.key;
-            renderAssignmentEngagementPage();
-          });
-          listEl.appendChild(button);
-        });
-      }
-
-      function renderAssignmentEngagementPage() {
-        const rowsEl = document.getElementById("assignmentEngagementRows");
-        const summaryEl = document.getElementById("assignmentEngagementSummary");
-        const tableSummaryEl = document.getElementById("assignmentEngagementTableSummary");
-        if (!rowsEl || !summaryEl) return;
-        renderAssignmentEngagementDayList();
-        const rows = assignmentEngagementRowsForDisplay();
-        const groups = assignmentEngagementGroupsForDisplay();
-        const allRows = Array.isArray(state.assignmentEngagement?.rows) ? state.assignmentEngagement.rows : [];
-        const sent = allRows.filter((row) => row.sentAt).length;
-        const opened = allRows.filter((row) => row.openedAt).length;
-        const clicked = allRows.filter((row) => row.clickedAt).length;
-        summaryEl.textContent = `${rows.length}/${allRows.length} shown | sent ${sent} | opened ${opened} | clicked ${clicked}`;
-        if (tableSummaryEl) tableSummaryEl.textContent = `${rows.length} recipient${rows.length === 1 ? "" : "s"} in the selected reminder group.`;
-        if (!rows.length) {
-          rowsEl.innerHTML = '<tr><td colspan="10">No assignment engagement records match the current search.</td></tr>';
-          return;
-        }
-        rowsEl.innerHTML = groups.map((group, groupIndex) => group.rows.map((row, rowIndex) => {
-          const metric = assignmentEngagementMetricRow(row);
-          const reviewedClass = normalizeLower(metric.reviewed) === "parent" ? "is-parent"
-            : normalizeLower(metric.reviewed) === "student" ? "is-student" : "";
-          const sentClass = normalizeLower(metric.sentOkReturned) === "no" ? "is-no"
-            : normalizeLower(metric.sentOkReturned) === "yes" ? "is-yes" : "is-empty";
-          const emailClass = metric.emailOpenedAt ? "is-set" : "is-empty";
-          const linkClass = metric.linkClickedAt ? "is-set" : "is-empty";
-          const ackClass = metric.acknowledgedAt ? "is-set" : "is-empty";
-          const pairStartClass = group.rows.length > 1 && rowIndex === 0 ? " pair-start" : "";
-          const pairEndClass = group.rows.length > 1 && rowIndex === group.rows.length - 1 ? " pair-end" : "";
-          return `<tr class="${`${pairStartClass}${pairEndClass}`.trim()}">
-            <td class="performance-engagement-reviewed-cell ${reviewedClass}">${escapeHtml(metric.reviewed || "-")}</td>
-            <td title="Email used: ${escapeHtml(metric.emailUsed || "not available")}">${escapeHtml(metric.id || "-")}</td>
-            <td>${escapeHtml(metric.englishName || "-")}</td>
-            <td>${escapeHtml(metric.level || "-")}</td>
-            <td class="performance-engagement-status-cell ${sentClass}" title="${escapeHtml(row.dispatch?.status || "")}">${escapeHtml(metric.sentOkReturned || "-")}</td>
-            <td class="performance-engagement-event-cell ${emailClass}" title="${escapeHtml(metric.emailOpenedAt || "")}">${escapeHtml(metric.emailOpened || "-")}</td>
-            <td class="performance-engagement-event-cell ${linkClass}" title="${escapeHtml(metric.linkClickedAt || "")}">${escapeHtml(metric.linkClicked || "-")}</td>
-            <td class="performance-engagement-event-cell is-empty">-</td>
-            <td class="performance-engagement-event-cell ${ackClass}" title="${escapeHtml(metric.acknowledgedAt || "")}">${escapeHtml(metric.acknowledged || "-")}</td>
-            <td>${escapeHtml(metric.emailUsed || "-")}</td>
-          </tr>${rowIndex === group.rows.length - 1 && groupIndex < groups.length - 1 && group.rows.length > 1
-            && groups[groupIndex + 1]?.rows?.length > 1
-            ? '<tr class="performance-engagement-pair-spacer" aria-hidden="true"><td colspan="10"></td></tr>'
-            : ""}`;
-        }).join("" )).join("");
-        updateTableHeaderSortIndicators();
-      }
-
-      async function loadAssignmentEngagementData({ force = false } = {}) {
-        if (state.assignmentEngagement.loading) return;
-        if (state.assignmentEngagement.loaded && !force) {
-          renderAssignmentEngagementPage();
-          return;
-        }
-        state.assignmentEngagement.loading = true;
-        renderAssignmentEngagementPage();
-        try {
-          const payload = await api(`${ADMIN_ASSIGNMENT_ENGAGEMENT_PATH}?take=1000`);
-          state.assignmentEngagement.rows = Array.isArray(payload?.items) ? payload.items : [];
-          state.assignmentEngagement.loaded = true;
-          const searchEl = document.getElementById("assignmentEngagementSearch");
-          if (searchEl && searchEl.dataset.engagementSearchBound !== "true") {
-            searchEl.addEventListener("input", (event) => {
-              state.assignmentEngagement.search = normalizeText(event?.target?.value);
-              renderAssignmentEngagementPage();
-            });
-            searchEl.dataset.engagementSearchBound = "true";
-          }
-        } finally {
-          state.assignmentEngagement.loading = false;
-          renderAssignmentEngagementPage();
-        }
-      }
-
       function performanceEngagementGroupKey(row = {}) {
         return normalizeText(row?.reportId) || `${normalizeText(row?.classDate)}-${normalizeText(row?.id)}`
       }
@@ -6517,7 +6216,7 @@
         else if (sortKey === "grades") renderGradeRows(state.tableRows.grades);
         else if (sortKey === "reports") renderReportRows(state.tableRows.reports);
         else if (sortKey === "newsReview") renderNewsReviewRows();
-        else if (sortKey === "assignmentEngagement") renderAssignmentEngagementPage();
+        else if (sortKey === "assignmentEngagement") assignmentEngagementIsland?.render();
       }
 
       function bindColumnSortHeaderEvents() {
@@ -10638,11 +10337,64 @@
         }
       }
 
+      let assignmentEngagementIsland = null;
+      let assignmentEngagementIslandPromise = null;
+
+      async function ensureAssignmentEngagementIsland() {
+        if (assignmentEngagementIsland) return assignmentEngagementIsland;
+        if (!assignmentEngagementIslandPromise) {
+          assignmentEngagementIslandPromise = import("/web-asset/admin/assignment-engagement-island.mjs")
+            .then((mod) => {
+              assignmentEngagementIsland = mod.initAssignmentEngagementIsland({
+                document,
+                state,
+                api,
+                onError: handleError,
+                helpers: {
+                  normalizeText,
+                  normalizeLower,
+                  compareTableIsoDateTime,
+                  compareTableText,
+                  applySortDirection,
+                  escapeHtml,
+                  formatDateTime,
+                  rowWeekNumber,
+                  updateTableHeaderSortIndicators,
+                },
+              });
+              return assignmentEngagementIsland;
+            });
+        }
+        return assignmentEngagementIslandPromise;
+      }
+
+      async function loadAssignmentEngagementData({ force = false } = {}) {
+        const island = await ensureAssignmentEngagementIsland();
+        return island.load({ force });
+      }
+
+      function renderAssignmentEngagementPage() {
+        assignmentEngagementIsland?.render();
+      }
+
+      function ensureAssignmentEngagementPageLoaded(slug = "") {
+        if (slug !== "assignment-engagement") return;
+        if (document.querySelector('.page-section[data-page="assignment-engagement"]')) return;
+        const template = document.getElementById("assignment-engagement-page-template");
+        const host = template?.parentElement;
+        if (!(template instanceof HTMLTemplateElement) || !host) return;
+        host.insertBefore(template.content.cloneNode(true), template);
+        template.remove();
+        void ensureAssignmentEngagementIsland();
+      }
+
       function setActivePage(pageSlug, options = {}) {
         const { syncUrl = true, historyMode = "push" } = options;
         let slug = normalizePageSlug(pageSlug);
         if (!isPageAllowedForCurrentRole(slug)) slug = roleStartPage();
         state.activePage = slug;
+        document.dispatchEvent(new CustomEvent("sis-admin-page-activated", { detail: { page: slug } }));
+        ensureAssignmentEngagementPageLoaded(slug);
         if (slug !== "news-reports") closeNewsReviewViewer();
 
         document.querySelectorAll(".page-section[data-page]").forEach((sectionEl) => {
@@ -10692,13 +10444,19 @@
         if (slug === "profile") {
           setProfileMode("info");
           renderProfileInfoLayout(state.currentStudent);
+          if (!state.currentStudent?.id) {
+            scheduleAfterFirstPaint(() => hydrateNextStudentNumberFromApi().catch((error) => {
+              if (error && (error.status === 401 || error.status === 404 || error.status === 503)) return;
+              handleError(error);
+            }), 1000);
+          }
         }
         if (slug === "parent-tracking") {
           ensureParentTrackingFormDefaults({ forceSummaryFromMemory: false });
           refreshParentTracking({ preserveStudentSelection: true }).catch(handleError);
         }
         if (slug === "queue-hub") {
-          loadQueueHub({ notify: false }).catch(handleError);
+          loadQueueHub({ notify: false, compact: false }).catch(handleError);
         }
         if (slug === "assignments" || slug === "assignments-data") {
           refreshAssignmentStudentOptions();
@@ -14062,6 +13820,7 @@
           title: normalizeText(panel?.title) || queueHubPanelTitle(id),
           total: Math.max(0, Number.parseInt(String(panel?.total || 0), 10) || 0),
           items: Array.isArray(panel?.items) ? panel.items : [],
+          deferred: Boolean(panel?.deferred),
         };
       }
 
@@ -14326,6 +14085,9 @@
       function queueHubPanelTableHtml(panel = {}) {
         const spec = queueHubTableSpec(panel?.id);
         const items = Array.isArray(panel?.items) ? panel.items : [];
+        if (panel?.deferred) {
+          return '<div class="queue-hub-empty data-surface" data-surface-role="data-surface">Panel deferred until Queue Hub is opened.</div>';
+        }
         if (!items.length) {
           return `<div class="queue-hub-empty data-surface" data-surface-role="data-surface">${escapeHtml(spec.emptyText)}</div>`;
         }
@@ -14626,7 +14388,7 @@
         setStatus("Queue detail open is not configured for this panel.", true);
       }
 
-      async function loadQueueHub({ notify = false } = {}) {
+      async function loadQueueHub({ notify = false, compact = false } = {}) {
         if (!canManageUsers()) {
           state.queueHub.loaded = true;
           state.queueHub.panelsById = {};
@@ -14638,7 +14400,8 @@
 
         let payload = null;
         try {
-          payload = await api(ADMIN_QUEUE_HUB_PATH);
+          const requestPath = compact ? `${ADMIN_QUEUE_HUB_PATH}?mode=compact` : ADMIN_QUEUE_HUB_PATH;
+          payload = await api(requestPath);
         } catch (error) {
           if (error && error.status === 404) {
             state.queueHub.loaded = true;
@@ -16164,12 +15927,12 @@
         refreshAssignmentStudentOptions();
         renderTopSearchStudentOptions();
         updateTopSearchScopeHint();
-        await refreshAttendanceLanding({
-          reloadRows:
-            state.activePage === "attendance" ||
-            state.activePage === "attendance-admin",
-        });
-        await refreshParentTracking({ preserveStudentSelection: true });
+        if (state.activePage === "attendance" || state.activePage === "attendance-admin") {
+          await refreshAttendanceLanding({ reloadRows: true });
+        }
+        if (state.activePage === "parent-tracking") {
+          await refreshParentTracking({ preserveStudentSelection: true });
+        }
         if (state.dashboardSummary) renderDashboardSummary(state.dashboardSummary);
       }
 
@@ -20825,7 +20588,7 @@
         setStatus(`Deleted profile field: ${key}`);
       }
 
-      function clearStudentForm({ refreshStudentList = true } = {}) {
+      function clearStudentForm({ refreshStudentList = true, hydrateNextStudentNumber = true } = {}) {
         state.currentStudent = null;
         state.tableRows.attendance = [];
         state.tableRows.performance = [];
@@ -20838,10 +20601,12 @@
         profileFieldIdList(true).forEach((field) => setFormValue(field, ""));
         const nextNumericId = nextStudentNumericId();
         setFormValue("studentNumber", nextNumericId);
-        hydrateNextStudentNumberFromApi().catch((error) => {
-          if (error && error.status === 401) return;
-          handleError(error);
-        });
+        if (hydrateNextStudentNumber) {
+          hydrateNextStudentNumberFromApi().catch((error) => {
+            if (error && (error.status === 401 || error.status === 404 || error.status === 503)) return;
+            handleError(error);
+          });
+        }
         applyLevelThemeToSections("");
         const attendanceIdEl = document.getElementById("a_id");
         const gradeIdEl = document.getElementById("g_id");
@@ -22911,6 +22676,9 @@
         runNext();
       }
 
+      /* PERF-CONTRACT: ADMIN-DEFERRED-HYDRATION
+       * This scheduler protects first paint and TBT. New dashboard work must
+       * be measured before moving it ahead of this boundary. */
       function scheduleAfterFirstPaint(task, timeout = 2000) {
         if (IS_JSDOM_ENV) {
           void Promise.resolve().then(task).catch(handleError);
@@ -22924,20 +22692,38 @@
         window.setTimeout(afterPaint, 0);
       }
 
+      /* PERF-CONTRACT: ADMIN-ISLAND-IMPORTS
+       * Island files are separate assets, but this boundary is what keeps
+       * their evaluation and network discovery out of the dashboard first
+       * paint. Move an import earlier only with authenticated Lighthouse proof. */
+      function scheduleAdminIslandImport(factory, timeout = 1800, requiredPage = "") {
+        return new Promise((resolve, reject) => {
+          let settled = false;
+          const pageActivated = () => runWhenPageIsReady();
+          const runWhenPageIsReady = () => {
+            if (settled) return;
+            if (
+              requiredPage &&
+              !requiredPage.split("|").includes(normalizePageSlug(state.activePage))
+            ) return;
+            settled = true;
+            document.removeEventListener("sis-admin-page-activated", pageActivated);
+            Promise.resolve().then(factory).then(resolve, reject);
+          };
+          document.addEventListener("sis-admin-page-activated", pageActivated);
+          scheduleAfterFirstPaint(runWhenPageIsReady, timeout);
+        });
+      }
+
       async function bootAfterLogin() {
         initializeParentTrackingScoreSelects();
         initializeParentTrackingScoreLegendPopovers();
-
         const bootConfigTasks = [];
         if (canManagePermissions()) {
           bootConfigTasks.push(async () => {
             await loadRolePermissions();
             showUserPanel();
           });
-        }
-        if (canReadData()) {
-          await hydrateUiSettingsFromServer();
-          applyUiSettings();
         }
         const activePage = normalizePageSlug(state.activePage);
         const pageNeedsStudentList = new Set([
@@ -22982,7 +22768,10 @@
         }
         renderAssignmentDraftItems();
         renderParentTrackingTeacherOptions();
-        clearStudentForm({ refreshStudentList: false });
+        clearStudentForm({
+          refreshStudentList: false,
+          hydrateNextStudentNumber: activePage === "profile" || activePage === "student-admin",
+        });
         const nextPage =
           isPageAllowedForCurrentRole(state.activePage) ?
             normalizePageSlug(state.activePage)
@@ -22993,6 +22782,13 @@
         });
 
         ensureAttendanceLandingFormDefaults();
+
+        if (canReadData()) {
+          scheduleAfterFirstPaint(async () => {
+            await hydrateUiSettingsFromServer();
+            applyUiSettings();
+          }, 2500);
+        }
 
         if (bootConfigTasks.length) {
           bootConfigTasks.forEach((task) => scheduleAfterFirstPaint(task, 2500));
@@ -23007,13 +22803,19 @@
             dataHydrationTasks.push(() => loadFilters().catch(handleError));
           }
           if (activePage === "overview") {
-            dataHydrationTasks.push(() => loadDashboardStudents().catch(handleError));
             dataHydrationTasks.push(async () => {
               await loadDashboardSummary();
+              if (
+                !state.dashboardLevelCompletionRows.length &&
+                Array.isArray(state.assignmentTemplates) &&
+                state.assignmentTemplates.length
+              ) {
+                await loadDashboardStudents();
+              }
               renderHubConnectionStatus();
               renderServiceControlCard();
             });
-            dataHydrationTasks.push(() => loadQueueHub({ notify: false }).catch(handleError));
+            dataHydrationTasks.push(() => loadQueueHub({ notify: false, compact: true }).catch(handleError));
             dataHydrationTasks.push(() =>
               loadIncomingExerciseResults({
                 showAll: state.incomingExerciseQueue.showAll,
@@ -23023,7 +22825,7 @@
           if (state.activePage === "assignments" || state.activePage === "assignments-data") {
             dataHydrationTasks.push(() => loadExerciseTitles().catch(handleError));
           }
-          dataHydrationTasks.forEach((task) => scheduleAfterFirstPaint(task, 2500));
+          dataHydrationTasks.forEach((task) => scheduleAfterFirstPaint(task, 5000));
 
           scheduleAfterFirstPaint(
             () =>
@@ -23031,7 +22833,7 @@
                 probeHubConnection({ notify: false, paint: false }),
                 loadServiceControlStatus({ notify: false, paint: false }),
               ]),
-            4000,
+            6000,
           );
         }
         await applyParentTrackingDeepLinkFromLocation();
@@ -23380,7 +23182,7 @@
       if (IS_JSDOM_ENV) {
         bindNewsReviewIslandFallback();
       } else {
-        void import("/web-asset/admin/news-review-island.mjs")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/news-review-island.mjs"), 1800, "news-reports")
           .then((mod) =>
             mod.initNewsReviewIsland({
               document,
@@ -23612,7 +23414,7 @@
       if (IS_JSDOM_ENV) {
         bindProfileIslandFallback();
       } else {
-        void import("/web-asset/admin/profile-island.mjs")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/profile-island.mjs"), 1800, "profile")
           .then((mod) =>
             mod.initProfileIsland({
               document,
@@ -23854,7 +23656,7 @@
       if (IS_JSDOM_ENV) {
         bindSchoolSetupBrandingFallback();
       } else {
-        void import("/web-asset/admin/school-setup-branding-island.mjs")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/school-setup-branding-island.mjs"), 1800, "school-setup")
           .then((mod) =>
             mod.initSchoolSetupBrandingIsland({
               document,
@@ -24018,7 +23820,7 @@
       if (IS_JSDOM_ENV) {
         bindReportSettingsFallback();
       } else {
-        void import("/web-asset/admin/report-settings-island.mjs")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/report-settings-island.mjs"), 1800, "report-settings")
           .then((mod) =>
             mod.initReportSettingsIsland({
               document,
@@ -24206,7 +24008,7 @@
       if (IS_JSDOM_ENV) {
         bindAssignmentControlsFallback();
       } else {
-        void import("/web-asset/admin/assignment-controls-island.mjs")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/assignment-controls-island.mjs"), 1800, "assignments|assignments-data")
           .then((mod) =>
             mod.initAssignmentControlsIsland({
               document,
@@ -24462,21 +24264,6 @@
           state.performanceEngagement.delivery = normalizeText(event?.target?.value);
           renderPerformanceEngagementPage();
         });
-        bindById("assignmentEngagementReloadBtn", "click", () => {
-          loadAssignmentEngagementData({ force: true }).catch(handleError);
-        });
-        bindById("assignmentEngagementSearch", "input", (event) => {
-          state.assignmentEngagement.search = normalizeText(event?.target?.value);
-          renderAssignmentEngagementPage();
-        });
-        bindById("assignmentEngagementReminderFilter", "change", (event) => {
-          state.assignmentEngagement.reminderKind = normalizeText(event?.target?.value);
-          renderAssignmentEngagementPage();
-        });
-        bindById("assignmentEngagementStatusFilter", "change", (event) => {
-          state.assignmentEngagement.status = normalizeText(event?.target?.value);
-          renderAssignmentEngagementPage();
-        });
         bindById("parentQueueCloseBtn", "click", () => closeParentQueueModal());
         bindById("parentQueuePrevBtn", "click", () => {
           if (state.parentReportQueue.modalIndex <= 0) return;
@@ -24511,7 +24298,7 @@
       if (IS_JSDOM_ENV) {
         bindParentTrackingIslandFallback();
       } else {
-        void import("/web-asset/admin/parent-tracking-island.mjs")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/parent-tracking-island.mjs"), 1800, "parent-tracking")
           .then((mod) =>
             mod.initParentTrackingIsland({
               document,
@@ -24925,7 +24712,7 @@
       if (IS_JSDOM_ENV) {
         bindAttendanceGradeControlsFallback();
       } else {
-        void import("/web-asset/admin/attendance-grade-controls-island.mjs")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/attendance-grade-controls-island.mjs"), 1800, "attendance|attendance-admin|grades|grades-data|grades-tabulator|reports|performance-data|performance-engagement")
           .then((mod) =>
             mod.initAttendanceGradeControlsIsland({
               document,
@@ -25230,9 +25017,7 @@
         document
           .getElementById("overviewNewsQueueShowAllBtn")
           ?.addEventListener("click", () => {
-            state.queueHub.overviewNewsQueueShowAll =
-              !state.queueHub.overviewNewsQueueShowAll;
-            renderOverviewNewsQueueSection();
+            toggleOverviewNewsQueueShowAll().catch(handleError);
           });
         document
           .getElementById("overviewNewsQueueRefreshBtn")
@@ -25251,11 +25036,19 @@
           });
       }
 
+      async function toggleOverviewNewsQueueShowAll() {
+        const panel = state.queueHub?.panelsById?.["news-report-review"];
+        if (panel?.deferred) await loadQueueHub({ notify: false, compact: false });
+        state.queueHub.overviewNewsQueueShowAll =
+          !state.queueHub.overviewNewsQueueShowAll;
+        renderOverviewNewsQueueSection();
+      }
+
       if (IS_JSDOM_ENV) {
         bindQueueHubIslandFallback();
         bindOverviewNewsQueueIslandFallback();
       } else {
-        void import("/web-asset/admin/queue-hub-island.mjs")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/queue-hub-island.mjs"), 1800, "queue-hub")
           .then((mod) =>
             mod.initQueueHubIsland({
               document,
@@ -25282,7 +25075,7 @@
             bindQueueHubIslandFallback();
             return null;
           });
-        void import("/web-asset/admin/overview-news-queue-island.mjs")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/overview-news-queue-island.mjs"), 1800, "overview")
           .then((mod) =>
             mod.initOverviewNewsQueueIsland({
               document,
@@ -25296,9 +25089,7 @@
                 setActivePage("queue-hub");
               },
               onOverviewNewsQueueShowAll() {
-                state.queueHub.overviewNewsQueueShowAll =
-                  !state.queueHub.overviewNewsQueueShowAll;
-                renderOverviewNewsQueueSection();
+                toggleOverviewNewsQueueShowAll().catch(handleError);
               },
             }),
           )
@@ -25313,22 +25104,25 @@
         defaultRolePermissionsConfig(),
       );
       state.authRolePolicy = getCurrentRolePolicy();
-      bindColumnSortHeaderEvents();
-      bindPerformanceEngagementSortHeaderEvents();
-      bindTopSearchControls();
-      applyGlobalTextZoom();
-      updateTableSortButtonLabels();
-      updateTableHeaderSortIndicators();
-      applyAllTableColumnVisibility();
-      renderPermissionsEditor();
-      updateNavigationAccess();
-      updateTrackingDataSubmenuVisibility();
-      updateArchiveToggleButtons();
       renderHubConnectionStatus();
       renderServiceControlCard();
-      if (!isStaticAdminPreviewMode() || ADMIN_API_ORIGIN) {
-        probeHubConnection({ notify: false }).catch(() => {});
-      }
+      scheduleAfterFirstPaint(() => {
+        bindColumnSortHeaderEvents();
+        bindPerformanceEngagementSortHeaderEvents();
+        bindTopSearchControls();
+        applyGlobalTextZoom();
+        updateTableSortButtonLabels();
+        updateTableHeaderSortIndicators();
+        applyAllTableColumnVisibility();
+        renderPermissionsEditor();
+        updateNavigationAccess();
+        updateTrackingDataSubmenuVisibility();
+        updateArchiveToggleButtons();
+        if ((IS_JSDOM_ENV && !isStaticAdminPreviewMode()) ||
+            (isStaticAdminPreviewMode() && ADMIN_API_ORIGIN)) {
+          probeHubConnection({ notify: false }).catch(() => {});
+        }
+      }, 1200);
       scheduleIdleTaskSeries([
         () => {
           renderProfileFormLayout();
