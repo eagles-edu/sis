@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
+  <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+  <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+  <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
   <title>The Eagles Club SIS Grades Table</title>
   <link rel="stylesheet" href="/web-asset/vendor/tabulatorz/tabulator.min.css">
   <script src="/web-asset/shared/portal-theme-state.js"></script>
@@ -217,8 +219,8 @@
         <div class="grid-head">
           <p class="grid-title">Interactive Matrix</p>
           <div class="grid-actions">
-            <button class="btn subtle portal-button portal-button-info" id="tableModalBtn" type="button" title="Open the full grade table in a separate view" aria-label="Open the full grade table in a separate view">Open table modal</button>
-            <button class="btn subtle portal-button portal-button-alt" id="toggleCompactBtn" type="button" title="Switch between comfortable and dense table rows" aria-label="Switch between comfortable and dense table rows">Dense rows: Off</button>
+            <button class="btn subtle portal-button portal-button-info" id="tableModalBtn" type="button" title="Open the full grade table in a separate view" aria-label="Open the full grade table in a separate view">Table</button>
+            <button class="btn subtle portal-button portal-button-alt" id="toggleCompactBtn" type="button" title="Switch between comfortable and dense table rows" aria-label="Switch between comfortable and dense table rows">Dense: Off</button>
             <button class="btn subtle portal-button portal-button-warning" id="resetColumnsBtn" type="button" title="Restore the default grade table columns" aria-label="Restore the default grade table columns">Reset columns</button>
           </div>
         </div>
@@ -317,6 +319,7 @@
     field: meta.key width: assignmentColumnWidth function applyTableHeight() {} function observeTableHeightResize() {}
   -->
   <script src="/web-asset/vendor/tabulatorz/tabulator.min.js"></script>
+  <script src="/web-asset/shared/portal-preferences.js"></script>
   <script src="/web-asset/admin/grades-tabulator.min.js"></script>
   <script src="/web-asset/shared/portal-environment.js"></script>
 </body>

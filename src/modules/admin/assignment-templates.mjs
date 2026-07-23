@@ -476,6 +476,16 @@ let assignmentTemplateDbWarned = false
 /** @type {Map<string, NormalizedAssignmentTemplate>} */
 const assignmentTemplateMemoryStore = new Map()
 
+function allowVolatileUnitTestStorage() {
+  return normalizeLower(process.env.NODE_ENV) === "test"
+}
+
+function assignmentTemplatePersistenceUnavailable() {
+  const error = new Error("Assignment template persistence is unavailable")
+  error.statusCode = 503
+  return error
+}
+
 /**
  * @returns {void}
  */
@@ -510,7 +520,10 @@ async function getAssignmentTemplatePrismaClient() {
 
 async function runAssignmentTemplateDbOperation(handler, fallbackHandler) {
   const prisma = await getAssignmentTemplatePrismaClient()
-  if (!prisma) return fallbackHandler()
+  if (!prisma) {
+    if (allowVolatileUnitTestStorage()) return fallbackHandler()
+    throw assignmentTemplatePersistenceUnavailable()
+  }
 
   try {
     return await handler(prisma)

@@ -5,7 +5,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Student portal for checking homework, news reports, attendance, grades, and performance updates.">
-  <link rel="shortcut icon" href="/web-asset/images/favicon.ico?=v2">
+  <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+  <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+  <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
   <script>
     /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
   </script>
@@ -654,8 +656,8 @@
           </div>
           <div id="newWordsRows" class="news-vocabulary-rows new-words-rows vocabulary-edit-surface"></div>
           <div class="new-words-add-actions">
-            <button id="newWordsAddOneBtn" type="button" class="portal-button portal-button-primary" title="Thêm một mục từ vựng vào danh sách học tập" aria-label="Thêm một mục từ vựng vào danh sách học tập">Add 1 Word</button>
-            <button id="newWordsAddFiveBtn" type="button" class="portal-button portal-button-primary" title="Thêm năm mục từ vựng vào danh sách học tập" aria-label="Thêm năm mục từ vựng vào danh sách học tập">Add 5 Words</button>
+            <button id="newWordsAddOneBtn" type="button" class="portal-button portal-button-primary" title="Thêm một mục từ vựng vào danh sách học tập" aria-label="Thêm một mục từ vựng vào danh sách học tập">Add Word</button>
+            <button id="newWordsAddFiveBtn" type="button" class="portal-button portal-button-primary" title="Thêm năm mục từ vựng vào danh sách học tập" aria-label="Thêm năm mục từ vựng vào danh sách học tập">Add Words</button>
           </div>
           <div class="new-words-save-actions">
             <button id="newWordsSaveBtn" type="button" class="portal-button portal-button-affirm" title="Lưu các thay đổi trong danh sách từ vựng của bạn" aria-label="Lưu các thay đổi trong danh sách từ vựng của bạn">Save Changes</button>
@@ -724,7 +726,7 @@
             <section id="newsReportFormCard" class="panel" data-surface-role="panel">
               <div class="section-head news-report-form-head">
                 <h2>Media Report Form</h2>
-                <button id="newNewsFormBtn" type="button" class="portal-button portal-button-primary" title="Bắt đầu một biểu mẫu báo cáo tin tức mới">Biểu mẫu mới</button>
+                <button id="newNewsFormBtn" type="button" class="portal-button portal-button-primary" title="Bắt đầu một biểu mẫu báo cáo tin tức mới" aria-label="Bắt đầu một biểu mẫu báo cáo tin tức mới">Mẫu mới</button>
               </div>
               <div class="row">
                 <div class="field c3">
@@ -952,6 +954,7 @@
     function formatQueueLatestSubmissionHtml() {}
     ${hour}:${minute}:${second} +07
   -->
+  <script src="/web-asset/shared/portal-preferences.js"></script>
   <script src="/web-asset/student/student-portal.min.js"></script>
   <script>
     (() => {

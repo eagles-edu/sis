@@ -10,12 +10,15 @@
   <script>
     /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
   </script>
-  <script src="/web-asset/shared/portal-theme-state.js"></script>
+    <script src="/web-asset/shared/portal-theme-state.js"></script>
+    <script src="/web-asset/shared/portal-preferences.js"></script>
   <script>
     window.SIS_PORTAL_THEME?.initTheme("dark")
   </script>
   <link rel="canonical" href="https://test.eagles.edu.vn">
-  <link rel="shortcut icon" href="../../favicon.ico?=v2">
+  <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+  <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+  <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <title>Cổng Thông Tin Sinh Viên The Eagles American English Club Ltd</title>
   <style>
@@ -292,8 +295,28 @@
     }
 
     @media (max-width: 639px) {
+      body.portal-hub-page {
+        overflow-x: clip;
+      }
+
       body.portal-hub-page .shell {
+        grid-template-columns: minmax(0, 1fr);
         margin: 12px auto;
+      }
+
+      body.portal-hub-page .header-bar,
+      body.portal-hub-page .hero,
+      body.portal-hub-page .section-card,
+      body.portal-hub-page .portal-grid,
+      body.portal-hub-page .portal-card,
+      body.portal-hub-page .hub-prefooter,
+      body.portal-hub-page .hub-footer {
+        max-inline-size: 100%;
+        min-inline-size: 0;
+      }
+
+      body.portal-hub-page .header-bar {
+        overflow: hidden;
       }
 
       body.portal-hub-page .portal-hub-bg {
@@ -316,12 +339,6 @@
       }
     }
 
-    @media (max-width: 399px) {
-      body.portal-hub-page {
-        overflow-x: clip;
-      }
-    }
-
     @media (max-width: 430px) {
       body.portal-hub-page div.header-bar {
         align-items: flex-start;
@@ -337,18 +354,8 @@
     }
 
     @media (max-width: 359px) {
-      body.portal-hub-page .header-bar,
-      body.portal-hub-page .hero,
-      body.portal-hub-page .section-card,
-      body.portal-hub-page .portal-grid,
-      body.portal-hub-page .portal-card,
-      body.portal-hub-page .hub-prefooter,
-      body.portal-hub-page .hub-footer {
-        max-inline-size: 100%;
-      }
-
       body.portal-hub-page .header-bar {
-        overflow: hidden;
+        padding-inline: 12px;
       }
     }
   </style>
@@ -573,10 +580,10 @@
         const applyTextZoom = (value) => {
           const next = Math.min(120, Math.max(80, Number(value) || 100));
           root.style.setProperty("--hub-phi", String(next / 100));
-          try { localStorage.setItem(textZoomKey, String(next)); } catch { void 0; }
+          void window.SIS_PORTAL_PREFERENCES?.save(textZoomKey, String(next));
         };
         let textZoom = 100;
-        try { textZoom = Number(localStorage.getItem(textZoomKey)) || 100; } catch { void 0; }
+        textZoom = Number(window.SIS_PORTAL_PREFERENCES?.get(textZoomKey, 100)) || 100;
         applyTextZoom(textZoom);
         document.getElementById("studentTextZoomDownBtn")?.addEventListener("click", () => applyTextZoom(textZoom = Math.max(80, textZoom - 5)));
         document.getElementById("studentTextZoomUpBtn")?.addEventListener("click", () => applyTextZoom(textZoom = Math.min(120, textZoom + 5)));

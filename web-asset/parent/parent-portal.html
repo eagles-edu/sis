@@ -11,7 +11,9 @@
       name="keywords"
       content="The Eagles Club, cổng thông tin, kết quả học tập của học sinh, dành cho phụ huynh">
     <meta name="author" content="The Eagles American Club, Ltd.">
-    <link rel="shortcut icon" href="../../favicon.ico?=v2">
+    <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+    <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+    <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
     <script>
       /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
     </script>
@@ -325,7 +327,7 @@
                       class="portal-button portal-button-primary"
                       title="Mở hồ sơ học sinh để xem và cập nhật thông tin"
                       aria-label="Mở hồ sơ học sinh để xem và cập nhật thông tin">
-                      Hồ sơ HS
+                      Hồ sơ
                     </button>
                     <button
                       id="reloadBtn"
@@ -414,7 +416,7 @@
                       type="button"
                       title="Xem danh sách bài tập về nhà quá hạn"
                       aria-label="Xem danh sách bài tập về nhà quá hạn">
-                      Xem quá hạn
+                      Quá hạn
                     </button>
                     <p class="hint" id="pastDueHomeworkSummary">
                       Chưa có dữ liệu.
@@ -464,7 +466,7 @@
                 class="portal-button portal-button-primary"
                 title="Mở chi tiết các báo cáo tin tức đang chờ xem"
                 aria-label="Mở chi tiết các báo cáo tin tức đang chờ xem">
-                      Xem chi tiết
+                      Chi tiết
                     </button>
               <button
                 id="refreshNewsQueueBtn"
@@ -917,7 +919,7 @@
                                 type="button"
                                 title="Xem danh sách bài tập về nhà quá hạn"
                                 aria-label="Xem danh sách bài tập về nhà quá hạn">
-                                Xem quá hạn
+                                Quá hạn
                               </button>
                               <p class="hint" id="reportPastDueHomeworkSummary">
                                 Không có bài tập quá hạn.
@@ -1191,6 +1193,7 @@
     <!-- Source-contract markers for functions implemented by parent-portal.js. -->
     <!-- function renderCurrentHomeworkOverviewCard() {} function renderPastDueHomeworkOverviewCard() {} function setPastDueHomeworkModalOpen() {} function loadPortalAsset() {} function assertApiOriginConfiguredForStaticPreview() {} function inferLoopbackPreviewApiOrigin() {} function formatQueueDateTimeTz7() {} function formatQueueLatestSubmissionHtml() {} fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js" http://127.0.0.1:8788 queue-compact-datetime ${hour}:${minute}:${second} +07 -->
     id="newsWeekSetModalVocabularyRows" active?.vocabulary class="new-word-entry"
+    <script src="/web-asset/shared/portal-preferences.js"></script>
     <script src="/web-asset/parent/parent-portal.min.js"></script>
     <script>
       ;(() => {

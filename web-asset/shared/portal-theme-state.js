@@ -11,20 +11,8 @@
   }
 
   function migrateLegacyTheme() {
-    try {
-      const current = localStorage.getItem(STORAGE_KEY)
-      if (validTheme(current)) return current
-      for (const key of LEGACY_KEYS) {
-        const legacy = localStorage.getItem(key)
-        if (!validTheme(legacy)) continue
-        localStorage.setItem(STORAGE_KEY, legacy)
-        for (const legacyKey of LEGACY_KEYS) localStorage.removeItem(legacyKey)
-        return legacy
-      }
-    } catch {
-      return ""
-    }
-    return ""
+    const current = globalThis.SIS_PORTAL_PREFERENCES?.get(STORAGE_KEY, "")
+    return validTheme(current) ? current : ""
   }
 
   function initTheme(defaultTheme = "light") {
@@ -38,12 +26,7 @@
     const next = validTheme(theme) ? theme : "light"
     document.documentElement.dataset.theme = next
     syncColorScheme(next)
-    try {
-      localStorage.setItem(STORAGE_KEY, next)
-      for (const legacyKey of LEGACY_KEYS) localStorage.removeItem(legacyKey)
-    } catch {
-      void 0
-    }
+    void globalThis.SIS_PORTAL_PREFERENCES?.save(STORAGE_KEY, next)
     return next
   }
 

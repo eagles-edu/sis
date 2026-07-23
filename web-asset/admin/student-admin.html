@@ -9,36 +9,17 @@
       name="description"
       content="Admin portal for monitoring students, attendance, assignments, performance reports, and news review queues.">
     <title>The Eagles Club Student Information System</title>
-    <link
-      href="/web-asset/admin/favicon.ico?=v2"
-      rel="shortcut icon"
-      type="image/vnd.microsoft.icon">
+    <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+    <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+    <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
     <script>
       /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
     </script>
+    <script src="/web-asset/shared/portal-theme-state.js"></script>
     <script>
       ;(() => {
         const valid = (value) => value === "dark" || value === "light"
         let theme = "light"
-        try {
-          const stored = localStorage.getItem("sis-theme")
-          if (valid(stored)) theme = stored
-          else {
-            for (const key of [
-              "sis-theme-admin",
-              "sis-theme-parent",
-              "sis-theme-student",
-            ]) {
-              const legacy = localStorage.getItem(key)
-              if (!valid(legacy)) continue
-              theme = legacy
-              localStorage.setItem("sis-theme", theme)
-              break
-            }
-          }
-        } catch {
-          void 0
-        }
         document.documentElement.dataset.theme = theme
         document.documentElement.style.colorScheme = theme
       })()
@@ -54,7 +35,7 @@
           const next = valid(theme) ? theme : "light"
           document.documentElement.dataset.theme = next
           document.documentElement.style.colorScheme = next
-          try { localStorage.setItem("sis-theme", next) } catch { void 0 }
+          void globalThis.SIS_PORTAL_PREFERENCES?.save("sis-theme", next)
           return next
         }
         globalThis.SIS_PORTAL_THEME = {
@@ -66,18 +47,9 @@
       })()
     </script>
     <script src="/web-asset/shared/portal-navigation.js" defer></script>
+    <script src="/web-asset/shared/portal-preferences.js" defer></script>
     <script>
       window.SIS_PORTAL_THEME?.initTheme("light")
-    </script>
-    <script>
-      // UI-only hint for static mirror reloads. The auth API remains authoritative.
-      try {
-        if (sessionStorage.getItem("sis-admin-authenticated") === "1") {
-          document.documentElement.dataset.adminAuthState = "authenticated"
-        }
-      } catch {
-        void 0
-      }
     </script>
     <!-- PERF-CONTRACT: ADMIN-BLOCKING-THEME
         Keep the shell theme render-blocking: the inline critical block is
@@ -456,6 +428,9 @@ html[data-theme="dark"] body.admin-portal-page #newsReviewViewerStatus,
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review textarea {
   color: var(--portal-dark-text);
 }
+html[data-theme="dark"] body.admin-portal-page #attendanceSaveResult {
+  color: var(--bright-gold-2);
+}
 body.admin-portal-page .performance-data-list .section-title,
 body.admin-portal-page #performanceStagedSection .section-title,
 body.admin-portal-page #performanceQueueSection .section-title {
@@ -621,7 +596,7 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
   block-size: 44px;
   inline-size: 44px;
   inset-block-start: 12px;
-  inset-inline-start: max(12px, calc((100vw - 1440px) / 2 + 4px));
+  inset-inline-end: 12px;
   position: fixed;
   z-index: 90;
 }
@@ -729,6 +704,15 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       }
       #overviewRiskStudents {
         overflow: visible;
+      }
+      #appSchoolSetupWarning.hidden {
+        display: none !important;
+        min-height: 0;
+        margin: 0;
+        visibility: hidden;
+      }
+      #appSchoolSetupWarning:not(.hidden) {
+        visibility: visible;
       }
       #levelDetailPanel .table-scroll-wrap table {
         min-width: 760px;
@@ -1761,8 +1745,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <button
                           id="levelReminderSendAllBtn"
                           type="button"
-                          class="portal-button portal-button-primary">
-                          Send to All Listed
+                          class="portal-button portal-button-primary"
+                          title="Send to All Listed"
+                          aria-label="Send to All Listed">
+                          Send All
                         </button>
                         <button
                           id="levelReminderClearBtn"
@@ -1931,18 +1917,22 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           </table>
                         </div>
                         <div class="actions actions-3">
-                          <button
-                            id="overviewNewsQueueShowAllBtn"
-                            type="button"
-                            class="portal-button portal-button-alt"
-                            aria-pressed="false">
-                            Show All Pending
+                      <button
+                        id="overviewNewsQueueShowAllBtn"
+                        type="button"
+                        class="portal-button portal-button-alt"
+                        title="Show All Pending"
+                        aria-label="Show All Pending"
+                        aria-pressed="false">
+                        Show Pending
                           </button>
-                          <button
-                            id="overviewNewsQueueOpenBtn"
-                            type="button"
-                            class="portal-button portal-button-primary">
-                            Open News Reports Page
+                      <button
+                        id="overviewNewsQueueOpenBtn"
+                        type="button"
+                        class="portal-button portal-button-primary"
+                        title="Open News Reports Page"
+                        aria-label="Open News Reports Page">
+                        News Reports
                           </button>
                           <button
                             id="overviewNewsQueueRefreshBtn"
@@ -1950,11 +1940,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                             class="portal-button portal-button-teal-refresh">
                             Reload Queue
                           </button>
-                          <button
-                            id="overviewNewsQueueQueueHubBtn"
-                            type="button"
-                            class="portal-button portal-button-alt">
-                            Open Queue Hub
+                      <button
+                        id="overviewNewsQueueQueueHubBtn"
+                        type="button"
+                        class="portal-button portal-button-alt"
+                        title="Open Queue Hub"
+                        aria-label="Open Queue Hub">
+                        Queue Hub
                           </button>
                         </div>
                       </details>
@@ -1976,19 +1968,19 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       id="queueHubRefreshBtn"
                       type="button"
                       class="portal-button portal-button-teal-refresh">
-                      Reload Queue Hub
+                      Reload Queue
                     </button>
                     <button
                       id="queueHubSaveOrderBtn"
                       type="button"
                       class="portal-button portal-button-affirm">
-                      Save Panel Order
+                      Save Order
                     </button>
                     <button
                       id="queueHubResetOrderBtn"
                       type="button"
                       class="portal-button portal-button-warning">
-                      Reset Panel Order
+                      Reset Order
                     </button>
                   </div>
                   <p
@@ -2076,11 +2068,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <div class="profile-editor-toolbar">
                         <h3>New / Edit Form</h3>
                         <div class="actions actions-2">
-                          <button
-                            id="profileBackToInfoBtn"
-                            type="button"
-                            class="portal-button portal-button-alt">
-                            Back to Info
+                      <button
+                        id="profileBackToInfoBtn"
+                        type="button"
+                        class="portal-button portal-button-alt"
+                        title="Back to Info"
+                        aria-label="Back to Info">
+                        Back
                           </button>
                         </div>
                       </div>
@@ -2103,11 +2097,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           class="portal-button portal-button-warning">
                           Clear Form
                         </button>
-                        <button
-                          id="saveBtn"
-                          type="submit"
-                          class="portal-button portal-button-affirm">
-                          Save / Update
+                      <button
+                        id="saveBtn"
+                        type="submit"
+                        class="portal-button portal-button-affirm"
+                        title="Save / Update"
+                        aria-label="Save / Update">
+                        Save
                         </button>
                         <button
                           id="deleteBtn"
@@ -2128,7 +2124,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <h2>Attendance</h2>
                   <p class="small page-note">
                     Record today's attendance by class level and save the daily
-                    roll.
+                    roll-call.
                   </p>
                   <div
                     id="attendanceLandingSection"
@@ -2185,13 +2181,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           id="attendanceLandingSaveAllBtn"
                           type="button"
                           class="portal-button portal-button-affirm">
-                          Save Level Attendance
+                          Save Level
                         </button>
                         <button
                           id="attendanceLandingReloadBtn"
                           type="button"
                           class="portal-button portal-button-teal-refresh">
-                          Reload Level Data
+                          Reload Level
                         </button>
                         <button
                           id="attendanceClearBtn"
@@ -2201,7 +2197,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         </button>
                       </div>
                       <p
-                        class="small"
+                        class="small font-size-medium"
                         id="attendanceSaveResult"
                         role="status"
                         aria-live="polite"
@@ -2819,8 +2815,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <button
                         id="assignmentSortDirBtn"
                         type="button"
-                        class="portal-button portal-button-alt">
-                        Newest Due First
+                        class="portal-button portal-button-alt"
+                        title="Newest Due First"
+                        aria-label="Newest Due First">
+                        Newest First
                       </button>
                     </div>
                   </div>
@@ -3262,11 +3260,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                                 placeholder="Add specific details before insert">
                             </div>
                             <div class="col-12 grid-actions">
-                              <button
-                                id="pt_actionInsertBtn"
-                                type="button"
-                                class="portal-button portal-button-affirm">
-                                Insert to Focused Field
+                      <button
+                        id="pt_actionInsertBtn"
+                        type="button"
+                        class="portal-button portal-button-affirm"
+                        title="Insert to Focused Field"
+                        aria-label="Insert to Focused Field">
+                        Insert
                               </button>
                               <button
                                 id="pt_actionClearBtn"
@@ -3944,11 +3944,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         </div>
                       </div>
                       <div class="actions actions-3">
-                        <button
-                          id="pt_saveBtn"
-                          type="button"
-                          class="portal-button portal-button-affirm">
-                          Save Performance Report
+                      <button
+                        id="pt_saveBtn"
+                        type="button"
+                        class="portal-button portal-button-affirm"
+                        title="Save Performance Report"
+                        aria-label="Save Performance Report">
+                        Save Report
                         </button>
                         <button
                           id="pt_queueSendBtn"
@@ -4803,10 +4805,12 @@ Select a homework link to inspect details.</pre>
                           column controls.
                         </p>
                         <button
-                          id="openTabulatorGradesBtn"
-                          class="portal-button portal-button-info tabulator-entry-btn"
-                          type="button">
-                          Open Tabulator Grades Admin
+                        id="openTabulatorGradesBtn"
+                        class="portal-button portal-button-info tabulator-entry-btn"
+                        type="button"
+                        title="Open Tabulator Grades Admin"
+                        aria-label="Open Tabulator Grades Admin">
+                        Grades Admin
                         </button>
                       </div>
                     </div>
@@ -4906,8 +4910,10 @@ Select a homework link to inspect details.</pre>
                       <button
                         id="gradeSortDirBtn"
                         type="button"
-                        class="portal-button portal-button-alt">
-                        Latest Due First
+                        class="portal-button portal-button-alt"
+                        title="Latest Due First"
+                        aria-label="Latest Due First">
+                        Latest First
                       </button>
                     </div>
                   </div>
@@ -5260,20 +5266,26 @@ Select a homework link to inspect details.</pre>
                     <button
                       id="reportGenerateBtn"
                       type="button"
-                      class="portal-button portal-button-teal-refresh">
-                      Generate from Grade Records
+                      class="portal-button portal-button-teal-refresh"
+                      title="Generate from Grade Records"
+                      aria-label="Generate from Grade Records">
+                      Generate Report
                     </button>
                     <button
                       id="reportCardBtn"
                       type="button"
-                      class="portal-button portal-button-primary">
-                      Download PDF Report Card
+                      class="portal-button portal-button-primary"
+                      title="Download PDF Report Card"
+                      aria-label="Download PDF Report Card">
+                      Download PDF
                     </button>
                     <button
                       id="reportClearBtn"
                       type="button"
-                      class="portal-button portal-button-warning">
-                      Clear Report Form
+                      class="portal-button portal-button-warning"
+                      title="Clear Report Form"
+                      aria-label="Clear Report Form">
+                      Clear
                     </button>
                   </div>
                   <h3>Performance data</h3>
@@ -6092,14 +6104,18 @@ No family lookup yet.</pre>
                       <button
                         id="schoolSetupSaveBtn"
                         type="button"
-                        class="portal-button portal-button-affirm">
-                        Save School Setup
+                        class="portal-button portal-button-affirm"
+                        title="Save School Setup"
+                        aria-label="Save School Setup">
+                        Save Setup
                       </button>
                       <button
                         id="schoolSetupResetBtn"
                         type="button"
-                        class="portal-button portal-button-warning">
-                        Reload Saved Setup
+                        class="portal-button portal-button-warning"
+                        title="Reload Saved Setup"
+                        aria-label="Reload Saved Setup">
+                        Reload Setup
                       </button>
                       <span></span>
                     </div>
@@ -6396,14 +6412,18 @@ No family lookup yet.</pre>
                       <button
                         id="profileFieldLayoutApplyBtn"
                         type="button"
-                        class="portal-button portal-button-primary">
-                        Apply Layout Changes
+                        class="portal-button portal-button-primary"
+                        title="Apply Layout Changes"
+                        aria-label="Apply Layout Changes">
+                        Apply Layout
                       </button>
                       <button
                         id="profileFieldLayoutResetBtn"
                         type="button"
-                        class="portal-button portal-button-warning">
-                        Reset Layout to Default
+                        class="portal-button portal-button-warning"
+                        title="Reset Layout to Default"
+                        aria-label="Reset Layout to Default">
+                        Reset Layout
                       </button>
                       <span></span>
                     </div>
@@ -6457,8 +6477,10 @@ No family lookup yet.</pre>
                       <button
                         id="attendanceLevelApplyBtn"
                         type="button"
-                        class="portal-button portal-button-affirm">
-                        Apply Global Style
+                        class="portal-button portal-button-affirm"
+                        title="Apply Global Style"
+                        aria-label="Apply Global Style">
+                        Apply Style
                       </button>
                       <button
                         id="attendanceLevelClearImageBtn"
@@ -6469,8 +6491,10 @@ No family lookup yet.</pre>
                       <button
                         id="attendanceLevelResetBtn"
                         type="button"
-                        class="portal-button portal-button-warning">
-                        Reset Level Style
+                        class="portal-button portal-button-warning"
+                        title="Reset Level Style"
+                        aria-label="Reset Level Style">
+                        Reset Style
                       </button>
                     </div>
                     <p class="small" id="attendanceLevelStyleStatus">
@@ -6512,6 +6536,68 @@ No family lookup yet.</pre>
               <a href="#top" id="back-top">Về đầu trang</a>
             </p>
           </footer>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="schoolSetupWarningModal"
+      class="queue-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="schoolSetupWarningModalTitle"
+      aria-describedby="schoolSetupWarningModalDescription">
+      <div class="queue-modal-card school-setup-warning-modal-card">
+        <div class="queue-modal-header">
+          <div>
+            <h2 id="schoolSetupWarningModalTitle">School setup needs attention</h2>
+            <p id="schoolSetupWarningModalStatus" class="small"></p>
+          </div>
+          <button
+            id="schoolSetupWarningCloseBtn"
+            type="button"
+            class="portal-button portal-button-warning"
+            aria-label="Close school setup warning">
+            Close
+          </button>
+        </div>
+        <div class="queue-modal-body school-setup-warning-modal-body">
+          <p id="schoolSetupWarningModalDescription">
+            School year dates or quarter rows are missing or invalid. Grades,
+            attendance periods, reports, and parent/student portal rollover
+            dates cannot be trusted until this is corrected.
+          </p>
+          <ol class="school-setup-warning-modal-steps">
+            <li>Open School Setup and confirm the first and last school day.</li>
+            <li>Click Auto-Fill Quarters, review the generated rows, and save.</li>
+            <li>If the values were lost after a settings problem, run System Config Sync or contact an administrator.</li>
+          </ol>
+          <div class="queue-modal-actions">
+            <a
+              id="schoolSetupWarningOpenBtn"
+              class="portal-button portal-button-primary"
+              href="/admin/school-setup#schoolSetupPanel">
+              Open School Setup
+            </a>
+            <button
+              id="schoolSetupWarningAutoFixBtn"
+              type="button"
+              class="portal-button portal-button-affirm">
+              Auto-Fill and Save
+            </button>
+            <button
+              id="schoolSetupWarningSyncBtn"
+              type="button"
+              class="portal-button portal-button-alt">
+              Run Config Sync
+            </button>
+            <a
+              class="portal-button portal-button-warning"
+              href="mailto:support@eagles.edu.vn?subject=School%20setup%20recovery">
+              Contact Admin
+            </a>
+          </div>
+          <p id="schoolSetupWarningModalActionStatus" class="small" aria-live="polite"></p>
         </div>
       </div>
     </div>

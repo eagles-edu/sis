@@ -133,6 +133,40 @@ model SisConfigMirror {
   updatedAt  DateTime @updatedAt
 }
 
+model PortalPreference {
+  id               String   @id @default(cuid())
+  principalType    String
+  principalId      String
+  payloadJson      Json
+  migrationVersion Int      @default(1)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([principalType, principalId])
+  @@index([principalType, updatedAt])
+}
+
+model PortalAsset {
+  id            String   @id @default(cuid())
+  assetKey      String   @unique
+  ownerType     String?
+  ownerId       String?
+  kind          String
+  mimeType      String
+  contentText   String?
+  contentBytes  Bytes?
+  width         Int?
+  height        Int?
+  isAnimated    Boolean  @default(false)
+  sha256        String
+  metadataJson  Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([ownerType, ownerId])
+  @@index([kind, updatedAt])
+}
+
 enum IntakeControlType {
   text
   textarea

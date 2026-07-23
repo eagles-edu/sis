@@ -118,6 +118,7 @@ LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
   "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
+  "web-asset/shared/portal-preferences.js|web-asset/shared/portal-preferences.js"
   "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
   "web-asset/shared/portal-environment.js|web-asset/shared/portal-environment.js"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
@@ -135,6 +136,8 @@ LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/images/ket.svg|web-asset/images/ket.svg"
   "web-asset/images/pet.svg|web-asset/images/pet.svg"
   "web-asset/images/favicon.ico|web-asset/images/favicon.ico"
+  "web-asset/images/favicon.png|web-asset/images/favicon.png"
+  "web-asset/images/favicon.svg|web-asset/images/favicon.svg"
   "web-asset/admin/favicon.ico|web-asset/admin/favicon.ico"
   "web-asset/icons/web-component/svg-icon.js|web-asset/icons/web-component/svg-icon.js"
   "web-asset/icons/web-component/svgs/theme-moon.svg|web-asset/icons/web-component/svgs/theme-moon.svg"
@@ -148,6 +151,8 @@ LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/vendor/tabulatorz/tabulator.min.js|web-asset/vendor/tabulatorz/tabulator.min.js"
   "web-asset/vendor/tabulatorz/tabulator.min.js.map|web-asset/vendor/tabulatorz/tabulator.min.js.map"
   "web-asset/images/favicon.ico|favicon.ico"
+  "web-asset/images/favicon.png|favicon.png"
+  "web-asset/images/favicon.svg|favicon.svg"
 )
 
 # Keep the local portal UI source and generated payloads explicit so every
@@ -243,6 +248,7 @@ LIVE_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/student-admin.css|web-asset/admin/student-admin.css"
   "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
+  "web-asset/shared/portal-preferences.js|web-asset/shared/portal-preferences.js"
   "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
   "web-asset/shared/portal-environment.js|web-asset/shared/portal-environment.js"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
@@ -260,6 +266,8 @@ LIVE_PUBLIC_WEBFILE_MAP=(
   "web-asset/images/ket.svg|web-asset/images/ket.svg"
   "web-asset/images/pet.svg|web-asset/images/pet.svg"
   "web-asset/images/favicon.ico|web-asset/images/favicon.ico"
+  "web-asset/images/favicon.png|web-asset/images/favicon.png"
+  "web-asset/images/favicon.svg|web-asset/images/favicon.svg"
   "web-asset/admin/favicon.ico|web-asset/admin/favicon.ico"
   "web-asset/icons/web-component/svg-icon.js|web-asset/icons/web-component/svg-icon.js"
   "web-asset/icons/web-component/svgs/theme-moon.svg|web-asset/icons/web-component/svgs/theme-moon.svg"
@@ -273,6 +281,8 @@ LIVE_PUBLIC_WEBFILE_MAP=(
   "web-asset/vendor/tabulatorz/tabulator.min.js|web-asset/vendor/tabulatorz/tabulator.min.js"
   "web-asset/vendor/tabulatorz/tabulator.min.js.map|web-asset/vendor/tabulatorz/tabulator.min.js.map"
   "web-asset/images/favicon.ico|favicon.ico"
+  "web-asset/images/favicon.png|favicon.png"
+  "web-asset/images/favicon.svg|favicon.svg"
 )
 
 LIVE_ROUTE_MATRIX=(

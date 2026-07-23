@@ -8,14 +8,13 @@
   <script>
     (() => {
       try {
-        const savedTheme = localStorage.getItem("sis-theme");
-        document.documentElement.dataset.theme =
-          savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
+        document.documentElement.dataset.theme = "light";
       } catch {
         document.documentElement.dataset.theme = "light";
       }
     })();
   </script>
+  <script src="/web-asset/shared/portal-preferences.js"></script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <style>
     * {

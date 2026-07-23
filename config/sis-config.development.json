@@ -27,32 +27,405 @@
           "endDate": "2027-01-24"
         }
       ],
-      "courseWeekCalendars": [],
+      "courseWeekCalendars": [
+        {
+          "schoolYear": "2026-2027",
+          "q1StartDate": "2026-02-21",
+          "q1EndDate": "2026-05-15",
+          "generatedAt": "2026-07-23T21:22:24.669Z",
+          "weeks": [
+            {
+              "weekNumber": 1,
+              "saturday": "2026-02-21",
+              "sunday": "2026-02-22",
+              "startDate": "2026-02-21",
+              "endDate": "2026-02-27"
+            },
+            {
+              "weekNumber": 2,
+              "saturday": "2026-02-28",
+              "sunday": "2026-03-01",
+              "startDate": "2026-02-28",
+              "endDate": "2026-03-06"
+            },
+            {
+              "weekNumber": 3,
+              "saturday": "2026-03-07",
+              "sunday": "2026-03-08",
+              "startDate": "2026-03-07",
+              "endDate": "2026-03-13"
+            },
+            {
+              "weekNumber": 4,
+              "saturday": "2026-03-14",
+              "sunday": "2026-03-15",
+              "startDate": "2026-03-14",
+              "endDate": "2026-03-20"
+            },
+            {
+              "weekNumber": 5,
+              "saturday": "2026-03-21",
+              "sunday": "2026-03-22",
+              "startDate": "2026-03-21",
+              "endDate": "2026-03-27"
+            },
+            {
+              "weekNumber": 6,
+              "saturday": "2026-03-28",
+              "sunday": "2026-03-29",
+              "startDate": "2026-03-28",
+              "endDate": "2026-04-03"
+            },
+            {
+              "weekNumber": 7,
+              "saturday": "2026-04-04",
+              "sunday": "2026-04-05",
+              "startDate": "2026-04-04",
+              "endDate": "2026-04-10"
+            },
+            {
+              "weekNumber": 8,
+              "saturday": "2026-04-11",
+              "sunday": "2026-04-12",
+              "startDate": "2026-04-11",
+              "endDate": "2026-04-17"
+            },
+            {
+              "weekNumber": 9,
+              "saturday": "2026-04-18",
+              "sunday": "2026-04-19",
+              "startDate": "2026-04-18",
+              "endDate": "2026-04-24"
+            },
+            {
+              "weekNumber": 10,
+              "saturday": "2026-04-25",
+              "sunday": "2026-04-26",
+              "startDate": "2026-04-25",
+              "endDate": "2026-05-01"
+            },
+            {
+              "weekNumber": 11,
+              "saturday": "2026-05-02",
+              "sunday": "2026-05-03",
+              "startDate": "2026-05-02",
+              "endDate": "2026-05-08"
+            },
+            {
+              "weekNumber": 12,
+              "saturday": "2026-05-09",
+              "sunday": "2026-05-10",
+              "startDate": "2026-05-09",
+              "endDate": "2026-05-15"
+            },
+            {
+              "weekNumber": 13,
+              "saturday": "2026-05-16",
+              "sunday": "2026-05-17",
+              "startDate": "2026-05-16",
+              "endDate": "2026-05-22"
+            },
+            {
+              "weekNumber": 14,
+              "saturday": "2026-05-23",
+              "sunday": "2026-05-24",
+              "startDate": "2026-05-23",
+              "endDate": "2026-05-29"
+            },
+            {
+              "weekNumber": 15,
+              "saturday": "2026-05-30",
+              "sunday": "2026-05-31",
+              "startDate": "2026-05-30",
+              "endDate": "2026-06-05"
+            },
+            {
+              "weekNumber": 16,
+              "saturday": "2026-06-06",
+              "sunday": "2026-06-07",
+              "startDate": "2026-06-06",
+              "endDate": "2026-06-12"
+            },
+            {
+              "weekNumber": 17,
+              "saturday": "2026-06-13",
+              "sunday": "2026-06-14",
+              "startDate": "2026-06-13",
+              "endDate": "2026-06-19"
+            },
+            {
+              "weekNumber": 18,
+              "saturday": "2026-06-20",
+              "sunday": "2026-06-21",
+              "startDate": "2026-06-20",
+              "endDate": "2026-06-26"
+            },
+            {
+              "weekNumber": 19,
+              "saturday": "2026-06-27",
+              "sunday": "2026-06-28",
+              "startDate": "2026-06-27",
+              "endDate": "2026-07-03"
+            },
+            {
+              "weekNumber": 20,
+              "saturday": "2026-07-04",
+              "sunday": "2026-07-05",
+              "startDate": "2026-07-04",
+              "endDate": "2026-07-10"
+            },
+            {
+              "weekNumber": 21,
+              "saturday": "2026-07-11",
+              "sunday": "2026-07-12",
+              "startDate": "2026-07-11",
+              "endDate": "2026-07-17"
+            },
+            {
+              "weekNumber": 22,
+              "saturday": "2026-07-18",
+              "sunday": "2026-07-19",
+              "startDate": "2026-07-18",
+              "endDate": "2026-07-24"
+            },
+            {
+              "weekNumber": 23,
+              "saturday": "2026-07-25",
+              "sunday": "2026-07-26",
+              "startDate": "2026-07-25",
+              "endDate": "2026-07-31"
+            },
+            {
+              "weekNumber": 24,
+              "saturday": "2026-08-01",
+              "sunday": "2026-08-02",
+              "startDate": "2026-08-01",
+              "endDate": "2026-08-07"
+            },
+            {
+              "weekNumber": 25,
+              "saturday": "2026-08-08",
+              "sunday": "2026-08-09",
+              "startDate": "2026-08-08",
+              "endDate": "2026-08-14"
+            },
+            {
+              "weekNumber": 26,
+              "saturday": "2026-08-15",
+              "sunday": "2026-08-16",
+              "startDate": "2026-08-15",
+              "endDate": "2026-08-21"
+            },
+            {
+              "weekNumber": 27,
+              "saturday": "2026-08-22",
+              "sunday": "2026-08-23",
+              "startDate": "2026-08-22",
+              "endDate": "2026-08-28"
+            },
+            {
+              "weekNumber": 28,
+              "saturday": "2026-08-29",
+              "sunday": "2026-08-30",
+              "startDate": "2026-08-29",
+              "endDate": "2026-09-04"
+            },
+            {
+              "weekNumber": 29,
+              "saturday": "2026-09-05",
+              "sunday": "2026-09-06",
+              "startDate": "2026-09-05",
+              "endDate": "2026-09-11"
+            },
+            {
+              "weekNumber": 30,
+              "saturday": "2026-09-12",
+              "sunday": "2026-09-13",
+              "startDate": "2026-09-12",
+              "endDate": "2026-09-18"
+            },
+            {
+              "weekNumber": 31,
+              "saturday": "2026-09-19",
+              "sunday": "2026-09-20",
+              "startDate": "2026-09-19",
+              "endDate": "2026-09-25"
+            },
+            {
+              "weekNumber": 32,
+              "saturday": "2026-09-26",
+              "sunday": "2026-09-27",
+              "startDate": "2026-09-26",
+              "endDate": "2026-10-02"
+            },
+            {
+              "weekNumber": 33,
+              "saturday": "2026-10-03",
+              "sunday": "2026-10-04",
+              "startDate": "2026-10-03",
+              "endDate": "2026-10-09"
+            },
+            {
+              "weekNumber": 34,
+              "saturday": "2026-10-10",
+              "sunday": "2026-10-11",
+              "startDate": "2026-10-10",
+              "endDate": "2026-10-16"
+            },
+            {
+              "weekNumber": 35,
+              "saturday": "2026-10-17",
+              "sunday": "2026-10-18",
+              "startDate": "2026-10-17",
+              "endDate": "2026-10-23"
+            },
+            {
+              "weekNumber": 36,
+              "saturday": "2026-10-24",
+              "sunday": "2026-10-25",
+              "startDate": "2026-10-24",
+              "endDate": "2026-10-30"
+            },
+            {
+              "weekNumber": 37,
+              "saturday": "2026-10-31",
+              "sunday": "2026-11-01",
+              "startDate": "2026-10-31",
+              "endDate": "2026-11-06"
+            },
+            {
+              "weekNumber": 38,
+              "saturday": "2026-11-07",
+              "sunday": "2026-11-08",
+              "startDate": "2026-11-07",
+              "endDate": "2026-11-13"
+            },
+            {
+              "weekNumber": 39,
+              "saturday": "2026-11-14",
+              "sunday": "2026-11-15",
+              "startDate": "2026-11-14",
+              "endDate": "2026-11-20"
+            },
+            {
+              "weekNumber": 40,
+              "saturday": "2026-11-21",
+              "sunday": "2026-11-22",
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-27"
+            },
+            {
+              "weekNumber": 41,
+              "saturday": "2026-11-28",
+              "sunday": "2026-11-29",
+              "startDate": "2026-11-28",
+              "endDate": "2026-12-04"
+            },
+            {
+              "weekNumber": 42,
+              "saturday": "2026-12-05",
+              "sunday": "2026-12-06",
+              "startDate": "2026-12-05",
+              "endDate": "2026-12-11"
+            },
+            {
+              "weekNumber": 43,
+              "saturday": "2026-12-12",
+              "sunday": "2026-12-13",
+              "startDate": "2026-12-12",
+              "endDate": "2026-12-18"
+            },
+            {
+              "weekNumber": 44,
+              "saturday": "2026-12-19",
+              "sunday": "2026-12-20",
+              "startDate": "2026-12-19",
+              "endDate": "2026-12-25"
+            },
+            {
+              "weekNumber": 45,
+              "saturday": "2026-12-26",
+              "sunday": "2026-12-27",
+              "startDate": "2026-12-26",
+              "endDate": "2027-01-01"
+            },
+            {
+              "weekNumber": 46,
+              "saturday": "2027-01-02",
+              "sunday": "2027-01-03",
+              "startDate": "2027-01-02",
+              "endDate": "2027-01-08"
+            },
+            {
+              "weekNumber": 47,
+              "saturday": "2027-01-09",
+              "sunday": "2027-01-10",
+              "startDate": "2027-01-09",
+              "endDate": "2027-01-15"
+            },
+            {
+              "weekNumber": 48,
+              "saturday": "2027-01-16",
+              "sunday": "2027-01-17",
+              "startDate": "2027-01-16",
+              "endDate": "2027-01-22"
+            },
+            {
+              "weekNumber": 49,
+              "saturday": "2027-01-23",
+              "sunday": "2027-01-24",
+              "startDate": "2027-01-23",
+              "endDate": "2027-01-29"
+            },
+            {
+              "weekNumber": 50,
+              "saturday": "2027-01-30",
+              "sunday": "2027-01-31",
+              "startDate": "2027-01-30",
+              "endDate": "2027-02-05"
+            },
+            {
+              "weekNumber": 51,
+              "saturday": "2027-02-06",
+              "sunday": "2027-02-07",
+              "startDate": "2027-02-06",
+              "endDate": "2027-02-12"
+            },
+            {
+              "weekNumber": 52,
+              "saturday": "2027-02-13",
+              "sunday": "2027-02-14",
+              "startDate": "2027-02-13",
+              "endDate": "2027-02-19"
+            }
+          ]
+        }
+      ],
       "letterGradeRanges": [
         {
           "letter": "A",
-          "maxPercent": 100,
-          "minPercent": 93
+          "minPercent": 93,
+          "maxPercent": 100
         },
         {
           "letter": "B",
-          "maxPercent": 92.99,
-          "minPercent": 85
+          "minPercent": 85,
+          "maxPercent": 92.99
         },
         {
           "letter": "C",
-          "maxPercent": 84.99,
-          "minPercent": 77
+          "minPercent": 77,
+          "maxPercent": 84.99
         },
         {
           "letter": "D",
-          "maxPercent": 76.99,
-          "minPercent": 70
+          "minPercent": 70,
+          "maxPercent": 76.99
         },
         {
           "letter": "F",
-          "maxPercent": 69.99,
-          "minPercent": 0
+          "minPercent": 0,
+          "maxPercent": 69.99
         }
       ],
       "schoolSetupState": "ok"
@@ -113,7 +486,9 @@
         "bgColor": "#FCAB15",
         "imageDataUrl": "web-asset/images/starters.svg"
       }
-    }
+    },
+    "profileFormConfig": {},
+    "globalAssets": {}
   },
   "runtime": {
     "databaseUrl": "postgresql://sis_app:Mg2yLkcVNSR2xzFvcLkKt1uPUWpb@127.0.0.1:5432/sis_dev?schema=public",
@@ -130,6 +505,6 @@
     "autoApproveDelayHours": 16
   },
   "environment": "development",
-  "updatedAt": "2026-07-22T11:23:35.354Z",
+  "updatedAt": "2026-07-23T22:03:41.849Z",
   "updatedBy": "admin"
 }

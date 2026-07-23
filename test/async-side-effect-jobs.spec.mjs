@@ -5,6 +5,7 @@ import path from "node:path"
 import test from "node:test"
 
 test("async side effect jobs dedupe, revive, and claim in memory mode", async () => {
+  process.env.NODE_ENV = "test"
   const previousDatabaseUrl = process.env.DATABASE_URL
   process.env.DATABASE_URL = ""
   const mod = await import(`../src/modules/async/side-effect-jobs.mjs?memory=${Date.now()}`)

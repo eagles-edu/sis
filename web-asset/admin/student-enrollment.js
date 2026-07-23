@@ -711,7 +711,7 @@
       function loadGlobalTextZoomFromStorage() {
         let stored = "";
         try {
-          stored = normalizeText(window.localStorage.getItem(TEXT_ZOOM_STORAGE_KEY));
+          stored = normalizeText(window.SIS_PORTAL_PREFERENCES?.get(TEXT_ZOOM_STORAGE_KEY, ""));
         } catch {
           stored = "";
         }
@@ -722,7 +722,7 @@
         const normalized = normalizeTextZoomPercent(value);
         state.globalTextZoomPercent = normalized;
         try {
-          window.localStorage.setItem(TEXT_ZOOM_STORAGE_KEY, String(normalized));
+          void window.SIS_PORTAL_PREFERENCES?.save(TEXT_ZOOM_STORAGE_KEY, String(normalized));
         } catch {
           void 0;
         }

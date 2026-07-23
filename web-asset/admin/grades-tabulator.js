@@ -1490,8 +1490,7 @@
             compactMode: Boolean(state.compactMode),
             filters: normalizedFiltersSnapshot(state.filters),
           }
-          window.localStorage.setItem(UI_PREFS_KEY, JSON.stringify(payload))
-          window.localStorage.removeItem(LEGACY_UI_PREFS_KEY)
+          void window.SIS_PORTAL_PREFERENCES?.save(UI_PREFS_KEY, payload)
         } catch (error) {
           void error
         }
@@ -1499,15 +1498,8 @@
 
       function restoreUiPreferences() {
         try {
-          const raw =
-            window.localStorage.getItem(UI_PREFS_KEY) ||
-            window.localStorage.getItem(LEGACY_UI_PREFS_KEY)
-          if (!raw) return
-          const parsed = JSON.parse(raw)
+          const parsed = window.SIS_PORTAL_PREFERENCES?.get(UI_PREFS_KEY, null)
           if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return
-          if (!window.localStorage.getItem(UI_PREFS_KEY)) {
-            window.localStorage.setItem(UI_PREFS_KEY, JSON.stringify(parsed))
-          }
           state.compactMode = Boolean(parsed.compactMode)
           state.filters = {
             ...state.filters,
@@ -1678,13 +1670,9 @@
 
       function readTableUiState() {
         try {
-          const rawCurrent = window.localStorage.getItem(TABLE_UI_STATE_KEY)
-          const rawLegacy = window.localStorage.getItem(LEGACY_TABLE_UI_STATE_KEY)
-          const raw = rawCurrent || rawLegacy
-          if (!raw) return null
-          const parsed = JSON.parse(raw)
+          const parsed = window.SIS_PORTAL_PREFERENCES?.get(TABLE_UI_STATE_KEY, null)
           if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null
-          const sourceIsLegacy = !rawCurrent && Boolean(rawLegacy)
+          const sourceIsLegacy = false
           const storedSchemaVersion = Number(parsed.schemaVersion) || 0
           const shouldResetPersistedWidths =
             sourceIsLegacy ||
@@ -1703,8 +1691,7 @@
             if (Number.isFinite(tableHeight)) {
               migratedPayload.tableHeight = tableHeight
             }
-            window.localStorage.setItem(TABLE_UI_STATE_KEY, JSON.stringify(migratedPayload))
-            window.localStorage.removeItem(LEGACY_TABLE_UI_STATE_KEY)
+            void window.SIS_PORTAL_PREFERENCES?.save(TABLE_UI_STATE_KEY, migratedPayload)
           }
           return {
             columnLayout,
@@ -1740,11 +1727,7 @@
           nextPayload.tableHeight = nextTableHeight
         }
         try {
-          window.localStorage.setItem(
-            TABLE_UI_STATE_KEY,
-            JSON.stringify(nextPayload)
-          )
-          window.localStorage.removeItem(LEGACY_TABLE_UI_STATE_KEY)
+          void window.SIS_PORTAL_PREFERENCES?.save(TABLE_UI_STATE_KEY, nextPayload)
         } catch (error) {
           void error
         }
@@ -1888,23 +1871,7 @@
       function clearStoredTableUiState() {
         const preservedHeight = normalizeTableHeightPx(state.tableHeightPx)
         try {
-          window.localStorage.removeItem(TABLE_UI_STATE_KEY)
-          window.localStorage.removeItem(LEGACY_TABLE_UI_STATE_KEY)
-          const persistencePrefixes = [
-            `tabulator-${TABLE_PERSISTENCE_ID}-`,
-            `tabulator-${LEGACY_TABLE_PERSISTENCE_ID}-`,
-          ]
-          const toRemove = []
-          for (let index = 0; index < window.localStorage.length; index += 1) {
-            const key = window.localStorage.key(index)
-            if (!key) continue
-            const matchesPrefix = persistencePrefixes.some((prefix) => key.startsWith(prefix))
-            if (!matchesPrefix) continue
-            toRemove.push(key)
-          }
-          toRemove.forEach((key) => {
-            window.localStorage.removeItem(key)
-          })
+          void window.SIS_PORTAL_PREFERENCES?.save(TABLE_UI_STATE_KEY, {})
           if (Number.isFinite(preservedHeight)) {
             writeTableUiState({
               tableHeight: preservedHeight,
@@ -2001,12 +1968,11 @@
 
       function loadUiSettingsFromLocalStorage() {
         try {
-          const raw = window.localStorage.getItem("sis.admin.uiSettings")
-          if (!raw) {
+          const parsed = window.SIS_PORTAL_PREFERENCES?.get("sis.admin.uiSettings", null)
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
             state.uiSettingsMeta = uiSettingsMetaFromSource(null)
             return null
           }
-          const parsed = JSON.parse(raw)
           if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
             state.uiSettingsMeta = uiSettingsMetaFromSource(null)
             return null

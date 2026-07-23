@@ -368,6 +368,9 @@ html[data-theme="dark"] body.admin-portal-page #newsReviewViewerStatus,
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review textarea {
   color: var(--portal-dark-text);
 }
+html[data-theme="dark"] body.admin-portal-page #attendanceSaveResult {
+  color: var(--bright-gold-2);
+}
 body.admin-portal-page .performance-data-list .section-title,
 body.admin-portal-page #performanceStagedSection .section-title,
 body.admin-portal-page #performanceQueueSection .section-title {
@@ -533,7 +536,7 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
   block-size: 44px;
   inline-size: 44px;
   inset-block-start: 12px;
-  inset-inline-start: max(12px, calc((100vw - 1440px) / 2 + 4px));
+  inset-inline-end: 12px;
   position: fixed;
   z-index: 90;
 }
@@ -641,6 +644,15 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       }
       #overviewRiskStudents {
         overflow: visible;
+      }
+      #appSchoolSetupWarning.hidden {
+        display: none !important;
+        min-height: 0;
+        margin: 0;
+        visibility: hidden;
+      }
+      #appSchoolSetupWarning:not(.hidden) {
+        visibility: visible;
       }
       #levelDetailPanel .table-scroll-wrap table {
         min-width: 760px;

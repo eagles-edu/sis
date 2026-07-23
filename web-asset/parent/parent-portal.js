@@ -891,12 +891,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
       }
 
       function readStoredTextZoomPct() {
-        try {
-          return clampTextZoomPct(window.localStorage?.getItem(TEXT_ZOOM_KEY))
-        } catch (error) {
-          void error
-          return TEXT_ZOOM_DEFAULT
-        }
+        return clampTextZoomPct(window.SIS_PORTAL_PREFERENCES?.get(TEXT_ZOOM_KEY, TEXT_ZOOM_DEFAULT))
       }
 
       function applyPortalTextZoom(percent) {
@@ -908,11 +903,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         )
         const label = document.getElementById("parentTextZoomLabel")
         if (label) label.textContent = `${nextPercent}%`
-        try {
-          window.localStorage?.setItem(TEXT_ZOOM_KEY, String(nextPercent))
-        } catch (error) {
-          void error
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(TEXT_ZOOM_KEY, String(nextPercent))
       }
 
       function adjustPortalTextZoom(delta) {
@@ -3232,26 +3223,12 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
       }
 
       function readStoredReportAcknowledgements() {
-        try {
-          const raw = window.localStorage?.getItem(resolveReportAckStorageKey())
-          if (!raw) return {}
-          const parsed = JSON.parse(raw)
-          return parsed && typeof parsed === "object" ? parsed : {}
-        } catch (error) {
-          void error
-          return {}
-        }
+        const parsed = window.SIS_PORTAL_PREFERENCES?.get(resolveReportAckStorageKey(), {})
+        return parsed && typeof parsed === "object" ? parsed : {}
       }
 
       function persistReportAcknowledgements() {
-        try {
-          window.localStorage?.setItem(
-            resolveReportAckStorageKey(),
-            JSON.stringify(state.reportAcknowledgements || {}),
-          )
-        } catch (error) {
-          void error
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(resolveReportAckStorageKey(), state.reportAcknowledgements || {})
       }
 
       function resolveReportAcknowledgementEntry(reportId, role = "parent") {

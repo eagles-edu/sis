@@ -1697,32 +1697,16 @@
       }
 
       function loadProfileFormConfigFromStorage() {
-        let raw = null;
-        try {
-          raw = window.localStorage.getItem(PROFILE_FORM_STORAGE_KEY);
-        } catch (error) {
-          void error;
-        }
-        if (!raw) return buildDefaultProfileFormConfig();
-        try {
-          return normalizeProfileFormConfig(JSON.parse(raw));
-        } catch (error) {
-          void error;
-        }
-        return buildDefaultProfileFormConfig();
+        const stored = window.SIS_PORTAL_PREFERENCES?.get(PROFILE_FORM_STORAGE_KEY, null);
+        return stored && typeof stored === "object" ? normalizeProfileFormConfig(stored) : buildDefaultProfileFormConfig();
       }
 
       function persistProfileFormConfig(config = null) {
         const normalized = normalizeProfileFormConfig(config);
         state.profileFormConfig = normalized;
-        try {
-          window.localStorage.setItem(
-            PROFILE_FORM_STORAGE_KEY,
-            JSON.stringify(normalized),
-          );
-        } catch (error) {
-          void error;
-        }
+        state.uiSettings.profileFormConfig = normalized;
+        void window.SIS_PORTAL_PREFERENCES?.save(PROFILE_FORM_STORAGE_KEY, normalized);
+        void persistUiSettingsToServer(state.uiSettings);
         return normalized;
       }
 
@@ -3053,6 +3037,9 @@
         },
         schoolProfile: defaultSchoolProfile(),
         newsReportValidation: defaultNewsReportValidationSettings(),
+        levelTileStylesByLevel: {},
+        profileFormConfig: null,
+        globalAssets: {},
         queueHub: {
           panelOrder: [
             "queued-performance-reports",
@@ -3387,15 +3374,10 @@
       }
 
       function loadTableArchiveIndexFromStorage() {
-        let stored = "";
-        try {
-          stored = window.localStorage.getItem(TABLE_ARCHIVE_STORAGE_KEY) || "";
-        } catch (error) {
-          void error;
-        }
+        const stored = window.SIS_PORTAL_PREFERENCES?.get(TABLE_ARCHIVE_STORAGE_KEY, null);
         if (!stored) return emptyTableArchiveIndex();
         try {
-          return normalizeTableArchiveIndex(JSON.parse(stored));
+          return normalizeTableArchiveIndex(typeof stored === "string" ? JSON.parse(stored) : stored);
         } catch (error) {
           void error;
           return emptyTableArchiveIndex();
@@ -3415,15 +3397,10 @@
       }
 
       function loadPerformanceHoldIndexFromStorage() {
-        let stored = "";
-        try {
-          stored = window.localStorage.getItem(PERFORMANCE_HOLD_STORAGE_KEY) || "";
-        } catch (error) {
-          void error;
-        }
+        const stored = window.SIS_PORTAL_PREFERENCES?.get(PERFORMANCE_HOLD_STORAGE_KEY, null);
         if (!stored) return {};
         try {
-          return normalizePerformanceHoldIndex(JSON.parse(stored));
+          return normalizePerformanceHoldIndex(typeof stored === "string" ? JSON.parse(stored) : stored);
         } catch (error) {
           void error;
           return {};
@@ -3433,28 +3410,14 @@
       function persistPerformanceHoldIndex(index = state.performanceHoldIndex) {
         const normalized = normalizePerformanceHoldIndex(index);
         state.performanceHoldIndex = normalized;
-        try {
-          window.localStorage.setItem(
-            PERFORMANCE_HOLD_STORAGE_KEY,
-            JSON.stringify(normalized),
-          );
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(PERFORMANCE_HOLD_STORAGE_KEY, normalized);
         return normalized;
       }
 
       function persistTableArchiveIndex(index = state.tableArchiveIndex) {
         const normalized = normalizeTableArchiveIndex(index);
         state.tableArchiveIndex = normalized;
-        try {
-          window.localStorage.setItem(
-            TABLE_ARCHIVE_STORAGE_KEY,
-            JSON.stringify(normalized),
-          );
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(TABLE_ARCHIVE_STORAGE_KEY, normalized);
         return normalized;
       }
 
@@ -3500,15 +3463,10 @@
         const storageKey =
           TABLE_COLUMN_VISIBILITY_STORAGE_KEYS[normalizeText(tableKey)];
         if (!storageKey) return normalizeTableColumnVisibility(tableKey);
-        let stored = "";
-        try {
-          stored = window.localStorage.getItem(storageKey) || "";
-        } catch (error) {
-          void error;
-        }
+        const stored = window.SIS_PORTAL_PREFERENCES?.get(storageKey, null);
         if (!stored) return normalizeTableColumnVisibility(tableKey);
         try {
-          return normalizeTableColumnVisibility(tableKey, JSON.parse(stored));
+          return normalizeTableColumnVisibility(tableKey, typeof stored === "string" ? JSON.parse(stored) : stored);
         } catch (error) {
           void error;
           return normalizeTableColumnVisibility(tableKey);
@@ -3538,14 +3496,7 @@
         );
         state.tableColumnVisibility[key] = normalized;
         if (key === "attendance") state.attendanceColumnVisibility = normalized;
-        try {
-          window.localStorage.setItem(
-            TABLE_COLUMN_VISIBILITY_STORAGE_KEYS[key],
-            JSON.stringify(normalized),
-          );
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(TABLE_COLUMN_VISIBILITY_STORAGE_KEYS[key], normalized);
         return normalized;
       }
 
@@ -3658,25 +3609,14 @@
       }
 
       function loadGlobalTextZoomFromStorage() {
-        let stored = "";
-        try {
-          stored = normalizeText(
-            window.localStorage.getItem(GLOBAL_TEXT_ZOOM_STORAGE_KEY),
-          );
-        } catch (error) {
-          void error;
-        }
+        const stored = normalizeText(window.SIS_PORTAL_PREFERENCES?.get(GLOBAL_TEXT_ZOOM_STORAGE_KEY, ""));
         return normalizeTextZoomPercent(stored || TEXT_ZOOM_DEFAULT);
       }
 
       function persistGlobalTextZoomToStorage(value = state.globalTextZoomPercent) {
         const normalized = normalizeTextZoomPercent(value);
         state.globalTextZoomPercent = normalized;
-        try {
-          window.localStorage.setItem(GLOBAL_TEXT_ZOOM_STORAGE_KEY, String(normalized));
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(GLOBAL_TEXT_ZOOM_STORAGE_KEY, String(normalized));
         return normalized;
       }
 
@@ -3736,17 +3676,10 @@
       }
 
       function loadStudentIdSearchHistoryFromStorage() {
-        let stored = "";
-        try {
-          stored = normalizeText(
-            window.localStorage.getItem(STUDENT_ID_SEARCH_STORAGE_KEY),
-          );
-        } catch (error) {
-          void error;
-        }
+        const stored = window.SIS_PORTAL_PREFERENCES?.get(STUDENT_ID_SEARCH_STORAGE_KEY, "");
         if (!stored) return [];
         try {
-          return normalizeStudentIdSearchHistory(JSON.parse(stored));
+          return normalizeStudentIdSearchHistory(typeof stored === "string" ? JSON.parse(stored) : stored);
         } catch (error) {
           void error;
           return [];
@@ -3756,14 +3689,7 @@
       function persistStudentIdSearchHistory(values = state.eaglesIdSearchHistory) {
         const normalized = normalizeStudentIdSearchHistory(values).slice(0, 80);
         state.eaglesIdSearchHistory = normalized;
-        try {
-          window.localStorage.setItem(
-            STUDENT_ID_SEARCH_STORAGE_KEY,
-            JSON.stringify(normalized),
-          );
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(STUDENT_ID_SEARCH_STORAGE_KEY, normalized);
         return normalized;
       }
 
@@ -3899,17 +3825,10 @@
       }
 
       function loadLegacyAssignmentTemplatesFromStorage() {
-        let stored = "";
-        try {
-          stored = normalizeText(
-            window.localStorage.getItem(ASSIGNMENT_TEMPLATE_STORAGE_KEY),
-          );
-        } catch (error) {
-          void error;
-        }
+        const stored = window.SIS_PORTAL_PREFERENCES?.get(ASSIGNMENT_TEMPLATE_STORAGE_KEY, "");
         if (!stored) return [];
         try {
-          const parsed = JSON.parse(stored);
+          const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
           if (!Array.isArray(parsed)) return [];
           return parsed
             .map((entry) => normalizeAssignmentTemplate(entry))
@@ -3921,11 +3840,7 @@
       }
 
       function clearLegacyAssignmentTemplateStorage() {
-        try {
-          window.localStorage.removeItem(ASSIGNMENT_TEMPLATE_STORAGE_KEY);
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(ASSIGNMENT_TEMPLATE_STORAGE_KEY, []);
       }
 
       function normalizeAssignmentTemplateList(templates = []) {
@@ -4012,17 +3927,10 @@
       }
 
       function loadParentTrackingTeacherNamesFromStorage() {
-        let stored = "";
-        try {
-          stored = normalizeText(
-            window.localStorage.getItem(PARENT_TRACKING_TEACHER_STORAGE_KEY),
-          );
-        } catch (error) {
-          void error;
-        }
+        const stored = window.SIS_PORTAL_PREFERENCES?.get(PARENT_TRACKING_TEACHER_STORAGE_KEY, "");
         if (!stored) return [];
         try {
-          const parsed = JSON.parse(stored);
+          const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
           return normalizeTeacherNameList(parsed);
         } catch (error) {
           void error;
@@ -4033,29 +3941,15 @@
       function persistParentTrackingTeacherNames(values = []) {
         const normalized = normalizeTeacherNameList(values);
         state.parentTracking.teacherNames = normalized;
-        try {
-          window.localStorage.setItem(
-            PARENT_TRACKING_TEACHER_STORAGE_KEY,
-            JSON.stringify(normalized),
-          );
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(PARENT_TRACKING_TEACHER_STORAGE_KEY, normalized);
         return normalized;
       }
 
       function loadParentTrackingLessonSummaryFromStorage() {
-        let stored = "";
-        try {
-          stored = normalizeText(
-            window.localStorage.getItem(PARENT_TRACKING_SUMMARY_STORAGE_KEY),
-          );
-        } catch (error) {
-          void error;
-        }
+        const stored = window.SIS_PORTAL_PREFERENCES?.get(PARENT_TRACKING_SUMMARY_STORAGE_KEY, "");
         if (!stored) return {};
         try {
-          const parsed = JSON.parse(stored);
+          const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
           if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
           const entries = Object.entries(parsed)
             .map(([key, value]) => [normalizeText(key), normalizeText(value)])
@@ -4076,14 +3970,7 @@
             .filter(([key, value]) => key && value),
         );
         state.parentTracking.lessonSummaryByLevelDate = normalized;
-        try {
-          window.localStorage.setItem(
-            PARENT_TRACKING_SUMMARY_STORAGE_KEY,
-            JSON.stringify(normalized),
-          );
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(PARENT_TRACKING_SUMMARY_STORAGE_KEY, normalized);
         return normalized;
       }
 
@@ -7885,11 +7772,7 @@
 
       function persistApiPrefix(prefix) {
         const normalized = normalizePathPrefix(prefix, DEFAULT_ADMIN_API_PREFIX);
-        try {
-          window.localStorage.setItem("sis.admin.apiPrefix", normalized);
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save("sis.admin.apiPrefix", normalized);
         return normalized;
       }
 
@@ -7898,14 +7781,7 @@
         const queryPrefix = normalizeText(params.get("apiPrefix"));
         const injectedPrefix = normalizeText(window.__SIS_ADMIN_API_PREFIX);
         const inferredPrefix = inferApiPrefixFromPathname(window.location.pathname);
-        let storedPrefix = "";
-        try {
-          storedPrefix = normalizeText(
-            window.localStorage.getItem("sis.admin.apiPrefix"),
-          );
-        } catch (error) {
-          void error;
-        }
+        const storedPrefix = normalizeText(window.SIS_PORTAL_PREFERENCES?.get("sis.admin.apiPrefix", ""));
         const hasExplicitOverride = Boolean(queryPrefix || injectedPrefix);
         const resolvedPrefix = normalizePathPrefix(
           queryPrefix || injectedPrefix || storedPrefix || inferredPrefix,
@@ -8340,6 +8216,15 @@
           newsReportValidation: normalizeNewsReportValidationSettings(
             source?.newsReportValidation || DEFAULT_UI_SETTINGS.newsReportValidation,
           ),
+          levelTileStylesByLevel:
+            source?.levelTileStylesByLevel && typeof source.levelTileStylesByLevel === "object" ?
+              source.levelTileStylesByLevel : {},
+          profileFormConfig:
+            source?.profileFormConfig && typeof source.profileFormConfig === "object" ?
+              source.profileFormConfig : null,
+          globalAssets:
+            source?.globalAssets && typeof source.globalAssets === "object" ?
+              source.globalAssets : {},
           queueHub: normalizeQueueHubSettings(
             source?.queueHub || DEFAULT_UI_SETTINGS.queueHub,
           ),
@@ -8466,18 +8351,13 @@
       }
 
       function loadUiSettingsFromStorage() {
-        let stored = null;
-        try {
-          stored = window.localStorage.getItem("sis.admin.uiSettings");
-        } catch (error) {
-          void error;
-        }
+        const stored = window.SIS_PORTAL_PREFERENCES?.get("sis.admin.uiSettings", null);
         if (!stored) {
           state.uiSettingsMeta = uiSettingsMetaFromSource(DEFAULT_UI_SETTINGS);
           return normalizeUiSettings(DEFAULT_UI_SETTINGS);
         }
         try {
-          const parsed = JSON.parse(stored);
+          const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
           state.uiSettingsMeta = uiSettingsMetaFromSource(parsed);
           return normalizeUiSettings({
             ...DEFAULT_UI_SETTINGS,
@@ -8491,18 +8371,13 @@
       }
 
       function loadSisConfigFromStorage() {
-        let stored = null;
-        try {
-          stored = window.localStorage.getItem("sis.admin.sisConfig");
-        } catch (error) {
-          void error;
-        }
+        const stored = window.SIS_PORTAL_PREFERENCES?.get("sis.admin.sisConfig", null);
         if (!stored) {
           state.sisConfigMeta = null;
           return normalizeSisConfig(DEFAULT_SIS_CONFIG);
         }
         try {
-          const parsed = JSON.parse(stored);
+          const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
           state.sisConfigMeta = parsed && typeof parsed === "object" ? parsed.meta || null : null;
           return normalizeSisConfig({
             ...DEFAULT_SIS_CONFIG,
@@ -8525,14 +8400,7 @@
           metaOverride && typeof metaOverride === "object" ?
             metaOverride :
             uiSettingsMetaFromSource(normalized);
-        try {
-          window.localStorage.setItem(
-            "sis.admin.uiSettings",
-            JSON.stringify(normalized),
-          );
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save("sis.admin.uiSettings", normalized);
         return normalized;
       }
 
@@ -8543,14 +8411,7 @@
         });
         state.sisConfig = normalized;
         state.sisConfigMeta = metaOverride && typeof metaOverride === "object" ? metaOverride : null;
-        try {
-          window.localStorage.setItem(
-            "sis.admin.sisConfig",
-            JSON.stringify({ ...normalized, meta: state.sisConfigMeta }),
-          );
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save("sis.admin.sisConfig", { ...normalized, meta: state.sisConfigMeta });
         return normalized;
       }
 
@@ -8639,18 +8500,8 @@
       }
 
       function loadAttendanceLevelTileConfigFromStorage() {
-        try {
-          const raw =
-            window.localStorage.getItem(CLASS_LEVEL_TILE_STYLE_STORAGE_KEY) ||
-            window.localStorage.getItem(LEGACY_ATTENDANCE_LEVEL_TILE_STORAGE_KEY);
-          if (!raw) return {};
-          const parsed = JSON.parse(raw);
-          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
-          return parsed;
-        } catch (error) {
-          void error;
-        }
-        return {};
+        const stored = window.SIS_PORTAL_PREFERENCES?.get(CLASS_LEVEL_TILE_STYLE_STORAGE_KEY, {});
+        return stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
       }
 
       function persistAttendanceLevelTileConfig(tileConfigByLevel) {
@@ -8659,43 +8510,22 @@
             tileConfigByLevel
           : {};
         state.attendanceLanding.tileConfigByLevel = normalized;
-        try {
-          window.localStorage.setItem(
-            CLASS_LEVEL_TILE_STYLE_STORAGE_KEY,
-            JSON.stringify(normalized),
-          );
-        } catch (error) {
-          void error;
-        }
+        state.uiSettings.levelTileStylesByLevel = normalized;
+        void persistUiSettingsToServer(state.uiSettings);
+        void window.SIS_PORTAL_PREFERENCES?.save(CLASS_LEVEL_TILE_STYLE_STORAGE_KEY, normalized);
         return normalized;
       }
 
       function loadAttendanceFormContextFromStorage() {
-        try {
-          const raw = window.localStorage.getItem(ATTENDANCE_FORM_STORAGE_KEY);
-          if (!raw) return {};
-          const parsed = JSON.parse(raw);
-          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
-          return {
-            selectedLevel: normalizeText(parsed.selectedLevel),
-          };
-        } catch (error) {
-          void error;
-          return {};
-        }
+        const parsed = window.SIS_PORTAL_PREFERENCES?.get(ATTENDANCE_FORM_STORAGE_KEY, {});
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+        return { selectedLevel: normalizeText(parsed.selectedLevel) };
       }
 
       function persistAttendanceFormContext() {
-        try {
-          window.localStorage.setItem(
-            ATTENDANCE_FORM_STORAGE_KEY,
-            JSON.stringify({
-              selectedLevel: normalizeText(state.attendanceLanding?.selectedLevel),
-            }),
-          );
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(ATTENDANCE_FORM_STORAGE_KEY, {
+          selectedLevel: normalizeText(state.attendanceLanding?.selectedLevel),
+        });
       }
 
       state.uiSettings = loadUiSettingsFromStorage();
@@ -9171,15 +9001,120 @@
         return `${message} <a href="${schoolSetupHref}" rel="bookmark">Open School Setup</a> to set the quarter rows before using grades or portals.`;
       }
 
+      let schoolSetupWarningAcknowledged = false;
+      let schoolSetupWarningCheckReady = false;
+      let schoolSetupWarningCheckScheduled = false;
+      let schoolSetupWarningCheckTimer = null;
+      let latestSchoolSetupWarningSetup = null;
+
+      function scheduleSchoolSetupWarningCheck() {
+        if (schoolSetupWarningCheckScheduled) return;
+        schoolSetupWarningCheckScheduled = true;
+        const arm = (lcpStartTime = performance.now()) => {
+          const elapsed = Math.max(0, performance.now() - lcpStartTime);
+          const remaining = Math.max(0, 10000 - elapsed);
+          schoolSetupWarningCheckTimer = window.setTimeout(() => {
+            schoolSetupWarningCheckReady = true;
+            renderSchoolSetupAccessWarning(latestSchoolSetupWarningSetup || schoolSetupState());
+          }, remaining);
+        };
+        try {
+          if (typeof PerformanceObserver === "function") {
+            let observed = false;
+            const observer = new PerformanceObserver((list) => {
+              const entries = list.getEntries();
+              const lcp = entries[entries.length - 1];
+              if (!lcp || observed) return;
+              observed = true;
+              observer.disconnect();
+              arm(Number(lcp.startTime) || performance.now());
+            });
+            observer.observe({ type: "largest-contentful-paint", buffered: true });
+            window.setTimeout(() => {
+              if (observed) return;
+              observed = true;
+              observer.disconnect();
+              arm(performance.now());
+            }, 10000);
+            return;
+          }
+        } catch (error) {
+          void error;
+        }
+        arm(performance.now());
+      }
+
+      function closeSchoolSetupWarningModal(acknowledge = true) {
+        const modal = document.getElementById("schoolSetupWarningModal");
+        if (!(modal instanceof HTMLElement)) return;
+        modal.classList.add("hidden");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+        if (acknowledge) schoolSetupWarningAcknowledged = true;
+      }
+
+      function openSchoolSetupWarningModal(setup = schoolSetupState()) {
+        const modal = document.getElementById("schoolSetupWarningModal");
+        if (!(modal instanceof HTMLElement)) return;
+        const normalizedSetup = normalizeSchoolSetup(setup);
+        const isUnset =
+          !normalizeText(normalizedSetup.startDate) &&
+          !normalizeText(normalizedSetup.endDate) &&
+          !normalizeText(normalizedSetup.schoolYear) &&
+          (!Array.isArray(normalizedSetup.quarters) || !normalizedSetup.quarters.length);
+        const statusEl = document.getElementById("schoolSetupWarningModalStatus");
+        const openBtn = document.getElementById("schoolSetupWarningOpenBtn");
+        const actionStatusEl = document.getElementById("schoolSetupWarningModalActionStatus");
+        const schoolSetupHref = buildAdminRuntimeHrefWithOrigin(
+          "/admin/school-setup#schoolSetupPanel",
+          resolveApiOrigin(),
+          resolveAdminPagePath(),
+        );
+        if (statusEl) {
+          statusEl.textContent = isUnset ?
+            "No school year or quarter data is currently available." :
+            "Stored school setup data is incomplete or invalid.";
+        }
+        if (openBtn) openBtn.setAttribute("href", schoolSetupHref);
+        if (actionStatusEl) actionStatusEl.textContent = "";
+        const autoFixBtn = document.getElementById("schoolSetupWarningAutoFixBtn");
+        const syncBtn = document.getElementById("schoolSetupWarningSyncBtn");
+        if (autoFixBtn instanceof HTMLButtonElement) autoFixBtn.disabled = !canManageUsers();
+        if (syncBtn instanceof HTMLButtonElement) syncBtn.disabled = !canManageUsers();
+        modal.classList.remove("hidden");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("modal-open");
+        document.getElementById("schoolSetupWarningCloseBtn")?.focus();
+      }
+
+      function recoverSchoolSetupFromWarning() {
+        try {
+          autoFillSchoolSetupFromInputs();
+          return saveSchoolSetupFromInputs({ notify: true });
+        } catch (error) {
+          throw error;
+        }
+      }
+
       function renderSchoolSetupAccessWarning(setup = schoolSetupState()) {
+        scheduleSchoolSetupWarningCheck();
+        latestSchoolSetupWarningSetup = normalizeSchoolSetup(setup);
         const warningHtml = schoolSetupAccessWarningHtml(setup);
         document
           .querySelectorAll("[data-school-setup-access-warning]")
           .forEach((warningEl) => {
             if (!(warningEl instanceof HTMLElement)) return;
-            warningEl.classList.toggle("hidden", !warningHtml);
-            warningEl.innerHTML = warningHtml;
+            warningEl.classList.add("hidden");
+            warningEl.replaceChildren();
           });
+        if (!warningHtml) {
+          schoolSetupWarningAcknowledged = false;
+          closeSchoolSetupWarningModal(false);
+          return;
+        }
+        if (schoolSetupWarningCheckReady && state.authUser && !schoolSetupWarningAcknowledged) {
+          openSchoolSetupWarningModal(setup);
+        }
       }
 
       function draftSchoolSetupFromInputs() {
@@ -9885,25 +9820,11 @@
       }
 
       function desktopMenuCollapsedPreference() {
-        try {
-          return (
-            window.localStorage.getItem(DESKTOP_MENU_COLLAPSED_STORAGE_KEY) === "1"
-          );
-        } catch (error) {
-          void error;
-          return false;
-        }
+        return window.SIS_PORTAL_PREFERENCES?.get(DESKTOP_MENU_COLLAPSED_STORAGE_KEY, "0") === "1";
       }
 
       function persistDesktopMenuCollapsedPreference(collapsed = false) {
-        try {
-          window.localStorage.setItem(
-            DESKTOP_MENU_COLLAPSED_STORAGE_KEY,
-            collapsed ? "1" : "0",
-          );
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(DESKTOP_MENU_COLLAPSED_STORAGE_KEY, collapsed ? "1" : "0");
       }
 
       function applyDesktopMenuCollapsedPreference() {
@@ -10539,6 +10460,14 @@
             }), 1000);
           }
         }
+        if (slug === "school-setup" || slug === "settings") {
+          renderProfileFieldLayoutEditor();
+          populateAttendanceLevelStyleOptions();
+          syncAttendanceLevelEditorInputs();
+          if (!IS_JSDOM_ENV && canReadData()) {
+            loadFilters().catch(handleError);
+          }
+        }
         if (slug === "parent-tracking") {
           ensureParentTrackingFormDefaults({ forceSummaryFromMemory: false });
           refreshParentTracking({ preserveStudentSelection: true }).catch(handleError);
@@ -10961,11 +10890,6 @@
         // The session is valid now, so release the boot gate immediately and
         // let the app shell paint instead of leaving a blank reload frame.
         document.documentElement.dataset.adminAuthState = "authenticated";
-        try {
-          sessionStorage.setItem("sis-admin-authenticated", "1");
-        } catch {
-          void 0;
-        }
         document.getElementById("authShell")?.classList.add("hidden");
         document.getElementById("authBootPanel")?.classList.add("hidden");
         document.getElementById("authPanel")?.classList.add("hidden");
@@ -10981,11 +10905,6 @@
 
       function showLogin() {
         document.documentElement.dataset.adminAuthState = "unauthenticated";
-        try {
-          sessionStorage.removeItem("sis-admin-authenticated");
-        } catch {
-          void 0;
-        }
         document.getElementById("authShell")?.classList.remove("hidden");
         setAuthBootstrapping(false);
         // Reveal the login panel only after the auth probe finishes unauthenticated.
@@ -13834,14 +13753,7 @@
         const queueId = normalizeText(item?.id);
         const snapshot = queueItemReportCardSnapshot(item);
         if (!queueId || !snapshot) return;
-        try {
-          window.localStorage.setItem(
-            `sis.reportCardPreview.${queueId}`,
-            JSON.stringify(snapshot),
-          );
-        } catch (error) {
-          void error;
-        }
+        void window.SIS_PORTAL_PREFERENCES?.save(`sis.reportCardPreview.${queueId}`, snapshot);
       }
 
       function incomingPerformanceRows(rows = []) {
@@ -21858,6 +21770,8 @@
       }
 
       async function bootAfterLogin() {
+        await window.SIS_PORTAL_PREFERENCES?.load?.();
+        window.SIS_PORTAL_THEME?.initTheme?.("light");
         const bootConfigTasks = [];
         if (canManagePermissions()) {
           bootConfigTasks.push(async () => {
@@ -22088,6 +22002,40 @@
       bindById("loginForm", "submit", (event) => {
         event.preventDefault();
         login().catch(handleError);
+      });
+      bindById("schoolSetupWarningCloseBtn", "click", () => closeSchoolSetupWarningModal());
+      bindById("schoolSetupWarningOpenBtn", "click", () => closeSchoolSetupWarningModal());
+      bindById("schoolSetupWarningAutoFixBtn", "click", async () => {
+        const statusEl = document.getElementById("schoolSetupWarningModalActionStatus");
+        try {
+          if (statusEl) statusEl.textContent = "Generating explicit quarter rows and saving...";
+          await recoverSchoolSetupFromWarning();
+          schoolSetupWarningAcknowledged = false;
+          renderSchoolSetupAccessWarning();
+          if (statusEl) statusEl.textContent = "School setup was recovered and saved.";
+        } catch (error) {
+          if (statusEl) statusEl.textContent = error?.message || "Recovery failed. Open School Setup to correct it manually.";
+          handleError(error);
+        }
+      });
+      bindById("schoolSetupWarningSyncBtn", "click", async () => {
+        const statusEl = document.getElementById("schoolSetupWarningModalActionStatus");
+        try {
+          if (statusEl) statusEl.textContent = "Running System Config Sync...";
+          await runSisConfigRepair();
+          if (statusEl) statusEl.textContent = "Config sync completed. Reloading school setup status...";
+          await hydrateUiSettingsFromServer();
+          schoolSetupWarningAcknowledged = false;
+          renderSchoolSetupAccessWarning();
+        } catch (error) {
+          if (statusEl) statusEl.textContent = error?.message || "Config sync failed. Contact an administrator.";
+          handleError(error);
+        }
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !document.getElementById("schoolSetupWarningModal")?.classList.contains("hidden")) {
+          closeSchoolSetupWarningModal();
+        }
       });
       document
         .getElementById("loginClearBtn")
@@ -23430,6 +23378,13 @@
           renderProfileFieldLayoutEditor();
           setProfileMode("info");
           populateProfileLevelOptions();
+        });
+      }
+      if (IS_JSDOM_ENV || activeStartupPage === "school-setup" || activeStartupPage === "settings") {
+        activePageIdleTasks.push(() => {
+          renderProfileFieldLayoutEditor();
+          populateAttendanceLevelStyleOptions();
+          syncAttendanceLevelEditorInputs();
         });
       }
       if (IS_JSDOM_ENV || activeStartupPage === "assignments" || activeStartupPage === "assignments-data") {

@@ -5,6 +5,11 @@ import crypto from "node:crypto"
  * @typedef {{
  *   username?: unknown,
  *   role?: unknown,
+ *   parentsId?: unknown,
+ *   accountId?: unknown,
+ *   eaglesId?: unknown,
+ *   studentRefId?: unknown,
+ *   email?: unknown,
  * }} SessionPrincipal
  *
  * @typedef {{
@@ -161,6 +166,11 @@ function makeSessionPayload(id, principal, ttlSeconds) {
     id,
     username: normalizeText(principal?.username),
     role: normalizeLower(principal?.role) || "admin",
+    ...(normalizeText(principal?.parentsId) ? { parentsId: normalizeText(principal.parentsId) } : {}),
+    ...(normalizeText(principal?.accountId) ? { accountId: normalizeText(principal.accountId) } : {}),
+    ...(normalizeText(principal?.eaglesId) ? { eaglesId: normalizeText(principal.eaglesId) } : {}),
+    ...(normalizeText(principal?.studentRefId) ? { studentRefId: normalizeText(principal.studentRefId) } : {}),
+    ...(normalizeText(principal?.email) ? { email: normalizeText(principal.email) } : {}),
     createdAt: now,
     updatedAt: now,
     expiresAt,

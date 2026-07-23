@@ -451,6 +451,8 @@ function normalizeUiSettings(source = {}) {
     newsReportValidation: toPlainObject(candidate.newsReportValidation),
     queueHub: toPlainObject(candidate.queueHub),
     levelTileStylesByLevel,
+    profileFormConfig: toPlainObject(candidate.profileFormConfig),
+    globalAssets: toPlainObject(candidate.globalAssets),
   }
 }
 

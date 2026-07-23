@@ -431,6 +431,7 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
   "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
+  "web-asset/shared/portal-preferences.js|web-asset/shared/portal-preferences.js"
   "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
   "web-asset/shared/portal-environment.js|web-asset/shared/portal-environment.js"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
@@ -448,6 +449,8 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/images/ket.svg|web-asset/images/ket.svg"
   "web-asset/images/pet.svg|web-asset/images/pet.svg"
   "web-asset/images/favicon.ico|web-asset/images/favicon.ico"
+  "web-asset/images/favicon.png|web-asset/images/favicon.png"
+  "web-asset/images/favicon.svg|web-asset/images/favicon.svg"
   "web-asset/admin/favicon.ico|web-asset/admin/favicon.ico"
   "web-asset/icons/web-component/svg-icon.js|web-asset/icons/web-component/svg-icon.js"
   "web-asset/icons/web-component/svgs/theme-moon.svg|web-asset/icons/web-component/svgs/theme-moon.svg"
@@ -462,6 +465,8 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/vendor/tabulatorz/tabulator.min.js|web-asset/vendor/tabulatorz/tabulator.min.js"
   "web-asset/vendor/tabulatorz/tabulator.min.js.map|web-asset/vendor/tabulatorz/tabulator.min.js.map"
   "web-asset/images/favicon.ico|favicon.ico"
+  "web-asset/images/favicon.png|favicon.png"
+  "web-asset/images/favicon.svg|favicon.svg"
 )
 
 # Local portal changes are authored in REPO_ROOT. Keep this explicit parity
@@ -558,6 +563,7 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/student-admin.css|web-asset/admin/student-admin.css"
   "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
+  "web-asset/shared/portal-preferences.js|web-asset/shared/portal-preferences.js"
   "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
   "web-asset/shared/portal-environment.js|web-asset/shared/portal-environment.js"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
@@ -575,6 +581,8 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/images/ket.svg|web-asset/images/ket.svg"
   "web-asset/images/pet.svg|web-asset/images/pet.svg"
   "web-asset/images/favicon.ico|web-asset/images/favicon.ico"
+  "web-asset/images/favicon.png|web-asset/images/favicon.png"
+  "web-asset/images/favicon.svg|web-asset/images/favicon.svg"
   "web-asset/admin/favicon.ico|web-asset/admin/favicon.ico"
   "web-asset/icons/web-component/svg-icon.js|web-asset/icons/web-component/svg-icon.js"
   "web-asset/icons/web-component/svgs/theme-moon.svg|web-asset/icons/web-component/svgs/theme-moon.svg"
@@ -589,6 +597,8 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/vendor/tabulatorz/tabulator.min.js|web-asset/vendor/tabulatorz/tabulator.min.js"
   "web-asset/vendor/tabulatorz/tabulator.min.js.map|web-asset/vendor/tabulatorz/tabulator.min.js.map"
   "web-asset/images/favicon.ico|favicon.ico"
+  "web-asset/images/favicon.png|favicon.png"
+  "web-asset/images/favicon.svg|favicon.svg"
 )
 
 read_env_value() {
@@ -1054,6 +1064,8 @@ verify_test_public_assets() {
   local target_public_root="/home/test.eagles.edu.vn/public_html"
   local required_assets=(
     "${target_public_root}/favicon.ico"
+    "${target_public_root}/favicon.png"
+    "${target_public_root}/favicon.svg"
     "${target_public_root}/sis-admin/student-admin.html"
     "${target_public_root}/sis-admin/portal-hub.html"
     "${target_public_root}/sis-admin/grades-tabulator.html"
@@ -1062,6 +1074,7 @@ verify_test_public_assets() {
     "${target_public_root}/sis-student/student-portal.html"
     "${target_public_root}/web-asset/shared/portal-theme.min.css"
     "${target_public_root}/web-asset/shared/portal-theme-state.js"
+    "${target_public_root}/web-asset/shared/portal-preferences.js"
     "${target_public_root}/web-asset/shared/portal-navigation.js"
     "${target_public_root}/web-asset/shared/portal-environment.js"
     "${target_public_root}/web-asset/shared/maintenance.svg"
@@ -1076,6 +1089,8 @@ verify_test_public_assets() {
     "${target_public_root}/web-asset/images/ket.svg"
     "${target_public_root}/web-asset/images/pet.svg"
     "${target_public_root}/web-asset/images/favicon.ico"
+    "${target_public_root}/web-asset/images/favicon.png"
+    "${target_public_root}/web-asset/images/favicon.svg"
     "${target_public_root}/web-asset/admin/favicon.ico"
     "${target_public_root}/web-asset/admin/student-admin.min.css"
     "${target_public_root}/web-asset/admin/student-admin.critical.css"
@@ -1097,6 +1112,26 @@ verify_test_public_assets() {
       return 1
     fi
   done
+}
+
+verify_favicon_mobile_contract() {
+  local mode="$1"
+  local command=(
+    "${TEST_NODE_BIN}"
+    "${REPO_ROOT}/tools/verify-portal-favicon-and-mobile.mjs"
+    --repo-root "${REPO_ROOT}"
+  )
+  if [[ "$mode" == "repo" ]]; then
+    log "verifying repository portal favicon and 320px contract"
+  else
+    command+=(
+      --runtime-root "${TEST_ROOT}"
+      --public-root "${TEST_PUBLIC_ROOT}"
+      --origin "${TEST_PRIMARY_ORIGIN}"
+    )
+    log "verifying test portal favicon, public copies, and 320px contract"
+  fi
+  (cd "${REPO_ROOT}" && "${command[@]}")
 }
 
 verify_test_runtime_routes() {
@@ -1219,6 +1254,7 @@ restart_test_runtime() {
 main() {
   log "file mirror sync; full mode includes a restorable test DB backup; git commit matching is not part of the contract"
   build_admin_assets
+  verify_favicon_mobile_contract repo
   backup_test_state
   wipe_test_target_contents
   verify_test_preserved_runtime_files
@@ -1248,6 +1284,7 @@ main() {
     fi
     verify_test_public_html_index
     verify_test_public_assets
+    verify_favicon_mobile_contract test
     verify_test_runtime_routes "$TEST_ROUTE_MATRIX"
     verify_portal_sync_proof
     precompress_test_assets

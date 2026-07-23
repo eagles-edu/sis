@@ -151,3 +151,48 @@ test("admin portal sources use the shared semantic button contract", () => {
 
   assert.match(adminRoutes, /class="portal-button portal-button-primary" href=/)
 })
+
+test("short portal button labels retain their full tooltip and accessible explanation", () => {
+  const contracts = [
+    ["web-asset/admin/student-admin.html", "levelReminderSendAllBtn", "Send All", "Send to All Listed"],
+    ["web-asset/admin/student-admin.html", "overviewNewsQueueShowAllBtn", "Show Pending", "Show All Pending"],
+    ["web-asset/admin/student-admin.html", "overviewNewsQueueOpenBtn", "News Reports", "Open News Reports Page"],
+    ["web-asset/admin/student-admin.html", "overviewNewsQueueQueueHubBtn", "Queue Hub", "Open Queue Hub"],
+    ["web-asset/admin/student-admin.html", "profileBackToInfoBtn", "Back", "Back to Info"],
+    ["web-asset/admin/student-admin.html", "saveBtn", "Save", "Save / Update"],
+    ["web-asset/admin/student-admin.html", "assignmentSortDirBtn", "Newest First", "Newest Due First"],
+    ["web-asset/admin/student-admin.html", "pt_actionInsertBtn", "Insert", "Insert to Focused Field"],
+    ["web-asset/admin/student-admin.html", "pt_saveBtn", "Save Report", "Save Performance Report"],
+    ["web-asset/admin/student-admin.html", "openTabulatorGradesBtn", "Grades Admin", "Open Tabulator Grades Admin"],
+    ["web-asset/admin/student-admin.html", "gradeSortDirBtn", "Latest First", "Latest Due First"],
+    ["web-asset/admin/student-admin.html", "reportGenerateBtn", "Generate Report", "Generate from Grade Records"],
+    ["web-asset/admin/student-admin.html", "reportCardBtn", "Download PDF", "Download PDF Report Card"],
+    ["web-asset/admin/student-admin.html", "reportClearBtn", "Clear", "Clear Report Form"],
+    ["web-asset/admin/student-admin.html", "schoolSetupSaveBtn", "Save Setup", "Save School Setup"],
+    ["web-asset/admin/student-admin.html", "schoolSetupResetBtn", "Reload Setup", "Reload Saved Setup"],
+    ["web-asset/admin/student-admin.html", "profileFieldLayoutApplyBtn", "Apply Layout", "Apply Layout Changes"],
+    ["web-asset/admin/student-admin.html", "profileFieldLayoutResetBtn", "Reset Layout", "Reset Layout to Default"],
+    ["web-asset/admin/student-admin.html", "attendanceLevelApplyBtn", "Apply Style", "Apply Global Style"],
+    ["web-asset/admin/student-admin.html", "attendanceLevelResetBtn", "Reset Style", "Reset Level Style"],
+    ["web-asset/admin/grades-tabulator.html", "tableModalBtn", "Table", "Open the full grade table in a separate view"],
+    ["web-asset/admin/grades-tabulator.html", "toggleCompactBtn", "Dense: Off", "Switch between comfortable and dense table rows"],
+    ["web-asset/parent/parent-portal.html", "openChildPageBtn", "Hồ sơ", "Mở hồ sơ học sinh để xem và cập nhật thông tin"],
+    ["web-asset/parent/parent-portal.html", "openPastDueHomeworkModalBtn", "Quá hạn", "Xem danh sách bài tập về nhà quá hạn"],
+    ["web-asset/parent/parent-portal.html", "openNewsQueueDetailBtn", "Chi tiết", "Mở chi tiết các báo cáo tin tức đang chờ xem"],
+    ["web-asset/parent/parent-portal.html", "reportPastDueHomeworkPreviewBtn", "Quá hạn", "Xem danh sách bài tập về nhà quá hạn"],
+    ["web-asset/student/student-portal.html", "newWordsAddOneBtn", "Add Word", "Thêm một mục từ vựng vào danh sách học tập"],
+    ["web-asset/student/student-portal.html", "newWordsAddFiveBtn", "Add Words", "Thêm năm mục từ vựng vào danh sách học tập"],
+    ["web-asset/student/student-portal.html", "newNewsFormBtn", "Mẫu mới", "Bắt đầu một biểu mẫu báo cáo tin tức mới"],
+  ]
+
+  for (const [file, id, shortLabel, fullLabel] of contracts) {
+    const html = readPortal(file)
+    const match = html.match(new RegExp(`<button\\b(?=[^>]*\\bid="${id}")[^>]*>([\\s\\S]*?)</button>`))
+    assert.ok(match, `${file} missing ${id}`)
+    const attrs = html.slice(match.index, match.index + match[0].indexOf(">") + 1)
+    const visibleLabel = match[1].replace(/<[^>]+>/g, " ").replace(/\\s+/g, " ").trim()
+    assert.equal(visibleLabel, shortLabel, `${id} visible label`)
+    assert.match(attrs, new RegExp(`\\btitle="${fullLabel}"`), `${id} tooltip`)
+    assert.match(attrs, new RegExp(`\\baria-label="${fullLabel}"`), `${id} aria-label`)
+  }
+})

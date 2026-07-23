@@ -1,0 +1,128 @@
+(() => {
+  "use strict"
+
+  const VERSION = 1
+  const memory = Object.create(null)
+  let loaded = false
+  let loadPromise = null
+
+  function endpoint() {
+    if (window.__SIS_ADMIN_PREFERENCES_PATH) return window.__SIS_ADMIN_PREFERENCES_PATH
+    if (window.__SIS_PARENT_PREFERENCES_PATH) return window.__SIS_PARENT_PREFERENCES_PATH
+    if (window.__SIS_STUDENT_PREFERENCES_PATH) return window.__SIS_STUDENT_PREFERENCES_PATH
+    return ""
+  }
+
+  function safeObject(value) {
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {}
+  }
+
+  function applySavedTheme() {
+    const theme = memory["sis-theme"]
+    if (theme !== "dark" && theme !== "light") return
+    document.documentElement.dataset.theme = theme
+    document.documentElement.style.colorScheme = theme
+  }
+
+  function legacyKeys() {
+    const keys = []
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index)
+      if (key) keys.push(key)
+    }
+    for (let index = 0; index < window.sessionStorage.length; index += 1) {
+      const key = window.sessionStorage.key(index)
+      if (key) keys.push(key)
+    }
+    return Array.from(new Set(keys)).filter((key) => key !== "sis-admin-authenticated")
+  }
+
+  async function load() {
+    if (loaded) return memory
+    if (loadPromise) return loadPromise
+    loadPromise = (async () => {
+      const path = endpoint()
+      if (path) {
+        try {
+          const response = await fetch(path, { credentials: "include", headers: { Accept: "application/json" } })
+          if (response.ok) {
+            const payload = await response.json()
+            Object.assign(memory, safeObject(payload?.preferences))
+            applySavedTheme()
+            loaded = true
+          } else {
+            loaded = false
+          }
+        } catch (error) {
+          void error
+          loaded = false
+        }
+      } else {
+        loaded = true
+      }
+      return memory
+    })().finally(() => {
+      loadPromise = null
+    })
+    return loadPromise
+  }
+
+  function get(key, fallback = null) {
+    return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : fallback
+  }
+
+  async function save(key, value) {
+    memory[key] = value
+    const path = endpoint()
+    if (!path) return false
+    try {
+      const response = await fetch(path, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ preferences: { [key]: value }, migrationVersion: VERSION }),
+      })
+      return response.ok
+    } catch (error) {
+      void error
+      return false
+    }
+  }
+
+  async function migrate() {
+    await load()
+    const imported = {}
+    for (const key of legacyKeys()) {
+      let raw = null
+      try { raw = window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key) } catch (error) { void error }
+      if (raw === null) continue
+      let value = raw
+      try { value = JSON.parse(raw) } catch (error) { void error }
+      if (!Object.prototype.hasOwnProperty.call(memory, key)) {
+        memory[key] = value
+        imported[key] = value
+      }
+    }
+    if (Object.keys(imported).length && endpoint()) {
+      try {
+        const response = await fetch(endpoint(), {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ preferences: imported, migrationVersion: VERSION }),
+        })
+        if (response.ok) {
+          for (const key of Object.keys(imported)) {
+            try { window.localStorage.removeItem(key); window.sessionStorage.removeItem(key) } catch (error) { void error }
+          }
+        }
+      } catch (error) {
+        void error
+      }
+    }
+    return memory
+  }
+
+  window.SIS_PORTAL_PREFERENCES = Object.freeze({ load, get, save, migrate })
+  void migrate()
+})()

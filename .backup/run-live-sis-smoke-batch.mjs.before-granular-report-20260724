@@ -1,0 +1,194 @@
+#!/usr/bin/env node
+/* Controlled end-to-end SIS smoke batch. Live mail requires --send-live. */
+import crypto from "node:crypto"
+import process from "node:process"
+import dotenv from "dotenv"
+
+dotenv.config({ path: process.env.SIS_ENV_FILE || ".env.dev" })
+const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
+const { drainAsyncSideEffectJobs } = await import("../src/modules/async/side-effect-worker.mjs")
+const { dispatchAssignmentCreated } = await import("../src/modules/admin/assignment-reminder-dispatcher.mjs")
+
+const ORIGIN = String(process.env.SIS_SMOKE_ORIGIN || "http://127.0.0.1:8788").replace(/\/$/, "")
+const RECIPIENTS = Object.freeze([
+  "admin@eagles.edu.vn",
+  "scsstx@gmail.com",
+  "saveearthnow@live.com",
+  "onlineadmin@eaglesvn.online",
+  "hoc@eagles.edu.vn",
+])
+const STUDENT_IDS = Array.from({ length: 10 }, (_, index) => `student${String(index + 1).padStart(3, "0")}`)
+const PARENT_IDS = Array.from({ length: 10 }, (_, index) => `cmstudent${String(index + 1).padStart(3, "0")}`)
+const STUDENT_ID = STUDENT_IDS[0]
+const PARENT_ID = PARENT_IDS[0]
+const MOCK_NAMES = ["Mia Nguyen", "Noah Tran", "Liam Pham", "Sofia Le", "Ethan Ho", "Ava Vo", "Oliver Bui", "Emma Dang", "Lucas Do", "Isla Huynh"]
+const LEVELS = ["Pre-A1 Starters", "A1 Movers", "A2 Flyers"]
+const STUDENT_PASSWORD = "SmokeStudent001!"
+const PARENT_PASSWORD = "SmokeParent001!"
+const batchId = `SIS-SMOKE-${new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14)}`
+const weekNumber = 30
+const level = LEVELS[0]
+const assignmentTitle = `Week ${weekNumber} - ${level} - ${batchId}`
+const smokeDate = "2026-07-24"
+const FAMILY_PHONE = "0900-SYSTEM-TESTED"
+const FAMILY_EMAIL = "family-system@eagles.edu.vn"
+
+function hashPassword(value) {
+  const salt = crypto.randomBytes(16)
+  const digest = crypto.scryptSync(value, salt, 32)
+  return `scrypt$${salt.toString("hex")}$${digest.toString("hex")}`
+}
+
+function json(value) {
+  return value && typeof value === "object" ? value : {}
+}
+
+function idFrom(value) {
+  const body = json(value)
+  return String(body.id || body.recordId || body.templateId || body.reportId || body.studentRefId || body.item?.id || body.record?.id || body.report?.id || body.student?.id || "")
+}
+
+async function seedAccounts() {
+  const prisma = await getSharedPrismaClient()
+  const students = []
+  for (let index = 0; index < STUDENT_IDS.length; index += 1) {
+    const studentId = STUDENT_IDS[index]
+    const parentId = PARENT_IDS[index]
+    const email = RECIPIENTS[index] || `${studentId}@system-tested.invalid`
+    const studentLevel = LEVELS[index % LEVELS.length]
+    const mockName = MOCK_NAMES[index % MOCK_NAMES.length]
+    const profileParentId = index < 3 ? PARENT_ID : parentId
+    const student = await prisma.student.upsert({
+      where: { eaglesId: studentId },
+      update: { email },
+      create: { externalKey: `eagles:${studentId}`, studentNumber: 99001 + index, eaglesId: studentId, email },
+    })
+    await prisma.studentProfile.upsert({
+      where: { studentRefId: student.id },
+      update: { fullName: `SYSTEM TESTED ${mockName}`, englishName: mockName, currentGrade: studentLevel, studentEmail: email, parentsId: profileParentId, motherName: "SYSTEM TESTED Family", motherEmail: FAMILY_EMAIL, motherEmergencyContact: FAMILY_PHONE, sourceFormId: "sis-live-smoke" },
+      create: { studentRefId: student.id, sourceFormId: "sis-live-smoke", fullName: `SYSTEM TESTED ${mockName}`, englishName: mockName, currentGrade: studentLevel, studentEmail: email, parentsId: profileParentId, motherName: "SYSTEM TESTED Family", motherEmail: FAMILY_EMAIL, motherEmergencyContact: FAMILY_PHONE, genderSelections: [], languagesAtHome: [], learningDisorders: [], covidShotHistory: [], feverMedicineAllowed: [] },
+    })
+    await prisma.studentPortalAccount.upsert({ where: { eaglesId: studentId }, update: { passwordHash: hashPassword(STUDENT_PASSWORD), studentRefId: student.id, status: "active" }, create: { eaglesId: studentId, passwordHash: hashPassword(STUDENT_PASSWORD), studentRefId: student.id, status: "active" } })
+    const parentEmail = parentId === PARENT_ID ? FAMILY_EMAIL : email
+    const parent = await prisma.parentPortalAccount.upsert({ where: { parentsId: parentId }, update: { email: parentEmail, passwordHash: hashPassword(PARENT_PASSWORD), status: "active" }, create: { parentsId: parentId, email: parentEmail, passwordHash: hashPassword(PARENT_PASSWORD), status: "active" } })
+    await prisma.parentPortalStudentLink.upsert({ where: { parentAccountId_studentRefId: { parentAccountId: parent.id, studentRefId: student.id } }, update: {}, create: { parentAccountId: parent.id, studentRefId: student.id } })
+    students.push(student)
+  }
+  const sharedParent = await prisma.parentPortalAccount.findUnique({ where: { parentsId: PARENT_ID } })
+  for (const child of students.slice(0, 3)) {
+    await prisma.parentPortalStudentLink.upsert({
+      where: { parentAccountId_studentRefId: { parentAccountId: sharedParent.id, studentRefId: child.id } },
+      update: {},
+      create: { parentAccountId: sharedParent.id, studentRefId: child.id },
+    })
+  }
+  return { prisma, student: students[0], students }
+}
+
+async function main() {
+  const args = new Set(process.argv.slice(2))
+  const sendLive = args.has("--send-live")
+  if (args.has("--help")) {
+    console.log("Usage: node tools/run-live-sis-smoke-batch.mjs [--send-live]")
+    return
+  }
+  if (sendLive) console.log(`LIVE MAIL ENABLED: exact recipients only (${RECIPIENTS.length}); batch ${batchId}`)
+  else console.log(`DRY MAIL MODE: no message will be sent; batch ${batchId}`)
+
+  const { prisma, student, students } = await seedAccounts()
+  const checks = []
+  async function request(label, path, options = {}, expected = [200]) {
+    const response = await fetch(`${ORIGIN}${path}`, {
+      ...options,
+      headers: { ...(options.body ? { "content-type": "application/json" } : {}), ...(options.headers || {}) },
+      body: options.body && typeof options.body === "object" ? JSON.stringify(options.body) : options.body,
+    })
+    const type = response.headers.get("content-type") || ""
+    const text = await response.text()
+    let body = null
+    if (type.includes("json") || text.trim().startsWith("{") || text.trim().startsWith("[")) {
+      try { body = JSON.parse(text) } catch { body = null }
+    }
+    const ok = expected.includes(response.status)
+    checks.push({ label, status: response.status, ok })
+    if (!ok) throw new Error(`${label} failed with ${response.status}: ${text.replace(/\s+/g, " ").slice(0, 300)}`)
+    return { response, body }
+  }
+  async function login(path, body, cookieName) {
+    const result = await request(`${cookieName} login`, path, { method: "POST", body })
+    const cookie = (result.response.headers.get("set-cookie") || "").split(";")[0]
+    if (!cookie.includes(`${cookieName}=`)) throw new Error(`${cookieName} login did not issue a session cookie`)
+    return { cookie, headers: { Cookie: cookie } }
+  }
+
+  const admin = await login("/api/admin/auth/login", { username: process.env.STUDENT_ADMIN_USER, password: process.env.STUDENT_ADMIN_PASS }, "student_admin_sid")
+  const a = admin.headers
+  const routeReads = [
+    "/api/admin/runtime/health", "/api/admin/dashboard", "/api/admin/queue-hub", "/api/admin/filters",
+    "/api/admin/enrollment/students?take=10", "/api/admin/students?take=10", "/api/admin/users?take=10",
+    "/api/admin/permissions", "/api/admin/settings/ui", "/api/admin/news-reports?take=10",
+    "/api/admin/assignment-templates?take=10", "/api/admin/points/summary", "/api/admin/profile-submissions?take=10",
+  ]
+  for (const path of routeReads) await request(`admin read ${path}`, path, { headers: a })
+  const family = await request("admin family lookup", `/api/admin/family?phone=${encodeURIComponent(FAMILY_PHONE)}`, { headers: a })
+  const familyItems = Array.isArray(family.body?.items) ? family.body.items : []
+  checks.push({ label: "family lookup returns all shared-email smoke children", status: familyItems.length >= STUDENT_IDS.length ? 200 : 500, ok: familyItems.length >= STUDENT_IDS.length })
+
+  const profile = await request("admin student profile edit", `/api/admin/students/${student.id}`, {
+    method: "PUT", headers: a, body: { eaglesId: STUDENT_ID, profile: { fullName: `Smoke Student 001 ${batchId}`, englishName: "Smoke Student", currentGrade: level, studentEmail: "saveearthnow@live.com", parentsId: PARENT_ID } },
+  })
+  await request("admin student profile recall", `/api/admin/students/${student.id}`, { headers: a })
+
+  const template = await request("assignment create", "/api/admin/assignment-templates", {
+    method: "POST", headers: a, body: { assignmentTitle, exerciseTitle: `${assignmentTitle} exercise`, assignedAt: smokeDate, dueAt: "2026-07-31", level, eaglesId: STUDENT_ID, message: `Smoke batch ${batchId}`, items: [{ id: "smoke-item-1", title: "Smoke exercise", url: "https://example.com/sis-smoke" }] },
+  })
+  const templateId = idFrom(template.body)
+  if (!templateId) throw new Error("assignment create returned no id")
+  await request("assignment recall", `/api/admin/assignment-templates/${encodeURIComponent(templateId)}`, { headers: a })
+  await request("assignment update", `/api/admin/assignment-templates/${encodeURIComponent(templateId)}`, { method: "PUT", headers: a, body: { assignmentTitle, exerciseTitle: `${assignmentTitle} exercise`, assignedAt: smokeDate, dueAt: "2026-07-31", level, eaglesId: STUDENT_ID, completed: true, completedAt: `${smokeDate}T12:00:00.000Z`, items: [{ id: "smoke-item-1", title: "Smoke exercise", url: "https://example.com/sis-smoke" }] } })
+
+  const attendance = await request("attendance save", `/api/admin/students/${student.id}/attendance`, { method: "POST", headers: a, body: { className: "Smoke Class", level, schoolYear: "2026-2027", quarter: "q1", attendanceDate: smokeDate, weekNumber, status: "late", comments: batchId } })
+  await request("attendance recall", `/api/admin/students/${student.id}`, { headers: a })
+  const grade = await request("grade save", `/api/admin/students/${student.id}/grades`, { method: "POST", headers: a, body: { className: "Smoke Class", level, schoolYear: "2026-2027", quarter: "q1", assignmentName: assignmentTitle, weekNumber, dueAt: "2026-07-31", submittedAt: `${smokeDate}T12:00:00.000Z`, score: 9, maxScore: 10, homeworkCompleted: true, homeworkOnTime: false, behaviorScore: 8, participationScore: 9, inClassScore: 9, comments: batchId } })
+  await request("grade recall", `/api/admin/students/${student.id}`, { headers: a })
+  await request("performance report save", `/api/admin/students/${student.id}/reports`, { method: "POST", headers: a, body: { className: "Smoke Class", level, schoolYear: "2026-2027", quarter: "q1", comments: `Performance ${batchId}` } })
+  await request("performance report recall", `/api/admin/students/${student.id}`, { headers: a })
+  await request("points save", "/api/admin/points/adjustments", { method: "POST", headers: a, body: { studentRefId: student.id, pointsDelta: 7, reason: batchId } })
+  await request("points recall", `/api/admin/points/ledger?studentRefId=${encodeURIComponent(student.id)}`, { headers: a })
+
+  const assignmentDispatch = await dispatchAssignmentCreated(templateId, { dryRun: false })
+  checks.push({ label: "assignment reminders dispatch", status: 200, ok: assignmentDispatch.ok === true })
+
+  const parent = await login("/api/parent/auth/login", { parentsId: PARENT_ID, password: PARENT_PASSWORD }, "parent_portal_sid")
+  const children = await request("parent children recall", "/api/parent/children", { headers: parent.headers })
+  const childIds = Array.isArray(children.body?.items) ? children.body.items.map((item) => item.eaglesId).filter(Boolean) : []
+  checks.push({ label: "shared parent recalls all shared-email children", status: childIds.filter((id) => STUDENT_IDS.includes(id)).length === STUDENT_IDS.length ? 200 : 500, ok: childIds.filter((id) => STUDENT_IDS.includes(id)).length === STUDENT_IDS.length })
+  await request("parent dashboard family recall", "/api/parent/dashboard", { headers: parent.headers })
+  for (const childId of STUDENT_IDS) {
+    await request(`parent profile recall ${childId}`, `/api/parent/children/${encodeURIComponent(childId)}/profile`, { headers: parent.headers })
+  }
+  await request("parent profile draft save", `/api/parent/children/${encodeURIComponent(STUDENT_IDS[1])}/profile-draft`, { method: "PUT", headers: parent.headers, body: { patch: { hobbies: `SYSTEM TESTED family edit ${batchId}` } } })
+  await request("parent profile submission", `/api/parent/children/${encodeURIComponent(STUDENT_IDS[1])}/profile-submit`, { method: "POST", headers: parent.headers, body: { comment: `SYSTEM TESTED family submission ${batchId}` } })
+  const studentLogin = await login("/api/student/auth/login", { eaglesId: STUDENT_ID, password: STUDENT_PASSWORD }, "student_portal_sid")
+  await request("student dashboard recall", "/api/student/dashboard", { headers: studentLogin.headers })
+  await request("student assignments recall", "/api/student/news-reports/calendar?days=30", { headers: studentLogin.headers })
+
+  const notification = { deliveryMode: "immediate", queueType: "announcement", assignmentTitle: `[SYSTEM TESTED] [SIS LIVE SMOKE TEST] ${assignmentTitle}`, level, message: `SYSTEM TESTED: controlled smoke notification batch ${batchId}. No action required.`, recipients: [...RECIPIENTS] }
+  if (sendLive) {
+    const queued = await request("live notification enqueue", "/api/admin/notifications/email", { method: "POST", headers: a, body: notification })
+    const drained = await drainAsyncSideEffectJobs({ take: 20, workerId: `sis-smoke-${process.pid}` })
+    checks.push({ label: "live notification worker", status: 200, ok: drained.failed === 0 && drained.succeeded >= 1 })
+    console.log(JSON.stringify({ liveMail: true, recipients: RECIPIENTS, enqueue: queued.body, worker: drained }, null, 2))
+  } else {
+    console.log(JSON.stringify({ liveMail: false, wouldSendTo: RECIPIENTS, notification }, null, 2))
+  }
+
+  const persisted = await prisma.student.findUnique({ where: { id: student.id }, include: { profile: true, attendanceRecords: { where: { comments: batchId } }, gradeRecords: { where: { comments: batchId } }, parentReports: { where: { comments: `Performance ${batchId}` } } } })
+  const persistedOk = Boolean(persisted?.profile?.fullName?.includes(batchId) && persisted.attendanceRecords.length && persisted.gradeRecords.length && persisted.parentReports.length)
+  checks.push({ label: "postgres persistence after recall", status: persistedOk ? 200 : 500, ok: persistedOk })
+  const failures = checks.filter((entry) => !entry.ok)
+  console.log(JSON.stringify({ batchId, accounts: { students: STUDENT_IDS, parents: PARENT_IDS }, studentId: student.id, assignmentTitle, checks: checks.length, failures: failures.length, failureDetails: failures }, null, 2))
+  if (failures.length) process.exitCode = 1
+}
+
+main().catch((error) => { console.error(error?.stack || error); process.exitCode = 1 })

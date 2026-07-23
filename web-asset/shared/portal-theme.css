@@ -5,10 +5,13 @@
   --border-dg: #727272;
   --brand: var(--primary-color);
   --brand-strong: #8f1620;
+  --bright-gold-1: #ffd700;
+  --bright-gold-2: #fdd017;
   --card: #fbffff;
   --card-soft: #f5f9ff;
   --err: #9e1d1d;
   --footer-background: var(--theme-footer-bg);
+  --gold: #d6ab02;
   --hub-prefooter-button-bg: #f1f5ff;
   --hub-prefooter-button-border: #9bb5df;
   --hub-prefooter-button-hover-bg: #f3f8ff;
@@ -8770,6 +8773,9 @@ html[data-theme="dark"] body.admin-portal-page #newsReviewViewerStatus,
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review textarea {
   color: var(--portal-dark-text);
 }
+html[data-theme="dark"] body.admin-portal-page #attendanceSaveResult {
+  color: var(--bright-gold-2);
+}
 body.portal-hub-page .portal-hub-bg {
   inset: 0;
   pointer-events: none;
@@ -9488,8 +9494,7 @@ body.menu-open.admin-portal-page .menu-backdrop {
   pointer-events: auto;
 }
 body.admin-portal-page .floating-menu-btn {
-  inset-inline-end: auto;
-  inset-inline-start: 12px;
+  inset-inline-end: 12px;
 }
 @media (max-width: 860px) {
   body.admin-portal-page .app-sidebar {
@@ -10550,6 +10555,9 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
 .hidden {
   display: none !important;
 }
+.font-size-medium {
+  font-size: 1.125rem !important;
+}
 .brand-logo-wrap:focus-visible,
 .hero-link:focus-visible,
 .portal-card:focus-visible,
@@ -10714,6 +10722,12 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
 }
 @media (max-width: 430px) {
 
+  html {
+    overflow-x: clip;
+  }
+  body:is(.admin-portal-page, .parent-portal-page, .student-portal-page) {
+    overflow-x: clip;
+  }
   .portal-card__subtitle,
   .resource-card__subtitle {
     font-size: 0.84rem;
@@ -10781,6 +10795,15 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   }
   body.admin-portal-page .hub-footer__copy {
     white-space: normal;
+  }
+  body.parent-portal-page .hub-footer__copy,
+  body.student-portal-page .hub-footer__copy {
+    overflow-wrap: anywhere;
+    white-space: normal !important;
+  }
+  body.parent-portal-page .portal-login-footer .hub-footer__copy,
+  body.student-portal-page .portal-login-footer .hub-footer__copy {
+    align-self: stretch;
   }
   body.admin-portal-page .portal-login-footer .hub-footer__copy {
     align-self: stretch;

@@ -689,7 +689,7 @@
         const label = field("studentTextZoomLabel");
         if (label) label.textContent = `${next}%`;
         try {
-          window.localStorage?.setItem(TEXT_ZOOM_KEY, String(next));
+          void window.SIS_PORTAL_PREFERENCES?.save(TEXT_ZOOM_KEY, String(next));
         } catch (error) {
           void error;
         }

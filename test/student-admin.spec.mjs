@@ -1419,7 +1419,7 @@ test("GET /admin/points-management returns points page HTML with runtime config"
   assert.match(res.headers.get("cache-control") || "", /no-store/i)
   const html = await res.text()
   assert.match(html, /Points Management/i)
-  assert.match(html, /localStorage\.getItem\("sis-theme"\)/i)
+  assert.match(html, /portal-preferences\.js/i)
   assert.match(html, /document\.documentElement\.dataset\.theme\s*=/i)
   assert.match(html, /href="\/web-asset\/shared\/portal-theme\.min\.css"/i)
   assert.match(html, /class="card portal-theme-card"/i)

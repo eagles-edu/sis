@@ -181,7 +181,7 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
   block-size: 44px;
   inline-size: 44px;
   inset-block-start: 12px;
-  inset-inline-start: max(12px, calc((100vw - 1440px) / 2 + 4px));
+  inset-inline-end: 12px;
   position: fixed;
   z-index: 90;
 }
@@ -1819,9 +1819,43 @@ body {
         margin-top: 10px;
         padding: 10px 12px;
       }
+      /* Keep an absent warning out of the authenticated content rhythm. */
+      #appSchoolSetupWarning.hidden {
+        display: none !important;
+        min-height: 0;
+        margin: 0;
+        visibility: hidden;
+      }
+      #appSchoolSetupWarning:not(.hidden) {
+        visibility: visible;
+      }
       .school-setup-access-warning a {
         color: inherit;
         font-weight: 700;
+      }
+      .school-setup-warning-modal-card {
+        max-inline-size: 720px;
+      }
+      .school-setup-warning-modal-body {
+        background: var(--portal-surface-support);
+        border: 1px solid var(--portal-border);
+        border-radius: var(--radius-2);
+        color: var(--portal-text);
+        display: grid;
+        gap: 10px;
+        padding: 14px;
+      }
+      .school-setup-warning-modal-body p {
+        margin: 0;
+      }
+      .school-setup-warning-modal-steps {
+        margin: 0;
+        padding-inline-start: 1.35rem;
+      }
+      html[data-theme="dark"] body.admin-portal-page .school-setup-warning-modal-body {
+        background: var(--portal-neutral-panel-dark);
+        border-color: var(--portal-dark-border);
+        color: var(--portal-dark-text);
       }
       .stats-grid {
         display: grid;

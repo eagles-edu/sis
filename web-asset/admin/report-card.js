@@ -335,15 +335,8 @@ window.SIS_REPORT_CARD_SAMPLE_DATA = {
 
       function readQueuedSnapshot() {
         if (!queuedSnapshotStorageKey) return null
-        try {
-          const raw = window.localStorage.getItem(queuedSnapshotStorageKey)
-          if (!raw) return null
-          const parsed = JSON.parse(raw)
-          return parsed && typeof parsed === "object" ? parsed : null
-        } catch (error) {
-          void error
-          return null
-        }
+        const parsed = window.SIS_PORTAL_PREFERENCES?.get(queuedSnapshotStorageKey, null)
+        return parsed && typeof parsed === "object" ? parsed : null
       }
 
       async function fetchCurrentSnapshot() {

@@ -43,6 +43,16 @@ const MEMORY_JOBS = []
 let SIDE_EFFECT_JOB_DB_DISABLED = !String(process.env.DATABASE_URL || "").trim()
 let SIDE_EFFECT_JOB_DB_WARNED = false
 
+function allowVolatileUnitTestStorage() {
+  return normalizeLower(process.env.NODE_ENV) === "test"
+}
+
+function sideEffectPersistenceUnavailable() {
+  const error = new Error("Async side-effect persistence is unavailable")
+  error.statusCode = 503
+  return error
+}
+
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
@@ -197,6 +207,7 @@ export async function enqueueAsyncSideEffectJob(jobType, payload = {}, options =
 
   const prisma = await getJobPrismaClient()
   if (!prisma) {
+    if (!allowVolatileUnitTestStorage()) throw sideEffectPersistenceUnavailable()
     if (dedupeKey) {
       const existing = MEMORY_JOBS.find(
         (job) => normalizeJobType(job.jobType) === normalizedJobType && normalizeText(job.dedupeKey) === dedupeKey
@@ -288,9 +299,11 @@ export async function enqueueAsyncSideEffectJob(jobType, payload = {}, options =
     return mapJobRecord(created)
   } catch (error) {
     if (isJobTableMissingError(error)) {
-      markDatabaseFallback(error)
-      MEMORY_JOBS.push(baseJob)
-      return cloneMemoryJob(baseJob)
+      if (allowVolatileUnitTestStorage()) {
+        MEMORY_JOBS.push(baseJob)
+        return cloneMemoryJob(baseJob)
+      }
+      throw sideEffectPersistenceUnavailable()
     }
     throw error
   }
@@ -310,6 +323,7 @@ export async function claimAsyncSideEffectJobs({ jobTypes = [], take = 10, worke
   const prisma = await getJobPrismaClient()
 
   if (!prisma) {
+    if (!allowVolatileUnitTestStorage()) throw sideEffectPersistenceUnavailable()
     const claimable = MEMORY_JOBS.filter((job) => {
       if (normalizedJobTypes.length && !normalizedJobTypes.includes(normalizeJobType(job.jobType))) return false
       if (normalizeJobStatus(job.status) !== ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED) return false
@@ -391,6 +405,7 @@ export async function completeAsyncSideEffectJob(jobId, resultJson = {}) {
 
   const prisma = await getJobPrismaClient()
   if (!prisma) {
+    if (!allowVolatileUnitTestStorage()) throw sideEffectPersistenceUnavailable()
     const index = MEMORY_JOBS.findIndex((job) => normalizeText(job.id) === id)
     if (index < 0) return null
     MEMORY_JOBS[index] = {
@@ -436,6 +451,7 @@ export async function failAsyncSideEffectJob(jobId, error, options = {}) {
 
   const prisma = await getJobPrismaClient()
   if (!prisma) {
+    if (!allowVolatileUnitTestStorage()) throw sideEffectPersistenceUnavailable()
     const index = MEMORY_JOBS.findIndex((job) => normalizeText(job.id) === id)
     if (index < 0) return null
     const current = MEMORY_JOBS[index]

@@ -169,6 +169,11 @@ import {
 } from "./student-report-card-pdf.mjs"
 import { createStudentAdminSessionStore } from "../src/modules/admin/session-store.mjs"
 import { getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
+import {
+  getPortalPreferences,
+  savePortalPreferences,
+} from "../src/modules/portal/portal-preference-store.mjs"
+import { readPortalAsset, savePortalAsset } from "../src/modules/portal/portal-asset-store.mjs"
 
 const ADMIN_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_ADMIN_PAGE_PATH, "/admin")
 const ADMIN_POINTS_PAGE_PATH = normalizePathPrefix(
@@ -220,6 +225,9 @@ const ADMIN_ENROLLMENT_PREFIX = `${ADMIN_API_PREFIX}/enrollment`
 const ADMIN_NEXT_STUDENT_NUMBER_PATH = `${ADMIN_STUDENTS_PREFIX}/next-student-number`
 const ADMIN_PERMISSIONS_PATH = `${ADMIN_API_PREFIX}/permissions`
 const ADMIN_UI_SETTINGS_PATH = `${ADMIN_API_PREFIX}/settings/ui`
+const ADMIN_PREFERENCES_PATH = `${ADMIN_API_PREFIX}/preferences`
+const ADMIN_ASSETS_PATH = `${ADMIN_API_PREFIX}/assets`
+const ADMIN_ASSET_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_ASSETS_PATH)}/([^/]+)$`)
 const ADMIN_DASHBOARD_PATH = `${ADMIN_API_PREFIX}/dashboard`
 const ADMIN_QUEUE_HUB_PATH = `${ADMIN_API_PREFIX}/queue-hub`
 const ADMIN_NEWS_REPORTS_PATH = `${ADMIN_API_PREFIX}/news-reports`
@@ -246,10 +254,12 @@ const PARENT_API_PREFIX = normalizePathPrefix(process.env.STUDENT_PARENT_API_PRE
 const PARENT_AUTH_PREFIX = `${PARENT_API_PREFIX}/auth`
 const PARENT_CHILDREN_PATH = `${PARENT_API_PREFIX}/children`
 const PARENT_DASHBOARD_PATH = `${PARENT_API_PREFIX}/dashboard`
+const PARENT_PREFERENCES_PATH = `${PARENT_API_PREFIX}/preferences`
 const PARENT_REPORT_PAGE_PREFIX = `${PARENT_PORTAL_PAGE_PATH}/reports`
 const STUDENT_API_PREFIX = normalizePathPrefix(process.env.STUDENT_STUDENT_API_PREFIX, "/api/student")
 const STUDENT_AUTH_PREFIX = `${STUDENT_API_PREFIX}/auth`
 const STUDENT_DASHBOARD_PATH = `${STUDENT_API_PREFIX}/dashboard`
+const STUDENT_PREFERENCES_PATH = `${STUDENT_API_PREFIX}/preferences`
 const STUDENT_NEWS_REPORTS_PATH = `${STUDENT_API_PREFIX}/news-reports`
 const STUDENT_NEWS_REPORTS_CHECK_PATH = `${STUDENT_API_PREFIX}/news-reports/check`
 const STUDENT_NEWS_CALENDAR_PATH = `${STUDENT_API_PREFIX}/news-reports/calendar`
@@ -751,6 +761,16 @@ let PARENT_PORTAL_DB_DISABLED = false
 let PARENT_PORTAL_DB_WARNED = false
 let STUDENT_PORTAL_DB_DISABLED = false
 let STUDENT_PORTAL_DB_WARNED = false
+
+function allowVolatileUnitTestStorage() {
+  return normalizeLower(process.env.NODE_ENV) === "test"
+}
+
+function parentPortalPersistenceUnavailable() {
+  const error = new Error("Parent profile persistence is unavailable")
+  error.statusCode = 503
+  return error
+}
 /** @type {RuntimeHealthProvider} */
 let runtimeHealthProvider = null
 
@@ -1460,7 +1480,7 @@ function injectAdminRuntimeConfig(html, pageSlug, origin, initialAuthState = { a
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SIS_CONFIG_REPAIR_PATH=${JSON.stringify(ADMIN_SIS_CONFIG_REPAIR_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_PREFERENCES_PATH=${JSON.stringify(ADMIN_PREFERENCES_PATH)};window.__SIS_ADMIN_ASSETS_PATH=${JSON.stringify(ADMIN_ASSETS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SIS_CONFIG_REPAIR_PATH=${JSON.stringify(ADMIN_SIS_CONFIG_REPAIR_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-admin-auth-state", authStateName)
   const bodyClassName =
     normalizedAuthState.authenticated ?
@@ -1481,7 +1501,7 @@ function injectParentRuntimeConfig(html, origin, initialAuthState = { authentica
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_PARENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};window.__SIS_PARENT_REPORT_PAGE_PREFIX=${JSON.stringify(PARENT_REPORT_PAGE_PREFIX)};window.__SIS_PARENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_PARENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_PREFERENCES_PATH=${JSON.stringify(PARENT_PREFERENCES_PATH)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};window.__SIS_PARENT_REPORT_PAGE_PREFIX=${JSON.stringify(PARENT_REPORT_PAGE_PREFIX)};window.__SIS_PARENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-parent-auth-state", authStateName)
   if (html.includes("</head>")) {
     return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
@@ -1490,7 +1510,7 @@ function injectParentRuntimeConfig(html, origin, initialAuthState = { authentica
 }
 
 function injectAdminPointsRuntimeConfig(html, origin) {
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_AUTH_PREFIX=${JSON.stringify(ADMIN_AUTH_PREFIX)};window.__SIS_ADMIN_POINTS_SUMMARY_PATH=${JSON.stringify(ADMIN_POINTS_SUMMARY_PATH)};window.__SIS_ADMIN_POINTS_STUDENTS_PATH=${JSON.stringify(ADMIN_POINTS_STUDENTS_PATH)};window.__SIS_ADMIN_POINTS_LEDGER_PATH=${JSON.stringify(ADMIN_POINTS_LEDGER_PATH)};window.__SIS_ADMIN_POINTS_ADJUSTMENTS_PATH=${JSON.stringify(ADMIN_POINTS_ADJUSTMENTS_PATH)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_AUTH_PREFIX=${JSON.stringify(ADMIN_AUTH_PREFIX)};window.__SIS_ADMIN_PREFERENCES_PATH=${JSON.stringify(ADMIN_PREFERENCES_PATH)};window.__SIS_ADMIN_POINTS_SUMMARY_PATH=${JSON.stringify(ADMIN_POINTS_SUMMARY_PATH)};window.__SIS_ADMIN_POINTS_STUDENTS_PATH=${JSON.stringify(ADMIN_POINTS_STUDENTS_PATH)};window.__SIS_ADMIN_POINTS_LEDGER_PATH=${JSON.stringify(ADMIN_POINTS_LEDGER_PATH)};window.__SIS_ADMIN_POINTS_ADJUSTMENTS_PATH=${JSON.stringify(ADMIN_POINTS_ADJUSTMENTS_PATH)};</script>`
   if (html.includes("</head>")) {
     return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
@@ -1525,7 +1545,7 @@ function injectStudentPortalRuntimeConfig(html, origin, initialAuthState = { aut
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_CHECK_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_NEW_WORDS_PATH=${JSON.stringify(STUDENT_NEW_WORDS_PATH)};window.__SIS_STUDENT_REPORT_PAGE_PREFIX=${JSON.stringify(STUDENT_REPORT_PAGE_PREFIX)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_PREFERENCES_PATH=${JSON.stringify(STUDENT_PREFERENCES_PATH)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_CHECK_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_NEW_WORDS_PATH=${JSON.stringify(STUDENT_NEW_WORDS_PATH)};window.__SIS_STUDENT_REPORT_PAGE_PREFIX=${JSON.stringify(STUDENT_REPORT_PAGE_PREFIX)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-student-auth-state", authStateName)
   if (html.includes("</head>")) {
     return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
@@ -3674,13 +3694,19 @@ async function getParentPortalPrismaClient() {
 
 async function runParentPortalDbOperation(handler, fallbackHandler) {
   const prisma = await getParentPortalPrismaClient()
-  if (!prisma) return fallbackHandler()
+  if (!prisma) {
+    if (allowVolatileUnitTestStorage()) return fallbackHandler()
+    throw parentPortalPersistenceUnavailable()
+  }
   try {
     return await handler(prisma)
   } catch (error) {
     if (isParentPortalTableMissingError(error)) {
-      markParentPortalDbFallback(error)
-      return fallbackHandler()
+      if (allowVolatileUnitTestStorage()) {
+        markParentPortalDbFallback(error)
+        return fallbackHandler()
+      }
+      throw parentPortalPersistenceUnavailable()
     }
     throw error
   }
@@ -3968,9 +3994,6 @@ async function listParentLinkedStudents({ parentsId = "", parentAccountId = "" }
       const linkedStudents = linkedRows
         .map((row) => row?.student)
         .filter(Boolean)
-      if (linkedStudents.length) {
-        return linkedStudents.map((student) => mapStudentToParentChildSummary(student))
-      }
 
       const account = parentAccountId
         ? await prisma.parentPortalAccount.findUnique({
@@ -3983,9 +4006,12 @@ async function listParentLinkedStudents({ parentsId = "", parentAccountId = "" }
       const rows = await prisma.studentProfile.findMany({
         where: {
           OR: [
-            { parentsId: normalizedParentsId },
+            { parentsId: { equals: normalizedParentsId, mode: "insensitive" } },
             ...(parentEmail
-              ? [{ motherEmail: parentEmail }, { fatherEmail: parentEmail }]
+              ? [
+                  { motherEmail: { equals: parentEmail, mode: "insensitive" } },
+                  { fatherEmail: { equals: parentEmail, mode: "insensitive" } },
+                ]
               : []),
           ],
         },
@@ -4006,10 +4032,15 @@ async function listParentLinkedStudents({ parentsId = "", parentAccountId = "" }
         },
       })
 
-      const mapped = rows
+      const profileMatchedStudents = rows
         .map((row) => row?.student)
         .filter(Boolean)
-        .map((student) => mapStudentToParentChildSummary(student))
+      const uniqueStudents = new Map()
+      ;[...linkedStudents, ...profileMatchedStudents].forEach((student) => {
+        const studentId = normalizeText(student?.id || student?.eaglesId)
+        if (studentId && !uniqueStudents.has(studentId)) uniqueStudents.set(studentId, student)
+      })
+      const mapped = Array.from(uniqueStudents.values()).map((student) => mapStudentToParentChildSummary(student))
       return mapped.sort((left, right) => normalizeText(left.fullName).localeCompare(normalizeText(right.fullName)))
     },
     async () => []
@@ -6182,6 +6213,54 @@ async function handleApiRequest(request, response, pathname, url) {
   const session = await requireAuthenticatedSession(request, response)
   const rolePolicy = enforceRoleAccess(session, method, pathname)
 
+  if (pathname === ADMIN_PREFERENCES_PATH) {
+    const principalId = normalizeText(session?.username)
+    if (method === "GET") {
+      sendJson(response, 200, { ok: true, ...(await getPortalPreferences("admin", principalId)) })
+      return true
+    }
+    if (method === "PUT" || method === "POST") {
+      const payload = await parseBody(request)
+      const result = await savePortalPreferences("admin", principalId, payload?.preferences || payload, {
+        migrationVersion: payload?.migrationVersion,
+      })
+      sendJson(response, 200, { ok: true, ...result })
+      return true
+    }
+  }
+
+  const assetMatch = pathname.match(ADMIN_ASSET_PATH_RE)
+  if (assetMatch) {
+    const assetKey = decodeURIComponent(assetMatch[1])
+    if (method === "GET") {
+      const asset = await readPortalAsset(assetKey)
+      if (!asset) {
+        const error = new Error("Asset not found")
+        error.statusCode = 404
+        throw error
+      }
+      sendJson(response, 200, {
+        ok: true,
+        asset: {
+          assetKey: asset.assetKey,
+          kind: asset.kind,
+          mimeType: asset.mimeType,
+          isAnimated: asset.isAnimated,
+          sha256: asset.sha256,
+          dataUrl: `data:${asset.mimeType};base64,${asset.content.toString("base64")}`,
+        },
+      })
+      return true
+    }
+    if (method === "PUT" || method === "POST") {
+      assertCanManageSettings(rolePolicy)
+      const payload = await parseBody(request)
+      const result = await savePortalAsset({ ...payload, assetKey })
+      sendJson(response, 200, { ok: true, asset: result })
+      return true
+    }
+  }
+
   if (pathname === ADMIN_PERMISSIONS_PATH) {
     if (method === "GET") {
       await handlePermissionsGet(response, session)
@@ -7522,6 +7601,22 @@ async function handleParentApiRequest(request, response, pathname, url) {
     parentAccountId: normalizeText(session?.accountId),
   }
 
+  if (pathname === PARENT_PREFERENCES_PATH) {
+    const principalId = parentContext.parentAccountId || parentContext.parentsId
+    if (method === "GET") {
+      sendJson(response, 200, { ok: true, ...(await getPortalPreferences("parent", principalId)) })
+      return true
+    }
+    if (method === "PUT" || method === "POST") {
+      const payload = await parseBody(request)
+      const result = await savePortalPreferences("parent", principalId, payload?.preferences || payload, {
+        migrationVersion: payload?.migrationVersion,
+      })
+      sendJson(response, 200, { ok: true, ...result })
+      return true
+    }
+  }
+
   if (method === "GET" && pathname === PARENT_CHILDREN_PATH) {
     const children = await listParentLinkedStudents({
       parentsId: parentContext.parentsId,
@@ -7761,6 +7856,22 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     const error = new Error("Student portal account is not linked to a student record")
     error.statusCode = 403
     throw error
+  }
+
+  if (pathname === STUDENT_PREFERENCES_PATH) {
+    const principalId = normalizeText(session?.accountId || studentRefId || session?.eaglesId)
+    if (method === "GET") {
+      sendJson(response, 200, { ok: true, ...(await getPortalPreferences("student", principalId)) })
+      return true
+    }
+    if (method === "PUT" || method === "POST") {
+      const payload = await parseBody(request)
+      const result = await savePortalPreferences("student", principalId, payload?.preferences || payload, {
+        migrationVersion: payload?.migrationVersion,
+      })
+      sendJson(response, 200, { ok: true, ...result })
+      return true
+    }
   }
 
   if (method === "GET" && pathname === STUDENT_DASHBOARD_PATH) {

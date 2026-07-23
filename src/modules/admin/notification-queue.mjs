@@ -128,6 +128,16 @@ let EMAIL_BATCH_LAST_KNOWN_SIZE = 0
 let EMAIL_QUEUE_DB_DISABLED = EMAIL_QUEUE_BACKEND_MODE !== "database"
 let EMAIL_QUEUE_DB_WARNED = false
 
+function allowVolatileUnitTestStorage() {
+  return normalizeLower(process.env.NODE_ENV) === "test"
+}
+
+function notificationPersistenceUnavailable() {
+  const error = new Error("Notification queue persistence is unavailable")
+  error.statusCode = 503
+  return error
+}
+
 /**
  * @returns {string}
  */
@@ -466,13 +476,19 @@ function markQueueDatabaseFallback(error) {
 
 async function runQueueDbOperation(handler, fallbackHandler) {
   const prisma = await getNotificationQueuePrismaClient()
-  if (!prisma) return fallbackHandler()
+  if (!prisma) {
+    if (allowVolatileUnitTestStorage()) return fallbackHandler()
+    throw notificationPersistenceUnavailable()
+  }
   try {
     return await handler(prisma)
   } catch (error) {
     if (isQueueTableMissingError(error) || isQueueDatabaseAuthFailureError(error)) {
-      markQueueDatabaseFallback(error)
-      return fallbackHandler()
+      if (allowVolatileUnitTestStorage()) {
+        markQueueDatabaseFallback(error)
+        return fallbackHandler()
+      }
+      throw notificationPersistenceUnavailable()
     }
     throw error
   }
