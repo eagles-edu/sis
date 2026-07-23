@@ -322,6 +322,23 @@
   --portal-footer-ink: var(--theme-footer-text);
   --portal-header-bar-fill: var(--primary-color);
   --portal-header-bar-ink: var(--secondary-color);
+  --portal-header-bar-line-height: 1;
+  --portal-header-bar-max-block-size: 40px;
+  --portal-header-bar-min-block-size: 20px;
+  --portal-header-bar-mobile-max-block-size: 64px;
+  --portal-header-bar-mobile-min-block-size: 40px;
+  --portal-header-bar-mobile-block-size: 64px;
+  --portal-header-bar-padding-block: 0.75rem;
+  --portal-header-bar-padding-inline: 1rem;
+  /* Page-stack contract: the fixed rhythm between shared chrome and content. */
+  --portal-page-stack-gap: 12px;
+  --portal-shell-gap: var(--portal-page-stack-gap);
+  --portal-brand-header-block-size: 58px;
+  --portal-brand-header-mobile-block-size: 110px;
+  --portal-brand-header-row-block-size: 44px;
+  --portal-prefooter-block-size: 30px;
+  --portal-footer-block-size: 52px;
+  --portal-footer-min-block-size: 52px;
   --portal-homework-link: #174f92;
   --portal-homework-link-hover: #0f3c70;
   --portal-homework-square-border: #b7c8dd;
@@ -8187,10 +8204,20 @@ a {
 .portal-shell {
   display: block;
 }
+/*
+ * Page-stack contract. These are the normal-flow stacks that own the vertical
+ * sequence from header bar through brand/content, prefooter, and footer.
+ * Keep this gap fixed; responsive rules may change wrapping, never the rhythm.
+ */
+body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page, .student-points-page)
+  :is(.portal-main, .shell, .wrap, .app, .enrollment-shell, .section-stack, .app-shell, .portal-login-shell) {
+  align-content: start;
+  row-gap: var(--portal-page-stack-gap);
+}
 .shell {
   box-sizing: border-box;
   display: grid;
-  gap: 12px;
+  gap: var(--portal-shell-gap);
   margin: 0 auto;
   max-width: 1440px;
   padding: 16px;
@@ -9506,6 +9533,11 @@ body.modal-open {
   gap: 8px;
   padding: 6px 28px;
 }
+.topbar {
+  block-size: var(--portal-brand-header-block-size);
+  max-block-size: var(--portal-brand-header-block-size);
+  min-block-size: var(--portal-brand-header-block-size);
+}
 body.portal-hub-page .hero,
 body.portal-hub-page .section-card {
   background: var(--hub-surface-content);
@@ -9530,6 +9562,9 @@ body.portal-hub-page .section-card>* {
   display: grid;
   gap: 10px;
   grid-template-columns: minmax(0, 1fr) auto;
+}
+.topbar-head {
+  min-block-size: var(--portal-brand-header-row-block-size);
 }
 .hero-brand,
 .brand-head {
@@ -10573,10 +10608,23 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   .topbar-head {
     grid-template-columns: 1fr;
   }
+  .topbar {
+    block-size: var(--portal-brand-header-mobile-block-size);
+    max-block-size: var(--portal-brand-header-mobile-block-size);
+    min-block-size: var(--portal-brand-header-mobile-block-size);
+  }
+  .topbar-head {
+    grid-template-rows: repeat(2, var(--portal-brand-header-row-block-size));
+    min-block-size: calc(var(--portal-brand-header-row-block-size) * 2 + 10px);
+  }
+  .topbar .header-actions {
+    flex-wrap: nowrap !important;
+    min-block-size: var(--portal-brand-header-row-block-size);
+  }
   .hero-actions,
   .header-actions,
   .app-header-actions {
-    justify-content: flex-start;
+    justify-content: flex-end;
   }
   body.admin-portal-page .news-review-viewer-actions,
   body.portal-hub-page .hub-prefooter__links,
@@ -10609,6 +10657,9 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   .hero,
   .topbar {
     padding: 5px 60px 5px 10px;
+  }
+  body.admin-portal-page .topbar {
+    padding-inline-end: 10px;
   }
   .brand-logo-wrap--sm {
     height: 34px;
@@ -10690,18 +10741,24 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
     padding: 3px 6px;
   }
   body.admin-portal-page .portal-login-header {
+    align-items: flex-start;
     flex-wrap: wrap;
     gap: 4px 10px;
-    justify-content: center;
+    justify-content: flex-end;
     line-height: 1.15;
-    min-block-size: 40px;
+    block-size: var(--portal-header-bar-mobile-block-size) !important;
+    max-block-size: var(--portal-header-bar-mobile-block-size) !important;
+    min-block-size: var(--portal-header-bar-mobile-block-size) !important;
     padding: 0.55rem 0.75rem;
-    text-align: center;
+    text-align: right;
   }
   body.admin-portal-page .portal-login-header a {
     display: inline-flex;
-    justify-content: center;
+    justify-content: flex-end;
     min-inline-size: 0;
+  }
+  body.admin-portal-page .topbar .header-actions {
+    justify-content: flex-end;
   }
   body.admin-portal-page .app-page-header {
     padding: 6px 8px;
@@ -10714,19 +10771,19 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
     gap: 4px;
   }
   body.admin-portal-page .hub-footer {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
     gap: 4px;
   }
   body.admin-portal-page .hub-footer__copy {
-    white-space: normal;
+    white-space: nowrap;
   }
   body.admin-portal-page .portal-login-footer .hub-footer__copy {
     align-self: stretch;
   }
   body.admin-portal-page .hub-footer__action {
-    margin-inline-start: 0;
-    white-space: normal;
+    margin-inline-start: auto;
+    white-space: nowrap;
   }
 }
 /* ================================
@@ -10800,22 +10857,36 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   justify-content: space-between;
   margin: 0 auto;
   max-width: none;
-  padding: var(--hub-space-2, 12px) var(--hub-space-3, 16px);
+  block-size: var(--portal-footer-block-size);
+  max-block-size: var(--portal-footer-block-size);
+  min-block-size: var(--portal-footer-min-block-size);
+  padding: 12px 16px;
   width: 100%;
 }
 .hub-footer__copy,
 .hub-footer__action {
   margin: 0;
 }
+.hub-footer__copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .hub-footer__action {
   margin-inline-start: auto;
+  white-space: nowrap;
 }
 .portal-prefooter {
   align-items: center;
+  block-size: var(--portal-prefooter-block-size);
+  box-sizing: border-box;
   display: flex;
   justify-content: flex-end;
+  max-block-size: var(--portal-prefooter-block-size);
   margin: 0;
-  min-height: 1.5rem;
+  min-block-size: var(--portal-prefooter-block-size);
   width: 100%;
 }
 .portal-prefooter .env-badge {
@@ -10924,7 +10995,9 @@ body.portal-hub-page .hub-prefooter .env-badge {
 body.portal-hub-page .header-bar,
 body.admin-portal-page .header-bar,
 body.parent-portal-page .header-bar,
-body.student-portal-page .header-bar {
+body.student-portal-page .header-bar,
+body.student-points-page .header-bar,
+#portalLoginHeader {
   background: var(--portal-header-bar-fill);
   border-radius: var(--radius-2);
   box-sizing: border-box;
@@ -10937,12 +11010,10 @@ body.student-portal-page .header-bar {
   letter-spacing: 0.08em;
   line-height: 1;
   margin: 0;
-  min-block-size: 20px;
+  block-size: var(--portal-header-bar-max-block-size);
+  max-block-size: var(--portal-header-bar-max-block-size);
+  min-block-size: var(--portal-header-bar-max-block-size);
   padding: .75rem 1rem;
-
-  /*border: 1px solid rgb(255 255 255 / 18%);*/
-  /*padding-block: 6px;
-padding-inline: calc(var(--hub-space-2) * 1.9);*/
 }
 /* The login header is a grid child of .wrap. Keep its containing width and
    centering explicit so the generic header-bar reset cannot pin it left. */
@@ -10950,37 +11021,49 @@ body.admin-portal-page .wrap > .portal-login-header {
   margin-inline: auto !important;
 }
 @media (max-width: 430px) {
+  body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page, .student-points-page) .header-bar,
+  #portalLoginHeader {
+    align-items: flex-start;
+    block-size: var(--portal-header-bar-mobile-block-size);
+    flex-wrap: wrap;
+    max-block-size: var(--portal-header-bar-mobile-max-block-size);
+    justify-content: flex-end;
+    min-block-size: var(--portal-header-bar-mobile-block-size);
+    row-gap: .35rem;
+  }
   body.admin-portal-page .portal-login-header {
-    min-block-size: 40px !important;
+    block-size: var(--portal-header-bar-mobile-block-size) !important;
+    max-block-size: var(--portal-header-bar-mobile-block-size) !important;
+    min-block-size: var(--portal-header-bar-mobile-block-size) !important;
   }
 }
 body.portal-hub-page .header-bar a,
 body.admin-portal-page .header-bar a,
 body.parent-portal-page .header-bar a,
-body.student-portal-page .header-bar a {
+body.student-portal-page .header-bar a,
+body.student-points-page .header-bar a,
+#portalLoginHeader a {
   color: inherit;
   text-decoration: none;
 }
 body.portal-hub-page .header-bar a:hover,
 body.admin-portal-page .header-bar a:hover,
 body.parent-portal-page .header-bar a:hover,
-body.student-portal-page .header-bar a:hover {
+body.student-portal-page .header-bar a:hover,
+body.student-points-page .header-bar a:hover,
+#portalLoginHeader a:hover {
   cursor: pointer;
   text-decoration-line: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
 }
 @media (max-width: 430px) {
-  body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page) .header-bar {
-    align-items: flex-start;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    row-gap: .35rem;
-  }
-  body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page) .header-bar a:first-child {
+  body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page, .student-points-page) .header-bar a:first-child,
+  #portalLoginHeader a:first-child {
     margin-inline-end: auto;
   }
-  body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page) .header-bar a:last-child {
+  body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page, .student-points-page) .header-bar a:last-child,
+  #portalLoginHeader a:last-child {
     flex-basis: 100%;
     overflow-wrap: anywhere;
     text-align: right;

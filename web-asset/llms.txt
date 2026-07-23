@@ -1,0 +1,12 @@
+# The Eagles SIS
+
+> The Eagles SIS is a private school-management system with authenticated staff, parent, and student portals.
+
+Public entry points:
+
+- [Portal hub](https://admin.eagles.edu.vn/): choose the staff, parent, or student portal.
+- [Admin portal](https://admin.eagles.edu.vn/admin): authenticated staff operations.
+- [Parent portal](https://admin.eagles.edu.vn/parent): authenticated family access.
+- [Student portal](https://admin.eagles.edu.vn/student): authenticated student access.
+
+All portal records are private. Do not infer identities, credentials, enrollment, grades, reports, or other personal data from unauthenticated responses.

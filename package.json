@@ -1,6 +1,6 @@
 {
   "name": "sis",
-  "version": "0.0.1.54",
+  "version": "0.1.1.08",
   "description": "SIS service workspace",
   "private": true,
   "type": "module",
@@ -160,7 +160,7 @@
     "ws": "^8.21.0",
     "ws@^7.4.2": "^7.5.11",
     "minimatch@10.2.5": {
-      "brace-expansion": "^5.0.6"
+      "brace-expansion": "^5.0.7"
     },
     "jsdom": {
       "ws": "^8.21.0"

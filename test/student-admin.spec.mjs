@@ -1227,6 +1227,17 @@ test("GET /admin returns HTML UI", async () => {
   assert.match(html, /urlMode === "query" \? buildPageQueryPath\(pageSlug\)/i)
 })
 
+test("GET /llms.txt returns the root agent guidance as plain text", async () => {
+  const res = await fetchLocal(port, "/llms.txt")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/plain/i)
+  assert.match(res.headers.get("cache-control") || "", /public/i)
+  const body = await res.text()
+  assert.match(body, /^# The Eagles SIS\s/m)
+  assert.match(body, /https:\/\/admin\.eagles\.edu\.vn\/admin/)
+  assert.doesNotMatch(body, /<html/i)
+})
+
 test("legacy portal routes redirect to canonical routes", async () => {
   const cases = [
     ["/admin/", "/admin"],

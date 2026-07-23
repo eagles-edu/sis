@@ -42,7 +42,7 @@
       body.parent-portal-page main.portal-main {
         box-sizing: border-box;
         display: grid;
-        gap: 12px;
+        gap: var(--portal-shell-gap);
         grid-template-columns: minmax(0, 1fr);
         margin: 0 auto;
         max-width: 1440px;
@@ -53,7 +53,7 @@
       html[data-parent-auth-state="unauthenticated"]
         body.parent-portal-page
         main.portal-main {
-        gap: 12px;
+        gap: var(--portal-shell-gap);
         margin-inline: auto;
         max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
         width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
@@ -75,7 +75,7 @@
   <title>
       Trang chủ dành cho phụ huynh - Câu lạc bộ Eagles
     </title>
-    
+
   </head>
 
   <body class="parent-portal-page" id="top">

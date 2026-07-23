@@ -1,6 +1,6 @@
 {
   "status": "ok",
-  "checkedAt": "2026-07-22T10:30:01.340Z",
+  "checkedAt": "2026-07-23T07:30:02.121Z",
   "thresholds": {
     "backupStaleMinutes": 1560,
     "maxQueryLatencyMs": 500,
@@ -10,15 +10,15 @@
   "db": {
     "status": "ok",
     "connected": true,
-    "queryLatencyMs": 134,
+    "queryLatencyMs": 88,
     "error": ""
   },
   "backup": {
     "status": "ok",
     "latestMetadataPath": "/home/eagles/dockerz/backups/postgres/latest.json",
-    "latestBackupPath": "/home/eagles/dockerz/backups/postgres/postgres-20260721-193001Z.dump",
-    "lastBackupAt": "2026-07-21T19:30:01.744Z",
-    "ageMinutes": 900,
+    "latestBackupPath": "/home/eagles/dockerz/backups/postgres/postgres-20260722-193001Z.dump",
+    "lastBackupAt": "2026-07-22T19:30:01.950Z",
+    "ageMinutes": 720,
     "staleThresholdMinutes": 1560,
     "isStale": false
   },
@@ -27,8 +27,8 @@
     "queuedCount": 0,
     "temporaryCount": 0,
     "unmatchedCount": 0,
-    "latestVacuumReportPath": "/home/eagles/dockerz/sis/runtime-data/maintenance-reports/incoming-vacuum-20260721-201702Z.json",
-    "lastIncomingVacuumAt": "2026-07-21T20:17:01.821Z",
+    "latestVacuumReportPath": "/home/eagles/dockerz/sis/runtime-data/maintenance-reports/incoming-vacuum-20260722-201702Z.json",
+    "lastIncomingVacuumAt": "2026-07-22T20:17:02.234Z",
     "manualReviewCount": 0
   },
   "orphans": {

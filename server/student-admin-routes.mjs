@@ -304,12 +304,16 @@ const ADMIN_ASSIGNMENT_TEMPLATE_PATH_RE = new RegExp(
 )
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
 const ADMIN_HUB_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/portal-hub.html")
+const ROOT_LLMS_PATH = path.resolve(process.cwd(), "web-asset/llms.txt")
+const ADMIN_LLMS_PATH = path.resolve(process.cwd(), "web-asset/admin/llms.txt")
 const ADMIN_POINTS_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-points.html")
 const ADMIN_ENROLLMENT_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-enrollment.html")
 const ADMIN_GRADES_TABULATOR_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/grades-tabulator.html")
 const REPORT_CARD_PREVIEW_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/report-card.html")
 const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
+const PARENT_LLMS_PATH = path.resolve(process.cwd(), "web-asset/parent/llms.txt")
 const STUDENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/student/student-portal.html")
+const STUDENT_LLMS_PATH = path.resolve(process.cwd(), "web-asset/student/llms.txt")
 const ADMIN_IMPORT_TEMPLATE_PATH = path.resolve(process.cwd(), "schemas/student-import-template.xlsx")
 const ADMIN_UI_SETTINGS_FILE_PATH = path.resolve(
   process.cwd(),
@@ -1158,6 +1162,16 @@ function sendHtml(response, statusCode, html, headers = {}) {
     ...headers,
   })
   response.end(html)
+}
+
+function sendText(response, statusCode, text, headers = {}) {
+  const body = `${text}\n`
+  response.writeHead(statusCode, {
+    "Content-Length": String(Buffer.byteLength(body)),
+    "Content-Type": "text/plain; charset=utf-8",
+    ...headers,
+  })
+  response.end(body)
 }
 
 function sendRedirect(response, statusCode, location) {
@@ -7841,6 +7855,35 @@ export async function handleStudentAdminRequest(request, response) {
   const url = new URL(request.url || "/", `http://${host}`)
   const pathname = url.pathname
   const requestOrigin = resolveRequestOrigin(request)
+
+  const llmsRoutes = new Map([
+    ["/", ROOT_LLMS_PATH],
+    [ADMIN_PAGE_PATH, ADMIN_LLMS_PATH],
+    [PARENT_PORTAL_PAGE_PATH, PARENT_LLMS_PATH],
+    [STUDENT_PORTAL_PAGE_PATH, STUDENT_LLMS_PATH],
+  ])
+  if ((method === "GET" || method === "HEAD") && pathname.endsWith("/llms.txt")) {
+    const basePath = pathname.slice(0, -"/llms.txt".length) || "/"
+    const llmsPath = llmsRoutes.get(basePath)
+    if (!llmsPath) return false
+    if (!fs.existsSync(llmsPath)) {
+      sendText(response, 404, "Not Found")
+      return true
+    }
+    if (method === "HEAD") {
+      const body = fs.readFileSync(llmsPath, "utf8")
+      response.writeHead(200, {
+        "Content-Length": String(Buffer.byteLength(`${body}\n`)),
+        "Content-Type": "text/plain; charset=utf-8",
+      })
+      response.end()
+      return true
+    }
+    sendText(response, 200, fs.readFileSync(llmsPath, "utf8"), {
+      "Cache-Control": "public, max-age=3600",
+    })
+    return true
+  }
 
   const reminderClickMatch = pathname.match(ASSIGNMENT_REMINDER_CLICK_PATH_RE)
   if (method === "GET" && reminderClickMatch) {

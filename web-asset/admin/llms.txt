@@ -1,0 +1,25 @@
+# The Eagles SIS Admin Portal
+
+> Authenticated operations portal for administrators and teachers managing student records, enrollment, attendance, grades, assignments, parent reports, news reports, and notification queues for The Eagles American English Club.
+
+This portal is for authorized staff only. It uses cookie-based sessions; API routes under `/api/admin` are not public documentation endpoints and require an authenticated session. Do not infer student, family, credential, or school-configuration data from an unauthenticated response.
+
+## Portal
+
+- [Admin portal](https://admin.eagles.edu.vn/admin): Staff login and the operations dashboard.
+- [Portal hub](https://admin.eagles.edu.vn/): Entry point for staff, parent, and student portals.
+
+## Capabilities
+
+- Student roster, profiles, identity validation, and imports.
+- Enrollment periods and student enrollment operations.
+- Attendance, assignments, grades, performance, and report-card workflows.
+- Parent report and news-report review queues.
+- Email notification queues and assignment reminders.
+- Role-aware access for `admin` and read-only `teacher` users.
+- Runtime health, school setup, permissions, and controlled service operations for authorized admins.
+
+## API
+
+- [Admin API](https://admin.eagles.edu.vn/api/admin): Cookie-session API prefix for authenticated staff operations.
+- [Admin login](https://admin.eagles.edu.vn/api/admin/auth/login): `POST` login endpoint; credentials must never be included in prompts or generated links.

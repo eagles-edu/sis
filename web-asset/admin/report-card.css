@@ -14,8 +14,9 @@
     }
 
     .wrap {
+      box-sizing: border-box;
       display: grid;
-      gap: 12px;
+      gap: var(--portal-shell-gap);
       grid-template-columns: minmax(0, 1fr);
       margin: 0 auto;
       padding: 18px;
@@ -24,16 +25,17 @@
 
     .section-stack {
       display: grid;
-      gap: 12px;
+      gap: var(--portal-shell-gap);
     }
 
     .app-page-header {
       display: grid;
-      gap: 12px;
+      gap: var(--portal-shell-gap);
     }
 
     .app-sidebar {
       border-radius: 0 var(--radius-3) var(--radius-3) 0;
+      box-sizing: border-box;
       inset-block: 0;
       inset-inline-start: 0;
       margin: 0;

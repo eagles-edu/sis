@@ -1,5 +1,5 @@
-*{box-sizing:border-box}body{color:var(--portal-role-text);font-family:var(--font-base,system-ui,-apple-system,sans-serif);line-height:1.4;margin:0;min-height:100vh}body.grades-tabulator-page{background:var(--portal-page-bg);padding-block:0}html[data-theme="dark"] body.grades-tabulator-page{background:var(--portal-dark-page-bg)}.wrap{display:grid;gap:14px;margin:0 auto;max-width:1440px;padding:18px;width:min(100%,1440px)}.wrap > *{min-width:0}
-    .app-page-header,.section-stack{display:grid;gap:14px}
+*{box-sizing:border-box}body{color:var(--portal-role-text);font-family:var(--font-base,system-ui,-apple-system,sans-serif);line-height:1.4;margin:0;min-height:100vh}body.grades-tabulator-page{background:var(--portal-page-bg);padding-block:0}html[data-theme="dark"] body.grades-tabulator-page{background:var(--portal-dark-page-bg)}.wrap{display:grid;gap:var(--portal-shell-gap);margin:0 auto;max-width:1440px;padding:18px;width:min(100%,1440px)}.wrap > *{min-width:0}
+    .app-page-header,.section-stack{display:grid;gap:var(--portal-shell-gap)}
     .control-card,
     .grid-card,.hero{border-radius:var(--radius-3);padding:.8rem}
     .control-card.portal-theme-panel,.hero.portal-theme-panel{background:var(--portal-surface-panel);border-color:var(--portal-border);color:var(--portal-role-text)}.grid-card.portal-theme-card{background:var(--portal-surface-card);border-color:var(--portal-border);color:var(--portal-role-text)}.grid-card{min-width:0}.hero-actions{align-items:center;display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.65rem}.btn:not(.portal-button),

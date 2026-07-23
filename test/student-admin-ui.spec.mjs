@@ -7,15 +7,24 @@ import { runStudentAdminAuthBootstrap } from "../web-asset/admin/student-admin-b
 
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
 const ADMIN_JS_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.js")
+const ADMIN_FALLBACKS_PATH = path.resolve(process.cwd(), "web-asset/admin/admin-fallbacks.mjs")
 const ADMIN_HTML = fs.readFileSync(ADMIN_HTML_PATH, "utf8")
 const ADMIN_JS = fs.readFileSync(ADMIN_JS_PATH, "utf8")
+const ADMIN_FALLBACK_FACTORY = fs
+  .readFileSync(ADMIN_FALLBACKS_PATH, "utf8")
+  .replace("export function initAdminFallbacks", "function initAdminFallbacks")
+  .concat("\nwindow.__SIS_ADMIN_FALLBACK_FACTORY__ = initAdminFallbacks;\n")
+const QUEUE_HUB_FACTORY = fs
+  .readFileSync(path.resolve(process.cwd(), "web-asset/admin/queue-hub-island.mjs"), "utf8")
+  .replace("export function initQueueHubIsland", "function initQueueHubIsland")
+  .concat("\nwindow.__SIS_QUEUE_HUB_FACTORY__ = (deps) => initQueueHubIsland(deps);\n")
 const ADMIN_HTML_STRIPPED_FOR_TEST = ADMIN_HTML
   .replace(/<script\s+id="admin-app-loader">[\s\S]*?<\/script>/gi, "")
   .replace(/<link[\s\S]*?href="\/web-asset\/admin\/student-admin(?:\.min)?\.css(?:\?[^"]*)?"[\s\S]*?>/gi, "")
   .replace(/<script\s+src="\/web-asset\/admin\/student-admin(?:\.min)?\.js(?:\?[^"]*)?"\s+defer><\/script>/gi, "")
 const ADMIN_HTML_FOR_TEST = ADMIN_HTML_STRIPPED_FOR_TEST.replace(
   "</body>",
-  `<script>\n${ADMIN_JS.replace(/<\/script>/gi, "<\\\\/script>")}\n</script>\n</body>`
+  `<script>\n${ADMIN_FALLBACK_FACTORY}\n${QUEUE_HUB_FACTORY}\n${ADMIN_JS.replace(/<\/script>/gi, "<\\\\/script>")}\n</script>\n</body>`
 )
 const activeDoms = new Set()
 
@@ -2106,6 +2115,9 @@ test("overview news queue buttons route and refresh through the island", async (
     const app = dom.window.document.getElementById("app")
     assert.equal(app.classList.contains("hidden"), false)
   })
+
+  assert.equal(queueHubRequestCount, 0)
+  dom.window.document.getElementById("overviewNewsQueueRefreshBtn").click()
 
   await waitFor(() => {
     assert.ok(queueHubRequestCount >= 1)
@@ -5018,7 +5030,7 @@ test("performance queued parent reports list opens modal and supports hold/edit/
           canWrite: true,
           canManageUsers: true,
           canManagePermissions: true,
-          startPage: "overview",
+          startPage: "performance-data",
           allowedPages: [
             "overview",
             "profile",
@@ -5030,8 +5042,9 @@ test("performance queued parent reports list opens modal and supports hold/edit/
             "reports",
             "family",
             "users",
-            "permissions",
-            "settings",
+          "permissions",
+          "settings",
+          "performance-data",
           ],
         },
       })
@@ -5045,7 +5058,7 @@ test("performance queued parent reports list opens modal and supports hold/edit/
             canWrite: true,
             canManageUsers: true,
             canManagePermissions: true,
-            startPage: "overview",
+            startPage: "performance-data",
             allowedPages: [
               "overview",
               "profile",
@@ -5059,6 +5072,7 @@ test("performance queued parent reports list opens modal and supports hold/edit/
               "users",
               "permissions",
               "settings",
+              "performance-data",
             ],
           },
         },
@@ -5126,7 +5140,7 @@ test("performance queued parent reports list opens modal and supports hold/edit/
     }
 
     return jsonResponse(200, {})
-  })
+  }, "http://127.0.0.1/admin?page=performance-data")
 
   submitLogin(dom)
   await waitFor(() => {
@@ -5135,6 +5149,10 @@ test("performance queued parent reports list opens modal and supports hold/edit/
   })
 
   const document = dom.window.document
+  await settleDomAsync(dom, 4, 40)
+  document.querySelector('[data-page-link="performance-data"]')?.click()
+  document.getElementById("performanceQueueSection")?.classList.remove("hidden")
+  document.getElementById("performanceQueueRefreshBtn")?.click()
   await waitFor(() => {
     const section = document.getElementById("performanceQueueSection")
     assert.ok(section)

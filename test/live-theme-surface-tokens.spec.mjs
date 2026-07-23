@@ -219,7 +219,7 @@ test("semantic status palettes stay on shared portal tokens", () => {
     "student-admin legacy status colors",
   )
 
-  const studentAdminJs = readFile("web-asset/admin/student-admin.js")
+  const studentAdminJs = `${readFile("web-asset/admin/student-admin.js")}\n${readFile("web-asset/admin/overview-chart-island.mjs")}`
   assertIncludesAll(
     studentAdminJs,
     ["bar-detail-action-btn", "level-theme-btn"],

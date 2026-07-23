@@ -21,7 +21,7 @@
 
     .wrap {
       display: grid;
-      gap: 14px;
+      gap: var(--portal-shell-gap);
       margin: 0 auto;
       max-width: 1440px;
       padding: 18px;
@@ -35,7 +35,7 @@
     .section-stack,
     .app-page-header {
       display: grid;
-      gap: 14px;
+      gap: var(--portal-shell-gap);
   }
 
     .hero,

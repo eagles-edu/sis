@@ -325,7 +325,7 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. School "
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
@@ -338,7 +338,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2794
+              "height": 2852
             },
             ".wrap": {
               "selector": ".wrap",
@@ -350,7 +350,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2746
+              "height": 2804
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -362,7 +362,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2662
+              "height": 2720
             },
             ".panel": {
               "selector": ".panel",
@@ -1038,7 +1038,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1272
+              "height": 1286
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1050,7 +1050,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1224
+              "height": 1238
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1062,7 +1062,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1140
+              "height": 1154
             },
             ".panel": {
               "selector": ".panel",
@@ -1078,13 +1078,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "hubConnectionCard",
-              "className": "system-health-item system-health-hub-card pending card",
+              "id": "",
+              "className": "stat-card stat-card--student card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "grid",
+              "display": "block",
               "width": 0,
               "height": 0
             },
@@ -1202,7 +1202,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 835
+              "height": 1014
             },
             ".panel": {
               "selector": ".panel",
@@ -1318,7 +1318,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1488
+              "height": 1639
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1330,7 +1330,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1440
+              "height": 1591
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1342,7 +1342,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1356
+              "height": 1507
             },
             ".panel": {
               "selector": ".panel",
@@ -1598,7 +1598,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1483
+              "height": 2670
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1610,7 +1610,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1435
+              "height": 2622
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1622,7 +1622,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1351
+              "height": 2538
             },
             ".panel": {
               "selector": ".panel",
@@ -1670,7 +1670,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1363,
-              "height": 492
+              "height": 1081
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -1681,8 +1681,8 @@
               "color": "rgb(0, 0, 0)",
               "border": "rgb(0, 0, 0)",
               "display": "block",
-              "width": 664,
-              "height": 19
+              "width": 0,
+              "height": 0
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -1732,13 +1732,13 @@
               "selector": "body",
               "id": "top",
               "className": "admin-portal-page page grades-tabulator-page",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "linear-gradient(rgb(252, 253, 255) 0px, rgb(232, 238, 244) 38%, rgb(227, 233, 240) 100%)",
+              "bg": "rgb(232, 238, 244)",
+              "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1802
+              "height": 1754
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2684,7 +2684,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "flex",
               "width": 1440,
-              "height": 18117
+              "height": 18121
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2696,7 +2696,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 18069
+              "height": 18073
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2708,7 +2708,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1250,
-              "height": 17824
+              "height": 17828
             },
             ".panel": {
               "selector": ".panel",
@@ -3591,13 +3591,13 @@
               "selector": "body",
               "id": "top",
               "className": "admin-portal-page page grades-tabulator-page",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "linear-gradient(rgb(252, 253, 255) 0px, rgb(232, 238, 244) 38%, rgb(227, 233, 240) 100%)",
+              "bg": "rgb(232, 238, 244)",
+              "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1802
+              "height": 1754
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3869,9 +3869,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "",
-            "bgImage": "",
-            "color": ""
+            "bg": "rgba(0, 0, 0, 0)",
+            "bgImage": "none",
+            "color": "rgb(0, 0, 0)"
           }
         }
       ]
@@ -3995,13 +3995,13 @@
           "selector": "body",
           "id": "top",
           "className": "admin-portal-page page grades-tabulator-page",
-          "bg": "rgba(0, 0, 0, 0)",
-          "bgImage": "linear-gradient(rgb(252, 253, 255) 0px, rgb(232, 238, 244) 38%, rgb(227, 233, 240) 100%)",
+          "bg": "rgb(232, 238, 244)",
+          "bgImage": "none",
           "color": "rgb(0, 0, 0)",
           "border": "rgb(0, 0, 0)",
           "display": "block",
           "width": 1440,
-          "height": 1802
+          "height": 1754
         },
         "#reloadBtn": null,
         "#gradesTable": null,
@@ -5972,7 +5972,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2852
+              "height": 3228
             },
             ".wrap": {
               "selector": ".wrap",
@@ -5984,7 +5984,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2804
+              "height": 3180
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -5996,7 +5996,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2720
+              "height": 3096
             },
             ".panel": {
               "selector": ".panel",
@@ -6836,7 +6836,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 835
+              "height": 1014
             },
             ".panel": {
               "selector": ".panel",
@@ -6976,7 +6976,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1488
+              "height": 1639
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6988,7 +6988,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1440
+              "height": 1591
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7000,7 +7000,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1356
+              "height": 1507
             },
             ".panel": {
               "selector": ".panel",
@@ -7256,7 +7256,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1483
+              "height": 2670
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7268,7 +7268,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1435
+              "height": 2622
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7280,7 +7280,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1351
+              "height": 2538
             },
             ".panel": {
               "selector": ".panel",
@@ -7328,7 +7328,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
               "width": 1363,
-              "height": 492
+              "height": 1081
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -7339,8 +7339,8 @@
               "color": "rgb(229, 245, 255)",
               "border": "rgba(255, 255, 255, 0.36)",
               "display": "block",
-              "width": 664,
-              "height": 19
+              "width": 0,
+              "height": 0
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",

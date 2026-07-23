@@ -1,0 +1,23 @@
+# The Eagles Parent Portal
+
+> Authenticated family portal for viewing linked students' learning progress, homework, attendance, grades, performance reports, news reports, and profile information.
+
+This portal is for authorized parents and guardians. It uses cookie-based sessions. Student and family records are private; an agent must not guess identities, expose account data, or treat an unauthenticated response as evidence that a child is linked.
+
+## Portal
+
+- [Parent portal](https://admin.eagles.edu.vn/parent): Parent login and dashboard.
+
+## Capabilities
+
+- Switch between linked children.
+- View dashboard summaries, current and overdue homework, attendance, grades, and performance-report archives.
+- Review news-report status and calendar information.
+- View a linked child's profile.
+- Save permitted profile changes as a draft and submit them for staff review.
+
+## API
+
+- [Parent API](https://admin.eagles.edu.vn/api/parent): Cookie-session API prefix for authenticated parent operations.
+- [Parent login](https://admin.eagles.edu.vn/api/parent/auth/login): `POST` login endpoint; never include credentials in generated content.
+- [Parent session](https://admin.eagles.edu.vn/api/parent/auth/me): `GET` current authenticated-session check.

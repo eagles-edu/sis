@@ -513,14 +513,14 @@
       }
 
       .header-actions {
-        justify-content: flex-start;
+        justify-content: flex-end;
         flex-wrap: wrap;
         width: 100%;
       }
 
       .text-zoom-controls {
         flex-wrap: wrap;
-        justify-content: flex-start;
+        justify-content: flex-end;
         max-width: 100%;
       }
 

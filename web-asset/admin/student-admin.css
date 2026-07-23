@@ -181,7 +181,7 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
   block-size: 44px;
   inline-size: 44px;
   inset-block-start: 12px;
-  inset-inline-start: 12px;
+  inset-inline-start: max(12px, calc((100vw - 1440px) / 2 + 4px));
   position: fixed;
   z-index: 90;
 }
@@ -3458,8 +3458,14 @@ body.admin-portal-page .performance-engagement-table {
           min-inline-size: clamp(74px, 24vw, 102px);
           padding-inline: 8px;
         }
+        #appMain .topbar {
+          padding-inline-end: 10px;
+        }
         .text-zoom-controls {
           justify-content: flex-start;
+        }
+        body.admin-portal-page .topbar .text-zoom-controls {
+          justify-content: flex-end;
         }
         .text-zoom-controls .global-text-label {
           display: none;

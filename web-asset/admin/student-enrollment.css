@@ -47,7 +47,7 @@
 
     .wrap {
       display: grid;
-      gap: clamp(10px, 2.2vw, 14px);
+      gap: var(--portal-shell-gap);
       margin: 0 auto;
       max-width: 1440px;
       padding: clamp(12px, 2.8vw, 16px);
@@ -57,7 +57,7 @@
     .enrollment-shell {
       --portal-center-column-max: var(--enrollment-shell-max);
       display: grid;
-      gap: clamp(12px, 2vw, 16px);
+      gap: var(--portal-shell-gap);
     }
 
     .app-brand-copy {

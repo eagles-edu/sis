@@ -11,13 +11,33 @@ const sharedThemeSourcePath = path.resolve(rootDir, "web-asset/shared/portal-the
 const adminThemePath = path.resolve(rootDir, "web-asset/admin/student-admin.css")
 const adminPortalPath = path.resolve(rootDir, "web-asset/admin/student-admin.html")
 const assignmentEngagementIslandPath = path.resolve(rootDir, "web-asset/admin/assignment-engagement-island.mjs")
+const performanceEngagementIslandPath = path.resolve(rootDir, "web-asset/admin/performance-engagement-island.mjs")
+const overviewChartIslandPath = path.resolve(rootDir, "web-asset/admin/overview-chart-island.mjs")
+const queueHubIslandPath = path.resolve(rootDir, "web-asset/admin/queue-hub-island.mjs")
+const adminFallbacksPath = path.resolve(rootDir, "web-asset/admin/admin-fallbacks.mjs")
 const parentPortalPath = path.resolve(rootDir, "web-asset/parent/parent-portal.html")
 const studentPortalPath = path.resolve(rootDir, "web-asset/student/student-portal.html")
 const buildAdminAssets = fs.readFileSync(buildAdminAssetsPath, "utf8")
 const portalPaths = [
   ["admin hub", "web-asset/admin/portal-hub.html"],
+  ["admin grades tabulator", "web-asset/admin/grades-tabulator.html"],
+  ["admin report card", "web-asset/admin/report-card.html"],
+  ["admin enrollment", "web-asset/admin/student-enrollment.html"],
+  ["admin student points", "web-asset/admin/student-points.html"],
+  ["admin student", "web-asset/admin/student-admin.html"],
   ["parent portal", "web-asset/parent/parent-portal.html"],
   ["student portal", "web-asset/student/student-portal.html"],
+]
+
+const pageStackPaths = [
+  ["admin hub", "web-asset/admin/portal-hub.html", "portal-hub-page", "shell"],
+  ["admin grades tabulator", "web-asset/admin/grades-tabulator.html", "admin-portal-page", "wrap"],
+  ["admin report card", "web-asset/admin/report-card.html", "admin-portal-page", "wrap"],
+  ["admin enrollment", "web-asset/admin/student-enrollment.html", "admin-portal-page", "wrap"],
+  ["admin student points", "web-asset/admin/student-points.html", "student-points-page", "app"],
+  ["admin student", "web-asset/admin/student-admin.html", "admin-portal-page", "wrap"],
+  ["parent portal", "web-asset/parent/parent-portal.html", "parent-portal-page", "portal-main"],
+  ["student portal", "web-asset/student/student-portal.html", "student-portal-page", "portal-main"],
 ]
 
 const sharedTheme = fs.readFileSync(sharedThemePath, "utf8")
@@ -25,6 +45,10 @@ const sharedThemeSource = fs.readFileSync(sharedThemeSourcePath, "utf8")
 const adminTheme = fs.readFileSync(adminThemePath, "utf8")
 const adminPortal = fs.readFileSync(adminPortalPath, "utf8")
 const assignmentEngagementIsland = fs.readFileSync(assignmentEngagementIslandPath, "utf8")
+const performanceEngagementIsland = fs.readFileSync(performanceEngagementIslandPath, "utf8")
+const overviewChartIsland = fs.readFileSync(overviewChartIslandPath, "utf8")
+const queueHubIsland = fs.readFileSync(queueHubIslandPath, "utf8")
+const adminFallbacks = fs.readFileSync(adminFallbacksPath, "utf8")
 const parentPortal = fs.readFileSync(parentPortalPath, "utf8")
 const studentPortal = fs.readFileSync(studentPortalPath, "utf8")
 const parentPortalAssets = `${parentPortal}\n${fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.css"), "utf8")}\n${fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.js"), "utf8")}`
@@ -64,6 +88,14 @@ test("portal pages load the shared portal theme stylesheet", () => {
       /portal-theme\.min\.css/,
       `${label} should link the shared portal theme`,
     )
+  }
+})
+
+test("every header-bearing portal page has a shared page-stack owner", () => {
+  for (const [label, relPath, bodyClass, stackClass] of pageStackPaths) {
+    const html = fs.readFileSync(path.resolve(rootDir, relPath), "utf8")
+    assert.match(html, new RegExp(`<body[^>]*class=["'][^"']*\\b${bodyClass}\\b`), `${label} must expose its shared page scope`)
+    assert.match(html, new RegExp(`class=["'][^"']*\\b${stackClass}\\b`), `${label} must expose its page-stack owner`)
   }
 })
 
@@ -132,6 +164,21 @@ test("assignment engagement stays outside the critical admin bundle", () => {
   )
 })
 
+test("admin SPA extraction keeps data and compatibility work behind protected island boundaries", () => {
+  const adminJs = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.js"), "utf8")
+  assert.match(performanceEngagementIsland, /PERF-CONTRACT: ADMIN-PERFORMANCE-ISLAND/)
+  assert.match(overviewChartIsland, /PERF-CONTRACT: ADMIN-OVERVIEW-CHART-ISLAND/)
+  assert.match(queueHubIsland, /PERF-CONTRACT: ADMIN-QUEUE-HUB-ISLAND/)
+  assert.match(adminFallbacks, /PERF-CONTRACT: ADMIN-FALLBACK-BOUNDARY/)
+  assert.match(adminJs, /performance-engagement-island\.mjs/)
+  assert.match(adminJs, /overview-chart-island\.mjs/)
+  assert.match(adminJs, /queue-hub-island\.mjs/)
+  assert.match(adminJs, /admin-fallbacks\.mjs/)
+  assert.doesNotMatch(adminJs, /dataHydrationTasks\.push\(\(\) => loadQueueHub\(/)
+  assert.doesNotMatch(adminJs, /function renderOverviewLineChart\(/)
+  assert.doesNotMatch(adminJs, /function normalizePerformanceEngagementRows\(/)
+})
+
 test("student admin exposes theme state before its inline toggle wiring", () => {
   assert.match(
     adminPortal,
@@ -163,6 +210,29 @@ test("shared portal theme minified asset is generated from portal-theme.css by t
     buildAdminAssets,
     /task\.kind === "css" \? await buildAdminCss\(task\.source\) : await buildAdminJs\(task\.source\)/,
     "build-admin-assets.mjs should rebuild minified assets from source files",
+  )
+})
+
+test("shared portal theme pins one fixed page-stack rhythm across every portal shell", () => {
+  assert.match(
+    sharedThemeSource,
+    /--portal-page-stack-gap:\s*12px;/,
+    "portal-theme.css must define the immutable 12px page-stack gap",
+  )
+  assert.match(
+    sharedThemeSource,
+    /--portal-shell-gap:\s*var\(--portal-page-stack-gap\);/,
+    "legacy shell-gap references must resolve to the page-stack contract",
+  )
+  assert.match(
+    sharedThemeSource,
+    /body:is\(\.portal-hub-page, \.admin-portal-page, \.parent-portal-page, \.student-portal-page, \.student-points-page\)[\s\S]*?:is\(\.portal-main, \.shell, \.wrap, \.app, \.enrollment-shell, \.section-stack, \.app-shell, \.portal-login-shell\)[\s\S]*?align-content:\s*start;[\s\S]*?row-gap:\s*var\(--portal-page-stack-gap\);/,
+    "all portal page stacks must use the fixed gap and prevent free-space redistribution",
+  )
+  assert.match(
+    sharedTheme,
+    /--portal-page-stack-gap:12px;/,
+    "portal-theme.min.css must carry the page-stack contract",
   )
 })
 

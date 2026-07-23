@@ -2671,6 +2671,10 @@
           probeHubConnection({ notify: false, paint }).catch(() => {});
         };
         state.hubPollTimer = window.setInterval(runProbe, 30000);
+        // The health card is part of the authenticated shell. Start one
+        // visible probe immediately; idle-only probing can leave the card in
+        // "Checking systems" indefinitely on busy pages.
+        void probeHubConnection({ notify: false, paint: true }).catch(() => {});
         const scheduleProbe = () => {
           const runWhenIdle = () => runProbe({ paint: false });
           if (typeof window.requestIdleCallback === "function") {
@@ -2711,6 +2715,18 @@
 
       function normalizeLower(value) {
         return normalizeText(value).toLowerCase();
+      }
+
+      function extractEaglesIdFromText(text = "") {
+        const normalized = normalizeText(text);
+        if (!normalized) return "";
+        const match = normalized.match(/\bEagles ID:\s*([A-Za-z0-9_-]+)/i);
+        return normalizeText(match?.[1] || "");
+      }
+
+      function engagementDayHeading(date, weekNumber) {
+        const dateText = normalizeText(date) || "Unknown day";
+        return weekNumber ? `${dateText} | Week ${weekNumber}` : dateText;
       }
 
       function normalizeSearchComparable(value) {
@@ -4477,387 +4493,6 @@
         });
       }
 
-      function normalizePerformanceEngagementSortField(field = "") {
-        const normalized = normalizeText(field);
-        if (
-          [
-            "reviewed",
-            "id",
-            "englishName",
-            "level",
-            "sentOkReturned",
-            "emailOpened",
-            "linkClicked",
-            "pdfDownloaded",
-            "acknowledged",
-            "classDate",
-            "classDay",
-            "className",
-            "reportId",
-          ].includes(normalized)
-        ) {
-          return normalized;
-        }
-        return "classDate";
-      }
-
-      function normalizePerformanceEngagementRows(rows = []) {
-        const source = Array.isArray(rows) ? rows : [];
-        return source
-          .map((row) => {
-            const normalized = row && typeof row === "object" ? { ...row } : null;
-            if (!normalized) return null;
-            normalized.reviewed = normalizeText(normalized.reviewed);
-            normalized.id = normalizeText(normalized.id);
-            normalized.emailUsed = normalizeText(normalized.emailUsed);
-            normalized.englishName = normalizeText(normalized.englishName);
-            normalized.level = normalizeText(normalized.level);
-            normalized.sentOkReturned = normalizeText(normalized.sentOkReturned);
-            normalized.emailOpened = normalizeText(normalized.emailOpened);
-            normalized.linkClicked = normalizeText(normalized.linkClicked);
-            normalized.pdfDownloaded = normalizeText(normalized.pdfDownloaded);
-            normalized.acknowledged = normalizeText(normalized.acknowledged);
-            normalized.classDate = normalizeText(normalized.classDate);
-            normalized.classDay = normalizeText(normalized.classDay);
-            normalized.className = normalizeText(normalized.className);
-            normalized.reportId = normalizeText(normalized.reportId);
-            normalized.searchText = normalizeText(normalized.searchText);
-            normalized.roleOrder = normalized.reviewed === "parent" ? 0 : 1;
-            return normalized;
-          })
-          .filter(Boolean);
-      }
-
-      function performanceEngagementGroupKey(row = {}) {
-        return normalizeText(row?.reportId) || `${normalizeText(row?.classDate)}-${normalizeText(row?.id)}`
-      }
-
-      function comparePerformanceEngagementGroupRows(left = {}, right = {}) {
-        if (left.roleOrder !== right.roleOrder) return left.roleOrder - right.roleOrder;
-        const nameCompare = compareTableText(left.englishName || left.id, right.englishName || right.id);
-        if (nameCompare) return nameCompare;
-        const reviewedCompare = compareTableText(left.reviewed, right.reviewed);
-        if (reviewedCompare) return reviewedCompare;
-        return compareTableText(left.id, right.id);
-      }
-
-      function performanceEngagementRowsForSelection() {
-        const selectedDayKey = normalizeText(state.performanceEngagement?.selectedDayKey);
-        const rows = normalizePerformanceEngagementRows(state.performanceEngagement?.rows);
-        const filtered = rows.filter((row) => performanceEngagementRowMatchesFilters(row, Boolean(selectedDayKey), true));
-        const grouped = new Map();
-        filtered.forEach((row) => {
-          const key = performanceEngagementGroupKey(row);
-          const entry = grouped.get(key) || {
-            reportId: normalizeText(row.reportId),
-            classDate: normalizeText(row.classDate),
-            classDay: normalizeText(row.classDay),
-            className: normalizeText(row.className),
-            sortRow: row,
-            rows: [],
-            searchText: "",
-          };
-          entry.rows.push(row);
-          if (entry.sortRow.roleOrder > row.roleOrder) entry.sortRow = row;
-          entry.searchText = `${entry.searchText} ${row.searchText}`.trim();
-          grouped.set(key, entry);
-        });
-        return Array.from(grouped.values())
-          .filter((entry) => {
-            const hasParent = entry.rows.some((row) => row.reviewed === "parent");
-            const hasStudent = entry.rows.some((row) => row.reviewed === "student");
-            const searchMatches = !normalizeText(state.performanceEngagement?.search)
-              || entry.rows.some((row) => performanceEngagementRowMatchesFilters(row, Boolean(selectedDayKey), false));
-            return hasParent && hasStudent && searchMatches;
-          })
-          .map((entry) => {
-            entry.rows.sort(comparePerformanceEngagementGroupRows);
-            entry.searchText = normalizeLower(entry.searchText);
-            return entry;
-          })
-          .sort((left, right) => {
-            const sortField =
-              normalizePerformanceEngagementSortField(state.performanceEngagement?.sortField);
-            const sortDir =
-              normalizeLower(state.performanceEngagement?.sortDir) === "asc" ? "asc" : "desc";
-            let compareValue = 0;
-            const leftRow =
-              left.rows.find((row) => row.reviewed === "student") || left.sortRow || left.rows[0] || {};
-            const rightRow =
-              right.rows.find((row) => row.reviewed === "student") || right.sortRow || right.rows[0] || {};
-            if (sortField === "reviewed") compareValue = compareTableText(leftRow.reviewed, rightRow.reviewed);
-            else if (sortField === "id") compareValue = compareTableText(leftRow.id, rightRow.id);
-            else if (sortField === "englishName") compareValue = compareTableText(leftRow.englishName, rightRow.englishName);
-            else if (sortField === "level") compareValue = compareTableText(leftRow.level, rightRow.level);
-            else if (sortField === "sentOkReturned") compareValue = compareTableText(leftRow.sentOkReturned, rightRow.sentOkReturned);
-            else if (sortField === "emailOpened") compareValue = compareTableText(leftRow.emailOpenedAt, rightRow.emailOpenedAt);
-            else if (sortField === "linkClicked") compareValue = compareTableText(leftRow.linkClickedAt, rightRow.linkClickedAt);
-            else if (sortField === "pdfDownloaded") compareValue = compareTableText(leftRow.pdfDownloadedAt, rightRow.pdfDownloadedAt);
-            else if (sortField === "acknowledged") compareValue = compareTableText(leftRow.acknowledgedAt, rightRow.acknowledgedAt);
-            else if (sortField === "classDay") compareValue = compareTableText(leftRow.classDay, rightRow.classDay);
-            else if (sortField === "className") compareValue = compareTableText(leftRow.className, rightRow.className);
-            else if (sortField === "reportId") compareValue = compareTableText(leftRow.reportId, rightRow.reportId);
-            else compareValue = compareTableIsoDate(leftRow.classDate, rightRow.classDate);
-            if (compareValue === 0) compareValue = compareTableText(leftRow.className, rightRow.className);
-            if (compareValue === 0) compareValue = compareTableText(leftRow.reportId, rightRow.reportId);
-            if (compareValue === 0) compareValue = comparePerformanceEngagementGroupRows(leftRow, rightRow);
-            return applySortDirection(compareValue, sortDir);
-          });
-      }
-
-      function performanceEngagementRowMatchesFilters(row = {}, includeSelectedDay = true, ignoreSearch = false) {
-        const searchTerms = ignoreSearch ? [] : normalizeText(state.performanceEngagement?.search)
-          .split("|").map((term) => normalizeLower(term)).filter(Boolean);
-        const role = normalizeLower(state.performanceEngagement?.role);
-        const level = normalizeLower(state.performanceEngagement?.level);
-        const delivery = normalizeLower(state.performanceEngagement?.delivery);
-        const selectedDayKey = normalizeText(state.performanceEngagement?.selectedDayKey);
-        const isTrue = (value) => ["yes", "true", "1"].includes(normalizeLower(value));
-        if (includeSelectedDay && selectedDayKey && normalizeText(row.classDate) !== selectedDayKey) return false;
-        if (role && normalizeLower(row.reviewed) !== role) return false;
-        if (level && normalizeLower(row.level) !== level) return false;
-        const searchHaystack = [
-          row.searchText,
-          row.reviewed,
-          row.id,
-          row.englishName,
-          row.level,
-          row.classDate,
-          row.classDay,
-          row.className,
-          row.reportId,
-        ].map((value) => normalizeLower(value)).filter(Boolean).join(" ");
-        if (searchTerms.length && !searchTerms.every((term) => searchHaystack.includes(term))) return false;
-        if (delivery === "not-opened" && isTrue(row.emailOpened)) return false;
-        if (delivery === "opened" && !isTrue(row.emailOpened)) return false;
-        if (delivery === "clicked" && !isTrue(row.linkClicked)) return false;
-        if (delivery === "acknowledged" && !isTrue(row.acknowledged)) return false;
-        return true;
-      }
-
-      function renderPerformanceEngagementDayList() {
-        const listEl = document.getElementById("performanceEngagementDayList");
-        const summaryEl = document.getElementById("performanceEngagementHomeSummary");
-        if (!listEl || !summaryEl) return;
-        const rows = normalizePerformanceEngagementRows(state.performanceEngagement?.rows);
-        const groupedDays = new Map();
-        rows.forEach((row) => {
-          if (!performanceEngagementRowMatchesFilters(row, false)) return;
-          const dayKey = normalizeText(row.classDate) || "unknown";
-          const day = groupedDays.get(dayKey) || {
-            dayKey,
-            classDate: normalizeText(row.classDate),
-            classDay: normalizeText(row.classDay),
-            weekNumber: rowWeekNumber("performance", row),
-            classNames: new Set(),
-            reports: new Set(),
-            rowCount: 0,
-            sentCount: 0,
-            openCount: 0,
-            clickCount: 0,
-            pdfCount: 0,
-            ackCount: 0,
-          };
-          day.classNames.add(normalizeText(row.className));
-          if (normalizeText(row.reportId)) day.reports.add(normalizeText(row.reportId));
-          day.rowCount += 1;
-          if (row.sentOkReturned === "yes") day.sentCount += 1;
-          if (row.emailOpened) day.openCount += 1;
-          if (row.linkClicked) day.clickCount += 1;
-          if (row.pdfDownloaded) day.pdfCount += 1;
-          if (row.acknowledged) day.ackCount += 1;
-          groupedDays.set(dayKey, day);
-        });
-        const days = Array.from(groupedDays.values()).sort((left, right) =>
-          compareTableIsoDate(right.classDate, left.classDate),
-        );
-        if (!state.performanceEngagement.selectedDayKey && days.length) {
-          state.performanceEngagement.selectedDayKey = days[0].dayKey;
-        }
-        const selectedStillExists = days.some(
-          (day) => normalizeText(day.dayKey) === normalizeText(state.performanceEngagement.selectedDayKey),
-        );
-        if (!selectedStillExists && days.length) {
-          state.performanceEngagement.selectedDayKey = days[0].dayKey;
-        }
-        summaryEl.textContent = days.length
-          ? `${days.length} class day${days.length === 1 ? "" : "s"} | ${rows.length} tracked rows`
-          : "No RC engagement rows matched the current search.";
-        listEl.innerHTML = "";
-        if (!days.length) {
-          listEl.innerHTML = '<div class="small">No class days found.</div>';
-          return;
-        }
-        days.forEach((day) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className =
-            normalizeText(state.performanceEngagement.selectedDayKey) === normalizeText(day.dayKey) ?
-              "performance-engagement-day-card card is-active"
-            : "performance-engagement-day-card card";
-          button.dataset.surfaceRole = "card";
-          button.innerHTML = `
-            <strong>${escapeHtml(engagementDayHeading(day.classDate, day.weekNumber))}</strong>
-            <span class="small">${escapeHtml(`reports=${day.reports.size} | rows=${day.rowCount} | opens=${day.openCount} | clicks=${day.clickCount} | pdf=${day.pdfCount}`)}</span>
-          `;
-          button.addEventListener("click", () => {
-            state.performanceEngagement.selectedDayKey = day.dayKey;
-            state.performanceEngagement.selectedReportId = "";
-            renderPerformanceEngagementPage();
-          });
-          listEl.appendChild(button);
-        });
-      }
-
-      function renderPerformanceEngagementRows() {
-        const rowsEl = document.getElementById("performanceEngagementRows");
-        const summaryEl = document.getElementById("performanceEngagementTableSummary");
-        const selectedDayEl = document.getElementById("performanceEngagementSelectedDaySummary");
-        if (!rowsEl || !summaryEl || !selectedDayEl) return;
-        updatePerformanceEngagementSortIndicators();
-        const engagementRows = performanceEngagementRowsForSelection();
-        const selectedDay = normalizeText(state.performanceEngagement.selectedDayKey);
-        const day = normalizeText(
-          state.performanceEngagement.days?.find((entry) => normalizeText(entry.dayKey) === selectedDay)?.classDay,
-        );
-        const date = normalizeText(
-          state.performanceEngagement.days?.find((entry) => normalizeText(entry.dayKey) === selectedDay)?.classDate,
-        );
-        selectedDayEl.textContent = selectedDay
-          ? `${day || "Selected day"} | ${date || selectedDay}`
-          : "No class day selected.";
-        summaryEl.textContent = engagementRows.length
-          ? `${engagementRows.length} report groups | ${engagementRows.reduce((sum, entry) => sum + entry.rows.length, 0)} tracked rows`
-          : "No engagement rows matched this day and search.";
-        rowsEl.innerHTML = "";
-        if (!engagementRows.length) {
-          rowsEl.innerHTML = '<tr><td colspan="9">No engagement rows for the selected class day.</td></tr>';
-          return;
-        }
-        engagementRows.forEach((group, groupIndex) => {
-          group.rows.forEach((row, rowIndex) => {
-            const tr = document.createElement("tr");
-            if (group.rows.length > 1 && rowIndex === 0) tr.classList.add("pair-start");
-            if (group.rows.length > 1 && rowIndex === group.rows.length - 1) tr.classList.add("pair-end");
-            const reviewedClass =
-              normalizeLower(row.reviewed) === "parent" ? "is-parent"
-              : normalizeLower(row.reviewed) === "student" ? "is-student"
-              : "";
-            const sentClass =
-              normalizeLower(row.sentOkReturned) === "no" ? "is-no"
-              : normalizeLower(row.sentOkReturned) === "yes" ? "is-yes"
-              : "is-empty";
-            const emailClass = row.emailOpenedAt ? "is-set" : "is-empty";
-            const linkClass = row.linkClickedAt ? "is-set" : "is-empty";
-            const pdfClass = row.pdfDownloadedAt ? "is-set" : "is-empty";
-            const ackClass = row.acknowledgedAt ? "is-set" : "is-empty";
-            tr.innerHTML = `
-              <td class="performance-engagement-reviewed-cell ${reviewedClass}">${escapeHtml(row.reviewed || "-")}</td>
-              <td title="Email used: ${escapeHtml(row.emailUsed || "not available")}">${escapeHtml(row.id || "-")}</td>
-              <td>${escapeHtml(row.englishName || "-")}</td>
-              <td>${escapeHtml(row.level || "-")}</td>
-              <td class="performance-engagement-status-cell ${sentClass}" title="${escapeHtml(row.sentOkReturned)}">${escapeHtml(row.sentOkReturned || "-")}</td>
-              <td class="performance-engagement-event-cell ${emailClass}" title="${escapeHtml(row.emailOpenedAt || "")}">${escapeHtml(row.emailOpened || "-")}</td>
-              <td class="performance-engagement-event-cell ${linkClass}" title="${escapeHtml(row.linkClickedAt || "")}">${escapeHtml(row.linkClicked || "-")}</td>
-              <td class="performance-engagement-event-cell ${pdfClass}" title="${escapeHtml(row.pdfDownloadedAt || "")}">${escapeHtml(row.pdfDownloaded || "-")}</td>
-              <td class="performance-engagement-event-cell ${ackClass}" title="${escapeHtml(row.acknowledgedAt || "")}">${escapeHtml(row.acknowledged || "-")}</td>
-              <td>${escapeHtml(row.emailUsed || "-")}</td>
-            `;
-            rowsEl.appendChild(tr);
-          });
-          if (groupIndex < engagementRows.length - 1 && group.rows.length > 1
-            && engagementRows[groupIndex + 1]?.rows?.length > 1) {
-            const spacer = document.createElement("tr");
-            spacer.className = "performance-engagement-pair-spacer";
-            spacer.setAttribute("aria-hidden", "true");
-            spacer.innerHTML = '<td colspan="10"></td>';
-            rowsEl.appendChild(spacer);
-          }
-        });
-      }
-
-      function renderPerformanceEngagementPage() {
-        renderPerformanceEngagementDayList();
-        renderPerformanceEngagementRows();
-        updatePerformanceEngagementSortIndicators();
-      }
-
-      async function loadPerformanceEngagementData({ force = false } = {}) {
-        const current = state.performanceEngagement || {};
-        if (current.loading) return;
-        if (current.loaded && !force) {
-          renderPerformanceEngagementPage();
-          return;
-        }
-        current.loading = true;
-        state.performanceEngagement = { ...current };
-        try {
-          const params = new URLSearchParams();
-          const response = await api(
-            `/api/admin/performance-engagement${params.toString() ? `?${params.toString()}` : ""}`,
-          );
-          state.performanceEngagement = {
-            ...state.performanceEngagement,
-            loaded: true,
-            loading: false,
-            generatedAt: normalizeText(response?.generatedAt),
-            days: Array.isArray(response?.days) ? response.days : [],
-            rows: Array.isArray(response?.rows) ? response.rows : [],
-          };
-          const performanceSearchEl = document.getElementById("performanceEngagementSearch");
-          if (performanceSearchEl && performanceSearchEl.dataset.engagementSearchBound !== "true") {
-            performanceSearchEl.addEventListener("input", (event) => {
-              state.performanceEngagement.search = normalizeText(event?.target?.value);
-              renderPerformanceEngagementPage();
-            });
-            performanceSearchEl.dataset.engagementSearchBound = "true";
-          }
-          const performanceRoleEl = document.getElementById("performanceEngagementRoleFilter");
-          if (performanceRoleEl && performanceRoleEl.dataset.engagementFilterBound !== "true") {
-            performanceRoleEl.addEventListener("change", (event) => {
-              state.performanceEngagement.role = normalizeText(event?.target?.value);
-              renderPerformanceEngagementPage();
-            });
-            performanceRoleEl.dataset.engagementFilterBound = "true";
-          }
-          const performanceLevelEl = document.getElementById("performanceEngagementLevelFilter");
-          if (performanceLevelEl && performanceLevelEl.dataset.engagementFilterBound !== "true") {
-            performanceLevelEl.addEventListener("change", (event) => {
-              state.performanceEngagement.level = normalizeText(event?.target?.value);
-              renderPerformanceEngagementPage();
-            });
-            performanceLevelEl.dataset.engagementFilterBound = "true";
-          }
-          const performanceDeliveryEl = document.getElementById("performanceEngagementDeliveryFilter");
-          if (performanceDeliveryEl && performanceDeliveryEl.dataset.engagementFilterBound !== "true") {
-            performanceDeliveryEl.addEventListener("change", (event) => {
-              state.performanceEngagement.delivery = normalizeText(event?.target?.value);
-              renderPerformanceEngagementPage();
-            });
-            performanceDeliveryEl.dataset.engagementFilterBound = "true";
-          }
-          if (
-            state.performanceEngagement.selectedDayKey
-            && !state.performanceEngagement.days.some(
-              (day) => normalizeText(day.dayKey) === normalizeText(state.performanceEngagement.selectedDayKey),
-            )
-          ) {
-            state.performanceEngagement.selectedDayKey = "";
-          }
-          renderPerformanceEngagementPage();
-        } catch (error) {
-          state.performanceEngagement = {
-            ...state.performanceEngagement,
-            loaded: true,
-            loading: false,
-            days: [],
-            rows: [],
-          };
-          renderPerformanceEngagementPage();
-          throw error;
-        }
-      }
-
       function normalizedNewsReviewSortField(field = "") {
         const normalized = normalizeText(field);
         if (
@@ -6264,63 +5899,6 @@
                 ascending ? "ascending"
                 : "descending"
               : "none",
-            );
-          });
-      }
-
-      function bindPerformanceEngagementSortHeaderEvents() {
-        document
-          .querySelectorAll("th[data-performance-engagement-sort]")
-          .forEach((thEl) => {
-            if (thEl.dataset.sortBound === "1") return;
-            thEl.dataset.sortBound = "1";
-            const onSort = () => {
-              const field = normalizeText(
-                thEl.getAttribute("data-performance-engagement-sort"),
-              );
-              if (!field) return;
-              const currentField = normalizePerformanceEngagementSortField(
-                state.performanceEngagement?.sortField,
-              );
-              const nextDir =
-                currentField === field &&
-                normalizeLower(state.performanceEngagement?.sortDir) === "desc" ?
-                  "asc"
-                : currentField === field ?
-                  "desc"
-                : "desc";
-              state.performanceEngagement.sortField = field;
-              state.performanceEngagement.sortDir = nextDir;
-              renderPerformanceEngagementRows();
-              updatePerformanceEngagementSortIndicators();
-            };
-            thEl.addEventListener("click", onSort);
-            thEl.addEventListener("keydown", (event) => {
-              if (event.key !== "Enter" && event.key !== " ") return;
-              event.preventDefault();
-              onSort();
-            });
-          });
-      }
-
-      function updatePerformanceEngagementSortIndicators() {
-        document
-          .querySelectorAll("th[data-performance-engagement-sort]")
-          .forEach((thEl) => {
-            const field = normalizeText(
-              thEl.getAttribute("data-performance-engagement-sort"),
-            );
-            const activeState = state.performanceEngagement || {};
-            const activeField = normalizePerformanceEngagementSortField(
-              activeState.sortField,
-            );
-            const active = activeField === field;
-            const ascending = normalizeLower(activeState.sortDir) === "asc";
-            thEl.classList.toggle("sort-active-asc", active && ascending);
-            thEl.classList.toggle("sort-active-desc", active && !ascending);
-            thEl.setAttribute(
-              "aria-sort",
-              active ? (ascending ? "ascending" : "descending") : "none",
             );
           });
       }
@@ -10337,6 +9915,393 @@
         }
       }
 
+      // PERF-CONTRACT: ADMIN-PERFORMANCE-ISLAND
+      // Performance engagement is evaluated only after its page is activated.
+      let performanceEngagementIsland = null;
+      let performanceEngagementIslandPromise = null;
+      let queueHubIsland = null;
+      let queueHubIslandPromise = null;
+      let overviewChartIsland = null;
+      let overviewChartIslandPromise = null;
+      let overviewDashboardIsland = null;
+      let overviewDashboardIslandPromise = null;
+      // PERF-CONTRACT: ADMIN-FALLBACK-BOUNDARY
+      // Compatibility handlers are loaded only after an island failure or by the test harness.
+      let adminFallbacks = null;
+      let adminFallbacksPromise = null;
+      const ADMIN_FALLBACK_DEPENDENCY_NAMES =
+        "STUDENT_NEWS_REVIEW_STATUS_SUBMITTED addAssignmentDraftItem applyAttendanceLevelTileStyle applyGradeChartCurrentQuarterDefault applyGradeChartCurrentSchoolYearDefault applyNewsReviewAction applyNewsReviewBulkApprove applyNewsReviewViewerAction applyParentTrackingLessonSummaryFromMemory applyParentTrackingRubricSummaryScores applyProfileFieldLayoutChanges applySortState autoFillSchoolSetupFromInputs bindById buildGradesTabulatorLaunchUrl clearAttendanceForm clearAttendanceLevelTileImage clearGradeForm clearLevelReminderForm clearParentTrackingActionShortcutInputs clearParentTrackingForm clearSchoolSetupLogoDraft closeGradeChartModal closeLevelDetailPanel closeNewsReviewViewer closeParentQueueModal compareIsoDateText createProfileFieldFromSettings dayLabelFromIsoDate deleteAssignmentTemplate deleteProfileFieldFromLayout deleteSelectedQueuedParentReports editParentQueueModalItem exportVisibleTableRowsToXlsx gradeChartCurrentSchoolYear handleAttendanceLevelImageUpload handleError handleSchoolSetupLogoUpload holdParentQueueModalItem insertParentTrackingActionShortcut loadAssignmentTemplatesFromServer loadExerciseTitles loadIncomingExerciseResults loadNewsReviewQueue loadParentReportQueue loadPerformanceEngagementData newsReviewViewerCurrentItem nextSundayIsoDate normalizeLower normalizeNewsReviewFilters normalizeText normalizedGradeChartPeriod openGradeChartModalForLaneKey openNewsReviewViewerByWeekSetId parentTrackingFieldSetValue persistAttendanceFormContext previewSchoolSetupFromInputs printVisibleTableRowsPdf queueParentTrackingEmail refreshAssignmentStudentOptions refreshAttendanceLanding refreshAttendanceLandingRows refreshNewsReviewFilterControls refreshParentTracking rememberParentTrackingLessonSummary rememberParentTrackingRecommendationFocus rememberParentTrackingTeacherName renderAssignmentLevelTiles renderAssignmentTemplates renderGradePulseChart renderParentQueueModal renderPerformanceEngagementPage renderPerformanceQueueSection renderPerformanceStagedSection renderProfileFieldLayoutEditor renderSchoolSetupPanel requeueParentQueueModalItem rerenderSortedTable resetAssignmentForm resetAttendanceLevelTileStyle resetParentTrackingManualMetricsTouched resetProfileFieldLayoutToDefault resetUiSettings saveAssignmentTemplate saveAttendance saveAttendanceLandingForSelectedLevel saveGrade saveParentTrackingReport saveSchoolSetupFromInputs schoolSetupDraftForRender sendAllQueuedParentReports sendAssignmentAnnouncement sendLevelReminders sendSelectedQueuedParentReports setAssignmentStatus setGradeChartState setNewsReviewFilterValues setNewsReviewViewerEditMode setParentQueueSelectionForVisibleRows setProfileFieldLayoutEditorExpanded setProfileLayoutStatus setStatus setTableSearchTerm shiftNewsReviewViewer state syncAttendanceDateDerivedFields syncAttendanceLevelEditorInputs syncParentTrackingForSelection toggleTableArchivedView unqueueSelectedQueuedParentReports updateAttendanceQuarterWarning".split(" ");
+
+      function adminFallbackDependencies() {
+        const dependencies = {};
+        dependencies.STUDENT_NEWS_REVIEW_STATUS_SUBMITTED = typeof STUDENT_NEWS_REVIEW_STATUS_SUBMITTED === "undefined" ? undefined : STUDENT_NEWS_REVIEW_STATUS_SUBMITTED;
+        dependencies.addAssignmentDraftItem = typeof addAssignmentDraftItem === "undefined" ? undefined : addAssignmentDraftItem;
+        dependencies.applyAttendanceLevelTileStyle = typeof applyAttendanceLevelTileStyle === "undefined" ? undefined : applyAttendanceLevelTileStyle;
+        dependencies.applyGradeChartCurrentQuarterDefault = typeof applyGradeChartCurrentQuarterDefault === "undefined" ? undefined : applyGradeChartCurrentQuarterDefault;
+        dependencies.applyGradeChartCurrentSchoolYearDefault = typeof applyGradeChartCurrentSchoolYearDefault === "undefined" ? undefined : applyGradeChartCurrentSchoolYearDefault;
+        dependencies.applyNewsReviewAction = typeof applyNewsReviewAction === "undefined" ? undefined : applyNewsReviewAction;
+        dependencies.applyNewsReviewBulkApprove = typeof applyNewsReviewBulkApprove === "undefined" ? undefined : applyNewsReviewBulkApprove;
+        dependencies.applyNewsReviewViewerAction = typeof applyNewsReviewViewerAction === "undefined" ? undefined : applyNewsReviewViewerAction;
+        dependencies.applyParentTrackingLessonSummaryFromMemory = typeof applyParentTrackingLessonSummaryFromMemory === "undefined" ? undefined : applyParentTrackingLessonSummaryFromMemory;
+        dependencies.applyParentTrackingRubricSummaryScores = typeof applyParentTrackingRubricSummaryScores === "undefined" ? undefined : applyParentTrackingRubricSummaryScores;
+        dependencies.applyProfileFieldLayoutChanges = typeof applyProfileFieldLayoutChanges === "undefined" ? undefined : applyProfileFieldLayoutChanges;
+        dependencies.applySortState = typeof applySortState === "undefined" ? undefined : applySortState;
+        dependencies.autoFillSchoolSetupFromInputs = typeof autoFillSchoolSetupFromInputs === "undefined" ? undefined : autoFillSchoolSetupFromInputs;
+        dependencies.bindById = typeof bindById === "undefined" ? undefined : bindById;
+        dependencies.buildGradesTabulatorLaunchUrl = typeof buildGradesTabulatorLaunchUrl === "undefined" ? undefined : buildGradesTabulatorLaunchUrl;
+        dependencies.clearAttendanceForm = typeof clearAttendanceForm === "undefined" ? undefined : clearAttendanceForm;
+        dependencies.clearAttendanceLevelTileImage = typeof clearAttendanceLevelTileImage === "undefined" ? undefined : clearAttendanceLevelTileImage;
+        dependencies.clearGradeForm = typeof clearGradeForm === "undefined" ? undefined : clearGradeForm;
+        dependencies.clearLevelReminderForm = typeof clearLevelReminderForm === "undefined" ? undefined : clearLevelReminderForm;
+        dependencies.clearParentTrackingActionShortcutInputs = typeof clearParentTrackingActionShortcutInputs === "undefined" ? undefined : clearParentTrackingActionShortcutInputs;
+        dependencies.clearParentTrackingForm = typeof clearParentTrackingForm === "undefined" ? undefined : clearParentTrackingForm;
+        dependencies.clearSchoolSetupLogoDraft = typeof clearSchoolSetupLogoDraft === "undefined" ? undefined : clearSchoolSetupLogoDraft;
+        dependencies.closeGradeChartModal = typeof closeGradeChartModal === "undefined" ? undefined : closeGradeChartModal;
+        dependencies.closeLevelDetailPanel = typeof closeLevelDetailPanel === "undefined" ? undefined : closeLevelDetailPanel;
+        dependencies.closeNewsReviewViewer = typeof closeNewsReviewViewer === "undefined" ? undefined : closeNewsReviewViewer;
+        dependencies.closeParentQueueModal = typeof closeParentQueueModal === "undefined" ? undefined : closeParentQueueModal;
+        dependencies.compareIsoDateText = typeof compareIsoDateText === "undefined" ? undefined : compareIsoDateText;
+        dependencies.createProfileFieldFromSettings = typeof createProfileFieldFromSettings === "undefined" ? undefined : createProfileFieldFromSettings;
+        dependencies.dayLabelFromIsoDate = typeof dayLabelFromIsoDate === "undefined" ? undefined : dayLabelFromIsoDate;
+        dependencies.deleteAssignmentTemplate = typeof deleteAssignmentTemplate === "undefined" ? undefined : deleteAssignmentTemplate;
+        dependencies.deleteProfileFieldFromLayout = typeof deleteProfileFieldFromLayout === "undefined" ? undefined : deleteProfileFieldFromLayout;
+        dependencies.deleteSelectedQueuedParentReports = typeof deleteSelectedQueuedParentReports === "undefined" ? undefined : deleteSelectedQueuedParentReports;
+        dependencies.editParentQueueModalItem = typeof editParentQueueModalItem === "undefined" ? undefined : editParentQueueModalItem;
+        dependencies.exportVisibleTableRowsToXlsx = typeof exportVisibleTableRowsToXlsx === "undefined" ? undefined : exportVisibleTableRowsToXlsx;
+        dependencies.gradeChartCurrentSchoolYear = typeof gradeChartCurrentSchoolYear === "undefined" ? undefined : gradeChartCurrentSchoolYear;
+        dependencies.handleAttendanceLevelImageUpload = typeof handleAttendanceLevelImageUpload === "undefined" ? undefined : handleAttendanceLevelImageUpload;
+        dependencies.handleError = typeof handleError === "undefined" ? undefined : handleError;
+        dependencies.handleSchoolSetupLogoUpload = typeof handleSchoolSetupLogoUpload === "undefined" ? undefined : handleSchoolSetupLogoUpload;
+        dependencies.holdParentQueueModalItem = typeof holdParentQueueModalItem === "undefined" ? undefined : holdParentQueueModalItem;
+        dependencies.insertParentTrackingActionShortcut = typeof insertParentTrackingActionShortcut === "undefined" ? undefined : insertParentTrackingActionShortcut;
+        dependencies.loadAssignmentTemplatesFromServer = typeof loadAssignmentTemplatesFromServer === "undefined" ? undefined : loadAssignmentTemplatesFromServer;
+        dependencies.loadExerciseTitles = typeof loadExerciseTitles === "undefined" ? undefined : loadExerciseTitles;
+        dependencies.loadIncomingExerciseResults = typeof loadIncomingExerciseResults === "undefined" ? undefined : loadIncomingExerciseResults;
+        dependencies.loadNewsReviewQueue = typeof loadNewsReviewQueue === "undefined" ? undefined : loadNewsReviewQueue;
+        dependencies.loadParentReportQueue = typeof loadParentReportQueue === "undefined" ? undefined : loadParentReportQueue;
+        dependencies.loadPerformanceEngagementData = typeof loadPerformanceEngagementData === "undefined" ? undefined : loadPerformanceEngagementData;
+        dependencies.newsReviewViewerCurrentItem = typeof newsReviewViewerCurrentItem === "undefined" ? undefined : newsReviewViewerCurrentItem;
+        dependencies.nextSundayIsoDate = typeof nextSundayIsoDate === "undefined" ? undefined : nextSundayIsoDate;
+        dependencies.normalizeLower = typeof normalizeLower === "undefined" ? undefined : normalizeLower;
+        dependencies.normalizeNewsReviewFilters = typeof normalizeNewsReviewFilters === "undefined" ? undefined : normalizeNewsReviewFilters;
+        dependencies.normalizeText = typeof normalizeText === "undefined" ? undefined : normalizeText;
+        dependencies.normalizedGradeChartPeriod = typeof normalizedGradeChartPeriod === "undefined" ? undefined : normalizedGradeChartPeriod;
+        dependencies.open = typeof open === "undefined" ? undefined : open;
+        dependencies.openGradeChartModalForLaneKey = typeof openGradeChartModalForLaneKey === "undefined" ? undefined : openGradeChartModalForLaneKey;
+        dependencies.openNewsReviewViewerByWeekSetId = typeof openNewsReviewViewerByWeekSetId === "undefined" ? undefined : openNewsReviewViewerByWeekSetId;
+        dependencies.parentTrackingFieldSetValue = typeof parentTrackingFieldSetValue === "undefined" ? undefined : parentTrackingFieldSetValue;
+        dependencies.persistAttendanceFormContext = typeof persistAttendanceFormContext === "undefined" ? undefined : persistAttendanceFormContext;
+        dependencies.previewSchoolSetupFromInputs = typeof previewSchoolSetupFromInputs === "undefined" ? undefined : previewSchoolSetupFromInputs;
+        dependencies.printVisibleTableRowsPdf = typeof printVisibleTableRowsPdf === "undefined" ? undefined : printVisibleTableRowsPdf;
+        dependencies.queueParentTrackingEmail = typeof queueParentTrackingEmail === "undefined" ? undefined : queueParentTrackingEmail;
+        dependencies.refreshAssignmentStudentOptions = typeof refreshAssignmentStudentOptions === "undefined" ? undefined : refreshAssignmentStudentOptions;
+        dependencies.refreshAttendanceLanding = typeof refreshAttendanceLanding === "undefined" ? undefined : refreshAttendanceLanding;
+        dependencies.refreshAttendanceLandingRows = typeof refreshAttendanceLandingRows === "undefined" ? undefined : refreshAttendanceLandingRows;
+        dependencies.refreshNewsReviewFilterControls = typeof refreshNewsReviewFilterControls === "undefined" ? undefined : refreshNewsReviewFilterControls;
+        dependencies.refreshParentTracking = typeof refreshParentTracking === "undefined" ? undefined : refreshParentTracking;
+        dependencies.rememberParentTrackingLessonSummary = typeof rememberParentTrackingLessonSummary === "undefined" ? undefined : rememberParentTrackingLessonSummary;
+        dependencies.rememberParentTrackingRecommendationFocus = typeof rememberParentTrackingRecommendationFocus === "undefined" ? undefined : rememberParentTrackingRecommendationFocus;
+        dependencies.rememberParentTrackingTeacherName = typeof rememberParentTrackingTeacherName === "undefined" ? undefined : rememberParentTrackingTeacherName;
+        dependencies.renderAssignmentLevelTiles = typeof renderAssignmentLevelTiles === "undefined" ? undefined : renderAssignmentLevelTiles;
+        dependencies.renderAssignmentTemplates = typeof renderAssignmentTemplates === "undefined" ? undefined : renderAssignmentTemplates;
+        dependencies.renderGradePulseChart = typeof renderGradePulseChart === "undefined" ? undefined : renderGradePulseChart;
+        dependencies.renderParentQueueModal = typeof renderParentQueueModal === "undefined" ? undefined : renderParentQueueModal;
+        dependencies.renderPerformanceEngagementPage = typeof renderPerformanceEngagementPage === "undefined" ? undefined : renderPerformanceEngagementPage;
+        dependencies.renderPerformanceQueueSection = typeof renderPerformanceQueueSection === "undefined" ? undefined : renderPerformanceQueueSection;
+        dependencies.renderPerformanceStagedSection = typeof renderPerformanceStagedSection === "undefined" ? undefined : renderPerformanceStagedSection;
+        dependencies.renderProfileFieldLayoutEditor = typeof renderProfileFieldLayoutEditor === "undefined" ? undefined : renderProfileFieldLayoutEditor;
+        dependencies.renderSchoolSetupPanel = typeof renderSchoolSetupPanel === "undefined" ? undefined : renderSchoolSetupPanel;
+        dependencies.requeueParentQueueModalItem = typeof requeueParentQueueModalItem === "undefined" ? undefined : requeueParentQueueModalItem;
+        dependencies.rerenderSortedTable = typeof rerenderSortedTable === "undefined" ? undefined : rerenderSortedTable;
+        dependencies.resetAssignmentForm = typeof resetAssignmentForm === "undefined" ? undefined : resetAssignmentForm;
+        dependencies.resetAttendanceLevelTileStyle = typeof resetAttendanceLevelTileStyle === "undefined" ? undefined : resetAttendanceLevelTileStyle;
+        dependencies.resetParentTrackingManualMetricsTouched = typeof resetParentTrackingManualMetricsTouched === "undefined" ? undefined : resetParentTrackingManualMetricsTouched;
+        dependencies.resetProfileFieldLayoutToDefault = typeof resetProfileFieldLayoutToDefault === "undefined" ? undefined : resetProfileFieldLayoutToDefault;
+        dependencies.resetUiSettings = typeof resetUiSettings === "undefined" ? undefined : resetUiSettings;
+        dependencies.saveAssignmentTemplate = typeof saveAssignmentTemplate === "undefined" ? undefined : saveAssignmentTemplate;
+        dependencies.saveAttendance = typeof saveAttendance === "undefined" ? undefined : saveAttendance;
+        dependencies.saveAttendanceLandingForSelectedLevel = typeof saveAttendanceLandingForSelectedLevel === "undefined" ? undefined : saveAttendanceLandingForSelectedLevel;
+        dependencies.saveGrade = typeof saveGrade === "undefined" ? undefined : saveGrade;
+        dependencies.saveParentTrackingReport = typeof saveParentTrackingReport === "undefined" ? undefined : saveParentTrackingReport;
+        dependencies.saveSchoolSetupFromInputs = typeof saveSchoolSetupFromInputs === "undefined" ? undefined : saveSchoolSetupFromInputs;
+        dependencies.schoolSetupDraftForRender = typeof schoolSetupDraftForRender === "undefined" ? undefined : schoolSetupDraftForRender;
+        dependencies.sendAllQueuedParentReports = typeof sendAllQueuedParentReports === "undefined" ? undefined : sendAllQueuedParentReports;
+        dependencies.sendAssignmentAnnouncement = typeof sendAssignmentAnnouncement === "undefined" ? undefined : sendAssignmentAnnouncement;
+        dependencies.sendLevelReminders = typeof sendLevelReminders === "undefined" ? undefined : sendLevelReminders;
+        dependencies.sendSelectedQueuedParentReports = typeof sendSelectedQueuedParentReports === "undefined" ? undefined : sendSelectedQueuedParentReports;
+        dependencies.setAssignmentStatus = typeof setAssignmentStatus === "undefined" ? undefined : setAssignmentStatus;
+        dependencies.setGradeChartState = typeof setGradeChartState === "undefined" ? undefined : setGradeChartState;
+        dependencies.setNewsReviewFilterValues = typeof setNewsReviewFilterValues === "undefined" ? undefined : setNewsReviewFilterValues;
+        dependencies.setNewsReviewViewerEditMode = typeof setNewsReviewViewerEditMode === "undefined" ? undefined : setNewsReviewViewerEditMode;
+        dependencies.setParentQueueSelectionForVisibleRows = typeof setParentQueueSelectionForVisibleRows === "undefined" ? undefined : setParentQueueSelectionForVisibleRows;
+        dependencies.setProfileFieldLayoutEditorExpanded = typeof setProfileFieldLayoutEditorExpanded === "undefined" ? undefined : setProfileFieldLayoutEditorExpanded;
+        dependencies.setProfileLayoutStatus = typeof setProfileLayoutStatus === "undefined" ? undefined : setProfileLayoutStatus;
+        dependencies.setStatus = typeof setStatus === "undefined" ? undefined : setStatus;
+        dependencies.setTableSearchTerm = typeof setTableSearchTerm === "undefined" ? undefined : setTableSearchTerm;
+        dependencies.shiftNewsReviewViewer = typeof shiftNewsReviewViewer === "undefined" ? undefined : shiftNewsReviewViewer;
+        dependencies.state = typeof state === "undefined" ? undefined : state;
+        dependencies.syncAttendanceDateDerivedFields = typeof syncAttendanceDateDerivedFields === "undefined" ? undefined : syncAttendanceDateDerivedFields;
+        dependencies.syncAttendanceLevelEditorInputs = typeof syncAttendanceLevelEditorInputs === "undefined" ? undefined : syncAttendanceLevelEditorInputs;
+        dependencies.syncParentTrackingForSelection = typeof syncParentTrackingForSelection === "undefined" ? undefined : syncParentTrackingForSelection;
+        dependencies.toggleTableArchivedView = typeof toggleTableArchivedView === "undefined" ? undefined : toggleTableArchivedView;
+        dependencies.unqueueSelectedQueuedParentReports = typeof unqueueSelectedQueuedParentReports === "undefined" ? undefined : unqueueSelectedQueuedParentReports;
+        dependencies.updateAttendanceQuarterWarning = typeof updateAttendanceQuarterWarning === "undefined" ? undefined : updateAttendanceQuarterWarning;
+        return dependencies;
+      }
+
+      async function ensureAdminFallbacks() {
+        if (adminFallbacks) return adminFallbacks;
+        if (!adminFallbacksPromise) {
+          adminFallbacksPromise = (IS_JSDOM_ENV && window.__SIS_ADMIN_FALLBACK_FACTORY__
+            ? Promise.resolve({ initAdminFallbacks: window.__SIS_ADMIN_FALLBACK_FACTORY__ })
+            : import("/web-asset/admin/admin-fallbacks.mjs"))
+            .then((mod) => {
+              adminFallbacks = mod.initAdminFallbacks(adminFallbackDependencies());
+              return adminFallbacks;
+            });
+        }
+        return adminFallbacksPromise;
+      }
+
+      function activateAdminFallback(name) {
+        void ensureAdminFallbacks()
+          .then((fallbacks) => fallbacks?.[name]?.())
+          .catch(handleError);
+      }
+
+      async function ensureOverviewChartIsland() {
+        if (overviewChartIsland) return overviewChartIsland;
+        if (IS_JSDOM_ENV) {
+          overviewChartIsland = { render() {} };
+          return overviewChartIsland;
+        }
+        if (!overviewChartIslandPromise) {
+          overviewChartIslandPromise = import("/web-asset/admin/overview-chart-island.mjs")
+            .then((mod) => {
+              overviewChartIsland = mod.initOverviewChartIsland({
+                document,
+                onLevelDetailOpen: openLevelDetailPanel,
+                helpers: {
+                  normalizeText,
+                  normalizeWeeklyAssignmentCompletion,
+                  shiftToFixedTimeZone,
+                  getLevelTheme,
+                  toRgba,
+                  shortLevelLabel,
+                  fullLevelLabel,
+                  formatPercent,
+                },
+              });
+              return overviewChartIsland;
+            });
+        }
+        return overviewChartIslandPromise;
+      }
+
+      function renderOverviewChartsAfterPaint(payload = {}) {
+        void (async () => {
+          const island = await ensureOverviewChartIsland();
+          island.render(payload);
+        })().catch(handleError);
+      }
+
+      async function ensureOverviewDashboardIsland() {
+        if (overviewDashboardIsland) return overviewDashboardIsland;
+        if (IS_JSDOM_ENV) {
+          overviewDashboardIsland = { renderDashboardSummary() {} };
+          return overviewDashboardIsland;
+        }
+        if (!overviewDashboardIslandPromise) {
+          overviewDashboardIslandPromise = import("/web-asset/admin/overview-dashboard-island.mjs")
+            .then((mod) => {
+              overviewDashboardIsland = mod.initOverviewDashboardIsland({
+                document,
+                state,
+                normalizeWeeklyAssignmentCompletion,
+                sortLevelRows,
+                isAssignedLevelRow,
+                effectiveDashboardLevelCompletionRows,
+                formatPercent,
+                levelBadgeHtml,
+                renderOverviewChartsAfterPaint,
+                buildDashboardRiskLines,
+                renderAttendanceAdminRiskSignals,
+                renderPerformanceStagedSection,
+              });
+              return overviewDashboardIsland;
+            });
+        }
+        return overviewDashboardIslandPromise;
+      }
+
+      async function ensureQueueHubIsland() {
+        if (queueHubIsland) return queueHubIsland;
+        if (IS_JSDOM_ENV) {
+          if (window.__SIS_QUEUE_HUB_FACTORY__) {
+            queueHubIsland = window.__SIS_QUEUE_HUB_FACTORY__({
+              document,
+              state,
+              api,
+              onQueueHubItemOpen(panelId, rowIndex) {
+                openQueueHubItem(panelId, rowIndex).catch(handleError);
+              },
+              onOverviewNewsQueueUpdate(panel) {
+                renderOverviewNewsQueueSection(panel);
+              },
+              helpers: {
+                normalizeText,
+                normalizeQueueHubPanelOrder,
+                persistUiSettings,
+                persistUiSettingsToServer,
+                formatDateTime,
+                formatPortalWeekRange,
+                fullLevelLabel,
+                resolveSystemLevelName,
+                newsReviewAdminSetStatusToken,
+                newsReviewWeekSetActionToken,
+                weeklyMinimumNewsReports,
+                newsReviewStatusChipHtml,
+                newsReviewStatusLabel,
+                newsReviewSetActionChipHtml,
+                newsReviewSetActionLabel,
+                escapeHtml,
+                normalizeLower,
+                currentRoleName,
+                canManageUsers,
+                setStatus,
+                panelIds: QUEUE_HUB_PANEL_IDS,
+                queueHubPath: ADMIN_QUEUE_HUB_PATH,
+                fixedTimeZone: FIXED_TIME_ZONE,
+                defaultPanelOrder: DEFAULT_UI_SETTINGS.queueHub.panelOrder,
+              },
+            });
+            queueHubIsland.bind();
+            return queueHubIsland;
+          }
+          queueHubIsland = {
+            load() {},
+            render() {},
+            save() {},
+            reset() {},
+            setStatus() {},
+            itemAt() { return null; },
+          };
+          return queueHubIsland;
+        }
+        if (!queueHubIslandPromise) {
+          queueHubIslandPromise = import("/web-asset/admin/queue-hub-island.mjs")
+            .then((mod) => {
+              queueHubIsland = mod.initQueueHubIsland({
+                document,
+                state,
+                api,
+                onQueueHubItemOpen(panelId, rowIndex) {
+                  openQueueHubItem(panelId, rowIndex).catch(handleError);
+                },
+                onOverviewNewsQueueUpdate(panel) {
+                  renderOverviewNewsQueueSection(panel);
+                },
+                helpers: {
+                  normalizeText,
+                  normalizeQueueHubPanelOrder,
+                  persistUiSettings,
+                  persistUiSettingsToServer,
+                  formatDateTime,
+                  formatPortalWeekRange,
+                  fullLevelLabel,
+                  resolveSystemLevelName,
+                  newsReviewAdminSetStatusToken,
+                  newsReviewWeekSetActionToken,
+                  weeklyMinimumNewsReports,
+                  newsReviewStatusChipHtml,
+                  newsReviewStatusLabel,
+                  newsReviewSetActionChipHtml,
+                  newsReviewSetActionLabel,
+                  escapeHtml,
+                  normalizeLower,
+                  currentRoleName,
+                  canManageUsers,
+                  setStatus,
+                  panelIds: QUEUE_HUB_PANEL_IDS,
+                  queueHubPath: ADMIN_QUEUE_HUB_PATH,
+                  fixedTimeZone: FIXED_TIME_ZONE,
+                  defaultPanelOrder: DEFAULT_UI_SETTINGS.queueHub.panelOrder,
+                },
+              });
+              queueHubIsland.bind();
+              return queueHubIsland;
+            });
+        }
+        return queueHubIslandPromise;
+      }
+
+      async function loadQueueHub(options = {}) {
+        const island = await ensureQueueHubIsland();
+        return island.load(options);
+      }
+
+      function renderQueueHubPanels() {
+        queueHubIsland?.render();
+      }
+
+      function setQueueHubStatus(message = "", isError = false) {
+        queueHubIsland?.setStatus(message, isError);
+      }
+
+      async function saveQueueHubPanelOrder() {
+        const island = await ensureQueueHubIsland();
+        return island.save();
+      }
+
+      function resetQueueHubPanelOrder() {
+        queueHubIsland?.reset();
+      }
+
+      async function ensurePerformanceEngagementIsland() {
+        if (performanceEngagementIsland) return performanceEngagementIsland;
+        if (IS_JSDOM_ENV) {
+          performanceEngagementIsland = { load() {}, render() {}, bind() {} };
+          return performanceEngagementIsland;
+        }
+        if (!performanceEngagementIslandPromise) {
+          performanceEngagementIslandPromise = import("/web-asset/admin/performance-engagement-island.mjs")
+            .then((mod) => {
+              performanceEngagementIsland = mod.initPerformanceEngagementIsland({
+                document,
+                state,
+                api,
+                onError: handleError,
+                helpers: {
+                  normalizeText,
+                  normalizeLower,
+                  compareTableText,
+                  compareTableIsoDate,
+                  applySortDirection,
+                  rowWeekNumber,
+                  engagementDayHeading,
+                  escapeHtml,
+                  formatDateTime,
+                },
+              });
+              return performanceEngagementIsland;
+            });
+        }
+        return performanceEngagementIslandPromise;
+      }
+
+      async function loadPerformanceEngagementData({ force = false } = {}) {
+        const island = await ensurePerformanceEngagementIsland();
+        return island.load({ force });
+      }
+
+      function renderPerformanceEngagementPage() {
+        performanceEngagementIsland?.render();
+      }
+
+      function bindPerformanceEngagementSortHeaderEvents() {
+        performanceEngagementIsland?.bind();
+      }
+
       let assignmentEngagementIsland = null;
       let assignmentEngagementIslandPromise = null;
 
@@ -10435,8 +10400,19 @@
           "performance-engagement",
           "reports",
         ]);
-        if (studentListPages.has(slug) && canReadData() && !state.students.length)
-          loadStudents().catch(handleError);
+        if (studentListPages.has(slug) && canReadData() && !state.students.length) {
+          loadStudents()
+            .then(() => {
+              if (slug === "assignments" || slug === "assignments-data") {
+                refreshAssignmentStudentOptions();
+                renderAssignmentLevelTiles();
+              }
+              if (slug === "parent-tracking") {
+                renderParentTrackingTeacherOptions();
+              }
+            })
+            .catch(handleError);
+        }
         if (slug === "attendance" || slug === "attendance-admin") {
           ensureAttendanceLandingFormDefaults();
           refreshAttendanceLanding({ reloadRows: true }).catch(handleError);
@@ -10461,6 +10437,9 @@
         if (slug === "assignments" || slug === "assignments-data") {
           refreshAssignmentStudentOptions();
           renderAssignmentLevelTiles();
+          loadAssignmentTemplatesFromServer({ migrateLegacy: true })
+            .then(() => renderAssignmentTemplates())
+            .catch(handleError);
           loadExerciseTitles().catch(handleError);
         }
         if (slug === "performance-data") {
@@ -10501,6 +10480,8 @@
         renderOverviewRuntimeRestartButton();
         if (syncUrl) syncPageHistory(slug, historyMode);
       }
+
+      window.__SIS_ADMIN_ACTIVATE_PAGE__ = setActivePage;
 
       function updateNavigationAccess() {
         document.querySelectorAll("[data-page-link]").forEach((linkEl) => {
@@ -12290,137 +12271,7 @@
         return Boolean(normalized) && normalized !== "unassigned";
       }
 
-      function renderOverviewLineChart(weeklyRows = [], assignmentSummary = {}) {
-        const svg = document.getElementById("overviewLineChart");
-        if (!svg) return;
-        svg.setAttribute("aria-label", "Current assignment completion percent (Mon to today)");
-        const rows = normalizeWeeklyAssignmentCompletion(weeklyRows);
 
-        const width = 900;
-        const height = 320;
-        const padLeft = 66;
-        const padRight = 24;
-        const padTop = 24;
-        const padBottom = 92;
-        const chartWidth = width - padLeft - padRight;
-        const chartHeight = height - padTop - padBottom;
-        const maxValue = 100;
-        const stepX = rows.length > 1 ? chartWidth / (rows.length - 1) : 0;
-        const xAt = (index) => padLeft + stepX * index;
-        const yAt = (value) =>
-          padTop + chartHeight - (Number(value || 0) / maxValue) * chartHeight;
-
-        const todayIndex = (shiftToFixedTimeZone(new Date()).getUTCDay() + 6) % 7;
-        const cappedTodayIndex = Math.max(0, Math.min(rows.length - 1, todayIndex));
-        const fallbackCompletionPercent = Math.max(
-          0,
-          Math.min(100, Number(assignmentSummary?.currentCompletionPercent || 0) || 0),
-        );
-        const fallbackTargetedStudents = Math.max(
-          0,
-          Number.parseInt(
-            String(assignmentSummary?.currentTargetedStudents || 0),
-            10,
-          ) || 0,
-        );
-
-        const assignmentStartIndex = rows.findIndex((row) => {
-          const assigned = Math.max(
-            Number(row.weeklyAssignedStudents || 0),
-            Number(row.studentsWithAssignments || 0),
-          );
-          return assigned > 0;
-        });
-
-        let visibleRows = [];
-        if (assignmentStartIndex >= 0 && assignmentStartIndex <= cappedTodayIndex) {
-          let rollingPercent = 0;
-          visibleRows = rows
-            .map((row, index) => {
-              if (index < assignmentStartIndex || index > cappedTodayIndex) return null;
-              if (index === assignmentStartIndex) {
-                return { index, day: row.day, completionPercent: 0 };
-              }
-              const assigned = Math.max(
-                Number(row.weeklyAssignedStudents || 0),
-                Number(row.studentsWithAssignments || 0),
-              );
-              const completed = Math.max(
-                Number(row.cumulativeCompletedStudents || 0),
-                Number(row.studentsCompletedAll || 0),
-              );
-              const reportedPercent = Number(row.completionPercent || 0);
-              const computedPercent =
-                assigned > 0 ? (completed / assigned) * 100 : reportedPercent;
-              rollingPercent = Math.max(
-                rollingPercent,
-                Math.max(
-                  0,
-                  Math.min(100, Number.isFinite(computedPercent) ? computedPercent : 0),
-                ),
-              );
-              return {
-                index,
-                day: row.day,
-                completionPercent: Number(rollingPercent.toFixed(1)),
-              };
-            })
-            .filter(Boolean);
-        } else if (fallbackTargetedStudents > 0) {
-          const fallbackRows = [{ index: 0, day: "Mon", completionPercent: 0 }];
-          if (cappedTodayIndex > 0) {
-            fallbackRows.push({
-              index: cappedTodayIndex,
-              day: rows[cappedTodayIndex]?.day || "Today",
-              completionPercent: Number(fallbackCompletionPercent.toFixed(1)),
-            });
-          }
-          visibleRows = fallbackRows;
-        }
-
-        if (!visibleRows.length) {
-          visibleRows = rows
-            .map((row, index) => {
-              if (index > cappedTodayIndex) return null;
-              return { index, day: row.day, completionPercent: 0 };
-            })
-            .filter(Boolean);
-          if (!visibleRows.length)
-            visibleRows = [{ index: 0, day: "Mon", completionPercent: 0 }];
-        }
-
-        const completionPoints = visibleRows
-          .map((row) => `${xAt(row.index)},${yAt(row.completionPercent)}`)
-          .join(" ");
-
-        const xLabels = rows
-          .map(
-            (row, index) =>
-              `<text x="${xAt(index)}" y="${height - 34}" text-anchor="middle" font-size="16" font-weight="700" fill="var(--chart-text)">${row.day}</text>`,
-          )
-          .join("");
-
-        const yTicks = [0, 0.25, 0.5, 0.75, 1]
-          .map((ratio) => {
-            const value = Math.round(maxValue * ratio);
-            const y = padTop + chartHeight - chartHeight * ratio;
-            return `<line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="var(--chart-grid)"></line><text x="${padLeft - 10}" y="${y + 5}" text-anchor="end" font-size="14" font-weight="700" fill="var(--chart-text)">${value}%</text>`;
-          })
-          .join("");
-
-        svg.innerHTML = `
-        <rect x="${padLeft}" y="${padTop}" width="${chartWidth}" height="${chartHeight}" fill="none" stroke="var(--border-strong)"></rect>
-        ${yTicks}
-        <polyline fill="none" stroke="var(--success-border)" stroke-width="3" points="${completionPoints}"></polyline>
-        ${visibleRows
-          .map(
-            (row) =>
-              `<circle cx="${xAt(row.index)}" cy="${yAt(row.completionPercent)}" r="3.5" fill="var(--success-border)"></circle>`,
-          )
-          .join("")}
-        ${xLabels}
-      `;
-      }
 
       function setLevelDetailStatus(message, isError = false) {
         const el = document.getElementById("levelDetailStatus");
@@ -12997,284 +12848,12 @@
         }
       }
 
-      function renderOverviewBarChart(levelRows = []) {
-        const svg = document.getElementById("overviewBarChart");
-        const actionsEl = document.getElementById("overviewBarDetailActions");
-        if (!svg || !actionsEl) return;
-        svg.setAttribute("aria-label", "Students versus current assignment completions by level");
-        actionsEl.innerHTML = "";
 
-        if (!levelRows.length) {
-          svg.innerHTML =
-            '<text x="18" y="44" font-size="16" font-weight="600" fill="var(--chart-text)">No level completion data available.</text>';
-          return;
-        }
-
-        const width = 780;
-        const height = 360;
-        const padLeft = 62;
-        const padRight = 20;
-        const padTop = 24;
-        const padBottom = 96;
-        const chartWidth = width - padLeft - padRight;
-        const chartHeight = height - padTop - padBottom;
-        const maxValue = Math.max(
-          1,
-          ...levelRows.map((row) =>
-            Math.max(
-              Number(row.enrolledStudents || 0),
-              Number(row.completedStudents || 0),
-            ),
-          ),
-        );
-
-        const groupCount = Math.max(1, levelRows.length);
-        const groupWidth = chartWidth / groupCount;
-        const barGap = Math.min(10, groupWidth * 0.16);
-        const maxBarWidth = Math.max(8, (groupWidth - barGap - 10) / 2);
-        const barWidth = Math.max(8, Math.min(26, maxBarWidth));
-
-        const yAt = (value) =>
-          padTop + chartHeight - (Number(value || 0) / maxValue) * chartHeight;
-
-        const yTicks = [0, 0.25, 0.5, 0.75, 1]
-          .map((ratio) => {
-            const value = Math.round(maxValue * ratio);
-            const y = padTop + chartHeight - chartHeight * ratio;
-            return `<line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="var(--chart-grid)"></line><text x="${padLeft - 10}" y="${y + 5}" text-anchor="end" font-size="14" font-weight="700" fill="var(--chart-text)">${value}</text>`;
-          })
-          .join("");
-
-        const bars = [];
-        const labels = [];
-        const values = [];
-
-        levelRows.forEach((row, index) => {
-          const theme = getLevelTheme(row.level || "");
-          const centerX = padLeft + groupWidth * index + groupWidth / 2;
-          const enrolled = Number(row.enrolledStudents || 0);
-          const completed = Number(row.completedStudents || 0);
-          const enrolledX = centerX - barGap / 2 - barWidth;
-          const completedX = centerX + barGap / 2;
-          const enrolledY = yAt(enrolled);
-          const completedY = yAt(completed);
-          const enrolledHeight = Math.max(1, padTop + chartHeight - enrolledY);
-          const completedHeight = Math.max(1, padTop + chartHeight - completedY);
-
-          bars.push(
-            `<rect x="${enrolledX}" y="${enrolledY}" width="${barWidth}" height="${enrolledHeight}" rx="4" fill="${toRgba(theme.color, 0.58)}" stroke="${theme.borderColor}" stroke-width="1"></rect>`,
-          );
-          bars.push(
-            `<rect x="${completedX}" y="${completedY}" width="${barWidth}" height="${completedHeight}" rx="4" fill="${theme.color}" stroke="${theme.borderColor}" stroke-width="1"></rect>`,
-          );
-          values.push(
-            `<text x="${enrolledX + barWidth / 2}" y="${Math.max(padTop + 14, enrolledY - 6)}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--chart-text)">${enrolled}</text>`,
-          );
-          values.push(
-            `<text x="${completedX + barWidth / 2}" y="${Math.max(padTop + 14, completedY - 6)}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--chart-text)">${completed}</text>`,
-          );
-          labels.push(
-            `<text x="${centerX}" y="${height - 38}" text-anchor="middle" font-size="18" font-weight="700" fill="var(--chart-text)">${shortLevelLabel(row.level || "")}</text>`,
-          );
-
-          const detailBtn = document.createElement("button");
-          detailBtn.type = "button";
-          detailBtn.className = "level-theme-btn bar-detail-action-btn portal-button portal-button-info";
-          detailBtn.style.setProperty("--level-theme-bg", theme.color);
-          detailBtn.style.setProperty("--level-theme-border", theme.borderColor);
-          detailBtn.style.setProperty("--level-theme-text", theme.textColor);
-          detailBtn.textContent = fullLevelLabel(row.level || "");
-          const dueAt = normalizeText(row?.dueAt);
-          const pending = Math.max(
-            0,
-            Number.parseInt(String(row?.outstandingAssignments || 0), 10) || 0,
-          );
-          detailBtn.title =
-            dueAt ?
-              `Open reminders (${pending} pending, due ${dueAt})`
-            : `Open reminders (${pending} pending)`;
-          detailBtn.addEventListener("click", () => openLevelDetailPanel(row));
-          actionsEl.appendChild(detailBtn);
-        });
-
-        svg.innerHTML = `
-        <rect x="${padLeft}" y="${padTop}" width="${chartWidth}" height="${chartHeight}" fill="none" stroke="var(--border-strong)"></rect>
-        ${yTicks}
-        ${bars.join("")}
-        ${values.join("")}
-        ${labels.join("")}
-      `;
-      }
 
       function renderDashboardSummary(summary = {}) {
-        const today = summary.today || {};
-        const assignments = summary.assignments || {};
-        const weeklyAssignmentCompletion = normalizeWeeklyAssignmentCompletion(
-          summary.weeklyAssignmentCompletion,
-        );
-        const classRows = sortLevelRows(
-          (Array.isArray(summary.classEnrollmentAttendance) ?
-            summary.classEnrollmentAttendance
-          : []
-          ).filter(isAssignedLevelRow),
-        );
-        const levelCompletion = effectiveDashboardLevelCompletionRows(summary);
-        state.dashboardLevelCompletionRows = levelCompletion;
-        const currentActiveLevels = levelCompletion.length;
-        const currentTargetedStudents = levelCompletion.reduce((sum, row) => {
-          const targeted =
-            Number.parseInt(
-              String(row?.totalAssignments ?? row?.enrolledStudents ?? 0),
-              10,
-            ) || 0;
-          return sum + Math.max(0, targeted);
-        }, 0);
-        const currentCompletedStudents = levelCompletion.reduce((sum, row) => {
-          const completed =
-            Number.parseInt(
-              String(row?.completedAssignments ?? row?.completedStudents ?? 0),
-              10,
-            ) || 0;
-          return sum + Math.max(0, completed);
-        }, 0);
-        const currentPendingStudents = levelCompletion.reduce((sum, row) => {
-          const explicitPending = Number.parseInt(
-            String(row?.outstandingAssignments),
-            10,
-          );
-          if (Number.isFinite(explicitPending))
-            return sum + Math.max(0, explicitPending);
-          const targeted =
-            Number.parseInt(
-              String(row?.totalAssignments ?? row?.enrolledStudents ?? 0),
-              10,
-            ) || 0;
-          const completed =
-            Number.parseInt(
-              String(row?.completedAssignments ?? row?.completedStudents ?? 0),
-              10,
-            ) || 0;
-          return sum + Math.max(0, targeted - completed);
-        }, 0);
-        const currentCompletionPercent =
-          currentTargetedStudents > 0 ?
-            (currentCompletedStudents / currentTargetedStudents) * 100
-          : 0;
-        const currentDueSoonLevels = levelCompletion.reduce((sum, row) => {
-          const daysUntilDue = Number.parseInt(String(row?.daysUntilDue), 10);
-          if (!Number.isFinite(daysUntilDue)) return sum;
-          if (daysUntilDue < 0 || daysUntilDue > 2) return sum;
-          return sum + 1;
-        }, 0);
-        const currentDueSoonPendingStudents = levelCompletion.reduce((sum, row) => {
-          const daysUntilDue = Number.parseInt(String(row?.daysUntilDue), 10);
-          if (!Number.isFinite(daysUntilDue)) return sum;
-          if (daysUntilDue < 0 || daysUntilDue > 2) return sum;
-          const explicitPending = Number.parseInt(
-            String(row?.outstandingAssignments),
-            10,
-          );
-          if (Number.isFinite(explicitPending))
-            return sum + Math.max(0, explicitPending);
-          const targeted =
-            Number.parseInt(
-              String(row?.totalAssignments ?? row?.enrolledStudents ?? 0),
-              10,
-            ) || 0;
-          const completed =
-            Number.parseInt(
-              String(row?.completedAssignments ?? row?.completedStudents ?? 0),
-              10,
-            ) || 0;
-          return sum + Math.max(0, targeted - completed);
-        }, 0);
-        const totalEnrollment = Math.max(
-          0,
-          Number(today.totalEnrollment ?? today.totalStudents ?? 0) || 0,
-        );
-        const attendanceCount = Math.max(0, Number(today.attendance || 0) || 0);
-        const attendancePercentOfEnrollment =
-          Number.isFinite(Number(today.attendancePercentOfEnrollment)) ?
-            Number(today.attendancePercentOfEnrollment)
-          : totalEnrollment > 0 ? (attendanceCount / totalEnrollment) * 100
-          : 0;
-        const unenrolledYtd = Math.max(0, Number(today.unenrolledYtd || 0) || 0);
-
-        const setValue = (id, value) => {
-          const el = document.getElementById(id);
-          if (el) el.textContent = value;
-        };
-
-        setValue("ovTotalEnrollment", String(totalEnrollment));
-        setValue(
-          "ovAttendancePctEnrollment",
-          formatPercent(attendancePercentOfEnrollment),
-        );
-        setValue("ovUnenrolledYtd", String(unenrolledYtd));
-        setValue("ovTodayAttendance", String(today.attendance || 0));
-        setValue("ovTodayAbsences", String(today.absences || 0));
-        setValue(
-          "ovTardyRates",
-          `${formatPercent(today.tardy10PlusPercent || 0)} / ${formatPercent(today.tardy30PlusPercent || 0)}`,
-        );
-        setValue("ovAtRiskCount", String(currentPendingStudents));
-        setValue("ovOutstanding", String(currentCompletedStudents));
-        setValue("ovOutstandingYtd", formatPercent(currentCompletionPercent));
-
-        const classBody = document.getElementById("overviewClassRows");
-        if (classBody) {
-          classBody.innerHTML = "";
-          classRows.forEach((row) => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-            <td>${levelBadgeHtml(row.level || "", { variant: "standard" })}</td>
-            <td>${row.enrolled || 0}</td>
-            <td>${row.attendanceToday || 0}</td>
-          `;
-            classBody.appendChild(tr);
-          });
-        }
-
-        const assignmentBody = document.getElementById("overviewAssignmentRows");
-        if (assignmentBody) {
-          assignmentBody.innerHTML = "";
-          [
-            ["Active class levels", currentActiveLevels],
-            ["Targeted students", currentTargetedStudents],
-            ["Completed now", currentCompletedStudents],
-            ["Pending reminders", currentPendingStudents],
-            ["Due soon levels (<=2 days)", currentDueSoonLevels],
-            ["Due soon pending students", currentDueSoonPendingStudents],
-            ["Current completion %", formatPercent(currentCompletionPercent)],
-          ].forEach(([label, value]) => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${label}</td><td>${value}</td>`;
-            assignmentBody.appendChild(tr);
-          });
-        }
-
-        renderOverviewLineChart(weeklyAssignmentCompletion, {
-          ...assignments,
-          currentTargetedStudents,
-          currentCompletedStudents,
-          currentPendingStudents,
-          currentCompletionPercent,
-        });
-        renderOverviewBarChart(levelCompletion);
-
-        const riskEl = document.getElementById("overviewRiskStudents");
-        if (riskEl) riskEl.textContent = buildDashboardRiskLines(levelCompletion);
-        renderAttendanceAdminRiskSignals();
-        renderOverviewIncomingExerciseSection(summary?.incomingExerciseResults || null);
-        renderPerformanceQueueSection(summary?.parentReportQueue || null);
-        renderOverviewNewsQueueSection(
-          state.queueHub?.panelsById?.["news-report-review"] || null,
-        );
-        state.parentReportQueue.savedReportCountHint = Math.max(
-          0,
-          Number(summary?.parentReports?.total || 0) || 0,
-        );
-        renderPerformanceStagedSection();
+        void ensureOverviewDashboardIsland()
+          .then((island) => island.renderDashboardSummary(summary))
+          .catch(handleError);
       }
 
       function canReviewIncomingExerciseQueue() {
@@ -13783,505 +13362,8 @@
         });
       }
 
-      function setQueueHubStatus(message = "", isError = false) {
-        const statusEl = document.getElementById("queueHubStatus");
-        if (!statusEl) return;
-        statusEl.style.color = isError ? "#b3262d" : "var(--portal-status-muted-text)";
-        statusEl.textContent =
-          normalizeText(message) || "Queue hub data not loaded yet.";
-      }
-
-      function queueHubPanelTitle(panelId = "") {
-        const id = normalizeText(panelId);
-        switch (id) {
-          case "queued-performance-reports":
-            return "Queued Performance Reports";
-          case "unmatched-exercise-submissions":
-            return "Exercise Submissions (Unmatched eaglesId)";
-          case "current-assignments-pending":
-            return "Current Assignments Not Yet Completed";
-          case "overdue-homework":
-            return "Past Overdue Homework";
-          case "attendance-risk":
-            return "At-Risk Attendance";
-          case "news-report-review":
-            return "News Week Sets (7 Reports)";
-          case "pending-profile-submissions":
-            return "Pending Profile Submissions";
-          default:
-            return id || "Queue Panel";
-        }
-      }
-
-      function normalizeQueueHubPanelForUi(panel = {}) {
-        const id = normalizeText(panel?.id);
-        return {
-          id,
-          title: normalizeText(panel?.title) || queueHubPanelTitle(id),
-          total: Math.max(0, Number.parseInt(String(panel?.total || 0), 10) || 0),
-          items: Array.isArray(panel?.items) ? panel.items : [],
-          deferred: Boolean(panel?.deferred),
-        };
-      }
-
-      function queueHubCellHtml(html = "", text = "") {
-        return {
-          html: normalizeText(html),
-          text: normalizeText(text),
-          allowHtml: true,
-        };
-      }
-
-      function extractEaglesIdFromText(text = "") {
-        const normalized = normalizeText(text);
-        if (!normalized) return "";
-        const match = normalized.match(/\bEagles ID:\s*([A-Za-z0-9_-]+)/i);
-        return normalizeText(match?.[1] || "");
-      }
-
-      function queueHubQueuedPerformanceReportSummary(item = {}) {
-        const daySource = normalizeText(item?.scheduledFor || item?.queuedAt);
-        const dayOfWeek = daySource ?
-              new Date(daySource).toLocaleDateString("vi-VN", { weekday: "long", timeZone: FIXED_TIME_ZONE })
-          : "";
-        const recipients = Array.isArray(item?.recipients) ? item.recipients : [];
-        const payload = item?.payloadJson && typeof item.payloadJson === "object" ? item.payloadJson : {};
-        return [
-          normalizeText(
-            item?.eaglesId ||
-              payload?.eaglesId ||
-              payload?.student?.eaglesId ||
-              payload?.studentRef?.eaglesId ||
-              extractEaglesIdFromText(item?.message || payload?.message || ""),
-              "",
-          ),
-          dayOfWeek,
-          recipients.length ? "has recipients" : "No recipients",
-        ]
-          .filter(Boolean)
-          .join("; ");
-      }
-
-      function normalizeQueueHubCell(value = "") {
-        if (value && typeof value === "object") {
-          const html = normalizeText(value?.html);
-          const text = normalizeText(value?.text);
-          if (html) {
-            return {
-              html,
-              text,
-              allowHtml: value?.allowHtml !== false,
-            };
-          }
-          return {
-            html: "",
-            text,
-            allowHtml: false,
-          };
-        }
-        return {
-          html: "",
-          text: normalizeText(value),
-          allowHtml: false,
-        };
-      }
-
-      function queueHubTableSpec(panelId = "") {
-        switch (panelId) {
-          case "queued-performance-reports":
-            return {
-              columns: ["Queued At", "Performance Report", "Status", "Level", "Queued By"],
-              openColumnIndex: 1,
-              row: (item) => [
-                formatDateTime(item?.queuedAt),
-                normalizeText(queueHubQueuedPerformanceReportSummary(item) || ""),
-                normalizeText(item?.status),
-                normalizeText(item?.level),
-                normalizeText(item?.queuedByUsername),
-              ],
-              emptyText: "No queued performance reports.",
-            };
-          case "unmatched-exercise-submissions":
-            return {
-              columns: [
-                "Received",
-                "Eagles ID",
-                "Email",
-                "Exercise",
-                "Score",
-                "Status",
-              ],
-              openColumnIndex: 3,
-              row: (item) => {
-                const totalQuestions = Math.max(
-                  0,
-                  Number.parseInt(String(item?.totalQuestions || 0), 10) || 0,
-                );
-                const correctCount = Math.max(
-                  0,
-                  Number.parseInt(String(item?.correctCount || 0), 10) || 0,
-                );
-                const scorePercent = Number(item?.scorePercent || 0);
-                const scoreLabel =
-                  totalQuestions > 0 ?
-                    `${correctCount}/${totalQuestions} (${Number.isFinite(scorePercent) ? scorePercent.toFixed(1) : "0.0"}%)`
-                  : `${Number.isFinite(scorePercent) ? scorePercent.toFixed(1) : "0.0"}%`;
-                return [
-                  formatDateTime(item?.createdAt),
-                  normalizeText(item?.submittedEaglesId || "(not provided)"),
-                  normalizeText(item?.submittedEmail),
-                  normalizeText(item?.pageTitle),
-                  scoreLabel,
-                  normalizeText(item?.status),
-                ];
-              },
-              emptyText: "No unmatched exercise submissions.",
-            };
-          case "current-assignments-pending":
-            return {
-              columns: ["Level", "Targeted", "Completed", "Pending", "Due At"],
-              openColumnIndex: 0,
-              row: (item) => {
-                const targeted =
-                  Number.parseInt(
-                    String(
-                      item?.currentTargetedStudents ??
-                        item?.targetedStudents ??
-                        item?.enrolled ??
-                        0,
-                    ),
-                    10,
-                  ) || 0;
-                const completed =
-                  Number.parseInt(
-                    String(
-                      item?.currentCompletedStudents ?? item?.completedStudents ?? 0,
-                    ),
-                    10,
-                  ) || 0;
-                const pending =
-                  Number.parseInt(
-                    String(
-                      item?.currentPendingStudents ??
-                        item?.pendingStudents ??
-                        (Array.isArray(item?.uncompletedStudents) ?
-                          item.uncompletedStudents.length
-                        : 0),
-                    ),
-                    10,
-                  ) || 0;
-                return [
-                  fullLevelLabel(resolveSystemLevelName(item?.level || "")),
-                  String(targeted),
-                  String(completed),
-                  String(pending),
-                  formatDateTime(item?.dueAt || item?.nextDueAt || ""),
-                ];
-              },
-              emptyText: "No current not-yet-completed assignment rows.",
-            };
-          case "overdue-homework":
-            return {
-              columns: ["Student", "Eagles ID", "Class", "Assignment", "Due At"],
-              openColumnIndex: 0,
-              row: (item) => [
-                normalizeText(item?.fullName),
-                normalizeText(item?.eaglesId || item?.studentRefId),
-                normalizeText(item?.className),
-                normalizeText(item?.assignmentName),
-                formatDateTime(item?.dueAt),
-              ],
-              emptyText: "No overdue homework rows.",
-            };
-          case "attendance-risk":
-            return {
-              columns: ["Student", "Eagles ID", "Absences", "Late 30+", "Risk Score"],
-              openColumnIndex: 0,
-              row: (item) => {
-                const absences = Math.max(
-                  0,
-                  Number.parseInt(String(item?.absences || 0), 10) || 0,
-                );
-                const late30 = Math.max(
-                  0,
-                  Number.parseInt(String(item?.late30Plus || 0), 10) || 0,
-                );
-                const riskScore = absences * 3 + late30 * 2;
-                return [
-                  normalizeText(item?.fullName),
-                  normalizeText(item?.eaglesId || item?.studentRefId),
-                  String(absences),
-                  String(late30),
-                  String(riskScore),
-                ];
-              },
-              emptyText: "No attendance risk rows.",
-            };
-          case "news-report-review":
-            return {
-              columns: [
-                "Week Set",
-                "Student",
-                "Eagles ID",
-                "Level",
-                "Reports",
-                "Status",
-                "Action",
-              ],
-              openColumnIndex: 0,
-              row: (item) => {
-                const setStatus = newsReviewAdminSetStatusToken(item);
-                const setAction = normalizeText(
-                  item?.setAction || newsReviewWeekSetActionToken(item),
-                );
-                return [
-                  formatPortalWeekRange(item?.weekStart, item?.weekEnd),
-                  normalizeText(item?.fullName || item?.student?.fullName),
-                  normalizeText(
-                    item?.eaglesId || item?.student?.eaglesId || item?.studentRefId,
-                  ),
-                  fullLevelLabel(resolveSystemLevelName(item?.level || "")),
-                  `${Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10) || 0)}/${weeklyMinimumNewsReports()}`,
-                  queueHubCellHtml(
-                    newsReviewStatusChipHtml(setStatus),
-                    newsReviewStatusLabel(setStatus),
-                  ),
-                  queueHubCellHtml(
-                    newsReviewSetActionChipHtml(setAction),
-                    newsReviewSetActionLabel(setAction),
-                  ),
-                ];
-              },
-              emptyText: "No weeks found.",
-            };
-          case "pending-profile-submissions":
-            return {
-              columns: [
-                "Submitted At",
-                "Submission",
-                "Student Ref",
-                "Status",
-                "Failure Point",
-              ],
-              openColumnIndex: 1,
-              row: (item) => [
-                formatDateTime(item?.submittedAt || item?.updatedAt),
-                normalizeText(item?.id),
-                normalizeText(item?.studentRefId),
-                normalizeText(item?.status),
-                normalizeText(item?.failurePoint),
-              ],
-              emptyText: "No pending profile submissions.",
-            };
-          default:
-            return {
-              columns: ["Details"],
-              row: (item) => [normalizeText(JSON.stringify(item))],
-              emptyText: "No records.",
-            };
-        }
-      }
-
-      function queueHubPanelTableHtml(panel = {}) {
-        const spec = queueHubTableSpec(panel?.id);
-        const items = Array.isArray(panel?.items) ? panel.items : [];
-        if (panel?.deferred) {
-          return '<div class="queue-hub-empty data-surface" data-surface-role="data-surface">Panel deferred until Queue Hub is opened.</div>';
-        }
-        if (!items.length) {
-          return `<div class="queue-hub-empty data-surface" data-surface-role="data-surface">${escapeHtml(spec.emptyText)}</div>`;
-        }
-        const visibleItems = items.slice(0, 25);
-        const headerHtml = spec.columns
-          .map((label) => `<th scope="col">${escapeHtml(label)}</th>`)
-          .join("");
-        const bodyHtml = visibleItems
-          .map((item, index) => {
-            const openColumnIndex = Number.parseInt(String(spec?.openColumnIndex), 10);
-            const cells = spec
-              .row(item)
-              .map((value, cellIndex) => {
-                const cell = normalizeQueueHubCell(value);
-                const text = normalizeText(cell?.text);
-                if (cellIndex === openColumnIndex) {
-                  return `<td><a href="#" class="queue-row-link" data-queue-hub-open-panel="${escapeHtml(normalizeText(panel?.id))}" data-queue-hub-open-index="${index}">${escapeHtml(text || "(open)")}</a></td>`;
-                }
-                if (cell?.allowHtml && cell?.html) {
-                  return `<td>${cell.html}</td>`;
-                }
-                return `<td>${escapeHtml(text)}</td>`;
-              })
-              .join("");
-            return `<tr>${cells}</tr>`;
-          })
-          .join("");
-        const truncatedHint =
-          items.length > visibleItems.length ?
-            `<p class="small">Showing first ${visibleItems.length} of ${items.length} rows.</p>`
-          : "";
-        return `
-        <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
-          <table>
-            <thead><tr>${headerHtml}</tr></thead>
-            <tbody>${bodyHtml}</tbody>
-          </table>
-        </div>
-        ${truncatedHint}
-      `;
-      }
-
-      function queueHubPanelMapFromPayload(panels = []) {
-        const map = {};
-        const source = Array.isArray(panels) ? panels : [];
-        source.forEach((entry) => {
-          const panel = normalizeQueueHubPanelForUi(entry);
-          if (!panel.id) return;
-          map[panel.id] = panel;
-        });
-        QUEUE_HUB_PANEL_IDS.forEach((panelId) => {
-          if (!map[panelId]) {
-            map[panelId] = {
-              id: panelId,
-              title: queueHubPanelTitle(panelId),
-              total: 0,
-              items: [],
-            };
-          }
-        });
-        return map;
-      }
-
-      function queueHubOrderedPanels() {
-        const panelOrder = normalizeQueueHubPanelOrder(state.queueHub.panelOrder);
-        const panelsById =
-          state.queueHub.panelsById && typeof state.queueHub.panelsById === "object" ?
-            state.queueHub.panelsById
-          : {};
-        return panelOrder.map(
-          (panelId) =>
-            panelsById[panelId] || {
-              id: panelId,
-              title: queueHubPanelTitle(panelId),
-              total: 0,
-              items: [],
-            },
-        );
-      }
-
-      function markQueueHubOrderDirty(order = []) {
-        const normalizedOrder = normalizeQueueHubPanelOrder(order);
-        state.queueHub.panelOrder = normalizedOrder;
-        state.queueHub.hasUnsavedOrder = true;
-        persistUiSettings({
-          ...state.uiSettings,
-          queueHub: {
-            ...(state.uiSettings?.queueHub || {}),
-            panelOrder: normalizedOrder,
-          },
-        });
-      }
-
-      function moveQueueHubPanelBefore(panelId = "", beforePanelId = "") {
-        const sourcePanelId = normalizeText(panelId);
-        const targetPanelId = normalizeText(beforePanelId);
-        const order = normalizeQueueHubPanelOrder(state.queueHub.panelOrder);
-        const fromIndex = order.indexOf(sourcePanelId);
-        const toIndex = order.indexOf(targetPanelId);
-        if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
-        order.splice(fromIndex, 1);
-        order.splice(toIndex, 0, sourcePanelId);
-        markQueueHubOrderDirty(order);
-        renderQueueHubPanels();
-        setQueueHubStatus(
-          "Queue Hub order changed. Click Save Panel Order to persist.",
-        );
-      }
-
-      function renderQueueHubPanels() {
-        const panelRoot = document.getElementById("queueHubPanels");
-        const saveBtn = document.getElementById("queueHubSaveOrderBtn");
-        if (!panelRoot) return;
-        const canReview = canManageUsers();
-        panelRoot.innerHTML = "";
-        if (!canReview) {
-          panelRoot.innerHTML =
-            '<div class="queue-hub-empty data-surface" data-surface-role="data-surface">Queue Hub is available for admin users only.</div>';
-          if (saveBtn) saveBtn.disabled = true;
-          return;
-        }
-
-        if (saveBtn) saveBtn.disabled = !state.queueHub.hasUnsavedOrder;
-        const panels = queueHubOrderedPanels();
-        if (!panels.length) {
-          panelRoot.innerHTML =
-            '<div class="queue-hub-empty data-surface" data-surface-role="data-surface">No queue hub panels available.</div>';
-          return;
-        }
-
-        panels.forEach((panel) => {
-          const panelEl = document.createElement("article");
-          panelEl.className = `queue-hub-panel panel${state.queueHub.hasUnsavedOrder ? " queue-hub-order-dirty" : ""}`;
-          panelEl.draggable = true;
-          panelEl.dataset.queueHubPanelId = panel.id;
-          panelEl.dataset.surfaceRole = "panel";
-          panelEl.innerHTML = `
-          <div class="queue-hub-panel-header">
-            <h3>${escapeHtml(panel.title)}</h3>
-            <span class="queue-hub-meta">total=${panel.total}</span>
-          </div>
-          ${queueHubPanelTableHtml(panel)}
-        `;
-          panelEl.addEventListener("dragstart", (event) => {
-            state.queueHub.draggingPanelId = panel.id;
-            panelEl.classList.add("dragging");
-            if (event.dataTransfer) {
-              event.dataTransfer.effectAllowed = "move";
-              event.dataTransfer.setData("text/plain", panel.id);
-            }
-          });
-          panelEl.addEventListener("dragend", () => {
-            state.queueHub.draggingPanelId = "";
-            panelEl.classList.remove("dragging");
-            panelRoot
-              .querySelectorAll(".queue-hub-panel.drop-target")
-              .forEach((entry) => entry.classList.remove("drop-target"));
-          });
-          panelEl.addEventListener("dragover", (event) => {
-            event.preventDefault();
-            panelEl.classList.add("drop-target");
-          });
-          panelEl.addEventListener("dragleave", () =>
-            panelEl.classList.remove("drop-target"),
-          );
-          panelEl.addEventListener("drop", (event) => {
-            event.preventDefault();
-            panelEl.classList.remove("drop-target");
-            const draggedPanelId = normalizeText(
-              state.queueHub.draggingPanelId ||
-                event.dataTransfer?.getData("text/plain"),
-            );
-            if (!draggedPanelId) return;
-            moveQueueHubPanelBefore(draggedPanelId, panel.id);
-          });
-          panelRoot.appendChild(panelEl);
-        });
-      }
-
-      function queueHubPanelById(panelId = "") {
-        const id = normalizeText(panelId);
-        if (!id) return null;
-        const panelsById =
-          state.queueHub?.panelsById && typeof state.queueHub.panelsById === "object" ?
-            state.queueHub.panelsById
-          : {};
-        return panelsById[id] || null;
-      }
-
       function queueHubItemByPanelIndex(panelId = "", rowIndex = 0) {
-        const panel = queueHubPanelById(panelId);
-        if (!panel || !Array.isArray(panel.items)) return null;
-        const index = Math.max(0, Number.parseInt(String(rowIndex), 10) || 0);
-        return panel.items[index] || null;
+        return queueHubIsland?.itemAt(panelId, rowIndex) || null;
       }
 
       async function openQueueHubItem(panelId = "", rowIndex = 0) {
@@ -14386,90 +13468,6 @@
         }
 
         setStatus("Queue detail open is not configured for this panel.", true);
-      }
-
-      async function loadQueueHub({ notify = false, compact = false } = {}) {
-        if (!canManageUsers()) {
-          state.queueHub.loaded = true;
-          state.queueHub.panelsById = {};
-          state.queueHub.hasUnsavedOrder = false;
-          renderQueueHubPanels();
-          setQueueHubStatus("Queue Hub is hidden for this role.");
-          return;
-        }
-
-        let payload = null;
-        try {
-          const requestPath = compact ? `${ADMIN_QUEUE_HUB_PATH}?mode=compact` : ADMIN_QUEUE_HUB_PATH;
-          payload = await api(requestPath);
-        } catch (error) {
-          if (error && error.status === 404) {
-            state.queueHub.loaded = true;
-            state.queueHub.panelsById = {};
-            state.queueHub.generatedAt = "";
-            renderQueueHubPanels();
-            setQueueHubStatus("Queue Hub API is not available on this runtime.", true);
-            if (notify)
-              setStatus("Queue Hub API is not available on this runtime.", true);
-            return;
-          }
-          throw error;
-        }
-
-        state.queueHub.loaded = true;
-        state.queueHub.generatedAt = normalizeText(payload?.generatedAt);
-        state.queueHub.panelsById = queueHubPanelMapFromPayload(payload?.panels);
-        if (!state.queueHub.hasUnsavedOrder) {
-          const panelOrder = normalizeQueueHubPanelOrder(
-            payload?.panelOrder || state.uiSettings?.queueHub?.panelOrder || [],
-          );
-          state.queueHub.panelOrder = panelOrder;
-          persistUiSettings({
-            ...state.uiSettings,
-            queueHub: {
-              ...(state.uiSettings?.queueHub || {}),
-              panelOrder,
-            },
-          });
-        }
-        renderQueueHubPanels();
-        renderOverviewNewsQueueSection(
-          state.queueHub?.panelsById?.["news-report-review"] || null,
-        );
-        const statusMessage = `Queue Hub loaded (${state.queueHub.generatedAt ? formatDateTime(state.queueHub.generatedAt) : "now"}).`;
-        setQueueHubStatus(statusMessage);
-        if (notify) setStatus(statusMessage);
-      }
-
-      async function saveQueueHubPanelOrder() {
-        if (!canManageUsers())
-          throw new Error("Only admin can save queue hub panel order.");
-        const panelOrder = normalizeQueueHubPanelOrder(state.queueHub.panelOrder);
-        persistUiSettings({
-          ...state.uiSettings,
-          queueHub: {
-            ...(state.uiSettings?.queueHub || {}),
-            panelOrder,
-          },
-        });
-        await persistUiSettingsToServer(state.uiSettings, state.sisConfig, {
-          notifyOnFailure: true,
-        });
-        state.queueHub.hasUnsavedOrder = false;
-        renderQueueHubPanels();
-        setQueueHubStatus("Queue Hub panel order saved.");
-        setStatus("Queue Hub panel order saved.");
-      }
-
-      function resetQueueHubPanelOrder() {
-        const panelOrder = normalizeQueueHubPanelOrder(
-          DEFAULT_UI_SETTINGS.queueHub.panelOrder,
-        );
-        markQueueHubOrderDirty(panelOrder);
-        renderQueueHubPanels();
-        setQueueHubStatus(
-          "Queue Hub panel order reset to default. Click Save Panel Order to persist.",
-        );
       }
 
       function canReviewParentQueue() {
@@ -22716,8 +21714,6 @@
       }
 
       async function bootAfterLogin() {
-        initializeParentTrackingScoreSelects();
-        initializeParentTrackingScoreLegendPopovers();
         const bootConfigTasks = [];
         if (canManagePermissions()) {
           bootConfigTasks.push(async () => {
@@ -22750,11 +21746,20 @@
           });
         }
 
+        const isOverview = activePage === "overview";
+        const isProfilePage = activePage === "profile";
+        const isAssignmentPage = activePage === "assignments" || activePage === "assignments-data";
+        const isParentTrackingPage = activePage === "parent-tracking";
+        const isAttendancePage = activePage === "attendance" || activePage === "attendance-admin";
+        const runCompatibilityStartup = IS_JSDOM_ENV;
+
         showUserPanel();
         applyUiSettings();
-        renderAssignmentTemplates();
-        renderAssignmentDraftItems();
-        renderAssignmentExerciseOptions();
+        if (isAssignmentPage || runCompatibilityStartup) {
+          renderAssignmentTemplates();
+          renderAssignmentDraftItems();
+          renderAssignmentExerciseOptions();
+        }
         clearUserForm();
         if (canManageUsers() && activePage === "users") {
           scheduleAfterFirstPaint(() => loadUsers().catch(handleError), 3000);
@@ -22766,11 +21771,15 @@
           state.students = [];
           renderStudents();
         }
-        renderAssignmentDraftItems();
-        renderParentTrackingTeacherOptions();
+        if (isAssignmentPage || runCompatibilityStartup) renderAssignmentDraftItems();
+        if (isParentTrackingPage || runCompatibilityStartup) {
+          initializeParentTrackingScoreSelects();
+          initializeParentTrackingScoreLegendPopovers();
+          renderParentTrackingTeacherOptions();
+        }
         clearStudentForm({
           refreshStudentList: false,
-          hydrateNextStudentNumber: activePage === "profile" || activePage === "student-admin",
+          hydrateNextStudentNumber: isProfilePage || activePage === "student-admin",
         });
         const nextPage =
           isPageAllowedForCurrentRole(state.activePage) ?
@@ -22781,7 +21790,7 @@
           historyMode: "replace",
         });
 
-        ensureAttendanceLandingFormDefaults();
+        if (isAttendancePage || runCompatibilityStartup) ensureAttendanceLandingFormDefaults();
 
         if (canReadData()) {
           scheduleAfterFirstPaint(async () => {
@@ -22802,7 +21811,7 @@
           if (pageNeedsFilters) {
             dataHydrationTasks.push(() => loadFilters().catch(handleError));
           }
-          if (activePage === "overview") {
+          if (isOverview) {
             dataHydrationTasks.push(async () => {
               await loadDashboardSummary();
               if (
@@ -22815,34 +21824,34 @@
               renderHubConnectionStatus();
               renderServiceControlCard();
             });
-            dataHydrationTasks.push(() => loadQueueHub({ notify: false, compact: true }).catch(handleError));
-            dataHydrationTasks.push(() =>
-              loadIncomingExerciseResults({
-                showAll: state.incomingExerciseQueue.showAll,
-              }).catch(handleError),
-            );
           }
-          if (state.activePage === "assignments" || state.activePage === "assignments-data") {
+          if (isAssignmentPage || runCompatibilityStartup) {
             dataHydrationTasks.push(() => loadExerciseTitles().catch(handleError));
           }
-          dataHydrationTasks.forEach((task) => scheduleAfterFirstPaint(task, 5000));
+          if (isOverview) {
+            // Overview content is already present in the shell and must
+            // hydrate as soon as auth succeeds so below-fold panels paint.
+            void Promise.all(dataHydrationTasks.map((task) => task())).catch(handleError);
+          } else {
+            dataHydrationTasks.forEach((task) => scheduleAfterFirstPaint(task, 5000));
+          }
 
-          scheduleAfterFirstPaint(
-            () =>
-              Promise.all([
-                probeHubConnection({ notify: false, paint: false }),
-                loadServiceControlStatus({ notify: false, paint: false }),
-              ]),
-            6000,
-          );
+          void Promise.all([
+            probeHubConnection({ notify: false, paint: true }),
+            loadServiceControlStatus({ notify: false, paint: true }),
+          ]).catch(handleError);
         }
-        await applyParentTrackingDeepLinkFromLocation();
+        if (isParentTrackingPage || runCompatibilityStartup) await applyParentTrackingDeepLinkFromLocation();
       }
 
-      installButtonPressFeedback();
-      initializeButtonTooltips();
-      wireSharedButtonDecoration();
-      wireRowOptionsDropdownLayout();
+      // Keep non-shell decoration out of the authenticated startup task.
+      // These helpers only enhance controls after the shell is usable.
+      scheduleAfterFirstPaint(() => {
+        installButtonPressFeedback();
+        initializeButtonTooltips();
+        wireSharedButtonDecoration();
+        wireRowOptionsDropdownLayout();
+      }, 3000);
 
       document.querySelectorAll("[data-menu-toggle]").forEach((toggleBtn) => {
         toggleBtn.addEventListener("click", () => {
@@ -23008,179 +22017,10 @@
           rerenderSortedTable(tableKey);
         });
       });
-      function bindNewsReviewIslandFallback() {
-        const newsReviewStatusEl = document.getElementById("newsReviewStatusFilter");
-        const newsReviewCheckEl = document.getElementById("newsReviewCheckFilter");
-        const newsReviewLevelEl = document.getElementById("newsReviewLevelFilter");
-        const newsReviewStudentEl = document.getElementById("newsReviewStudentFilter");
-        const newsReviewDateFromEl = document.getElementById("newsReviewDateFromFilter");
-        const newsReviewDateToEl = document.getElementById("newsReviewDateToFilter");
-        const newsReviewQueryEl = document.getElementById("newsReviewQueryFilter");
-        const newsReviewRowsEl = document.getElementById("newsReviewRows");
-        newsReviewStatusEl?.addEventListener("change", () => {
-          setNewsReviewFilterValues({
-            status: normalizeText(newsReviewStatusEl.value) || "all",
-          });
-          loadNewsReviewQueue().catch(handleError);
-        });
-        newsReviewCheckEl?.addEventListener("change", () => {
-          setNewsReviewFilterValues({
-            setAction: normalizeText(newsReviewCheckEl.value) || "all",
-          });
-          loadNewsReviewQueue().catch(handleError);
-        });
-        newsReviewLevelEl?.addEventListener("change", () => {
-          setNewsReviewFilterValues({
-            level: newsReviewLevelEl.value,
-            studentRefId: "",
-          });
-          loadNewsReviewQueue().catch(handleError);
-        });
-        newsReviewStudentEl?.addEventListener("change", () => {
-          setNewsReviewFilterValues({ studentRefId: newsReviewStudentEl.value });
-          loadNewsReviewQueue().catch(handleError);
-        });
-        const applyNewsReviewDateRange = () => {
-          let fromIso = normalizeText(newsReviewDateFromEl?.value).slice(0, 10);
-          let toIso = normalizeText(newsReviewDateToEl?.value).slice(0, 10);
-          if (fromIso && toIso && compareIsoDateText(fromIso, toIso) > 0) {
-            const swapped = fromIso;
-            fromIso = toIso;
-            toIso = swapped;
-            if (newsReviewDateFromEl) newsReviewDateFromEl.value = fromIso;
-            if (newsReviewDateToEl) newsReviewDateToEl.value = toIso;
-          }
-          setNewsReviewFilterValues({ dateFrom: fromIso, dateTo: toIso });
-          loadNewsReviewQueue().catch(handleError);
-        };
-        newsReviewDateFromEl?.addEventListener("change", applyNewsReviewDateRange);
-        newsReviewDateToEl?.addEventListener("change", applyNewsReviewDateRange);
-        newsReviewQueryEl?.addEventListener("input", () => {
-          setNewsReviewFilterValues({ query: newsReviewQueryEl.value });
-          loadNewsReviewQueue().catch(handleError);
-        });
-        document.getElementById("newsReviewRefreshBtn")?.addEventListener("click", () => {
-          loadNewsReviewQueue({ notify: true }).catch(handleError);
-        });
-        document
-          .getElementById("newsReviewClearFiltersBtn")
-          ?.addEventListener("click", () => {
-            state.newsReview.filters = normalizeNewsReviewFilters({
-              status: "all",
-              setAction: "all",
-              level: "",
-              studentRefId: "",
-              dateFrom: "",
-              dateTo: "",
-              query: "",
-              take: state.newsReview?.filters?.take || 200,
-            });
-            refreshNewsReviewFilterControls();
-            loadNewsReviewQueue({ notify: true }).catch(handleError);
-          });
-        document
-          .getElementById("newsReviewApproveQueueBtn")
-          ?.addEventListener("click", () => {
-            applyNewsReviewBulkApprove().catch(handleError);
-          });
-        newsReviewRowsEl?.addEventListener("click", (event) => {
-          const target = event?.target;
-          if (!(target instanceof Element)) return;
-          if (target.closest("a[href]")) return;
-
-          const openBtn = target.closest("button[data-news-review-open-week-set]");
-          if (openBtn instanceof HTMLButtonElement) {
-            const weekSetId = normalizeText(
-              openBtn.getAttribute("data-news-review-open-week-set"),
-            );
-            const reportId = normalizeText(
-              openBtn.getAttribute("data-news-review-open-report"),
-            );
-            if (!weekSetId) return;
-            openNewsReviewViewerByWeekSetId(weekSetId, { reportId }).catch(handleError);
-            return;
-          }
-
-          const rowEl = target.closest("tr[data-news-review-week-set-id]");
-          if (rowEl instanceof HTMLTableRowElement) {
-            const weekSetId = normalizeText(rowEl.dataset.newsReviewWeekSetId);
-            if (!weekSetId) return;
-            openNewsReviewViewerByWeekSetId(weekSetId).catch(handleError);
-          }
-        });
-        document
-          .getElementById("newsReviewViewerCloseBtn")
-          ?.addEventListener("click", () => closeNewsReviewViewer());
-        document
-          .getElementById("newsReviewViewerEditBtn")
-          ?.addEventListener("click", () => {
-            const activeReport = newsReviewViewerCurrentItem();
-            if (!activeReport) return;
-            if (
-              (normalizeLower(normalizeText(activeReport?.reviewStatus)) ||
-                STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) ===
-              "approved"
-            ) {
-              return;
-            }
-            setNewsReviewViewerEditMode(!state.newsReview.viewerEditMode);
-          });
-        document
-          .getElementById("newsReviewViewerSaveBtn")
-          ?.addEventListener("click", () => {
-            applyNewsReviewAction(
-              normalizeText(newsReviewViewerCurrentItem()?.id),
-              "save",
-              {
-                keepViewerOpen: true,
-              },
-            ).catch(handleError);
-          });
-        document
-          .getElementById("newsReviewViewerPrevBtn")
-          ?.addEventListener("click", () => shiftNewsReviewViewer(-1));
-        document
-          .getElementById("newsReviewViewerNextBtn")
-          ?.addEventListener("click", () => shiftNewsReviewViewer(1));
-        document
-          .getElementById("newsReviewViewerApproveBtn")
-          ?.addEventListener("click", () => {
-            applyNewsReviewViewerAction("approve").catch(handleError);
-          });
-        document
-          .getElementById("newsReviewViewerRevisionBtn")
-          ?.addEventListener("click", () => {
-            applyNewsReviewViewerAction("revision-requested").catch(handleError);
-          });
-        document
-          .getElementById("newsReviewViewerModal")
-          ?.addEventListener("click", (event) => {
-            if (event.target === event.currentTarget) closeNewsReviewViewer();
-          });
-        document.addEventListener("keydown", (event) => {
-          const modalEl = document.getElementById("newsReviewViewerModal");
-          if (!(modalEl instanceof HTMLDivElement)) return;
-          if (modalEl.classList.contains("hidden")) return;
-          const key = normalizeText(event.key);
-          if (key !== "ArrowLeft" && key !== "ArrowRight") return;
-          const target = event.target;
-          if (target instanceof HTMLElement) {
-            const tagName = normalizeLower(target.tagName);
-            if (
-              tagName === "input" ||
-              tagName === "textarea" ||
-              tagName === "select" ||
-              target.isContentEditable
-            )
-              return;
-          }
-          event.preventDefault();
-          shiftNewsReviewViewer(key === "ArrowLeft" ? -1 : 1);
-        });
-      }
+      
 
       if (IS_JSDOM_ENV) {
-        bindNewsReviewIslandFallback();
+        activateAdminFallback("bindNewsReviewIslandFallback");
       } else {
         void scheduleAdminIslandImport(() => import("/web-asset/admin/news-review-island.mjs"), 1800, "news-reports")
           .then((mod) =>
@@ -23268,7 +22108,7 @@
           )
           .catch((error) => {
             handleError(error);
-            bindNewsReviewIslandFallback();
+            activateAdminFallback("bindNewsReviewIslandFallback");
             return null;
           });
       }
@@ -23499,162 +22339,10 @@
           message: "Quarter preview updated.",
         });
       };
-      function bindSchoolSetupBrandingFallback() {
-        document
-          .getElementById("schoolSetupStartDate")
-          ?.addEventListener("input", previewSchoolSetupFromInputs);
-        document
-          .getElementById("schoolSetupStartDate")
-          ?.addEventListener("change", previewSchoolSetupFromInputs);
-        document
-          .getElementById("schoolSetupEndDate")
-          ?.addEventListener("input", previewSchoolSetupFromInputs);
-        document
-          .getElementById("schoolSetupEndDate")
-          ?.addEventListener("change", previewSchoolSetupFromInputs);
-        document
-          .getElementById("schoolSetupLetterGradeRanges")
-          ?.addEventListener("input", previewSchoolSetupFromInputs);
-        document
-          .getElementById("schoolSetupLetterGradeRanges")
-          ?.addEventListener("change", previewSchoolSetupFromInputs);
-        document
-          .getElementById("schoolSetupAutoFillBtn")
-          ?.addEventListener("click", () => {
-            try {
-              autoFillSchoolSetupFromInputs();
-              setStatus("Quarter rows auto-filled.");
-            } catch (error) {
-              const statusEl = document.getElementById("schoolSetupStatus");
-              if (statusEl) {
-                statusEl.style.color = "#b3262d";
-                statusEl.textContent = error.message || "Unable to auto-fill quarter rows.";
-              }
-              setStatus(error.message || "Unable to auto-fill quarter rows.", true);
-            }
-          });
-        [
-          "schoolSetupNewsSourceDefaultCnn",
-          "schoolSetupNewsSourceDefaultBbc",
-          "schoolSetupNewsSourceCustom1Enabled",
-          "schoolSetupNewsSourceCustom2Enabled",
-          "schoolSetupNewsSourceCustom3Enabled",
-          "schoolSetupNewsSourceCustom4Enabled",
-          "schoolSetupNewsSourceCustom5Enabled",
-          "schoolSetupNewsSourceCustom6Enabled",
-          "schoolSetupNewsSourceCustom7Enabled",
-          "schoolSetupNewsSourceCustom8Enabled",
-          "schoolSetupNewsSourceCustom1Domain",
-          "schoolSetupNewsSourceCustom2Domain",
-          "schoolSetupNewsSourceCustom3Domain",
-          "schoolSetupNewsSourceCustom4Domain",
-          "schoolSetupNewsSourceCustom5Domain",
-          "schoolSetupNewsSourceCustom6Domain",
-          "schoolSetupNewsSourceCustom7Domain",
-          "schoolSetupNewsSourceCustom8Domain",
-        ].forEach((id) => {
-          document.getElementById(id)?.addEventListener("change", previewSchoolSetupFromInputs);
-        });
-        document
-          .getElementById("schoolSetupLogoFile")
-          ?.addEventListener("change", (event) => {
-            handleSchoolSetupLogoUpload(event).catch((error) => {
-              const draft = schoolSetupDraftForRender();
-              renderSchoolSetupPanel({
-                setup: draft.setup,
-                profile: draft.profile,
-                newsReportValidation: draft.newsReportValidation,
-                message: error.message || "Unable to process school logo.",
-                isError: true,
-              });
-              setStatus(error.message || "Unable to process school logo.", true);
-            });
-          });
-        document
-          .getElementById("schoolSetupLogoClearBtn")
-          ?.addEventListener("click", () => {
-            try {
-              clearSchoolSetupLogoDraft();
-              setStatus("School logo cleared from draft.");
-            } catch (error) {
-              setStatus(error.message || "Unable to clear school logo draft.", true);
-            }
-          });
-        document.getElementById("schoolSetupSaveBtn")?.addEventListener("click", () => {
-          saveSchoolSetupFromInputs({ notify: true })
-            .then(() => {
-              syncAttendanceDateDerivedFields();
-              rerenderSortedTable("attendance");
-              rerenderSortedTable("performance");
-              rerenderSortedTable("grades");
-              rerenderSortedTable("reports");
-            })
-            .catch(handleError);
-        });
-        document.getElementById("schoolSetupResetBtn")?.addEventListener("click", () => {
-          resetUiSettings()
-            .then(() => {
-              const logoFileEl = document.getElementById("schoolSetupLogoFile");
-              if (logoFileEl) logoFileEl.value = "";
-              syncAttendanceDateDerivedFields();
-              setStatus("School setup reloaded from saved values.");
-            })
-            .catch(handleError);
-        });
-        document
-          .getElementById("profileFieldLayoutApplyBtn")
-          ?.addEventListener("click", () => {
-            try {
-              applyProfileFieldLayoutChanges();
-            } catch (error) {
-              handleError(error);
-            }
-          });
-        document
-          .getElementById("profileFieldLayoutResetBtn")
-          ?.addEventListener("click", () => {
-            try {
-              resetProfileFieldLayoutToDefault();
-            } catch (error) {
-              handleError(error);
-            }
-          });
-        document
-          .getElementById("profileFieldLayoutRefreshBtn")
-          ?.addEventListener("click", () => {
-            renderProfileFieldLayoutEditor();
-            setProfileLayoutStatus("Layout editor reloaded.");
-          });
-        document
-          .getElementById("profileFieldLayoutExpandBtn")
-          ?.addEventListener("click", () => {
-            setProfileFieldLayoutEditorExpanded(!state.profileLayoutExpanded);
-          });
-        document
-          .getElementById("profileFieldCreateBtn")
-          ?.addEventListener("click", () => {
-            try {
-              createProfileFieldFromSettings();
-            } catch (error) {
-              handleError(error);
-            }
-          });
-        document
-          .getElementById("profileFieldLayoutRows")
-          ?.addEventListener("click", (event) => {
-            const target = event.target;
-            if (!(target instanceof Element)) return;
-            const button = target.closest("[data-profile-layout-action]");
-            if (!(button instanceof HTMLButtonElement)) return;
-            if (button.dataset.profileLayoutAction !== "delete") return;
-            const row = button.closest("tr[data-profile-field-key]");
-            if (!(row instanceof HTMLTableRowElement)) return;
-            deleteProfileFieldFromLayout(row.dataset.profileFieldKey || "");
-          });
-      }
+      
 
       if (IS_JSDOM_ENV) {
-        bindSchoolSetupBrandingFallback();
+        activateAdminFallback("bindSchoolSetupBrandingFallback");
       } else {
         void scheduleAdminIslandImport(() => import("/web-asset/admin/school-setup-branding-island.mjs"), 1800, "school-setup")
           .then((mod) =>
@@ -23753,7 +22441,7 @@
           )
           .catch((error) => {
             handleError(error);
-            bindSchoolSetupBrandingFallback();
+            activateAdminFallback("bindSchoolSetupBrandingFallback");
             return null;
           });
       }
@@ -23895,118 +22583,10 @@
           });
       }
 
-      function bindAssignmentControlsFallback() {
-        bindById("assignLevel", "change", () => {
-          refreshAssignmentStudentOptions();
-          renderAssignmentLevelTiles();
-        });
-        bindById("assignAssignedAt", "change", () => {
-          const dueEl = document.getElementById("assignDueAt");
-          if (!normalizeText(dueEl?.value)) {
-            if (dueEl)
-              dueEl.value = nextSundayIsoDate(
-                document.getElementById("assignAssignedAt").value,
-              );
-          }
-        });
-        bindById("assignmentExerciseSelect", "change", () => {
-          const selectEl = document.getElementById("assignmentExerciseSelect");
-          const urlEl = document.getElementById("assignmentExerciseUrl");
-          if (!selectEl || !urlEl) return;
-          const selectedOption = selectEl.options[selectEl.selectedIndex];
-          const suggestedUrl = normalizeText(selectedOption?.dataset?.url);
-          if (suggestedUrl) urlEl.value = suggestedUrl;
-        });
-        bindById("assignmentAddItemBtn", "click", () => {
-          try {
-            addAssignmentDraftItem();
-          } catch (error) {
-            handleError(error);
-          }
-        });
-        bindById("assignmentLoadTitlesBtn", "click", () => {
-          const q = normalizeText(
-            document.getElementById("assignmentExerciseSelect").value,
-          );
-          loadExerciseTitles(q).catch(handleError);
-        });
-        bindById("assignmentReloadTemplatesBtn", "click", () => {
-          loadAssignmentTemplatesFromServer()
-            .then(() => {
-              renderAssignmentTemplates();
-              setAssignmentStatus("Assignments reloaded.");
-            })
-            .catch(handleError);
-        });
-        bindById("assignmentSortField", "change", () => {
-          applySortState(
-            "assignments",
-            normalizeText(document.getElementById("assignmentSortField").value) ||
-              "dueAt",
-            { toggleIfSame: false, resetDirOnFieldChange: false },
-          );
-          rerenderSortedTable("assignments");
-        });
-        bindById("assignmentSortDirBtn", "click", () => {
-          const currentField =
-            normalizeText(state.tableSort?.assignments?.field) || "dueAt";
-          applySortState("assignments", currentField, {
-            toggleIfSame: true,
-            resetDirOnFieldChange: false,
-          });
-          rerenderSortedTable("assignments");
-        });
-        const applyAssignmentDataSearch = () => {
-          setTableSearchTerm(
-            "assignments",
-            document.getElementById("assignmentDataSearch").value,
-          );
-          rerenderSortedTable("assignments");
-        };
-        bindById("assignmentDataSearch", "input", applyAssignmentDataSearch);
-        bindById("assignmentArchiveToggleBtn", "click", () => {
-          try {
-            toggleTableArchivedView("assignments");
-          } catch (error) {
-            handleError(error);
-          }
-        });
-        bindById("assignmentExportXlsxBtn", "click", () => {
-          exportVisibleTableRowsToXlsx("assignments").catch(handleError);
-        });
-        bindById("assignmentPrintPdfBtn", "click", () => {
-          try {
-            printVisibleTableRowsPdf("assignments");
-          } catch (error) {
-            handleError(error);
-          }
-        });
-        bindById("assignmentSaveTemplateBtn", "click", () =>
-          saveAssignmentTemplate().catch(handleError),
-        );
-        bindById("assignmentDeleteTemplateBtn", "click", () =>
-          deleteAssignmentTemplate().catch(handleError),
-        );
-        bindById("assignmentSendBtn", "click", () =>
-          sendAssignmentAnnouncement().catch(handleError),
-        );
-        bindById("assignmentResetBtn", "click", () => resetAssignmentForm());
-        bindById("levelReminderSendBtn", "click", () =>
-          sendLevelReminders(
-            normalizeText(
-              document.getElementById("levelReminderMode").value || "selected",
-            ),
-          ).catch(handleError),
-        );
-        bindById("levelReminderSendAllBtn", "click", () =>
-          sendLevelReminders("all").catch(handleError),
-        );
-        bindById("levelReminderClearBtn", "click", () => clearLevelReminderForm());
-        bindById("levelDetailCloseBtn", "click", () => closeLevelDetailPanel());
-      }
+      
 
       if (IS_JSDOM_ENV) {
-        bindAssignmentControlsFallback();
+        activateAdminFallback("bindAssignmentControlsFallback");
       } else {
         void scheduleAdminIslandImport(() => import("/web-asset/admin/assignment-controls-island.mjs"), 1800, "assignments|assignments-data")
           .then((mod) =>
@@ -24123,180 +22703,15 @@
           )
           .catch((error) => {
             handleError(error);
-            bindAssignmentControlsFallback();
+            activateAdminFallback("bindAssignmentControlsFallback");
             return null;
           });
       }
 
-      function bindParentTrackingIslandFallback() {
-        bindById("pt_classDate", "change", () => {
-          const classDate = normalizeText(document.getElementById("pt_classDate").value);
-          parentTrackingFieldSetValue("pt_classDay", dayLabelFromIsoDate(classDate));
-          resetParentTrackingManualMetricsTouched();
-          applyParentTrackingLessonSummaryFromMemory({ force: true });
-          syncParentTrackingForSelection({}).catch(handleError);
-        });
-        bindById("pt_studentRefId", "change", () => {
-          resetParentTrackingManualMetricsTouched();
-          syncParentTrackingForSelection({}).catch(handleError);
-        });
-        bindById("pt_teacherName", "change", () => {
-          rememberParentTrackingTeacherName();
-        });
-        bindById("pt_lessonSummary", "input", () => {
-          rememberParentTrackingLessonSummary();
-        });
-        const parentTrackingSectionEl = document.querySelector(
-          '.page-section[data-page="parent-tracking"]',
-        );
-        parentTrackingSectionEl?.addEventListener("focusin", (event) => {
-          const target = event?.target;
-          if (!(target instanceof HTMLTextAreaElement)) return;
-          if (!normalizeText(target.name).startsWith("pt_rec_")) return;
-          rememberParentTrackingRecommendationFocus(target.name);
-        });
-        parentTrackingSectionEl?.addEventListener("change", (event) => {
-          const target = event?.target;
-          if (
-            !(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)
-          )
-            return;
-          const fieldName = normalizeText(target.name);
-          if (!fieldName.startsWith("pt_skill_") && !fieldName.startsWith("pt_conduct_"))
-            return;
-          applyParentTrackingRubricSummaryScores();
-        });
-        parentTrackingSectionEl?.addEventListener("input", (event) => {
-          const target = event?.target;
-          if (!(target instanceof HTMLInputElement)) return;
-          const fieldName = normalizeText(target.name);
-          if (!fieldName.startsWith("pt_skill_") && !fieldName.startsWith("pt_conduct_"))
-            return;
-          applyParentTrackingRubricSummaryScores();
-        });
-        document
-          .getElementById("pt_actionInsertBtn")
-          ?.addEventListener("click", () => insertParentTrackingActionShortcut());
-        document
-          .getElementById("pt_actionClearBtn")
-          ?.addEventListener("click", () => clearParentTrackingActionShortcutInputs());
-        bindById("pt_saveBtn", "click", () => saveParentTrackingReport().catch(handleError));
-        bindById("pt_queueSendBtn", "click", () => queueParentTrackingEmail().catch(handleError));
-        bindById("pt_clearBtn", "click", () => {
-          clearParentTrackingForm();
-          refreshParentTracking({ preserveStudentSelection: true }).catch(handleError);
-        });
-        document
-          .getElementById("performanceQueueExpandBtn")
-          ?.addEventListener("click", () => {
-            const nextShowAll = !state.parentReportQueue.showAll;
-            loadParentReportQueue({ showAll: nextShowAll }).catch(handleError);
-          });
-        bindById("overviewIncomingExerciseExpandBtn", "click", () => {
-            const nextShowAll = !state.incomingExerciseQueue.showAll;
-            loadIncomingExerciseResults({ showAll: nextShowAll }).catch(handleError);
-          });
-        bindById("overviewIncomingExerciseRefreshBtn", "click", () => {
-            loadIncomingExerciseResults({
-              showAll: state.incomingExerciseQueue.showAll,
-            }).catch(handleError);
-          });
-        document
-          .getElementById("performanceQueueRefreshBtn")
-          ?.addEventListener("click", () => {
-            loadParentReportQueue({ showAll: state.parentReportQueue.showAll }).catch(
-              handleError,
-            );
-          });
-        document
-          .getElementById("performanceQueueSendAllBtn")
-          ?.addEventListener("click", () => {
-            sendAllQueuedParentReports().catch(handleError);
-          });
-        document
-          .getElementById("performanceQueueSendSelectedBtn")
-          ?.addEventListener("click", () => {
-            sendSelectedQueuedParentReports().catch(handleError);
-          });
-        document
-          .getElementById("performanceQueueUnqueueSelectedBtn")
-          ?.addEventListener("click", () => {
-            unqueueSelectedQueuedParentReports().catch(handleError);
-          });
-        document
-          .getElementById("performanceQueueDeleteSelectedBtn")
-          ?.addEventListener("click", () => {
-            deleteSelectedQueuedParentReports().catch(handleError);
-          });
-        document
-          .getElementById("performanceQueueSelectAll")
-          ?.addEventListener("change", (event) => {
-            const target = event.target;
-            setParentQueueSelectionForVisibleRows(Boolean(target?.checked), state.parentReportQueue.items);
-            renderPerformanceQueueSection({
-              total: state.parentReportQueue.total,
-              hasMore: state.parentReportQueue.hasMore,
-              items: state.parentReportQueue.items,
-            });
-          });
-        document
-          .getElementById("performanceStagedRefreshBtn")
-          ?.addEventListener("click", () => {
-            loadParentReportQueue({ showAll: state.parentReportQueue.showAll })
-              .then(() => {
-                renderPerformanceStagedSection(state.visibleTableRows?.performance || []);
-                setStatus("Staged performance reports reloaded.");
-              })
-              .catch(handleError);
-          });
-        bindById("performanceEngagementReloadBtn", "click", () => {
-          loadPerformanceEngagementData({ force: true }).catch(handleError);
-        });
-        bindById("performanceEngagementSearch", "input", (event) => {
-          state.performanceEngagement.search = normalizeText(event?.target?.value);
-          renderPerformanceEngagementPage();
-        });
-        bindById("performanceEngagementLevelFilter", "change", (event) => {
-          state.performanceEngagement.level = normalizeText(event?.target?.value);
-          renderPerformanceEngagementPage();
-        });
-        bindById("performanceEngagementDeliveryFilter", "change", (event) => {
-          state.performanceEngagement.delivery = normalizeText(event?.target?.value);
-          renderPerformanceEngagementPage();
-        });
-        bindById("parentQueueCloseBtn", "click", () => closeParentQueueModal());
-        bindById("parentQueuePrevBtn", "click", () => {
-          if (state.parentReportQueue.modalIndex <= 0) return;
-          state.parentReportQueue.modalIndex -= 1;
-          renderParentQueueModal();
-        });
-        bindById("parentQueueNextBtn", "click", () => {
-          const total =
-            Array.isArray(state.parentReportQueue?.items) ?
-              state.parentReportQueue.items.length
-            : 0;
-          if (state.parentReportQueue.modalIndex >= total - 1) return;
-          state.parentReportQueue.modalIndex += 1;
-          renderParentQueueModal();
-        });
-        bindById("parentQueueHoldBtn", "click", () => holdParentQueueModalItem().catch(handleError));
-        bindById("parentQueueEditBtn", "click", () => editParentQueueModalItem().catch(handleError));
-        bindById("parentQueueRequeueBtn", "click", () =>
-            requeueParentQueueModalItem().catch(handleError),
-          );
-        bindById("parentQueueSendAllBtn", "click", () =>
-            sendAllQueuedParentReports().catch(handleError),
-          );
-        bindById("parentQueueModal", "click", (event) => {
-          const target = event.target;
-          if (!(target instanceof Element)) return;
-          if (target.id !== "parentQueueModal") return;
-          closeParentQueueModal();
-        });
-      }
+      
 
       if (IS_JSDOM_ENV) {
-        bindParentTrackingIslandFallback();
+        activateAdminFallback("bindParentTrackingIslandFallback");
       } else {
         void scheduleAdminIslandImport(() => import("/web-asset/admin/parent-tracking-island.mjs"), 1800, "parent-tracking")
           .then((mod) =>
@@ -24433,284 +22848,15 @@
           )
           .catch((error) => {
             handleError(error);
-            bindParentTrackingIslandFallback();
+            activateAdminFallback("bindParentTrackingIslandFallback");
             return null;
           });
       }
 
-      function bindAttendanceGradeControlsFallback() {
-        document
-          .getElementById("attendanceLevelStyleLevel")
-          ?.addEventListener("change", () => {
-            state.levelTileStyleEditor.pendingImageDataUrl = "";
-            syncAttendanceLevelEditorInputs();
-          });
-        bindById("attendanceSaveBtn", "click", () => saveAttendance().catch(handleError));
-        bindById("attendanceLandingSaveAllBtn", "click", () =>
-          saveAttendanceLandingForSelectedLevel().catch(handleError),
-        );
-        bindById("attendanceLandingReloadBtn", "click", () =>
-          refreshAttendanceLanding({ reloadRows: true }).catch(handleError),
-        );
-        bindById("attendanceLevelApplyBtn", "click", () => {
-          try {
-            applyAttendanceLevelTileStyle();
-          } catch (error) {
-            handleError(error);
-          }
-        });
-        bindById("attendanceLevelClearImageBtn", "click", () => {
-          try {
-            clearAttendanceLevelTileImage();
-          } catch (error) {
-            handleError(error);
-          }
-        });
-        bindById("attendanceLevelResetBtn", "click", () => {
-          try {
-            resetAttendanceLevelTileStyle();
-          } catch (error) {
-            handleError(error);
-          }
-        });
-        bindById("attendanceLevelImage", "change", (event) => {
-          try {
-            handleAttendanceLevelImageUpload(event);
-          } catch (error) {
-            handleError(error);
-          }
-        });
-        bindById("a_date", "change", () => {
-          syncAttendanceDateDerivedFields();
-          state.attendanceLanding.selectionsByStudentId = {};
-          persistAttendanceFormContext();
-          refreshAttendanceLandingRows({ hydrate: false }).catch(handleError);
-        });
-        bindById("a_schoolYear", "change", persistAttendanceFormContext);
-        bindById("a_quarter", "change", () => {
-          updateAttendanceQuarterWarning();
-          persistAttendanceFormContext();
-        });
-        bindById("attendanceClearBtn", "click", () => {
-          clearAttendanceForm();
-          setStatus("Attendance form cleared.");
-        });
-        bindById("attendanceSortField", "change", () => {
-          applySortState(
-            "attendance",
-            normalizeText(document.getElementById("attendanceSortField").value) ||
-              "attendanceDate",
-            { toggleIfSame: false, resetDirOnFieldChange: false },
-          );
-          rerenderSortedTable("attendance");
-        });
-        bindById("attendanceSortDirBtn", "click", () => {
-          const currentField =
-            normalizeText(state.tableSort?.attendance?.field) || "attendanceDate";
-          applySortState("attendance", currentField, {
-            toggleIfSame: true,
-            resetDirOnFieldChange: false,
-          });
-          rerenderSortedTable("attendance");
-        });
-        const applyAttendanceDataSearch = () => {
-          setTableSearchTerm(
-            "attendance",
-            document.getElementById("attendanceDataSearch").value,
-          );
-          rerenderSortedTable("attendance");
-        };
-        bindById("attendanceDataSearch", "input", applyAttendanceDataSearch);
-        bindById("attendanceArchiveToggleBtn", "click", () => {
-          try {
-            toggleTableArchivedView("attendance");
-          } catch (error) {
-            handleError(error);
-          }
-        });
-        bindById("attendanceExportXlsxBtn", "click", () => {
-          exportVisibleTableRowsToXlsx("attendance").catch(handleError);
-        });
-        bindById("attendancePrintPdfBtn", "click", () => {
-          try {
-            printVisibleTableRowsPdf("attendance");
-          } catch (error) {
-            handleError(error);
-          }
-        });
-        bindById("performanceSortField", "change", () => {
-          applySortState(
-            "performance",
-            normalizeText(document.getElementById("performanceSortField").value) ||
-              "generatedAt",
-            { toggleIfSame: false, resetDirOnFieldChange: false },
-          );
-          rerenderSortedTable("performance");
-        });
-        bindById("performanceSortDirBtn", "click", () => {
-          const currentField =
-            normalizeText(state.tableSort?.performance?.field) || "generatedAt";
-          applySortState("performance", currentField, {
-            toggleIfSame: true,
-            resetDirOnFieldChange: false,
-          });
-          rerenderSortedTable("performance");
-        });
-        const applyPerformanceDataSearch = () => {
-          setTableSearchTerm(
-            "performance",
-            document.getElementById("performanceDataSearch").value,
-          );
-          rerenderSortedTable("performance");
-        };
-        bindById("performanceDataSearch", "input", applyPerformanceDataSearch);
-        bindById("performanceExportXlsxBtn", "click", () => {
-          exportVisibleTableRowsToXlsx("performance").catch(handleError);
-        });
-        bindById("performancePrintPdfBtn", "click", () => {
-          try {
-            printVisibleTableRowsPdf("performance");
-          } catch (error) {
-            handleError(error);
-          }
-        });
-        bindById("gradeSaveBtn", "click", () => saveGrade().catch(handleError));
-        bindById("gradeClearBtn", "click", () => {
-          clearGradeForm();
-          setStatus("Grade form cleared.");
-        });
-        bindById("gradeSortField", "change", () => {
-          applySortState(
-            "grades",
-            normalizeText(document.getElementById("gradeSortField").value) || "dueAt",
-            { toggleIfSame: false, resetDirOnFieldChange: false },
-          );
-          rerenderSortedTable("grades");
-        });
-        bindById("gradeSortDirBtn", "click", () => {
-          const currentField = normalizeText(state.tableSort?.grades?.field) || "dueAt";
-          applySortState("grades", currentField, {
-            toggleIfSame: true,
-            resetDirOnFieldChange: false,
-          });
-          rerenderSortedTable("grades");
-        });
-        const applyGradeDataSearch = () => {
-          setTableSearchTerm("grades", document.getElementById("gradeDataSearch").value);
-          rerenderSortedTable("grades");
-        };
-        bindById("gradeDataSearch", "input", applyGradeDataSearch);
-        bindById("gradeArchiveToggleBtn", "click", () => {
-          try {
-            toggleTableArchivedView("grades");
-          } catch (error) {
-            handleError(error);
-          }
-        });
-        bindById("gradeExportXlsxBtn", "click", () => {
-          exportVisibleTableRowsToXlsx("grades").catch(handleError);
-        });
-        bindById("gradePrintPdfBtn", "click", () => {
-          try {
-            printVisibleTableRowsPdf("grades");
-          } catch (error) {
-            handleError(error);
-          }
-        });
-
-        document
-          .getElementById("openTabulatorGradesBtn")
-          ?.addEventListener("click", () => {
-            window.location.assign(buildGradesTabulatorLaunchUrl());
-          });
-        document.getElementById("gradeChartLanes")?.addEventListener("click", (event) => {
-          const target = event?.target;
-          if (!(target instanceof Element)) return;
-          const openBtn = target.closest("button[data-grade-chart-open]");
-          if (!(openBtn instanceof HTMLButtonElement)) return;
-          const laneKey = normalizeText(openBtn.getAttribute("data-grade-chart-open"));
-          if (!laneKey) return;
-          openGradeChartModalForLaneKey(laneKey);
-        });
-        document
-          .getElementById("gradeChartModalCloseBtn")
-          ?.addEventListener("click", () => {
-            closeGradeChartModal();
-          });
-        document.getElementById("gradeChartModal")?.addEventListener("click", (event) => {
-          if (event.target === event.currentTarget) closeGradeChartModal();
-        });
-        document.addEventListener("keydown", (event) => {
-          if (!state.gradeChartModalOpen) return;
-          if (normalizeText(event.key) !== "Escape") return;
-          closeGradeChartModal();
-        });
-        document
-          .getElementById("gradeChartPeriods")
-          ?.addEventListener("click", (event) => {
-            const target = event?.target;
-            if (!(target instanceof Element)) return;
-            const buttonEl = target.closest("[data-grade-chart-period]");
-            if (!(buttonEl instanceof HTMLButtonElement)) return;
-            const period = normalizedGradeChartPeriod(
-              buttonEl.getAttribute("data-grade-chart-period"),
-            );
-            setGradeChartState({ period });
-            applyGradeChartCurrentSchoolYearDefault();
-            applyGradeChartCurrentQuarterDefault();
-            renderGradePulseChart(state.visibleTableRows?.grades || []);
-          });
-        document.getElementById("gradeChartGroupBy")?.addEventListener("change", () => {
-          setGradeChartState({
-            groupBy: document.getElementById("gradeChartGroupBy")?.value || "class",
-          });
-          renderGradePulseChart(state.visibleTableRows?.grades || []);
-        });
-        document.getElementById("gradeChartQuarter")?.addEventListener("change", () => {
-          setGradeChartState({
-            quarter: document.getElementById("gradeChartQuarter")?.value || "",
-          });
-          renderGradePulseChart(state.visibleTableRows?.grades || []);
-        });
-        document
-          .getElementById("gradeChartSchoolYear")
-          ?.addEventListener("change", () => {
-            setGradeChartState({
-              schoolYear:
-                document.getElementById("gradeChartSchoolYear")?.value ||
-                gradeChartCurrentSchoolYear(),
-            });
-            renderGradePulseChart(state.visibleTableRows?.grades || []);
-          });
-        const applyGradeChartCustomRange = () => {
-          let customFrom = normalizeText(
-            document.getElementById("gradeChartCustomFrom")?.value,
-          ).slice(0, 10);
-          let customTo = normalizeText(
-            document.getElementById("gradeChartCustomTo")?.value,
-          ).slice(0, 10);
-          if (customFrom && customTo && compareIsoDateText(customFrom, customTo) > 0) {
-            const swapped = customFrom;
-            customFrom = customTo;
-            customTo = swapped;
-          }
-          const fromEl = document.getElementById("gradeChartCustomFrom");
-          const toEl = document.getElementById("gradeChartCustomTo");
-          if (fromEl) fromEl.value = customFrom;
-          if (toEl) toEl.value = customTo;
-          setGradeChartState({ customFrom, customTo });
-          renderGradePulseChart(state.visibleTableRows?.grades || []);
-        };
-        document
-          .getElementById("gradeChartCustomFrom")
-          ?.addEventListener("change", applyGradeChartCustomRange);
-        document
-          .getElementById("gradeChartCustomTo")
-          ?.addEventListener("change", applyGradeChartCustomRange);
-      }
+      
 
       if (IS_JSDOM_ENV) {
-        bindAttendanceGradeControlsFallback();
+        activateAdminFallback("bindAttendanceGradeControlsFallback");
       } else {
         void scheduleAdminIslandImport(() => import("/web-asset/admin/attendance-grade-controls-island.mjs"), 1800, "attendance|attendance-admin|grades|grades-data|grades-tabulator|reports|performance-data|performance-engagement")
           .then((mod) =>
@@ -24928,7 +23074,7 @@
           )
           .catch((error) => {
             handleError(error);
-            bindAttendanceGradeControlsFallback();
+            activateAdminFallback("bindAttendanceGradeControlsFallback");
             return null;
           });
       }
@@ -25123,34 +23269,48 @@
           probeHubConnection({ notify: false }).catch(() => {});
         }
       }, 1200);
-      scheduleIdleTaskSeries([
-        () => {
+      const activeStartupPage = normalizePageSlug(state.activePage);
+      const activePageIdleTasks = [];
+      if (IS_JSDOM_ENV || activeStartupPage === "profile") {
+        activePageIdleTasks.push(() => {
           renderProfileFormLayout();
           renderProfileInfoLayout();
           renderProfileFieldLayoutEditor();
           setProfileMode("info");
-          applyUiSettings();
+          populateProfileLevelOptions();
+        });
+      }
+      if (IS_JSDOM_ENV || activeStartupPage === "assignments" || activeStartupPage === "assignments-data") {
+        activePageIdleTasks.push(() => {
+          populateAssignmentLevelOptions();
+          refreshAssignmentStudentOptions();
           renderAssignmentTemplates();
           renderAssignmentDraftItems();
           renderAssignmentExerciseOptions();
-        },
-        () => {
-          populateProfileLevelOptions();
-          populateAssignmentLevelOptions();
+        });
+      }
+      if (IS_JSDOM_ENV || activeStartupPage === "attendance" || activeStartupPage === "attendance-admin") {
+        activePageIdleTasks.push(() => {
           populateAttendanceLevelStyleOptions();
-          refreshAllTableSearchFilterControls();
-          applyGradeChartCurrentSchoolYearDefault();
-          applyGradeChartCurrentQuarterDefault();
-          renderGradePulseChart(state.visibleTableRows?.grades || []);
           syncAttendanceLevelEditorInputs();
-          refreshAssignmentStudentOptions();
+          refreshAttendanceLanding({ reloadRows: false }).catch(() => {});
+        });
+      }
+      if (IS_JSDOM_ENV || activeStartupPage === "parent-tracking") {
+        activePageIdleTasks.push(() => {
+          renderParentTrackingTeacherOptions();
+          refreshParentTracking({ preserveStudentSelection: true }).catch(() => {});
+        });
+      }
+      if (IS_JSDOM_ENV || activeStartupPage !== "overview") {
+        activePageIdleTasks.push(() => {
+          populateProfileLevelOptions();
+          refreshAllTableSearchFilterControls();
           renderTopSearchStudentOptions();
           updateTopSearchScopeHint();
-          renderParentTrackingTeacherOptions();
-        },
-        () => refreshParentTracking({ preserveStudentSelection: true }).catch(() => {}),
-        () => refreshAttendanceLanding({ reloadRows: false }).catch(() => {}),
-      ]);
+        });
+      }
+      scheduleIdleTaskSeries(activePageIdleTasks);
       if (isStaticAdminPreviewMode() && !ADMIN_API_ORIGIN) {
         setAuthBootstrapping(true);
         showLogin();

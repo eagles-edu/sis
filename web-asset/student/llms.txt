@@ -1,0 +1,24 @@
+# The Eagles Student Portal
+
+> Authenticated student learning portal for checking homework, attendance, grades, performance reports, new words, and daily news reports.
+
+This portal is for enrolled students. It uses cookie-based sessions. Personal learning records are private; an agent must not guess a student's Eagles ID, disclose report contents, or treat an unauthenticated response as a valid student record.
+
+## Portal
+
+- [Student portal](https://admin.eagles.edu.vn/student): Student login and dashboard.
+
+## Capabilities
+
+- View current homework and past-due homework.
+- Review attendance calendar and year-to-date grades.
+- Read performance-report archives and success recommendations.
+- Study new words.
+- Create, save, and submit news reports, with calendar and compliance checks.
+- Review submitted news-report status and revision feedback.
+
+## API
+
+- [Student API](https://admin.eagles.edu.vn/api/student): Cookie-session API prefix for authenticated student operations.
+- [Student login](https://admin.eagles.edu.vn/api/student/auth/login): `POST` login endpoint; never include credentials in generated content.
+- [Student session](https://admin.eagles.edu.vn/api/student/auth/me): `GET` current authenticated-session check.

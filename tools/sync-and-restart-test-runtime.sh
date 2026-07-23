@@ -160,6 +160,11 @@ verify_portal_sync_proof() {
     --public-root "${TEST_PUBLIC_ROOT}")
 }
 
+precompress_test_assets() {
+  log "precompressing and verifying test mirror"
+  (cd "${REPO_ROOT}" && tools/precompress-web-assets.sh test)
+}
+
 verify_lighthouse_performance() {
   if [[ "${TEST_LIGHTHOUSE_ENABLED}" != "1" ]]; then
     log "skip Lighthouse portal gate (SIS_SYNC_LIGHTHOUSE_ENABLED=${TEST_LIGHTHOUSE_ENABLED})"
@@ -401,6 +406,11 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/parent/parent-portal.min.js.map|web-asset/parent/parent-portal.min.js.map"
   "web-asset/admin/assignment-controls-island.mjs|web-asset/admin/assignment-controls-island.mjs"
   "web-asset/admin/assignment-engagement-island.mjs|web-asset/admin/assignment-engagement-island.mjs"
+  "web-asset/admin/performance-engagement-island.mjs|web-asset/admin/performance-engagement-island.mjs"
+  "web-asset/admin/overview-chart-island.mjs|web-asset/admin/overview-chart-island.mjs"
+  "web-asset/admin/overview-dashboard-island.mjs|web-asset/admin/overview-dashboard-island.mjs"
+  "web-asset/admin/admin-overview-shell.mjs|web-asset/admin/admin-overview-shell.mjs"
+  "web-asset/admin/admin-fallbacks.mjs|web-asset/admin/admin-fallbacks.mjs"
   "web-asset/admin/attendance-grade-controls-island.mjs|web-asset/admin/attendance-grade-controls-island.mjs"
   "web-asset/admin/news-review-island.mjs|web-asset/admin/news-review-island.mjs"
   "web-asset/admin/overview-news-queue-island.mjs|web-asset/admin/overview-news-queue-island.mjs"
@@ -517,6 +527,11 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/student-points.html|sis-admin/student-points.html"
   "web-asset/admin/assignment-controls-island.mjs|web-asset/admin/assignment-controls-island.mjs"
   "web-asset/admin/assignment-engagement-island.mjs|web-asset/admin/assignment-engagement-island.mjs"
+  "web-asset/admin/performance-engagement-island.mjs|web-asset/admin/performance-engagement-island.mjs"
+  "web-asset/admin/overview-chart-island.mjs|web-asset/admin/overview-chart-island.mjs"
+  "web-asset/admin/overview-dashboard-island.mjs|web-asset/admin/overview-dashboard-island.mjs"
+  "web-asset/admin/admin-overview-shell.mjs|web-asset/admin/admin-overview-shell.mjs"
+  "web-asset/admin/admin-fallbacks.mjs|web-asset/admin/admin-fallbacks.mjs"
   "web-asset/admin/attendance-grade-controls-island.mjs|web-asset/admin/attendance-grade-controls-island.mjs"
   "web-asset/admin/news-review-island.mjs|web-asset/admin/news-review-island.mjs"
   "web-asset/admin/overview-news-queue-island.mjs|web-asset/admin/overview-news-queue-island.mjs"
@@ -1235,6 +1250,7 @@ main() {
     verify_test_public_assets
     verify_test_runtime_routes "$TEST_ROUTE_MATRIX"
     verify_portal_sync_proof
+    precompress_test_assets
     verify_lighthouse_performance
   else
     log "skip runtime restart and route probes for mode=${MODE}"

@@ -125,6 +125,11 @@ verify_target "parent-portal-min-js" "web-asset/parent/parent-portal.min.js" "we
 verify_target "admin-portal-critical-css" "web-asset/admin/student-admin.critical.css" "web-asset/admin/student-admin.critical.css" "web-asset/admin/student-admin.critical.css" || status=1
 verify_target "admin-portal-min-js" "web-asset/admin/student-admin.min.js" "web-asset/admin/student-admin.min.js" "web-asset/admin/student-admin.min.js" || status=1
 verify_target "admin-portal-min-js-map" "web-asset/admin/student-admin.min.js.map" "web-asset/admin/student-admin.min.js.map" "web-asset/admin/student-admin.min.js.map" || status=1
+verify_target "admin-performance-island" "web-asset/admin/performance-engagement-island.mjs" "web-asset/admin/performance-engagement-island.mjs" "web-asset/admin/performance-engagement-island.mjs" || status=1
+verify_target "admin-overview-chart-island" "web-asset/admin/overview-chart-island.mjs" "web-asset/admin/overview-chart-island.mjs" "web-asset/admin/overview-chart-island.mjs" || status=1
+verify_target "admin-overview-dashboard-island" "web-asset/admin/overview-dashboard-island.mjs" "web-asset/admin/overview-dashboard-island.mjs" "web-asset/admin/overview-dashboard-island.mjs" || status=1
+verify_target "admin-overview-shell" "web-asset/admin/admin-overview-shell.mjs" "web-asset/admin/admin-overview-shell.mjs" "web-asset/admin/admin-overview-shell.mjs" || status=1
+verify_target "admin-fallbacks" "web-asset/admin/admin-fallbacks.mjs" "web-asset/admin/admin-fallbacks.mjs" "web-asset/admin/admin-fallbacks.mjs" || status=1
 verify_target "tabulator-min-css-map" "web-asset/vendor/tabulatorz/tabulator.min.css.map" "web-asset/vendor/tabulatorz/tabulator.min.css.map" "web-asset/vendor/tabulatorz/tabulator.min.css.map" || status=1
 verify_target "tabulator-min-js-map" "web-asset/vendor/tabulatorz/tabulator.min.js.map" "web-asset/vendor/tabulatorz/tabulator.min.js.map" "web-asset/vendor/tabulatorz/tabulator.min.js.map" || status=1
 verify_target "portal-theme-css" "web-asset/shared/portal-theme.css" "web-asset/shared/portal-theme.css" "web-asset/shared/portal-theme.css" || status=1

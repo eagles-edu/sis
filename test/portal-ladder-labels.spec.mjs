@@ -8,10 +8,11 @@ const hubHtml = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/portal-hu
 const studentAdminHtml = fs
   .readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.html"), "utf8")
   .replace(/\s+/g, " ")
-const studentAdminJs = fs.readFileSync(
-  path.resolve(rootDir, "web-asset/admin/student-admin.js"),
-  "utf8",
-)
+const studentAdminJs = [
+  "web-asset/admin/student-admin.js",
+  "web-asset/admin/overview-chart-island.mjs",
+  "web-asset/admin/queue-hub-island.mjs",
+].map((relPath) => fs.readFileSync(path.resolve(rootDir, relPath), "utf8")).join("\n")
 const studentAdminCss = fs.readFileSync(
   path.resolve(rootDir, "web-asset/admin/student-admin.css"),
   "utf8",
