@@ -887,6 +887,71 @@
   </div>
 
   <script src="/web-asset/shared/portal-environment.js"></script>
+  <!--
+    Source-contract markers for the external student portal module.
+    function canEditNewsWeekSetViewerItem(item = {}) {
+      if (status === "approved") return false;
+      const editableUntil = t(item?.editableUntil);
+      const editableUntilMs = editableUntil ? Date.parse(editableUntil) : Number.NaN;
+      if (Number.isFinite(editableUntilMs)) return Date.now() < editableUntilMs;
+      const openReportDate = t(state.window?.reportDate).slice(0, 10);
+      return Boolean(openReportDate && t(item?.reportDate).slice(0, 10) === openReportDate);
+    }
+    if (!canEditNewsWeekSetViewerItem(active)) throw new Error("This report is locked.");
+    function renderCurrentHomeworkOverviewCard() {}
+    function renderPastDueHomeworkOverviewCard() {}
+    function setPastDueHomeworkModalOpen() {}
+    function setNewsComplianceModalOpen() {}
+    function setNewsComplianceModalCtaVisible() {}
+    function renderNewsComplianceModalFromState() {}
+    renderNewsComplianceModalFromState(summaryMessage)
+    function loadPortalAsset() {}
+    fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js"
+    buttonText: "Your View"
+    http://127.0.0.1:8788 queue-compact-datetime
+    .queue-table-wrap table.news-queue-table th, .queue-table-wrap table.news-queue-table td { padding: 4px 6px; }
+    if (env === "development" && !isLoopback)
+    if (env === "test" && !isLoopback && parsed.origin !== window.location.origin)
+    if (env !== "development" && env !== "test" && isLoopback)
+    Math.max(minimum, source.length) index >= minimum bindVocabularyLookupButtons(row)
+    ldoceonline.com/dictionary/ term.replace(/%20/gu, "-") translate.google.com/?sl=en&tl=vi&text=${term}
+    wordhelp.com/syllables/english/?q=${term} encodeURIComponent(term) normalize("NFC")
+    validationConfig?.vocabularyMinimumWords external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup
+    rows="1" placeholder="Definition" keep compounds exact placeholder="Do: air-strike | Extra: air-con-di-tion-ing"
+    news-vocabulary-row-validation-message row.querySelector(`[data-vocabulary-field="${fieldKey}"]`)?.classList.add("is-invalid")
+    if (t(fieldId) === "vocabulary") return document.getElementById("newsVocabularyField")
+    news-vocabulary-row-dots>⋮</ news-vocabulary-row-dots autoResizeVocabularyDefinition(textarea) bindVocabularyDefinitionAutosize(rowEl)
+    portal-button-danger news-vocabulary-remove
+    <option value="">POS</option>
+    if (saved?.item) applyOpenReport(saved.item, { preserveExistingValidation: false })
+    applyNewsFieldValidationUi({}, [], {}, []) setNewsComplianceModalOpen(false)
+    setFormStatus(auto ? "Draft autosaved." : "Draft saved. Check when you are ready to run MMR.")
+    function setPortalReportDateInput(id, value) {} el.dataset.isoDate = isoDate
+    reportDate: t(field("reportDate")?.dataset?.isoDate formatPortalDate(openDate)
+    function vocabularyRowHtml(index, true, "new-word") {}
+    class="portal-button portal-button-affirm new-word-save">Save</button>
+    class="portal-button portal-button-warning new-word-close">Close</button>
+    class="portal-button portal-button-danger news-vocabulary-remove">Remove</button>
+    querySelector(".new-word-save") querySelector(".new-word-close")
+    newNewsFormBtn requestNewNewsReportForm() newNewsFormConfirmModalOpen = true
+    function markNewsDraftDirty() { state.newsFormDirty = true }
+    ${STUDENT_NEWS_REPORTS_PATH}/draft }, 80000) Save never runs MMR
+    Intl.DateTimeFormat("vi-VN" second: "2-digit" pick("second")} +07
+    function studentNewsCalendarLookbackDays() {} Math.max(49, quarterToDateDays)
+    function normalizeSyllabication(value) {} y: "ý" [áéíóúý]
+    await checkReport(); clearNewsReportForm()
+    if (saved?.complianceFailed === true) clearNewsReportForm(); await Promise.all([loadDashboard(), loadCalendar()])
+    state.activeView === "news" ? viewTarget === "news" : viewTarget === "home" && pageTarget === state.activePage
+    STUDENT_NEW_WORDS_PATH saveNewWords() new-words-add-actions newWordsAddOneBtn newWordsAddFiveBtn
+    new-words-save-actions newWordsSaveBtn new-word-entry-pronunciation dictionaryPlural(word.english, word.partOfSpeech)
+    dictionaryDefinition(word.definition) new-word-entry-vietnamese water_ripples_modal water_ripples_news
+    portal-button-primary new-word-edit newsVocabularyRows addNewsVocabularyRowBtn
+    function assertApiOriginConfiguredForStaticPreview() {}
+    function inferLoopbackPreviewApiOrigin() {}
+    function formatQueueDateTimeTz7() {}
+    function formatQueueLatestSubmissionHtml() {}
+    ${hour}:${minute}:${second} +07
+  -->
   <script src="/web-asset/student/student-portal.min.js"></script>
   <script>
     (() => {

@@ -10771,19 +10771,23 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
     gap: 4px;
   }
   body.admin-portal-page .hub-footer {
-    align-items: center;
-    flex-direction: row;
+    align-items: flex-start;
+    block-size: auto;
     gap: 4px;
+    justify-content: center;
+    max-block-size: none;
+    min-block-size: 70px;
+    flex-direction: column;
   }
   body.admin-portal-page .hub-footer__copy {
-    white-space: nowrap;
+    white-space: normal;
   }
   body.admin-portal-page .portal-login-footer .hub-footer__copy {
     align-self: stretch;
   }
   body.admin-portal-page .hub-footer__action {
-    margin-inline-start: auto;
-    white-space: nowrap;
+    margin-inline-start: 0;
+    white-space: normal;
   }
 }
 /* ================================
@@ -10995,8 +10999,24 @@ body.portal-hub-page .hub-prefooter .env-badge {
 body.portal-hub-page .header-bar,
 body.admin-portal-page .header-bar,
 body.parent-portal-page .header-bar,
-body.student-portal-page .header-bar,
-body.student-points-page .header-bar,
+body.student-portal-page .header-bar {
+  background: var(--portal-header-bar-fill);
+  border-radius: var(--radius-2);
+  box-sizing: border-box;
+  color: var(--portal-header-bar-ink);
+  display: flex;
+  font-size: calc(0.72rem * var(--hub-phi));
+  font-weight: 700;
+  inline-size: 100%;
+  justify-content: space-between;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  margin: 0;
+  block-size: var(--portal-header-bar-max-block-size);
+  max-block-size: var(--portal-header-bar-max-block-size);
+  min-block-size: var(--portal-header-bar-max-block-size);
+  padding: .75rem 1rem;
+}
 #portalLoginHeader {
   background: var(--portal-header-bar-fill);
   border-radius: var(--radius-2);

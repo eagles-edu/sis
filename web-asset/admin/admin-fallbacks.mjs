@@ -417,9 +417,13 @@ function bindAssignmentControlsFallback() {
       handleError(error);
     }
   });
-  bindById("assignmentSaveTemplateBtn", "click", () =>
-    saveAssignmentTemplate().catch(handleError),
-  );
+  const assignmentSaveTemplateBtn = document.getElementById("assignmentSaveTemplateBtn");
+  if (assignmentSaveTemplateBtn?.dataset.sisAssignmentSaveBound !== "true") {
+    bindById("assignmentSaveTemplateBtn", "click", () =>
+      saveAssignmentTemplate().catch(handleError),
+    );
+    if (assignmentSaveTemplateBtn) assignmentSaveTemplateBtn.dataset.sisAssignmentSaveBound = "true";
+  }
   bindById("assignmentDeleteTemplateBtn", "click", () =>
     deleteAssignmentTemplate().catch(handleError),
   );

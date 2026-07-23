@@ -32,10 +32,28 @@
       min-width: 0;
   }
 
+    .topbar-head {
+      min-width: 0;
+  }
+
+    .topbar {
+      grid-template-columns: minmax(0, 1fr);
+      inline-size: 100%;
+      min-width: 0;
+  }
+
+    .topbar .header-actions {
+      min-width: 0;
+  }
+
     .section-stack,
     .app-page-header {
       display: grid;
       gap: var(--portal-shell-gap);
+  }
+
+    .section-stack {
+      grid-template-columns: minmax(0, 1fr);
   }
 
     .hero,

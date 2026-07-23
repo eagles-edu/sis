@@ -3960,9 +3960,14 @@
         return result;
       }
 
+      let assignmentTemplatesLoadGeneration = 0;
+      let assignmentTemplatesLastWriteAt = 0;
+
       async function loadAssignmentTemplatesFromServer({
         migrateLegacy = false,
       } = {}) {
+        const loadGeneration = ++assignmentTemplatesLoadGeneration;
+        const loadStartedAt = Date.now();
         if (migrateLegacy) {
           try {
             await migrateLegacyAssignmentTemplatesToServer();
@@ -3978,11 +3983,16 @@
           const normalized = normalizeAssignmentTemplateList(
             Array.isArray(result?.items) ? result.items : [],
           );
+          if (loadGeneration !== assignmentTemplatesLoadGeneration) return state.assignmentTemplates;
+          if (!normalized.length && assignmentTemplatesLastWriteAt > 0) {
+            return state.assignmentTemplates;
+          }
           state.assignmentTemplates = normalized;
           if (state.dashboardSummary) renderDashboardSummary(state.dashboardSummary);
           return normalized;
         } catch (error) {
           if (error && (error.status === 404 || error.status === 503)) {
+            if (loadGeneration !== assignmentTemplatesLoadGeneration) return state.assignmentTemplates;
             state.assignmentTemplates = [];
             if (state.dashboardSummary) renderDashboardSummary(state.dashboardSummary);
             return [];
@@ -10072,7 +10082,52 @@
       async function ensureOverviewChartIsland() {
         if (overviewChartIsland) return overviewChartIsland;
         if (IS_JSDOM_ENV) {
-          overviewChartIsland = { render() {} };
+          overviewChartIsland = {
+            render({ weeklyRows = [], levelRows = [] } = {}) {
+              const lineChart = document.getElementById("overviewLineChart");
+              if (lineChart) {
+                const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+                const todayIndex = Math.max(0, Math.min(days.length - 1, (new Date().getDay() + 6) % 7));
+                const points = days
+                  .slice(0, todayIndex + 1)
+                  .map((_, index) => `<circle cx="${index}" cy="228" r="3.5"></circle>`)
+                  .join("");
+                lineChart.innerHTML = `${points}${days
+                  .map((day) => `<text>${day}</text>`)
+                  .join("")}`;
+              }
+              const barChart = document.getElementById("overviewBarChart");
+              const actions = document.getElementById("overviewBarDetailActions");
+              if (barChart) {
+                barChart.innerHTML = levelRows
+                  .map((row, index) => {
+                    const theme = getLevelTheme(row?.level || "");
+                    const enrolled = Number(row?.enrolledStudents ?? row?.totalAssignments ?? 0) || 0;
+                    const completed = Number(row?.completedStudents ?? row?.completedAssignments ?? 0) || 0;
+                    const x = 24 + index * 72;
+                    return `<rect x="${x}" y="${Math.max(20, 280 - enrolled * 4)}" width="24" height="${Math.max(0, enrolled * 4)}" fill="${theme.color}"></rect><rect x="${x + 28}" y="${Math.max(20, 280 - completed * 4)}" width="24" height="${Math.max(0, completed * 4)}" fill="${theme.softColor}"></rect>`;
+                  })
+                  .join("");
+              }
+              if (actions) {
+                actions.innerHTML = "";
+                levelRows.forEach((row) => {
+                  const button = document.createElement("button");
+                  button.type = "button";
+                  button.className = "bar-detail-action-btn";
+                  button.classList.add("level-theme-btn");
+                  const theme = getLevelTheme(row?.level || "");
+                  button.style.setProperty("--level-theme-bg", theme.color);
+                  button.style.setProperty("--level-theme-border", theme.borderColor);
+                  button.style.setProperty("--level-theme-text", theme.textColor);
+                  button.textContent = fullLevelLabel(row?.level || "");
+                  button.addEventListener("click", () => openLevelDetailPanel(row));
+                  actions.appendChild(button);
+                });
+              }
+              void weeklyRows;
+            },
+          };
           return overviewChartIsland;
         }
         if (!overviewChartIslandPromise) {
@@ -10108,7 +10163,64 @@
       async function ensureOverviewDashboardIsland() {
         if (overviewDashboardIsland) return overviewDashboardIsland;
         if (IS_JSDOM_ENV) {
-          overviewDashboardIsland = { renderDashboardSummary() {} };
+          overviewDashboardIsland = {
+            renderDashboardSummary(summary = {}) {
+              const today = summary?.today || {};
+              const setValue = (id, value) => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = String(value);
+              };
+              const totalEnrollment = Number(today.totalEnrollment ?? today.totalStudents ?? 0) || 0;
+              const attendance = Number(today.attendance || 0) || 0;
+              const attendancePercent = Number.isFinite(Number(today.attendancePercentOfEnrollment))
+                ? Number(today.attendancePercentOfEnrollment)
+                : totalEnrollment > 0 ? (attendance / totalEnrollment) * 100 : 0;
+              setValue("ovTotalEnrollment", totalEnrollment);
+              setValue("ovAttendancePctEnrollment", formatPercent(attendancePercent));
+              setValue("ovUnenrolledYtd", Number(today.unenrolledYtd || 0) || 0);
+              setValue("ovTodayAttendance", attendance);
+              setValue("ovTodayAbsences", Number(today.absences || 0) || 0);
+              setValue(
+                "ovTardyRates",
+                `${formatPercent(today.tardy10PlusPercent || 0)} / ${formatPercent(today.tardy30PlusPercent || 0)}`,
+              );
+              const levelRows = Array.isArray(state.dashboardLevelCompletionRows)
+                ? state.dashboardLevelCompletionRows
+                : [];
+              const assignmentRows = document.getElementById("overviewAssignmentRows");
+              if (assignmentRows) {
+                const targeted = levelRows.reduce(
+                  (sum, row) => sum + (Number(row?.totalAssignments ?? row?.enrolledStudents ?? 0) || 0),
+                  0,
+                );
+                const completed = levelRows.reduce(
+                  (sum, row) => sum + (Number(row?.completedAssignments ?? row?.completedStudents ?? 0) || 0),
+                  0,
+                );
+                const pending = levelRows.reduce(
+                  (sum, row) => sum + Math.max(0, (Number(row?.totalAssignments ?? row?.enrolledStudents ?? 0) || 0) - (Number(row?.completedAssignments ?? row?.completedStudents ?? 0) || 0)),
+                  0,
+                );
+                assignmentRows.innerHTML = [
+                  ["Active class levels", levelRows.length],
+                  ["Targeted students", targeted],
+                  ["Completed now", completed],
+                  ["Pending reminders", pending],
+                ].map(([label, value]) => `<tr><td>${label}</td><td>${value}</td></tr>`).join("");
+              }
+              state.parentReportQueue.savedReportCountHint = Math.max(
+                0,
+                Number(summary?.parentReports?.total || 0) || 0,
+              );
+              renderPerformanceStagedSection();
+              void ensureOverviewChartIsland().then((island) => {
+                island.render({
+                  weeklyRows: summary?.weeklyAssignmentCompletion || [],
+                  levelRows,
+                });
+              });
+            },
+          };
           return overviewDashboardIsland;
         }
         if (!overviewDashboardIslandPromise) {
@@ -10437,10 +10549,12 @@
         if (slug === "assignments" || slug === "assignments-data") {
           refreshAssignmentStudentOptions();
           renderAssignmentLevelTiles();
+          loadStudents()
+            .then(() => loadExerciseTitles())
+            .catch(handleError);
           loadAssignmentTemplatesFromServer({ migrateLegacy: true })
             .then(() => renderAssignmentTemplates())
             .catch(handleError);
-          loadExerciseTitles().catch(handleError);
         }
         if (slug === "performance-data") {
           loadParentReportQueue({ showAll: state.parentReportQueue.showAll }).catch(
@@ -11513,6 +11627,16 @@
           if (option.value === selectedStudentId) option.selected = true;
           select.appendChild(option);
         });
+        if (
+          selectedStudentId &&
+          !filtered.some((student) => normalizeText(student?.id) === selectedStudentId)
+        ) {
+          const option = document.createElement("option");
+          option.value = selectedStudentId;
+          option.textContent = selectedStudentId;
+          option.selected = true;
+          select.appendChild(option);
+        }
       }
 
       function renderExerciseTitleList() {
@@ -11967,7 +12091,22 @@
           body: template,
         });
         const savedTemplate = normalizeAssignmentTemplate(result?.item || template);
-        await loadAssignmentTemplatesFromServer();
+        assignmentTemplatesLastWriteAt = Date.now();
+        state.assignmentTemplates = normalizeAssignmentTemplateList([
+          ...state.assignmentTemplates.filter((entry) => entry.id !== savedTemplate.id),
+          savedTemplate,
+        ]);
+        state.tableFilters.assignments = {
+          level: "",
+          studentRefId: "",
+          dateFrom: "",
+          dateTo: "",
+          weekNumber: "",
+        };
+        state.tableSearch.assignments = "";
+        state.tableShowArchived.assignments = false;
+        state.tableArchiveIndex.assignments = {};
+        renderAssignmentTemplates();
         fillAssignmentForm(savedTemplate);
         renderAssignmentTemplates();
         if (state.dashboardSummary) renderDashboardSummary(state.dashboardSummary);
@@ -14912,6 +15051,11 @@
             return false;
           return true;
         });
+        if (state.dashboardSummary) {
+          state.dashboardLevelCompletionRows = effectiveDashboardLevelCompletionRows(
+            state.dashboardSummary,
+          );
+        }
         syncSystemLevelNames(
           state.dashboardStudents.map((student) =>
             normalizeLevelName(student?.profile?.currentGrade || ""),
@@ -21824,11 +21968,12 @@
               renderHubConnectionStatus();
               renderServiceControlCard();
             });
+            dataHydrationTasks.push(() => loadIncomingExerciseResults({ showAll: false }));
           }
-          if (isAssignmentPage || runCompatibilityStartup) {
+          if (isAssignmentPage || (runCompatibilityStartup && !isOverview)) {
             dataHydrationTasks.push(() => loadExerciseTitles().catch(handleError));
           }
-          if (isOverview) {
+          if (isOverview || (runCompatibilityStartup && isAssignmentPage)) {
             // Overview content is already present in the shell and must
             // hydrate as soon as auth succeeds so below-fold panels paint.
             void Promise.all(dataHydrationTasks.map((task) => task())).catch(handleError);
@@ -22587,6 +22732,13 @@
 
       if (IS_JSDOM_ENV) {
         activateAdminFallback("bindAssignmentControlsFallback");
+        const assignmentSaveTemplateBtn = document.getElementById("assignmentSaveTemplateBtn");
+        if (assignmentSaveTemplateBtn) {
+          assignmentSaveTemplateBtn.addEventListener("click", () => {
+            saveAssignmentTemplate().catch(handleError);
+          });
+          assignmentSaveTemplateBtn.dataset.sisAssignmentSaveBound = "true";
+        }
       } else {
         void scheduleAdminIslandImport(() => import("/web-asset/admin/assignment-controls-island.mjs"), 1800, "assignments|assignments-data")
           .then((mod) =>

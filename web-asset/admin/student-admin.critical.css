@@ -394,11 +394,6 @@ html[data-theme="dark"] body.admin-portal-page #performanceQueueSection .section
     min-inline-size: 56px !important;
   }
 }
-body.portal-hub-page .header-bar,
-body.admin-portal-page .header-bar,
-body.parent-portal-page .header-bar,
-body.student-portal-page .header-bar,
-body.student-points-page .header-bar,
 #portalLoginHeader {
   background: var(--portal-header-bar-fill);
   border-radius: var(--radius-2);

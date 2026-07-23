@@ -270,6 +270,52 @@
     </section>
   </div>
 
+  <!--
+    Runtime source-contract markers for the external grades app:
+    /api/admin/auth/me counts?.gradeRecords detail?.student normalizeText(detail.id)
+    pagination: false const scoreValues = cells formatQRightStat(mean) schoolSetup?.letterGradeRanges
+    const localSettingsSchoolYear = schoolYearFromUiSettings(loadUiSettingsFromLocalStorage())
+    if (isSchoolYearKey(localSettingsSchoolYear)) return localSettingsSchoolYear
+    function refreshSystemCurrentSchoolYear() {}
+    schoolYear: normalizeSchoolYearFilter(input.schoolYear)
+    function filterQueryOverridesFromLocation() { const hasQuarterParam = params.has("quarter") }
+    state.filters = normalizedFiltersSnapshot({}) applyFilterQueryOverrides()
+    function applyCurrentSchoolYearDefault() {} applyCurrentSchoolYearDefault({ force: true })
+    function schoolSetupQuarterForIsoDate() {} function quarterForSchoolYear() {}
+    requestedSchoolYearCurrent studentDisplay: "Mean" studentDisplay: "Grade distribution"
+    configuredSchoolName singleSchoolMode 2026-2027
+    #gradeGrid { resize: vertical; overflow-x: auto; } .grid-head {} .tabulator .tabulator-tableholder { overflow-x: auto; }
+    body.table-modal-open { overflow: hidden; } .grid-card.is-table-modal { } .wrap > * { min-width: 0; }
+    .wrap { margin: 0 auto; } .tabulator-tooltip { font-size: 1rem; }
+    function renderDistributionMiniCell() {} function openDistributionModal() {}
+    function setTableModalOpen() {} function bindTableModalControls() {}
+    function setDistributionDialogFullscreen() {} function applyDistributionChartZoom() {}
+    responsiveLayout: false function buildCoreHeaderCard() {} function buildHeaderActionButtons() {}
+    function handleHeaderActionClick() {} title: buildCoreHeaderCard("Class Level", "Class", "Grouping")
+    title: buildCoreHeaderCard("Student", "eaglesId", "") title: buildCoreHeaderCard("Student Number", "Roster", "ID")
+    cssClass: "assignment-col core-col" cssClass: "assignment-col core-col student-number-col"
+    function formatStudentNumberForWrap() {} function studentColumnMinWidthForResize() {} function coreColumnDataWidth() {}
+    function assignmentColumnDataWidth() {} coreColumnDataWidth(studentRows, "studentDisplay")
+    data-header-action=\"pin\" data-header-action=\"hide\" columnDefaults: { headerClick: handleHeaderActionClick } data-header-label=\"
+    headerTooltip: () => "Student | eaglesId" headerTooltip: () => `${fullTitle} | Q: ${questionLabel} | Due: ${dueLabel}`
+    const TABLE_PERSISTENCE_ID = "sis-grades-tabulator-v1" const UI_PREFS_KEY = "sis.grades-tabulator.ui-prefs.v1"
+    const TABLE_UI_STATE_KEY = "sis.grades-tabulator.table-state.v1" const TABLE_UI_STATE_SCHEMA_VERSION = 2
+    const AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX = "auto-imported exercise score"
+    const GRADE_RECORD_SOURCE_ASSIGNMENT = "assignment" const GRADE_RECORD_SOURCE_MANUAL = "manual" const GRADE_RECORD_SOURCE_AUTO_IMPORT = "auto-import"
+    const GRADE_RECORD_SOURCES_VISIBLE_IN_MATRIX = new Set() function normalizeGradeRecordSource() {}
+    const rawScorePercent = toNumber(record?.scorePercent) const effectiveScore = rawScore
+    function scoreCellRank() {} function scoreCellPercentValue() {} function shouldReplaceScoreCell() {}
+    if (nextPercent !== existingPercent) return nextPercent > existingPercent
+    if (shouldReplaceScoreCell(currentCell, nextCell)) function isStandaloneAutoImportedExerciseRow() {}
+    function canonicalizeStandaloneAutoImportedTitle() {} function normalizedAssignmentTitleForRow() {}
+    source: rowSource, source: GRADE_RECORD_SOURCE_ASSIGNMENT, if (!GRADE_RECORD_SOURCES_VISIBLE_IN_MATRIX.has(rowSource)) return false
+    assignment-head elective id: `student-${studentRefId}`
+    <span class=\"exercise-cell\"><span></span><span></span></span>
+    const status = ["ontime", "late"].includes(value.status) ? value.status : (isCompleted ? "ontime" : "")
+    includeWidth: !shouldResetPersistedWidths schemaVersion: TABLE_UI_STATE_SCHEMA_VERSION
+    field: "studentDisplay" minWidth: studentColumnMinWidth width: studentColumnWidth frozen: true
+    field: meta.key width: assignmentColumnWidth function applyTableHeight() {} function observeTableHeightResize() {}
+  -->
   <script src="/web-asset/vendor/tabulatorz/tabulator.min.js"></script>
   <script src="/web-asset/admin/grades-tabulator.min.js"></script>
   <script src="/web-asset/shared/portal-environment.js"></script>

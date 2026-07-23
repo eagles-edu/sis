@@ -45,7 +45,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3308
+              "height": 1148
             },
             ".portal-card": null,
             ".panel": {
@@ -338,7 +338,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2852
+              "height": 3215
             },
             ".wrap": {
               "selector": ".wrap",
@@ -350,7 +350,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2804
+              "height": 3167
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -362,7 +362,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2720
+              "height": 3083
             },
             ".panel": {
               "selector": ".panel",
@@ -478,7 +478,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3563
+              "height": 3550
             },
             ".wrap": {
               "selector": ".wrap",
@@ -490,7 +490,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3515
+              "height": 3502
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -502,7 +502,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3431
+              "height": 3418
             },
             ".panel": {
               "selector": ".panel",
@@ -618,7 +618,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3318
+              "height": 3305
             },
             ".wrap": {
               "selector": ".wrap",
@@ -630,7 +630,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3270
+              "height": 3257
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -642,7 +642,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3186
+              "height": 3173
             },
             ".panel": {
               "selector": ".panel",
@@ -782,7 +782,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 788
+              "height": 775
             },
             ".panel": {
               "selector": ".panel",
@@ -898,7 +898,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1349
+              "height": 1336
             },
             ".wrap": {
               "selector": ".wrap",
@@ -910,7 +910,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1301
+              "height": 1288
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -922,7 +922,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1217
+              "height": 1204
             },
             ".panel": {
               "selector": ".panel",
@@ -1038,7 +1038,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1286
+              "height": 1273
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1050,7 +1050,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1238
+              "height": 1225
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1062,7 +1062,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1154
+              "height": 1141
             },
             ".panel": {
               "selector": ".panel",
@@ -1202,7 +1202,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1014
+              "height": 1001
             },
             ".panel": {
               "selector": ".panel",
@@ -1318,7 +1318,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1639
+              "height": 1626
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1330,7 +1330,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1591
+              "height": 1578
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1342,7 +1342,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1507
+              "height": 1494
             },
             ".panel": {
               "selector": ".panel",
@@ -1482,7 +1482,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 739
+              "height": 726
             },
             ".panel": {
               "selector": ".panel",
@@ -1598,7 +1598,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2670
+              "height": 2657
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1610,7 +1610,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2622
+              "height": 2609
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1622,7 +1622,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2538
+              "height": 2525
             },
             ".panel": {
               "selector": ".panel",
@@ -1738,7 +1738,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1754
+              "height": 1721
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1750,7 +1750,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1754
+              "height": 1721
             },
             ".app-shell": null,
             ".panel": {
@@ -1824,7 +1824,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3861
+              "height": 3848
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1836,7 +1836,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3813
+              "height": 3800
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1848,7 +1848,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3729
+              "height": 3716
             },
             ".panel": {
               "selector": ".panel",
@@ -1984,7 +1984,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2281
+              "height": 2268
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1996,7 +1996,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2233
+              "height": 2220
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2008,7 +2008,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2149
+              "height": 2136
             },
             ".panel": {
               "selector": ".panel",
@@ -2148,7 +2148,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 669
+              "height": 885
             },
             ".panel": {
               "selector": ".panel",
@@ -2264,7 +2264,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 8309
+              "height": 8296
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2276,7 +2276,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 8261
+              "height": 8248
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2288,7 +2288,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 8177
+              "height": 8164
             },
             ".panel": {
               "selector": ".panel",
@@ -2404,7 +2404,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1840
+              "height": 1827
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2416,7 +2416,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1792
+              "height": 1779
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2428,7 +2428,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1708
+              "height": 1695
             },
             ".panel": {
               "selector": ".panel",
@@ -2568,7 +2568,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 864
+              "height": 851
             },
             ".panel": {
               "selector": ".panel",
@@ -2684,7 +2684,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "flex",
               "width": 1440,
-              "height": 18121
+              "height": 18096
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2696,7 +2696,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 18073
+              "height": 18048
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2804,7 +2804,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1810
+              "height": 1797
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2816,7 +2816,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1762
+              "height": 1749
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2828,7 +2828,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1678
+              "height": 1665
             },
             ".panel": {
               "selector": ".panel",
@@ -2967,7 +2967,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3072
+              "height": 3059
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2979,7 +2979,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3024
+              "height": 3011
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2991,7 +2991,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2940
+              "height": 2927
             },
             ".panel": {
               "selector": ".panel",
@@ -3119,7 +3119,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1205
+              "height": 1192
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3131,7 +3131,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1157
+              "height": 1144
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3143,7 +3143,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1073
+              "height": 1060
             },
             ".panel": {
               "selector": ".panel",
@@ -3259,7 +3259,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2371
+              "height": 2358
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3271,7 +3271,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2323
+              "height": 2310
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3283,7 +3283,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2239
+              "height": 2226
             },
             ".panel": {
               "selector": ".panel",
@@ -3399,7 +3399,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2556
+              "height": 2288
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3411,7 +3411,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2508
+              "height": 2240
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3423,7 +3423,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2424
+              "height": 2156
             },
             ".panel": {
               "selector": ".panel",
@@ -3525,52 +3525,6 @@
                   "failureSummary": "Fix any of the following:\n  Heading order invalid"
                 }
               ]
-            },
-            {
-              "id": "label",
-              "impact": "critical",
-              "help": "Form elements must have labels",
-              "nodes": [
-                {
-                  "target": "input[value=\"Tải ảnh học sinh lên\"][data-layout-key=\"labelVi\"][type=\"text\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(5) > input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[value=\"10\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(7) > input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
-            },
-            {
-              "id": "select-name",
-              "impact": "critical",
-              "help": "Select element must have an accessible name",
-              "nodes": [
-                {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
             }
           ]
         },
@@ -3597,7 +3551,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1754
+              "height": 1721
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3609,7 +3563,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1754
+              "height": 1721
             },
             ".app-shell": null,
             ".panel": {
@@ -3683,7 +3637,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2281
+              "height": 2268
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3695,7 +3649,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2233
+              "height": 2220
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3707,7 +3661,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2149
+              "height": 2136
             },
             ".panel": {
               "selector": ".panel",
@@ -4001,7 +3955,7 @@
           "border": "rgb(0, 0, 0)",
           "display": "block",
           "width": 1440,
-          "height": 1754
+          "height": 1721
         },
         "#reloadBtn": null,
         "#gradesTable": null,
@@ -4113,7 +4067,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1640
+              "height": 1635
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4227,7 +4181,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 4058
+              "height": 4053
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4471,7 +4425,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1483
+              "height": 1478
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4601,7 +4555,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1483
+              "height": 1478
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4731,7 +4685,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 2724
+              "height": 2719
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4861,7 +4815,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1547
+              "height": 1542
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4991,7 +4945,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1688
+              "height": 1683
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5105,7 +5059,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1795
+              "height": 1790
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5613,7 +5567,7 @@
           "x": 0,
           "y": 24,
           "w": 1440,
-          "h": 1592,
+          "h": 1587,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -5679,7 +5633,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3308
+              "height": 1148
             },
             ".portal-card": null,
             ".panel": {
@@ -5972,7 +5926,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3228
+              "height": 3215
             },
             ".wrap": {
               "selector": ".wrap",
@@ -5984,7 +5938,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3180
+              "height": 3167
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -5996,7 +5950,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3096
+              "height": 3083
             },
             ".panel": {
               "selector": ".panel",
@@ -6112,7 +6066,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3563
+              "height": 3550
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6124,7 +6078,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3515
+              "height": 3502
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6136,7 +6090,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3431
+              "height": 3418
             },
             ".panel": {
               "selector": ".panel",
@@ -6252,7 +6206,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3318
+              "height": 3305
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6264,7 +6218,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3270
+              "height": 3257
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6276,7 +6230,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3186
+              "height": 3173
             },
             ".panel": {
               "selector": ".panel",
@@ -6416,7 +6370,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 788
+              "height": 775
             },
             ".panel": {
               "selector": ".panel",
@@ -6532,7 +6486,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1349
+              "height": 1336
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6544,7 +6498,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1301
+              "height": 1288
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6556,7 +6510,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1217
+              "height": 1204
             },
             ".panel": {
               "selector": ".panel",
@@ -6672,7 +6626,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1286
+              "height": 1273
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6684,7 +6638,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1238
+              "height": 1225
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6696,7 +6650,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1154
+              "height": 1141
             },
             ".panel": {
               "selector": ".panel",
@@ -6836,7 +6790,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1014
+              "height": 1001
             },
             ".panel": {
               "selector": ".panel",
@@ -6976,7 +6930,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1639
+              "height": 1626
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6988,7 +6942,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1591
+              "height": 1578
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7000,7 +6954,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1507
+              "height": 1494
             },
             ".panel": {
               "selector": ".panel",
@@ -7140,7 +7094,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 739
+              "height": 726
             },
             ".panel": {
               "selector": ".panel",
@@ -7256,7 +7210,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2670
+              "height": 2657
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7268,7 +7222,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2622
+              "height": 2609
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7280,7 +7234,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2538
+              "height": 2525
             },
             ".panel": {
               "selector": ".panel",
@@ -7396,7 +7350,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1754
+              "height": 1721
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7408,7 +7362,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1754
+              "height": 1721
             },
             ".app-shell": null,
             ".panel": {
@@ -7482,7 +7436,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3861
+              "height": 3848
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7494,7 +7448,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3813
+              "height": 3800
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7506,7 +7460,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3729
+              "height": 3716
             },
             ".panel": {
               "selector": ".panel",
@@ -7642,7 +7596,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2281
+              "height": 2268
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7654,7 +7608,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2233
+              "height": 2220
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7666,7 +7620,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2149
+              "height": 2136
             },
             ".panel": {
               "selector": ".panel",
@@ -7806,7 +7760,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 669
+              "height": 885
             },
             ".panel": {
               "selector": ".panel",
@@ -7922,7 +7876,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 8309
+              "height": 8296
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7934,7 +7888,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 8261
+              "height": 8248
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7946,7 +7900,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 8177
+              "height": 8164
             },
             ".panel": {
               "selector": ".panel",
@@ -8062,7 +8016,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1840
+              "height": 1827
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8074,7 +8028,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1792
+              "height": 1779
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8086,7 +8040,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1708
+              "height": 1695
             },
             ".panel": {
               "selector": ".panel",
@@ -8226,7 +8180,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 864
+              "height": 851
             },
             ".panel": {
               "selector": ".panel",
@@ -8342,7 +8296,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "flex",
               "width": 1440,
-              "height": 18121
+              "height": 18096
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8354,7 +8308,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 18073
+              "height": 18048
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8462,7 +8416,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1810
+              "height": 1797
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8474,7 +8428,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1762
+              "height": 1749
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8486,7 +8440,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1678
+              "height": 1665
             },
             ".panel": {
               "selector": ".panel",
@@ -8625,7 +8579,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3072
+              "height": 3059
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8637,7 +8591,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3024
+              "height": 3011
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8649,7 +8603,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2940
+              "height": 2927
             },
             ".panel": {
               "selector": ".panel",
@@ -8777,7 +8731,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1205
+              "height": 1192
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8789,7 +8743,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1157
+              "height": 1144
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8801,7 +8755,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1073
+              "height": 1060
             },
             ".panel": {
               "selector": ".panel",
@@ -8917,7 +8871,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2371
+              "height": 2358
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8929,7 +8883,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2323
+              "height": 2310
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8941,7 +8895,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2239
+              "height": 2226
             },
             ".panel": {
               "selector": ".panel",
@@ -9057,7 +9011,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2556
+              "height": 2288
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9069,7 +9023,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2508
+              "height": 2240
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9081,7 +9035,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2424
+              "height": 2156
             },
             ".panel": {
               "selector": ".panel",
@@ -9183,52 +9137,6 @@
                   "failureSummary": "Fix any of the following:\n  Heading order invalid"
                 }
               ]
-            },
-            {
-              "id": "label",
-              "impact": "critical",
-              "help": "Form elements must have labels",
-              "nodes": [
-                {
-                  "target": "input[value=\"Tải ảnh học sinh lên\"][data-layout-key=\"labelVi\"][type=\"text\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(5) > input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[value=\"10\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(7) > input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
-            },
-            {
-              "id": "select-name",
-              "impact": "critical",
-              "help": "Select element must have an accessible name",
-              "nodes": [
-                {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
             }
           ]
         },
@@ -9255,7 +9163,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1754
+              "height": 1721
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9267,7 +9175,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1754
+              "height": 1721
             },
             ".app-shell": null,
             ".panel": {
@@ -9341,7 +9249,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2281
+              "height": 2268
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9353,7 +9261,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2233
+              "height": 2220
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9365,7 +9273,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2149
+              "height": 2136
             },
             ".panel": {
               "selector": ".panel",
@@ -9659,7 +9567,7 @@
           "border": "rgb(251, 255, 255)",
           "display": "block",
           "width": 1440,
-          "height": 1754
+          "height": 1721
         },
         "#reloadBtn": null,
         "#gradesTable": null,
@@ -9771,7 +9679,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1640
+              "height": 1635
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -9885,7 +9793,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 4059
+              "height": 4054
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10129,7 +10037,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1485
+              "height": 1480
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10259,7 +10167,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1485
+              "height": 1480
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10389,7 +10297,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 2726
+              "height": 2721
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10519,7 +10427,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1549
+              "height": 1544
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10649,7 +10557,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1688
+              "height": 1683
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10763,7 +10671,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1797
+              "height": 1792
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11271,7 +11179,7 @@
           "x": 0,
           "y": 24,
           "w": 1440,
-          "h": 1592,
+          "h": 1587,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
