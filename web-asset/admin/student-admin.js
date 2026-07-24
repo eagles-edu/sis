@@ -9024,38 +9024,10 @@
       function scheduleSchoolSetupWarningCheck() {
         if (schoolSetupWarningCheckScheduled) return;
         schoolSetupWarningCheckScheduled = true;
-        const arm = (lcpStartTime = performance.now()) => {
-          const elapsed = Math.max(0, performance.now() - lcpStartTime);
-          const remaining = Math.max(0, 10000 - elapsed);
-          schoolSetupWarningCheckTimer = window.setTimeout(() => {
-            schoolSetupWarningCheckReady = true;
-            renderSchoolSetupAccessWarning(latestSchoolSetupWarningSetup || schoolSetupState());
-          }, remaining);
-        };
-        try {
-          if (typeof PerformanceObserver === "function") {
-            let observed = false;
-            const observer = new PerformanceObserver((list) => {
-              const entries = list.getEntries();
-              const lcp = entries[entries.length - 1];
-              if (!lcp || observed) return;
-              observed = true;
-              observer.disconnect();
-              arm(Number(lcp.startTime) || performance.now());
-            });
-            observer.observe({ type: "largest-contentful-paint", buffered: true });
-            window.setTimeout(() => {
-              if (observed) return;
-              observed = true;
-              observer.disconnect();
-              arm(performance.now());
-            }, 10000);
-            return;
-          }
-        } catch (error) {
-          void error;
-        }
-        arm(performance.now());
+        schoolSetupWarningCheckTimer = window.setTimeout(() => {
+          schoolSetupWarningCheckReady = true;
+          renderSchoolSetupAccessWarning(latestSchoolSetupWarningSetup || schoolSetupState());
+        }, 10000);
       }
 
       function closeSchoolSetupWarningModal(acknowledge = true) {
