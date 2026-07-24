@@ -1,6 +1,6 @@
 # SIS (Student Information System)
 
-![Node.js](https://img.shields.io/badge/Node.js-20.19.4-339933?logo=node.js&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-22.22.1-339933?logo=node.js&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ESM-F7DF1E?logo=javascript&logoColor=111)
 ![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?logo=postgresql&logoColor=white)
@@ -31,7 +31,7 @@ Production runtime root:
 
 ## Stack
 
-- Runtime: Node.js `v20.19.4`
+- Runtime: Node.js `v22.22.1`
 - Language: JavaScript (ESM)
 - API service entrypoint: `server/exercise-mailer.mjs`
 - Database: PostgreSQL (via Prisma)

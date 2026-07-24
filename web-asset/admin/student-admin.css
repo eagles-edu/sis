@@ -1737,7 +1737,7 @@ body {
         min-height: 108px;
       }
       #overviewRiskStudents {
-        overflow: visible;
+        overflow: auto;
       }
       .overview-group>details {
         min-width: 0;

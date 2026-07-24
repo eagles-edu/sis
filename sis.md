@@ -4,7 +4,7 @@
 
 - Dev workspace: `/home/eagles/dockerz/sis`
 - Test-host snapshot dump: `/home/eagles/dockerz/BAK/test-dump-090526/test-host-pre-wipe-20260509-011220`
-- Runtime: Node `v20.19.4`
+- Runtime: Node `v22.22.1`
 - Service entrypoint: `server/exercise-mailer.mjs`
 - Admin routing module: `server/student-admin-routes.mjs`
 

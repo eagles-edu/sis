@@ -1,6 +1,6 @@
 {
   "name": "sis",
-  "version": "0.1.1.08",
+  "version": "0.1.1.10",
   "description": "SIS service workspace",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
     "doc": "docs"
   },
   "engines": {
-    "node": "20.19.4"
+    "node": "22.22.1"
   },
   "scripts": {
     "html:normalize-self-closing": "node tools/normalize-html-self-closing.mjs",
@@ -145,6 +145,7 @@
   "overrides": {
     "@hono/node-server": "^1.19.13",
     "brace-expansion@^2.0.0": "^5.0.7",
+    "find-my-way": "^9.7.0",
     "form-data": "^4.0.6",
     "hono": "^4.12.25",
     "dompurify": "^3.4.9",
