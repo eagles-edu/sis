@@ -67,3 +67,11 @@ test("portal theme state toggles and reads the canonical key", () => {
   assert.equal(document.documentElement.style.colorScheme, "dark")
   assert.equal(store.get("sis-theme"), "dark")
 })
+
+test("portal theme state applies the cached theme before async preferences load", () => {
+  const { document, theme } = createSandbox({ "sis-theme": "dark" })
+
+  assert.equal(theme.initTheme("light"), "dark")
+  assert.equal(document.documentElement.dataset.theme, "dark")
+  assert.equal(document.documentElement.style.colorScheme, "dark")
+})

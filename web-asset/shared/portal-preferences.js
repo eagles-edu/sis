@@ -18,10 +18,18 @@
   }
 
   function applySavedTheme() {
-    const theme = memory["sis-theme"]
+    let cachedTheme = ""
+    try { cachedTheme = window.localStorage.getItem("sis-theme") || "" } catch (error) { void error }
+    const theme = cachedTheme === "dark" || cachedTheme === "light" ? cachedTheme : memory["sis-theme"]
     if (theme !== "dark" && theme !== "light") return
     document.documentElement.dataset.theme = theme
     document.documentElement.style.colorScheme = theme
+    if (!cachedTheme) {
+      try { window.localStorage.setItem("sis-theme", theme) } catch (error) { void error }
+    }
+    try {
+      window.dispatchEvent(new CustomEvent("sis-theme-change", { detail: { theme } }))
+    } catch (error) { void error }
   }
 
   function legacyKeys() {
@@ -73,6 +81,9 @@
 
   async function save(key, value) {
     memory[key] = value
+    if (key === "sis-theme" && (value === "dark" || value === "light")) {
+      try { window.localStorage.setItem(key, value) } catch (error) { void error }
+    }
     const path = endpoint()
     if (!path) return false
     try {
@@ -124,5 +135,9 @@
   }
 
   window.SIS_PORTAL_PREFERENCES = Object.freeze({ load, get, save, migrate })
-  void migrate()
+
+  const initialAuth = window.__SIS_ADMIN_INITIAL_AUTH__
+    || window.__SIS_PARENT_INITIAL_AUTH__
+    || window.__SIS_STUDENT_INITIAL_AUTH__
+  if (initialAuth?.authenticated) void migrate()
 })()

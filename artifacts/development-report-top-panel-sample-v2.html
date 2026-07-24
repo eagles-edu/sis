@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Development Report - Compact Top Panel</title>
+    <style>
+      :root {
+        --page: #edf2f8;
+        --panel: #dfe7f1;
+        --surface: #f8fafc;
+        --border: #8ca4c5;
+        --border-strong: #5c78a3;
+        --text: #182230;
+        --muted: #42536b;
+        --accent: #244a7d;
+        --good: #2f7d62;
+        --watch: #b17812;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        background: var(--page);
+        color: var(--text);
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: 1.35;
+        margin: 0;
+        padding: clamp(12px, 3vw, 32px);
+      }
+
+      .sample-shell { margin: 0 auto; max-width: 1280px; }
+
+      .sample-note {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 0 0 12px;
+      }
+
+      .development-report-panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-left: 5px solid var(--border-strong);
+        border-radius: 12px;
+        padding: clamp(10px, 1.6vw, 16px);
+      }
+
+      .report-title {
+        color: var(--accent);
+        font-size: clamp(19px, 2vw, 27px);
+        line-height: 1.15;
+        margin: 0 0 10px;
+      }
+
+      .report-line {
+        align-items: baseline;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--border-strong);
+        border-radius: 9px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        margin-top: 8px;
+        min-width: 0;
+        padding: 10px 13px;
+      }
+
+      .report-line:first-of-type { margin-top: 0; }
+
+      .time-line {
+        color: var(--accent);
+        font-size: clamp(19px, 2.4vw, 32px);
+        font-weight: 800;
+        letter-spacing: -.02em;
+        line-height: 1.15;
+        padding: 13px 15px;
+      }
+
+      .identity-line {
+        font-size: clamp(15px, 1.6vw, 21px);
+        font-weight: 700;
+      }
+
+      .report-line span { overflow-wrap: anywhere; }
+
+      .report-line span + span::before {
+        color: var(--border-strong);
+        content: "|";
+        display: inline-block;
+        font-weight: 400;
+        margin: 0 11px;
+      }
+
+      .observations {
+        align-items: stretch;
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 8px;
+      }
+
+      .observation {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--border-strong);
+        border-radius: 9px;
+        min-width: 0;
+        padding: 9px 12px;
+      }
+
+      .observation.good { border-left-color: var(--good); }
+      .observation.watch { border-left-color: var(--watch); }
+
+      .observation strong {
+        display: block;
+        font-size: 12px;
+        letter-spacing: .04em;
+        margin-bottom: 3px;
+        text-transform: uppercase;
+      }
+
+      .observation span {
+        display: block;
+        font-size: clamp(14px, 1.35vw, 18px);
+        font-weight: 700;
+      }
+
+      .observation small {
+        color: var(--muted);
+        display: block;
+        font-size: 12px;
+        margin-top: 3px;
+      }
+
+      .comment-line,
+      .teacher-line {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .comment-line b,
+      .teacher-line b { color: var(--text); }
+
+      @media (max-width: 700px) {
+        .observations { grid-template-columns: 1fr; }
+        .observation { padding: 8px 10px; }
+      }
+
+      @media (max-width: 480px) {
+        .report-line span { width: 100%; }
+        .report-line span + span { margin-top: 3px; }
+        .report-line span + span::before {
+          content: "";
+          margin: 0;
+        }
+        .time-line { font-size: 21px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="sample-shell">
+      <p class="sample-note">Development report prototype - compact top panel v2</p>
+
+      <section class="development-report-panel" aria-labelledby="report-title">
+        <h1 class="report-title" id="report-title">Development Report | Class Snapshot</h1>
+
+        <div class="report-line time-line">
+          <span>Saturday, 13 June 2026</span>
+          <span>Eggs &amp; Chicks</span>
+          <span>PM</span>
+          <span>Week 22</span>
+        </div>
+
+        <div class="report-line identity-line">
+          <span>Kramer</span>
+          <span>Kramer</span>
+          <span>kramer001</span>
+          <span>100</span>
+        </div>
+
+        <div class="observations">
+          <article class="observation good">
+            <strong>Eyes</strong>
+            <span>No issues currently</span>
+            <small>No eye exam currently needed.</small>
+          </article>
+          <article class="observation good">
+            <strong>Speech pathology</strong>
+            <span>Normal</span>
+            <small>No current concern reported.</small>
+          </article>
+          <article class="observation watch">
+            <strong>Speaking volume</strong>
+            <span>Sometimes inaudible</span>
+            <small>Monitor whole-class speaking.</small>
+          </article>
+        </div>
+
+        <div class="report-line comment-line">
+          <span><b>Comment:</b> Encourage a clear, confident speaking voice.</span>
+        </div>
+
+        <div class="report-line teacher-line">
+          <span><b>Nguyen Thi Lan</b> / Ms. Lan</span>
+          <span>Submitted 13 June 2026, 7:24 PM +07</span>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

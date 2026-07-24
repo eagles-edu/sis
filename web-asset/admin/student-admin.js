@@ -5985,6 +5985,20 @@
         );
       }
 
+      function studentNeedsEnrollment(student = {}) {
+        const currentEnrollment =
+          student?.currentEnrollment && typeof student.currentEnrollment === "object" ?
+            student.currentEnrollment
+          : null;
+        if (!currentEnrollment) return true;
+        return normalizeLower(currentEnrollment.status) === "unenrolled";
+      }
+
+      function studentEnrollmentWarningHtml(student = {}) {
+        if (!studentNeedsEnrollment(student)) return "";
+        return '<span class="student-enrollment-warning" role="status" title="No enrollment or class is assigned. Use Include unenrolled to find this student.">Warning: no enrollment</span>';
+      }
+
       function levelBadgeHtml(levelName, { full = false, variant = "" } = {}) {
         const label = full ? fullLevelLabel(levelName) : shortLevelLabel(levelName);
         const variantToken = normalizeText(variant)
@@ -18528,7 +18542,7 @@
           <td>${student.eaglesId || ""}</td>
           <td>${escapeHtml(fullName)}</td>
           <td>${escapeHtml(englishName)}</td>
-          <td>${levelBadgeHtml(levelName, { variant: "standard" })}</td>
+          <td>${levelBadgeHtml(levelName, { variant: "standard" })}${studentEnrollmentWarningHtml(student)}</td>
           <td><button type="button" class="portal-button portal-button-info top-search-open-btn" data-button-tooltip="Open the selected student profile">Open Profile</button></td>
         `;
           const open = (event) => {
@@ -18574,7 +18588,7 @@
           <td>${student.eaglesId || ""}</td>
           <td>${escapeHtml(studentFullName(student))}</td>
           <td>${escapeHtml(studentEnglishName(student))}</td>
-          <td>${levelBadgeHtml(levelName, { variant: "standard" })}</td>
+          <td>${levelBadgeHtml(levelName, { variant: "standard" })}${studentEnrollmentWarningHtml(student)}</td>
           <td class="school-col-cell">${student.profile?.schoolName || ""}</td>
         `;
           tr.addEventListener("click", () => openStudentProfileFromList(student.id));
@@ -18784,7 +18798,9 @@
         const enrollmentStatus = normalizeText(currentEnrollment?.status || "")
           .toLowerCase();
         const statusLabel =
-          enrollmentStatus === "unenrolled" ? "Unenrolled" : "Enrolled";
+          enrollmentStatus === "unenrolled" ? "Unenrolled"
+          : currentEnrollment ? "Enrolled"
+          : "No enrollment";
         const currentSchoolYear = normalizeText(currentEnrollment?.schoolYear || "");
         const schoolName = normalizeText(profile?.schoolName);
         const motherContact = normalizeText(
@@ -20033,7 +20049,11 @@
         if (state.currentStudent?.id) await loadStudentDetail(state.currentStudent.id);
         setProfileMode("info");
         renderProfileInfoLayout(state.currentStudent);
-        setStatus("Student saved.");
+        setStatus(
+          studentNeedsEnrollment(state.currentStudent) ?
+            "Student saved. Warning: no enrollment or class assigned; use Include unenrolled to find this student."
+          : "Student saved.",
+        );
       }
 
       async function deleteCurrentStudent() {
@@ -21770,7 +21790,7 @@
       }
 
       async function bootAfterLogin() {
-        await window.SIS_PORTAL_PREFERENCES?.load?.();
+        await window.SIS_PORTAL_PREFERENCES?.migrate?.();
         window.SIS_PORTAL_THEME?.initTheme?.("light");
         const bootConfigTasks = [];
         if (canManagePermissions()) {

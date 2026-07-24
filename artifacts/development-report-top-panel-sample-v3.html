@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Development Report - Parent Friendly Summary</title>
+    <style>
+      :root {
+        --page: #edf2f8;
+        --panel: #f8fafc;
+        --band: #e4ebf4;
+        --border: #8ca4c5;
+        --border-strong: #5c78a3;
+        --text: #182230;
+        --muted: #42536b;
+        --accent: #244a7d;
+        --good: #2f7d62;
+        --watch: #b17812;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        background: var(--page);
+        color: var(--text);
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: 1.35;
+        margin: 0;
+        padding: clamp(10px, 2.5vw, 28px);
+      }
+
+      .sample-shell { margin: 0 auto; max-width: 1280px; }
+
+      .sample-note {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 0 0 10px;
+      }
+
+      .development-report-panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-left: 5px solid var(--border-strong);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .report-head {
+        background: var(--band);
+        border-bottom: 1px solid var(--border);
+        padding: clamp(12px, 1.8vw, 18px);
+      }
+
+      .report-title {
+        color: var(--accent);
+        font-size: clamp(19px, 2vw, 27px);
+        line-height: 1.15;
+        margin: 0 0 9px;
+      }
+
+      .time-line,
+      .identity-line,
+      .teacher-line {
+        align-items: baseline;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        min-width: 0;
+      }
+
+      .time-line {
+        color: var(--accent);
+        font-size: clamp(19px, 2.3vw, 31px);
+        font-weight: 800;
+        letter-spacing: -.02em;
+        line-height: 1.15;
+      }
+
+      .identity-line {
+        color: var(--text);
+        font-size: clamp(14px, 1.4vw, 18px);
+        font-weight: 700;
+        margin-top: 6px;
+      }
+
+      .time-line span + span::before,
+      .identity-line span + span::before,
+      .teacher-line span + span::before {
+        color: var(--border-strong);
+        content: "|";
+        font-weight: 400;
+        margin: 0 10px;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .summary-block {
+        min-width: 0;
+        padding: clamp(12px, 1.7vw, 18px);
+      }
+
+      .summary-block + .summary-block { border-left: 1px solid var(--border); }
+      .summary-block.success { border-top: 4px solid var(--good); }
+      .summary-block.developing { border-top: 4px solid var(--watch); }
+      .summary-block.next { border-top: 4px solid var(--accent); }
+
+      .summary-block h2 {
+        font-size: clamp(14px, 1.4vw, 18px);
+        line-height: 1.2;
+        margin: 0 0 6px;
+      }
+
+      .summary-block p {
+        font-size: clamp(14px, 1.35vw, 17px);
+        margin: 0;
+      }
+
+      .summary-block small {
+        color: var(--muted);
+        display: block;
+        font-size: 12px;
+        margin-top: 6px;
+      }
+
+      .detail-strip,
+      .teacher-line {
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 13px;
+        padding: 10px clamp(12px, 1.7vw, 18px);
+      }
+
+      .detail-strip b,
+      .teacher-line b { color: var(--text); }
+
+      .teacher-line { background: var(--band); }
+
+      @media (max-width: 700px) {
+        .summary-grid { grid-template-columns: 1fr; }
+        .summary-block + .summary-block {
+          border-left: 0;
+          border-top: 1px solid var(--border);
+        }
+        .summary-block.success { border-top-width: 4px; }
+      }
+
+      @media (max-width: 480px) {
+        .time-line,
+        .identity-line,
+        .teacher-line { display: block; }
+        .time-line span,
+        .identity-line span,
+        .teacher-line span { display: inline; }
+        .time-line span + span::before,
+        .identity-line span + span::before,
+        .teacher-line span + span::before {
+          margin: 0 6px;
+        }
+        .time-line { font-size: 20px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="sample-shell">
+      <p class="sample-note">Development report prototype - parent-friendly summary v3</p>
+
+      <section class="development-report-panel" aria-labelledby="report-title">
+        <header class="report-head">
+          <h1 class="report-title" id="report-title">Development Report</h1>
+          <div class="time-line">
+            <span>Saturday, 13 June 2026</span>
+            <span>Eggs &amp; Chicks</span>
+            <span>PM</span>
+            <span>Week 22</span>
+          </div>
+          <div class="identity-line">
+            <span>Kramer</span>
+            <span>Kramer</span>
+            <span>kramer001</span>
+            <span>100</span>
+          </div>
+        </header>
+
+        <div class="summary-grid">
+          <section class="summary-block success" aria-labelledby="success-title">
+            <h2 id="success-title">Successes</h2>
+            <p>Eyes: no issues currently. Speech pathology: normal.</p>
+            <small>Current classroom access and communication are developing normally.</small>
+          </section>
+          <section class="summary-block developing" aria-labelledby="developing-title">
+            <h2 id="developing-title">Developing</h2>
+            <p>Speaking volume is sometimes inaudible in whole-class discussion.</p>
+            <small>This is a coaching focus, not a speech-pathology finding.</small>
+          </section>
+          <section class="summary-block next" aria-labelledby="next-title">
+            <h2 id="next-title">Next step</h2>
+            <p>Use a clear, confident voice and check that the teacher can hear the full answer.</p>
+            <small>Practice target: one audible answer in each whole-class discussion.</small>
+          </section>
+        </div>
+
+        <div class="detail-strip">
+          <b>Comment:</b> Encourage a clear, confident speaking voice.
+        </div>
+
+        <div class="teacher-line">
+          <span><b>Nguyen Thi Lan</b> / Ms. Lan</span>
+          <span>Submitted 13 June 2026, 7:24 PM +07</span>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

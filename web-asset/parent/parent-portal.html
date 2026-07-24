@@ -250,11 +250,21 @@
             </div>
             <div class="form-row">
               <label for="parentPassword">Mật khẩu</label>
-              <input
-                id="parentPassword"
-                type="password"
-                autocomplete="current-password"
-                placeholder="Mật khẩu dùng chung phụ huynh - học sinh">
+              <div class="password-visibility-field">
+                <input
+                  id="parentPassword"
+                  type="password"
+                  autocomplete="current-password"
+                  placeholder="Mật khẩu dùng chung phụ huynh - học sinh"
+                  data-password-visibility>
+                <button
+                  type="button"
+                  class="password-visibility-toggle portal-button-info portal-button-amber-ink-dark"
+                  data-password-visibility-toggle
+                  aria-label="Show password"
+                  aria-pressed="false"
+                  title="Show password"></button>
+              </div>
               <p class="field-hint">
                 Nhập đúng mật khẩu hiện hành của tài khoản.
               </p>
@@ -1194,6 +1204,7 @@
     <!-- function renderCurrentHomeworkOverviewCard() {} function renderPastDueHomeworkOverviewCard() {} function setPastDueHomeworkModalOpen() {} function loadPortalAsset() {} function assertApiOriginConfiguredForStaticPreview() {} function inferLoopbackPreviewApiOrigin() {} function formatQueueDateTimeTz7() {} function formatQueueLatestSubmissionHtml() {} fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js" http://127.0.0.1:8788 queue-compact-datetime ${hour}:${minute}:${second} +07 -->
     id="newsWeekSetModalVocabularyRows" active?.vocabulary class="new-word-entry"
     <script src="/web-asset/shared/portal-preferences.js"></script>
+    <script src="/web-asset/shared/portal-password-visibility.js"></script>
     <script src="/web-asset/parent/parent-portal.min.js"></script>
     <script>
       ;(() => {
@@ -1211,6 +1222,10 @@
           button.setAttribute("aria-label", label)
           icon.setAttribute("name", isDark ? "theme-sun" : "theme-moon")
         }
+
+        window.addEventListener("sis-theme-change", (event) => {
+          sync(event.detail?.theme || root.dataset.theme)
+        })
 
         function apply(theme) {
           const next =

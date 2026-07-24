@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Development Report - Top Panel Sample</title>
+    <style>
+      :root {
+        --page: #edf2f8;
+        --panel: #dfe7f1;
+        --card: #f8fafc;
+        --border: #8ca4c5;
+        --border-strong: #5c78a3;
+        --text: #182230;
+        --muted: #42536b;
+        --accent: #244a7d;
+        --good: #2f7d62;
+        --watch: #b17812;
+        --radius: 12px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        background: var(--page);
+        color: var(--text);
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: 1.35;
+        margin: 0;
+        padding: 28px;
+      }
+
+      .sample-shell {
+        margin: 0 auto;
+        max-width: 1120px;
+      }
+
+      .sample-note {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 0 0 14px;
+      }
+
+      .development-report-panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-left: 5px solid var(--border-strong);
+        border-radius: var(--radius);
+        padding: 14px;
+      }
+
+      .panel-title {
+        color: var(--accent);
+        font-size: clamp(20px, 2.5vw, 28px);
+        line-height: 1.15;
+        margin: 0 0 14px;
+      }
+
+      .report-row {
+        display: grid;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .report-row:first-of-type { margin-top: 0; }
+
+      .time-row { grid-template-columns: 1.35fr 1fr .7fr .75fr; }
+      .identity-row { grid-template-columns: 1.2fr 1.2fr .85fr .85fr; }
+      .observation-row { grid-template-columns: .9fr 1fr 1.2fr 1.35fr; }
+      .teacher-row { grid-template-columns: 1.2fr 1.2fr .9fr 1fr; }
+
+      .report-field {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--border-strong);
+        border-radius: 10px;
+        min-width: 0;
+        padding: 11px 13px;
+      }
+
+      .time-row .report-field {
+        min-height: 92px;
+        padding: 14px 16px;
+      }
+
+      .identity-row .report-field { min-height: 68px; }
+
+      .field-label {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        margin: 0 0 7px;
+        text-transform: uppercase;
+      }
+
+      .field-value {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .time-row .field-value {
+        color: var(--accent);
+        font-size: clamp(20px, 2.4vw, 30px);
+        line-height: 1.1;
+      }
+
+      .identity-row .field-value {
+        font-size: clamp(15px, 1.7vw, 20px);
+      }
+
+      .field-support {
+        color: var(--muted);
+        font-size: 12px;
+        margin: 5px 0 0;
+      }
+
+      .status-good { border-left-color: var(--good); }
+      .status-watch { border-left-color: var(--watch); }
+
+      .teacher-row .report-field { background: #eef3f8; }
+
+      @media (max-width: 860px) {
+        body { padding: 16px; }
+        .time-row,
+        .identity-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .observation-row,
+        .teacher-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+
+      @media (max-width: 520px) {
+        .development-report-panel { padding: 10px; }
+        .time-row,
+        .identity-row,
+        .observation-row,
+        .teacher-row { grid-template-columns: 1fr; }
+        .time-row .report-field { min-height: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="sample-shell">
+      <p class="sample-note">Development report prototype - first panel for review</p>
+
+      <section class="development-report-panel" aria-labelledby="development-report-title">
+        <h1 class="panel-title" id="development-report-title">Development Report | Class Snapshot</h1>
+
+        <!-- Row 1: high-priority session context -->
+        <div class="report-row time-row">
+          <article class="report-field">
+            <p class="field-label">Day / date</p>
+            <p class="field-value">Saturday, 13 June 2026</p>
+          </article>
+          <article class="report-field">
+            <p class="field-label">Class</p>
+            <p class="field-value">Eggs &amp; Chicks</p>
+          </article>
+          <article class="report-field">
+            <p class="field-label">Session</p>
+            <p class="field-value">PM</p>
+          </article>
+          <article class="report-field">
+            <p class="field-label">School week</p>
+            <p class="field-value">Week 22</p>
+          </article>
+        </div>
+
+        <!-- Row 2: student identity strip -->
+        <div class="report-row identity-row">
+          <article class="report-field">
+            <p class="field-label">Full name</p>
+            <p class="field-value">Kramer</p>
+          </article>
+          <article class="report-field">
+            <p class="field-label">English name</p>
+            <p class="field-value">Kramer</p>
+          </article>
+          <article class="report-field">
+            <p class="field-label">Eagles ID</p>
+            <p class="field-value">kramer001</p>
+          </article>
+          <article class="report-field">
+            <p class="field-label">Student number</p>
+            <p class="field-value">100</p>
+          </article>
+        </div>
+
+        <!-- Row 3: observation and access needs -->
+        <div class="report-row observation-row">
+          <article class="report-field status-good">
+            <p class="field-label">Eyes</p>
+            <p class="field-value">No issues currently</p>
+            <p class="field-support">Child does not currently need an eye exam.</p>
+          </article>
+          <article class="report-field status-watch">
+            <p class="field-label">Speech pathology</p>
+            <p class="field-value">Normal</p>
+            <p class="field-support">No current speech-pathology concern reported.</p>
+          </article>
+          <article class="report-field status-watch">
+            <p class="field-label">Classroom speaking volume</p>
+            <p class="field-value">Sometimes inaudible</p>
+            <p class="field-support">Teacher will monitor audibility during whole-class speaking.</p>
+          </article>
+          <article class="report-field">
+            <p class="field-label">Comments</p>
+            <p class="field-value">Encourage a clear, confident speaking voice.</p>
+          </article>
+        </div>
+
+        <!-- Row 4: report provenance -->
+        <div class="report-row teacher-row">
+          <article class="report-field">
+            <p class="field-label">Reporting teacher</p>
+            <p class="field-value">Nguyen Thi Lan</p>
+          </article>
+          <article class="report-field">
+            <p class="field-label">English name</p>
+            <p class="field-value">Ms. Lan</p>
+          </article>
+          <article class="report-field">
+            <p class="field-label">Submitted date</p>
+            <p class="field-value">13 June 2026</p>
+          </article>
+          <article class="report-field">
+            <p class="field-label">Submitted time</p>
+            <p class="field-value">7:24 PM +07</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

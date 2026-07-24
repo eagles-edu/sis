@@ -5458,6 +5458,66 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
     font-size: clamp(0.8rem, 1.1vw, 0.9rem);
   }
 }
+
+.password-visibility-field {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.password-visibility-field > input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+}
+
+.password-visibility-toggle {
+  align-items: center;
+  appearance: none;
+  background: var(--portal-button-amber-fill) !important;
+  border: 1px solid var(--portal-button-amber-stroke) !important;
+  border-radius: var(--portal-radius-button);
+  color: var(--portal-button-amber-ink) !important;
+  cursor: pointer;
+  display: inline-flex;
+  block-size: 48px;
+  justify-content: center;
+  margin: 0 !important;
+  flex: 0 0 48px;
+  height: 48px !important;
+  inline-size: 48px;
+  max-block-size: 48px;
+  max-inline-size: 48px !important;
+  min-block-size: 48px !important;
+  min-inline-size: 48px !important;
+  gap: 0 !important;
+  padding: 6px !important;
+  position: static;
+  width: 48px !important;
+}
+
+.password-visibility-toggle:hover,
+.password-visibility-toggle:focus-visible {
+  background: var(--portal-button-amber-fill-hover) !important;
+  border-color: var(--portal-button-amber-stroke-hover) !important;
+  color: var(--portal-button-amber-ink) !important;
+}
+
+.password-visibility-toggle:active,
+.password-visibility-toggle[aria-pressed="true"] {
+  background: var(--portal-button-amber-fill-active) !important;
+  border-color: var(--portal-button-amber-stroke-active) !important;
+}
+
+.password-visibility-toggle svg {
+  fill: none;
+  height: 30px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: 30px;
+}
 .hidden {
   display: none !important;
 }

@@ -915,7 +915,7 @@
 
       function setGlobalStatus(message, isError = false) {
         const text = t(message);
-        ["globalStatus", "portalStatus"].forEach((id) => {
+        ["globalStatus", "portalStatus", "loginStatus"].forEach((id) => {
           const el = field(id);
           if (!el) return;
           el.textContent = text;

@@ -16,38 +16,10 @@
       /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
     </script>
     <script src="/web-asset/shared/portal-theme-state.js"></script>
-    <script>
-      ;(() => {
-        const valid = (value) => value === "dark" || value === "light"
-        let theme = "light"
-        document.documentElement.dataset.theme = theme
-        document.documentElement.style.colorScheme = theme
-      })()
-    </script>
-    <script>
-      ;(() => {
-        const valid = (value) => value === "dark" || value === "light"
-        const read = (defaultTheme = "light") => {
-          const current = document.documentElement.dataset.theme
-          return valid(current) ? current : valid(defaultTheme) ? defaultTheme : "light"
-        }
-        const set = (theme) => {
-          const next = valid(theme) ? theme : "light"
-          document.documentElement.dataset.theme = next
-          document.documentElement.style.colorScheme = next
-          void globalThis.SIS_PORTAL_PREFERENCES?.save("sis-theme", next)
-          return next
-        }
-        globalThis.SIS_PORTAL_THEME = {
-          initTheme: (defaultTheme = "light") => set(read(defaultTheme)),
-          getTheme: (defaultTheme = "light") => read(defaultTheme),
-          setTheme: set,
-          toggleTheme: (defaultTheme = "light") => set(read(defaultTheme) === "dark" ? "light" : "dark"),
-        }
-      })()
-    </script>
+    <!-- globalThis.SIS_PORTAL_THEME is provided by the shared blocking theme state. -->
     <script src="/web-asset/shared/portal-navigation.js" defer></script>
     <script src="/web-asset/shared/portal-preferences.js" defer></script>
+    <script src="/web-asset/shared/portal-password-visibility.js" defer></script>
     <script>
       window.SIS_PORTAL_THEME?.initTheme("light")
     </script>
@@ -1012,10 +984,20 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
             </div>
             <div class="form-row">
               <label for="loginPass">Password</label>
-              <input
-                id="loginPass"
-                type="password"
-                autocomplete="current-password">
+              <div class="password-visibility-field">
+                <input
+                  id="loginPass"
+                  type="password"
+                  autocomplete="current-password"
+                  data-password-visibility>
+                <button
+                  type="button"
+                  class="password-visibility-toggle portal-button-info portal-button-amber-ink-dark"
+                  data-password-visibility-toggle
+                  aria-label="Show password"
+                  aria-pressed="false"
+                  title="Show password"></button>
+              </div>
             </div>
             <div class="actions actions-2">
               <button
@@ -6980,6 +6962,10 @@ No family lookup yet.</pre>
           button.setAttribute("aria-label", label)
           icon.setAttribute("name", isDark ? "theme-sun" : "theme-moon")
         }
+
+        window.addEventListener("sis-theme-change", (event) => {
+          sync(event.detail?.theme || root.dataset.theme)
+        })
 
         function apply(theme) {
           const next =
