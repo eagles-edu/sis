@@ -915,6 +915,7 @@
 
       function setGlobalStatus(message, isError = false) {
         const text = t(message);
+        window.SIS_ACTION_FEEDBACK?.status(text, isError);
         ["globalStatus", "portalStatus", "loginStatus"].forEach((id) => {
           const el = field(id);
           if (!el) return;
@@ -925,6 +926,7 @@
 
       function setFormStatus(message, isError = false, isOk = false) {
         const el = field("formStatus");
+        window.SIS_ACTION_FEEDBACK?.status(t(message), isError);
         if (!el) return;
         el.textContent = t(message);
         el.className = isError ? "status bad" : isOk ? "status ok" : "status";
@@ -3233,6 +3235,13 @@
           actionWhat: t(entry?.actionWhat),
           actionWhy: t(entry?.actionWhy),
           biasAssessment: t(entry?.biasAssessment),
+          vocabulary: Array.isArray(entry?.vocabulary) ? entry.vocabulary.map((row) => ({
+            partOfSpeech: t(row?.partOfSpeech),
+            english: t(row?.english),
+            vietnamese: t(row?.vietnamese),
+            syllabication: normalizeSyllabication(row?.syllabication),
+            definition: t(row?.definition),
+          })) : [],
           submittedAt: t(entry?.submittedAt),
           reviewStatus: normalizeNewsReviewStatusToken(entry?.reviewStatus),
           awaitingReReview: entry?.awaitingReReview === true,

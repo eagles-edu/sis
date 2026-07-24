@@ -1757,6 +1757,7 @@
 
       function setStatus(message, isError = false) {
         const text = normalizeText(message);
+        window.SIS_ACTION_FEEDBACK?.status(text, isError);
         if (statusEl) {
           statusEl.style.color = isError ? "#bd2f2f" : "var(--portal-status-muted-text)";
           statusEl.textContent = text;
@@ -8518,16 +8519,52 @@
         return stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
       }
 
-      function persistAttendanceLevelTileConfig(tileConfigByLevel) {
+      function rehydratePreferenceBackedState() {
+        state.uiSettings = loadUiSettingsFromStorage();
+        state.sisConfig = loadSisConfigFromStorage();
+        applySisConfigToForm(state.sisConfig);
+        state.profileFormConfig = loadProfileFormConfigFromStorage();
+        state.tableArchiveIndex = loadTableArchiveIndexFromStorage();
+        state.performanceHoldIndex = loadPerformanceHoldIndexFromStorage();
+        state.tableColumnVisibility = loadAllTableColumnVisibilityFromStorage();
+        state.attendanceColumnVisibility = state.tableColumnVisibility.attendance;
+        state.eaglesIdSearchHistory = loadStudentIdSearchHistoryFromStorage();
+        state.globalTextZoomPercent = loadGlobalTextZoomFromStorage();
+        state.attendanceLanding.tileConfigByLevel =
+          loadAttendanceLevelTileConfigFromStorage();
+        state.parentTracking.teacherNames = loadParentTrackingTeacherNamesFromStorage();
+        state.parentTracking.lessonSummaryByLevelDate =
+          loadParentTrackingLessonSummaryFromStorage();
+      }
+
+      async function persistAttendanceLevelTileConfig(tileConfigByLevel) {
         const normalized =
           tileConfigByLevel && typeof tileConfigByLevel === "object" ?
             tileConfigByLevel
           : {};
         state.attendanceLanding.tileConfigByLevel = normalized;
         state.uiSettings.levelTileStylesByLevel = normalized;
-        void persistUiSettingsToServer(state.uiSettings);
+        const persisted = await persistUiSettingsToServer(state.uiSettings);
+        if (!persisted) throw new Error("Unable to save class-level tile settings to PostgreSQL.");
         void window.SIS_PORTAL_PREFERENCES?.save(CLASS_LEVEL_TILE_STYLE_STORAGE_KEY, normalized);
         return normalized;
+      }
+
+      async function saveAttendanceTileAsset(assetKey, dataUrl, levelName) {
+        const normalizedDataUrl = normalizeText(dataUrl);
+        if (!normalizedDataUrl) return null;
+        const result = await api(`${ADMIN_ASSETS_PATH}/${encodeURIComponent(assetKey)}`, {
+          method: "PUT",
+          body: {
+            assetKey,
+            dataUrl: normalizedDataUrl,
+            kind: "class-level-tile",
+            ownerType: "system-config",
+            ownerId: `level:${levelNameKey(levelName)}`,
+            metadata: { level: normalizeText(levelName), source: "admin-level-tile-editor" },
+          },
+        });
+        return result?.asset || null;
       }
 
       function loadAttendanceFormContextFromStorage() {
@@ -9027,7 +9064,7 @@
         schoolSetupWarningCheckTimer = window.setTimeout(() => {
           schoolSetupWarningCheckReady = true;
           renderSchoolSetupAccessWarning(latestSchoolSetupWarningSetup || schoolSetupState());
-        }, 10000);
+        }, /\bjsdom\b/i.test(String(window.navigator?.userAgent || "")) ? 0 : 10000);
       }
 
       function closeSchoolSetupWarningModal(acknowledge = true) {
@@ -9074,12 +9111,8 @@
       }
 
       function recoverSchoolSetupFromWarning() {
-        try {
-          autoFillSchoolSetupFromInputs();
-          return saveSchoolSetupFromInputs({ notify: true });
-        } catch (error) {
-          throw error;
-        }
+        autoFillSchoolSetupFromInputs();
+        return saveSchoolSetupFromInputs({ notify: true });
       }
 
       function renderSchoolSetupAccessWarning(setup = schoolSetupState()) {
@@ -9267,6 +9300,12 @@
         state.queueHub.panelOrder = normalizeQueueHubPanelOrder(
           state.uiSettings?.queueHub?.panelOrder || state.queueHub.panelOrder,
         );
+        if (
+          state.activePage === "attendance" ||
+          state.activePage === "attendance-admin"
+        ) {
+          syncAttendanceDateDerivedFields();
+        }
         if (state.queueHub.loaded) renderQueueHubPanels();
       }
 
@@ -9280,6 +9319,8 @@
         normalizeText(window.__SIS_ADMIN_PERMISSIONS_PATH) || "/api/admin/permissions";
       const ADMIN_UI_SETTINGS_PATH =
         normalizeText(window.__SIS_ADMIN_UI_SETTINGS_PATH) || "/api/admin/settings/ui";
+      const ADMIN_ASSETS_PATH =
+        normalizeText(window.__SIS_ADMIN_ASSETS_PATH) || "/api/admin/assets";
       const ADMIN_DASHBOARD_PATH =
         normalizeText(window.__SIS_ADMIN_DASHBOARD_PATH) || "/api/admin/dashboard";
       const ADMIN_QUEUE_HUB_PATH =
@@ -20251,7 +20292,15 @@
             normalizeText(raw.bgColor)
           : theme.color;
         const imageDataUrl = normalizeText(raw.imageDataUrl);
-        return { title, bgColor, imageDataUrl };
+        const assetKey = normalizeText(raw.assetKey);
+        return {
+          title,
+          bgColor,
+          assetKey,
+          imageDataUrl: assetKey
+            ? `${ADMIN_ASSETS_PATH}/raw/${encodeURIComponent(assetKey)}`
+            : imageDataUrl,
+        };
       }
 
       function setAttendanceLevelStyleStatus(message) {
@@ -20959,7 +21008,7 @@
         }
       }
 
-      function applyAttendanceLevelTileStyle() {
+      async function applyAttendanceLevelTileStyle() {
         const selectedLevel = selectedAttendanceLevelStyleLevel();
         if (!selectedLevel) throw new Error("Select a class level first.");
         const levelKeys = levelTileStyleKeys(selectedLevel);
@@ -20974,9 +21023,14 @@
           document.getElementById("attendanceLevelColor")?.value,
         );
         const bgColor = parseHexRgb(colorInput) ? colorInput : current.bgColor;
-        const imageDataUrl =
-          normalizeText(state.levelTileStyleEditor?.pendingImageDataUrl) ||
-          current.imageDataUrl;
+        const pendingImageDataUrl = normalizeText(state.levelTileStyleEditor?.pendingImageDataUrl);
+        let assetKey = current.assetKey;
+        let imageDataUrl = current.assetKey ? "" : current.imageDataUrl;
+        if (pendingImageDataUrl) {
+          assetKey = `class-level-${levelNameKey(selectedLevel)}`;
+          await saveAttendanceTileAsset(assetKey, pendingImageDataUrl, selectedLevel);
+          imageDataUrl = "";
+        }
         const nextConfig = { ...(state.attendanceLanding.tileConfigByLevel || {}) };
         levelKeys.forEach((key) => {
           delete nextConfig[key];
@@ -20984,9 +21038,10 @@
         nextConfig[levelKey] = {
           title: titleValue,
           bgColor,
+          assetKey,
           imageDataUrl,
         };
-        persistAttendanceLevelTileConfig(nextConfig);
+        await persistAttendanceLevelTileConfig(nextConfig);
         state.levelTileStyleEditor.pendingImageDataUrl = "";
         const imageInput = document.getElementById("attendanceLevelImage");
         if (imageInput) imageInput.value = "";
@@ -20999,7 +21054,7 @@
         );
       }
 
-      function clearAttendanceLevelTileImage() {
+      async function clearAttendanceLevelTileImage() {
         const selectedLevel = selectedAttendanceLevelStyleLevel();
         if (!selectedLevel) throw new Error("Select a class level first.");
         const levelKeys = levelTileStyleKeys(selectedLevel);
@@ -21014,9 +21069,10 @@
         nextConfig[levelKey] = {
           title: current.title,
           bgColor: current.bgColor,
+          assetKey: "",
           imageDataUrl: "",
         };
-        persistAttendanceLevelTileConfig(nextConfig);
+        await persistAttendanceLevelTileConfig(nextConfig);
         state.levelTileStyleEditor.pendingImageDataUrl = "";
         const imageInput = document.getElementById("attendanceLevelImage");
         if (imageInput) imageInput.value = "";
@@ -21029,7 +21085,7 @@
         );
       }
 
-      function resetAttendanceLevelTileStyle() {
+      async function resetAttendanceLevelTileStyle() {
         const selectedLevel = selectedAttendanceLevelStyleLevel();
         if (!selectedLevel) throw new Error("Select a class level first.");
         const levelKeys = levelTileStyleKeys(selectedLevel);
@@ -21037,7 +21093,7 @@
         levelKeys.forEach((key) => {
           delete nextConfig[key];
         });
-        persistAttendanceLevelTileConfig(nextConfig);
+        await persistAttendanceLevelTileConfig(nextConfig);
         state.levelTileStyleEditor.pendingImageDataUrl = "";
         const imageInput = document.getElementById("attendanceLevelImage");
         if (imageInput) imageInput.value = "";
@@ -21745,6 +21801,7 @@
       function scheduleAdminIslandImport(factory, timeout = 1800, requiredPage = "") {
         return new Promise((resolve, reject) => {
           let settled = false;
+          let retryTimer = null;
           const pageActivated = () => runWhenPageIsReady();
           const runWhenPageIsReady = () => {
             if (settled) return;
@@ -21753,16 +21810,19 @@
               !requiredPage.split("|").includes(normalizePageSlug(state.activePage))
             ) return;
             settled = true;
+            if (retryTimer) window.clearInterval(retryTimer);
             document.removeEventListener("sis-admin-page-activated", pageActivated);
             Promise.resolve().then(factory).then(resolve, reject);
           };
           document.addEventListener("sis-admin-page-activated", pageActivated);
+          retryTimer = window.setInterval(runWhenPageIsReady, 250);
           scheduleAfterFirstPaint(runWhenPageIsReady, timeout);
         });
       }
 
       async function bootAfterLogin() {
         await window.SIS_PORTAL_PREFERENCES?.migrate?.();
+        rehydratePreferenceBackedState();
         window.SIS_PORTAL_THEME?.initTheme?.("light");
         const bootConfigTasks = [];
         if (canManagePermissions()) {
@@ -22429,7 +22489,7 @@
       if (IS_JSDOM_ENV) {
         activateAdminFallback("bindSchoolSetupBrandingFallback");
       } else {
-        void scheduleAdminIslandImport(() => import("/web-asset/admin/school-setup-branding-island.mjs"), 1800, "school-setup")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/school-setup-branding-island.mjs"), 1800, "school-setup|settings")
           .then((mod) =>
             mod.initSchoolSetupBrandingIsland({
               document,
@@ -22593,7 +22653,7 @@
       if (IS_JSDOM_ENV) {
         bindReportSettingsFallback();
       } else {
-        void scheduleAdminIslandImport(() => import("/web-asset/admin/report-settings-island.mjs"), 1800, "report-settings")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/report-settings-island.mjs"), 1800, "report-settings|settings|reports")
           .then((mod) =>
             mod.initReportSettingsIsland({
               document,
@@ -22950,7 +23010,7 @@
       if (IS_JSDOM_ENV) {
         activateAdminFallback("bindAttendanceGradeControlsFallback");
       } else {
-        void scheduleAdminIslandImport(() => import("/web-asset/admin/attendance-grade-controls-island.mjs"), 1800, "attendance|attendance-admin|grades|grades-data|grades-tabulator|reports|performance-data|performance-engagement")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/attendance-grade-controls-island.mjs"), 1800, "attendance|attendance-admin|grades|grades-data|grades-tabulator|reports|performance-data|performance-engagement|settings")
           .then((mod) =>
             mod.initAttendanceGradeControlsIsland({
               document,
@@ -22968,25 +23028,13 @@
                 refreshAttendanceLanding({ reloadRows: true }).catch(handleError);
               },
               onAttendanceLevelApply() {
-                try {
-                  applyAttendanceLevelTileStyle();
-                } catch (error) {
-                  handleError(error);
-                }
+                applyAttendanceLevelTileStyle().catch(handleError);
               },
               onAttendanceLevelClearImage() {
-                try {
-                  clearAttendanceLevelTileImage();
-                } catch (error) {
-                  handleError(error);
-                }
+                clearAttendanceLevelTileImage().catch(handleError);
               },
               onAttendanceLevelReset() {
-                try {
-                  resetAttendanceLevelTileStyle();
-                } catch (error) {
-                  handleError(error);
-                }
+                resetAttendanceLevelTileStyle().catch(handleError);
               },
               onAttendanceLevelImageChange(event) {
                 try {

@@ -8,13 +8,19 @@
   <script>
     (() => {
       try {
-        document.documentElement.dataset.theme = "light";
+        const stored = window.localStorage?.getItem("sis-theme")
+        if (stored === "dark" || stored === "light") {
+          document.documentElement.dataset.theme = stored
+        } else {
+          document.documentElement.dataset.theme = "light"
+        }
       } catch {
-        document.documentElement.dataset.theme = "light";
+        document.documentElement.dataset.theme = "light"
       }
     })();
   </script>
   <script src="/web-asset/shared/portal-preferences.js"></script>
+  <script src="/web-asset/shared/portal-action-feedback.js"></script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <style>
     * {
@@ -311,6 +317,7 @@
       }
 
       function setStatus(message, isError = false) {
+        window.SIS_ACTION_FEEDBACK?.status(t(message), isError);
         const el = document.getElementById("globalStatus");
         if (!el) return;
         el.textContent = t(message);

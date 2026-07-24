@@ -8,6 +8,7 @@ import {
 } from "../src/modules/admin/student-news-compliance.mjs"
 
 const STUDENT_HTML = fs.readFileSync(new URL("../web-asset/student/student-portal.html", import.meta.url), "utf8")
+const STUDENT_JS = fs.readFileSync(new URL("../web-asset/student/student-portal.js", import.meta.url), "utf8")
 const SHARED_THEME = fs.readFileSync(new URL("../web-asset/shared/portal-theme.css", import.meta.url), "utf8")
 const PARENT_HTML = fs.readFileSync(new URL("../web-asset/parent/parent-portal.html", import.meta.url), "utf8")
 const ADMIN_JS = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
@@ -146,6 +147,11 @@ test("student news report dates render Vietnamese text while retaining ISO paylo
   assert.match(STUDENT_HTML, /el\.dataset\.isoDate = isoDate/)
   assert.match(STUDENT_HTML, /reportDate: t\(field\("reportDate"\)\?\.dataset\?\.isoDate/)
   assert.match(STUDENT_HTML, /formatPortalDate\(openDate\)/)
+})
+
+test("student news week-set reports retain vocabulary when calendar items are normalized", () => {
+  assert.match(STUDENT_JS, /function normalizeNewsReportItem\(entry = \{\}\) \{[\s\S]*?vocabulary: Array\.isArray\(entry\?\.vocabulary\)/)
+  assert.match(STUDENT_JS, /renderVocabularyRows\(field\("newsWeekSetModalVocabularyRows"\), active\?\.vocabulary \|\| \[\]\)/)
 })
 
 test("parent and admin vocabulary mirrors contain no student lookup controls", () => {

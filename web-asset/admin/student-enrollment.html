@@ -8,6 +8,7 @@
   <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
   <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
   <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script src="/web-asset/shared/portal-action-feedback.js"></script>
   <script type="module">
     import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
 
@@ -174,6 +175,16 @@
 
             <section class="content" aria-label="Enrollment filters" data-surface-role="content">
               <p id="globalStatus" class="status" aria-live="polite"></p>
+              <div class="enrollment-level-panel" aria-labelledby="enrollmentLevelTitle">
+                <div class="enrollment-level-panel__head">
+                  <div>
+                    <h2 id="enrollmentLevelTitle" class="section-title">Class Levels</h2>
+                    <p id="enrollmentLevelTilesHint" class="small">Choose a class level to filter the enrollment roster.</p>
+                  </div>
+                  <button id="enrollmentLevelAllBtn" type="button" class="portal-button portal-button-alt">All levels</button>
+                </div>
+                <div id="enrollmentLevelTiles" class="enrollment-level-grid" role="list" aria-label="Class level filters"></div>
+              </div>
               <div class="row">
                 <div class="field c4">
                   <label for="searchQ">Search student</label>

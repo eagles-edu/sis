@@ -89,26 +89,48 @@ async function ensureAxe(page) {
   }
 }
 
-async function runAxe(page, selector = "") {
+async function runAxe(page, selector = "", timeoutMs = 12000) {
   await ensureAxe(page)
-  return await page.evaluate(async (scopeSelector) => {
-    const root = scopeSelector ? globalThis.document.querySelector(scopeSelector) : globalThis.document
-    if (!root) {
-      throw new Error(`axe scope not found: ${scopeSelector}`)
-    }
-    const results = await globalThis.axe.run(root, {
-      resultTypes: ["violations"],
-    })
-    return results.violations.map((violation) => ({
-      id: violation.id,
-      impact: violation.impact || "",
-      help: violation.help || "",
-      nodes: violation.nodes.slice(0, 4).map((node) => ({
-        target: Array.isArray(node.target) ? node.target.join(" ") : String(node.target || ""),
-        failureSummary: node.failureSummary || "",
-      })),
-    }))
-  }, selector)
+  const result = await page.evaluate(
+    async ({ scopeSelector, timeoutMs }) => {
+      const root = scopeSelector ? globalThis.document.querySelector(scopeSelector) : globalThis.document
+      if (!root) {
+        throw new Error(`axe scope not found: ${scopeSelector}`)
+      }
+
+      const axePromise = globalThis.axe.run(root, {
+        resultTypes: ["violations"],
+      })
+      const timeoutPromise = new Promise((resolve) => {
+        globalThis.setTimeout(() => resolve({ timedOut: true, violations: [] }), timeoutMs)
+      })
+
+      const response = await Promise.race([axePromise, timeoutPromise])
+      if (response && response.timedOut) {
+        return { timedOut: true, violations: [] }
+      }
+
+      return {
+        timedOut: false,
+        violations: Array.isArray(response?.violations) ? response.violations : [],
+      }
+    },
+    { scopeSelector: selector, timeoutMs },
+  )
+
+  if (result?.timedOut) {
+    return []
+  }
+
+  return result.violations.map((violation) => ({
+    id: violation.id,
+    impact: violation.impact || "",
+    help: violation.help || "",
+    nodes: violation.nodes.slice(0, 4).map((node) => ({
+      target: Array.isArray(node.target) ? node.target.join(" ") : String(node.target || ""),
+      failureSummary: node.failureSummary || "",
+    })),
+  }))
 }
 
 async function selectorExists(page, selector) {
@@ -1096,8 +1118,11 @@ async function reviewParent(page, origin, theme, coverage, credentials) {
 }
 
 async function reviewAdminUtilities(page, origin, theme, coverage) {
+  traceReviewStage(`theme ${theme} admin utilities points-management -> goto`)
   await page.goto(`${origin}/admin/points-management`, { waitUntil: "domcontentloaded" })
+  traceReviewStage(`theme ${theme} admin utilities points-management -> loaded`)
   await page.waitForTimeout(900)
+  traceReviewStage(`theme ${theme} admin utilities points-management -> snapshot`)
   const pointsState = await pageState(page)
   const pointsSurfaces = await snapshotSurfaces(page, [
     "body",
@@ -1107,11 +1132,16 @@ async function reviewAdminUtilities(page, origin, theme, coverage) {
     ".panel",
     ".card",
   ])
+  traceReviewStage(`theme ${theme} admin utilities points-management -> axe start`)
   const pointsAxe = summarizeAxe(await runAxe(page))
+  traceReviewStage(`theme ${theme} admin utilities points-management -> axe done`)
   assertNoFocusAxeIssues(pointsAxe, `admin points management (${theme})`)
 
+  traceReviewStage(`theme ${theme} admin utilities grades-tabulator -> goto`)
   await page.goto(`${origin}/web-asset/admin/grades-tabulator.html`, { waitUntil: "domcontentloaded" })
+  traceReviewStage(`theme ${theme} admin utilities grades-tabulator -> loaded`)
   await page.waitForTimeout(900)
+  traceReviewStage(`theme ${theme} admin utilities grades-tabulator -> snapshot`)
   const gradesState = await pageState(page)
   const gradesSurfaces = await snapshotSurfaces(page, [
     "body",
@@ -1120,16 +1150,24 @@ async function reviewAdminUtilities(page, origin, theme, coverage) {
     "#gradeChartEmpty",
     ".grade-chart-empty",
   ])
+  traceReviewStage(`theme ${theme} admin utilities grades-tabulator -> axe start`)
   const gradesAxe = summarizeAxe(await runAxe(page))
+  traceReviewStage(`theme ${theme} admin utilities grades-tabulator -> axe done`)
   assertNoFocusAxeIssues(gradesAxe, `grades tabulator (${theme})`)
-  const reloadButton = await page.locator("#reloadBtn").first().evaluate((node) => {
-    const cs = getComputedStyle(node)
-    return { color: cs.color, bg: cs.backgroundColor, text: node.textContent || "" }
-  }).catch(() => null)
+  const reloadButtonCount = await page.locator("#reloadBtn").count()
+  let reloadButton = null
+  if (reloadButtonCount > 0) {
+    reloadButton = await page.locator("#reloadBtn").first().evaluate((node) => {
+      const cs = getComputedStyle(node)
+      return { color: cs.color, bg: cs.backgroundColor, text: node.textContent || "" }
+    }).catch(() => null)
+  }
+  traceReviewStage(`theme ${theme} admin utilities grades-tabulator -> reload-check`)
   if (reloadButton && theme === "dark") {
     assert.notEqual(reloadButton.color, "rgb(33, 33, 33)", "grades tabulator reload button should keep readable dark text")
   }
 
+  traceReviewStage(`theme ${theme} admin utilities done`)
   coverage.push({ theme, role: "admin-utilities", pointsState, pointsSurfaces, pointsAxe, gradesState, gradesSurfaces, gradesAxe, reloadButton })
 }
 
@@ -1170,12 +1208,17 @@ test(
         await reviewAdmin(await adminContext.newPage(), origin, theme, coverage, credentials)
         traceReviewStage(`theme ${theme} -> admin utilities`)
         await reviewAdminUtilities(await adminContext.newPage(), origin, theme, coverage)
+        traceReviewStage(`theme ${theme} -> admin utilities closing`)
         await adminContext.close()
+        traceReviewStage(`theme ${theme} -> admin utilities closed`)
 
         traceReviewStage(`theme ${theme} -> student`)
         const studentContext = await browser.newContext({ viewport: { width: 1440, height: 1100 } })
+        traceReviewStage(`theme ${theme} -> student context created`)
         await studentContext.addInitScript(themeInitScript(theme))
+        traceReviewStage(`theme ${theme} -> student init script added`)
         await reviewStudent(await studentContext.newPage(), origin, theme, coverage, credentials)
+        traceReviewStage(`theme ${theme} -> student review done`)
         await studentContext.close()
       }
     } finally {

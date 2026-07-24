@@ -18,13 +18,17 @@ const QUEUE_HUB_FACTORY = fs
   .readFileSync(path.resolve(process.cwd(), "web-asset/admin/queue-hub-island.mjs"), "utf8")
   .replace("export function initQueueHubIsland", "function initQueueHubIsland")
   .concat("\nwindow.__SIS_QUEUE_HUB_FACTORY__ = (deps) => initQueueHubIsland(deps);\n")
+const PORTAL_PREFERENCES_JS = fs.readFileSync(
+  path.resolve(process.cwd(), "web-asset/shared/portal-preferences.js"),
+  "utf8",
+)
 const ADMIN_HTML_STRIPPED_FOR_TEST = ADMIN_HTML
   .replace(/<script\s+id="admin-app-loader">[\s\S]*?<\/script>/gi, "")
   .replace(/<link[\s\S]*?href="\/web-asset\/admin\/student-admin(?:\.min)?\.css(?:\?[^"]*)?"[\s\S]*?>/gi, "")
   .replace(/<script\s+src="\/web-asset\/admin\/student-admin(?:\.min)?\.js(?:\?[^"]*)?"\s+defer><\/script>/gi, "")
 const ADMIN_HTML_FOR_TEST = ADMIN_HTML_STRIPPED_FOR_TEST.replace(
   "</body>",
-  `<script>\n${ADMIN_FALLBACK_FACTORY}\n${QUEUE_HUB_FACTORY}\n${ADMIN_JS.replace(/<\/script>/gi, "<\\\\/script>")}\n</script>\n</body>`
+  `<script>\n${PORTAL_PREFERENCES_JS}\n${ADMIN_FALLBACK_FACTORY}\n${QUEUE_HUB_FACTORY}\n${ADMIN_JS.replace(/<\/script>/gi, "<\\\\/script>")}\n</script>\n</body>`
 )
 const activeDoms = new Set()
 
@@ -216,6 +220,8 @@ async function createAdminUiDom(fetchHandler, url = "http://127.0.0.1/admin", op
     pretendToBeVisual: true,
     url,
     beforeParse(window) {
+      window.__SIS_ADMIN_PREFERENCES_PATH = "/api/admin/preferences"
+      window.__SIS_ADMIN_AUTH_BOOTSTRAP__ = runStudentAdminAuthBootstrap
       if (typeof options.beforeParse === "function") options.beforeParse(window)
       window.fetch = (resource, init = {}) => fetchHandler(resource, init)
     },
@@ -343,7 +349,7 @@ async function createSchoolSetupAdminDom(options = {}) {
       schoolSetupHasIssues: false,
     },
   }
-  return createAdminUiDom(
+  const dom = await createAdminUiDom(
     async (resource, init = {}) => {
       const url = String(resource)
       if (url.includes("/api/admin/auth/me")) {
@@ -394,6 +400,8 @@ async function createSchoolSetupAdminDom(options = {}) {
     options.url,
     options
   )
+  dom.__schoolSetupUiSettingsResponse = () => schoolSetupUiSettingsResponse
+  return dom
 }
 
 test("admin ui login shows invalid credentials errors on the login panel", async () => {
@@ -492,9 +500,8 @@ test("admin ui warns on login when school setup is unset and links to school set
   const document = dom.window.document
   await waitFor(() => {
     const warning = document.getElementById("authSchoolSetupWarning")
-    assert.equal(warning.classList.contains("hidden"), false)
-    assert.match(normalizeText(warning.textContent), /School setup is unset/i)
-    assert.ok(warning.querySelector('a[href="/admin/school-setup#schoolSetupPanel"]'))
+    assert.equal(warning.classList.contains("hidden"), true)
+    assert.equal(normalizeText(warning.textContent), "")
   })
 
   submitLogin(dom)
@@ -505,10 +512,10 @@ test("admin ui warns on login when school setup is unset and links to school set
   })
 
   await waitFor(() => {
-    const warning = document.getElementById("appSchoolSetupWarning")
-    assert.equal(warning.classList.contains("hidden"), false)
-    assert.ok(warning.querySelector('a[href="/admin/school-setup#schoolSetupPanel"]'))
-    assert.match(normalizeText(warning.textContent), /Open School Setup/i)
+    const modal = document.getElementById("schoolSetupWarningModal")
+    assert.equal(modal.classList.contains("hidden"), false)
+    assert.match(normalizeText(document.getElementById("schoolSetupWarningModalStatus")?.textContent), /No school year or quarter data/i)
+    assert.ok(document.getElementById("schoolSetupWarningOpenBtn")?.getAttribute("href")?.includes("/admin/school-setup#schoolSetupPanel"))
   })
 
   dom.window.close()
@@ -580,8 +587,8 @@ test("admin quarter and school-year helpers fail closed without setup", async ()
   )
 
   await waitFor(() => {
-    const warning = dom.window.document.getElementById("appSchoolSetupWarning")
-    assert.ok(warning && !warning.classList.contains("hidden"))
+    const modal = dom.window.document.getElementById("schoolSetupWarningModal")
+    assert.ok(modal && !modal.classList.contains("hidden"))
   }, 5000)
 
   assert.equal(typeof dom.window.defaultAttendanceSchoolYear, "function")
@@ -3695,8 +3702,8 @@ test("static preview path over http supports login when apiOrigin is explicit", 
   })
   assert.equal(
     dom.window.sessionStorage.getItem("sis-admin-authenticated"),
-    "1",
-    "successful admin login should leave a reload-only auth UI hint",
+    null,
+    "successful admin login must not persist an auth marker in browser storage",
   )
 
   dom.window.close()
@@ -5985,6 +5992,19 @@ test("legacy alias level-tile config still applies to assignments input tiles", 
           },
         })
       }
+      if (url.includes("/api/admin/preferences")) {
+        return jsonResponse(200, {
+          preferences: {
+            "sis.admin.levelTiles.v1": {
+              starters: {
+                title: "Starter Tile Legacy",
+                bgColor: "#224466",
+                imageDataUrl: "",
+              },
+            },
+          },
+        })
+      }
       if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
       if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: [] })
       if (url.includes("/api/admin/students")) {
@@ -6013,20 +6033,7 @@ test("legacy alias level-tile config still applies to assignments input tiles", 
       return jsonResponse(200, {})
     },
     "http://127.0.0.1/admin",
-    {
-      beforeParse(window) {
-        window.localStorage.setItem(
-          "sis.admin.levelTiles.v1",
-          JSON.stringify({
-            starters: {
-              title: "Starter Tile Legacy",
-              bgColor: "#224466",
-              imageDataUrl: "",
-            },
-          })
-        )
-      },
-    }
+    {}
   )
 
   submitLogin(dom, { username: "admin" })
@@ -6034,12 +6041,18 @@ test("legacy alias level-tile config still applies to assignments input tiles", 
   await waitFor(() => {
     const document = dom.window.document
     assert.equal(document.getElementById("authPanel").classList.contains("hidden"), true)
+    document.querySelector('[data-page-link="assignments"]')?.click()
+  })
+
+  await waitFor(() => {
+    const document = dom.window.document
     const assignmentTile = document.querySelector('#assignmentLevelTiles .attendance-level-tile[data-level="Pre-A1 Starters"]')
     assert.ok(assignmentTile)
     assert.match(assignmentTile.textContent || "", /Starter Tile Legacy/i)
     assert.match(assignmentTile.getAttribute("style") || "", /rgb\(34,\s*68,\s*102\)/i)
   })
 
+  await settleDomAsync(dom, 8, 25)
   dom.window.close()
 })
 
@@ -7345,7 +7358,9 @@ test("attendance main reloads saved statuses and admin child shows per-student s
   await waitFor(() => {
     const statusText = normalizeText(dom.window.document.getElementById("status")?.textContent)
     const saveResultText = normalizeText(dom.window.document.getElementById("attendanceSaveResult")?.textContent)
-    assert.match(statusText, /Saved 0; corrected 1; unchanged 0 — Eggs & Chicks, 19\/07\/26/i)
+    const [year, month, day] = attendanceSunday.split("-")
+    const expectedAttendanceDate = `${day}/${month}/${year.slice(-2)}`
+    assert.match(statusText, new RegExp(`Saved 0; corrected 1; unchanged 0 — Eggs & Chicks, ${expectedAttendanceDate}`,"i"))
     assert.equal(saveResultText, statusText)
     assert.ok(dashboardCalls > dashboardCallsBeforeSave)
   })
@@ -7416,12 +7431,12 @@ test("attendance main reloads saved statuses and admin child shows per-student s
   })
   await waitFor(() => {
     assert.equal(dom.window.document.documentElement.style.getPropertyValue("--sis-global-text-zoom"), "1.05")
-    assert.equal(normalizeText(dom.window.localStorage.getItem("sis.admin.globalTextZoomPercent.v1")), "105")
+    assert.equal(normalizeText(dom.window.SIS_PORTAL_PREFERENCES?.get("sis.admin.globalTextZoomPercent.v1", "")), "105")
   })
   dom.window.document.getElementById("studentTextZoomResetBtn")?.click()
   await waitFor(() => {
     assert.equal(dom.window.document.documentElement.style.getPropertyValue("--sis-global-text-zoom"), "1")
-    assert.equal(normalizeText(dom.window.localStorage.getItem("sis.admin.globalTextZoomPercent.v1")), "100")
+    assert.equal(normalizeText(dom.window.SIS_PORTAL_PREFERENCES?.get("sis.admin.globalTextZoomPercent.v1", "")), "100")
   })
 
   await settleDomAsync(dom)
@@ -8046,6 +8061,19 @@ test("profile info display emphasizes student summary and clusters empty fields"
       normalizedFormPayload: {},
       rawFormPayload: {},
     },
+    currentEnrollment: {
+      status: "active",
+      level: "A1 Movers",
+      schoolYear: "2026-2027",
+    },
+    enrollmentPeriods: [
+      {
+        id: "enrollment-01",
+        status: "active",
+        level: "A1 Movers",
+        schoolYear: "2026-2027",
+      },
+    ],
     attendanceRecords: [],
     gradeRecords: [],
     parentReports: [],
@@ -8646,7 +8674,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
     const fullNameHeader = document.querySelector('th[data-attendance-col="fullName"]')
     assert.equal(fullNameHeader?.classList.contains("attendance-col-hidden"), false)
     assert.equal(
-      normalizeText(dom.window.localStorage.getItem("sis.admin.attendance.columnVisibility.v1")).includes("\"fullName\":true"),
+      Boolean(dom.window.SIS_PORTAL_PREFERENCES?.get("sis.admin.attendance.columnVisibility.v1", {})?.fullName),
       true
     )
   })
@@ -9094,9 +9122,8 @@ test("school setup profile fields persist and reset from saved values", async ()
     assert.match(document.getElementById("status").textContent || "", /School setup saved \(2026-2027\) for Eagles Learning Hub\./i)
   })
 
-  const savedRaw = dom.window.localStorage.getItem("sis.admin.uiSettings")
-  assert.ok(savedRaw)
-  const saved = JSON.parse(savedRaw)
+  const saved = dom.__schoolSetupUiSettingsResponse()?.uiSettings
+  assert.ok(saved)
   assert.equal(saved.schoolSetup.startDate, "2026-02-21")
   assert.equal(saved.schoolSetup.endDate, "2027-01-24")
   assert.equal(saved.schoolSetup.letterGradeRanges[0].letter, "A")

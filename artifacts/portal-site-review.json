@@ -87,11 +87,11 @@
                   "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 },
                 {
-                  "target": ".form-row:nth-child(2)",
+                  "target": "label[for=\"loginPass\"]",
                   "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 },
                 {
-                  "target": ".login-links",
+                  "target": "#loginPass",
                   "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
@@ -338,7 +338,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3215
+              "height": 2704
             },
             ".wrap": {
               "selector": ".wrap",
@@ -350,7 +350,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3167
+              "height": 2656
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -362,7 +362,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3083
+              "height": 2572
             },
             ".panel": {
               "selector": ".panel",
@@ -391,7 +391,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -478,7 +478,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3550
+              "height": 4790
             },
             ".wrap": {
               "selector": ".wrap",
@@ -490,7 +490,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3502
+              "height": 4742
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -502,7 +502,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3418
+              "height": 4658
             },
             ".panel": {
               "selector": ".panel",
@@ -531,7 +531,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -618,7 +618,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3305
+              "height": 3235
             },
             ".wrap": {
               "selector": ".wrap",
@@ -630,7 +630,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3257
+              "height": 3187
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -642,7 +642,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3173
+              "height": 3103
             },
             ".panel": {
               "selector": ".panel",
@@ -671,7 +671,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -782,7 +782,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 775
+              "height": 737
             },
             ".panel": {
               "selector": ".panel",
@@ -811,7 +811,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -898,7 +898,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1336
+              "height": 1302
             },
             ".wrap": {
               "selector": ".wrap",
@@ -910,7 +910,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1288
+              "height": 1254
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -922,7 +922,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1204
+              "height": 1170
             },
             ".panel": {
               "selector": ".panel",
@@ -951,7 +951,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -1038,7 +1038,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1273
+              "height": 1239
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1050,7 +1050,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1225
+              "height": 1191
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1062,7 +1062,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1141
+              "height": 1107
             },
             ".panel": {
               "selector": ".panel",
@@ -1091,7 +1091,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -1178,7 +1178,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1148
+              "height": 3011
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1190,7 +1190,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1100
+              "height": 2963
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1202,7 +1202,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1001
+              "height": 2879
             },
             ".panel": {
               "selector": ".panel",
@@ -1231,7 +1231,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -1318,7 +1318,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1626
+              "height": 33280
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1330,7 +1330,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1578
+              "height": 33232
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1342,7 +1342,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1494
+              "height": 33148
             },
             ".panel": {
               "selector": ".panel",
@@ -1371,7 +1371,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -1482,7 +1482,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 726
+              "height": 714
             },
             ".panel": {
               "selector": ".panel",
@@ -1511,7 +1511,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -1598,7 +1598,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2657
+              "height": 1454
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1610,7 +1610,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2609
+              "height": 1406
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1622,7 +1622,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2525
+              "height": 1322
             },
             ".panel": {
               "selector": ".panel",
@@ -1651,7 +1651,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -1670,7 +1670,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1363,
-              "height": 1081
+              "height": 492
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -1681,8 +1681,8 @@
               "color": "rgb(0, 0, 0)",
               "border": "rgb(0, 0, 0)",
               "display": "block",
-              "width": 0,
-              "height": 0
+              "width": 664,
+              "height": 19
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -1824,7 +1824,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3848
+              "height": 3784
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1836,7 +1836,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3800
+              "height": 3736
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1848,7 +1848,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3716
+              "height": 3652
             },
             ".panel": {
               "selector": ".panel",
@@ -1877,7 +1877,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -1984,7 +1984,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2268
+              "height": 2222
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1996,7 +1996,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2220
+              "height": 2174
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2008,7 +2008,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2136
+              "height": 2090
             },
             ".panel": {
               "selector": ".panel",
@@ -2037,7 +2037,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -2148,7 +2148,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 885
+              "height": 847
             },
             ".panel": {
               "selector": ".panel",
@@ -2177,7 +2177,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -2264,7 +2264,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 8296
+              "height": 8483
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2276,7 +2276,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 8248
+              "height": 8435
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2288,7 +2288,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 8164
+              "height": 8351
             },
             ".panel": {
               "selector": ".panel",
@@ -2317,7 +2317,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -2404,7 +2404,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1827
+              "height": 1783
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2416,7 +2416,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1779
+              "height": 1735
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2428,7 +2428,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1695
+              "height": 1651
             },
             ".panel": {
               "selector": ".panel",
@@ -2457,7 +2457,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -2568,7 +2568,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 851
+              "height": 807
             },
             ".panel": {
               "selector": ".panel",
@@ -2597,7 +2597,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -2684,7 +2684,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "flex",
               "width": 1440,
-              "height": 18096
+              "height": 19718
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2696,7 +2696,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 18048
+              "height": 19670
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2708,7 +2708,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1250,
-              "height": 17828
+              "height": 19450
             },
             ".panel": {
               "selector": ".panel",
@@ -2734,6 +2734,52 @@
             "#reloadBtn": null
           },
           "axe": [
+            {
+              "id": "aria-allowed-attr",
+              "impact": "critical",
+              "help": "Elements must only use supported ARIA attributes",
+              "nodes": [
+                {
+                  "target": "button[data-level=\"Eggs & Chicks\"]",
+                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
+                },
+                {
+                  "target": "button[data-level=\"Pre-A1 Starters\"]",
+                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
+                },
+                {
+                  "target": "button[data-level=\"A1 Movers\"]",
+                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
+                },
+                {
+                  "target": "button[data-level=\"A2 Flyers\"]",
+                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
+                }
+              ]
+            },
+            {
+              "id": "aria-allowed-role",
+              "impact": "minor",
+              "help": "ARIA role should be appropriate for the element",
+              "nodes": [
+                {
+                  "target": "button[data-level=\"Eggs & Chicks\"]",
+                  "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
+                },
+                {
+                  "target": "button[data-level=\"Pre-A1 Starters\"]",
+                  "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
+                },
+                {
+                  "target": "button[data-level=\"A1 Movers\"]",
+                  "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
+                },
+                {
+                  "target": "button[data-level=\"A2 Flyers\"]",
+                  "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
+                }
+              ]
+            },
             {
               "id": "color-contrast",
               "impact": "serious",
@@ -2804,7 +2850,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1797
+              "height": 1759
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2816,7 +2862,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1749
+              "height": 1711
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2828,7 +2874,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1665
+              "height": 1627
             },
             ".panel": {
               "selector": ".panel",
@@ -2857,7 +2903,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -2967,7 +3013,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3059
+              "height": 3041
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2979,7 +3025,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3011
+              "height": 2993
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2991,7 +3037,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2927
+              "height": 2909
             },
             ".panel": {
               "selector": ".panel",
@@ -3020,7 +3066,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -3119,7 +3165,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1192
+              "height": 1231
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3131,7 +3177,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1144
+              "height": 1183
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3143,7 +3189,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1060
+              "height": 1099
             },
             ".panel": {
               "selector": ".panel",
@@ -3172,7 +3218,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -3259,7 +3305,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2358
+              "height": 2338
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3271,7 +3317,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2310
+              "height": 2290
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3283,7 +3329,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2226
+              "height": 2206
             },
             ".panel": {
               "selector": ".panel",
@@ -3312,7 +3358,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -3399,7 +3445,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2288
+              "height": 2475
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3411,7 +3457,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2240
+              "height": 2427
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3423,7 +3469,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2156
+              "height": 2343
             },
             ".panel": {
               "selector": ".panel",
@@ -3452,7 +3498,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -3523,6 +3569,52 @@
                 {
                   "target": ".settings-mirror-panel > h4",
                   "failureSummary": "Fix any of the following:\n  Heading order invalid"
+                }
+              ]
+            },
+            {
+              "id": "label",
+              "impact": "critical",
+              "help": "Form elements must have labels",
+              "nodes": [
+                {
+                  "target": "input[value=\"Tải ảnh học sinh lên\"][data-layout-key=\"labelVi\"][type=\"text\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(5) > input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[value=\"10\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(7) > input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                }
+              ]
+            },
+            {
+              "id": "select-name",
+              "impact": "critical",
+              "help": "Select element must have an accessible name",
+              "nodes": [
+                {
+                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
             }
@@ -3637,7 +3729,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2268
+              "height": 2222
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3649,7 +3741,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2220
+              "height": 2174
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3661,7 +3753,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2136
+              "height": 2090
             },
             ".panel": {
               "selector": ".panel",
@@ -3690,7 +3782,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
@@ -3796,25 +3888,14 @@
               "width": 932,
               "height": 75
             },
-            ".news-review-note-line.pending": {
-              "selector": ".news-review-note-line.pending",
-              "id": "",
-              "className": "news-review-note-line pending",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(124, 18, 29)",
-              "border": "rgb(124, 18, 29)",
-              "display": "block",
-              "width": 912,
-              "height": 57
-            },
+            ".news-review-note-line.pending": null,
             ".news-review-note-line.fixed": null
           },
           "modalAxe": [],
           "viewerBlock": {
             "bg": "rgb(250, 252, 255)",
             "color": "rgb(0, 0, 0)",
-            "text": "Report IDcmrq28op90000e8g0rt6z3zag"
+            "text": "Report IDcmrz7yk6c0024nxg0uglgji53"
           }
         },
         {
@@ -3823,9 +3904,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "rgba(0, 0, 0, 0)",
-            "bgImage": "none",
-            "color": "rgb(0, 0, 0)"
+            "bg": "",
+            "bgImage": "",
+            "color": ""
           }
         }
       ]
@@ -3850,7 +3931,7 @@
           "border": "rgb(0, 0, 0)",
           "display": "block",
           "width": 1440,
-          "height": 16522
+          "height": 17787
         },
         "#loginPanel": {
           "selector": "#loginPanel",
@@ -4067,7 +4148,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1635
+              "height": 1585
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4181,7 +4262,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 4053
+              "height": 4023
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4425,7 +4506,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1478
+              "height": 1458
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4555,7 +4636,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1478
+              "height": 1458
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4685,7 +4766,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 2719
+              "height": 2699
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4815,7 +4896,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1542
+              "height": 1522
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4945,7 +5026,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1683
+              "height": 1663
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5059,7 +5140,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1790
+              "height": 1770
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5495,70 +5576,70 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 68
+          "y": 58
         },
         {
           "selector": "#metricsPanel",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 68
+          "y": 58
         },
         {
           "selector": "#pastDueHomeworkCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 394
+          "y": 384
         },
         {
           "selector": "#newsQueueCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 394
+          "y": 374
         },
         {
           "selector": "#currentHomeworkCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 703
+          "y": 683
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 703
+          "y": 673
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1019
+          "y": 979
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 1019
+          "y": 979
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1158
+          "y": 1108
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1277
+          "y": 1227
         }
       ],
       "frameProfile": {
@@ -5567,7 +5648,7 @@
           "x": 0,
           "y": 24,
           "w": 1440,
-          "h": 1587,
+          "h": 1537,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -5579,7 +5660,7 @@
           "x": 31,
           "y": 177,
           "w": 1378,
-          "h": 1297,
+          "h": 1247,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",
@@ -5675,11 +5756,11 @@
                   "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 },
                 {
-                  "target": ".form-row:nth-child(2)",
+                  "target": "label[for=\"loginPass\"]",
                   "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 },
                 {
-                  "target": ".login-links",
+                  "target": "#loginPass",
                   "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
@@ -5926,7 +6007,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3215
+              "height": 2704
             },
             ".wrap": {
               "selector": ".wrap",
@@ -5938,7 +6019,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3167
+              "height": 2656
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -5950,7 +6031,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3083
+              "height": 2572
             },
             ".panel": {
               "selector": ".panel",
@@ -5979,7 +6060,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -6066,7 +6147,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3550
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6078,7 +6159,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3502
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6090,7 +6171,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3418
+              "height": 475
             },
             ".panel": {
               "selector": ".panel",
@@ -6119,7 +6200,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -6206,7 +6287,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3305
+              "height": 3235
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6218,7 +6299,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3257
+              "height": 3187
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6230,7 +6311,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3173
+              "height": 3103
             },
             ".panel": {
               "selector": ".panel",
@@ -6259,7 +6340,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -6370,7 +6451,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 775
+              "height": 737
             },
             ".panel": {
               "selector": ".panel",
@@ -6399,7 +6480,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -6486,7 +6567,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1336
+              "height": 1302
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6498,7 +6579,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1288
+              "height": 1254
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6510,7 +6591,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1204
+              "height": 1170
             },
             ".panel": {
               "selector": ".panel",
@@ -6539,7 +6620,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -6626,7 +6707,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1273
+              "height": 1239
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6638,7 +6719,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1225
+              "height": 1191
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6650,7 +6731,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1141
+              "height": 1107
             },
             ".panel": {
               "selector": ".panel",
@@ -6679,7 +6760,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -6766,7 +6847,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1148
+              "height": 3011
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6778,7 +6859,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1100
+              "height": 2963
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6790,7 +6871,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1001
+              "height": 2879
             },
             ".panel": {
               "selector": ".panel",
@@ -6819,7 +6900,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -6889,19 +6970,19 @@
               "nodes": [
                 {
                   "target": "tr:nth-child(1) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[rel=\"noopener noreferrer\"][target=\"_blank\"]",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
                 },
                 {
-                  "target": "tr:nth-child(2) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[rel=\"noopener noreferrer\"][target=\"_blank\"]",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+                  "target": "tr:nth-child(2) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[href$=\"sis-smoke\"][rel=\"noopener noreferrer\"]",
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
                 },
                 {
-                  "target": "tr:nth-child(3) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[rel=\"noopener noreferrer\"][target=\"_blank\"]",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+                  "target": "tr:nth-child(3) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[href$=\"sis-smoke\"][rel=\"noopener noreferrer\"]",
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
                 },
                 {
-                  "target": "tr:nth-child(4) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item:nth-child(1) > .assignment-item-link[rel=\"noopener noreferrer\"][target=\"_blank\"]",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+                  "target": "tr:nth-child(4) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[href$=\"sis-smoke\"][rel=\"noopener noreferrer\"]",
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
                 }
               ]
             }
@@ -6930,7 +7011,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1626
+              "height": 33280
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6942,7 +7023,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1578
+              "height": 33232
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6954,7 +7035,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1494
+              "height": 33148
             },
             ".panel": {
               "selector": ".panel",
@@ -6983,7 +7064,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -7094,7 +7175,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 726
+              "height": 714
             },
             ".panel": {
               "selector": ".panel",
@@ -7123,7 +7204,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -7210,7 +7291,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2657
+              "height": 1454
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7222,7 +7303,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2609
+              "height": 1406
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7234,7 +7315,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2525
+              "height": 1322
             },
             ".panel": {
               "selector": ".panel",
@@ -7263,7 +7344,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -7282,7 +7363,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
               "width": 1363,
-              "height": 1081
+              "height": 492
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -7293,8 +7374,8 @@
               "color": "rgb(229, 245, 255)",
               "border": "rgba(255, 255, 255, 0.36)",
               "display": "block",
-              "width": 0,
-              "height": 0
+              "width": 664,
+              "height": 19
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -7436,7 +7517,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3848
+              "height": 3784
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7448,7 +7529,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3800
+              "height": 3736
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7460,7 +7541,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3716
+              "height": 3652
             },
             ".panel": {
               "selector": ".panel",
@@ -7489,7 +7570,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -7596,7 +7677,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2268
+              "height": 2222
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7608,7 +7689,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2220
+              "height": 2174
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7620,7 +7701,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2136
+              "height": 2090
             },
             ".panel": {
               "selector": ".panel",
@@ -7649,7 +7730,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -7760,7 +7841,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 885
+              "height": 847
             },
             ".panel": {
               "selector": ".panel",
@@ -7789,7 +7870,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -7876,7 +7957,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 8296
+              "height": 8483
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7888,7 +7969,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 8248
+              "height": 8435
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7900,7 +7981,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 8164
+              "height": 8351
             },
             ".panel": {
               "selector": ".panel",
@@ -7929,7 +8010,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -8016,7 +8097,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1827
+              "height": 1783
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8028,7 +8109,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1779
+              "height": 1735
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8040,7 +8121,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1695
+              "height": 1651
             },
             ".panel": {
               "selector": ".panel",
@@ -8069,7 +8150,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -8180,7 +8261,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 851
+              "height": 807
             },
             ".panel": {
               "selector": ".panel",
@@ -8209,7 +8290,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -8296,7 +8377,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "flex",
               "width": 1440,
-              "height": 18096
+              "height": 19718
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8308,7 +8389,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 18048
+              "height": 19670
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8320,7 +8401,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1250,
-              "height": 17828
+              "height": 19450
             },
             ".panel": {
               "selector": ".panel",
@@ -8346,6 +8427,52 @@
             "#reloadBtn": null
           },
           "axe": [
+            {
+              "id": "aria-allowed-attr",
+              "impact": "critical",
+              "help": "Elements must only use supported ARIA attributes",
+              "nodes": [
+                {
+                  "target": "button[data-level=\"Eggs & Chicks\"]",
+                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
+                },
+                {
+                  "target": "button[data-level=\"Pre-A1 Starters\"]",
+                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
+                },
+                {
+                  "target": "button[data-level=\"A1 Movers\"]",
+                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
+                },
+                {
+                  "target": "button[data-level=\"A2 Flyers\"]",
+                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
+                }
+              ]
+            },
+            {
+              "id": "aria-allowed-role",
+              "impact": "minor",
+              "help": "ARIA role should be appropriate for the element",
+              "nodes": [
+                {
+                  "target": "button[data-level=\"Eggs & Chicks\"]",
+                  "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
+                },
+                {
+                  "target": "button[data-level=\"Pre-A1 Starters\"]",
+                  "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
+                },
+                {
+                  "target": "button[data-level=\"A1 Movers\"]",
+                  "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
+                },
+                {
+                  "target": "button[data-level=\"A2 Flyers\"]",
+                  "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
+                }
+              ]
+            },
             {
               "id": "color-contrast",
               "impact": "serious",
@@ -8416,7 +8543,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1797
+              "height": 1759
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8428,7 +8555,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1749
+              "height": 1711
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8440,7 +8567,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1665
+              "height": 1627
             },
             ".panel": {
               "selector": ".panel",
@@ -8469,7 +8596,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -8579,7 +8706,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3059
+              "height": 3041
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8591,7 +8718,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3011
+              "height": 2993
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8603,7 +8730,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2927
+              "height": 2909
             },
             ".panel": {
               "selector": ".panel",
@@ -8632,7 +8759,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -8731,7 +8858,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1192
+              "height": 1231
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8743,7 +8870,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1144
+              "height": 1183
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8755,7 +8882,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1060
+              "height": 1099
             },
             ".panel": {
               "selector": ".panel",
@@ -8784,7 +8911,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -8871,7 +8998,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2358
+              "height": 2338
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8883,7 +9010,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2310
+              "height": 2290
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8895,7 +9022,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2226
+              "height": 2206
             },
             ".panel": {
               "selector": ".panel",
@@ -8924,7 +9051,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -9011,7 +9138,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2288
+              "height": 2475
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9023,7 +9150,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2240
+              "height": 2427
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9035,7 +9162,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2156
+              "height": 2343
             },
             ".panel": {
               "selector": ".panel",
@@ -9064,7 +9191,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -9135,6 +9262,52 @@
                 {
                   "target": ".settings-mirror-panel > h4",
                   "failureSummary": "Fix any of the following:\n  Heading order invalid"
+                }
+              ]
+            },
+            {
+              "id": "label",
+              "impact": "critical",
+              "help": "Form elements must have labels",
+              "nodes": [
+                {
+                  "target": "input[value=\"Tải ảnh học sinh lên\"][data-layout-key=\"labelVi\"][type=\"text\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[value=\"10\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                }
+              ]
+            },
+            {
+              "id": "select-name",
+              "impact": "critical",
+              "help": "Select element must have an accessible name",
+              "nodes": [
+                {
+                  "target": "select[data-layout-key=\"inputType\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "select[data-layout-key=\"tabId\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "select[data-layout-key=\"inputType\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "select[data-layout-key=\"tabId\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
             }
@@ -9249,7 +9422,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2268
+              "height": 2222
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9261,7 +9434,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2220
+              "height": 2174
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9273,7 +9446,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2136
+              "height": 2090
             },
             ".panel": {
               "selector": ".panel",
@@ -9302,7 +9475,7 @@
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
               "id": "",
-              "className": "queue-modal-card",
+              "className": "queue-modal-card school-setup-warning-modal-card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
@@ -9408,25 +9581,14 @@
               "width": 932,
               "height": 75
             },
-            ".news-review-note-line.pending": {
-              "selector": ".news-review-note-line.pending",
-              "id": "",
-              "className": "news-review-note-line pending",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgb(251, 255, 255)",
-              "display": "block",
-              "width": 912,
-              "height": 57
-            },
+            ".news-review-note-line.pending": null,
             ".news-review-note-line.fixed": null
           },
           "modalAxe": [],
           "viewerBlock": {
             "bg": "rgb(76, 76, 76)",
             "color": "rgb(251, 255, 255)",
-            "text": "Report IDcmrq28op90000e8g0rt6z3zag"
+            "text": "Report IDcmrz7yk6c0024nxg0uglgji53"
           }
         },
         {
@@ -9435,9 +9597,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "rgb(82, 82, 82)",
-            "bgImage": "none",
-            "color": "rgb(229, 245, 255)"
+            "bg": "",
+            "bgImage": "",
+            "color": ""
           }
         }
       ]
@@ -9462,7 +9624,7 @@
           "border": "rgb(251, 255, 255)",
           "display": "block",
           "width": 1440,
-          "height": 16522
+          "height": 17787
         },
         "#loginPanel": {
           "selector": "#loginPanel",
@@ -9679,7 +9841,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1635
+              "height": 1585
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -9793,7 +9955,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 4054
+              "height": 4024
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10037,7 +10199,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1480
+              "height": 1460
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10167,7 +10329,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1480
+              "height": 1460
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10297,7 +10459,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 2721
+              "height": 2701
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10427,7 +10589,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1544
+              "height": 1524
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10557,7 +10719,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1683
+              "height": 1663
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10671,7 +10833,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1792
+              "height": 1772
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11107,70 +11269,70 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 68
+          "y": 58
         },
         {
           "selector": "#metricsPanel",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 68
+          "y": 58
         },
         {
           "selector": "#pastDueHomeworkCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 394
+          "y": 384
         },
         {
           "selector": "#newsQueueCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 394
+          "y": 374
         },
         {
           "selector": "#currentHomeworkCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 703
+          "y": 683
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 703
+          "y": 673
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1019
+          "y": 979
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 1019
+          "y": 979
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1158
+          "y": 1108
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1277
+          "y": 1227
         }
       ],
       "frameProfile": {
@@ -11179,7 +11341,7 @@
           "x": 0,
           "y": 24,
           "w": 1440,
-          "h": 1587,
+          "h": 1537,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -11191,7 +11353,7 @@
           "x": 31,
           "y": 177,
           "w": 1378,
-          "h": 1297,
+          "h": 1247,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",

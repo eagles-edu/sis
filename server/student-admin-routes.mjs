@@ -228,6 +228,7 @@ const ADMIN_UI_SETTINGS_PATH = `${ADMIN_API_PREFIX}/settings/ui`
 const ADMIN_PREFERENCES_PATH = `${ADMIN_API_PREFIX}/preferences`
 const ADMIN_ASSETS_PATH = `${ADMIN_API_PREFIX}/assets`
 const ADMIN_ASSET_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_ASSETS_PATH)}/([^/]+)$`)
+const ADMIN_ASSET_RAW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_ASSETS_PATH)}/raw/([^/]+)$`)
 const ADMIN_DASHBOARD_PATH = `${ADMIN_API_PREFIX}/dashboard`
 const ADMIN_QUEUE_HUB_PATH = `${ADMIN_API_PREFIX}/queue-hub`
 const ADMIN_NEWS_REPORTS_PATH = `${ADMIN_API_PREFIX}/news-reports`
@@ -2508,6 +2509,7 @@ async function requireAuthenticatedStudentSession(request, response) {
 }
 
 function canTeacherWriteDataEntryPath(pathname, method) {
+  if (pathname === ADMIN_PREFERENCES_PATH && (method === "POST" || method === "PUT")) return true
   if (method !== "POST") return false
   if (pathname === ADMIN_NOTIFY_EMAIL_PATH) return true
   if (ADMIN_ATTENDANCE_PATH_RE.test(pathname)) return true
@@ -3410,6 +3412,33 @@ async function handleLogin(request, response) {
 
 async function handleMe(request, response) {
   const session = await requireAuthenticatedSession(request, response)
+  const rolePolicy = getRolePolicy(session.role)
+  sendJson(response, 200, {
+    authenticated: true,
+    user: {
+      username: session.username,
+      role: session.role,
+    },
+    rolePolicy,
+    expiresAt: session.expiresAt,
+    sessionTtlSeconds: SESSION_TTL_SECONDS,
+    sessionDriver: SESSION_STORE.driver,
+  })
+}
+
+async function handleAuthBootstrap(request, response) {
+  const sessionId = readSessionIdFromRequest(request)
+  if (!sessionId) {
+    sendJson(response, 200, { authenticated: false, ok: true, reason: "no-session" })
+    return
+  }
+  const session = await SESSION_STORE.touchSession(sessionId)
+  if (!session) {
+    clearSessionCookie(response)
+    sendJson(response, 200, { authenticated: false, ok: true, reason: "expired-session" })
+    return
+  }
+  response.setHeader("Set-Cookie", makeSessionCookieValue(sessionId, SESSION_TTL_SECONDS))
   const rolePolicy = getRolePolicy(session.role)
   sendJson(response, 200, {
     authenticated: true,
@@ -6206,7 +6235,8 @@ async function handleApiRequest(request, response, pathname, url) {
   }
 
   if (method === "GET" && pathname === mePath) {
-    await handleMe(request, response)
+    if (url.searchParams.get("bootstrap") === "1") await handleAuthBootstrap(request, response)
+    else await handleMe(request, response)
     return true
   }
 
@@ -6230,6 +6260,29 @@ async function handleApiRequest(request, response, pathname, url) {
   }
 
   const assetMatch = pathname.match(ADMIN_ASSET_PATH_RE)
+  const rawAssetMatch = pathname.match(ADMIN_ASSET_RAW_PATH_RE)
+  if (rawAssetMatch) {
+    if (method !== "GET") {
+      const error = new Error("Raw asset endpoint is read-only")
+      error.statusCode = 405
+      throw error
+    }
+    const assetKey = decodeURIComponent(rawAssetMatch[1])
+    const asset = await readPortalAsset(assetKey)
+    if (!asset) {
+      const error = new Error("Asset not found")
+      error.statusCode = 404
+      throw error
+    }
+    response.writeHead(200, {
+      "Cache-Control": "private, max-age=300",
+      "Content-Length": String(asset.content.length),
+      "Content-Type": asset.mimeType,
+      "X-Content-Type-Options": "nosniff",
+    })
+    response.end(asset.content)
+    return true
+  }
   if (assetMatch) {
     const assetKey = decodeURIComponent(assetMatch[1])
     if (method === "GET") {

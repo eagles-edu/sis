@@ -164,6 +164,67 @@
       line-height: 1.05;
     }
 
+    .enrollment-level-panel {
+      background: var(--portal-surface-card);
+      border: 1px solid var(--portal-border);
+      border-radius: var(--radius-3);
+      padding: clamp(12px, 2vw, 18px);
+    }
+
+    .enrollment-level-panel__head {
+      align-items: start;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .enrollment-level-panel__head .section-title,
+    .enrollment-level-panel__head .small {
+      margin-block: 0;
+    }
+
+    .enrollment-level-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    }
+
+    .enrollment-level-tile {
+      align-items: start;
+      background-position: center;
+      background-size: cover;
+      border: 2px solid transparent;
+      border-radius: var(--radius-2);
+      color: #f8fbff;
+      display: grid;
+      gap: 6px;
+      justify-items: start;
+      min-height: 84px;
+      padding: 12px;
+      text-align: left;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    .enrollment-level-tile:hover,
+    .enrollment-level-tile:focus-visible,
+    .enrollment-level-tile.is-active {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-focus-ring) 70%, transparent);
+      transform: translateY(-1px);
+    }
+
+    .enrollment-level-tile strong {
+      font-size: .98rem;
+      line-height: 1.15;
+    }
+
+    .enrollment-level-tile span {
+      font-size: .76rem;
+      font-weight: 700;
+      opacity: .9;
+    }
+
     .status-cell-stack {
       display: grid;
       gap: 8px;

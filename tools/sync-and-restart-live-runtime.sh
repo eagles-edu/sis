@@ -119,6 +119,7 @@ LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
   "web-asset/shared/portal-preferences.js|web-asset/shared/portal-preferences.js"
+  "web-asset/shared/portal-password-visibility.js|web-asset/shared/portal-password-visibility.js"
   "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
   "web-asset/shared/portal-environment.js|web-asset/shared/portal-environment.js"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
@@ -196,6 +197,7 @@ LIVE_LOCAL_UI_RUNTIME_PARITY_MAP=(
   "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
+  "web-asset/shared/portal-password-visibility.js|web-asset/shared/portal-password-visibility.js"
 )
 
 LIVE_PUBLIC_WEBFILE_MAP=(
@@ -249,6 +251,7 @@ LIVE_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
   "web-asset/shared/portal-preferences.js|web-asset/shared/portal-preferences.js"
+  "web-asset/shared/portal-password-visibility.js|web-asset/shared/portal-password-visibility.js"
   "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
   "web-asset/shared/portal-environment.js|web-asset/shared/portal-environment.js"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"

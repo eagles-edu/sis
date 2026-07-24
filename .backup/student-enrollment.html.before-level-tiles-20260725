@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Eagles Club Student Enrollment</title>
+  <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+  <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+  <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
+
+    if (!customElements.get("svg-icon")) {
+      svgIcon({
+        defaultSize: 28,
+        path: "/web-asset/icons/web-component/svgs/",
+      });
+    }
+  </script>
+  <script>
+    window.SIS_PORTAL_THEME?.initTheme("light")
+  </script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260525i" as="style">
+  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260525i">
+  <!-- Route-owned CSS stays blocking and follows shared/admin tokens so standalone overrides retain their established cascade. -->
+  <link rel="stylesheet" href="/web-asset/admin/student-enrollment.min.css">
+  
+</head>
+  <body class="admin-portal-page page student-enrollment-page" id="top">
+  <div class="wrap">
+  <span class="hidden">The Eagles Club Student Enrollment</span>
+  <div class="enrollment-shell content portal-center-column">
+      <div class="header-bar portal-login-header">
+        <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+        <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+      </div>
+      <section id="sessionRequiredPanel" class="panel portal-theme-card hidden" aria-label="Admin session required" data-surface-role="panel">
+        <h2 class="section-title">Admin session required</h2>
+        <p class="app-page-subtitle">
+          Enrollment uses the current admin session. Sign in through the main admin page, then return here.
+        </p>
+        <div class="session-required-actions">
+          <a href="/admin">Open Admin Login</a>
+          <a href="/admin/profile">Back to Profile</a>
+        </div>
+      </section>
+
+      <div id="app" class="hidden">
+        <button id="floatingMenuBtn" type="button" class="floating-menu-btn portal-button portal-button-immutable-chrome" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
+          <span class="floating-menu-icon" aria-hidden="true"></span>
+        </button>
+        <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
+        <div class="app-shell">
+          <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation">
+            <h2 class="section-title">Navigation</h2>
+            <div class="sidebar-logo-wrap" id="sidebarLogoWrap">
+              <img id="sidebarLogoImg" src="data:," alt="School logo" class="hidden">
+              <span id="sidebarLogoFallback" class="sidebar-logo-fallback">SIS</span>
+            </div>
+            <p class="small">Shared admin navigation keeps standalone pages aligned with the rest of the portal.</p>
+            <nav class="menu-groups" id="navMenu">
+              <a href="/admin" class="menu-link menu-link-top" data-page-link="overview">DASHBOARD</a>
+              <a href="/admin/queue-hub" class="menu-link menu-link-top" data-page-link="queue-hub">QUEUE HUB</a>
+              <a href="/admin/profile" class="menu-link menu-link-top" data-page-link="profile">STUDENTS</a>
+              <div class="menu-group expanded" data-menu-group="tracking">
+                <button type="button" class="menu-group-btn" aria-expanded="true">TRACKING</button>
+                <div class="menu-group-links">
+                  <a href="/admin/attendance" class="menu-link" data-page-link="attendance">Attendance</a>
+                  <div id="attendanceAdminSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+                    <a href="/admin/attendance-admin" class="menu-link menu-sublink" data-page-link="attendance-admin" data-admin-submenu="tracking-data">
+                      Attendance data
+                    </a>
+                  </div>
+                  <a href="/admin/assignments" class="menu-link" data-page-link="assignments">Assignments</a>
+                  <div id="assignmentDataSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+                    <a href="/admin/assignments-data" class="menu-link menu-sublink" data-page-link="assignments-data" data-admin-submenu="tracking-data">
+                      Assignments data
+                    </a>
+                    <a href="/admin/assignment-engagement" class="menu-link menu-sublink" data-page-link="assignment-engagement" data-admin-submenu="tracking-data">
+                      Assignment engagement
+                    </a>
+                  </div>
+                  <a href="/admin/grades" class="menu-link" data-page-link="grades">Grades</a>
+                  <div id="gradesDataSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+                    <a href="/admin/grades-data" class="menu-link menu-sublink" data-page-link="grades-data" data-admin-submenu="tracking-data">
+                      Grades data
+                    </a>
+                    <a href="/admin/grades-tabulator" class="menu-link menu-sublink" data-page-link="grades-tabulator" data-admin-submenu="tracking-data">
+                      Grade table
+                    </a>
+                  </div>
+                  <a href="/admin/parent-tracking" class="menu-link" data-page-link="parent-tracking">Performance</a>
+                  <div id="performanceDataSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+                    <a href="/admin/performance-data" class="menu-link menu-sublink" data-page-link="performance-data" data-admin-submenu="tracking-data">
+                      Performance data
+                    </a>
+                    <a href="/admin/performance-engagement" class="menu-link menu-sublink" data-page-link="performance-engagement" data-admin-submenu="tracking-data">
+                      RC engagement
+                    </a>
+                  </div>
+                  <a href="/admin/news-reports" class="menu-link" data-page-link="news-reports">News Reports</a>
+                  <a href="/admin/reports" class="menu-link" data-page-link="reports">All Reports</a>
+                </div>
+              </div>
+              <div class="menu-group expanded" data-menu-group="support">
+                <button type="button" class="menu-group-btn" aria-expanded="true">SUPPORT</button>
+                <div class="menu-group-links">
+                  <a href="/admin/family" class="menu-link" data-page-link="family">Family Lookup</a>
+                </div>
+              </div>
+              <div class="menu-group expanded" data-menu-group="admin">
+                <button type="button" class="menu-group-btn" aria-expanded="true">ADMINISTRATION</button>
+                <div class="menu-group-links">
+                  <a href="/admin/enrollment" class="menu-link active" data-page-link="enrollment" aria-current="page">Enrollment</a>
+                  <a href="/admin/student-admin" class="menu-link" data-page-link="student-admin">Student Admin</a>
+                  <a href="/admin/school-setup" class="menu-link" data-page-link="school-setup">School Setup</a>
+                  <a href="/admin/users" class="menu-link" data-page-link="users">Users</a>
+                  <a href="/admin/permissions" class="menu-link" data-page-link="permissions">Permissions</a>
+                  <a href="/admin/settings" class="menu-link" data-page-link="settings">Settings</a>
+                </div>
+              </div>
+            </nav>
+            <div class="sidebar-actions">
+              <button id="logoutBtn" type="button" class="portal-button portal-button-danger hidden" title="Sign out of the enrollment admin" aria-label="Sign out of the enrollment admin">Logout</button>
+            </div>
+          </aside>
+
+          <main id="appMain" class="section-stack" aria-label="Enrollment workspace">
+            <section class="content topbar" data-surface-role="content">
+              <div class="topbar-head">
+                <div class="brand-head">
+                  <a class="brand-logo-wrap brand-logo-wrap--sm" href="/admin" aria-label="Go to student home">
+                    <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+                  </a>
+                  <h1>THE EAGLES CLUB</h1>
+                </div>
+                <div class="header-actions">
+                  <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle" type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
+                    <span class="portal-theme-toggle__icon" aria-hidden="true">
+                      <svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon>
+                    </span>
+                  </button>
+                  <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
+                    <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" title="Giảm cỡ chữ">A-</button>
+                    <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" title="Tăng cỡ chữ">A+</button>
+                    <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" title="Đặt lại cỡ chữ">Reset</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="content" aria-label="Enrollment summary" data-surface-role="content">
+              <div class="enrollment-summary-grid" id="summaryGrid">
+                <article class="portal-theme-card enrollment-summary-card panel" data-surface-role="panel">
+                  <p class="enrollment-summary-label">Visible rows</p>
+                  <p class="enrollment-summary-value" id="summaryVisibleRows">0</p>
+                <!-- <p class="enrollment-summary-note">Current result set after page filters.</p> -->
+                </article>
+                <article class="portal-theme-card enrollment-summary-card panel" data-surface-role="panel">
+                  <p class="enrollment-summary-label">Active students</p>
+                  <p class="enrollment-summary-value" id="summaryActiveRows">0</p>
+                  <!--
+                  <p class="enrollment-summary-note">Students currently enrolled in the visible result set.</p>-->
+                </article>
+                <article class="portal-theme-card enrollment-summary-card panel" data-surface-role="panel">
+                  <p class="enrollment-summary-label">Unenrolled students</p>
+                  <p class="enrollment-summary-value" id="summaryUnenrolledRows">0</p>
+                  <!--
+                  <p class="enrollment-summary-note">Students archived from active lists but still searchable here.</p>  -->
+                </article>
+              </div>
+            </section>
+
+            <section class="content" aria-label="Enrollment filters" data-surface-role="content">
+              <p id="globalStatus" class="status" aria-live="polite"></p>
+              <div class="row">
+                <div class="field c4">
+                  <label for="searchQ">Search student</label>
+                  <input id="searchQ" type="search" placeholder="name, eagles id, parent">
+                </div>
+                <div class="field c3">
+                  <label for="filterLevel">Level</label>
+                  <select id="filterLevel">
+                    <option value="">All levels</option>
+                  </select>
+                </div>
+                <div class="field c3">
+                  <label>Roster scope</label>
+                  <div class="field-inline">
+                    <input id="includeUnenrolled" type="checkbox">
+                    <span>Include unenrolled</span>
+                  </div>
+                </div>
+                <div class="grid-actions">
+                  <button id="refreshBtn" type="button" class="portal-button portal-button-teal-refresh" title="Reload the enrollment list and current filters" aria-label="Reload the enrollment list and current filters">Refresh</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="content" aria-label="Enrollment roster" data-surface-role="content">
+              <div class="table-wrap data-surface" data-surface-role="data-surface">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Student</th>
+                      <th scope="col">Current status</th>
+                      <th scope="col">Enrollment action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="enrollmentRows">
+                    <tr>
+                      <td colspan="3" class="table-empty">Loading...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+      <div id="enrollmentHistoryModal" class="enrollment-history-modal hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="enrollmentHistoryModalTitle" aria-describedby="enrollmentHistoryModalSummary">
+        <div class="enrollment-history-modal__backdrop" data-history-close aria-hidden="true"></div>
+        <section class="enrollment-history-modal__panel content" aria-label="History details" data-surface-role="content">
+          <div class="enrollment-history-modal__header">
+            <div>
+              <p class="enrollment-history-modal__kicker">History</p>
+              <h2 id="enrollmentHistoryModalTitle" class="enrollment-history-modal__title">Student history note</h2>
+            </div>
+            <button type="button" class="portal-button portal-button-immutable-chrome enrollment-history-modal__close" title="Close the enrollment history window" aria-label="Close the enrollment history window"
+            data-history-close tabindex="-1">Close</button>
+          </div>
+          <p id="enrollmentHistoryModalSummary" class="enrollment-history-modal__summary"></p>
+          <div id="enrollmentHistoryModalBody" class="enrollment-history-modal__list panel" data-surface-role="panel"></div>
+        </section>
+      </div>
+      <section class="content portal-prefooter" aria-label="Runtime environment" data-surface-role="content">
+        <span id="envBadge" class="env-badge" data-environment-prefooter aria-live="polite"></span>
+      </section>
+      <footer class="hub-footer" aria-label="Site footer">
+        <p class="hub-footer__copy">
+          © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
+        </p>
+        <p class="hub-footer__action">
+          <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
+        </p>
+      </footer>
+    </div>
+  </div>
+  <script src="/web-asset/shared/portal-preferences.js"></script>
+  <script src="/web-asset/admin/student-enrollment.min.js"></script>
+  <script src="/web-asset/shared/portal-environment.js"></script>
+</body>
+</html>

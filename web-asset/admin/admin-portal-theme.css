@@ -508,6 +508,51 @@
   --radius-2: calc(var(--radius-base) * 2);
   --radius-3: calc(var(--radius-base) * 3);
 }
+
+.sis-action-feedback {
+  align-items: center;
+  background: var(--portal-surface-card, #ffffff);
+  border: 1px solid var(--portal-border-strong, #5f7391);
+  border-radius: var(--radius-2, 8px);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 18%);
+  color: var(--portal-text, #172033);
+  display: flex;
+  inset: auto 16px 16px auto;
+  max-inline-size: min(420px, calc(100vw - 32px));
+  padding: 10px 14px;
+  position: fixed;
+  z-index: 1000;
+}
+
+.sis-action-feedback[data-state="pending"] {
+  border-color: var(--portal-status-info-border, #8fa7c8);
+}
+
+.sis-action-feedback[data-state="ok"] {
+  background: var(--portal-status-good-bg, #e8f8ef);
+  border-color: var(--portal-status-good-border, #90d3ad);
+  color: var(--portal-status-good-text, #1f7a4f);
+}
+
+.sis-action-feedback[data-state="error"] {
+  background: var(--portal-status-bad-bg, #fdebec);
+  border-color: var(--portal-status-bad-border, #f2b1b7);
+  color: var(--portal-status-bad-text, #9e1d1d);
+}
+
+[data-action-feedback-state="pending"] {
+  cursor: progress;
+}
+
+[data-action-feedback-state="ok"] {
+  outline: 2px solid var(--portal-status-good-border, #90d3ad);
+  outline-offset: 2px;
+}
+
+[data-action-feedback-state="error"] {
+  outline: 2px solid var(--portal-status-bad-border, #f2b1b7);
+  outline-offset: 2px;
+}
 /* Hub dark theme root
    Edit these tokens first when tuning dark mode. */
 html[data-theme="dark"] body.portal-hub-page {
@@ -5477,6 +5522,7 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   background: var(--portal-button-amber-fill) !important;
   border: 1px solid var(--portal-button-amber-stroke) !important;
   border-radius: var(--portal-radius-button);
+  box-sizing: border-box;
   color: var(--portal-button-amber-ink) !important;
   cursor: pointer;
   display: inline-flex;

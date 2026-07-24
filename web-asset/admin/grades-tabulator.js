@@ -1921,6 +1921,7 @@
       }
 
       function setStatus(message, isError) {
+        window.SIS_ACTION_FEEDBACK?.status(normalizeText(message), isError);
         const el = document.getElementById("statusLine")
         if (!el) return
         el.textContent = normalizeText(message)

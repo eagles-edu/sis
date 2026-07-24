@@ -24,6 +24,16 @@ const DEFAULT_LEVEL_TILE_IMAGE_PATH_BY_LEVEL = new Map(
     ["B1 PET", "web-asset/images/pet.svg"],
   ].map(([level, imagePath]) => [normalizeLower(level), imagePath]),
 )
+const DEFAULT_LEVEL_TILE_ASSET_KEY_BY_LEVEL = new Map(
+  [
+    ["Eggs & Chicks", "class-level-eggs-chicks"],
+    ["Pre-A1 Starters", "class-level-pre-a1-starters"],
+    ["A1 Movers", "class-level-a1-movers"],
+    ["A2 Flyers", "class-level-a2-flyers"],
+    ["A2 KET", "class-level-a2-ket"],
+    ["B1 PET", "class-level-b1-pet"],
+  ].map(([level, assetKey]) => [normalizeLower(level), assetKey]),
+)
 const DEFAULT_LEVEL_THEME_BY_LEVEL = new Map(
   [
     ["Eggs & Chicks", { color: "#e0162b", className: "panelbg-eggs-chicks" }],
@@ -383,6 +393,7 @@ function defaultLevelTileStyle(levelName = "") {
   return {
     title: DEFAULT_LEVEL_TILE_LABEL_BY_LEVEL.get(normalized) || normalizeText(levelName),
     bgColor: normalizeText(theme ? theme.color : ""),
+    assetKey: DEFAULT_LEVEL_TILE_ASSET_KEY_BY_LEVEL.get(normalized) || "",
     imageDataUrl: DEFAULT_LEVEL_TILE_IMAGE_PATH_BY_LEVEL.get(normalized) || DEFAULT_SCHOOL_LOGO_IMAGE_PATH,
   }
 }
@@ -396,13 +407,15 @@ function normalizeLevelTileStylesByLevel(source = {}) {
     if (!levelKey) return
     const sourceEntry = toPlainObject(entry)
     const defaultEntry = defaultLevelTileStyle(levelKey)
+    const sourceImageDataUrl = normalizeText(sourceEntry.imageDataUrl || sourceEntry.imagePath || sourceEntry.imageUrl)
     normalized[levelKey] = {
       ...sourceEntry,
       title: normalizeText(sourceEntry.title) || defaultEntry.title,
       bgColor: normalizeText(sourceEntry.bgColor) || defaultEntry.bgColor,
-      imageDataUrl:
-        normalizeText(sourceEntry.imageDataUrl || sourceEntry.imagePath || sourceEntry.imageUrl) ||
-        defaultEntry.imageDataUrl,
+      assetKey:
+        normalizeText(sourceEntry.assetKey) ||
+        (sourceImageDataUrl === defaultEntry.imageDataUrl ? defaultEntry.assetKey : ""),
+      imageDataUrl: sourceImageDataUrl || defaultEntry.imageDataUrl,
     }
   })
   knownLevels.forEach((levelName) => {

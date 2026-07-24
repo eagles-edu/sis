@@ -627,25 +627,13 @@ function bindAttendanceGradeControlsFallback() {
     refreshAttendanceLanding({ reloadRows: true }).catch(handleError),
   );
   bindById("attendanceLevelApplyBtn", "click", () => {
-    try {
-      applyAttendanceLevelTileStyle();
-    } catch (error) {
-      handleError(error);
-    }
+    applyAttendanceLevelTileStyle().catch(handleError);
   });
   bindById("attendanceLevelClearImageBtn", "click", () => {
-    try {
-      clearAttendanceLevelTileImage();
-    } catch (error) {
-      handleError(error);
-    }
+    clearAttendanceLevelTileImage().catch(handleError);
   });
   bindById("attendanceLevelResetBtn", "click", () => {
-    try {
-      resetAttendanceLevelTileStyle();
-    } catch (error) {
-      handleError(error);
-    }
+    resetAttendanceLevelTileStyle().catch(handleError);
   });
   bindById("attendanceLevelImage", "change", (event) => {
     try {

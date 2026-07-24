@@ -1416,6 +1416,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
       }
 
       function setStatus(message, type = "") {
+        window.SIS_ACTION_FEEDBACK?.status(normalizeText(message), type === "err" || type === "bad")
         const statusEl = document.getElementById("portalStatus")
         const detailStatusEl = document.getElementById("portalDetailStatus")
         const childStatusEl = document.getElementById("childPageStatus")

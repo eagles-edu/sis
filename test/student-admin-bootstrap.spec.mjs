@@ -96,7 +96,7 @@ test("student admin auth bootstrap loads session and runs post-login boot", asyn
     user: { username: "admin" },
   })
   assert.deepEqual(calls, [
-    ["api", "/api/admin/auth/me"],
+    ["api", "/api/admin/auth/me?bootstrap=1"],
     ["normalizeRolePolicy", "admin", { canManageUsers: true }, { current: true }],
     "showApp",
     ["status", "Authenticated as admin.", undefined],

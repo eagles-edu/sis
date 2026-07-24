@@ -56,18 +56,13 @@
           if (response.ok) {
             const payload = await response.json()
             Object.assign(memory, safeObject(payload?.preferences))
-            applySavedTheme()
-            loaded = true
-          } else {
-            loaded = false
           }
         } catch (error) {
           void error
-          loaded = false
         }
-      } else {
-        loaded = true
       }
+      applySavedTheme()
+      loaded = true
       return memory
     })().finally(() => {
       loadPromise = null

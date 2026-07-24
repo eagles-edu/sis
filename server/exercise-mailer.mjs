@@ -233,6 +233,17 @@ const {
   closeStudentAdminRuntimeResources,
   setStudentAdminRuntimeHealthProvider,
 } = await import("./student-admin-routes.mjs")
+const { ensureDefaultPortalAssets } = await import("../src/modules/portal/portal-asset-store.mjs")
+
+try {
+  const portalAssetSeed = await ensureDefaultPortalAssets()
+  if (portalAssetSeed.seeded.length) {
+    console.log(`[portal-assets] seeded ${portalAssetSeed.seeded.length} missing built-in asset(s): ${portalAssetSeed.seeded.join(", ")}`)
+  }
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error)
+  console.error(`[portal-assets] built-in asset seed failed: ${message}`)
+}
 
 /** @type {{ createTransport: (options: object) => import("nodemailer").Transporter } | null} */
 let nodemailer = null

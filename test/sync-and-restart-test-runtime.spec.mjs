@@ -34,6 +34,7 @@ test("sync-and-restart-test-runtime skips Prisma refresh in public mode only", (
   )
   assert.match(script, /if should_refresh_prisma; then\s+refresh_test_prisma\s+else\s+log "skip Prisma refresh for mode=\$\{MODE\}"/)
   assert.match(script, /build_admin_assets\(\)/)
+  assert.match(script, /verify_favicon_mobile_contract repo/)
   assert.match(script, /npm run build:admin-assets/)
   assert.match(script, /wipe_target_contents\(\)/)
   assert.match(script, /wipe_test_target_contents\(\)/)
@@ -53,6 +54,6 @@ test("sync-and-restart-test-runtime skips Prisma refresh in public mode only", (
   assert.match(script, /log "syncing test public mirror into \$\{TEST_PUBLIC_ROOT\}"/)
   assert.match(
     script,
-    /main\(\) \{\s+log "file mirror sync; full mode includes a restorable test DB backup; git commit matching is not part of the contract"\s+build_admin_assets\s+backup_test_state\s+wipe_test_target_contents\s+verify_test_preserved_runtime_files\s+wipe_target_contents "\$TEST_PUBLIC_ROOT"\s+run_sync/s,
+    /main\(\) \{\s+log "file mirror sync; full mode includes a restorable test DB backup; git commit matching is not part of the contract"\s+build_admin_assets\s+verify_favicon_mobile_contract repo\s+backup_test_state\s+wipe_test_target_contents\s+verify_test_preserved_runtime_files\s+wipe_target_contents "\$TEST_PUBLIC_ROOT"\s+run_sync/s,
   )
 })

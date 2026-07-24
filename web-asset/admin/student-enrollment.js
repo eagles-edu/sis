@@ -8,6 +8,7 @@
         window.__SIS_ADMIN_ENROLLMENT_STUDENTS_PATH || "/api/admin/enrollment/students";
       const UI_SETTINGS_PATH =
         window.__SIS_ADMIN_UI_SETTINGS_PATH || "/api/admin/settings/ui";
+      const ADMIN_ASSETS_PATH = "/api/admin/assets";
       const ENROLLMENT_REASONS = Array.isArray(window.__SIS_ADMIN_ENROLLMENT_REASONS)
         ? window.__SIS_ADMIN_ENROLLMENT_REASONS
         : [];
@@ -51,6 +52,7 @@
       let enrollmentHistoryModalReturnFocus = null;
       let openHistoryRailMenu = null;
       let enrollmentRowsCache = [];
+      let levelTileStylesByLevel = {};
 
       function normalizeText(value) {
         return value === undefined || value === null ? "" : String(value).trim();
@@ -62,6 +64,13 @@
 
       function normalizeLevelKey(value) {
         return normalizeLower(value).replace(/[^a-z0-9]/g, "");
+      }
+
+      function normalizeAssetUrl(value = "") {
+        const raw = normalizeText(value);
+        if (!raw || /^data:/i.test(raw) || /^blob:/i.test(raw) || /^https?:\/\//i.test(raw)) return raw;
+        if (/^javascript:/i.test(raw)) return "";
+        return `/${raw.replace(/^\/+/, "")}`;
       }
 
       function escapeHtml(value) {
@@ -132,6 +141,7 @@
       }
 
       function setStatus(message, isError = false) {
+        window.SIS_ACTION_FEEDBACK?.status(normalizeText(message), isError);
         const el = document.getElementById("globalStatus");
         if (!el) return;
         el.textContent = normalizeText(message);
@@ -212,6 +222,59 @@
         const normalizedLevel = normalizeText(levelName || "Unassigned");
         const levelColor = LEVEL_THEME_LOOKUP.get(normalizeLevelKey(normalizedLevel)) || "#002786";
         return chipHtml(normalizedLevel, levelColor);
+      }
+
+      function levelTileConfig(levelName = "") {
+        const key = normalizeLevelKey(levelName);
+        const source = levelTileStylesByLevel && typeof levelTileStylesByLevel === "object"
+          ? levelTileStylesByLevel
+          : {};
+        const raw = source[levelName] || source[key] || Object.entries(source).find(([label]) => normalizeLevelKey(label) === key)?.[1] || {};
+        const fallbackColor = LEVEL_THEME_LOOKUP.get(key) || "#1d4999";
+        const bgColor = normalizeText(raw?.bgColor || raw?.backgroundColor || fallbackColor) || fallbackColor;
+        const assetKey = normalizeText(raw?.assetKey || "");
+        const imageDataUrl = assetKey
+          ? `${ADMIN_ASSETS_PATH}/raw/${encodeURIComponent(assetKey)}`
+          : normalizeAssetUrl(raw?.imageDataUrl || raw?.backgroundImage || "");
+        const title = normalizeText(raw?.title || "");
+        return { assetKey, bgColor, imageDataUrl, title };
+      }
+
+      function renderLevelTiles(levels = []) {
+        const tilesEl = document.getElementById("enrollmentLevelTiles");
+        const hintEl = document.getElementById("enrollmentLevelTilesHint");
+        if (!tilesEl) return;
+        const selected = normalizeText(document.getElementById("filterLevel")?.value || "");
+        const available = Array.from(new Set([...KNOWN_LEVELS, ...levels.filter(Boolean)]));
+        tilesEl.innerHTML = "";
+        available.forEach((level) => {
+          const config = levelTileConfig(level);
+          const tile = document.createElement("button");
+          tile.type = "button";
+          tile.className = "enrollment-level-tile";
+          tile.setAttribute("role", "listitem");
+          tile.setAttribute("data-level", level);
+          tile.setAttribute("aria-label", `Filter enrollment by ${level}`);
+          tile.setAttribute("aria-pressed", normalizeLower(selected) === normalizeLower(level) ? "true" : "false");
+          tile.classList.toggle("is-active", normalizeLower(selected) === normalizeLower(level));
+          tile.style.backgroundColor = config.bgColor;
+          tile.style.color = preferredContrastText(config.bgColor);
+          if (config.imageDataUrl) {
+            const safeUrl = config.imageDataUrl.replace(/"/g, "%22");
+            tile.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, .12), rgba(0, 0, 0, .12)), url("${safeUrl}")`;
+          }
+          tile.innerHTML = `<strong>${escapeHtml(level)}</strong><span>${normalizeLower(selected) === normalizeLower(level) ? "Selected" : "View roster"}</span>`;
+          tile.addEventListener("click", () => {
+            const select = document.getElementById("filterLevel");
+            if (select instanceof HTMLSelectElement) select.value = level;
+            loadRows().catch((error) => {
+              if (handleAuthError(error)) return;
+              setStatus(error?.message || error, true);
+            });
+          });
+          tilesEl.appendChild(tile);
+        });
+        if (hintEl) hintEl.textContent = `${available.length} class levels available. Tile colors and artwork come from saved System Config settings.`;
       }
 
       function currentLevelText(row) {
@@ -396,6 +459,7 @@
         const rows = Array.isArray(data?.items) ? data.items : [];
         enrollmentRowsCache = rows;
         renderLevelFilterOptions(rows.map((row) => currentLevelText(row)).filter(Boolean));
+        renderLevelTiles(rows.map((row) => currentLevelText(row)).filter(Boolean));
         renderRows(rows);
         updateSummary(rows);
         setStatus("");
@@ -696,8 +760,12 @@
       async function loadBranding() {
         try {
           const payload = await api(UI_SETTINGS_PATH);
+          levelTileStylesByLevel = payload?.uiSettings?.levelTileStylesByLevel && typeof payload.uiSettings.levelTileStylesByLevel === "object"
+            ? payload.uiSettings.levelTileStylesByLevel
+            : {};
           renderSchoolBranding(payload?.uiSettings?.schoolProfile || DEFAULT_SCHOOL_PROFILE);
         } catch {
+          levelTileStylesByLevel = {};
           renderSchoolBranding(DEFAULT_SCHOOL_PROFILE);
         }
       }
@@ -815,6 +883,14 @@
         if (handleAuthError(error)) return;
         setStatus(error?.message || error, true);
       }));
+      document.getElementById("enrollmentLevelAllBtn")?.addEventListener("click", () => {
+        const select = document.getElementById("filterLevel");
+        if (select instanceof HTMLSelectElement) select.value = "";
+        loadRows().catch((error) => {
+          if (handleAuthError(error)) return;
+          setStatus(error?.message || error, true);
+        });
+      });
       document.getElementById("includeUnenrolled")?.addEventListener("change", () => loadRows().catch((error) => {
         if (handleAuthError(error)) return;
         setStatus(error?.message || error, true);

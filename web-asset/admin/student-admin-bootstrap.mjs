@@ -21,13 +21,21 @@ export async function runStudentAdminAuthBootstrap({
 
   let me;
   try {
-    me = await api?.("/api/admin/auth/me");
+    me = await api?.("/api/admin/auth/me?bootstrap=1");
   } catch (error) {
     showLogin?.();
     if (error && error.status && error.status !== 401) {
       setStatus?.(error.message || "Unable to restore session.", true);
     }
     return { status: "unauthenticated", error };
+  }
+
+  if (me?.authenticated === false) {
+    if (globalThis?.window?.__SIS_DEBUG_AUTH__) {
+      globalThis.console?.debug?.(`[SIS auth] bootstrap: ${me.reason || "unauthenticated"}`);
+    }
+    showLogin?.();
+    return { status: "unauthenticated", reason: me.reason || "unauthenticated" };
   }
 
   state.authUser = me?.user || null;

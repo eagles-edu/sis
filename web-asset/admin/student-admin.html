@@ -16,6 +16,7 @@
       /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
     </script>
     <script src="/web-asset/shared/portal-theme-state.js"></script>
+    <script src="/web-asset/shared/portal-action-feedback.js"></script>
     <!-- globalThis.SIS_PORTAL_THEME is provided by the shared blocking theme state. -->
     <script src="/web-asset/shared/portal-navigation.js" defer></script>
     <script src="/web-asset/shared/portal-preferences.js" defer></script>
@@ -1797,7 +1798,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <div
                         class="mini-list data-surface"
                         id="overviewRiskStudents"
-                        data-surface-role="data-surface">
+                        data-surface-role="data-surface"
+                        tabindex="0">
                         No pending students for current not-yet-due assignments.
                       </div>
                     </section>
