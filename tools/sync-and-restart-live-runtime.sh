@@ -317,10 +317,42 @@ if [[ ! -f "${LIVE_ROOT}/.env" ]]; then
   exit 1
 fi
 
-if [[ ! -w "${LIVE_ROOT}" ]]; then
+can_use_sudo() {
+  if sudo -n true >/dev/null 2>&1; then
+    return 0
+  fi
+  return 1
+}
+
+should_use_sudo_for_root() {
+  local root="$1"
+  local current_user
+  current_user="$(id -un)"
+
+  if [[ ! -w "${root}" ]]; then
+    return 0
+  fi
+
+  if find "${root}" -mindepth 1 -maxdepth 1 ! -user "${current_user}" -print -quit | grep -q .; then
+    return 0
+  fi
+
+  return 1
+}
+
+if should_use_sudo_for_root "${LIVE_ROOT}"; then
+  if ! can_use_sudo; then
+    echo "Live root is not writable or contains non-owned files and passwordless sudo is unavailable: ${LIVE_ROOT}" >&2
+    exit 1
+  fi
   LIVE_WRITE_PREFIX=(sudo -n)
 fi
-if [[ ! -w "${PUBLIC_ROOT}" ]]; then
+
+if should_use_sudo_for_root "${PUBLIC_ROOT}"; then
+  if ! can_use_sudo; then
+    echo "Public root is not writable or contains non-owned files and passwordless sudo is unavailable: ${PUBLIC_ROOT}" >&2
+    exit 1
+  fi
   PUBLIC_WRITE_PREFIX=(sudo -n)
 fi
 
@@ -971,6 +1003,26 @@ wipe_live_target_contents() {
     cp -a "${LIVE_ROOT}/.env" "${env_backup}"
     env_backup_sha="$(sha256_or_missing "${env_backup}")"
     restore_env=1
+  fi
+
+  log "checking live root writability before wipe"
+  if should_use_sudo_for_root "${LIVE_ROOT}"; then
+    if can_use_sudo; then
+      log "live root contains non-owned or non-writable entries; using sudo wrapper"
+      LIVE_WRITE_PREFIX=(sudo -n)
+    else
+      echo "Live root is not writable or contains non-owned files and passwordless sudo is unavailable: ${LIVE_ROOT}" >&2
+      return 1
+    fi
+  fi
+  if should_use_sudo_for_root "${PUBLIC_ROOT}"; then
+    if can_use_sudo; then
+      log "public root contains non-owned or non-writable entries; using sudo wrapper"
+      PUBLIC_WRITE_PREFIX=(sudo -n)
+    else
+      echo "Public root is not writable or contains non-owned files and passwordless sudo is unavailable: ${PUBLIC_ROOT}" >&2
+      return 1
+    fi
   fi
 
   runtime_file_backup_dir="$(mktemp -d)"
