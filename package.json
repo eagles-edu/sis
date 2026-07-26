@@ -96,8 +96,8 @@
     "stylelint-config-standard": "^40.0.0"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
+    "@prisma/adapter-pg": "^7.9.0",
+    "@prisma/client": "^7.9.0",
     "archiver": "^7.0.1",
     "argparse": "^2.0.1",
     "cheerio": "^1.2.0",
@@ -105,13 +105,13 @@
     "cssnano": "^7.1.7",
     "dom-serializer": "^3.1.1",
     "dotenv": "^17.4.2",
-    "fast-xml-parser": ">=5.9.2",
+    "fast-xml-parser": ">=5.10.1",
     "glob": ">=11.1.0",
     "js-yaml": "^4.2.0",
     "nodemailer": "^8.0.11",
     "pdfkit": "^0.19.1",
-    "pg": "^8.21.0",
-    "postcss": "^8.5.15",
+    "pg": "^8.22.0",
+    "postcss": "^8.5.23",
     "redis": "^5.12.1",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
