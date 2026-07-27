@@ -172,7 +172,7 @@ const STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED = "submitted"
  * @param {string} [fallback]
  * @returns {string}
  */
-function normalizeStudentNewsSubmissionState(value, fallback = STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED) {
+function normalizeStudentNewsSubmissionState(value, fallback = STUDENT_NEWS_SUBMISSION_STATE_DRAFT) {
   const token = normalizeLower(value)
   if (!token) return fallback
   if (token === STUDENT_NEWS_SUBMISSION_STATE_DRAFT) return STUDENT_NEWS_SUBMISSION_STATE_DRAFT
@@ -325,7 +325,18 @@ function normalizeStudentNewsFallbackEntry(entry = {}) {
   const actionWhat = normalizeText(entry?.actionWhat)
   const actionWhy = normalizeText(entry?.actionWhy)
   const reviewStatus = normalizeStudentNewsReviewStatus(entry?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
-  const submissionState = normalizeStudentNewsSubmissionState(entry?.submissionState, STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED)
+  const firstSubmittedAt = parseDateOrNull(entry?.firstSubmittedAt)
+  const createdAtDate = parseDateOrNull(entry?.createdAt)
+  const rawSubmissionState = normalizeText(entry?.submissionState)
+  const legacySubmitted = !rawSubmissionState
+    && createdAtDate instanceof Date
+    && createdAtDate < new Date("2026-06-28T00:00:00.000Z")
+  const submissionState = firstSubmittedAt instanceof Date
+    ? STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+    : normalizeStudentNewsSubmissionState(
+        rawSubmissionState || (legacySubmitted ? STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED : ""),
+        STUDENT_NEWS_SUBMISSION_STATE_DRAFT,
+      )
   const reviewNote = normalizeNullableText(entry?.reviewNote)
   const reviewedAt = parseDateOrNull(entry?.reviewedAt)?.toISOString?.() || ""
   const reviewedByUsername = normalizeNullableText(entry?.reviewedByUsername)
@@ -338,6 +349,7 @@ function normalizeStudentNewsFallbackEntry(entry = {}) {
     id: normalizeText(entry?.id) || createStudentNewsFallbackId(),
     studentRefId,
     reportDate,
+    reportSequence: Math.max(1, Number(entry?.reportSequence) || 1),
     sourceLink,
     articleTitle,
     byline: normalizeNullableText(entry?.byline),
@@ -361,7 +373,7 @@ function normalizeStudentNewsFallbackEntry(entry = {}) {
     reviewNote,
     reviewedAt,
     reviewedByUsername,
-    submittedAt: parseDateOrNull(entry?.submittedAt)?.toISOString?.() || createdAt,
+    submittedAt: parseDateOrNull(entry?.submittedAt)?.toISOString?.() || "",
     createdAt,
     updatedAt,
     validationIssuesJson:
@@ -422,7 +434,9 @@ function listStudentNewsReportsFromFallbackStore(studentRefId, { startDate = "",
     .filter((entry) => entry.studentRefId === id)
     .filter((entry) => !start || entry.reportDate >= start)
     .filter((entry) => !end || entry.reportDate <= end)
-    .sort((left, right) => normalizeText(right.reportDate).localeCompare(normalizeText(left.reportDate)))
+    .sort((left, right) => normalizeText(right.reportDate).localeCompare(normalizeText(left.reportDate))
+      || (Number(right.reportSequence) || 1) - (Number(left.reportSequence) || 1)
+      || normalizeText(right.submittedAt).localeCompare(normalizeText(left.submittedAt)))
     .map((entry) => ({
       ...entry,
       reportDate: parseLocalDateOnly(entry.reportDate) || entry.reportDate,
@@ -441,19 +455,19 @@ function upsertStudentNewsReportInFallbackStore(studentRefId, reportDate, payloa
   const dateKey = normalizeText(reportDate)
   const now = new Date().toISOString()
   const source = readStudentNewsFallbackEntries()
-  const index = source.findIndex((entry) => entry.studentRefId === id && entry.reportDate === dateKey)
+  const requestedReportId = normalizeText(payload?.id)
+  const requestedSequence = Math.max(1, Number(payload?.reportSequence) || 1)
+  const index = source.findIndex((entry) => requestedReportId
+    ? entry.studentRefId === id && entry.id === requestedReportId
+    : entry.studentRefId === id && entry.reportDate === dateKey && (Number(entry.reportSequence) || 1) === requestedSequence)
   const existing = index >= 0 ? source[index] : null
-  if (normalizeStudentNewsReviewStatus(existing?.reviewStatus) === STUDENT_NEWS_REVIEW_STATUS_APPROVED) {
-    const error = new Error("Approved news reports cannot be edited")
-    error.statusCode = 403
-    throw error
-  }
   const normalized = normalizeStudentNewsFallbackEntry({
     ...(existing || {}),
     ...payload,
     id: normalizeText(existing?.id) || createStudentNewsFallbackId(),
     studentRefId: id,
     reportDate: dateKey,
+    reportSequence: requestedSequence,
     createdAt: normalizeText(existing?.createdAt) || now,
     updatedAt: now,
     submissionState: normalizeStudentNewsSubmissionState(payload?.submissionState, normalizeStudentNewsSubmissionState(existing?.submissionState)),
@@ -503,7 +517,7 @@ function buildStudentNewsFallbackOverlayIndex(entries = []) {
       index.set(`id:${normalized.id}`, reviewOverlay)
     }
     if (normalized.studentRefId && normalized.reportDate) {
-      index.set(`student:${normalized.studentRefId}|date:${normalized.reportDate}`, reviewOverlay)
+      index.set(`student:${normalized.studentRefId}|date:${normalized.reportDate}|sequence:${normalized.reportSequence}`, reviewOverlay)
     }
   })
   return index
@@ -533,10 +547,11 @@ function resolveStudentNewsFallbackReviewOverlay(row = {}, overlayIndex = null) 
   const reportDate = row?.reportDate instanceof Date
     ? toLocalIsoDate(row?.reportDate)
     : normalizeText(row?.reportDate) || toLocalIsoDate(row?.reportDate)
+  const reportSequence = Math.max(1, Number(row?.reportSequence) || 1)
 
   const keys = []
   if (rowId) keys.push(`id:${rowId}`)
-  if (studentRefId && reportDate) keys.push(`student:${studentRefId}|date:${reportDate}`)
+  if (studentRefId && reportDate) keys.push(`student:${studentRefId}|date:${reportDate}|sequence:${reportSequence}`)
 
   for (const key of keys) {
     if (!index.has(key)) continue

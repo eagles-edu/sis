@@ -470,6 +470,7 @@ model StudentNewsReport {
   enrollmentPeriodId String?
   enrollmentPeriod   StudentEnrollmentPeriod? @relation("EnrollmentPeriodNewsReports", fields: [enrollmentPeriodId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   reportDate    DateTime
+  reportSequence Int      @default(1)
   weekNumber    Int?
   sourceLink    String
   articleTitle  String
@@ -483,7 +484,7 @@ model StudentNewsReport {
   actionWhy     String
   biasAssessment String?
   vocabularyJson Json?
-  submissionState String @default("submitted")
+  submissionState String @default("draft")
   draftCheckedAt DateTime?
   mmrPassedAt DateTime?
   dateSatisfiedAt DateTime?
@@ -491,7 +492,7 @@ model StudentNewsReport {
   firstSubmittedAt DateTime?
   lastSubmittedAt DateTime?
   editableUntil DateTime?
-  submittedAt   DateTime @default(now())
+  submittedAt   DateTime?
   reviewStatus  String   @default("submitted")
   reviewNote    String?
   validationIssuesJson Json?
@@ -500,7 +501,7 @@ model StudentNewsReport {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  @@unique([studentRefId, reportDate])
+  @@unique([studentRefId, reportDate, reportSequence])
   @@index([enrollmentPeriodId])
   @@index([reportDate, submittedAt])
   @@index([reviewStatus, reportDate, submittedAt])

@@ -179,7 +179,7 @@ test("short portal button labels retain their full tooltip and accessible explan
     ["web-asset/parent/parent-portal.html", "openChildPageBtn", "Hồ sơ", "Mở hồ sơ học sinh để xem và cập nhật thông tin"],
     ["web-asset/parent/parent-portal.html", "openPastDueHomeworkModalBtn", "Quá hạn", "Xem danh sách bài tập về nhà quá hạn"],
     ["web-asset/parent/parent-portal.html", "openNewsQueueDetailBtn", "Chi tiết", "Mở chi tiết các báo cáo tin tức đang chờ xem"],
-    ["web-asset/parent/parent-portal.html", "reportPastDueHomeworkPreviewBtn", "Quá hạn", "Xem danh sách bài tập về nhà quá hạn"],
+    ["web-asset/parent/parent-portal.html", "reportPastDueHomeworkPreviewBtn", "Xem quá hạn", "Xem danh sách bài tập về nhà quá hạn"],
     ["web-asset/student/student-portal.html", "newWordsAddOneBtn", "Add Word", "Thêm một mục từ vựng vào danh sách học tập"],
     ["web-asset/student/student-portal.html", "newWordsAddFiveBtn", "Add Words", "Thêm năm mục từ vựng vào danh sách học tập"],
     ["web-asset/student/student-portal.html", "newNewsFormBtn", "Mẫu mới", "Bắt đầu một biểu mẫu báo cáo tin tức mới"],

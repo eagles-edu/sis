@@ -133,3 +133,21 @@ export async function getSharedPrismaClient() {
     throw error
   }
 }
+
+/**
+ * Close the process-shared client and clear the cached promise.
+ *
+ * @returns {Promise<void>}
+ */
+export async function closeSharedPrismaClient() {
+  const clientPromise = sharedPrismaClientPromise
+  sharedPrismaClientPromise = null
+  sharedPrismaClientDatabaseUrl = ""
+  if (!clientPromise) return
+  try {
+    const client = await clientPromise
+    await client.$disconnect()
+  } catch (error) {
+    void error
+  }
+}

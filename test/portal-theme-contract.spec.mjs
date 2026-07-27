@@ -15,6 +15,7 @@ const performanceEngagementIslandPath = path.resolve(rootDir, "web-asset/admin/p
 const overviewChartIslandPath = path.resolve(rootDir, "web-asset/admin/overview-chart-island.mjs")
 const queueHubIslandPath = path.resolve(rootDir, "web-asset/admin/queue-hub-island.mjs")
 const adminFallbacksPath = path.resolve(rootDir, "web-asset/admin/admin-fallbacks.mjs")
+const adminOverviewShellPath = path.resolve(rootDir, "web-asset/admin/admin-overview-shell.mjs")
 const parentPortalPath = path.resolve(rootDir, "web-asset/parent/parent-portal.html")
 const studentPortalPath = path.resolve(rootDir, "web-asset/student/student-portal.html")
 const buildAdminAssets = fs.readFileSync(buildAdminAssetsPath, "utf8")
@@ -49,6 +50,7 @@ const performanceEngagementIsland = fs.readFileSync(performanceEngagementIslandP
 const overviewChartIsland = fs.readFileSync(overviewChartIslandPath, "utf8")
 const queueHubIsland = fs.readFileSync(queueHubIslandPath, "utf8")
 const adminFallbacks = fs.readFileSync(adminFallbacksPath, "utf8")
+const adminOverviewShell = fs.readFileSync(adminOverviewShellPath, "utf8")
 const parentPortal = fs.readFileSync(parentPortalPath, "utf8")
 const studentPortal = fs.readFileSync(studentPortalPath, "utf8")
 const parentPortalAssets = `${parentPortal}\n${fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.css"), "utf8")}\n${fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.js"), "utf8")}`
@@ -132,6 +134,13 @@ test("admin performance contract markers protect first-paint mitigations", () =>
     /#top\.admin-portal-page \.wrap[\s\S]*#appMain \.grid-main[\s\S]*#floatingMenuBtn\.floating-menu-btn/,
     "generated critical CSS must retain the protected shell geometry",
   )
+})
+
+test("admin overview shell does not auto-handoff while deferred content is already visible", () => {
+  assert.match(adminOverviewShell, /PERF-CONTRACT: ADMIN-OVERVIEW-SHELL/)
+  assert.match(adminOverviewShell, /initialPageSlug\s*&&\s*initialPageSlug\s*!==\s*["']overview["']/)
+  assert.match(adminOverviewShell, /if \(!userScrolled\) return/)
+  assert.doesNotMatch(adminOverviewShell, /new IntersectionObserver/)
 })
 
 test("assignment engagement stays outside the critical admin bundle", () => {

@@ -1,0 +1,40 @@
+services:
+  languagetool-1:
+    build:
+      context: .
+      args:
+        LANGUAGETOOL_VERSION: "6.8"
+    image: sis/languagetool:6.8
+    container_name: sis-languagetool-1
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8091:8081"
+    mem_limit: 1g
+    cpus: 1.5
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,noexec,nosuid,nodev
+    volumes:
+      - ./server.properties:/etc/languagetool/server.properties:ro
+
+  languagetool-2:
+    build:
+      context: .
+      args:
+        LANGUAGETOOL_VERSION: "6.8"
+    image: sis/languagetool:6.8
+    container_name: sis-languagetool-2
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8092:8081"
+    mem_limit: 1g
+    cpus: 1.5
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,noexec,nosuid,nodev
+    volumes:
+      - ./server.properties:/etc/languagetool/server.properties:ro

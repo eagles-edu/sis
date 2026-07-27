@@ -24,6 +24,7 @@ const PORTAL_PREFERENCES_JS = fs.readFileSync(
 )
 const ADMIN_HTML_STRIPPED_FOR_TEST = ADMIN_HTML
   .replace(/<script\s+id="admin-app-loader">[\s\S]*?<\/script>/gi, "")
+  .replace(/<script[^>]+src="\/web-asset\/shared\/portal-(?:theme-state|action-feedback|navigation|preferences|password-visibility)\.js"[^>]*><\/script>\s*/gi, "")
   .replace(/<link[\s\S]*?href="\/web-asset\/admin\/student-admin(?:\.min)?\.css(?:\?[^"]*)?"[\s\S]*?>/gi, "")
   .replace(/<script\s+src="\/web-asset\/admin\/student-admin(?:\.min)?\.js(?:\?[^"]*)?"\s+defer><\/script>/gi, "")
 const ADMIN_HTML_FOR_TEST = ADMIN_HTML_STRIPPED_FOR_TEST.replace(
@@ -1030,7 +1031,7 @@ test("news review modal supports student-scoped navigation and modal review acti
         englishName: "Student One",
         level: "Pre-A1 Starters",
       },
-      reviewStatus: index === 6 ? "revision-requested" : "submitted",
+      reviewStatus: index === 5 ? "approved" : index === 6 ? "revision-requested" : "submitted",
       reviewNote: "",
       reviewedByUsername: "",
       reviewedAt: "",
@@ -1197,7 +1198,7 @@ test("news review modal supports student-scoped navigation and modal review acti
     assert.match(rows[0].textContent || "", /09\/03\/26 to 15\/03\/26/i)
     assert.doesNotMatch(rows[0].textContent || "", /2026-03-09 to 2026-03-15/i)
     assert.match(rows[0].textContent || "", /Waiting/i)
-    assert.match(rows[0].textContent || "", /Pending-6/i)
+    assert.match(rows[0].textContent || "", /Pending-5/i)
   })
 
   const document = dom.window.document
@@ -1222,6 +1223,18 @@ test("news review modal supports student-scoped navigation and modal review acti
   await waitFor(() => {
     assert.equal(normalizeText(document.getElementById("newsReviewViewerIndex").textContent), "2 / 7")
     assert.notEqual(normalizeText(document.getElementById("newsReviewViewerBody").textContent), firstBodyText)
+  })
+
+  // Approved/auto-approved reports remain a fully actionable admin surface.
+  for (let index = 0; index < 4; index += 1) {
+    document.getElementById("newsReviewViewerNextBtn").click()
+  }
+  await waitFor(() => {
+    assert.equal(normalizeText(document.getElementById("newsReviewViewerIndex").textContent), "6 / 7")
+    assert.equal(document.getElementById("newsReviewViewerEditBtn").disabled, false)
+    assert.equal(document.getElementById("newsReviewViewerNote").disabled, false)
+    assert.equal(document.getElementById("newsReviewViewerApproveBtn").disabled, false)
+    assert.equal(document.getElementById("newsReviewViewerRevisionBtn").disabled, false)
   })
 
   const queryInput = document.getElementById("newsReviewQueryFilter")

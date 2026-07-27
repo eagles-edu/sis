@@ -6407,3 +6407,28 @@ body.parent-portal-page :is(.actions, .login-actions, .portal-modal-actions, .po
    progressively restore the denser form and viewer arrangements. */
 
 /* Parent's read-only week-set viewer follows the same mobile-first shell. */
+
+.fcontainer {
+  display: flex;
+  align-items: center;
+}
+
+.fcontainer span {
+  margin-left: auto;
+}
+
+/* alignment without flex container */
+.cspan {
+  display: block;
+  text-align: center;
+}
+
+.lspan {
+  display: block;
+  text-align: left;
+}
+
+.rspan {
+  display: block;
+  text-align: right;
+}

@@ -268,6 +268,15 @@ async function startServer() {
   return { server, origin: `http://127.0.0.1:${port}` }
 }
 
+async function closeReportFlowServer(server) {
+  if (!server.listening) return
+  server.closeAllConnections?.()
+  server.closeIdleConnections?.()
+  await new Promise((resolve) => server.close(resolve))
+  const { closeStudentAdminRuntimeResources } = await import("../server/student-admin-routes.mjs")
+  await closeStudentAdminRuntimeResources()
+}
+
 function buildMangledReportHref(reportHref, replacementSlug = "mismatch") {
   const url = new URL(reportHref)
   const segments = url.pathname.split("/")
@@ -494,7 +503,7 @@ test(
       }
     } finally {
       await browser.close()
-      await new Promise((resolve) => server.close(resolve))
+      await closeReportFlowServer(server)
     }
   },
 )
@@ -558,7 +567,7 @@ test(
       }
     } finally {
       await browser.close()
-      await new Promise((resolve) => server.close(resolve))
+      await closeReportFlowServer(server)
     }
   },
 )
@@ -635,7 +644,7 @@ test(
       }
     } finally {
       await browser.close()
-      await new Promise((resolve) => server.close(resolve))
+      await closeReportFlowServer(server)
     }
   },
 )

@@ -11,12 +11,22 @@ const ALLOWED_MIME_TYPES = new Set(["image/svg+xml", "image/png", "image/jpeg", 
 
 const DEFAULT_PORTAL_ASSETS = [
   { assetKey: "school-logo-default", fileName: "logo.svg", kind: "school-logo", ownerType: "system-config", ownerId: "school" },
+  { assetKey: "school-logo-square", fileName: "loogo-b-1x1-1-01.svg", kind: "school-logo", ownerType: "system-config", ownerId: "school:square" },
+  { assetKey: "school-favicon", fileName: "favicon.svg", kind: "site-icon", ownerType: "system-config", ownerId: "site:favicon" },
+  { assetKey: "school-icon", fileName: "icon.svg", kind: "site-icon", ownerType: "system-config", ownerId: "site:icon" },
   { assetKey: "class-level-eggs-chicks", fileName: "eggs-chicks.svg", kind: "class-level-tile", ownerType: "system-config", ownerId: "level:eggs-and-chicks" },
   { assetKey: "class-level-pre-a1-starters", fileName: "starters.svg", kind: "class-level-tile", ownerType: "system-config", ownerId: "level:pre-a1-starters" },
   { assetKey: "class-level-a1-movers", fileName: "movers.svg", kind: "class-level-tile", ownerType: "system-config", ownerId: "level:a1-movers" },
   { assetKey: "class-level-a2-flyers", fileName: "flyers.svg", kind: "class-level-tile", ownerType: "system-config", ownerId: "level:a2-flyers" },
   { assetKey: "class-level-a2-ket", fileName: "ket.svg", kind: "class-level-tile", ownerType: "system-config", ownerId: "level:a2-ket" },
   { assetKey: "class-level-b1-pet", fileName: "pet.svg", kind: "class-level-tile", ownerType: "system-config", ownerId: "level:b1-pet" },
+  { assetKey: "class-level-b2-ielts", fileName: "ielts.svg", kind: "class-level-tile", ownerType: "system-config", ownerId: "level:b2-ielts" },
+  { assetKey: "ui-caret-down", fileName: "caret-down.svg", kind: "ui-icon", ownerType: "system-config", ownerId: "ui:caret-down" },
+  { assetKey: "ui-caret-left", fileName: "caret-left.svg", kind: "ui-icon", ownerType: "system-config", ownerId: "ui:caret-left" },
+  { assetKey: "ui-caret-right", fileName: "caret-right.svg", kind: "ui-icon", ownerType: "system-config", ownerId: "ui:caret-right" },
+  { assetKey: "ui-caret-up", fileName: "caret-up.svg", kind: "ui-icon", ownerType: "system-config", ownerId: "ui:caret-up" },
+  { assetKey: "ui-hamburger-black", fileName: "hamburger _BW_1F354.svg", kind: "ui-icon", ownerType: "system-config", ownerId: "ui:hamburger-black" },
+  { assetKey: "ui-hamburger-white", fileName: "hamburger _W_1F354.svg", kind: "ui-icon", ownerType: "system-config", ownerId: "ui:hamburger-white" },
 ]
 
 function text(value) {

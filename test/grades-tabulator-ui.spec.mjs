@@ -9,6 +9,7 @@ const TABULATOR_JS = fs.readFileSync(path.resolve(process.cwd(), "web-asset/admi
 const TABULATOR_HTML = fs
   .readFileSync(TABULATOR_HTML_PATH, "utf8")
   .replace(/<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>\s*/i, "")
+  .replace(/<script src="\/web-asset\/shared\/portal-(?:action-feedback|preferences|password-visibility|navigation)\.js"><\/script>\s*/gi, "")
   .replace(/<link[^>]*tabulator\.min\.css[^>]*>\s*/ig, "")
   .replace(/<link rel="stylesheet" href="\.\.\/vendor\/tabulatorz\/tabulator\.min\.css">\s*/i, "")
   .replace(/<link rel="stylesheet" href="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.css">\s*/i, "")

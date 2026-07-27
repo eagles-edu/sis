@@ -22,6 +22,7 @@ const DEFAULT_LEVEL_TILE_IMAGE_PATH_BY_LEVEL = new Map(
     ["A2 Flyers", "web-asset/images/flyers.svg"],
     ["A2 KET", "web-asset/images/ket.svg"],
     ["B1 PET", "web-asset/images/pet.svg"],
+    ["B2+ IELTS", "web-asset/images/ielts.svg"],
   ].map(([level, imagePath]) => [normalizeLower(level), imagePath]),
 )
 const DEFAULT_LEVEL_TILE_ASSET_KEY_BY_LEVEL = new Map(
@@ -32,6 +33,7 @@ const DEFAULT_LEVEL_TILE_ASSET_KEY_BY_LEVEL = new Map(
     ["A2 Flyers", "class-level-a2-flyers"],
     ["A2 KET", "class-level-a2-ket"],
     ["B1 PET", "class-level-b1-pet"],
+    ["B2+ IELTS", "class-level-b2-ielts"],
   ].map(([level, assetKey]) => [normalizeLower(level), assetKey]),
 )
 const DEFAULT_LEVEL_THEME_BY_LEVEL = new Map(
@@ -55,6 +57,7 @@ const DEFAULT_LEVEL_TILE_LABEL_BY_LEVEL = new Map(
     ["A2 Flyers", "A2 Flyers"],
     ["A2 KET", "A2 KET"],
     ["B1 PET", "B1 PET"],
+    ["B2+ IELTS", "B2+ IELTS"],
   ].map(([level, label]) => [normalizeLower(level), label]),
 )
 

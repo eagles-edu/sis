@@ -55,6 +55,8 @@
         newsSubmissionState: "",
         newsDateSatisfied: false,
         newsReportDateLocked: false,
+        newsReportId: "",
+        newsReportSequence: 0,
         newsComplianceModalOpen: false,
         newNewsFormConfirmModalOpen: false,
         newsComplianceSummary: "",
@@ -230,6 +232,18 @@
               message: t(row?.message),
               fields: Array.isArray(row?.fields) ? row.fields.map((field) => t(field)).filter(Boolean) : [],
           })).filter((row) => row.index >= 0 && row.message) : [],
+          ruleIds: [...new Set([
+            ...(Array.isArray(entry.ruleIds) ? entry.ruleIds.map((ruleId) => t(ruleId)) : []),
+          ].filter(Boolean))],
+          sentenceType: t(entry.sentenceType),
+          sentenceIssues: Array.isArray(entry.sentenceIssues) ? entry.sentenceIssues.map((issue) => ({
+            ruleId: t(issue?.ruleId),
+            start: Math.max(0, Number.parseInt(String(issue?.start), 10) || 0),
+            length: Math.max(1, Number.parseInt(String(issue?.length), 10) || 1),
+            message: t(issue?.message),
+            replacements: Array.isArray(issue?.replacements) ? issue.replacements.map((value) => t(value)).filter(Boolean) : [],
+            blocking: issue?.blocking !== false,
+          })).filter((issue) => issue.ruleId && issue.message) : [],
         };
         });
         return map;
@@ -250,6 +264,8 @@
             threshold: Number.isFinite(Number(entry.threshold)) ?
               Number(entry.threshold) :
               null,
+            ruleIds: Array.isArray(entry.ruleIds) ? entry.ruleIds : [],
+            sentenceIssues: Array.isArray(entry.sentenceIssues) ? entry.sentenceIssues : [],
           };
         });
         return failed;
@@ -413,12 +429,89 @@
           const helpEl = document.getElementById(`newsValidationHelp-${fieldId}`);
           if (helpEl) helpEl.remove();
         });
+        ["actionWhy", "biasAssessment", "newsViewerActionWhy", "newsViewerBiasAssessment"].forEach((fieldId) => {
+          const feedbackEl = document.getElementById(`newsSentenceFeedback-${fieldId}`);
+          if (!feedbackEl) return;
+          feedbackEl.replaceChildren();
+          feedbackEl.hidden = true;
+        });
         document.querySelectorAll("#newsVocabularyRows .news-vocabulary-row").forEach((row) => {
           row.querySelectorAll(".field-validation-message, [data-vocabulary-field].is-invalid").forEach((element) => {
             element.classList.remove("is-invalid");
             if (element.classList.contains("field-validation-message")) element.remove();
           });
         });
+      }
+
+      function renderNewsSentenceFeedback(fieldId = "", detail = {}) {
+        const feedbackEl = document.getElementById(`newsSentenceFeedback-${fieldId}`);
+        if (!feedbackEl) return;
+        feedbackEl.replaceChildren();
+        const issues = Array.isArray(detail?.sentenceIssues) ? detail.sentenceIssues : [];
+        const raw = String(field(fieldId)?.value || "");
+        if (!issues.length || !raw.trim()) {
+          feedbackEl.hidden = true;
+          return;
+        }
+        const isWhyField = fieldId === "actionWhy" || fieldId === "newsViewerActionWhy";
+        const questionNumber = isWhyField ? "11" : "12";
+        const ruleLabels = {
+          "sentence-capitalization": "capitalization",
+          "sentence-punctuation": "sentence punctuation",
+          "sentence-spelling": "spelling",
+          "subject-verb-agreement": "subject-verb agreement",
+          "verb-tense-consistency": "verb tense consistency",
+          "clause-fragment": "sentence fragment",
+          "sentence-type": "sentence type",
+          "conjunction-use": "conjunction use",
+          "determiner-use": "determiner use",
+          "adjective-use": "adjective use",
+          "adverb-use": "adverb use",
+          "parallel-structure": "parallel structure",
+        };
+        const ruleIds = [...new Set(issues
+          .map((issue) => ruleLabels[t(issue?.ruleId)] || t(issue?.ruleId))
+          .filter(Boolean))];
+        const heading = document.createElement("h4");
+        heading.textContent = `${questionNumber}. Incorrect sentence / grammar, please fix: ${ruleIds.join(", ")}`;
+        feedbackEl.appendChild(heading);
+
+        const rawPreview = document.createElement("div");
+        rawPreview.className = "news-sentence-raw";
+        const sortedIssues = issues
+          .map((issue) => ({
+            ...issue,
+            start: Math.max(0, Math.min(raw.length, Number(issue.start) || 0)),
+            length: Math.max(1, Number(issue.length) || 1),
+          }))
+          .sort((left, right) => left.start - right.start);
+        let cursor = 0;
+        sortedIssues.forEach((issue) => {
+          const start = Math.max(cursor, issue.start);
+          const end = Math.min(raw.length, Math.max(start + 1, start + issue.length));
+          if (start > cursor) rawPreview.appendChild(document.createTextNode(raw.slice(cursor, start)));
+          const marked = document.createElement("span");
+          marked.className = "news-sentence-error";
+          marked.textContent = raw.slice(start, end);
+          marked.dataset.start = String(start);
+          marked.dataset.length = String(end - start);
+          rawPreview.appendChild(marked);
+          cursor = end;
+        });
+        if (cursor < raw.length) rawPreview.appendChild(document.createTextNode(raw.slice(cursor)));
+        feedbackEl.appendChild(rawPreview);
+
+        const comments = document.createElement("ul");
+        comments.className = "news-sentence-comments";
+        issues.forEach((issue) => {
+          const comment = document.createElement("li");
+          const replacements = Array.isArray(issue?.replacements) ? issue.replacements : [];
+          const suffix = replacements.length ? ` Suggested correction: ${replacements.join(", ")}.` : "";
+          comment.textContent = `${issue?.blocking === false ? "Suggestion: " : ""}${t(issue?.message)}${suffix}`;
+          comments.appendChild(comment);
+        });
+        feedbackEl.appendChild(comments);
+        feedbackEl.hidden = false;
       }
 
       function hasNewsWarnings() {
@@ -429,10 +522,16 @@
         clearNewsFieldValidationUi();
         const failed = normalizeFailedFieldMap(failedFieldMap);
         const warnings = normalizeFailedFieldMap(warningFieldMap);
+        Object.keys(failed).forEach((fieldId) => {
+          delete warnings[fieldId];
+        });
         state.newsFieldErrors = failed;
         state.newsRevisionTasks = Array.isArray(revisionTasks) ? revisionTasks : [];
         state.newsWarningFields = warnings;
         state.newsWarningTasks = Array.isArray(warningTasks) ? warningTasks : [];
+        ["actionWhy", "biasAssessment"].forEach((fieldId) => {
+          renderNewsSentenceFeedback(fieldId, failed[fieldId] || warnings[fieldId] || {});
+        });
         const hasFailed = Object.keys(failed).length > 0;
         setNewsComplianceModalCtaVisible(hasFailed || hasNewsWarnings());
         if (!hasFailed && !hasNewsWarnings()) {
@@ -592,8 +691,24 @@
           ...NEWS_FORM_FIELD_IDS.filter((fieldKey) => Object.prototype.hasOwnProperty.call(normalizedFieldMap, fieldKey)),
           ...Object.keys(normalizedFieldMap).filter((fieldKey) => !NEWS_FORM_FIELD_IDS.includes(fieldKey)),
         ];
+        const sentenceFields = orderedFields.filter((fieldKey) =>
+          ["actionWhy", "biasAssessment"].includes(fieldKey) &&
+          Array.isArray(normalizedFieldMap[fieldKey]?.sentenceIssues) &&
+          normalizedFieldMap[fieldKey].sentenceIssues.length,
+        );
+        let sentenceDirectiveAdded = false;
         orderedFields.forEach((fieldKey, index) => {
           const entry = normalizedFieldMap[fieldKey] || {};
+          if (["actionWhy", "biasAssessment"].includes(fieldKey) && sentenceFields.length) {
+            if (sentenceDirectiveAdded) return;
+            sentenceDirectiveAdded = true;
+            rows.push({
+              field: "11/12. Sentence review",
+              errorType: "Review errors under 11 and/or 12 in the report.",
+              suggestedFix: "Read the red-underlined sentence and comments directly beneath fields 11 and 12.",
+            });
+            return;
+          }
           rows.push({
             field: `${index + 1}. ${t(NEWS_STUDENT_FIELD_LABELS[fieldKey]) || fieldKey}`,
             errorType: studentFriendlyFeedbackType(fieldKey, entry),
@@ -3223,6 +3338,7 @@
         if (!reportDate) return null;
         return {
           id: t(entry?.id) || `news-report:${reportDate}`,
+          reportSequence: Math.max(1, Number(entry?.reportSequence) || 1),
           reportDate,
           sourceLink: t(entry?.sourceLink),
           articleTitle: t(entry?.articleTitle),
@@ -3247,6 +3363,8 @@
           awaitingReReview: entry?.awaitingReReview === true,
           currentMmrPassed: entry?.currentMmrPassed === true,
           editableUntil: t(entry?.editableUntil),
+          mmrFailedFields: entry?.mmrFailedFields && typeof entry.mmrFailedFields === "object" ? entry.mmrFailedFields : {},
+          warningFields: entry?.warningFields && typeof entry.warningFields === "object" ? entry.warningFields : {},
         };
       }
 
@@ -3685,6 +3803,8 @@
         Object.keys(NEWS_VIEWER_MODAL_FIELD_IDS).forEach((fieldKey) => {
           setNewsViewerFieldValue(fieldKey, active?.[fieldKey] || "");
         });
+        renderNewsSentenceFeedback("newsViewerActionWhy", active?.mmrFailedFields?.actionWhy || {});
+        renderNewsSentenceFeedback("newsViewerBiasAssessment", active?.mmrFailedFields?.biasAssessment || {});
         renderVocabularyRows(field("newsWeekSetModalVocabularyRows"), active?.vocabulary || []);
         renderNewsWeekSetViewerFeedback(active || {});
         syncNewsWeekSetViewerControls();
@@ -3732,8 +3852,10 @@
         const weekSet = newsWeekSetById(id, ensureNewsWeekSets());
         if (!weekSet) return false;
         const items = sortNewsWeekSetViewerItems(weekSet.reports);
+        const preferredId = t(options?.reportId);
         const preferredDate = t(options?.reportDate).slice(0, 10);
-        const preferredIndex = preferredDate ?
+        const preferredIdIndex = preferredId ? items.findIndex((entry) => t(entry?.id) === preferredId) : -1;
+        const preferredIndex = preferredIdIndex >= 0 ? preferredIdIndex : preferredDate ?
           items.findIndex((entry) => t(entry?.reportDate) === preferredDate) :
           -1;
         state.newsWeekSetViewerWeekSetId = id;
@@ -3759,6 +3881,19 @@
         return openNewsWeekSetModalByWeekSetId(weekSet.id, {
           ...options,
           reportDate: dateKey,
+        });
+      }
+
+      function openNewsWeekSetModalByReportId(reportId = "", options = {}) {
+        const id = t(reportId);
+        if (!id) return false;
+        const weekSet = ensureNewsWeekSets().find((entry) =>
+          Array.isArray(entry?.reports) && entry.reports.some((report) => t(report?.id) === id),
+        );
+        if (!weekSet) return false;
+        return openNewsWeekSetModalByWeekSetId(weekSet.id, {
+          ...options,
+          reportId: id,
         });
       }
 
@@ -3915,7 +4050,12 @@
       function normalizeVocabularyLookupTerm(value) {
         return String(value || "")
           .normalize("NFC")
-          .replace(/[\u0000-\u001F\u007F]/gu, " ")
+          .split("")
+          .map((character) => {
+            const code = character.charCodeAt(0);
+            return code <= 0x1f || code === 0x7f ? " " : character;
+          })
+          .join("")
           .trim()
           .replace(/[’‘]/gu, "'")
           .replace(/[‐‑‒–—―]/gu, "-")
@@ -3925,20 +4065,7 @@
       }
 
       function normalizeSyllabication(value) {
-        const vowels = { a: "á", e: "é", i: "í", o: "ó", u: "ú", y: "ý" };
-        return t(value).split("-").filter(Boolean).map((part) => {
-          const stressed = /[A-Z]/u.test(part);
-          const rawChars = Array.from(part);
-          const chars = Array.from(part.toLocaleLowerCase("en-US"));
-          if (stressed && !chars.some((char) => /[áéíóúý]/u.test(char))) {
-            const uppercaseVowelIndex = rawChars.findIndex((char) => /[AEIOUY]/u.test(char));
-            const vowelIndex = uppercaseVowelIndex >= 0
-              ? uppercaseVowelIndex
-              : chars.findIndex((char) => vowels[char]);
-            if (vowelIndex >= 0) chars[vowelIndex] = vowels[chars[vowelIndex]];
-          }
-          return chars.join("");
-        }).join("-");
+        return t(value);
       }
 
       function vocabularyLookupUrl(label, english) {
@@ -4063,15 +4190,6 @@
         });
       }
 
-      function dictionaryPlural(english, partOfSpeech) {
-        const word = t(english);
-        if (t(partOfSpeech).toLowerCase() !== "noun" || !word) return "";
-        if (/[^aeiou]y$/iu.test(word)) return `${word.slice(0, -1)}ies`;
-        if (/(s|x|z|ch|sh)$/iu.test(word)) return `${word}es`;
-        if (/o$/iu.test(word)) return `${word}es`;
-        return `${word}s`;
-      }
-
       function dictionaryDefinition(definition) {
         const value = t(definition) || "No definition yet.";
         return /^\d+\.\s/u.test(value) ? value : `1. ${value}`;
@@ -4091,7 +4209,6 @@
               <strong>${escapeHtml(t(word.english) || "New word")}</strong>
               <span class="new-word-entry-pronunciation">/${escapeHtml(normalizeSyllabication(word.syllabication))}/</span>
               <strong class="new-word-entry-part-of-speech">${escapeHtml(t(word.partOfSpeech))}</strong>
-              ${dictionaryPlural(word.english, word.partOfSpeech) ? `<span class="new-word-entry-plural">(<em>plural</em> ${escapeHtml(dictionaryPlural(word.english, word.partOfSpeech))})</span>` : ""}
               <span class="new-word-entry-vietnamese">vi: ${escapeHtml(t(word.vietnamese))}</span>
               <button type="button" class="portal-button portal-button-primary new-word-edit" title="Mở mục từ vựng này để chỉnh sửa" aria-label="Mở mục từ vựng này để chỉnh sửa">Edit</button>
             </div>
@@ -4178,6 +4295,8 @@
 
       function reportPayload() {
         return {
+          reportId: t(state.newsReportId),
+          reportSequence: Number(state.newsReportSequence) || null,
           reportDate: t(field("reportDate")?.dataset?.isoDate || field("reportDate")?.value),
           sourceLink: t(field("sourceLink")?.value),
           articleTitle: t(field("articleTitle")?.value),
@@ -4197,6 +4316,8 @@
       function reportPayloadFromViewerItem(item = null) {
         const report = item && typeof item === "object" ? item : {};
         return {
+          reportId: t(report?.id),
+          reportSequence: Number(report?.reportSequence) || null,
           reportDate: t(report?.reportDate),
           sourceLink: readNewsViewerFieldValue("sourceLink"),
           articleTitle: readNewsViewerFieldValue("articleTitle"),
@@ -4216,18 +4337,17 @@
       function applyOpenReport(report = null, options = {}) {
         const preserveExistingValidation =
           options && options.preserveExistingValidation === true;
-        setInputValue("sourceLink", report?.sourceLink);
-        setInputValue("articleTitle", report?.articleTitle);
-        setInputValue("byline", report?.byline);
-        setInputValue("articleDateline", report?.articleDateline);
-        setInputValue("leadSynopsis", report?.leadSynopsis);
-        setInputValue("actionActor", report?.actionActor);
-        setInputValue("actionAffected", report?.actionAffected);
-        setInputValue("actionWhere", report?.actionWhere);
-        setInputValue("actionWhat", report?.actionWhat);
-        setInputValue("actionWhy", report?.actionWhy);
-        setInputValue("biasAssessment", report?.biasAssessment);
-        renderVocabularyRows(field("newsVocabularyRows"), report?.vocabulary || []);
+        const hasReport = report && typeof report === "object";
+        if (!hasReport && options?.preserveExistingValues === true) return;
+        ["sourceLink", "articleTitle", "byline", "articleDateline", "leadSynopsis", "actionActor", "actionAffected", "actionWhere", "actionWhat", "actionWhy", "biasAssessment"].forEach((fieldId) => {
+          if (hasReport && !Object.prototype.hasOwnProperty.call(report, fieldId)) return;
+          setInputValue(fieldId, hasReport ? report?.[fieldId] : "");
+        });
+        if (!hasReport || Object.prototype.hasOwnProperty.call(report, "vocabulary")) {
+          renderVocabularyRows(field("newsVocabularyRows"), hasReport && Array.isArray(report?.vocabulary) ? report.vocabulary : []);
+        }
+        state.newsReportId = t(report?.id);
+        state.newsReportSequence = Math.max(0, Number(report?.reportSequence) || 0);
         state.newsCurrentMmrPassed = report?.currentMmrPassed === true &&
           (report?.dateSatisfied === true || Boolean(t(report?.dateSatisfiedAt)));
         state.newsFormDirty = false;
@@ -4623,6 +4743,8 @@
         state.newsSubmissionState = "";
         state.newsDateSatisfied = false;
         state.newsReportDateLocked = false;
+        state.newsReportId = "";
+        state.newsReportSequence = 0;
         setNewsComplianceModalOpen(false);
         setFormStatus("New form ready. / Biểu mẫu mới đã sẵn sàng.", false, false);
         updateSubmitAvailability();
@@ -4676,9 +4798,14 @@
         renderNewsQueue();
         setPortalReportDateInput("reportDate", t(data?.window?.reportDate));
         if (state.activeView === "news") renderCalendar(state.calendarRows);
-        applyOpenReport(data?.openReport || null, {
-          preserveExistingValidation: options?.preserveValidation === true,
-        });
+        if (options?.preserveForm !== true) {
+          const currentReport = state.newsReportId
+            ? state.newsItems.find((entry) => t(entry?.id) === state.newsReportId) || data?.openReport || null
+            : data?.openReport || null;
+          applyOpenReport(currentReport, {
+            preserveExistingValidation: options?.preserveValidation === true,
+          });
+        }
         const openDate = t(data?.window?.reportDate);
         const closesAt = t(data?.window?.closesAt);
         field("windowSummary").textContent = openDate ?
@@ -4703,42 +4830,64 @@
         const checkedItem = payloadBody?.item && typeof payloadBody.item === "object"
           ? payloadBody.item
           : null;
-        if (checkedItem) {
+        if (checkedItem && options?.viewerItem !== true) {
           applyOpenReport(checkedItem, {
             preserveExistingValidation: true,
           });
         }
-        applyNewsFieldValidationUi(
-          failedFieldMap,
-          revisionTasks,
-          warningFieldMap,
-          warningTasks,
-        );
+        if (checkedItem && options?.viewerItem === true) {
+          const currentId = t(checkedItem?.id);
+          const viewerItems = Array.isArray(state.newsWeekSetViewerItems) ? state.newsWeekSetViewerItems : [];
+          const viewerIndex = viewerItems.findIndex((entry) => t(entry?.id) === currentId);
+          if (viewerIndex >= 0) viewerItems[viewerIndex] = normalizeNewsReportItem(checkedItem);
+          state.newsWeekSetViewerItems = viewerItems;
+          renderNewsWeekSetViewer();
+          renderNewsSentenceFeedback("newsViewerActionWhy", checkedItem?.mmrFailedFields?.actionWhy || {});
+          renderNewsSentenceFeedback("newsViewerBiasAssessment", checkedItem?.mmrFailedFields?.biasAssessment || {});
+        }
+        if (options?.viewerItem === true) {
+          renderNewsSentenceFeedback("newsViewerActionWhy", failedFieldMap.actionWhy || {});
+          renderNewsSentenceFeedback("newsViewerBiasAssessment", failedFieldMap.biasAssessment || {});
+          setNewsWeekSetModalStatus(summaryMessage);
+        } else {
+          applyNewsFieldValidationUi(
+            failedFieldMap,
+            revisionTasks,
+            warningFieldMap,
+            warningTasks,
+          );
+        }
         setFormStatus(
           summaryMessage,
           false,
           payloadBody?.mmrPassed === true,
         );
         state.newsComplianceSummary = summaryMessage;
-        renderNewsComplianceModalFromState(summaryMessage);
+        if (options?.viewerItem !== true) renderNewsComplianceModalFromState(summaryMessage);
         await Promise.all([
           loadDashboard(),
           loadCalendar({
-            preserveValidation: true
+            preserveValidation: true,
+            preserveForm: options?.viewerItem === true,
           }),
         ]);
         // Calendar hydration can briefly return without openReport while the
         // just-saved row is being read back. Restore the authoritative check
         // response so vocabulary and prose never disappear from the form.
-        if (checkedItem) {
+        if (checkedItem && options?.viewerItem !== true) {
           applyOpenReport(checkedItem, { preserveExistingValidation: true });
         }
-        if (reopenReportDate) {
+        if (options?.reopenReportId) {
+          openNewsWeekSetModalByReportId(options.reopenReportId, {
+            reportDate: reopenReportDate,
+            silentStatus: true,
+          });
+        } else if (reopenReportDate) {
           openNewsWeekSetModalByReportDate(reopenReportDate, {
             silentStatus: true,
           });
         }
-        if (hasNewsFieldValidationErrors() || hasNewsWarnings()) {
+        if (options?.viewerItem !== true && (hasNewsFieldValidationErrors() || hasNewsWarnings())) {
           renderNewsComplianceModalFromState(summaryMessage);
         }
       }
@@ -4792,7 +4941,28 @@
           if (saved?.complianceFailed === true) {
             await handleNewsCheckResult(saved, {
               reopenReportDate,
+              reopenReportId: options?.reopenReportId,
+              viewerItem: options?.viewerItem === true,
             });
+            return;
+          }
+          if (options?.viewerItem === true) {
+            const savedItem = saved?.item && typeof saved.item === "object" ? normalizeNewsReportItem(saved.item) : null;
+            const viewerItems = Array.isArray(state.newsWeekSetViewerItems) ? state.newsWeekSetViewerItems : [];
+            const viewerIndex = viewerItems.findIndex((entry) => t(entry?.id) === t(payload?.reportId));
+            if (savedItem && viewerIndex >= 0) viewerItems[viewerIndex] = savedItem;
+            state.newsWeekSetViewerItems = viewerItems;
+            renderNewsWeekSetViewer();
+            setNewsWeekSetModalStatus(t(saved?.message) || "Report submitted.");
+            await Promise.all([
+              loadDashboard(),
+              loadCalendar({ preserveForm: true, preserveValidation: true }),
+            ]);
+            openNewsWeekSetModalByReportId(t(payload?.reportId), {
+              reportDate: reopenReportDate,
+              silentStatus: true,
+            });
+            setSubmitSuccessModalOpen(true);
             return;
           }
           applyNewsFieldValidationUi(
@@ -4822,6 +4992,8 @@
               {};
             await handleNewsCheckResult(payloadBody, {
               reopenReportDate,
+              reopenReportId: options?.reopenReportId,
+              viewerItem: options?.viewerItem === true,
               messageFallback: t(error.message),
             });
             return;
@@ -4848,6 +5020,8 @@
           const payload = reportPayloadFromViewerItem(active);
           await checkNewsPayload(payload, {
             reopenReportDate: payload.reportDate,
+            reopenReportId: active.id,
+            viewerItem: true,
           });
         } finally {
           state.newsWeekSetViewerPending = false;
@@ -4867,6 +5041,8 @@
           const payload = reportPayloadFromViewerItem(active);
           await submitNewsPayload(payload, {
             reopenReportDate: payload.reportDate,
+            reopenReportId: active.id,
+            viewerItem: true,
           });
         } finally {
           state.newsWeekSetViewerPending = false;

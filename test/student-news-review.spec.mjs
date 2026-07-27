@@ -56,8 +56,21 @@ test("student news admin review keeps admin statuses unchanged and can expose sa
   assert.match(source, /const STUDENT_NEWS_REVIEW_STATUS_APPROVED = "approved"/)
   assert.match(source, /await reconcileStudentNewsAutoApprovals\(\)/)
   assert.match(source, /editablePayload\.vocabularyJson = existingReport\.vocabularyJson/)
-  assert.match(source, /evaluateStudentNewsAutoApprovalState\(entry/)
-  assert.match(source, /autoApprovalState\?\.enabled && autoApprovalState\.candidate && !autoApprovalState\.due/)
+  assert.doesNotMatch(source, /Approved news reports cannot be edited/)
+  assert.match(source, /const filtered = mapped\.filter\(\(entry\) => \{/)
+  assert.match(source, /submissionState === "draft"/)
+})
+
+test("admin news review keeps every report status actionable and grants revision access", () => {
+  const review = fs.readFileSync(new URL("../src/modules/admin/student-news-review.mjs", import.meta.url), "utf8")
+  const fallback = fs.readFileSync(new URL("../src/modules/admin/student-news-fallback.mjs", import.meta.url), "utf8")
+  const admin = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
+
+  assert.doesNotMatch(review, /existingReport\?\.reviewStatus[\s\S]{0,240}Approved news reports cannot be edited/)
+  assert.doesNotMatch(fallback, /Approved news reports cannot be edited/)
+  assert.match(review, /if \(action === "save"\) \{[\s\S]*normalizeStudentNewsReviewEditablePayload\(payload\)/)
+  assert.match(review, /if \(reviewStatus === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED\) \{[\s\S]*updateData\.editableUntil/)
+  assert.match(admin, /if \(newsReportMatch && method === "POST"\) \{[\s\S]*assertCanManageUsers\(rolePolicy\)/)
 })
 
 test("student news revision requests reopen editing for a 15-day deadline", () => {

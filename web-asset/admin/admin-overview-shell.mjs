@@ -6,6 +6,7 @@
 
 const apiOrigin = String(window.__SIS_ADMIN_API_ORIGIN__ || "").trim();
 const apiPrefix = String(window.__SIS_ADMIN_API_PREFIX__ || "/api/admin").trim() || "/api/admin";
+const initialPageSlug = String(window.__SIS_ADMIN_PAGE_SLUG__ || "overview").trim().toLowerCase();
 
 function apiUrl(path) {
   const suffix = String(path || "").startsWith("/") ? String(path) : `/${path}`;
@@ -81,42 +82,39 @@ function installViewportHandoff() {
   if (!target) return;
 
   let handedOff = false;
-  let observer = null;
+  let userScrolled = false;
   const handOffOnce = () => {
     if (handedOff) return;
     handedOff = true;
-    observer?.disconnect();
     window.removeEventListener("scroll", checkViewport);
     window.removeEventListener("resize", checkViewport);
     handOffToFullApp();
   };
   const checkViewport = () => {
+    if (!userScrolled) return;
     const bounds = target.getBoundingClientRect();
     if (bounds.top <= window.innerHeight + 200 && bounds.bottom >= -200) {
       handOffOnce();
     }
   };
-  observer = typeof IntersectionObserver === "function" ?
-    new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) handOffOnce();
-    }, { rootMargin: "0px 0px 200px 0px" })
-  : null;
-
-  if (observer) {
-    observer.observe(target);
-  }
-  window.addEventListener("scroll", checkViewport, { passive: true });
+  window.addEventListener("scroll", () => {
+    userScrolled = true;
+    checkViewport();
+  }, { passive: true });
   window.addEventListener("resize", checkViewport, { passive: true });
-  checkViewport();
 }
 
 async function boot() {
+  if (initialPageSlug && initialPageSlug !== "overview") {
+    handOffToFullApp();
+    return;
+  }
   try {
     renderDashboard(await loadDashboard());
     const shell = document.getElementById("adminOverviewShellStatus");
     if (shell) shell.textContent = "Overview ready. Select a tool to continue.";
-    // Keep the shell light until the continuation actually enters the
-    // viewport. Click remains a fallback for keyboard and direct interaction.
+    // Keep the shell light until the user scrolls to deferred content.
+    // Click remains the explicit fallback for keyboard and direct interaction.
     installViewportHandoff();
   } catch (error) {
     const shell = document.getElementById("adminOverviewShellStatus");

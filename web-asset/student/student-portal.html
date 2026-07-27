@@ -463,10 +463,12 @@
                       <div class="field c12">
                         <label for="newsViewerActionWhy">11. Why or how did the news action happen?</label>
                         <textarea id="newsViewerActionWhy"></textarea>
+                        <div id="newsSentenceFeedback-newsViewerActionWhy" class="news-sentence-feedback" hidden></div>
                       </div>
                       <div class="field c12">
                         <label for="newsViewerBiasAssessment">12. Do you suspect the article was written with bias, agenda, spin, or prevarication? Explain why or why not.</label>
                         <textarea id="newsViewerBiasAssessment"></textarea>
+                        <div id="newsSentenceFeedback-newsViewerBiasAssessment" class="news-sentence-feedback" hidden></div>
                       </div>
                     </div>
                   </div>
@@ -791,6 +793,7 @@
                 <div class="field c12">
                   <label for="actionWhy">11. Why or how did the news action happen?</label>
                   <textarea id="actionWhy"></textarea>
+                  <div id="newsSentenceFeedback-actionWhy" class="news-sentence-feedback" hidden></div>
                 </div>
 
                 <div class="field c12">
@@ -798,6 +801,7 @@
                   was written with bias, agenda, spin, or prevarication?
                   Explain why or why not.</label>
                   <textarea id="biasAssessment"></textarea>
+                  <div id="newsSentenceFeedback-biasAssessment" class="news-sentence-feedback" hidden></div>
                 </div>
 
                 <div class="field c12">
@@ -944,12 +948,12 @@
     ${STUDENT_NEWS_REPORTS_PATH}/draft }, 80000) Save never runs MMR
     Intl.DateTimeFormat("vi-VN" second: "2-digit" pick("second")} +07
     function studentNewsCalendarLookbackDays() {} Math.max(49, quarterToDateDays)
-    function normalizeSyllabication(value) {} y: "ý" [áéíóúý]
+    function normalizeSyllabication(value) { return t(value); }
     await checkReport(); clearNewsReportForm()
     if (saved?.complianceFailed === true) clearNewsReportForm(); await Promise.all([loadDashboard(), loadCalendar()])
     state.activeView === "news" ? viewTarget === "news" : viewTarget === "home" && pageTarget === state.activePage
     STUDENT_NEW_WORDS_PATH saveNewWords() new-words-add-actions newWordsAddOneBtn newWordsAddFiveBtn
-    new-words-save-actions newWordsSaveBtn new-word-entry-pronunciation dictionaryPlural(word.english, word.partOfSpeech)
+    new-words-save-actions newWordsSaveBtn new-word-entry-pronunciation
     dictionaryDefinition(word.definition) new-word-entry-vietnamese water_ripples_modal water_ripples_news
     portal-button-primary new-word-edit newsVocabularyRows addNewsVocabularyRowBtn
     function assertApiOriginConfiguredForStaticPreview() {}

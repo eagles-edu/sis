@@ -1,0 +1,649 @@
+/* portal-critical-theme:start */
+    /* VS Code selector resolution anchors; shared styles live in portal-theme.min.css. */
+    .actions,
+    .actions-2,
+    .active,
+    .attendance-overview-grid,
+    .attendance-square-k,
+    .attendance-square-v,
+    .brand-head,
+    .brand-logo,
+    .brand-logo-wrap,
+    .brand-logo-wrap--sm,
+    .calendar-empty,
+    .calendar-shell,
+    .card,
+    .chip-lock,
+    .chip-neutral,
+    .chip-ok,
+    .detail-meta,
+    .detail-note,
+    .floating-menu-btn,
+    .floating-menu-icon,
+    .header-bar,
+    .hidden,
+    .hint,
+    .homework-card-label,
+    .homework-content-title,
+    .homework-modal-btn,
+    .homework-square-k,
+    .identity-label,
+    .identity-list,
+    .identity-value,
+    .login-form,
+    .metrics,
+    .nav-overlay,
+    .panel,
+    .portal-col,
+    .portal-grid,
+    .portal-modal,
+    .portal-modal-actions,
+    .portal-modal-backdrop,
+    .portal-modal-body,
+    .portal-modal-close,
+    .portal-modal-dialog,
+    .portal-modal-head,
+    .portal-button-alt,
+    .portal-button-danger,
+    .portal-button-immutable-chrome,
+    .portal-button-info,
+    .portal-button-primary,
+    .portal-button-teal-refresh,
+    .portal-button-warning,
+    .portal-shell,
+    .portal-theme-toggle,
+    .portal-theme-toggle__icon,
+    .security-badge,
+    .security-badge__caption,
+    .security-badge__icon,
+    .side-actions,
+    .side-brand,
+    .side-links,
+    .side-nav,
+    .sub,
+    .topbar {}
+
+    .login-links {}
+    .login-link {}
+    .field-hint {}
+    .square-number {}
+    .square-percent-symbol {}
+    .queue-summary-stack {}
+    .queue-summary-chips {}
+    .queue-summary-chip {}
+    .queue-summary-chip-label {}
+    .queue-summary-chip-count {}
+
+    .status-strip {
+      padding: 10px 12px;
+    }
+
+    .submit-success-modal {
+      z-index: 1250;
+    }
+
+    .submit-success-confetti {
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      position: fixed;
+      z-index: 0;
+    }
+
+    .submit-success-confetti-piece {
+      animation: submit-success-confetti-fall linear infinite;
+      background: var(--piece-color, var(--portal-status-good-border));
+      border-radius: 999px;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+      height: var(--piece-height, 14px);
+      left: var(--piece-left, 50%);
+      opacity: .92;
+      position: absolute;
+      top: -12vh;
+      transform: translate3d(0, 0, 0) rotate(var(--piece-rotate-start, 0deg));
+      width: var(--piece-width, 10px);
+    }
+
+    .submit-success-dialog {
+      max-inline-size: min(92vw, 420px);
+      text-align: center;
+    }
+
+    .submit-success-body {
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+      padding-block: 10px 4px;
+    }
+
+    .submit-success-mark {
+      align-items: center;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--portal-status-good-bg) 88%, #fff 12%), var(--portal-status-good-bg));
+      block-size: 72px;
+      border: 2px solid var(--portal-status-good-border);
+      border-radius: 999px;
+      box-shadow: 0 16px 30px rgba(21, 95, 63, 0.18);
+      color: var(--portal-status-good-text);
+      display: inline-flex;
+      font-size: 36px;
+      font-weight: 900;
+      inline-size: 72px;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .submit-success-title {
+      font-size: 1.18rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin: 0;
+    }
+
+    .submit-success-copy {
+      margin: 0;
+      max-inline-size: 28ch;
+    }
+
+    .news-feedback-report {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .news-feedback-note,
+    .news-feedback-deadline {
+      background: var(--portal-surface-support);
+      border: 1px solid var(--portal-border);
+      border-radius: var(--radius-2);
+      color: var(--portal-text);
+      font-size: 1rem;
+      line-height: 1.6;
+      margin: 0;
+      padding: 12px 14px;
+    }
+
+    .news-feedback-deadline {
+      font-weight: 700;
+    }
+
+    .news-feedback-note {
+      white-space: pre-wrap;
+    }
+
+    .news-feedback-section {
+      display: grid;
+      gap: 8px;
+    }
+
+    .news-feedback-section h5 {
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .news-feedback-table {
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.98rem;
+      line-height: 1.55;
+      width: 100%;
+    }
+
+    .news-feedback-table th,
+    .news-feedback-table td {
+      border-bottom: 1px solid var(--portal-border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .news-feedback-table thead th {
+      background: var(--portal-surface-support);
+      font-size: 0.86rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .news-feedback-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    @keyframes submit-success-confetti-fall {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, -8vh, 0) rotate(var(--piece-rotate-start, 0deg));
+      }
+
+      8% {
+        opacity: .96;
+      }
+
+      100% {
+        opacity: .88;
+        transform: translate3d(var(--piece-drift, 0px), 120vh, 0) rotate(var(--piece-rotate-end, 360deg));
+      }
+    }
+
+    .row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .queue-summary-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .summary-title {
+      display: block;
+      font-weight: 800;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    .queue-table-wrap {
+      padding: 6px;
+      max-height: 260px;
+      overflow: auto;
+      box-sizing: border-box;
+      min-width: 0;
+    }
+
+    .queue-table-wrap table {
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      table-layout: fixed;
+      width: 100%;
+    }
+
+    .queue-table-wrap th,
+    .queue-table-wrap td {
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .queue-table-wrap tr:last-child td {
+      border-bottom: none;
+    }
+
+    .queue-table-wrap .link-btn {
+      padding: 6px 10px;
+      min-height: 0;
+      font-size: 12px;
+    }
+
+    .queue-table-wrap .cell-actions {
+      white-space: nowrap;
+    }
+
+    .queue-table-wrap table.news-queue-table {
+      table-layout: auto;
+    }
+
+    .queue-table-wrap table.news-queue-table th,
+    .queue-table-wrap table.news-queue-table td {
+      padding: 4px 6px;
+    }
+
+    .queue-table-wrap table.news-queue-table th:nth-child(2),
+    .queue-table-wrap table.news-queue-table td:nth-child(2),
+    .queue-table-wrap table.news-queue-table th:nth-child(3),
+    .queue-table-wrap table.news-queue-table td:nth-child(3),
+    .queue-table-wrap table.news-queue-table th:nth-child(5),
+    .queue-table-wrap table.news-queue-table td:nth-child(5) {
+      white-space: nowrap;
+    }
+
+    .queue-table-wrap table.news-queue-table td:nth-child(3) .chip,
+    table.news-queue-table td:nth-child(3) .chip {
+      --chip-height: 24px;
+      --chip-min-ar: 0;
+      min-inline-size: 0;
+      padding: 0 8px;
+      font-size: 11px;
+    }
+
+    table.news-queue-table td:nth-child(3) .chip {
+      min-inline-size: 0;
+    }
+
+    @media (max-width: 920px) {
+
+      .queue-table-wrap table.news-queue-table th:nth-child(4),
+      .queue-table-wrap table.news-queue-table td:nth-child(4) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 620px) {
+
+      .queue-table-wrap table.news-queue-table th:nth-child(2),
+      .queue-table-wrap table.news-queue-table td:nth-child(2) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .queue-table-wrap table.news-queue-table {
+        table-layout: auto;
+      }
+
+      .queue-table-wrap table.news-queue-table thead {
+        display: none;
+      }
+
+      .queue-table-wrap table.news-queue-table th:nth-child(2),
+      .queue-table-wrap table.news-queue-table td:nth-child(2),
+      .queue-table-wrap table.news-queue-table th:nth-child(3),
+      .queue-table-wrap table.news-queue-table td:nth-child(3),
+      .queue-table-wrap table.news-queue-table th:nth-child(4),
+      .queue-table-wrap table.news-queue-table td:nth-child(4) {
+        display: none;
+      }
+
+      .queue-table-wrap table.news-queue-table tbody {
+        display: grid;
+        gap: 8px;
+      }
+
+      .queue-table-wrap table.news-queue-table tbody tr {
+        display: grid;
+        gap: 6px;
+        grid-template-columns: minmax(0, 1fr);
+        border-radius: var(--radius-2);
+        padding: 8px;
+      }
+
+      .queue-table-wrap table.news-queue-table tbody td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        border-bottom: 0;
+        padding: 0;
+      }
+
+      .queue-table-wrap table.news-queue-table tbody td:nth-child(1) {
+        font-weight: 700;
+      }
+      .queue-table-wrap table.news-queue-table tbody td[colspan] {
+        display: block;
+        text-align: center;
+      }
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .form-row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .c3 {
+      grid-column: span 3;
+    }
+
+    .c4 {
+      grid-column: span 4;
+    }
+
+    .c6 {
+      grid-column: span 6;
+    }
+
+    .c12 {
+      grid-column: span 12;
+    }
+
+    .homework-modal-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    .homework-modal-table th,
+    .homework-modal-table td {
+      text-align: left;
+      padding: 8px 6px;
+      vertical-align: top;
+    }
+
+    .homework-modal-table th {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .homework-modal-table td:first-child,
+    .homework-modal-table th:first-child {
+      width: 140px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 520px) {
+      .homework-card-shell {
+        grid-template-columns: 86px minmax(0, 1fr);
+        gap: 8px;
+      }
+    }
+
+    .detail-layout {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .detail-metrics {
+      margin-top: 0;
+    }
+
+    .detail-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .grade-quarter-picker-btn {}
+    .grade-tabulator-shell .tabulator .tabulator-row.is-open {}
+    .quarter-board-card {}
+
+    @media (min-width: 720px) {
+      .grade-quarter-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .news-layout {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .calendar-range {
+      margin: 6px 0 8px;
+      font-size: 0.84rem;
+    }
+
+    @keyframes overdueBlink {
+
+      0%,
+      49% {
+        transform: scale(1);
+      }
+
+      50%,
+      100% {
+        transform: scale(1.015);
+      }
+    }
+
+    @keyframes dayAlertPulse {
+
+      0%,
+      100% {
+      }
+
+      50% {
+      }
+    }
+
+    @media (max-width: 959px) {
+
+      .c3,
+      .c4,
+      .c6 {
+        grid-column: span 12;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .topbar-head {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+      }
+
+      .header-actions {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        width: 100%;
+      }
+
+      .text-zoom-controls {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        max-width: 100%;
+      }
+
+      .text-zoom-controls > .portal-button {
+        flex: 0 0 auto !important;
+        inline-size: auto !important;
+        max-inline-size: none !important;
+        min-inline-size: 44px !important;
+      }
+    }
+
+    @media (min-width: 431px) and (max-width: 639px) {
+      #studentTextZoomDownBtn,
+      #studentTextZoomUpBtn {
+        box-sizing: border-box;
+        flex: 0 0 44px !important;
+        inline-size: 44px !important;
+        max-inline-size: 44px !important;
+        min-inline-size: 44px !important;
+      }
+
+      #studentTextZoomResetBtn {
+        box-sizing: border-box;
+        flex: 0 0 56px !important;
+        inline-size: 56px !important;
+        max-inline-size: 56px !important;
+        min-inline-size: 56px !important;
+      }
+    }
+
+    @media (max-width: 560px) {
+
+      .section-head,
+      .queue-summary-head {
+        justify-content: center;
+        text-align: center;
+      }
+
+      .section-head>*,
+      .queue-summary-head>* {
+        margin-inline: auto;
+        text-align: center;
+      }
+    }
+
+    @media (min-width: 720px) {
+      .toolbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+      }
+
+      .fc .fc-daygrid-day-frame {
+        min-height: 124px;
+      }
+    }
+
+    @media (max-width: 719px) {
+      .fc .fc-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .fc .fc-toolbar-chunk {
+        display: flex;
+        justify-content: center;
+      }
+
+      .fc .fc-toolbar-title {
+        text-align: center;
+      }
+
+      .fc .fc-daygrid-day-frame {
+        min-height: 92px;
+      }
+    }
+
+    @media (min-width: 1000px) {
+      #overviewPanel,
+      #quickLinksPanel {
+        grid-column: 1 / -1;
+      }
+
+      #identityPanel {
+        grid-column: 1;
+      }
+
+      #metricsPanel {
+        grid-column: 2;
+      }
+
+      #portalStatus {
+        grid-column: 1 / -1;
+      }
+
+      .news-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .detail-layout {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .detail-calendar-panel {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (min-width: 1000px) and (max-width: 1280px) {
+    }
+
+    html[data-student-auth-state="authenticated"] body.student-portal-page #loginPanel {
+      display: none !important;
+    }
+
+    html[data-student-auth-state="authenticated"] body.student-portal-page #appPanel {
+      display: block !important;
+    }
+
+    html[data-student-auth-state="unauthenticated"] body.student-portal-page #loginPanel {
+      display: block !important;
+    }
+
+    html[data-student-auth-state="unauthenticated"] body.student-portal-page #appPanel {
+      display: none !important;
+    }
+    /* portal-critical-theme:end */

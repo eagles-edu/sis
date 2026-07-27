@@ -3,6 +3,8 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 
 import {
+  buildStudentNewsSentenceIssues,
+  buildStudentNewsSentenceReport,
   evaluateStudentNewsCompliance,
   evaluateStudentNewsMinimumRequirements,
   mergeStudentNewsReviewNoteWithCompliance,
@@ -41,6 +43,105 @@ function basePayload(overrides = {}) {
     ...overrides,
   }
 }
+
+test("sentence feedback preserves raw offsets and emits rule messages without suggestions", () => {
+  const value = "  why did it happen"
+  const issues = buildStudentNewsSentenceIssues(value)
+
+  assert.deepEqual(issues.map(({ ruleId, start, length }) => ({ ruleId, start, length })), [
+    { ruleId: "sentence-capitalization", start: 2, length: 1 },
+    { ruleId: "sentence-punctuation", start: value.length - 1, length: 1 },
+  ])
+  assert.ok(issues.every((issue) => !Object.hasOwn(issue, "suggestion")))
+  assert.equal(value.slice(issues[0].start, issues[0].start + issues[0].length), "w")
+})
+
+test("action why and bias assessment require complete sentences", async () => {
+  const result = await evaluateStudentNewsMinimumRequirements(basePayload({
+    actionWhy: "why did it happen",
+    biasAssessment: "official sources",
+  }))
+
+  assert.equal(result.passed, false)
+  for (const field of ["actionWhy", "biasAssessment"]) {
+    assert.ok(result.failedFields[field].ruleIds.length > 0)
+    assert.ok(result.failedFields[field].sentenceIssues.length > 0)
+    assert.ok(result.failedFields[field].sentenceIssues.every((issue) => issue.message))
+  }
+})
+
+test("complete action why and bias assessment sentences pass sentence validation", () => {
+  assert.deepEqual(buildStudentNewsSentenceIssues(
+    "The action happened because officials needed to protect residents."
+  ), [])
+  assert.deepEqual(buildStudentNewsSentenceIssues(
+    "The report presents official sources but also includes resident perspectives."
+  ), [])
+})
+
+test("sentence report covers grammar families with exact ranges and classification", () => {
+  const report = buildStudentNewsSentenceReport("he are ready.")
+  assert.equal(report.sentenceType, "simple")
+  assert.deepEqual(report.issues.map(({ ruleId, start, length }) => ({ ruleId, start, length })), [
+    { ruleId: "sentence-capitalization", start: 0, length: 1 },
+    { ruleId: "subject-verb-agreement", start: 3, length: 3 },
+  ])
+  assert.ok(report.issues.every((issue) => issue.message && !Object.hasOwn(issue, "suggestion")))
+
+  assert.equal(buildStudentNewsSentenceReport("The team arrived, they started work.").issues.some((issue) => issue.ruleId === "sentence-type"), true)
+  assert.equal(buildStudentNewsSentenceReport("The team arrived because the gate opened.").sentenceType, "complex")
+  assert.equal(buildStudentNewsSentenceReport("Because the team arrived.").issues.some((issue) => issue.ruleId === "clause-fragment"), true)
+  assert.equal(buildStudentNewsSentenceReport("The team arrived, and the gate opened.").sentenceType, "compound")
+  assert.equal(buildStudentNewsSentenceReport("The team arrived because the gate opened, and the guard called.").sentenceType, "compound-complex")
+})
+
+test("sentence diagnostics cover the requested grammar and spelling rule families", () => {
+  const cases = [
+    ["Yesterday he goes home.", "verb-tense-consistency"],
+    ["They like to read and writing.", "parallel-structure"],
+    ["The goverment acted.", "sentence-spelling"],
+    ["And the team acted.", "conjunction-use"],
+    ["A apple fell.", "determiner-use"],
+    ["A quickly response failed.", "adjective-use"],
+    ["The team very quickly acted.", "adverb-use"],
+    ["The team acted", "sentence-punctuation"],
+  ]
+  for (const [sentence, ruleId] of cases) {
+    const issue = buildStudentNewsSentenceReport(sentence).issues.find((entry) => entry.ruleId === ruleId)
+    assert.ok(issue, `${ruleId} was not emitted for ${sentence}`)
+    assert.equal(typeof issue.start, "number")
+    assert.equal(typeof issue.length, "number")
+    assert.ok(issue.message.length > 0)
+    assert.equal(Object.hasOwn(issue, "suggestion"), false)
+    assert.equal(sentence.slice(issue.start, issue.start + issue.length).length, issue.length)
+  }
+})
+
+test("only fields 11 and 12 require complete sentence grammar", async () => {
+  const result = await evaluateStudentNewsMinimumRequirements(basePayload({
+    actionWhat: "Evacuated residents",
+    actionWhy: "The action happened because officials needed to protect residents.",
+    biasAssessment: "The report presents official sources and resident perspectives.",
+  }))
+  assert.equal(result.failedFields.actionWhat, undefined)
+  assert.equal(result.failedFields.actionWhy, undefined)
+  assert.equal(result.failedFields.biasAssessment, undefined)
+  assert.equal(result.sentenceReports.actionWhy.sentenceType, "complex")
+  assert.equal(result.sentenceReports.biasAssessment.sentenceType, "compound")
+})
+
+test("source compliance does not duplicate sentence fields as warnings", async () => {
+  const result = await withMockedFetch(ARTICLE_HTML, () => evaluateStudentNewsCompliance(basePayload({
+    actionWhy: "why did it happen",
+    biasAssessment: "official sources",
+  }), {
+    validationConfig: {
+      allowedDomains: ["bbc.com"],
+    },
+  }))
+  assert.equal(result.warningFields.actionWhy, undefined)
+  assert.equal(result.warningFields.biasAssessment, undefined)
+})
 
 async function withMockedFetch(html, fn) {
   const originalFetch = globalThis.fetch
@@ -181,7 +282,7 @@ test(
 )
 
 test("student news validation rejects homepage-only source links", async () => {
-  const minimum = evaluateStudentNewsMinimumRequirements(
+  const minimum = await evaluateStudentNewsMinimumRequirements(
     basePayload({
       sourceLink: "https://www.bbc.com/",
     }),

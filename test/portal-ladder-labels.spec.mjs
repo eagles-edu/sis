@@ -92,7 +92,7 @@ test("portal ladder surfaces are labeled explicitly in markup", () => {
   assert.match(studentAdminHtml, /<div class="chart-shell bar-chart-shell data-surface" data-surface-role="data-surface">/)
   assert.match(studentAdminHtml, /<div class="table-scroll-wrap data-surface" id="overviewClassTableWrap" data-surface-role="data-surface"[^>]*>/)
   assert.match(studentAdminHtml, /<section class="overview-group level-detail-panel panel" id="levelDetailPanel" data-surface-role="panel">/)
-  assert.match(studentAdminHtml, /<div class="mini-list data-surface" id="overviewRiskStudents" data-surface-role="data-surface">/)
+  assert.match(studentAdminHtml, /<div class="mini-list data-surface" id="overviewRiskStudents" data-surface-role="data-surface"[^>]*>/)
   assert.match(studentAdminHtml, /<section class="overview-group full hidden panel" id="overviewIncomingExerciseSection" data-surface-role="panel">/)
   assert.match(studentAdminHtml, /<section class="overview-group full panel" id="overviewNewsQueueSection" data-surface-role="panel">/)
   assert.match(studentAdminHtml, /<div id="profileInfoDataSummary" class="panel profile-info-summary" aria-live="polite" data-surface-role="panel">/)

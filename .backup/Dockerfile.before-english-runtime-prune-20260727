@@ -1,0 +1,48 @@
+# syntax=docker/dockerfile:1.7
+
+FROM maven:3.9.16-eclipse-temurin-17-noble@sha256:1ed5d1f54416b706707b4f3238f63a20bb06aab27c6d240090a2bb9ad895ed45 AS build
+
+ARG LANGUAGETOOL_VERSION=6.8
+WORKDIR /build
+
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y ca-certificates git \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth 1 --branch "v${LANGUAGETOOL_VERSION}" \
+  https://github.com/languagetool-org/languagetool.git /build/languagetool
+
+WORKDIR /build/languagetool
+
+RUN --mount=type=cache,target=/root/.m2 \
+  ./build.sh languagetool-standalone package -DskipTests
+
+FROM eclipse-temurin:17-jre-jammy
+
+ARG LANGUAGETOOL_VERSION=6.8
+ENV LANGUAGETOOL_VERSION=${LANGUAGETOOL_VERSION}
+ENV LT_HOME=/opt/languagetool/LanguageTool-${LANGUAGETOOL_VERSION}
+ENV JAVA_TOOL_OPTIONS="-Xms256m -Xmx768m -XX:+ExitOnOutOfMemoryError"
+
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y ca-certificates curl unzip \
+  && useradd --system --create-home --home-dir /opt/languagetool --shell /usr/sbin/nologin languagetool \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR ${LT_HOME}
+COPY --from=build "/build/languagetool/languagetool-standalone/target/LanguageTool-${LANGUAGETOOL_VERSION}.zip" /tmp/languagetool.zip
+RUN unzip -q /tmp/languagetool.zip -d /opt/languagetool \
+  && rm /tmp/languagetool.zip \
+  && mkdir -p /etc/languagetool \
+  && chown -R languagetool:languagetool /opt/languagetool /etc/languagetool
+
+COPY server.properties /etc/languagetool/server.properties
+RUN chown languagetool:languagetool /etc/languagetool/server.properties
+
+USER languagetool
+EXPOSE 8081
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=45s --retries=3 \
+  CMD curl -fsS --max-time 5 --data-urlencode language=en-US --data-urlencode text="Health check." http://127.0.0.1:8081/v2/check >/dev/null || exit 1
+
+CMD ["java", "-cp", "languagetool-server.jar", "org.languagetool.server.HTTPServer", "--config", "/etc/languagetool/server.properties", "--port", "8081", "--public"]

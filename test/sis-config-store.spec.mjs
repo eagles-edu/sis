@@ -423,7 +423,7 @@ test("sis config loader fails fast on placeholder example database hosts with li
   }
 })
 
-test("sis config loader reinjects relative logo and six level image paths when missing", async () => {
+test("sis config loader reinjects relative logo and built-in level image paths when missing", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   process.env.SIS_CONFIG_FILE = sisConfigPath
   process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
@@ -474,6 +474,7 @@ test("sis config loader reinjects relative logo and six level image paths when m
       "A2 Flyers",
       "A2 KET",
       "B1 PET",
+      "B2+ IELTS",
       "Eggs & Chicks",
       "Pre-A1 Starters",
     ])
@@ -500,6 +501,10 @@ test("sis config loader reinjects relative logo and six level image paths when m
     assert.equal(
       snapshot.uiSettings.levelTileStylesByLevel["B1 PET"].imageDataUrl,
       "web-asset/images/pet.svg",
+    )
+    assert.equal(
+      snapshot.uiSettings.levelTileStylesByLevel["B2+ IELTS"].imageDataUrl,
+      "web-asset/images/ielts.svg",
     )
 
     const restoredConfig = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))

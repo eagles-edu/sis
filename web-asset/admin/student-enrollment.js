@@ -711,13 +711,26 @@
         });
       }
 
+      function normalizeSchoolLogoUrl(value = "") {
+        const raw = normalizeText(value);
+        if (!raw) return "";
+        if (/^(?:data:|blob:|https?:|\/)/i.test(raw)) return raw;
+        if (raw === "logo.svg" || raw === "images/logo.svg") {
+          return "/web-asset/images/logo.svg";
+        }
+        if (raw.startsWith("web-asset/")) return `/${raw}`;
+        return raw;
+      }
+
       function normalizeSchoolProfile(source = {}) {
         const profile = source && typeof source === "object" && !Array.isArray(source)
           ? source
           : {};
         return {
           schoolName: normalizeText(profile.schoolName || DEFAULT_SCHOOL_PROFILE.schoolName),
-          logoDataUrl: normalizeText(profile.logoDataUrl || DEFAULT_SCHOOL_PROFILE.logoDataUrl),
+          logoDataUrl: normalizeSchoolLogoUrl(
+            profile.logoDataUrl || DEFAULT_SCHOOL_PROFILE.logoDataUrl,
+          ),
         };
       }
 

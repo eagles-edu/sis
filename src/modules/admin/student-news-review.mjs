@@ -1,8 +1,6 @@
 // @ts-check
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import {
-  evaluateStudentNewsAutoApprovalState,
-  getStudentNewsAutoApprovalConfigSync,
   reconcileStudentNewsAutoApprovals,
 } from "./student-news-auto-approval.mjs"
 import {
@@ -246,6 +244,14 @@ function normalizeValidationIssueEntry(fieldKey = "", entry = {}) {
   const steps = Array.isArray(source.steps)
     ? source.steps.map((item) => normalizeText(item)).filter(Boolean)
     : []
+  const sentenceIssues = Array.isArray(source.sentenceIssues)
+    ? source.sentenceIssues.map((issue) => ({
+      ruleId: normalizeText(issue?.ruleId),
+      start: Math.max(0, Number.parseInt(String(issue?.start), 10) || 0),
+      length: Math.max(1, Number.parseInt(String(issue?.length), 10) || 1),
+      message: normalizeText(issue?.message),
+    })).filter((issue) => issue.ruleId && issue.message)
+    : []
   return {
     field: key,
     label: normalizeText(source.label || key),
@@ -255,6 +261,11 @@ function normalizeValidationIssueEntry(fieldKey = "", entry = {}) {
     steps,
     score: Number.isFinite(Number(source.score)) ? Number(source.score) : null,
     threshold: Number.isFinite(Number(source.threshold)) ? Number(source.threshold) : null,
+    ruleIds: [...new Set([
+      ...(Array.isArray(source.ruleIds) ? source.ruleIds.map((ruleId) => normalizeText(ruleId)) : []),
+      ...sentenceIssues.map((issue) => issue.ruleId),
+    ].filter(Boolean))],
+    sentenceIssues,
     updatedAt: parseDateOrNull(source.updatedAt)?.toISOString?.() || new Date().toISOString(),
   }
 }
@@ -492,6 +503,7 @@ function mapStudentNewsReportRow(row = {}) {
     id: normalizeText(row?.id),
     studentRefId: normalizeText(row?.studentRefId),
     reportDate: toLocalIsoDate(row?.reportDate),
+    reportSequence: Math.max(1, Number(row?.reportSequence) || 1),
     sourceLink,
     articleTitle,
     byline: normalizeText(row?.byline),
@@ -686,6 +698,7 @@ function buildStudentNewsReviewSelect({ includeReviewFields = true } = {}) {
     id: true,
     studentRefId: true,
     reportDate: true,
+    reportSequence: true,
     sourceLink: true,
     articleTitle: true,
     byline: true,
@@ -849,7 +862,7 @@ export async function listStudentNewsReportsForReview({
         const submissionState = normalizeLower(entry?.submissionState)
         return requestedSubmissionState
           ? submissionState === requestedSubmissionState
-          : rawStatus === "all" || !submissionState || submissionState === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+          : rawStatus === "all" || !submissionState || submissionState === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED || submissionState === "draft"
       })
       .filter((entry) => !requestedStudentRefId || normalizeText(entry?.studentRefId) === requestedStudentRefId)
       .filter((entry) => !fromDateKey || normalizeText(entry?.reportDate) >= fromDateKey)
@@ -887,17 +900,7 @@ export async function listStudentNewsReportsForReview({
       studentByRefId,
     })
   })
-  const autoApprovalConfig = getStudentNewsAutoApprovalConfigSync()
-  const autoApprovalStates = await Promise.all(
-    mapped.map((entry) =>
-      evaluateStudentNewsAutoApprovalState(entry, {
-        config: autoApprovalConfig,
-      })
-    )
-  )
-  const filtered = mapped.filter((entry, index) => {
-    const autoApprovalState = autoApprovalStates[index] || null
-    if (autoApprovalState?.enabled && autoApprovalState.candidate && !autoApprovalState.due) return false
+  const filtered = mapped.filter((entry) => {
     if (requestedStatus !== "all" && normalizeStudentNewsReviewStatus(entry?.reviewStatus, "") !== requestedStatus) return false
     if (requestedLevel) {
       const entryLevel = canonicalizeLevel(entry?.student?.level || "") || ""
@@ -995,11 +998,9 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
   assertWithStatus(Boolean(existingReport), 404, "Student news report not found")
 
   if (action === "save") {
-    assertWithStatus(
-      normalizeStudentNewsReviewStatus(existingReport?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) !== STUDENT_NEWS_REVIEW_STATUS_APPROVED,
-      403,
-      "Approved news reports cannot be edited",
-    )
+    // This endpoint is admin-only at the route boundary. Admins need a full
+    // intervention surface, so an existing review status must not prevent
+    // editing or adding feedback to a report.
     const editablePayload = normalizeStudentNewsReviewEditablePayload(payload)
     // The admin viewer edits report prose, not vocabulary. Preserve the
     // stored vocabulary when the viewer save payload does not include it.

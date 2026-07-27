@@ -87,6 +87,31 @@ test("compound vocabulary passes required validation but can earn an extra-point
   assert.match(result.warningFields.vocabulary.message, /extra points/)
 })
 
+test("air-strike never receives a false syllabication warning", async () => {
+  const { evaluateStudentNewsCompliance } = await import("../src/modules/admin/student-news-compliance.mjs")
+  const result = await evaluateStudentNewsCompliance({
+    sourceLink: "https://www.bbc.com/news/articles/cy91vrzxn34o",
+    articleTitle: "How Pakistan won over Trump to become an unlikely mediator in the Iran war",
+    byline: "Caroline Davies",
+    articleDateline: "9 hours ago",
+    leadSynopsis: "Pakistan became an unlikely mediator.",
+    actionActor: "Pakistan",
+    actionAffected: "Iran",
+    actionWhere: "Iran",
+    actionWhat: "Pakistan acted as a mediator.",
+    actionWhy: "The parties needed a mediator.",
+    biasAssessment: "The article presents more than one viewpoint.",
+    vocabulary: [{
+      partOfSpeech: "noun",
+      english: "air-strike",
+      vietnamese: "cuộc không kích",
+      syllabication: "air-strike",
+      definition: "An attack from aircraft.",
+    }],
+  }, { validationConfig: { vocabularyMinimumWords: 1 } })
+  assert.equal(result.warningFields.vocabulary, undefined)
+})
+
 test("syllabication requires stress only for multisyllabic words inside phrases", () => {
   assert.equal(isValidStudentNewsSyllabication("po-tá-to"), true)
   assert.equal(isValidStudentNewsSyllabication("po-TA-to"), true)
@@ -124,6 +149,8 @@ test("student vocabulary rows provide lookup controls for initial and added rows
   assert.match(STUDENT_HTML, /autoResizeVocabularyDefinition\(textarea\)/)
   assert.match(STUDENT_HTML, /bindVocabularyDefinitionAutosize\(rowEl\)/)
   assert.match(STUDENT_HTML, /portal-button-danger news-vocabulary-remove/)
+  assert.match(STUDENT_HTML, /function normalizeSyllabication\(value\) \{\s*return t\(value\);\s*\}/)
+  assert.doesNotMatch(STUDENT_HTML, /function dictionaryPlural\(/)
 })
 
 test("student part-of-speech selectors use a fixed longest-option width", () => {
@@ -252,7 +279,7 @@ test("student New Words page exposes editable, sortable, paginated vocabulary", 
   assert.match(STUDENT_HTML, /new-words-add-actions[\s\S]*id="newWordsAddOneBtn"[\s\S]*id="newWordsAddFiveBtn"/)
   assert.match(STUDENT_HTML, /new-words-save-actions[\s\S]*id="newWordsSaveBtn"/)
   assert.match(STUDENT_HTML, /new-word-entry-pronunciation/)
-  assert.match(STUDENT_HTML, /dictionaryPlural\(word\.english, word\.partOfSpeech\)/)
+  assert.doesNotMatch(STUDENT_HTML, /dictionaryPlural\(word\.english, word\.partOfSpeech\)/)
   assert.match(STUDENT_HTML, /dictionaryDefinition\(word\.definition\)/)
   assert.match(STUDENT_HTML, /new-word-entry-vietnamese/)
   assert.equal((STUDENT_HTML.match(/class="new-words-intro-illustration"/g) || []).length, 3)
@@ -274,9 +301,8 @@ test("student New Words page exposes editable, sortable, paginated vocabulary", 
   assert.match(NEW_WORDS_MODULE, /sourceReportDate: localDateKey\(row\.sourceReportDate\)/)
   assert.match(NEW_WORDS_MODULE, /normalizeSyllabication\(row\.syllabication\)/)
   assert.match(NEWS_SUBMISSIONS_MODULE, /syllabication: normalizeSyllabication\(/)
-  assert.match(STUDENT_HTML, /function normalizeSyllabication\(value\)/)
-  assert.match(STUDENT_HTML, /y: "ý"/)
-  assert.match(STUDENT_HTML, /\[áéíóúý\]/)
+  assert.match(STUDENT_HTML, /function normalizeSyllabication\(value\) \{\s*return t\(value\);\s*\}/)
+  assert.doesNotMatch(STUDENT_HTML, /syllableCount\s*===\s*1[\s\S]*?normalizeSyllabication/)
   assert.match(SHARED_THEME, /new-word-entry-definition[\s\S]*padding-inline-start: 18px/)
 })
 

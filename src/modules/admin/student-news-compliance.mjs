@@ -1,6 +1,8 @@
 // src/modules/admin/student-news-compliance.mjs
 // @ts-check
 
+import { checkTextWithLanguageTool } from "./student-news-language-tool.mjs"
+
 /**
  * @param {unknown} value
  * @returns {string}
@@ -229,23 +231,17 @@ function studentNewsVocabularyRowError(row, index) {
   }
 }
 
-function countStudentNewsVowelGroups(value) {
-  return (normalizeLower(value).match(/[aeiouy]+/gu) || []).length
-}
-
 function findStudentNewsVocabularyExtraPointWarnings(value) {
   return normalizeStudentNewsVocabulary(value)
     .map((row, index) => {
       const english = normalizeText(row.english)
       const syllabication = normalizeText(row.syllabication)
-      if (!english || !syllabication || !english.includes("-") || normalizeLower(english) !== normalizeLower(syllabication)) return null
-      const compoundParts = english.split("-").filter(Boolean)
-      const multisyllabicPart = compoundParts.find((part) => countStudentNewsVowelGroups(part) > 1)
-      if (!multisyllabicPart) return null
+      const verified = STUDENT_NEWS_VERIFIED_COMPOUND_SYLLABICATIONS[normalizeLower(english)]
+      if (!verified || !syllabication || normalizeLower(english) !== normalizeLower(syllabication)) return null
       return {
         index,
         english,
-        message: `Entry ${index + 1} ("${english}") passes as a compound, but split "${multisyllabicPart}" at its dictionary syllable boundaries for extra points.`,
+        message: `Entry ${index + 1} ("${english}") passes as a compound, but its verified dictionary syllabication is "${verified}" for extra points.`,
       }
     })
     .filter(Boolean)
@@ -366,6 +362,9 @@ function normalizeStudentNewsValidationConfig(config = {}) {
   const allowedDomains = normalizedDomains.length
     ? Array.from(new Set(normalizedDomains))
     : [...STUDENT_NEWS_DEFAULT_ALLOWED_SOURCE_DOMAINS]
+  const grammarSource = source?.grammarEngine && typeof source.grammarEngine === "object"
+    ? source.grammarEngine
+    : {}
 
   const thresholds = {
     articleTitle: Number(source?.thresholds?.articleTitle),
@@ -392,6 +391,12 @@ function normalizeStudentNewsValidationConfig(config = {}) {
       leadSynopsis: Number.isFinite(thresholds.leadSynopsis)
         ? Math.max(0.1, Math.min(1, thresholds.leadSynopsis))
         : STUDENT_NEWS_DEFAULT_THRESHOLDS.leadSynopsis,
+    },
+    grammarEngine: {
+      enabled: grammarSource.enabled === true,
+      endpoint: normalizeText(grammarSource.endpoint),
+      language: normalizeText(grammarSource.language) || "en-US",
+      timeoutMs: Math.max(1000, Math.min(30000, Number.parseInt(String(grammarSource.timeoutMs), 10) || 12000)),
     },
   }
 }
@@ -1000,6 +1005,16 @@ function normalizeValidationIssueEntry(fieldKey = "", entry = {}) {
   const steps = Array.isArray(source.steps)
     ? source.steps.map((item) => normalizeText(item)).filter(Boolean)
     : []
+  const sentenceIssues = Array.isArray(source.sentenceIssues)
+    ? source.sentenceIssues.map((issue) => ({
+      ruleId: normalizeText(issue?.ruleId),
+      start: Math.max(0, Number.parseInt(String(issue?.start), 10) || 0),
+      length: Math.max(1, Number.parseInt(String(issue?.length), 10) || 1),
+      message: normalizeText(issue?.message),
+      replacements: Array.isArray(issue?.replacements) ? issue.replacements.map((value) => normalizeText(value)).filter(Boolean).slice(0, 5) : [],
+      blocking: issue?.blocking !== false,
+    })).filter((issue) => issue.ruleId && issue.message)
+    : []
   return {
     field: key,
     label: normalizeText(source.label || STUDENT_NEWS_FIELD_LABELS[key] || key),
@@ -1009,6 +1024,11 @@ function normalizeValidationIssueEntry(fieldKey = "", entry = {}) {
     steps,
     score: Number.isFinite(Number(source.score)) ? Number(source.score) : null,
     threshold: Number.isFinite(Number(source.threshold)) ? Number(source.threshold) : null,
+    ruleIds: [...new Set([
+      ...(Array.isArray(source.ruleIds) ? source.ruleIds.map((ruleId) => normalizeText(ruleId)) : []),
+      ...sentenceIssues.map((issue) => issue.ruleId),
+    ].filter(Boolean))],
+    sentenceIssues,
     updatedAt: parseDateOrNull(source.updatedAt)?.toISOString?.() || nowIso(),
   }
 }
@@ -1636,12 +1656,243 @@ function hasNounLikePhrase(value = "") {
   return tokens.length >= 1
 }
 
+const STUDENT_NEWS_SENTENCE_RULES = Object.freeze({
+  capitalization: "sentence-capitalization",
+  punctuation: "sentence-punctuation",
+  spelling: "sentence-spelling",
+  subjectVerbAgreement: "subject-verb-agreement",
+  tenseConsistency: "verb-tense-consistency",
+  parallelStructure: "parallel-structure",
+  clauseFragment: "clause-fragment",
+  sentenceType: "sentence-type",
+  conjunctionUse: "conjunction-use",
+  determinerUse: "determiner-use",
+  adjectiveUse: "adjective-use",
+  adverbUse: "adverb-use",
+})
+
+const STUDENT_NEWS_COMMON_SPELLING_ERRORS = Object.freeze({
+  accomodate: "accommodate",
+  definately: "definitely",
+  enviroment: "environment",
+  goverment: "government",
+  occured: "occurred",
+  recieve: "receive",
+  seperate: "separate",
+  becuase: "because",
+})
+
+const STUDENT_NEWS_VERIFIED_COMPOUND_SYLLABICATIONS = Object.freeze({
+  "air-conditioning": "air-con-di-tion-ing",
+  "thirty-seven": "THIR-ty-SEV-en",
+  "runner-up": "RUN-ner-up",
+})
+
+const STUDENT_NEWS_IRREGULAR_PAST_VERBS = new Set([
+  "was", "were", "had", "did", "went", "saw", "made", "took", "gave", "came", "became",
+])
+
+const STUDENT_NEWS_PRESENT_VERBS = new Set([
+  "am", "is", "are", "has", "have", "do", "does", "go", "goes", "make", "makes", "take", "takes",
+  "give", "gives", "come", "comes", "become", "becomes", "act", "acts", "report", "reports",
+  "say", "says", "show", "shows", "need", "needs", "cause", "causes", "affect", "affects",
+])
+
+const STUDENT_NEWS_PAST_TIME_MARKERS = /\b(?:yesterday|last\s+(?:week|month|year|night)|ago|earlier)\b/iu
+const STUDENT_NEWS_FUTURE_TIME_MARKERS = /\b(?:tomorrow|next\s+(?:week|month|year))\b/iu
+
+function studentNewsSentenceWords(value = "") {
+  const raw = String(value == null ? "" : value)
+  return Array.from(raw.matchAll(/\b[A-Za-z]+(?:'[A-Za-z]+)?\b/gu)).map((match) => ({
+    text: match[0],
+    lower: match[0].toLocaleLowerCase("en-US"),
+    start: match.index || 0,
+    length: match[0].length,
+  }))
+}
+
+function studentNewsIssue(ruleId, start, length, message) {
+  return {
+    ruleId,
+    start: Math.max(0, Number(start) || 0),
+    length: Math.max(1, Number(length) || 1),
+    message: String(message || "").trim(),
+  }
+}
+
+export function classifyStudentNewsSentence(value = "") {
+  const raw = String(value == null ? "" : value).trim()
+  if (!raw) return "fragment"
+  const words = studentNewsSentenceWords(raw)
+  const conjunctionCount = (raw.match(/\b(?:and|but|or|so|yet|for|nor)\b/giu) || []).length
+  const subordinatingCount = (raw.match(/\b(?:because|although|while|when|if|since|after|before|unless|that)\b/giu) || []).length
+  const clauseCount = Math.max(1, (raw.match(/[,;:]\s+(?:and|but|or|so|yet|because|although|while|when|if)\b/giu) || []).length + 1)
+  if (words.length < 3) return "fragment"
+  if (subordinatingCount && clauseCount > 1 && conjunctionCount) return "compound-complex"
+  if (subordinatingCount) return "complex"
+  if (clauseCount > 1 || conjunctionCount) return "compound"
+  return "simple"
+}
+
+function buildStudentNewsGrammarIssues(raw) {
+  const text = String(raw == null ? "" : raw)
+  const trimmed = text.trim()
+  if (!trimmed) return []
+  const startOffset = text.indexOf(trimmed)
+  const words = studentNewsSentenceWords(text)
+  const issues = []
+  const firstLetterOffset = trimmed.search(/[A-Za-z]/u)
+  if (firstLetterOffset >= 0 && /[a-z]/u.test(trimmed[firstLetterOffset])) {
+    issues.push(studentNewsIssue(
+      STUDENT_NEWS_SENTENCE_RULES.capitalization,
+      startOffset + firstLetterOffset,
+      1,
+      "Start the sentence with a capital letter.",
+    ))
+  }
+  if (!/[.!?]$/u.test(trimmed)) {
+    issues.push(studentNewsIssue(
+      STUDENT_NEWS_SENTENCE_RULES.punctuation,
+      startOffset + Math.max(0, trimmed.length - 1),
+      1,
+      "End the sentence with a full stop, question mark, or exclamation mark.",
+    ))
+  }
+  if (words.length < 3) {
+    issues.push(studentNewsIssue(
+      STUDENT_NEWS_SENTENCE_RULES.clauseFragment,
+      startOffset,
+      Math.max(1, trimmed.length),
+      "This is a fragment; include a subject and a finite verb in a complete clause.",
+    ))
+  }
+  const leadingSubordinator = /^(because|although|while|when|if|since|after|before|unless)\b/iu.exec(trimmed)
+  if (leadingSubordinator && !/\b(?:is|are|was|were|has|have|did|does|do|[A-Za-z]+ed|[A-Za-z]+s)\b[^.!?]*\b(?:because|although|while|when|if|since|after|before|unless)\b/iu.test(trimmed)) {
+    issues.push(studentNewsIssue(
+      STUDENT_NEWS_SENTENCE_RULES.clauseFragment,
+      startOffset + (leadingSubordinator.index || 0),
+      leadingSubordinator[0].length,
+      "This subordinate clause is incomplete; connect it to an independent clause.",
+    ))
+  }
+
+  words.forEach((word) => {
+    const correction = STUDENT_NEWS_COMMON_SPELLING_ERRORS[word.lower]
+    if (!correction) return
+    issues.push(studentNewsIssue(
+      STUDENT_NEWS_SENTENCE_RULES.spelling,
+      word.start,
+      word.length,
+      `Possible spelling error in “${word.text}”.`,
+    ))
+  })
+
+  const addWordIssue = (ruleId, word, message) => {
+    if (word) issues.push(studentNewsIssue(ruleId, word.start, word.length, message))
+  }
+  for (let index = 0; index < words.length - 1; index += 1) {
+    const subject = words[index]
+    const verb = words[index + 1]
+    if (["he", "she", "it"].includes(subject.lower) && ["are", "were", "have", "do", "go", "need", "say"].includes(verb.lower)) {
+      addWordIssue(STUDENT_NEWS_SENTENCE_RULES.subjectVerbAgreement, verb, `The subject “${subject.text}” requires a singular verb form.`)
+    }
+    if (["they", "we", "you"].includes(subject.lower) && ["is", "was", "has", "does", "goes", "needs", "says"].includes(verb.lower)) {
+      addWordIssue(STUDENT_NEWS_SENTENCE_RULES.subjectVerbAgreement, verb, `The subject “${subject.text}” requires a plural or non-third-person verb form.`)
+    }
+    if (subject.lower === "i" && ["is", "are", "has", "does"].includes(verb.lower)) {
+      addWordIssue(STUDENT_NEWS_SENTENCE_RULES.subjectVerbAgreement, verb, `The subject “${subject.text}” does not agree with “${verb.text}”.`)
+    }
+    if (subject.lower === "a" && ["apple", "event", "official", "action", "article", "error"].includes(verb.lower)) {
+      addWordIssue(STUDENT_NEWS_SENTENCE_RULES.determinerUse, subject, `Use “an” before the vowel sound in “${verb.text}”.`)
+    }
+    if (subject.lower === "an" && ["boy", "car", "student", "report", "government"].includes(verb.lower)) {
+      addWordIssue(STUDENT_NEWS_SENTENCE_RULES.determinerUse, subject, `Use “a” before the consonant sound in “${verb.text}”.`)
+    }
+  }
+
+  if (STUDENT_NEWS_PAST_TIME_MARKERS.test(trimmed)) {
+    const present = words.find((word) => STUDENT_NEWS_PRESENT_VERBS.has(word.lower))
+    if (present) addWordIssue(STUDENT_NEWS_SENTENCE_RULES.tenseConsistency, present, `The past-time marker requires a consistent past-tense verb near “${present.text}”.`)
+  }
+  if (STUDENT_NEWS_FUTURE_TIME_MARKERS.test(trimmed)) {
+    const past = words.find((word) => STUDENT_NEWS_IRREGULAR_PAST_VERBS.has(word.lower))
+    if (past) addWordIssue(STUDENT_NEWS_SENTENCE_RULES.tenseConsistency, past, `The future-time marker requires a consistent future construction near “${past.text}”.`)
+  }
+
+  const commaSplice = /\b(?:is|are|was|were|has|have|did|does|do|[A-Za-z]+ed)\b\s*,\s+[A-Za-z]+\s+(?:is|are|was|were|has|have|did|does|do|[A-Za-z]+(?:s|ed))\b/gu.exec(trimmed)
+  if (commaSplice && !/\b(?:and|but|or|so|yet|for|nor)\b/iu.test(commaSplice[0])) {
+    const commaOffset = startOffset + commaSplice.index + commaSplice[0].indexOf(",")
+    issues.push(studentNewsIssue(STUDENT_NEWS_SENTENCE_RULES.sentenceType, commaOffset, 1, "Separate two independent clauses with a conjunction or stronger punctuation."))
+  }
+  if (/\b(?:to\s+\w+\s+and\s+\w+ing|\w+ing\s+and\s+to\s+\w+)\b/iu.test(trimmed)) {
+    const match = /\b(?:to\s+\w+\s+and\s+\w+ing|\w+ing\s+and\s+to\s+\w+)\b/iu.exec(trimmed)
+    issues.push(studentNewsIssue(STUDENT_NEWS_SENTENCE_RULES.parallelStructure, startOffset + (match?.index || 0), match?.[0]?.length || 1, "Use matching grammatical forms for the coordinated actions."))
+  }
+  if (/^(?:and|but|because|so)\b/iu.test(trimmed)) {
+    issues.push(studentNewsIssue(STUDENT_NEWS_SENTENCE_RULES.conjunctionUse, startOffset, words[0]?.length || 1, "Begin with this conjunction only when it clearly connects to a preceding clause."))
+  }
+  if (/\b(?:very quickly|quickly very|extremely sudden)\b/iu.test(trimmed)) {
+    const match = /\b(?:very quickly|quickly very|extremely sudden)\b/iu.exec(trimmed)
+    issues.push(studentNewsIssue(STUDENT_NEWS_SENTENCE_RULES.adverbUse, startOffset + (match?.index || 0), match?.[0]?.length || 1, "Place the adverb next to the verb or adjective it modifies."))
+  }
+  if (/\b(?:a|an)\s+(?:quickly|slowly|carefully)\b/iu.test(trimmed)) {
+    const match = /\b(?:a|an)\s+(?:quickly|slowly|carefully)\b/iu.exec(trimmed)
+    issues.push(studentNewsIssue(STUDENT_NEWS_SENTENCE_RULES.adjectiveUse, startOffset + (match?.index || 0), match?.[0]?.length || 1, "Use an adjective after the determiner when the noun is being described."))
+  }
+  return issues.sort((left, right) => left.start - right.start || left.ruleId.localeCompare(right.ruleId))
+}
+
+/**
+ * Return deterministic, range-based sentence findings for the two fields
+ * that explicitly require complete sentences. Suggestions are intentionally
+ * excluded: students receive the raw sentence and explanatory comments.
+ *
+ * @param {unknown} value
+ * @returns {Array<{ ruleId: string, start: number, length: number, message: string }>}
+ */
+export function buildStudentNewsSentenceIssues(value = "") {
+  return buildStudentNewsGrammarIssues(value)
+}
+
+export function buildStudentNewsSentenceReport(value = "") {
+  const text = value === undefined || value === null ? "" : String(value)
+  return {
+    sentenceType: classifyStudentNewsSentence(text),
+    issues: buildStudentNewsSentenceIssues(text),
+  }
+}
+
+async function buildStudentNewsLanguageReports(actionWhy, biasAssessment, config) {
+  const fallback = {
+    actionWhy: { ...buildStudentNewsSentenceReport(actionWhy), advisoryIssues: [] },
+    biasAssessment: { ...buildStudentNewsSentenceReport(biasAssessment), advisoryIssues: [] },
+  }
+  if (config?.grammarEngine?.enabled !== true) return fallback
+  const entries = [
+    ["actionWhy", actionWhy],
+    ["biasAssessment", biasAssessment],
+  ]
+  const reports = { ...fallback }
+  for (const [field, value] of entries) {
+    if (!normalizeText(value)) continue
+    let result
+    try {
+      result = await checkTextWithLanguageTool(value, config.grammarEngine)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "LanguageTool request failed"
+      throw new Error(`Grammar validation unavailable: ${message}`, { cause: error })
+    }
+    reports[field] = {
+      sentenceType: classifyStudentNewsSentence(value),
+      issues: result.blockingIssues,
+      advisoryIssues: result.advisoryIssues,
+    }
+  }
+  return reports
+}
+
 function isSentenceLike(value = "") {
-  const text = normalizeText(value)
-  if (!text) return false
-  const tokens = text.split(/\s+/).filter(Boolean)
-  if (tokens.length < 4) return false
-  return /[.!?]$/.test(text) || text.length >= 24
+  return buildStudentNewsSentenceIssues(value).length === 0
 }
 
 function datelineHasExplicitUpdatedCue(value = "") {
@@ -1677,7 +1928,7 @@ function buildTasksFromFailedFields(failedFields = {}, allowedDomains = []) {
  *   config: ReturnType<typeof normalizeStudentNewsValidationConfig>,
  * }}
  */
-export function evaluateStudentNewsMinimumRequirements(payload = {}, options = {}) {
+export async function evaluateStudentNewsMinimumRequirements(payload = {}, options = {}) {
   const config = normalizeStudentNewsValidationConfig(options?.validationConfig || {})
   const normalizedSourceLink = normalizeHttpUrl(payload?.sourceLink)
   const rawSourceLink = normalizeText(payload?.sourceLink)
@@ -1691,6 +1942,7 @@ export function evaluateStudentNewsMinimumRequirements(payload = {}, options = {
   const actionWhat = normalizeText(payload?.actionWhat)
   const actionWhy = normalizeText(payload?.actionWhy)
   const biasAssessment = normalizeText(payload?.biasAssessment)
+  const sentenceReports = await buildStudentNewsLanguageReports(actionWhy, biasAssessment, config)
   const failedFields = {}
 
   if (!rawSourceLink) {
@@ -1774,11 +2026,15 @@ export function evaluateStudentNewsMinimumRequirements(payload = {}, options = {
       score: 0,
       threshold: 1,
     }
-  } else if (!isSentenceLike(actionWhy)) {
+  } else if (sentenceReports.actionWhy.issues.length) {
+    const sentenceIssues = sentenceReports.actionWhy.issues
     failedFields.actionWhy = {
       message: "Action reason must be at least one sentence.",
       score: 0,
       threshold: 1,
+      ruleIds: sentenceIssues.map((issue) => issue.ruleId),
+      sentenceIssues,
+      sentenceType: sentenceReports.actionWhy.sentenceType,
     }
   }
   if (!biasAssessment) {
@@ -1787,11 +2043,15 @@ export function evaluateStudentNewsMinimumRequirements(payload = {}, options = {
       score: 0,
       threshold: 1,
     }
-  } else if (!isSentenceLike(biasAssessment)) {
+  } else if (sentenceReports.biasAssessment.issues.length) {
+    const sentenceIssues = sentenceReports.biasAssessment.issues
     failedFields.biasAssessment = {
       message: "Bias assessment must be at least one sentence.",
       score: 0,
       threshold: 1,
+      ruleIds: sentenceIssues.map((issue) => issue.ruleId),
+      sentenceIssues,
+      sentenceType: sentenceReports.biasAssessment.sentenceType,
     }
   }
   const vocabularyValidation = evaluateStudentNewsVocabulary(payload?.vocabulary, {
@@ -1810,6 +2070,7 @@ export function evaluateStudentNewsMinimumRequirements(payload = {}, options = {
     passed: Object.keys(failedFields).length === 0,
     failedFields,
     requiredTasks: buildTasksFromFailedFields(failedFields, config.allowedDomains),
+    sentenceReports,
     config,
   }
 }
@@ -1861,6 +2122,9 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
   const actionWhat = normalizeText(payload?.actionWhat)
   const actionWhy = normalizeText(payload?.actionWhy)
   const biasAssessment = normalizeText(payload?.biasAssessment)
+  const sentenceReports = options?.sentenceReports && typeof options.sentenceReports === "object"
+    ? options.sentenceReports
+    : await buildStudentNewsLanguageReports(actionWhy, biasAssessment, config)
   const failedFields = {}
   const warningFields = {}
   const validationDetails = {}
@@ -2116,22 +2380,10 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
       score: 0,
       threshold: 1,
     }
-  } else if (!isSentenceLike(actionWhat)) {
-    warningFields.actionWhat = {
-      message: "Action description should be at least one phrase or sentence.",
-      score: 0,
-      threshold: 1,
-    }
   }
   if (!actionWhy) {
     failedFields.actionWhy = {
       message: "Action reason must contain data.",
-      score: 0,
-      threshold: 1,
-    }
-  } else if (!isSentenceLike(actionWhy)) {
-    warningFields.actionWhy = {
-      message: "Action reason should be at least one sentence.",
       score: 0,
       threshold: 1,
     }
@@ -2142,9 +2394,17 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
       score: 0,
       threshold: 1,
     }
-  } else if (!isSentenceLike(biasAssessment)) {
-    warningFields.biasAssessment = {
-      message: "Bias assessment should be at least one sentence.",
+  }
+
+  for (const [field, label] of [["actionWhy", "Action reason"], ["biasAssessment", "Bias assessment"]]) {
+    const advisoryIssues = Array.isArray(sentenceReports?.[field]?.advisoryIssues)
+      ? sentenceReports[field].advisoryIssues
+      : []
+    if (!advisoryIssues.length) continue
+    warningFields[field] = {
+      message: `${label} has style or readability suggestions.`,
+      ruleIds: advisoryIssues.map((issue) => issue.ruleId),
+      sentenceIssues: advisoryIssues,
       score: 0,
       threshold: 1,
     }
@@ -2231,6 +2491,8 @@ export function updateStudentNewsValidationIssues(previousIssues = {}, complianc
         steps: Array.isArray(task?.steps) ? task.steps : [],
         score: Number.isFinite(Number(failed?.score)) ? Number(failed?.score) : null,
         threshold: Number.isFinite(Number(failed?.threshold)) ? Number(failed?.threshold) : null,
+        ruleIds: Array.isArray(failed?.ruleIds) ? failed.ruleIds : [],
+        sentenceIssues: Array.isArray(failed?.sentenceIssues) ? failed.sentenceIssues : [],
         updatedAt: nowIso(),
       })
       return

@@ -79,6 +79,32 @@ async function cacheDelete(type, id) {
   }
 }
 
+export async function closePortalPreferenceCache() {
+  const client = redisClient
+  const pendingConnect = redisConnectPromise
+  redisClient = null
+  redisConnectPromise = null
+  let targetClient = client
+  if (!targetClient && pendingConnect) {
+    try {
+      targetClient = await pendingConnect
+    } catch (error) {
+      void error
+    }
+  }
+  if (!targetClient) return
+  try {
+    if (typeof targetClient.quit === "function") {
+      await targetClient.quit()
+    } else if (typeof targetClient.disconnect === "function") {
+      targetClient.disconnect()
+    }
+  } catch (error) {
+    void error
+    targetClient.disconnect?.()
+  }
+}
+
 export async function getPortalPreferences(principalType, principalId) {
   const type = text(principalType)
   const id = text(principalId)

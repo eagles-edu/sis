@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="vi-VN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Student portal for checking homework, news reports, attendance, grades, and performance updates.">
+  <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+  <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+  <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
+  <script>
+    /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
+  </script>
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script src="/web-asset/shared/portal-action-feedback.js"></script>
+  <script>
+    window.SIS_PORTAL_THEME?.initTheme("light")
+  </script>
+  <script>
+    document.documentElement.dataset.studentAuthState = "booting";
+  </script>
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
+
+    if (!customElements.get("svg-icon")) {
+      svgIcon({
+        defaultSize: 28,
+        path: "/web-asset/icons/web-component/svgs/",
+      });
+    }
+  </script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <script src="/web-asset/shared/portal-navigation.js"></script>
+  <style>
+    html {
+      font-family:  var(--font-base, system-ui, -apple-system, sans-serif);
+    }
+
+    body.student-portal-page main.portal-main {
+      box-sizing: border-box;
+      display: grid;
+      gap: var(--portal-shell-gap);
+      grid-template-columns: minmax(0, 1fr);
+      margin: 0 auto;
+      max-width: 1440px;
+      padding: 16px;
+      width: 100%;
+    }
+
+    html[data-student-auth-state="unauthenticated"] body.student-portal-page main.portal-main {
+      gap: var(--portal-shell-gap);
+      margin-inline: auto;
+      max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
+      width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
+    }
+
+    html[data-student-auth-state="booting"] body.student-portal-page {
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    html[data-student-auth-state="booting"] body.student-portal-page #loginPanel,
+    html[data-student-auth-state="booting"] body.student-portal-page #appPanel {
+      display: none !important;
+    }
+  </style>
+  <link rel="stylesheet" href="/web-asset/student/student-portal.min.css">
+  <title>Student Portal</title>
+
+</head>
+
+<body class="student-portal-page" id="top">
+  <div class="portal-shell">
+    <aside id="sideNav" class="side-nav" aria-label="Student navigation">
+      <div class="side-brand">
+        <strong>Student Dashboard</strong>
+        <span>English learning and daily media reports</span>
+      </div>
+      <nav class="side-links">
+        <a class="side-link active" href="#studentHomeCard" data-view-target="home" data-page-target="home">Home</a>
+        <a class="side-link" href="#newsPageCard" data-view-target="news" data-page-target="news">News Reports</a>
+        <a class="side-link" href="#newWordsPageCard" data-view-target="home" data-page-target="new-words">New Words</a>
+        <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="current-homework">Current Homework</a>
+        <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="past-due-homework">Past Due Homework</a>
+        <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="attendance-calendar">Attendance Calendar SYTD</a>
+        <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="performance-reports">Performance Reports SYTD Archive</a>
+        <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="grades-ytd">Grades YTD</a>
+        <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="recommendations">Recommendations for Success</a>
+      </nav>
+      <div class="side-actions">
+        <button id="studentNavLogoutBtn" type="button" class="portal-button portal-button-danger" title="Đăng xuất khỏi cổng học sinh">Log Out</button>
+      </div>
+    </aside>
+
+    <button id="navOverlay" class="nav-overlay portal-button portal-button-immutable-chrome" type="button" title="Đóng điều hướng" aria-label="Đóng điều hướng"></button>
+
+    <main class="portal-main">
+      <div class="header-bar portal-login-header">
+        <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+        <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+      </div>
+      <button id="menuBtn" class="floating-menu-btn portal-button portal-button-immutable-chrome" type="button" title="Mở điều hướng" aria-label="Mở điều hướng">
+        <span class="floating-menu-icon" aria-hidden="true"></span>
+      </button>
+      <section class="content topbar" data-surface-role="content">
+        <div class="topbar-head">
+          <div class="brand-head">
+            <a class="brand-logo-wrap brand-logo-wrap--sm" href="/student" aria-label="Go to student home">
+              <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+            </a>
+            <h1>THE EAGLES CLUB</h1>
+          </div>
+          <div class="header-actions">
+            <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle" type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
+              <span class="portal-theme-toggle__icon" aria-hidden="true">
+                <svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon>
+              </span>
+            </button>
+            <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
+              <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" title="Giảm cỡ chữ">A-</button>
+              <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" title="Tăng cỡ chữ">A+</button>
+              <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" title="Đặt lại cỡ chữ">Reset</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="loginPanel" data-surface-role="panel">
+        <div class="section-head">
+          <h1>STUDENT LOG-IN</h1>
+          <div class="security-badge">
+            <img class="security-badge__icon security-badge__icon--light" src="/web-asset/shared/secure-network.svg" alt="" aria-hidden="true">
+            <img class="security-badge__icon security-badge__icon--dark" src="/web-asset/shared/secure-network-white.svg" alt="" aria-hidden="true">
+            <span class="security-badge__caption">secured connection</span>
+          </div>
+        </div>
+        <form id="loginForm" class="login-form" novalidate>
+          <div class="form-row">
+            <label for="loginEaglesId">Student User Name (eaglesId)</label>
+            <input id="loginEaglesId" type="text" autocomplete="username" placeholder="cm&lt;eaglesId&gt; hoặc mã gia đình">
+            <p class="field-hint">&nbsp;</p>
+          </div>
+          <div class="form-row">
+            <label for="loginPassword">Enter current password.</label>
+            <div class="password-visibility-field">
+              <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mật khẩu dùng chung phụ huynh - học sinh" data-password-visibility>
+              <button type="button" class="password-visibility-toggle portal-button-info portal-button-amber-ink-dark" data-password-visibility-toggle aria-label="Show password" aria-pressed="false" title="Show password"></button>
+            </div>
+            <p class="field-hint">Enter the current password for your account.</p>
+          </div>
+          <div class="login-actions">
+            <button id="loginBtn" class="portal-button portal-button-primary" type="submit" title="Đăng nhập vào cổng học sinh">Log In</button>
+            <button id="loginClearBtn" class="portal-button portal-button-warning" type="reset" title="Xóa nội dung đã nhập">Clear</button>
+          </div>
+        </form>
+        <div class="login-links">
+          <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Student%20portal%20password%20reset" title="Yêu cầu đặt lại mật khẩu">Reset password</a>
+          <a class="login-link" href="tel:0937667818">0937&nbsp;667&nbsp;818</a>
+        </div>
+        <p id="loginStatus" class="status"></p>
+      </section>
+
+      <section id="appPanel" class="hidden">
+        <section id="studentHomeCard" class="content" data-surface-role="content">
+          <div class="portal-grid">
+            <div id="studentHomeGrid" class="portal-col">
+              <div id="studentOverviewSummary" class="panel" data-surface-role="panel">Loading student dashboard...</div>
+
+              <section id="identityPanel" class="panel" data-surface-role="panel">
+                <div class="section-head">
+                  <h2>Thông tin định danh học sinh</h2>
+                  <span class="chip chip-lock">Chỉ xem</span>
+                </div>
+                <div class="portal-action-strip portal-action-strip--card">
+                  <div class="portal-action-strip__actions">
+                    <button id="reloadBtn" type="button" class="portal-button portal-button-teal-refresh" title="Tải lại dữ liệu học sinh">Refresh</button>
+                    <button id="logoutBtn" type="button" class="portal-button portal-button-danger" title="Đăng xuất khỏi cổng học sinh">Log Out</button>
+                  </div>
+                </div>
+                <p id="studentIdentity" class="hint">Loading student metrics...</p>
+                <div class="identity-list">
+                  <div class="identity-item portal-theme-card">
+                    <span class="identity-label">Eagles ID</span>
+                    <span id="studentEaglesIdValue" class="identity-value">-</span>
+                  </div>
+                  <div class="identity-item portal-theme-card">
+                    <span class="identity-label">Mã học sinh</span>
+                    <span id="studentNumberValue" class="identity-value">-</span>
+                  </div>
+                  <div class="identity-item portal-theme-card">
+                    <span class="identity-label">Họ và tên</span>
+                    <span id="studentNameValue" class="identity-value">-</span>
+                  </div>
+                  <div class="identity-item portal-theme-card">
+                    <span class="identity-label">Lớp hiện tại</span>
+                    <span id="studentGradeValue" class="identity-value">-</span>
+                  </div>
+                </div>
+              </section>
+
+              <section id="metricsPanel" class="panel" data-surface-role="panel">
+                <div class="section-head">
+                  <h3>Quick Overview</h3>
+                  <span id="snapshotBadge" class="chip chip-neutral">No data yet</span>
+                </div>
+                <div id="dashboardMetrics" class="metrics"></div>
+              </section>
+
+              <section id="pastDueHomeworkCard" class="panel homework-card" data-surface-role="panel">
+                <h3 class="homework-card-label">Past Due Homework</h3>
+                <div class="homework-card-shell">
+                  <div id="pastDueHomeworkBadge" class="homework-square is-clear">
+                    <span class="homework-square-k">Arrears</span>
+                    <strong id="pastDueHomeworkBadgeValue" class="homework-square-v is-count">0</strong>
+                  </div>
+                  <div class="homework-card-content">
+                    <h4 class="homework-content-title">Overdue items</h4>
+                    <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn portal-button portal-button-info" type="button" title="Xem danh sách bài tập quá hạn">View Overdue</button>
+                    <p id="pastDueHomeworkSummary" class="hint">No data yet.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section id="newsQueueCard" class="panel queue-panel" data-surface-role="panel">
+                <div id="newsQueueDetails">
+                <div class="queue-summary-head">
+                  <div class="queue-summary-stack">
+                    <h3 class="summary-title">News Report Queue</h3>
+                    <span id="newsQueueSummary" class="queue-summary-chips" aria-live="polite"></span>
+                  </div>
+                  </div>
+                  <div class="queue-table-wrap data-surface" data-surface-role="data-surface">
+                    <table class="news-queue-table">
+                      <thead>
+                        <tr>
+                          <th scope="col">Week Set</th>
+                          <th scope="col">#</th>
+                          <th scope="col">Status</th>
+                          <th scope="col">Latest Submission</th>
+                          <th scope="col">Open</th>
+                        </tr>
+                      </thead>
+                      <tbody id="newsQueueBody">
+                        <tr>
+                          <td colspan="5">Loading...</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="actions actions-2">
+                    <button id="openNewsPageBtn" type="button" class="portal-button portal-button-primary" title="Mở trang báo cáo tin tức">Open News</button>
+                    <button id="newsQueueRefreshBtn" type="button" class="portal-button portal-button-teal-refresh" title="Tải lại hàng chờ báo cáo tin tức">Refresh</button>
+                  </div>
+                </div>
+              </section>
+
+              <section id="currentHomeworkCard" class="panel homework-card" data-surface-role="panel">
+                <h3 class="homework-card-label">Current Homework</h3>
+                <div class="homework-card-shell">
+                  <div id="currentHomeworkBadge" class="homework-square is-none">
+                    <span class="homework-square-k">Tình trạng</span>
+                    <strong id="currentHomeworkBadgeValue" class="homework-square-v">Không có</strong>
+                  </div>
+                  <div class="homework-card-content">
+                    <h4 id="currentHomeworkHeader" class="homework-content-title">Bài tập hiện tại</h4>
+                    <a id="currentHomeworkAssignmentLink" class="homework-link hidden" href="#" target="_blank" rel="noopener noreferrer">Xem thông báo bài tập</a>
+                    <p id="currentHomeworkSummary" class="hint">No data yet.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section id="pastDueHomeworkModal" class="portal-modal hidden">
+                <div class="portal-modal-backdrop" id="pastDueHomeworkModalBackdrop"></div>
+                <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pastDueHomeworkModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="pastDueHomeworkModalTitle">Bài tập chưa hoàn thành</h4>
+                    <button id="closePastDueHomeworkModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng danh sách bài tập quá hạn">Close</button>
+                  </div>
+                  <table class="homework-modal-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Due Date</th>
+                        <th scope="col">Assignment</th>
+                      </tr>
+                    </thead>
+                    <tbody id="pastDueHomeworkTableBody"></tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section id="newsComplianceModal" class="portal-modal hidden">
+                <div class="portal-modal-backdrop" id="newsComplianceModalBackdrop"></div>
+                <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsComplianceModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="newsComplianceModalTitle">Check Report</h4>
+                    <button id="closeNewsComplianceModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng cửa sổ kiểm tra báo cáo">Close</button>
+                  </div>
+                  <div class="portal-modal-body">
+                    <p id="newsComplianceModalSummary" class="hint">Draft saved.</p>
+                    <div class="news-feedback-section">
+                      <h5>Required Before Submit</h5>
+                      <table class="news-feedback-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Field</th>
+                            <th scope="col">Error Type</th>
+                            <th scope="col">Suggested Fix</th>
+                          </tr>
+                        </thead>
+                        <tbody id="newsComplianceRequiredBody"></tbody>
+                      </table>
+                    </div>
+                    <div class="news-feedback-section">
+                      <h5>Improve for Extra Points</h5>
+                      <table class="news-feedback-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Field</th>
+                            <th scope="col">Error Type</th>
+                            <th scope="col">Suggested Fix</th>
+                          </tr>
+                        </thead>
+                        <tbody id="newsComplianceWarningBody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="portal-modal-actions">
+                    <button id="newsComplianceModalCloseActionBtn" type="button" class="portal-button portal-button-warning" title="Đóng cửa sổ kiểm tra báo cáo">Close</button>
+                  </div>
+                </div>
+              </section>
+
+              <section id="newNewsFormConfirmModal" class="portal-modal news-new-form-modal hidden">
+                <div class="portal-modal-backdrop" id="newNewsFormConfirmModalBackdrop"></div>
+                <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newNewsFormConfirmModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="newNewsFormConfirmModalTitle">Start a new media report? / Bắt đầu báo cáo mới?</h4>
+                  </div>
+                  <div class="portal-modal-body">
+                    <p class="hint">You have unsaved work. Save it before starting a new form, or ignore it and lose it.<br>Bạn có dữ liệu chưa lưu. Hãy lưu trước khi tạo biểu mẫu mới, hoặc bỏ qua để mất dữ liệu.</p>
+                  </div>
+                  <div class="portal-modal-actions">
+                    <button id="newNewsFormSaveBtn" type="button" class="portal-button portal-button-affirm" title="Lưu bản nháp hiện tại rồi mở biểu mẫu báo cáo mới" aria-label="Lưu bản nháp hiện tại rồi mở biểu mẫu báo cáo mới">Save &amp; New</button>
+                    <button id="newNewsFormIgnoreBtn" type="button" class="portal-button portal-button-danger" title="Bỏ bản nháp hiện tại rồi mở biểu mẫu báo cáo mới" aria-label="Bỏ bản nháp hiện tại rồi mở biểu mẫu báo cáo mới">Discard &amp; New</button>
+                  </div>
+                </div>
+              </section>
+
+              <section id="reportAccessErrorModal" class="portal-modal hidden">
+                <div class="portal-modal-backdrop" id="reportAccessErrorModalBackdrop"></div>
+                <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reportAccessErrorModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="reportAccessErrorModalTitle">Report access warning</h4>
+                    <button id="closeReportAccessErrorModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng cảnh báo truy cập báo cáo">Close</button>
+                  </div>
+                  <div class="portal-modal-body">
+                    <p id="reportAccessErrorModalMessage">LINK doesn't MATCH STUDENT OR FAMILY ACCOUNT</p>
+                  </div>
+                </div>
+              </section>
+
+              <section id="submitSuccessModal" class="portal-modal submit-success-modal hidden">
+                <div class="portal-modal-backdrop" id="submitSuccessModalBackdrop"></div>
+                <div id="submitSuccessConfetti" class="submit-success-confetti" aria-hidden="true"></div>
+                <div class="portal-modal-dialog submit-success-dialog" role="dialog" aria-modal="true" aria-labelledby="submitSuccessModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="submitSuccessModalTitle">Successfully submitted</h4>
+                    <button id="closeSubmitSuccessModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng thông báo nộp bài thành công">Close</button>
+                  </div>
+                  <div class="portal-modal-body submit-success-body">
+                    <div class="submit-success-mark" aria-hidden="true">✓</div>
+                    <p class="submit-success-title">Your media report has been submitted.</p>
+                    <p class="hint submit-success-copy">Confetti will keep celebrating until you close this message.</p>
+                  </div>
+                  <div class="portal-modal-actions">
+                    <button id="submitSuccessModalOkBtn" type="button" class="portal-button portal-button-primary" title="Xác nhận và đóng thông báo">OK</button>
+                  </div>
+                </div>
+              </section>
+
+              <section id="newsWeekSetModal" class="portal-modal hidden">
+                <div class="portal-modal-backdrop" id="newsWeekSetModalBackdrop"></div>
+                <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsWeekSetModalTitle">
+                  <div class="portal-modal-head queue-modal-header">
+                    <div class="actions news-week-set-modal-nav queue-modal-nav">
+                      <strong id="newsWeekSetModalTitle">Student News Report Viewer</strong>
+                      <button id="newsWeekSetModalPrevBtn" type="button" class="portal-button portal-button-alt portal-button-alt-nav" title="Xem báo cáo trước" aria-label="Xem báo cáo trước">&lt;</button>
+                      <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
+                      <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-alt portal-button-alt-nav" title="Xem báo cáo tiếp theo" aria-label="Xem báo cáo tiếp theo">&gt;</button>
+                    </div>
+                    <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-warning hidden" type="button" title="Đóng trình xem báo cáo tin tức">Close</button>
+                  </div>
+                  <div class="portal-modal-body">
+                    <p id="newsWeekSetModalMeta" class="hint">Open a week set to review and resubmit reports.</p>
+                    <div class="row">
+                      <div class="field c4">
+                        <label for="newsViewerReportDate">1. Report Date</label>
+                        <input id="newsViewerReportDate" type="text" readonly aria-readonly="true" inputmode="numeric" placeholder="dd/mm/yy">
+                      </div>
+                      <div class="field c4">
+                        <h5>Status</h5>
+                        <span id="newsViewerReviewStatusChip" class="chip chip-neutral">-</span>
+                      </div>
+                      <div class="field c4">
+                        <label for="newsViewerSubmittedAt">Submitted At</label>
+                        <input id="newsViewerSubmittedAt" type="text" readonly aria-readonly="true">
+                      </div>
+                    </div>
+                    <div id="newsWeekSetModalFeedback" class="news-feedback-report hidden">
+                      <p id="newsWeekSetModalDeadline" class="news-feedback-deadline hidden"></p>
+                      <p id="newsWeekSetModalTeacherNote" class="news-feedback-note hidden"></p>
+                      <div class="news-feedback-section">
+                        <h5>Revision Report</h5>
+                        <table class="news-feedback-table">
+                          <thead>
+                            <tr>
+                              <th scope="col">Field</th>
+                              <th scope="col">Error Type</th>
+                              <th scope="col">Suggested Fix</th>
+                            </tr>
+                          </thead>
+                          <tbody id="newsWeekSetModalFeedbackBody"></tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="field c12">
+                        <label for="newsViewerSourceLink">2. Source: Paste the full link to this article</label>
+                        <input id="newsViewerSourceLink" type="url" placeholder="https://...">
+                      </div>
+                      <div class="field c12">
+                        <label for="newsViewerArticleTitle">3. Paste the full article Title</label>
+                        <input id="newsViewerArticleTitle" type="text" maxlength="240">
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerByline">4. Paste Byline (author; IF NONE, enter CNN or BBC)</label>
+                        <input id="newsViewerByline" type="text" maxlength="240">
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerArticleDateline">5. Article Dateline / Publication Date</label>
+                        <input id="newsViewerArticleDateline" type="text">
+                      </div>
+                      <div class="field c12">
+                        <label for="newsViewerLeadSynopsis">6. Paste Lead Synopsis (first paragraph of article)</label>
+                        <textarea id="newsViewerLeadSynopsis"></textarea>
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerActionActor">7. Who or what (actor) was doing news action?</label>
+                        <textarea id="newsViewerActionActor"></textarea>
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerActionAffected">8. Who or what (actor) received/was affected by the news action?</label>
+                        <textarea id="newsViewerActionAffected"></textarea>
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerActionWhere">9. Where did this news action take place?</label>
+                        <textarea id="newsViewerActionWhere"></textarea>
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerActionWhat">10. Describe the current news action (i.e., what happened)?</label>
+                        <textarea id="newsViewerActionWhat"></textarea>
+                      </div>
+                      <div class="field c12">
+                        <label for="newsViewerActionWhy">11. Why or how did the news action happen?</label>
+                        <textarea id="newsViewerActionWhy"></textarea>
+                      </div>
+                      <div class="field c12">
+                        <label for="newsViewerBiasAssessment">12. Do you suspect the article was written with bias, agenda, spin, or prevarication? Explain why or why not.</label>
+                        <textarea id="newsViewerBiasAssessment"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                  <details class="panel student-new-words-instructions">
+                    <summary>How to enter New Words</summary>
+                    <div class="student-new-words-instructions-body">
+                      <div class="student-new-words-instructions-copy">
+                        <h3>Follow this workflow for every entry:</h3>
+                        <ol>
+                          <li>Choose a useful word or phrase from the article and select its part of speech.</li>
+                          <li>Enter the English word or phrase, the Vietnamese meaning, and a clear definition.</li>
+                          <li>For a monosyllabic word, write the word whole in syllabication and do not add stress.</li>
+                          <li>For a phrase, keep the spaces between words. For a hyphenated compound, keep the exact hyphen, such as <code>air-strike</code>.</li>
+                          <li>If a phrase contains a hyphenated multisyllabic word, split that word and mark one stressed syllable, such as <code>in the MÓRN-ing</code>.</li>
+                          <li>For extra points, split a multisyllabic compound part, such as <code>air-con-di-tion-ing</code>.</li>
+                          <li>Complete at least five entries, select <strong>Check</strong>, and correct any highlighted fields.</li>
+                        </ol>
+                      </div>
+                      <svg class="new-words-intro-illustration" viewBox="0 0 24 24" aria-label="Animated vocabulary study illustration" role="img" width="100" height="100" stroke="currentColor" stroke-width="2" fill="none">
+                        <circle cx="12" cy="12" r="1"><animate id="water_ripples_modal" attributeName="r" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                        <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_modal.begin+1s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_modal.begin+1s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                        <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_modal.begin+2s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_modal.begin+2s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                      </svg>
+                      <button class="student-new-words-instructions-thumb" type="button" data-new-words-lightbox title="Open the New Words Tool image" aria-label="Open the New Words Tool image">
+                        <img src="/web-asset/images/new-words.png" width="1188" height="584" loading="lazy" decoding="async" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
+                      </button>
+                    </div>
+                  </details>
+                  <section class="news-review-vocabulary" aria-label="Vocabulary">
+                    <strong class="news-vocabulary-label">13. Vocabulary</strong>
+                    <div id="newsWeekSetModalVocabularyRows" class="news-vocabulary-rows vocabulary-edit-surface"></div>
+                    <div class="news-vocabulary-add-actions">
+                      <button id="addNewsWeekSetModalVocabularyRowBtn" type="button" class="portal-button portal-button-affirm" title="Thêm một dòng từ vựng vào báo cáo tin tức" aria-label="Thêm một dòng từ vựng vào báo cáo tin tức">Add Word</button>
+                    </div>
+                  </section>
+                  <div class="portal-modal-actions student-news-form-actions">
+                    <button id="newsWeekSetModalCheckBtn" type="button" class="portal-button portal-button-info" title="Kiểm tra các trường của báo cáo đang xem và chỉ ra nội dung cần sửa" aria-label="Kiểm tra các trường của báo cáo đang xem và chỉ ra nội dung cần sửa">Check</button>
+                    <button id="newsWeekSetModalSubmitBtn" type="button" class="portal-button portal-button-primary" title="Nộp lại báo cáo đang xem sau khi kiểm tra đạt yêu cầu" aria-label="Nộp lại báo cáo đang xem sau khi kiểm tra đạt yêu cầu">Submit</button>
+                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-warning" title="Đóng trình xem báo cáo tin tức">Close</button>
+                  </div>
+                  <p id="newsWeekSetModalStatus" class="hint">Viewer is ready.</p>
+                </div>
+              </section>
+
+              <section id="attendanceCalendarCard" class="panel" data-surface-role="panel">
+                <div class="section-head">
+                  <h3>Attendance Calendar SYTD</h3>
+                </div>
+                <div id="attendanceCalendarMetrics" class="attendance-overview-grid"></div>
+                <p id="attendanceCalendarSummary" class="hint">No data yet.</p>
+              </section>
+
+              <section id="performanceReportsCard" class="panel" data-surface-role="panel">
+                <div class="section-head">
+                  <h3>Performance Reports SYTD Archive</h3>
+                </div>
+                <p id="performanceReportsSummary" class="hint">No data yet.</p>
+              </section>
+
+              <section id="gradesYtdCard" class="panel" data-surface-role="panel">
+                <div class="section-head">
+                  <h3>Grades YTD</h3>
+                </div>
+                <p id="gradesYtdSummary" class="hint">No data yet.</p>
+              </section>
+
+              <section id="recommendationsCard" class="panel" data-surface-role="panel">
+                <div class="section-head">
+                  <h3>Recommendations for Success</h3>
+                </div>
+                <p id="recommendationsSummary" class="hint">No data yet.</p>
+              </section>
+
+              <section id="quickLinksPanel" class="panel" style="display:none" data-surface-role="panel">
+                <div class="section-head">
+                  <h3>Liên kết nhanh</h3>
+                </div>
+              </section>
+
+              <p id="portalStatus" class="status"></p>
+            </div>
+          </div>
+        </section>
+
+        <section id="studentDetailPageCard" class="content hidden" data-surface-role="content">
+          <div class="section-head">
+            <h2 id="studentDetailTitle">Student Detail</h2>
+            <div class="actions">
+              <button id="studentDetailBackToMainBtn" type="button" class="portal-button portal-button-alt" title="Quay lại trang chính">Back</button>
+            </div>
+          </div>
+          <p id="studentDetailLead" class="detail-copy">Loading student detail...</p>
+          <div id="studentDetailMetrics" class="metrics detail-metrics"></div>
+          <div class="detail-layout">
+            <section class="panel detail-calendar-panel" data-surface-role="panel">
+              <div class="section-head">
+                <h3 id="studentDetailCalendarTitle">Calendar</h3>
+              </div>
+              <p id="studentDetailCalendarSummary" class="hint">No data yet.</p>
+              <div id="studentDetailCalendarGrid" class="calendar-shell detail-calendar-shell" aria-live="polite"></div>
+            </section>
+
+            <section class="panel" data-surface-role="panel">
+              <div class="section-head">
+                <h3 id="studentDetailPrimaryTitle">Current Focus</h3>
+              </div>
+              <p id="studentDetailPrimarySummary" class="detail-hint">No data yet.</p>
+              <div id="studentDetailPrimaryList" class="detail-list"></div>
+            </section>
+
+            <section class="panel" data-surface-role="panel">
+              <div class="section-head">
+                <h3 id="studentDetailHistoryTitle">Recent History</h3>
+              </div>
+              <p id="studentDetailHistorySummary" class="detail-hint">No data yet.</p>
+              <div id="studentDetailHistoryList" class="detail-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="newWordsPageCard" class="content hidden" data-surface-role="content">
+          <div class="section-head new-words-page-head bm015">
+            <h2>New Words Section</h2>
+          </div>
+          <details class="panel new-words-intro">
+            <summary>Read Instructions</summary>
+            <div class="new-words-intro-body">
+              <div class="new-words-intro-copy">
+                <h3>Build your personal dictionary</h3>
+                <p><b>New Words</b> from your news reports are collected here. You can edit each entry, sort your list, and study from a clean
+                dictionary-style version of your new academic vocabulary.</p>
+                <div class="student-new-words-instructions-copy">
+                  <h3>Follow this workflow for every entry:</h3>
+                  <ol>
+                    <li>Copy a word or phrase you do not know from the article and paste it into Word/Phrase en.</li>
+                    <li>Use the three blue buttons to find the required information:
+                      <ul>
+                        <li><strong>LD — Longman Dictionary:</strong> part of speech and English definition</li>
+                        <li><strong>GT — Google Translate:</strong> Vietnamese translation</li>
+                        <li><strong>WH — Word Helper:</strong> syllables and primary stress</li>
+                      </ul>
+                    </li>
+                    <li>Enter syllables as follows:
+                      <ul>
+                        <li><strong>One-syllable word:</strong> Type the whole word. Do not mark stress. Examples: <code>book</code>, <code>straight</code>, <code>laugh</code></li>
+                        <li><strong>Multi-syllable word:</strong> Examples: <code>ex-pec-TA-tion</code>, <code>RE-flex</code>, <code>in-STRUC-tions</code></li>
+                        <li><strong>Hyphenated compound A — all parts have one syllable:</strong> Keep the compound and its hyphens together. Examples: <code>check-in</code>, <code>life-size</code>, <code>long-term</code></li>
+                        <li><strong>Hyphenated compound B — one or more parts have multiple syllables:</strong> Keep the hyphens, divide the multi-syllable parts into syllables, and capitalize the stressed syllables. Examples: <code>thirty-seven</code> → <code>THIR-ty-SEV-en</code>; <code>runner-up</code> → <code>RUN-ner-up</code></li>
+                        <li><strong>Hyphenated phrase A — all words have one syllable:</strong> Type the whole phrase with its hyphens. Examples: <code>step-by-step</code>, <code>down-to-earth</code></li>
+                        <li><strong>Hyphenated phrase B — one or more words have multiple syllables:</strong> Keep the hyphens, divide the multi-syllable words into syllables, and capitalize the stressed syllables. Examples: <code>once-in-a-lifetime</code> → <code>once-in-a-LIFE-time</code>; <code>daughter-in-law</code> → <code>DAUGH-ter-in-law</code>; <code>middle-of-the-road</code> → <code>MID-dle-of-the-road</code>; <code>spur-of-the-moment</code> → <code>spur-of-the-MO-ment</code></li>
+                      </ul>
+                    </li>
+                    <li>Click <strong>CHECK</strong> at any time to save your progress.</li>
+                    <li>When you have finished:
+                      <ul>
+                        <li>Click <strong>CHECK</strong>.</li>
+                        <li>If <strong>SUBMIT</strong> turns green, click it to send your work.</li>
+                        <li>If <strong>SUBMIT</strong> does not turn green, read the pop-up instructions, correct your entries, and click <strong>CHECK</strong> again.</li>
+                      </ul>
+                    </li>
+                  </ol>
+                </div>
+                <svg class="new-words-intro-illustration" viewBox="0 0 24 24" aria-label="Animated vocabulary study illustration" role="img" width="100" height="100" stroke="currentColor" stroke-width="2" fill="none">
+                  <circle cx="12" cy="12" r="1"><animate id="water_ripples_one" attributeName="r" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                  <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                  <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                </svg>
+              </div>
+              <button class="student-new-words-instructions-thumb" type="button" data-new-words-lightbox title="Open the New Words Tool image" aria-label="Open the New Words Tool image">
+                <img src="/web-asset/images/new-words.png" width="1188" height="584" loading="lazy" decoding="async" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
+              </button>
+            </div>
+          </details>
+          <div class="panel new-words-tools" data-surface-role="panel">
+            <label for="newWordsSort">Sort by</label>
+            <select id="newWordsSort">
+              <option value="date-desc">Date added</option>
+              <option value="alpha">Alphabetical</option>
+              <option value="part-of-speech">Part of speech</option>
+              <option value="syllables">Number of syllables</option>
+              <option value="random">Random</option>
+            </select>
+            <label for="newWordsPageSize">Words per page</label>
+            <select id="newWordsPageSize">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="all">All</option>
+            </select>
+            <span id="newWordsSummary" class="hint" aria-live="polite">No words loaded.</span>
+          </div>
+          <div id="newWordsRows" class="news-vocabulary-rows new-words-rows vocabulary-edit-surface"></div>
+          <div class="new-words-add-actions">
+            <button id="newWordsAddOneBtn" type="button" class="portal-button portal-button-primary" title="Thêm một mục từ vựng vào danh sách học tập" aria-label="Thêm một mục từ vựng vào danh sách học tập">Add Word</button>
+            <button id="newWordsAddFiveBtn" type="button" class="portal-button portal-button-primary" title="Thêm năm mục từ vựng vào danh sách học tập" aria-label="Thêm năm mục từ vựng vào danh sách học tập">Add Words</button>
+          </div>
+          <div class="new-words-save-actions">
+            <button id="newWordsSaveBtn" type="button" class="portal-button portal-button-affirm" title="Lưu các thay đổi trong danh sách từ vựng của bạn" aria-label="Lưu các thay đổi trong danh sách từ vựng của bạn">Save Changes</button>
+          </div>
+          <div class="new-words-pagination">
+            <button id="newWordsPrevBtn" type="button" class="portal-button portal-button-alt" title="Xem trang từ vựng liền trước" aria-label="Xem trang từ vựng liền trước">Previous</button>
+            <span id="newWordsPageStatus" class="hint">Page 0 / 0</span>
+            <button id="newWordsNextBtn" type="button" class="portal-button portal-button-alt" title="Xem trang từ vựng liền sau" aria-label="Xem trang từ vựng liền sau">Next</button>
+          </div>
+          <a class="new-words-back-top" href="#top">Back to top</a>
+        </section>
+
+        <section id="newsPageCard" class="content hidden" data-surface-role="content">
+          <div class="section-head">
+            <h2>Daily News Report</h2>
+            <div class="news-actions">
+              <button id="backToHomeBtn" type="button" class="portal-button portal-button-alt" title="Quay lại trang chính">Back</button>
+              <button id="logoutBtnNews" type="button" class="portal-button portal-button-danger" title="Đăng xuất khỏi cổng học sinh">Log Out</button>
+            </div>
+          </div>
+          <div class="news-layout">
+            <section id="studentCalendar" class="panel" data-surface-role="panel">
+              <h2>Your View Month Calendar</h2>
+              <p id="calendarTitle" class="sub calendar-range">Your View timeline</p>
+              <div class="legend">
+                <span><span class="dot good"></span>Approved</span>
+                <span><span class="dot submitted"></span>Submitted</span>
+                <span><span class="dot waiting"></span>Waiting</span>
+                <span><span class="dot open"></span>Open</span>
+                <span><span class="dot revise"></span>Revise</span>
+                <span><span class="dot bad"></span>None Submitted</span>
+              </div>
+              <p id="windowSummary" class="sub">Loading calendar...</p>
+              <div id="calendarGrid" class="calendar-shell" aria-live="polite"></div>
+            </section>
+
+            <section id="newsQueuePanel" class="panel queue-panel" data-surface-role="panel">
+              <div id="newsPageQueueDetails">
+                <div class="queue-summary-head">
+                  <div class="queue-summary-stack">
+                    <h3 class="summary-title">News Report Queue</h3>
+                    <span id="newsPageQueueSummary" class="queue-summary-chips" aria-live="polite"></span>
+                  </div>
+                </div>
+                <div class="queue-table-wrap data-surface" data-surface-role="data-surface">
+                  <table class="news-queue-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Week Set</th>
+                        <th scope="col">#</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Latest Submission</th>
+                        <th scope="col">Open</th>
+                      </tr>
+                    </thead>
+                    <tbody id="newsPageQueueBody">
+                      <tr>
+                        <td colspan="5">Loading...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section id="newsReportFormCard" class="panel" data-surface-role="panel">
+              <div class="section-head news-report-form-head">
+                <h2>Media Report Form</h2>
+                <button id="newNewsFormBtn" type="button" class="portal-button portal-button-primary" title="Bắt đầu một biểu mẫu báo cáo tin tức mới" aria-label="Bắt đầu một biểu mẫu báo cáo tin tức mới">Mẫu mới</button>
+              </div>
+              <div class="row">
+                <div class="field c3">
+                  <label for="reportDate">1. Report Date</label>
+                  <input id="reportDate" type="text" readonly aria-readonly="true" inputmode="numeric" placeholder="dd/mm/yy">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="field c12">
+                  <label for="sourceLink">2. Source: Paste the full link to this
+                  article:</label>
+                  <input id="sourceLink" type="url" placeholder="https://...">
+                </div>
+
+                <div class="field c12">
+                  <label for="articleTitle">3. Paste the full article Title</label>
+                  <input type="text" id="articleTitle" maxlength="240">
+                </div>
+
+                <div class="field c6">
+                  <label for="byline">4. Paste Byline (author; IF NONE, enter CNN or BBC)</label>
+                  <input type="text" id="byline" maxlength="240">
+                </div>
+
+                <div class="field c6">
+                  <label for="articleDateline">5. Article Dateline / Publication Date</label>
+                  <input type="text" id="articleDateline" placeholder="March 12, 2026">
+                </div>
+
+                <div class="field c12">
+                  <label for="leadSynopsis">6. Paste Lead Synopsis (first paragraph of article)</label>
+                  <textarea id="leadSynopsis"></textarea>
+                </div>
+
+                <div class="field c6">
+                  <label for="actionActor">7. Who or what (actor) was doing news action?</label>
+                  <textarea id="actionActor"></textarea>
+                </div>
+
+                <div class="field c6">
+                  <label for="actionAffected">8. Who or what (actor) received/was affected by the news action?</label>
+                  <textarea id="actionAffected"></textarea>
+                </div>
+
+                <div class="field c6">
+                  <label for="actionWhere">9. Where did this news action
+                  take place (enter city/town/region, country, and continent)?</label>
+                  <textarea id="actionWhere"></textarea>
+                </div>
+
+                <div class="field c6">
+                  <label for="actionWhat">10. Describe the current news
+                  action (i.e., what happened)?</label>
+                  <textarea id="actionWhat"></textarea>
+                </div>
+
+                <div class="field c12">
+                  <label for="actionWhy">11. Why or how did the news action happen?</label>
+                  <textarea id="actionWhy"></textarea>
+                </div>
+
+                <div class="field c12">
+                  <label for="biasAssessment">12. Do you suspect the article
+                  was written with bias, agenda, spin, or prevarication?
+                  Explain why or why not.</label>
+                  <textarea id="biasAssessment"></textarea>
+                </div>
+
+                <div class="field c12">
+                  <details class="panel student-new-words-instructions">
+                    <summary>How to enter New Words</summary>
+                    <div class="student-new-words-instructions-body">
+                      <div class="student-new-words-instructions-copy">
+                        <h3>Follow this workflow for every entry:</h3>
+                        <ol>
+                          <li>Copy a word or phrase you do not know from the article and paste it into Word/Phrase en.</li>
+                          <li>Use the three blue buttons to find the required information:
+                            <ul>
+                              <li><strong>LD — Longman Dictionary:</strong> part of speech and English definition</li>
+                              <li><strong>GT — Google Translate:</strong> Vietnamese translation</li>
+                              <li><strong>WH — Word Helper:</strong> syllables and primary stress</li>
+                            </ul>
+                          </li>
+                          <li>Enter syllables as follows:
+                            <ul>
+                              <li><strong>One-syllable word:</strong> Type the whole word. Do not mark stress. Examples: <code>book</code>, <code>straight</code>, <code>laugh</code></li>
+                              <li><strong>Multi-syllable word:</strong> Examples: <code>ex-pec-TA-tion</code>, <code>RE-flex</code>, <code>in-STRUC-tions</code></li>
+                              <li><strong>Hyphenated compound A — all parts have one syllable:</strong> Keep the compound and its hyphens together. Examples: <code>check-in</code>, <code>life-size</code>, <code>long-term</code></li>
+                              <li><strong>Hyphenated compound B — one or more parts have multiple syllables:</strong> Keep the hyphens, divide the multi-syllable parts into syllables, and capitalize the stressed syllables. Examples: <code>thirty-seven</code> → <code>THIR-ty-SEV-en</code>; <code>runner-up</code> → <code>RUN-ner-up</code></li>
+                              <li><strong>Hyphenated phrase A — all words have one syllable:</strong> Type the whole phrase with its hyphens. Examples: <code>step-by-step</code>, <code>down-to-earth</code></li>
+                              <li><strong>Hyphenated phrase B — one or more words have multiple syllables:</strong> Keep the hyphens, divide the multi-syllable words into syllables, and capitalize the stressed syllables. Examples: <code>once-in-a-lifetime</code> → <code>once-in-a-LIFE-time</code>; <code>daughter-in-law</code> → <code>DAUGH-ter-in-law</code>; <code>middle-of-the-road</code> → <code>MID-dle-of-the-road</code>; <code>spur-of-the-moment</code> → <code>spur-of-the-MO-ment</code></li>
+                            </ul>
+                          </li>
+                          <li>Click <strong>CHECK</strong> at any time to save your progress.</li>
+                          <li>When you have finished:
+                            <ul>
+                              <li>Click <strong>CHECK</strong>.</li>
+                              <li>If <strong>SUBMIT</strong> turns green, click it to send your work.</li>
+                              <li>If <strong>SUBMIT</strong> does not turn green, read the pop-up instructions, correct your entries, and click <strong>CHECK</strong> again.</li>
+                            </ul>
+                          </li>
+                        </ol>
+                      </div>
+                      <svg class="new-words-intro-illustration" viewBox="0 0 24 24" aria-label="Animated vocabulary study illustration" role="img" width="100" height="100" stroke="currentColor" stroke-width="2" fill="none">
+                        <circle cx="12" cy="12" r="1"><animate id="water_ripples_news" attributeName="r" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                        <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_news.begin+1s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_news.begin+1s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                        <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_news.begin+2s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_news.begin+2s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                      </svg>
+                      <button class="student-new-words-instructions-thumb" type="button" data-new-words-lightbox title="Open the New Words Tool image" aria-label="Open the New Words Tool image">
+                        <img src="/web-asset/images/new-words.png" width="1188" height="584" loading="lazy" decoding="async" alt="New Words Tool example showing part of speech, Vietnamese meaning, definition, and syllabication fields">
+                      </button>
+                    </div>
+                  </details>
+                </div>
+                <div id="newsVocabularyField" class="field c12 news-vocabulary-field">
+                  <label id="newsVocabularyLabel" for="addNewsVocabularyRowBtn">13. Vocabulary</label>
+                  <p class="hint">Do: keep compound words exact, such as <code>air-strike</code>. For extra points, split a multi-syllable compound part, such as <code>air-con-di-tion-ing</code>. Do not add stress to a compound just because it is hyphenated.</p>
+                  <div id="newsVocabularyRows" class="news-vocabulary-rows vocabulary-edit-surface"></div>
+                  <button id="addNewsVocabularyRowBtn" type="button" class="portal-button portal-button-affirm" title="Thêm một dòng từ vựng mới vào báo cáo tin tức này" aria-label="Thêm một dòng từ vựng mới vào báo cáo tin tức này">Add Word</button>
+                </div>
+
+                <div class="field c12 actions student-news-form-actions">
+                  <button id="saveDraftBtn" class="portal-button portal-button-affirm" type="button" title="Save this report as a draft without running MMR" aria-label="Save this report as a draft without running MMR">Save</button>
+                  <button id="checkBtn" class="portal-button portal-button-info" type="button" title="Kiểm tra từng trường bắt buộc và chỉ ra chính xác nội dung cần sửa trước khi nộp" aria-label="Kiểm tra từng trường bắt buộc và chỉ ra chính xác nội dung cần sửa trước khi nộp">Check</button>
+                  <button id="submitBtn" class="portal-button portal-button-primary" type="button" title="Nộp báo cáo tin tức sau khi tất cả trường bắt buộc đã đạt yêu cầu" aria-label="Nộp báo cáo tin tức sau khi tất cả trường bắt buộc đã đạt yêu cầu">Submit</button>
+                  <button id="openNewsComplianceModalBtn" type="button" class="portal-button portal-button-info hidden" title="Xem chi tiết kiểm tra báo cáo">View Details</button>
+                </div>
+              </div>
+              <p id="formStatus" class="status">Waiting for calendar window. </p>
+            </section>
+          </div>
+        </section>
+      </section>
+
+      <section id="newWordsImageLightbox" class="student-new-words-lightbox hidden" aria-labelledby="newWordsImageLightboxTitle" aria-modal="true" role="dialog">
+        <div class="student-new-words-lightbox-backdrop" data-new-words-lightbox-close></div>
+        <div class="student-new-words-lightbox-dialog">
+          <div class="student-new-words-lightbox-head">
+            <h2 id="newWordsImageLightboxTitle">New Words Tool example</h2>
+            <button id="newWordsImageLightboxCloseBtn" class="portal-button portal-button-warning" type="button" data-new-words-lightbox-close aria-label="Close New Words Tool image">Close</button>
+          </div>
+          <img class="student-new-words-lightbox-image" src="/web-asset/images/new-words.png" width="1188" height="584" loading="lazy" decoding="async" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
+        </div>
+      </section>
+
+      <section class="content status-strip portal-prefooter" aria-label="Runtime environment" data-surface-role="content">
+        <p id="globalStatus" class="status">Checking student session...</p>
+        <span id="envBadge" class="env-badge" data-environment-prefooter aria-live="polite"></span>
+      </section>
+      <footer class="hub-footer portal-login-footer" aria-label="Site footer">
+        <p class="hub-footer__copy">
+          © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
+        </p>
+        <p class="hub-footer__action">
+          <a href="#top" id="back-top">Về đầu trang</a>
+        </p>
+      </footer>
+    </main>
+  </div>
+
+  <script src="/web-asset/shared/portal-environment.js"></script>
+  <!--
+    Source-contract markers for the external student portal module.
+    function canEditNewsWeekSetViewerItem(item = {}) {
+      if (status === "approved") return false;
+      const editableUntil = t(item?.editableUntil);
+      const editableUntilMs = editableUntil ? Date.parse(editableUntil) : Number.NaN;
+      if (Number.isFinite(editableUntilMs)) return Date.now() < editableUntilMs;
+      const openReportDate = t(state.window?.reportDate).slice(0, 10);
+      return Boolean(openReportDate && t(item?.reportDate).slice(0, 10) === openReportDate);
+    }
+    if (!canEditNewsWeekSetViewerItem(active)) throw new Error("This report is locked.");
+    function renderCurrentHomeworkOverviewCard() {}
+    function renderPastDueHomeworkOverviewCard() {}
+    function setPastDueHomeworkModalOpen() {}
+    function setNewsComplianceModalOpen() {}
+    function setNewsComplianceModalCtaVisible() {}
+    function renderNewsComplianceModalFromState() {}
+    renderNewsComplianceModalFromState(summaryMessage)
+    function loadPortalAsset() {}
+    fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js"
+    buttonText: "Your View"
+    http://127.0.0.1:8788 queue-compact-datetime
+    .queue-table-wrap table.news-queue-table th, .queue-table-wrap table.news-queue-table td { padding: 4px 6px; }
+    if (env === "development" && !isLoopback)
+    if (env === "test" && !isLoopback && parsed.origin !== window.location.origin)
+    if (env !== "development" && env !== "test" && isLoopback)
+    Math.max(minimum, source.length) index >= minimum bindVocabularyLookupButtons(row)
+    ldoceonline.com/dictionary/ term.replace(/%20/gu, "-") translate.google.com/?sl=en&tl=vi&text=${term}
+    wordhelp.com/syllables/english/?q=${term} encodeURIComponent(term) normalize("NFC")
+    validationConfig?.vocabularyMinimumWords external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup
+    rows="1" placeholder="Definition" keep compounds exact placeholder="Do: air-strike | Extra: air-con-di-tion-ing"
+    news-vocabulary-row-validation-message row.querySelector(`[data-vocabulary-field="${fieldKey}"]`)?.classList.add("is-invalid")
+    if (t(fieldId) === "vocabulary") return document.getElementById("newsVocabularyField")
+    news-vocabulary-row-dots>⋮</ news-vocabulary-row-dots autoResizeVocabularyDefinition(textarea) bindVocabularyDefinitionAutosize(rowEl)
+    portal-button-danger news-vocabulary-remove
+    <option value="">POS</option>
+    if (saved?.item) applyOpenReport(saved.item, { preserveExistingValidation: false })
+    applyNewsFieldValidationUi({}, [], {}, []) setNewsComplianceModalOpen(false)
+    setFormStatus(auto ? "Draft autosaved." : "Draft saved. Check when you are ready to run MMR.")
+    function setPortalReportDateInput(id, value) {} el.dataset.isoDate = isoDate
+    reportDate: t(field("reportDate")?.dataset?.isoDate formatPortalDate(openDate)
+    function vocabularyRowHtml(index, true, "new-word") {}
+    class="portal-button portal-button-affirm new-word-save">Save</button>
+    class="portal-button portal-button-warning new-word-close">Close</button>
+    class="portal-button portal-button-danger news-vocabulary-remove">Remove</button>
+    querySelector(".new-word-save") querySelector(".new-word-close")
+    newNewsFormBtn requestNewNewsReportForm() newNewsFormConfirmModalOpen = true
+    function markNewsDraftDirty() { state.newsFormDirty = true }
+    ${STUDENT_NEWS_REPORTS_PATH}/draft }, 80000) Save never runs MMR
+    Intl.DateTimeFormat("vi-VN" second: "2-digit" pick("second")} +07
+    function studentNewsCalendarLookbackDays() {} Math.max(49, quarterToDateDays)
+    function normalizeSyllabication(value) {} y: "ý" [áéíóúý]
+    await checkReport(); clearNewsReportForm()
+    if (saved?.complianceFailed === true) clearNewsReportForm(); await Promise.all([loadDashboard(), loadCalendar()])
+    state.activeView === "news" ? viewTarget === "news" : viewTarget === "home" && pageTarget === state.activePage
+    STUDENT_NEW_WORDS_PATH saveNewWords() new-words-add-actions newWordsAddOneBtn newWordsAddFiveBtn
+    new-words-save-actions newWordsSaveBtn new-word-entry-pronunciation dictionaryPlural(word.english, word.partOfSpeech)
+    dictionaryDefinition(word.definition) new-word-entry-vietnamese water_ripples_modal water_ripples_news
+    portal-button-primary new-word-edit newsVocabularyRows addNewsVocabularyRowBtn
+    function assertApiOriginConfiguredForStaticPreview() {}
+    function inferLoopbackPreviewApiOrigin() {}
+    function formatQueueDateTimeTz7() {}
+    function formatQueueLatestSubmissionHtml() {}
+    ${hour}:${minute}:${second} +07
+  -->
+  <script src="/web-asset/shared/portal-preferences.js"></script>
+  <script src="/web-asset/shared/portal-password-visibility.js"></script>
+  <script src="/web-asset/student/student-portal.min.js"></script>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const button = document.getElementById("studentThemeToggle");
+      const icon = document.getElementById("studentThemeToggleIcon");
+      const themeState = window.SIS_PORTAL_THEME;
+
+      function sync(theme) {
+        if (!button || !icon) return;
+        const isDark = theme === "dark";
+        const label = isDark ? "Switch to light theme" : "Switch to dark theme";
+        button.setAttribute("aria-pressed", String(isDark));
+        button.setAttribute("aria-label", label);
+        icon.setAttribute("name", isDark ? "theme-sun" : "theme-moon");
+      }
+
+      window.addEventListener("sis-theme-change", (event) => {
+        sync(event.detail?.theme || root.dataset.theme);
+      });
+
+      function apply(theme) {
+        const next = themeState?.setTheme ? themeState.setTheme(theme) : (theme === "dark" ? "dark" : "light");
+        sync(next);
+      }
+
+      button?.addEventListener("click", () => {
+        apply(themeState?.toggleTheme ? themeState.toggleTheme("light") : (root.dataset.theme === "dark" ? "light" : "dark"));
+      });
+      apply(themeState?.getTheme ? themeState.getTheme("light") : (root.dataset.theme === "dark" ? "dark" : "light"));
+    })();
+  </script>
+</body>
+
+</html>

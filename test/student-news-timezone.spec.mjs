@@ -34,6 +34,7 @@ test("buildStudentNewsCalendarRows resolves open/completed states in UTC+7", () 
   const reports = [
     {
       reportDate: new Date("2026-03-11T17:00:00.000Z"), // 2026-03-12 in UTC+7
+      createdAt: new Date("2026-03-12T03:45:00.000Z"),
       submittedAt: "2026-03-12T03:45:00.000Z",
     },
   ]

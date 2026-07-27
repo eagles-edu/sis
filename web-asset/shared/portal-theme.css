@@ -11749,3 +11749,28 @@ body.parent-portal-page #newsWeekSetModal .news-review-vocabulary-row {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+.fcontainer {
+  display: flex;
+  align-items: center;
+}
+
+.fcontainer span {
+  margin-left: auto;
+}
+
+/* alignment without flex container */
+.cspan {
+  display: block;
+  text-align: center;
+}
+
+.lspan {
+  display: block;
+  text-align: left;
+}
+
+.rspan {
+  display: block;
+  text-align: right;
+}

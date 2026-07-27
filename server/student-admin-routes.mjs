@@ -168,8 +168,9 @@ import {
   generateStudentReportCardPdf,
 } from "./student-report-card-pdf.mjs"
 import { createStudentAdminSessionStore } from "../src/modules/admin/session-store.mjs"
-import { getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
+import { closeSharedPrismaClient, getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
 import {
+  closePortalPreferenceCache,
   getPortalPreferences,
   savePortalPreferences,
 } from "../src/modules/portal/portal-preference-store.mjs"
@@ -649,6 +650,14 @@ function resolveStudentNewsValidationConfigFromSettings() {
   const vocabularyMinimumWords = Number.isFinite(Number(rawValidation?.vocabularyMinimumWords))
     ? Math.max(1, Math.min(100, Math.trunc(Number(rawValidation.vocabularyMinimumWords))))
     : STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM
+  const grammarEngine = rawValidation?.grammarEngine && typeof rawValidation.grammarEngine === "object"
+    ? rawValidation.grammarEngine
+    : {}
+  const grammarEndpoint = normalizeText(
+    process.env.STUDENT_NEWS_GRAMMAR_ENDPOINT
+    || grammarEngine.endpoint
+    || "http://127.0.0.1:8093/v2/check",
+  )
   return {
     enabled: !(envValidationDisabled || settingsValidationDisabled),
     vocabularyMinimumWords,
@@ -659,6 +668,14 @@ function resolveStudentNewsValidationConfigFromSettings() {
           STUDENT_NEWS_SOURCE_DEFAULT_DOMAINS.bbc,
         ],
     thresholds: { ...STUDENT_NEWS_VALIDATION_THRESHOLDS },
+    grammarEngine: {
+      enabled: !(envValidationDisabled || settingsValidationDisabled) && grammarEngine.enabled !== false,
+      endpoint: grammarEndpoint,
+      language: normalizeText(grammarEngine.language) || "en-US",
+      timeoutMs: Number.isFinite(Number(grammarEngine.timeoutMs))
+        ? Math.max(1000, Math.min(30000, Math.trunc(Number(grammarEngine.timeoutMs))))
+        : 12000,
+    },
   }
 }
 const PARENT_PROFILE_IMMUTABLE_FIELDS = new Set(["eaglesId", "studentNumber"])
@@ -1759,6 +1776,8 @@ export async function closeStudentAdminRuntimeResources() {
     PARENT_SESSION_STORE.close(),
     STUDENT_SESSION_STORE.close(),
     closeStudentAdminFilterCache(),
+    closeSharedPrismaClient(),
+    closePortalPreferenceCache(),
   ])
 }
 
@@ -5771,6 +5790,7 @@ async function buildParentDashboardPayload(session = {}) {
             latestSubmittedAt,
             window: newsSnapshot?.window || null,
             openReport: newsSnapshot?.openReport || null,
+            openReports: Array.isArray(newsSnapshot?.openReports) ? newsSnapshot.openReports : [],
             items: Array.isArray(newsSnapshot?.items) ? newsSnapshot.items : [],
             calendar: Array.isArray(newsSnapshot?.calendar) ? newsSnapshot.calendar : [],
           },
@@ -6274,10 +6294,20 @@ async function handleApiRequest(request, response, pathname, url) {
       error.statusCode = 404
       throw error
     }
+    const etag = `"${asset.sha256}"`
+    if (request.headers["if-none-match"] === etag) {
+      response.writeHead(304, {
+        "Cache-Control": "private, max-age=300, stale-while-revalidate=86400",
+        ETag: etag,
+      })
+      response.end()
+      return true
+    }
     response.writeHead(200, {
-      "Cache-Control": "private, max-age=300",
+      "Cache-Control": "private, max-age=300, stale-while-revalidate=86400",
       "Content-Length": String(asset.content.length),
       "Content-Type": asset.mimeType,
+      ETag: etag,
       "X-Content-Type-Options": "nosniff",
     })
     response.end(asset.content)

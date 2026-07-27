@@ -74,6 +74,31 @@
     .queue-summary-chip-label {}
     .queue-summary-chip-count {}
 
+    .news-sentence-feedback {
+      display: grid;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .news-sentence-feedback h4 {
+      margin: 0;
+    }
+
+    .news-sentence-raw {
+      white-space: pre-wrap;
+    }
+
+    .news-sentence-error {
+      text-decoration: underline wavy #b3262d 2px;
+      text-decoration-skip-ink: none;
+      text-underline-offset: 3px;
+    }
+
+    .news-sentence-comments {
+      margin: 0;
+      padding-left: 20px;
+    }
+
     .status-strip {
       padding: 10px 12px;
     }

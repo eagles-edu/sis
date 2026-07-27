@@ -7323,10 +7323,10 @@
         const pendingAction = normalizeText(
           state.newsReview?.pendingById?.[activeReportId],
         );
-        const reportStatus =
-          normalizeLower(normalizeText(activeReport?.reviewStatus)) ||
-          STUDENT_NEWS_REVIEW_STATUS_SUBMITTED;
-        const canEditReport = canReview && Boolean(activeReportId) && reportStatus !== "approved";
+        // Admin review is an intervention surface, not a status-limited queue.
+        // Keep the role gate, but allow the administrator to edit, comment on,
+        // approve, or return any report regardless of its current status.
+        const canEditReport = canReview && Boolean(activeReportId);
         const editBtn = document.getElementById("newsReviewViewerEditBtn");
         if (editBtn instanceof HTMLButtonElement) {
           editBtn.disabled = !canEditReport || Boolean(pendingAction);
@@ -8101,6 +8101,17 @@
         return normalizeSchoolSetupState(source);
       }
 
+      function normalizeSchoolLogoUrl(value = "") {
+        const raw = normalizeText(value);
+        if (!raw) return "";
+        if (/^(?:data:|blob:|https?:|\/)/i.test(raw)) return raw;
+        if (raw === "logo.svg" || raw === "images/logo.svg") {
+          return "/web-asset/images/logo.svg";
+        }
+        if (raw.startsWith("web-asset/")) return `/${raw}`;
+        return raw;
+      }
+
       function normalizeSchoolProfile(source = {}) {
         const fallback = defaultSchoolProfile();
         const normalizedSource = source && typeof source === "object" ? source : {};
@@ -8134,7 +8145,9 @@
             normalizedSource.googleMapsEmbedIframe || fallback.googleMapsEmbedIframe,
           ),
           logoDataUrl: normalizeText(
-            normalizedSource.logoDataUrl || fallback.logoDataUrl,
+            normalizeSchoolLogoUrl(
+              normalizedSource.logoDataUrl || fallback.logoDataUrl,
+            ),
           ),
         };
       }
@@ -8515,8 +8528,16 @@
       }
 
       function loadAttendanceLevelTileConfigFromStorage() {
-        const stored = window.SIS_PORTAL_PREFERENCES?.get(CLASS_LEVEL_TILE_STYLE_STORAGE_KEY, {});
-        return stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+        const isConfig = (value) =>
+          value && typeof value === "object" && !Array.isArray(value) ? value : null;
+        const current = isConfig(
+          window.SIS_PORTAL_PREFERENCES?.get(CLASS_LEVEL_TILE_STYLE_STORAGE_KEY, null),
+        );
+        if (current) return current;
+        const legacy = isConfig(
+          window.SIS_PORTAL_PREFERENCES?.get(LEGACY_ATTENDANCE_LEVEL_TILE_STORAGE_KEY, null),
+        );
+        return legacy || {};
       }
 
       function rehydratePreferenceBackedState() {
@@ -9256,6 +9277,18 @@
       function applyUiSettings() {
         const multiSchool = Boolean(state.uiSettings?.multiSchool);
         state.uiSettings = normalizeUiSettings(state.uiSettings);
+        const persistedTileStyles = state.uiSettings?.levelTileStylesByLevel;
+        if (persistedTileStyles && typeof persistedTileStyles === "object" && !Array.isArray(persistedTileStyles)) {
+          if (Object.keys(persistedTileStyles).length > 0) {
+            state.attendanceLanding.tileConfigByLevel = persistedTileStyles;
+          } else if (
+            !state.attendanceLanding.tileConfigByLevel ||
+            Object.keys(state.attendanceLanding.tileConfigByLevel).length === 0
+          ) {
+            state.attendanceLanding.tileConfigByLevel =
+              loadAttendanceLevelTileConfigFromStorage();
+          }
+        }
         normalizeQuarterDropdownDefaults();
         const schoolFilterCol = document.getElementById("schoolFilterCol");
         const profileSchoolCol = document.getElementById("profileSchoolCol");
@@ -9306,6 +9339,9 @@
         ) {
           syncAttendanceDateDerivedFields();
         }
+        populateAttendanceLevelStyleOptions();
+        syncAttendanceLevelEditorInputs();
+        renderAllClassLevelTiles();
         if (state.queueHub.loaded) renderQueueHubPanels();
       }
 
@@ -11445,6 +11481,7 @@
         const tilesEl = document.getElementById("assignmentLevelTiles");
         const hintEl = document.getElementById("assignmentLevelPanelHint");
         if (!tilesEl) return;
+        if (!shouldRenderTileSurface(tilesEl)) return;
 
         const levels = collectAttendanceLevelNames();
         const selectedLevel = normalizeAssignmentTargetLevel(
@@ -11455,6 +11492,10 @@
           if (hintEl) hintEl.textContent = "No class levels found.";
           return;
         }
+
+        const renderKey = tileSurfaceRenderKey(levels, selectedLevel);
+        if (tilesEl.dataset.tileRenderKey === renderKey) return;
+        tilesEl.dataset.tileRenderKey = renderKey;
 
         tilesEl.innerHTML = "";
         levels.forEach((levelName) => {
@@ -17365,6 +17406,7 @@
         const tilesEl = document.getElementById("parentTrackingLevelTiles");
         const hintEl = document.getElementById("parentTrackingLevelHint");
         if (!tilesEl) return;
+        if (!shouldRenderTileSurface(tilesEl)) return;
         const selectedLevel = selectedParentTrackingLevel();
         const levels = collectAttendanceLevelNames([selectedLevel]);
         if (!levels.length) {
@@ -17372,6 +17414,10 @@
           if (hintEl) hintEl.textContent = "No class levels available.";
           return;
         }
+
+        const renderKey = tileSurfaceRenderKey(levels, selectedLevel);
+        if (tilesEl.dataset.tileRenderKey === renderKey) return;
+        tilesEl.dataset.tileRenderKey = renderKey;
 
         tilesEl.innerHTML = "";
         levels.forEach((levelName) => {
@@ -20280,8 +20326,8 @@
         const theme = getLevelTheme(canonicalLevel);
         const configStore = state.attendanceLanding?.tileConfigByLevel || {};
         const configKeys = levelTileStyleKeys(canonicalLevel);
-        const matchedKey = configKeys.find((key) =>
-          Object.prototype.hasOwnProperty.call(configStore, key),
+        const matchedKey = Object.keys(configStore).find((key) =>
+          configKeys.includes(levelNameKey(key)),
         );
         const raw = matchedKey ? configStore[matchedKey] || {} : {};
         const hasCustomTitle = Object.prototype.hasOwnProperty.call(raw, "title");
@@ -20508,6 +20554,28 @@
         );
       }
 
+      function shouldRenderTileSurface(tilesEl) {
+        const pageSection = tilesEl?.closest(".page-section");
+        return !pageSection || pageSection.classList.contains("active");
+      }
+
+      function tileSurfaceRenderKey(levels, selectedLevel = "") {
+        return JSON.stringify([
+          normalizeText(selectedLevel),
+          ...levels.map((level) => {
+            const canonicalLevel = resolveSystemLevelName(level);
+            const config = attendanceLevelTileConfig(canonicalLevel);
+            return [
+              canonicalLevel,
+              config.title,
+              config.bgColor,
+              config.assetKey,
+              config.imageDataUrl,
+            ];
+          }),
+        ]);
+      }
+
       function renderAttendanceLevelTiles() {
         if (!hasLiveDom()) return;
         const tileTargets = [
@@ -20542,6 +20610,10 @@
         state.attendanceLanding.selectedLevel = hasSelected ? selectedLevel : "";
 
         tileTargets.forEach(({ tilesEl, hintEl }) => {
+          if (!shouldRenderTileSurface(tilesEl)) return;
+          const renderKey = tileSurfaceRenderKey(levels, selectedLevel);
+          if (tilesEl.dataset.tileRenderKey === renderKey) return;
+          tilesEl.dataset.tileRenderKey = renderKey;
           tilesEl.innerHTML = "";
           levels.forEach((level) => {
             const canonicalLevel = resolveSystemLevelName(level);
@@ -22225,13 +22297,6 @@
               onNewsReviewEditViewer() {
                 const activeReport = newsReviewViewerCurrentItem();
                 if (!activeReport) return;
-                if (
-                  (normalizeLower(normalizeText(activeReport?.reviewStatus)) ||
-                    STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) ===
-                  "approved"
-                ) {
-                  return;
-                }
                 setNewsReviewViewerEditMode(!state.newsReview.viewerEditMode);
               },
               onNewsReviewSaveViewer() {

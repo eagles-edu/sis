@@ -338,7 +338,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2704
+              "height": 2596
             },
             ".wrap": {
               "selector": ".wrap",
@@ -350,7 +350,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2656
+              "height": 2548
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -362,7 +362,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2572
+              "height": 2464
             },
             ".panel": {
               "selector": ".panel",
@@ -378,15 +378,15 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
-              "width": 211,
-              "height": 71
+              "display": "grid",
+              "width": 430,
+              "height": 186
             },
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
@@ -478,7 +478,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 4790
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -490,7 +490,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 4742
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -502,7 +502,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 4658
+              "height": 461
             },
             ".panel": {
               "selector": ".panel",
@@ -518,13 +518,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -618,7 +618,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3235
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -630,7 +630,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3187
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -642,7 +642,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3103
+              "height": 880
             },
             ".panel": {
               "selector": ".panel",
@@ -658,13 +658,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -782,7 +782,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 737
+              "height": 656
             },
             ".panel": {
               "selector": ".panel",
@@ -798,13 +798,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -898,7 +898,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1302
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -910,7 +910,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1254
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -922,7 +922,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1170
+              "height": 1013
             },
             ".panel": {
               "selector": ".panel",
@@ -938,13 +938,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -1038,7 +1038,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1239
+              "height": 1225
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1050,7 +1050,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1191
+              "height": 1177
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1062,7 +1062,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1107
+              "height": 1093
             },
             ".panel": {
               "selector": ".panel",
@@ -1078,13 +1078,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -1178,7 +1178,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3011
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1190,7 +1190,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2963
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1202,7 +1202,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2879
+              "height": 767
             },
             ".panel": {
               "selector": ".panel",
@@ -1218,13 +1218,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -1318,7 +1318,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 33280
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1330,7 +1330,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 33232
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1342,7 +1342,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 33148
+              "height": 218
             },
             ".panel": {
               "selector": ".panel",
@@ -1358,13 +1358,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -1482,7 +1482,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 714
+              "height": 700
             },
             ".panel": {
               "selector": ".panel",
@@ -1498,13 +1498,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -1598,7 +1598,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1454
+              "height": 1407
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1610,7 +1610,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1406
+              "height": 1359
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1622,7 +1622,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1322
+              "height": 1275
             },
             ".panel": {
               "selector": ".panel",
@@ -1638,13 +1638,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -1824,7 +1824,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3784
+              "height": 3061
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1836,7 +1836,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3736
+              "height": 3013
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1848,7 +1848,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3652
+              "height": 2929
             },
             ".panel": {
               "selector": ".panel",
@@ -1864,13 +1864,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -1939,27 +1939,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "label-title-only",
-              "impact": "serious",
-              "help": "Form elements should have a visible label",
-              "nodes": [
-                {
-                  "target": "textarea[name=\"pt_rec_internationalNews\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_readingEnglishEnjoyment\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_vocabularyLookup\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -1984,7 +1964,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2222
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1996,7 +1976,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2174
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2008,7 +1988,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2090
+              "height": 808
             },
             ".panel": {
               "selector": ".panel",
@@ -2024,13 +2004,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -2148,7 +2128,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 847
+              "height": 607
             },
             ".panel": {
               "selector": ".panel",
@@ -2164,13 +2144,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -2264,7 +2244,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 8483
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2276,7 +2256,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 8435
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2288,7 +2268,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 8351
+              "height": 594
             },
             ".panel": {
               "selector": ".panel",
@@ -2304,13 +2284,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -2404,7 +2384,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1783
+              "height": 1557
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2416,7 +2396,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1735
+              "height": 1509
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2428,7 +2408,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1651
+              "height": 1425
             },
             ".panel": {
               "selector": ".panel",
@@ -2444,13 +2424,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -2568,7 +2548,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 807
+              "height": 793
             },
             ".panel": {
               "selector": ".panel",
@@ -2584,13 +2564,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -2684,7 +2664,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "flex",
               "width": 1440,
-              "height": 19718
+              "height": 19847
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2696,7 +2676,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 19670
+              "height": 19799
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2708,7 +2688,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1250,
-              "height": 19450
+              "height": 19579
             },
             ".panel": {
               "selector": ".panel",
@@ -2850,7 +2830,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1759
+              "height": 1172
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2862,7 +2842,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1711
+              "height": 1124
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2874,7 +2854,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1627
+              "height": 1040
             },
             ".panel": {
               "selector": ".panel",
@@ -2890,13 +2870,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -2976,17 +2956,6 @@
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
-            },
-            {
-              "id": "scrollable-region-focusable",
-              "impact": "serious",
-              "help": "Scrollable region must have keyboard access",
-              "nodes": [
-                {
-                  "target": "#studentListPanel > .list-box.data-surface[data-surface-role=\"data-surface\"]",
-                  "failureSummary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
-                }
-              ]
             }
           ]
         },
@@ -3013,7 +2982,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3041
+              "height": 2928
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3025,7 +2994,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2993
+              "height": 2880
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3037,7 +3006,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2909
+              "height": 2796
             },
             ".panel": {
               "selector": ".panel",
@@ -3053,13 +3022,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -3165,7 +3134,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1231
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3177,7 +3146,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1183
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3189,7 +3158,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1099
+              "height": 961
             },
             ".panel": {
               "selector": ".panel",
@@ -3205,13 +3174,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -3305,7 +3274,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2338
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3317,7 +3286,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2290
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3329,7 +3298,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2206
+              "height": 798
             },
             ".panel": {
               "selector": ".panel",
@@ -3345,13 +3314,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -3445,7 +3414,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2475
+              "height": 2172
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3457,7 +3426,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2427
+              "height": 2124
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3469,7 +3438,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2343
+              "height": 2040
             },
             ".panel": {
               "selector": ".panel",
@@ -3485,13 +3454,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -3569,52 +3538,6 @@
                 {
                   "target": ".settings-mirror-panel > h4",
                   "failureSummary": "Fix any of the following:\n  Heading order invalid"
-                }
-              ]
-            },
-            {
-              "id": "label",
-              "impact": "critical",
-              "help": "Form elements must have labels",
-              "nodes": [
-                {
-                  "target": "input[value=\"Tải ảnh học sinh lên\"][data-layout-key=\"labelVi\"][type=\"text\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(5) > input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[value=\"10\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(7) > input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
-            },
-            {
-              "id": "select-name",
-              "impact": "critical",
-              "help": "Select element must have an accessible name",
-              "nodes": [
-                {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
             }
@@ -3729,7 +3652,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2222
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3741,7 +3664,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2174
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3753,7 +3676,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2090
+              "height": 808
             },
             ".panel": {
               "selector": ".panel",
@@ -3769,13 +3692,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(252, 253, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -3848,65 +3771,13 @@
         },
         {
           "link": {
-            "href": "/admin/news-reports",
-            "text": "News Reports"
-          },
-          "modalSurfaces": {
-            "#newsReviewViewerModal": {
-              "selector": "#newsReviewViewerModal",
-              "id": "newsReviewViewerModal",
-              "className": "queue-modal",
-              "bg": "rgba(8, 18, 40, 0.58)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgb(0, 0, 0)",
-              "display": "flex",
-              "width": 1425,
-              "height": 1100
-            },
-            "#newsReviewViewerBody .news-review-viewer-block": {
-              "selector": "#newsReviewViewerBody .news-review-viewer-block",
-              "id": "",
-              "className": "news-review-viewer-block card",
-              "bg": "rgb(250, 252, 255)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgb(0, 0, 0)",
-              "display": "grid",
-              "width": 460,
-              "height": 71
-            },
-            "#newsReviewViewerNote": {
-              "selector": "#newsReviewViewerNote",
-              "id": "newsReviewViewerNote",
-              "className": "card",
-              "bg": "rgb(252, 253, 255)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
-              "width": 932,
-              "height": 75
-            },
-            ".news-review-note-line.pending": null,
-            ".news-review-note-line.fixed": null
-          },
-          "modalAxe": [],
-          "viewerBlock": {
-            "bg": "rgb(250, 252, 255)",
-            "color": "rgb(0, 0, 0)",
-            "text": "Report IDcmrz7yk6c0024nxg0uglgji53"
-          }
-        },
-        {
-          "link": {
             "href": "/admin/grades-data",
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "",
-            "bgImage": "",
-            "color": ""
+            "bg": "rgba(0, 0, 0, 0)",
+            "bgImage": "none",
+            "color": "rgb(0, 0, 0)"
           }
         }
       ]
@@ -3931,7 +3802,7 @@
           "border": "rgb(0, 0, 0)",
           "display": "block",
           "width": 1440,
-          "height": 17787
+          "height": 17902
         },
         "#loginPanel": {
           "selector": "#loginPanel",
@@ -4262,7 +4133,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 4023
+              "height": 4095
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -6007,7 +5878,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2704
+              "height": 2596
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6019,7 +5890,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2656
+              "height": 2548
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6031,7 +5902,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2572
+              "height": 2464
             },
             ".panel": {
               "selector": ".panel",
@@ -6047,15 +5918,15 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
-              "width": 211,
-              "height": 71
+              "display": "grid",
+              "width": 430,
+              "height": 186
             },
             ".queue-modal-card": {
               "selector": ".queue-modal-card",
@@ -6171,7 +6042,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 475
+              "height": 461
             },
             ".panel": {
               "selector": ".panel",
@@ -6187,13 +6058,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -6287,7 +6158,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3235
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6299,7 +6170,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3187
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6311,7 +6182,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3103
+              "height": 880
             },
             ".panel": {
               "selector": ".panel",
@@ -6327,13 +6198,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -6451,7 +6322,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 737
+              "height": 656
             },
             ".panel": {
               "selector": ".panel",
@@ -6467,13 +6338,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -6567,7 +6438,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1302
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6579,7 +6450,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1254
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6591,7 +6462,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1170
+              "height": 1013
             },
             ".panel": {
               "selector": ".panel",
@@ -6607,13 +6478,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -6707,7 +6578,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1239
+              "height": 1225
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6719,7 +6590,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1191
+              "height": 1177
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6731,7 +6602,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1107
+              "height": 1093
             },
             ".panel": {
               "selector": ".panel",
@@ -6747,13 +6618,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -6847,7 +6718,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3011
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6859,7 +6730,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2963
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6871,7 +6742,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2879
+              "height": 767
             },
             ".panel": {
               "selector": ".panel",
@@ -6887,13 +6758,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -6962,31 +6833,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "tr:nth-child(1) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[rel=\"noopener noreferrer\"][target=\"_blank\"]",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(2) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[href$=\"sis-smoke\"][rel=\"noopener noreferrer\"]",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(3) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[href$=\"sis-smoke\"][rel=\"noopener noreferrer\"]",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(4) > td[data-assignments-col=\"items\"] > .assignment-record-items > .assignment-record-item > .assignment-item-link[href$=\"sis-smoke\"][rel=\"noopener noreferrer\"]",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -7011,7 +6858,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 33280
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7023,7 +6870,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 33232
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7035,7 +6882,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 33148
+              "height": 218
             },
             ".panel": {
               "selector": ".panel",
@@ -7051,13 +6898,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -7175,7 +7022,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 714
+              "height": 700
             },
             ".panel": {
               "selector": ".panel",
@@ -7191,13 +7038,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -7291,7 +7138,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1454
+              "height": 1407
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7303,7 +7150,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1406
+              "height": 1359
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7315,7 +7162,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1322
+              "height": 1275
             },
             ".panel": {
               "selector": ".panel",
@@ -7331,13 +7178,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -7517,7 +7364,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3784
+              "height": 3061
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7529,7 +7376,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3736
+              "height": 3013
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7541,7 +7388,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3652
+              "height": 2929
             },
             ".panel": {
               "selector": ".panel",
@@ -7557,13 +7404,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -7632,27 +7479,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "label-title-only",
-              "impact": "serious",
-              "help": "Form elements should have a visible label",
-              "nodes": [
-                {
-                  "target": "textarea[name=\"pt_rec_internationalNews\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_readingEnglishEnjoyment\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_vocabularyLookup\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -7677,7 +7504,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2222
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7689,7 +7516,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2174
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7701,7 +7528,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2090
+              "height": 808
             },
             ".panel": {
               "selector": ".panel",
@@ -7717,13 +7544,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -7841,7 +7668,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 847
+              "height": 607
             },
             ".panel": {
               "selector": ".panel",
@@ -7857,13 +7684,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -7957,7 +7784,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 8483
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7969,7 +7796,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 8435
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7981,7 +7808,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 8351
+              "height": 594
             },
             ".panel": {
               "selector": ".panel",
@@ -7997,13 +7824,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -8097,7 +7924,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1783
+              "height": 1557
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8109,7 +7936,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1735
+              "height": 1509
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8121,7 +7948,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1651
+              "height": 1425
             },
             ".panel": {
               "selector": ".panel",
@@ -8137,13 +7964,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -8261,7 +8088,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 807
+              "height": 793
             },
             ".panel": {
               "selector": ".panel",
@@ -8277,13 +8104,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -8377,7 +8204,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "flex",
               "width": 1440,
-              "height": 19718
+              "height": 19847
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8389,7 +8216,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 19670
+              "height": 19799
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8401,7 +8228,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1250,
-              "height": 19450
+              "height": 19579
             },
             ".panel": {
               "selector": ".panel",
@@ -8543,7 +8370,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1759
+              "height": 1172
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8555,7 +8382,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1711
+              "height": 1124
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8567,7 +8394,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1627
+              "height": 1040
             },
             ".panel": {
               "selector": ".panel",
@@ -8583,13 +8410,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -8669,17 +8496,6 @@
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
-            },
-            {
-              "id": "scrollable-region-focusable",
-              "impact": "serious",
-              "help": "Scrollable region must have keyboard access",
-              "nodes": [
-                {
-                  "target": "#studentListPanel > .list-box.data-surface[data-surface-role=\"data-surface\"]",
-                  "failureSummary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
-                }
-              ]
             }
           ]
         },
@@ -8706,7 +8522,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3041
+              "height": 2928
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8718,7 +8534,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2993
+              "height": 2880
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8730,7 +8546,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2909
+              "height": 2796
             },
             ".panel": {
               "selector": ".panel",
@@ -8746,13 +8562,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -8858,7 +8674,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1231
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8870,7 +8686,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1183
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8882,7 +8698,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1099
+              "height": 961
             },
             ".panel": {
               "selector": ".panel",
@@ -8898,13 +8714,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -8998,7 +8814,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2338
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9010,7 +8826,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2290
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9022,7 +8838,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2206
+              "height": 798
             },
             ".panel": {
               "selector": ".panel",
@@ -9038,13 +8854,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -9138,7 +8954,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2475
+              "height": 2172
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9150,7 +8966,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2427
+              "height": 2124
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9162,7 +8978,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2343
+              "height": 2040
             },
             ".panel": {
               "selector": ".panel",
@@ -9178,13 +8994,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -9262,52 +9078,6 @@
                 {
                   "target": ".settings-mirror-panel > h4",
                   "failureSummary": "Fix any of the following:\n  Heading order invalid"
-                }
-              ]
-            },
-            {
-              "id": "label",
-              "impact": "critical",
-              "help": "Form elements must have labels",
-              "nodes": [
-                {
-                  "target": "input[value=\"Tải ảnh học sinh lên\"][data-layout-key=\"labelVi\"][type=\"text\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[value=\"10\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
-            },
-            {
-              "id": "select-name",
-              "impact": "critical",
-              "help": "Select element must have an accessible name",
-              "nodes": [
-                {
-                  "target": "select[data-layout-key=\"inputType\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "select[data-layout-key=\"tabId\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "select[data-layout-key=\"inputType\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "select[data-layout-key=\"tabId\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
             }
@@ -9422,7 +9192,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2222
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9434,7 +9204,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2174
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9446,7 +9216,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2090
+              "height": 808
             },
             ".panel": {
               "selector": ".panel",
@@ -9462,13 +9232,13 @@
             },
             ".card": {
               "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
+              "id": "hubConnectionCard",
+              "className": "system-health-item system-health-hub-card pending card",
               "bg": "rgb(76, 76, 76)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "grid",
               "width": 0,
               "height": 0
             },
@@ -9541,65 +9311,13 @@
         },
         {
           "link": {
-            "href": "/admin/news-reports",
-            "text": "News Reports"
-          },
-          "modalSurfaces": {
-            "#newsReviewViewerModal": {
-              "selector": "#newsReviewViewerModal",
-              "id": "newsReviewViewerModal",
-              "className": "queue-modal",
-              "bg": "rgba(6, 9, 16, 0.72)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgb(251, 255, 255)",
-              "display": "flex",
-              "width": 1425,
-              "height": 1100
-            },
-            "#newsReviewViewerBody .news-review-viewer-block": {
-              "selector": "#newsReviewViewerBody .news-review-viewer-block",
-              "id": "",
-              "className": "news-review-viewer-block card",
-              "bg": "rgb(76, 76, 76)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "grid",
-              "width": 460,
-              "height": 71
-            },
-            "#newsReviewViewerNote": {
-              "selector": "#newsReviewViewerNote",
-              "id": "newsReviewViewerNote",
-              "className": "card",
-              "bg": "rgb(76, 76, 76)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
-              "width": 932,
-              "height": 75
-            },
-            ".news-review-note-line.pending": null,
-            ".news-review-note-line.fixed": null
-          },
-          "modalAxe": [],
-          "viewerBlock": {
-            "bg": "rgb(76, 76, 76)",
-            "color": "rgb(251, 255, 255)",
-            "text": "Report IDcmrz7yk6c0024nxg0uglgji53"
-          }
-        },
-        {
-          "link": {
             "href": "/admin/grades-data",
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "",
-            "bgImage": "",
-            "color": ""
+            "bg": "rgb(82, 82, 82)",
+            "bgImage": "none",
+            "color": "rgb(229, 245, 255)"
           }
         }
       ]
@@ -9624,7 +9342,7 @@
           "border": "rgb(251, 255, 255)",
           "display": "block",
           "width": 1440,
-          "height": 17787
+          "height": 17902
         },
         "#loginPanel": {
           "selector": "#loginPanel",
@@ -9955,7 +9673,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 4024
+              "height": 4096
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",

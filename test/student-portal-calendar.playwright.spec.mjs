@@ -195,7 +195,10 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
   function listNewsItems() {
     return studentNewsItems
       .slice()
-      .sort((left, right) => String(right.reportDate || "").localeCompare(String(left.reportDate || "")));
+      .sort((left, right) => (
+        String(right.reportDate || "").localeCompare(String(left.reportDate || ""))
+        || (Number(right.reportSequence) || 1) - (Number(left.reportSequence) || 1)
+      ));
   }
 
   return http.createServer(async (request, response) => {
@@ -602,10 +605,21 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
           submitCounter += 1;
           const submittedAt = `2026-03-17T12:0${Math.min(submitCounter, 9)}:00.000Z`;
           const reportDate = String(payload?.reportDate || "");
-          const existingIndex = studentNewsItems.findIndex((entry) => entry.reportDate === reportDate);
+          const existingIndex = payload?.reportId
+            ? studentNewsItems.findIndex((entry) => entry.id === String(payload.reportId))
+            : -1;
+          const nextSequence = existingIndex >= 0
+            ? Number(studentNewsItems[existingIndex]?.reportSequence) || 1
+            : Math.max(
+              0,
+              ...studentNewsItems
+                .filter((entry) => entry.reportDate === reportDate)
+                .map((entry) => Number(entry.reportSequence) || 1),
+            ) + 1;
           const nextItem = {
-            id: `news-${reportDate}`,
+            id: existingIndex >= 0 ? studentNewsItems[existingIndex].id : `news-${reportDate}-${nextSequence}`,
             reportDate,
+            reportSequence: nextSequence,
             sourceLink: String(payload?.sourceLink || ""),
             articleTitle: String(payload?.articleTitle || ""),
             byline: String(payload?.byline || ""),
@@ -771,7 +785,9 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
         }
         const payload = await readJsonBody(request);
         const reportDate = String(payload?.reportDate || "");
-        const existing = studentNewsItems.find((entry) => entry.reportDate === reportDate);
+        const existing = payload?.reportId
+          ? studentNewsItems.find((entry) => entry.id === String(payload.reportId))
+          : null;
         const item = existing ? { ...existing, ...payload, currentMmrPassed: true } : { ...payload, currentMmrPassed: true };
         if (existing) Object.assign(existing, item);
         sendJson(response, 200, {

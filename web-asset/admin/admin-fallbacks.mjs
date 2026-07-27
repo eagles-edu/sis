@@ -114,13 +114,6 @@ function bindNewsReviewIslandFallback() {
     ?.addEventListener("click", () => {
       const activeReport = newsReviewViewerCurrentItem();
       if (!activeReport) return;
-      if (
-        (normalizeLower(normalizeText(activeReport?.reviewStatus)) ||
-          STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) ===
-        "approved"
-      ) {
-        return;
-      }
       setNewsReviewViewerEditMode(!state.newsReview.viewerEditMode);
     });
   document

@@ -61,6 +61,15 @@ function makeMockTransport() {
   }
 }
 
+async function closeReviewServer(server) {
+  if (!server.listening) return
+  server.closeAllConnections?.()
+  server.closeIdleConnections?.()
+  await new Promise((resolve) => server.close(resolve))
+  const { closeStudentAdminRuntimeResources } = await import("../server/student-admin-routes.mjs")
+  await closeStudentAdminRuntimeResources()
+}
+
 function themeInitScript(theme = "light") {
   const rawTheme = theme === "dark" ? "dark" : "light"
   return `
@@ -656,7 +665,7 @@ test(
       await context.close()
     } finally {
       await browser.close().catch(() => {})
-      await new Promise((resolve) => server.close(resolve))
+      await closeReviewServer(server)
     }
   },
 )
@@ -1223,7 +1232,7 @@ test(
       }
     } finally {
       await browser.close().catch(() => {})
-      await new Promise((resolve) => server.close(resolve))
+      await closeReviewServer(server)
     }
 
     fs.writeFileSync(
