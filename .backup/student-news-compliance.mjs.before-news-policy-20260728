@@ -51,7 +51,7 @@ function normalizeHttpUrl(value) {
   try {
     const parsed = new URL(text)
     const protocol = normalizeLower(parsed.protocol)
-    if (protocol !== "https:") return ""
+    if (protocol !== "http:" && protocol !== "https:") return ""
     return parsed.toString()
   } catch (error) {
     void error
@@ -298,7 +298,7 @@ function hostnameFromUrl(value) {
   try {
     const parsed = new URL(text)
     const protocol = normalizeLower(parsed.protocol)
-    if (protocol !== "https:") return ""
+    if (protocol !== "http:" && protocol !== "https:") return ""
     return normalizeDomainToken(parsed.hostname)
   } catch (error) {
     void error
@@ -316,7 +316,7 @@ function hasSpecificArticlePath(value) {
   try {
     const parsed = new URL(text)
     const protocol = normalizeLower(parsed.protocol)
-    if (protocol !== "https:") return false
+    if (protocol !== "http:" && protocol !== "https:") return false
     const pathname = normalizeText(parsed.pathname)
     return Boolean(pathname && pathname !== "/")
   } catch (error) {
@@ -846,7 +846,7 @@ function parseGenericJinaMarkdown(markdownText = "") {
  */
 async function fetchViaJinaProxy(link = "") {
   const target = normalizeHttpUrl(link)
-  if (!target) throw new Error("Source link is not a valid https URL.")
+  if (!target) throw new Error("Source link is not a valid http/https URL.")
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 12000)
   try {
@@ -1163,7 +1163,7 @@ async function fetchStudentNewsArticleMetadata(sourceLink = "") {
   if (!link) {
     return {
       ok: false,
-      error: "Source link is not a valid https URL.",
+      error: "Source link is not a valid http/https URL.",
       sourceLink: normalizeText(sourceLink),
     }
   }
@@ -1898,20 +1898,9 @@ async function buildStudentNewsLanguageReports(actionWhy, biasAssessment, config
       const message = error instanceof Error ? error.message : "LanguageTool request failed"
       throw new Error(`Grammar validation unavailable: ${message}`, { cause: error })
     }
-    const fallbackIssues = fallback[field].issues
-    const externalIssues = Array.isArray(result.blockingIssues) ? result.blockingIssues : []
-    const issues = [
-      ...externalIssues,
-      ...fallbackIssues.filter((fallbackIssue) =>
-        !externalIssues.some((externalIssue) =>
-          externalIssue.start === fallbackIssue.start &&
-          externalIssue.length === fallbackIssue.length
-        )
-      ),
-    ].sort((left, right) => left.start - right.start || left.ruleId.localeCompare(right.ruleId))
     reports[field] = {
       sentenceType: classifyStudentNewsSentence(value),
-      issues,
+      issues: result.blockingIssues,
       advisoryIssues: result.advisoryIssues,
     }
   }
@@ -1980,7 +1969,7 @@ export async function evaluateStudentNewsMinimumRequirements(payload = {}, optio
     }
   } else if (!normalizedSourceLink) {
     failedFields.sourceLink = {
-      message: "Source must be a valid full story URL (https).",
+      message: "Source must be a valid full story URL (http/https).",
       score: 0,
       threshold: 1,
     }
@@ -2172,7 +2161,7 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
     }
   } else if (!sourceHostname) {
     failedFields.sourceLink = {
-      message: "Source must be a valid full story URL (https).",
+      message: "Source must be a valid full story URL (http/https).",
       threshold: 1,
       score: 0,
     }
@@ -2444,24 +2433,11 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
   }
 
   const vocabularyRowWarnings = findStudentNewsVocabularyExtraPointWarnings(payload?.vocabulary)
-  const vocabularyRows = normalizeStudentNewsVocabulary(payload?.vocabulary)
-  const populatedVocabularyRows = vocabularyRows.filter((row) => Object.values(row).some(Boolean))
-  const vocabularyExtraRows = populatedVocabularyRows.length > config.vocabularyMinimumWords
-    ? populatedVocabularyRows.slice(config.vocabularyMinimumWords)
-    : []
-  if (vocabularyRowWarnings.length || vocabularyExtraRows.length) {
-    const vocabularyMessages = []
-    if (vocabularyExtraRows.length) {
-      vocabularyMessages.push(`${vocabularyExtraRows.length} vocabulary entr${vocabularyExtraRows.length === 1 ? "y" : "ies"} beyond the required five can earn extra points.`)
-    }
-    if (vocabularyRowWarnings.length) {
-      vocabularyMessages.push("A multi-syllable part of a compound can be split for extra points.")
-    }
+  if (vocabularyRowWarnings.length) {
     warningFields.vocabulary = {
-      message: vocabularyMessages.join(" "),
-      score: populatedVocabularyRows.length,
-      threshold: config.vocabularyMinimumWords,
-      extraEntryCount: vocabularyExtraRows.length,
+      message: "Vocabulary is complete, but a multi-syllable part of a compound can be split for extra points.",
+      score: 0,
+      threshold: 1,
       rowWarnings: vocabularyRowWarnings,
     }
   }
@@ -2476,17 +2452,6 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
         "For extra points, split the multi-syllable part into syllables.",
       ],
       criterion: "Optional: show syllable boundaries for multi-syllable compound parts.",
-    })
-  }
-  if (vocabularyExtraRows.length) {
-    warningTasks.push({
-      field: "vocabulary",
-      label: "Vocabulary extra entries",
-      steps: [
-        `Keep at least ${config.vocabularyMinimumWords} complete vocabulary entries.`,
-        "Add additional complete entries for extra points.",
-      ],
-      criterion: `Optional: provide more than ${config.vocabularyMinimumWords} complete vocabulary entries.`,
     })
   }
   return {

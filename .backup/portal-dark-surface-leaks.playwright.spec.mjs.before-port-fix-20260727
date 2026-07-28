@@ -212,7 +212,7 @@ function assertMutedText(label, style) {
 }
 
 test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolvePlaywrightSkipReason() }, async () => {
-  const server = startStaticServer(8097)
+  const server = startStaticServer(8092)
   const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
   const page = await browser.newPage({ viewport: { width: 1440, height: 1600 } })
   await page.addInitScript(themeInitScript())
@@ -261,7 +261,7 @@ test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolve
 
   try {
     for (const testCase of cases) {
-      await page.goto(`http://127.0.0.1:8097${testCase.url}`, { waitUntil: "networkidle" })
+      await page.goto(`http://127.0.0.1:8092${testCase.url}`, { waitUntil: "networkidle" })
       await page.waitForTimeout(400)
       for (const [label, selector] of testCase.checks) {
         const style = await readStyle(page, selector)

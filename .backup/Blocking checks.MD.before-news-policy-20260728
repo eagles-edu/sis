@@ -1,0 +1,69 @@
+You’re right—here is the evaluation list for you, not the modal.
+
+### Blocking checks
+
+1. Report date
+   Must be the currently open submission date; THEREAFTER, REPORT REMAIN EDITABLE FOR 30 DAYS AND _ANYTIME_ ADMIN REQUESTS REVISION
+
+2. Source URL
+   Must be non-empty, valid `https`, and point to a specific article—not THE SITE'S homepage.
+
+3. Article title
+   Must be non-empty and match the fetched headline by:
+   - normalized exact match, or
+   - title containment, or
+   - similarity score ≥ 0.70.
+   A real mismatch blocks submission.
+
+4. Byline
+   Must be present. IF NONE, ENTER NEWS SERVICE NAME, E.G., BBC, CNN. Blank byline blocks submission.
+
+5. Publish/date line
+   Must be present and match the fetched visible publishED/updated date line OR CONTAIN '(UPDATED) _X_ HOURS/MINUTES AGO' is a valid match. Required information, must be present. A real mismatch blocks submission.
+
+6. Lead synopsis
+   Must be present.
+
+7. Action fields
+   These must be present:
+   - actor
+   - affected person/group
+   - location
+   - what happened
+   - why/how it happened
+   - bias assessment
+
+8. Sentence validation
+   Fields 11 and 12 must be complete sentences.
+
+9. Vocabulary
+   Minimum five entries. Every entry requires:
+   - part of speech
+   - English
+   - Vietnamese
+   - syllabication
+   - definition
+
+10. Submit gate
+   Submit is blocked unless all blocking checks pass and the report date is satisfied/locked.
+
+### Advisory checks
+
+These appear under “Improve for Extra Points” and do not block Submit:
+
+- byline similarity when a non-empty byline is present
+- lead similarity to the source lead
+- noun-phrase quality for actor, affected, and location <-- EXPLAIN BETTER
+- sentence style/readability suggestions
+- optional vocabulary syllable improvements  <-- EXPLAIN BETTER
+- > 5 WORD ENTRIES
+- source metadata-fetch warnings when the article itself cannot be fully fetched  <-- EXPLAIN BETTER
+
+### Successful result
+
+When all blocking checks pass, the result should display:
+
+- `Saved. CHECKS PASSED!`
+- `NO ERRORS — SUBMIT is now available.`
+
+No generic `__compliance` error should appear on a passing report.

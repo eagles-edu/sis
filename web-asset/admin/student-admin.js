@@ -11477,11 +11477,11 @@
         });
       }
 
-      function renderAssignmentLevelTiles() {
+      function renderAssignmentLevelTiles({ force = false } = {}) {
         const tilesEl = document.getElementById("assignmentLevelTiles");
         const hintEl = document.getElementById("assignmentLevelPanelHint");
         if (!tilesEl) return;
-        if (!shouldRenderTileSurface(tilesEl)) return;
+        if (!force && !shouldRenderTileSurface(tilesEl)) return;
 
         const levels = collectAttendanceLevelNames();
         const selectedLevel = normalizeAssignmentTargetLevel(
@@ -17465,8 +17465,8 @@
       }
 
       function renderAllClassLevelTiles() {
-        renderAttendanceLevelTiles();
-        renderAssignmentLevelTiles();
+        renderAttendanceLevelTiles({ force: true });
+        renderAssignmentLevelTiles({ force: true });
         renderParentTrackingLevelTiles();
       }
 
@@ -20576,7 +20576,7 @@
         ]);
       }
 
-      function renderAttendanceLevelTiles() {
+      function renderAttendanceLevelTiles({ force = false } = {}) {
         if (!hasLiveDom()) return;
         const tileTargets = [
           {
@@ -20587,7 +20587,7 @@
             tilesEl: document.getElementById("attendanceAdminLevelTiles"),
             hintEl: document.getElementById("attendanceAdminLevelPanelHint"),
           },
-        ].filter((entry) => Boolean(entry.tilesEl));
+        ].filter((entry) => Boolean(entry.tilesEl) && (force || shouldRenderTileSurface(entry.tilesEl)));
         if (!tileTargets.length) return;
 
         const levels = collectAttendanceLevelNames();
@@ -20610,7 +20610,7 @@
         state.attendanceLanding.selectedLevel = hasSelected ? selectedLevel : "";
 
         tileTargets.forEach(({ tilesEl, hintEl }) => {
-          if (!shouldRenderTileSurface(tilesEl)) return;
+          if (!force && !shouldRenderTileSurface(tilesEl)) return;
           const renderKey = tileSurfaceRenderKey(levels, selectedLevel);
           if (tilesEl.dataset.tileRenderKey === renderKey) return;
           tilesEl.dataset.tileRenderKey = renderKey;

@@ -143,6 +143,15 @@ test("source compliance does not duplicate sentence fields as warnings", async (
   assert.equal(result.warningFields.biasAssessment, undefined)
 })
 
+test("source URL validation rejects plain HTTP", async () => {
+  const result = await evaluateStudentNewsMinimumRequirements(basePayload({
+    sourceLink: "http://www.bbc.com/news/world-123456",
+  }))
+
+  assert.equal(result.passed, false)
+  assert.match(result.failedFields.sourceLink.message, /https/i)
+})
+
 async function withMockedFetch(html, fn) {
   const originalFetch = globalThis.fetch
   globalThis.fetch = async () =>
@@ -182,7 +191,7 @@ test(
 )
 
 test(
-  "evaluateStudentNewsCompliance downgrades dateline timezone literal mismatch to a warning",
+  "evaluateStudentNewsCompliance blocks dateline timezone literal mismatch",
   { concurrency: false },
   async () => {
     const result = await withMockedFetch(ARTICLE_HTML, () =>
@@ -205,9 +214,9 @@ test(
       )
     )
 
-    assert.equal(result.passed, true)
-    assert.equal(result.failedFields.articleDateline, undefined)
-    assert.equal(Boolean(result.warningFields.articleDateline), true)
+    assert.equal(result.passed, false)
+    assert.equal(Boolean(result.failedFields.articleDateline), true)
+    assert.equal(result.warningFields.articleDateline, undefined)
   }
 )
 
@@ -249,6 +258,31 @@ test(
     assert.equal(result.failedFields.leadSynopsis, undefined)
     assert.equal(Boolean(result.warningFields.leadSynopsis), true)
     assert.equal(result.warningFields.leadSynopsis.threshold, 0.45)
+  }
+)
+
+test(
+  "evaluateStudentNewsCompliance treats vocabulary beyond five entries as extra points",
+  { concurrency: false },
+  async () => {
+    const vocabulary = Array.from({ length: 6 }, (_, index) => ({
+      partOfSpeech: "noun",
+      english: `term-${index + 1}`,
+      vietnamese: `tu-${index + 1}`,
+      syllabication: `term-${index + 1}`,
+      definition: `Definition ${index + 1}.`,
+    }))
+    const result = await withMockedFetch(ARTICLE_HTML, () =>
+      evaluateStudentNewsCompliance(basePayload({ vocabulary }), {
+        validationConfig: {
+          allowedDomains: ["bbc.com", "cnn.com"],
+        },
+      })
+    )
+
+    assert.equal(result.failedFields.vocabulary, undefined)
+    assert.equal(result.warningFields.vocabulary.extraEntryCount, 1)
+    assert.match(result.warningFields.vocabulary.message, /extra points/i)
   }
 )
 

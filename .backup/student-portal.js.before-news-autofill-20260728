@@ -3040,7 +3040,6 @@
           calendar.gotoDate(anchorDate);
         }
         calendar.render();
-        labelFullCalendarIcons(grid);
         state.detailCalendarHasMounted = true;
       }
 
@@ -4336,73 +4335,6 @@
         };
       }
 
-      const NEWS_DEV_AUTOFILL_FIXTURES = Object.freeze({
-        valid: {
-          sourceLink: "https://example.com/news/test-article",
-          articleTitle: "Storms hit coast city",
-          byline: "bbc",
-          articleDateline: "Published March 1, 2026 at 9:00 AM ICT (Indochina Time GMT+7). Updated March 1, 2026 at 11:00 AM ICT (Indochina Time GMT+7).",
-          leadSynopsis: "Officials said emergency teams evacuated hundreds of families after rising waters flooded multiple districts near the river.",
-          actionActor: "Emergency teams",
-          actionAffected: "Hundreds of families",
-          actionWhere: "Riverside districts in Coast City",
-          actionWhat: "Emergency teams evacuated residents after flood levels surged quickly.",
-          actionWhy: "Floodwaters rose because heavy overnight rain and emergency dam releases increased river levels.",
-          biasAssessment: "The report emphasizes official sources but also includes resident perspectives.",
-          vocabulary: Array.from({ length: 6 }, (_, index) => ({
-            partOfSpeech: "noun",
-            english: `test-term-${index + 1}`,
-            vietnamese: `tu-kiem-tra-${index + 1}`,
-            syllabication: `test-term-${index + 1}`,
-            definition: `A complete test vocabulary definition ${index + 1}.`,
-          })),
-        },
-        "grammar-errors": {
-          sourceLink: "https://example.com/news/test-article",
-          articleTitle: "Storms hit coast city",
-          byline: "bbc",
-          articleDateline: "Published March 1, 2026 at 9:00 AM ICT (Indochina Time GMT+7).",
-          leadSynopsis: "Officials said emergency teams evacuated hundreds of families after rising waters flooded multiple districts near the river.",
-          actionActor: "Emergency teams",
-          actionAffected: "Hundreds of families",
-          actionWhere: "Riverside districts in Coast City",
-          actionWhat: "Emergency teams evacuated residents after flood levels surged quickly.",
-          actionWhy: "because officials needed to protect residents",
-          biasAssessment: "The article are biased, they omit resident context",
-          vocabulary: [],
-        },
-        "blocking-errors": {
-          sourceLink: "http://example.com/news/test-article",
-          articleTitle: "",
-          byline: "",
-          articleDateline: "",
-          leadSynopsis: "",
-          actionActor: "",
-          actionAffected: "",
-          actionWhere: "",
-          actionWhat: "",
-          actionWhy: "",
-          biasAssessment: "",
-          vocabulary: [],
-        },
-      });
-
-      function autofillNewsDevFixture(name = "valid") {
-        if (RUNTIME_ENV !== "development") return;
-        const fixture = NEWS_DEV_AUTOFILL_FIXTURES[name] || NEWS_DEV_AUTOFILL_FIXTURES.valid;
-        applyOpenReport(null);
-        ["sourceLink", "articleTitle", "byline", "articleDateline", "leadSynopsis", "actionActor", "actionAffected", "actionWhere", "actionWhat", "actionWhy", "biasAssessment"].forEach((fieldId) => {
-          setInputValue(fieldId, fixture[fieldId] || "");
-        });
-        renderVocabularyRows(field("newsVocabularyRows"), fixture.vocabulary || []);
-        state.newsFormDirty = true;
-        state.newsCurrentMmrPassed = false;
-        state.newsDateSatisfied = false;
-        state.newsReportDateLocked = false;
-        applyNewsFieldValidationUi({}, [], {}, []);
-        setGlobalStatus(`DEV autofill loaded: ${name}. Click Check to run news validation.`);
-      }
-
       function reportPayloadFromViewerItem(item = null) {
         const report = item && typeof item === "object" ? item : {};
         return {
@@ -4762,17 +4694,7 @@
           },
         });
         state.studentCalendar.render();
-        labelFullCalendarIcons(grid);
         return state.studentCalendar;
-      }
-
-      function labelFullCalendarIcons(root) {
-        if (!root) return;
-        root.querySelectorAll('.fc-icon[role="img"]').forEach((icon) => {
-          const button = icon.closest("button");
-          const label = t(button?.getAttribute("aria-label") || button?.getAttribute("title"));
-          if (label) icon.setAttribute("aria-label", label);
-        });
       }
 
       function renderCalendar(calendar = []) {
@@ -5058,7 +4980,6 @@
             state.newsWeekSetViewerItems = viewerItems;
             renderNewsWeekSetViewer();
             setNewsWeekSetModalStatus(t(saved?.message) || "Report submitted.");
-            setFormStatus(t(saved?.message) || "Report saved.", false, true);
             await Promise.all([
               loadDashboard(),
               loadCalendar({ preserveForm: true, preserveValidation: true }),
@@ -5385,10 +5306,6 @@
           });
           field("newNewsFormBtn")?.addEventListener("click", () => {
             requestNewNewsReportForm();
-          });
-          field("newsDevAutofill")?.classList.toggle("hidden", RUNTIME_ENV !== "development");
-          field("newsDevAutofillBtn")?.addEventListener("click", () => {
-            autofillNewsDevFixture(t(field("newsDevFixture")?.value) || "valid");
           });
           field("newNewsFormIgnoreBtn")?.addEventListener("click", () => {
             closeNewNewsFormConfirmModal();

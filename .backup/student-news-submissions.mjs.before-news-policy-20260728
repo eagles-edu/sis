@@ -131,6 +131,18 @@ function endOfDay(value = new Date()) {
 }
 
 /**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
+function startOfWeekSunday(value = new Date()) {
+  const date = startOfDay(value)
+  const shifted = shiftToFixedTimeZone(date)
+  const day = shifted.getUTCDay()
+  shifted.setUTCDate(shifted.getUTCDate() - day)
+  return shiftFromFixedTimeZone(shifted)
+}
+
+/**
  * @param {unknown} value
  * @returns {string}
  */
@@ -185,7 +197,7 @@ function normalizeHttpUrl(value) {
   try {
     const parsed = new URL(text)
     const protocol = normalizeLower(parsed.protocol)
-    if (protocol !== "https:") return ""
+    if (protocol !== "http:" && protocol !== "https:") return ""
     return parsed.toString()
   } catch (error) {
     void error
@@ -487,7 +499,8 @@ function buildStudentNewsValidationPayload(report = {}) {
 function resolveStudentNewsEditableUntil(reportDate) {
   const parsed = reportDate instanceof Date ? reportDate : parseLocalDateOnly(reportDate)
   if (!(parsed instanceof Date) || Number.isNaN(parsed.valueOf())) return null
-  return addDays(parsed, 30)
+  const currentWeekStart = startOfWeekSunday(parsed)
+  return new Date(currentWeekStart.getTime() + (ONE_DAY_MS * 7))
 }
 
 /**
@@ -522,8 +535,6 @@ function assertStudentNewsEditability(existing, nowDate, reportDateText, window)
   )
   const isApproved = existingStatus === STUDENT_NEWS_REVIEW_STATUS_APPROVED
   assertWithStatus(!isApproved, 403, "Approved news reports cannot be edited")
-
-  if (existingStatus === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED) return
 
   const satisfied = hasStudentNewsDateSatisfied(existing)
   if (!satisfied) {
@@ -911,9 +922,7 @@ export function buildStudentNewsCalendarRows({ now = new Date(), reports = [], d
     const saved = byDate.get(date) || null
     const isOpenDate = Boolean(window?.isOpen) && date === window.reportDate
     const editableUntil = parseDateOrNull(saved?.editableUntil)
-    const savedReviewStatus = normalizeStudentNewsReviewStatus(saved?.reviewStatus, "")
-    const canEditSaved = savedReviewStatus === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED
-      || Boolean(editableUntil instanceof Date && !Number.isNaN(editableUntil.valueOf()) && nowDate < editableUntil)
+    const canEditSaved = Boolean(editableUntil instanceof Date && !Number.isNaN(editableUntil.valueOf()) && nowDate < editableUntil)
     const submissionState = normalizeStudentNewsSubmissionState(saved?.submissionState, "")
     const status = saved
       ? submissionState === STUDENT_NEWS_SUBMISSION_STATE_DRAFT
@@ -1148,8 +1157,6 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     reviewNote = addAwaitingReReviewMarker(reviewNote)
   }
 
-  // Keep the submission timestamp distinct from draft/check persistence.
-  // Legacy contract: const submittedAt = new Date(nowDate.getTime())
   let submittedAt = parseDateOrNull(existing?.submittedAt)
   let reviewStatus = existingStatus
   let submissionState = existingSubmissionState
@@ -1202,7 +1209,7 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
         reportDateLocked: Boolean(reportDateLockedAt),
       })
     }
-        submittedAt = new Date(nowDate.getTime())
+    submittedAt = nowDate
     if (!(reportDateLockedAt instanceof Date)) reportDateLockedAt = nowDate
     if (!(mmrPassedAt instanceof Date)) mmrPassedAt = nowDate
     if (!(dateSatisfiedAt instanceof Date)) dateSatisfiedAt = nowDate
@@ -1288,8 +1295,6 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     }
   }
   if (!saved && !fallbackOnly && hasPrismaDelegateMethod(prisma, "studentNewsReport", "create")) {
-    // The optional Prisma delegate contract also supports upsert semantics.
-    // hasPrismaDelegateMethod(prisma, "studentNewsReport", "upsert")
     try {
       saved = await createStudentNewsReportWithSequence(prisma, id, reportDateDate, reportData)
     } catch (error) {
@@ -1342,10 +1347,8 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
       ? "Saved. CHECKS PASSED!"
       : `Draft saved. ${Object.keys(minimumRequirements.failedFields || {}).length} required fixes remain.`
     : autoApproveConfig.autoApproveEnabled && autoApproveDueAt instanceof Date && !Number.isNaN(autoApproveDueAt.valueOf())
-          ? `Submitted. Auto-approval is scheduled after ${autoApproveConfig.autoApproveDelayHours} hours while edits remain open for 30 days.`
-          : "Submitted. You may continue improving for 30 days."
-
-  // Legacy contract wording: Today's report date is satisfied and locked.
+      ? `Submitted. Auto-approval is scheduled after ${autoApproveConfig.autoApproveDelayHours} hours while edits remain open until Sunday 00:00.`
+      : "Submitted. You may continue improving until Sunday 00:00."
 
   return {
     generatedAt: new Date().toISOString(),

@@ -4133,7 +4133,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 4095
+              "height": 4298
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4226,23 +4226,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": ".fc-icon-chevron-left",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": ".fc-icon-chevron-right",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 2,
@@ -4470,23 +4454,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 4,
@@ -4600,23 +4568,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 5,
@@ -4730,23 +4682,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 6,
@@ -4860,23 +4796,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 7,
@@ -5104,23 +5024,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "newsModal": true,
@@ -5147,7 +5051,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "grid",
               "width": 726,
-              "height": 1504
+              "height": 1556
             },
             "#newsWeekSetModal .portal-modal-close": {
               "selector": "#newsWeekSetModal .portal-modal-close",
@@ -5196,21 +5100,6 @@
                 {
                   "target": ".c4.field:nth-child(2) > h5",
                   "failureSummary": "Fix any of the following:\n  Heading order invalid"
-                }
-              ]
-            },
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
                 }
               ]
             }
@@ -5263,21 +5152,6 @@
                 {
                   "target": "#newsComplianceModalTitle",
                   "failureSummary": "Fix any of the following:\n  Heading order invalid"
-                }
-              ]
-            },
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
                 }
               ]
             }
@@ -9673,7 +9547,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 4096
+              "height": 4299
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -9766,23 +9640,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": ".fc-icon-chevron-left",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": ".fc-icon-chevron-right",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 2,
@@ -10010,23 +9868,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 4,
@@ -10140,23 +9982,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 5,
@@ -10270,23 +10096,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 6,
@@ -10400,23 +10210,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 7,
@@ -10644,23 +10438,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "newsModal": true,
@@ -10687,7 +10465,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "grid",
               "width": 726,
-              "height": 1504
+              "height": 1556
             },
             "#newsWeekSetModal .portal-modal-close": {
               "selector": "#newsWeekSetModal .portal-modal-close",
@@ -10736,21 +10514,6 @@
                 {
                   "target": ".c4.field:nth-child(2) > h5",
                   "failureSummary": "Fix any of the following:\n  Heading order invalid"
-                }
-              ]
-            },
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
                 }
               ]
             }
@@ -10803,21 +10566,6 @@
                 {
                   "target": "#newsComplianceModalTitle",
                   "failureSummary": "Fix any of the following:\n  Heading order invalid"
-                }
-              ]
-            },
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
                 }
               ]
             }

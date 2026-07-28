@@ -734,15 +734,6 @@
                 <h2>Media Report Form</h2>
                 <button id="newNewsFormBtn" type="button" class="portal-button portal-button-primary" title="Bắt đầu một biểu mẫu báo cáo tin tức mới" aria-label="Bắt đầu một biểu mẫu báo cáo tin tức mới">Mẫu mới</button>
               </div>
-              <div id="newsDevAutofill" class="news-dev-autofill hidden" data-dev-only="true">
-                <label for="newsDevFixture">DEV test fixture</label>
-                <select id="newsDevFixture">
-                  <option value="valid">Valid report — grammar passes</option>
-                  <option value="grammar-errors">Grammar errors — fields 11 and 12</option>
-                  <option value="blocking-errors">Blocking errors — required fields</option>
-                </select>
-                <button id="newsDevAutofillBtn" type="button" class="portal-button portal-button-alt">Auto-fill test</button>
-              </div>
               <div class="row">
                 <div class="field c3">
                   <label for="reportDate">1. Report Date</label>
@@ -973,7 +964,7 @@
   -->
   <script src="/web-asset/shared/portal-preferences.js"></script>
   <script src="/web-asset/shared/portal-password-visibility.js"></script>
-  <script src="/web-asset/student/student-portal.min.js"></script>
+  <script src="/web-asset/student/student-portal.min.js?v=20260728-validation-ui"></script>
   <script>
     (() => {
       const root = document.documentElement;

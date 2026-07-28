@@ -3,16 +3,11 @@
 const COURSE_WEEK_COUNT = 52
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
-/** @typedef {{ weekNumber: number, saturday: string, sunday: string, startDate: string, endDate: string }} CourseWeekEntry */
-/** @typedef {{ schoolYear: string, q1StartDate: string, q1EndDate: string, generatedAt: string, weeks: CourseWeekEntry[] }} CourseWeekCalendar */
-/** @typedef {Record<string, unknown>} UnknownRecord */
-
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
-/** @param {unknown} value */
 function isoDate(value = "") {
   const text = normalizeText(value).slice(0, 10)
   return /^\d{4}-\d{2}-\d{2}$/u.test(text) ? text : ""
@@ -36,21 +31,18 @@ function isSaturday(value = "") {
   return Boolean(parsed && parsed.getUTCDay() === 6)
 }
 
-/** @param {unknown} entry @returns {CourseWeekEntry|null} */
 function normalizeWeekEntry(entry = {}) {
   if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null
-  const record = /** @type {UnknownRecord} */ (entry)
-  const weekNumber = Number.parseInt(String(record.weekNumber || ""), 10)
-  const saturday = isoDate(record.saturday)
-  const sunday = isoDate(record.sunday)
-  const startDate = isoDate(record.startDate || saturday)
-  const endDate = isoDate(record.endDate || dateOffset(saturday, 6))
+  const weekNumber = Number.parseInt(String(entry.weekNumber || ""), 10)
+  const saturday = isoDate(entry.saturday)
+  const sunday = isoDate(entry.sunday)
+  const startDate = isoDate(entry.startDate || saturday)
+  const endDate = isoDate(entry.endDate || dateOffset(saturday, 6))
   if (!Number.isInteger(weekNumber) || weekNumber < 1 || weekNumber > COURSE_WEEK_COUNT) return null
   if (!saturday || !sunday || !startDate || !endDate) return null
   return { weekNumber, saturday, sunday, startDate, endDate }
 }
 
-/** @returns {CourseWeekCalendar|null} */
 export function generateCourseWeekCalendar({
   schoolYear = "",
   q1StartDate = "",
@@ -79,23 +71,21 @@ export function generateCourseWeekCalendar({
   }
 }
 
-/** @param {unknown} calendar @returns {CourseWeekCalendar|null} */
 export function normalizeCourseWeekCalendar(calendar = {}) {
   if (!calendar || typeof calendar !== "object" || Array.isArray(calendar)) return null
-  const record = /** @type {UnknownRecord} */ (calendar)
-  const schoolYear = normalizeText(record.schoolYear)
-  const q1StartDate = isoDate(record.q1StartDate)
-  const q1EndDate = isoDate(record.q1EndDate)
-  const weeks = (Array.isArray(record.weeks) ? record.weeks : [])
+  const schoolYear = normalizeText(calendar.schoolYear)
+  const q1StartDate = isoDate(calendar.q1StartDate)
+  const q1EndDate = isoDate(calendar.q1EndDate)
+  const weeks = (Array.isArray(calendar.weeks) ? calendar.weeks : [])
     .map((entry) => normalizeWeekEntry(entry))
-    .filter((entry) => entry !== null)
+    .filter(Boolean)
   if (!schoolYear || !q1StartDate || !q1EndDate || weeks.length !== COURSE_WEEK_COUNT) return null
   const complete = weeks.every((entry, index) => {
     const expectedSaturday = dateOffset(q1StartDate, index * 7)
     return entry.weekNumber === index + 1 && entry.saturday === expectedSaturday
   })
   if (!complete) return null
-  return { schoolYear, q1StartDate, q1EndDate, generatedAt: normalizeText(record.generatedAt), weeks }
+  return { schoolYear, q1StartDate, q1EndDate, generatedAt: normalizeText(calendar.generatedAt), weeks }
 }
 
 export function courseWeekCalendarForSchoolYear(calendars = [], schoolYear = "") {

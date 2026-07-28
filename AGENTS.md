@@ -12,6 +12,7 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 - Primary domains: exercise submission and email dispatch, student intake ingestion, admin APIs and session auth, report-card PDF generation
 - Dev workspace source of truth: `/home/eagles/dockerz/sis`
 - Terminology: call `deploy/nginx/test.eagles.edu.vn.conf` the **test-mirror vhost**; call files under `test/` repository contract tests, not test vhosts.
+- Environment terminology: **live mirror** and **admin mirror** are synonyms for `https://admin.eagles.edu.vn`; **test mirror** means the test environment; **dev** means the local development runtime.
 - Test-host snapshot dump: `/home/eagles/dockerz/BAK/test-dump-090526/test-host-pre-wipe-20260509-011220`
 - School model: weekend English classes. Do not import public-school assumptions into date, quarter, holiday, or scheduling logic unless the task explicitly asks for them.
 - Authoritative school dates and quarter boundaries come from stored school setup data. If that setup is missing or invalid, fail closed and warn instead of synthesizing a public-school-style default.

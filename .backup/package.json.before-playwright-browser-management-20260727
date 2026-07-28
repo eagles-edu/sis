@@ -44,8 +44,6 @@
     "languagetool:status": "tools/languagetool-service.sh status",
     "languagetool:health": "tools/languagetool-service.sh health",
     "languagetool:failover": "tools/languagetool-service.sh failover-check",
-    "playwright:browsers:install": "tools/install-playwright-browsers.sh install",
-    "playwright:browsers:update": "tools/install-playwright-browsers.sh update",
     "news:validation:audit": "node tools/news-validation-audit.mjs",
     "db:health:check": "node tools/db-health-check.mjs",
     "ops:incoming:vacuum:cron:check": "tools/install-incoming-vacuum-cron.sh --check-only",

@@ -76,23 +76,16 @@
 
     .news-sentence-feedback {
       display: grid;
-      gap: 12px;
-      margin-top: 16px;
-      padding-top: 4px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 1.08rem;
-      line-height: 1.65;
+      gap: 6px;
+      margin-top: 10px;
     }
 
     .news-sentence-feedback h4 {
-      margin: 0 0 4px;
-      font-size: 1.12rem;
-      line-height: 1.45;
+      margin: 0;
     }
 
     .news-sentence-raw {
       white-space: pre-wrap;
-      padding: 0.35rem 0;
     }
 
     .news-sentence-error {
@@ -102,16 +95,8 @@
     }
 
     .news-sentence-comments {
-      margin: 4px 0 0;
+      margin: 0;
       padding-left: 20px;
-    }
-
-    #actionWhy,
-    #biasAssessment {
-      min-height: 8rem;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 1.08rem;
-      line-height: 1.65;
     }
 
     .status-strip {
@@ -529,31 +514,6 @@
       .grade-quarter-stats {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
-    }
-
-    .news-dev-autofill {
-      align-items: center;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin: 0 0 1rem;
-      padding: 0.65rem 0.75rem;
-      border: 1px dashed var(--portal-border, #9ca3af);
-      border-radius: 0.6rem;
-      background: color-mix(in srgb, #fef3c7 70%, transparent);
-      font-size: 0.9rem;
-    }
-
-    .news-dev-autofill label {
-      font-weight: 800;
-    }
-
-    html[data-theme="dark"] body.student-portal-page .news-dev-autofill label {
-      color: #17324d;
-    }
-
-    .news-dev-autofill select {
-      min-width: 16rem;
     }
 
     .news-layout {
