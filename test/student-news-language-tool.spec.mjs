@@ -8,6 +8,7 @@ test("normalizes LanguageTool blocking and advisory matches", async () => {
   globalThis.fetch = async (_url, request) => {
     assert.equal(request.method, "POST")
     assert.equal(new URLSearchParams(request.body).get("language"), "en-US")
+    assert.equal(new URLSearchParams(request.body).get("enabledRules"), "ARTICLE_MISSING")
     return new Response(JSON.stringify({
       matches: [
         {

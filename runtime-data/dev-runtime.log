@@ -1,2 +1,2 @@
-◇ injected env (35) from .env.dev // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (35) from .env.dev // tip: ⌘ override existing { override: true }
 exercise-mailer listening on 127.0.0.1:8788 at /api/exercise-submission and /api/student-intake-submission (health: /healthz)

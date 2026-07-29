@@ -2,6 +2,7 @@
 // @ts-check
 
 import { checkTextWithLanguageTool } from "./student-news-language-tool.mjs"
+import { parseStudentNewsSentence } from "./student-news-parser.mjs"
 
 /**
  * @param {unknown} value
@@ -1729,7 +1730,10 @@ function studentNewsSentenceWords(value = "") {
 
 function studentNewsIssue(ruleId, start, length, message) {
   return {
+    code: ruleId,
     ruleId,
+    severity: "blocking",
+    source: "internal",
     start: Math.max(0, Number(start) || 0),
     length: Math.max(1, Number(length) || 1),
     message: String(message || "").trim(),
@@ -1737,17 +1741,7 @@ function studentNewsIssue(ruleId, start, length, message) {
 }
 
 export function classifyStudentNewsSentence(value = "") {
-  const raw = String(value == null ? "" : value).trim()
-  if (!raw) return "fragment"
-  const words = studentNewsSentenceWords(raw)
-  const conjunctionCount = (raw.match(/\b(?:and|but|or|so|yet|for|nor)\b/giu) || []).length
-  const subordinatingCount = (raw.match(/\b(?:because|although|while|when|if|since|after|before|unless|that)\b/giu) || []).length
-  const clauseCount = Math.max(1, (raw.match(/[,;:]\s+(?:and|but|or|so|yet|because|although|while|when|if)\b/giu) || []).length + 1)
-  if (words.length < 3) return "fragment"
-  if (subordinatingCount && clauseCount > 1 && conjunctionCount) return "compound-complex"
-  if (subordinatingCount) return "complex"
-  if (clauseCount > 1 || conjunctionCount) return "compound"
-  return "simple"
+  return parseStudentNewsSentence(value).classification
 }
 
 function buildStudentNewsGrammarIssues(raw) {
@@ -1756,6 +1750,7 @@ function buildStudentNewsGrammarIssues(raw) {
   if (!trimmed) return []
   const startOffset = text.indexOf(trimmed)
   const words = studentNewsSentenceWords(text)
+  const parsed = parseStudentNewsSentence(text)
   const issues = []
   const firstLetterOffset = trimmed.search(/[A-Za-z]/u)
   if (firstLetterOffset >= 0 && /[a-z]/u.test(trimmed[firstLetterOffset])) {
@@ -1783,12 +1778,12 @@ function buildStudentNewsGrammarIssues(raw) {
     ))
   }
   const leadingSubordinator = /^(because|although|while|when|if|since|after|before|unless)\b/iu.exec(trimmed)
-  if (leadingSubordinator && !/\b(?:is|are|was|were|has|have|did|does|do|[A-Za-z]+ed|[A-Za-z]+s)\b[^.!?]*\b(?:because|although|while|when|if|since|after|before|unless)\b/iu.test(trimmed)) {
+  if (leadingSubordinator && parsed.clauses.some((clause) => clause.clauseType === "subordinate") && !parsed.clauses.some((clause) => clause.independent)) {
     issues.push(studentNewsIssue(
       STUDENT_NEWS_SENTENCE_RULES.clauseFragment,
-      startOffset + (leadingSubordinator.index || 0),
-      leadingSubordinator[0].length,
-      "This subordinate clause is incomplete; connect it to an independent clause.",
+      startOffset + parsed.clauses[0].start,
+      Math.max(1, parsed.clauses[0].end - parsed.clauses[0].start),
+      "This subordinate clause contains a subject and finite verb but no independent main clause; connect it to an independent clause.",
     ))
   }
 
@@ -1872,16 +1867,19 @@ export function buildStudentNewsSentenceIssues(value = "") {
 
 export function buildStudentNewsSentenceReport(value = "") {
   const text = value === undefined || value === null ? "" : String(value)
+  const parser = parseStudentNewsSentence(text)
   return {
-    sentenceType: classifyStudentNewsSentence(text),
+    sentenceType: parser.classification,
     issues: buildStudentNewsSentenceIssues(text),
+    parser,
+    status: parser.text ? "completed" : "empty",
   }
 }
 
 async function buildStudentNewsLanguageReports(actionWhy, biasAssessment, config) {
   const fallback = {
-    actionWhy: { ...buildStudentNewsSentenceReport(actionWhy), advisoryIssues: [] },
-    biasAssessment: { ...buildStudentNewsSentenceReport(biasAssessment), advisoryIssues: [] },
+    actionWhy: { ...buildStudentNewsSentenceReport(actionWhy), advisoryIssues: [], languageToolStatus: "disabled" },
+    biasAssessment: { ...buildStudentNewsSentenceReport(biasAssessment), advisoryIssues: [], languageToolStatus: "disabled" },
   }
   if (config?.grammarEngine?.enabled !== true) return fallback
   const entries = [
@@ -1896,7 +1894,20 @@ async function buildStudentNewsLanguageReports(actionWhy, biasAssessment, config
       result = await checkTextWithLanguageTool(value, config.grammarEngine)
     } catch (error) {
       const message = error instanceof Error ? error.message : "LanguageTool request failed"
-      throw new Error(`Grammar validation unavailable: ${message}`, { cause: error })
+      const unavailable = new Error(`Grammar validation unavailable: ${message}`, { cause: error })
+      unavailable.statusCode = 503
+      unavailable.code = "STUDENT_NEWS_VALIDATION_UNAVAILABLE"
+      unavailable.payload = {
+        ok: false,
+        status: "unavailable",
+        validation: {
+          engines: {
+            internal: "completed",
+            languageTool: "unavailable",
+          },
+        },
+      }
+      throw unavailable
     }
     const fallbackIssues = fallback[field].issues
     const externalIssues = Array.isArray(result.blockingIssues) ? result.blockingIssues : []
@@ -1913,6 +1924,9 @@ async function buildStudentNewsLanguageReports(actionWhy, biasAssessment, config
       sentenceType: classifyStudentNewsSentence(value),
       issues,
       advisoryIssues: result.advisoryIssues,
+      parser: fallback[field].parser,
+      status: "completed",
+      languageToolStatus: "completed",
     }
   }
   return reports
@@ -2094,6 +2108,7 @@ export async function evaluateStudentNewsMinimumRequirements(payload = {}, optio
   }
 
   return {
+    status: Object.keys(failedFields).length ? "fail" : "pass",
     passed: Object.keys(failedFields).length === 0,
     failedFields,
     requiredTasks: buildTasksFromFailedFields(failedFields, config.allowedDomains),
@@ -2155,6 +2170,20 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
   const failedFields = {}
   const warningFields = {}
   const validationDetails = {}
+  validationDetails.sentenceReports = sentenceReports
+  validationDetails.parser = {
+    sentences: Object.values(sentenceReports)
+      .map((report) => report?.parser)
+      .filter(Boolean),
+    clauses: Object.values(sentenceReports)
+      .flatMap((report) => Array.isArray(report?.parser?.clauses) ? report.parser.clauses : []),
+    phrases: Object.values(sentenceReports)
+      .flatMap((report) => Array.isArray(report?.parser?.phrases) ? report.parser.phrases : []),
+  }
+  validationDetails.engines = {
+    internal: "completed",
+    languageTool: config.grammarEngine.enabled ? "completed" : "disabled",
+  }
   const preferredThresholds = {
     articleTitle: config.thresholds.articleTitle,
     byline: config.thresholds.byline,
@@ -2490,6 +2519,7 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
     })
   }
   return {
+    status: Object.keys(failedFields).length ? "fail" : "pass",
     passed: Object.keys(failedFields).length === 0,
     failedFields,
     warningFields,

@@ -43,6 +43,7 @@
     "languagetool:stop": "tools/languagetool-service.sh stop",
     "languagetool:status": "tools/languagetool-service.sh status",
     "languagetool:health": "tools/languagetool-service.sh health",
+    "languagetool:regression": "tools/languagetool-service.sh regression",
     "languagetool:failover": "tools/languagetool-service.sh failover-check",
     "playwright:browsers:install": "tools/install-playwright-browsers.sh install",
     "playwright:browsers:update": "tools/install-playwright-browsers.sh update",
@@ -111,6 +112,7 @@
   "homepage": "",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@prisma/client": "^7.9.1",
     "@redocly/cli": "^2.39.0",
     "@types/node": "^20.19.43",
     "axe-core": "^4.12.1",
@@ -125,15 +127,15 @@
     "playwright": "^1.61.1",
     "postcss-html": "^1.8.1",
     "prettier": "^3.9.5",
-    "prisma": "^7.8.0",
+    "prisma": "^7.9.1",
     "stylelint": "^17.14.0",
     "stylelint-config-standard": "^40.0.0",
     "typescript": "^5.9.3",
     "uglify-js": "^3.19.3"
   },
   "dependencies": {
+    "@prisma/client": "^7.9.1",
     "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
     "archiver": "^8.0.0",
     "argparse": "^2.0.1",
     "cheerio": "^1.2.0",

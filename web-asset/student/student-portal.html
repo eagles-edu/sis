@@ -330,6 +330,24 @@
                 </div>
               </section>
 
+              <section id="newsGrammarCheckWait" class="news-grammar-check-wait hidden" role="status" aria-live="assertive" aria-atomic="true" aria-label="Checking grammar">
+                <div class="news-grammar-check-wait__backdrop"></div>
+                <div class="news-grammar-check-wait__dialog">
+                  <header class="news-grammar-check-wait__header">
+                    <span class="news-grammar-check-wait__eyebrow">Student report</span>
+                    <strong>Grammar check</strong>
+                  </header>
+                  <div class="news-grammar-check-wait__body">
+                    <dotlottie-wc class="news-grammar-check-wait__animation" src="/web-asset/images/K9f9G9VR1Z.lottie" autoplay loop aria-hidden="true"></dotlottie-wc>
+                  </div>
+                  <footer class="news-grammar-check-wait__footer">
+                    <span class="news-grammar-check-wait__pulse" aria-hidden="true"></span>
+                    <span>Checking your sentences...</span>
+                    <small>Please wait while we review your report.</small>
+                  </footer>
+                </div>
+              </section>
+
               <section id="newNewsFormConfirmModal" class="portal-modal news-new-form-modal hidden">
                 <div class="portal-modal-backdrop" id="newNewsFormConfirmModalBackdrop"></div>
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newNewsFormConfirmModalTitle">
@@ -973,6 +991,23 @@
   -->
   <script src="/web-asset/shared/portal-preferences.js"></script>
   <script src="/web-asset/shared/portal-password-visibility.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-wc@latest/dist/dotlottie-wc.js"></script>
+  <script>
+    (() => {
+      const configureDotLottiePlayers = () => {
+        document.querySelectorAll("dotlottie-wc").forEach((player) => {
+          const contain = () => {
+            player.layout = { fit: "contain", align: [0.5, 0.5] };
+            player.renderConfig = { devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2) };
+          };
+          contain();
+          player.addEventListener("load", contain, { once: true });
+        });
+      };
+      if (customElements.get("dotlottie-wc")) configureDotLottiePlayers();
+      else customElements.whenDefined("dotlottie-wc").then(configureDotLottiePlayers);
+    })();
+  </script>
   <script src="/web-asset/student/student-portal.min.js"></script>
   <script>
     (() => {

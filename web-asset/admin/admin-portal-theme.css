@@ -463,7 +463,7 @@
   --portal-status-revise-text: #fbffff;
   --portal-status-warn-bg: #fff3d8;
   --portal-status-warn-border: #e5cb66;
-  --portal-status-warn-text: #6a4a00;
+  --portal-status-warn-text: #212121;
   --portal-support-message: var(--portal-text-soft);
   --portal-surface-card: #fcfdff;
   --portal-surface-panel: var(--portal-neutral-panel-light);
@@ -701,7 +701,7 @@ html[data-theme="dark"] {
   --portal-status-revise-text: #FBFFFF;
   --portal-status-warn-bg: #ffd063;
   --portal-status-warn-border: #6a4a00;
-  --portal-status-warn-text: #6a4a00;
+  --portal-status-warn-text: #212121;
   --portal-support-message: var(--portal-dark-text-soft);
   --portal-surface-card: var(--portal-dark-surface-card);
   --portal-surface-panel: var(--portal-dark-surface-panel);

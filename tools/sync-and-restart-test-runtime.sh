@@ -435,6 +435,7 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/shared/portal-password-visibility.js|web-asset/shared/portal-password-visibility.js"
   "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
   "web-asset/shared/portal-environment.js|web-asset/shared/portal-environment.js"
+  "web-asset/shared/portal-action-feedback.js|web-asset/shared/portal-action-feedback.js"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
   "web-asset/shared/maintenance.svg|web-asset/shared/maintenance.svg"
@@ -442,6 +443,7 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/shared/secure-network-white.svg|web-asset/shared/secure-network-white.svg"
   "web-asset/images/logo.svg|web-asset/images/logo.svg"
   "web-asset/images/new-words.png|web-asset/images/new-words.png"
+  "web-asset/images/K9f9G9VR1Z.lottie|web-asset/images/K9f9G9VR1Z.lottie"
   "web-asset/images/caret-down.svg|web-asset/images/caret-down.svg"
   "web-asset/images/eggs-chicks.svg|web-asset/images/eggs-chicks.svg"
   "web-asset/images/starters.svg|web-asset/images/starters.svg"
@@ -510,6 +512,8 @@ TEST_LOCAL_UI_RUNTIME_PARITY_MAP=(
   "web-asset/parent/parent-portal.min.js.map|web-asset/parent/parent-portal.min.js.map"
   "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
   "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
+  "web-asset/images/K9f9G9VR1Z.lottie|web-asset/images/K9f9G9VR1Z.lottie"
+  "web-asset/shared/portal-action-feedback.js|web-asset/shared/portal-action-feedback.js"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
 )
@@ -568,6 +572,7 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/shared/portal-password-visibility.js|web-asset/shared/portal-password-visibility.js"
   "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
   "web-asset/shared/portal-environment.js|web-asset/shared/portal-environment.js"
+  "web-asset/shared/portal-action-feedback.js|web-asset/shared/portal-action-feedback.js"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
   "web-asset/shared/maintenance.svg|web-asset/shared/maintenance.svg"
@@ -575,6 +580,7 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/shared/secure-network-white.svg|web-asset/shared/secure-network-white.svg"
   "web-asset/images/logo.svg|web-asset/images/logo.svg"
   "web-asset/images/new-words.png|web-asset/images/new-words.png"
+  "web-asset/images/K9f9G9VR1Z.lottie|web-asset/images/K9f9G9VR1Z.lottie"
   "web-asset/images/caret-down.svg|web-asset/images/caret-down.svg"
   "web-asset/images/eggs-chicks.svg|web-asset/images/eggs-chicks.svg"
   "web-asset/images/starters.svg|web-asset/images/starters.svg"
@@ -1079,11 +1085,13 @@ verify_test_public_assets() {
     "${target_public_root}/web-asset/shared/portal-preferences.js"
     "${target_public_root}/web-asset/shared/portal-navigation.js"
     "${target_public_root}/web-asset/shared/portal-environment.js"
+    "${target_public_root}/web-asset/shared/portal-action-feedback.js"
     "${target_public_root}/web-asset/shared/maintenance.svg"
     "${target_public_root}/web-asset/shared/secure-network.svg"
     "${target_public_root}/web-asset/shared/secure-network-white.svg"
     "${target_public_root}/web-asset/images/logo.svg"
     "${target_public_root}/web-asset/images/new-words.png"
+    "${target_public_root}/web-asset/images/K9f9G9VR1Z.lottie"
     "${target_public_root}/web-asset/images/eggs-chicks.svg"
     "${target_public_root}/web-asset/images/starters.svg"
     "${target_public_root}/web-asset/images/movers.svg"
@@ -1192,7 +1200,7 @@ refresh_test_prisma() {
   fi
 
   log "installing test runtime dependencies in ${TEST_ROOT}"
-  (cd "$TEST_ROOT" && env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" "${TEST_VERBOSE_ENV[@]}" npm ci --omit=dev)
+  (cd "$TEST_ROOT" && env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" "${TEST_VERBOSE_ENV[@]}" npm ci --include=dev)
 
   log "refreshing test Prisma client in ${TEST_ROOT}"
   (cd "$TEST_ROOT" && env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" "${TEST_VERBOSE_ENV[@]}" npm run db:generate)

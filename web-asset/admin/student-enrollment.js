@@ -284,12 +284,14 @@
       }
 
       function currentStatusText(row) {
+        if (!row?.currentEnrollment) return "Needs enrollment";
         return normalizeLower(row?.currentEnrollment?.status || "active") === "unenrolled"
           ? "Unenrolled"
           : "Enrolled";
       }
 
       function currentStatusChipHtml(row) {
+        if (!row?.currentEnrollment) return chipHtml("Needs enrollment", "#8a5a00");
         return normalizeLower(row?.currentEnrollment?.status || "active") === "unenrolled"
           ? chipHtml("Unenrolled", "#ad2c3c")
           : chipHtml("Enrolled", "#287a4f");

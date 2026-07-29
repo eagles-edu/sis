@@ -46,6 +46,7 @@ RUN unzip -q /tmp/languagetool.zip -d /opt/languagetool \
   && chown -R languagetool:languagetool /opt/languagetool /etc/languagetool
 
 COPY server.properties /etc/languagetool/server.properties
+COPY grammar_custom.xml "${LT_HOME}/org/languagetool/rules/en/grammar_custom.xml"
 RUN chown languagetool:languagetool /etc/languagetool/server.properties
 
 USER languagetool

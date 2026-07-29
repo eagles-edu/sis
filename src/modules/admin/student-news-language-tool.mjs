@@ -1,5 +1,6 @@
 const DEFAULT_LANGUAGE = "en-US"
 const DEFAULT_TIMEOUT_MS = 12000
+const ESL_ENABLED_RULES = "ARTICLE_MISSING"
 
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
@@ -19,6 +20,7 @@ function normalizeMatch(match = {}) {
   const message = normalizeText(match?.message || match?.shortMessage)
   if (!Number.isInteger(from) || from < 0 || !Number.isInteger(length) || length < 1 || !ruleId || !message) return null
   return {
+    code: ruleId,
     ruleId,
     start: from,
     length,
@@ -28,6 +30,8 @@ function normalizeMatch(match = {}) {
       : [],
     issueType: normalizeText(match?.issueType).toLowerCase() || "grammar",
     blocking: !isStyleMatch(match),
+    severity: isStyleMatch(match) ? "advisory" : "blocking",
+    source: "language-tool",
   }
 }
 
@@ -40,10 +44,11 @@ export async function checkTextWithLanguageTool(text = "", options = {}) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    const body = new URLSearchParams({
-      language: normalizeText(options?.language) || DEFAULT_LANGUAGE,
-      text: value,
-    })
+  const body = new URLSearchParams({
+    language: normalizeText(options?.language) || DEFAULT_LANGUAGE,
+    text: value,
+    enabledRules: normalizeText(options?.enabledRules) || ESL_ENABLED_RULES,
+  })
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },

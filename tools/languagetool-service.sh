@@ -5,7 +5,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SERVICE_DIR="${REPO_ROOT}/infra/languagetool"
 
 usage() {
-  printf 'Usage: %s {build|start|stop|restart|status|logs|health|failover-check}\n' "$0" >&2
+  printf 'Usage: %s {build|start|stop|restart|status|logs|health|regression|failover-check}\n' "$0" >&2
   exit 2
 }
 
@@ -25,6 +25,9 @@ case "$command" in
         "http://127.0.0.1:${port}/v2/check" >/dev/null
       printf 'healthy %s\n' "$port"
     done
+    ;;
+  regression)
+    node "${REPO_ROOT}/tools/languagetool-regression.mjs"
     ;;
   failover-check)
     docker compose ps --status running

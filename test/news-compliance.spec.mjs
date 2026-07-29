@@ -11,6 +11,7 @@ import {
   normalizeValidationIssueMap,
   updateStudentNewsValidationIssues,
 } from "../src/modules/admin/student-news-compliance.mjs"
+import { parseStudentNewsSentence } from "../src/modules/admin/student-news-parser.mjs"
 
 const ARTICLE_HTML = `
 <!doctype html>
@@ -77,6 +78,49 @@ test("complete action why and bias assessment sentences pass sentence validation
   assert.deepEqual(buildStudentNewsSentenceIssues(
     "The report presents official sources but also includes resident perspectives."
   ), [])
+})
+
+test("layered parser identifies a subordinate reason fragment without inventing a phrase classification", () => {
+  const report = buildStudentNewsSentenceReport("because officials needed to protect residents")
+  const clauseIssue = report.issues.find((issue) => issue.ruleId === "clause-fragment")
+
+  assert.ok(clauseIssue)
+  assert.match(clauseIssue.message, /independent main clause/i)
+  assert.equal(report.parser.constituentKind, undefined)
+  assert.equal(report.parser.clauses[0].constituentKind, "clause")
+  assert.equal(report.parser.clauses[0].clauseType, "subordinate")
+  assert.equal(report.parser.clauses[0].clauseFunction, "reason-adjunct")
+  assert.ok(report.parser.clauses[0].confidence > 0)
+  assert.ok(report.parser.phrases.every((phrase) => phrase.constituentKind === "phrase"))
+})
+
+test("parser keeps phrase class, phrase type, and phrase function distinct", () => {
+  const parsed = parseStudentNewsSentence("Officials acted in the city.")
+  const phrase = parsed.phrases.find((entry) => entry.phraseClass === "prepositional-phrase")
+
+  assert.ok(phrase)
+  assert.equal(phrase.phraseClass, "prepositional-phrase")
+  assert.equal(phrase.phraseType, "headed")
+  assert.equal(phrase.phraseFunction, "adjunct")
+  assert.equal(Object.hasOwn(phrase, "phraseFunction"), true)
+  assert.equal(Object.hasOwn(phrase, "phraseFun"), false)
+})
+
+test("required online grammar failure is reported as unavailable and remains fail-closed", async () => {
+  await assert.rejects(
+    evaluateStudentNewsMinimumRequirements(basePayload(), {
+      validationConfig: {
+        grammarEngine: {
+          enabled: true,
+          endpoint: "http://127.0.0.1:1/v2/check",
+          timeoutMs: 1000,
+        },
+      },
+    }),
+    (error) => error?.statusCode === 503
+      && error?.code === "STUDENT_NEWS_VALIDATION_UNAVAILABLE"
+      && error?.payload?.status === "unavailable"
+  )
 })
 
 test("sentence report covers grammar families with exact ranges and classification", () => {

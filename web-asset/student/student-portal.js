@@ -46,6 +46,7 @@
         newsCurrentMmrPassed: false,
         newsFormDirty: false,
         newsAutoSaveBusy: false,
+        newsGrammarCheckBusy: false,
         newsVocabularyMinimumWords: 5,
         newWords: [],
         newWordsLoaded: false,
@@ -1033,7 +1034,7 @@
       function hoistPortalModals() {
         const host = document.body;
         if (!host) return;
-        ["pastDueHomeworkModal", "newsComplianceModal", "newNewsFormConfirmModal", "reportAccessErrorModal", "submitSuccessModal", "newsWeekSetModal"].forEach((id) => {
+        ["pastDueHomeworkModal", "newsComplianceModal", "newNewsFormConfirmModal", "reportAccessErrorModal", "submitSuccessModal", "newsWeekSetModal", "newsGrammarCheckWait"].forEach((id) => {
           const modal = field(id);
           if (!modal || modal.parentElement === host) return;
           host.appendChild(modal);
@@ -4816,14 +4817,24 @@
         const checkBtn = field("checkBtn");
         const btn = field("submitBtn");
         const hasReportDate = Boolean(t(field("reportDate")?.value));
-        if (saveBtn instanceof HTMLButtonElement) saveBtn.disabled = !hasReportDate || state.newsAutoSaveBusy;
+        if (saveBtn instanceof HTMLButtonElement) saveBtn.disabled = !hasReportDate || state.newsAutoSaveBusy || state.newsGrammarCheckBusy;
         if (checkBtn instanceof HTMLButtonElement) {
-          checkBtn.disabled = !hasReportDate;
+          checkBtn.disabled = !hasReportDate || state.newsGrammarCheckBusy;
         }
         if (!btn) return;
         const windowInfo = state.window || {};
         const canSubmit = Boolean(t(windowInfo.reportDate)) && state.newsCurrentMmrPassed === true;
-        btn.disabled = !canSubmit;
+        btn.disabled = !canSubmit || state.newsGrammarCheckBusy;
+      }
+
+      function setNewsGrammarCheckBusy(busy) {
+        const shouldShow = Boolean(busy);
+        state.newsGrammarCheckBusy = shouldShow;
+        const wait = field("newsGrammarCheckWait");
+        wait?.classList.toggle("hidden", !shouldShow);
+        wait?.setAttribute("aria-hidden", String(!shouldShow));
+        document.body.classList.toggle("news-grammar-check-busy", shouldShow);
+        updateSubmitAvailability();
       }
 
       function markNewsDraftDirty() {
@@ -4996,14 +5007,26 @@
         }
       }
 
+      const NEWS_GRAMMAR_CHECK_MIN_DISPLAY_MS = 3300;
+
       async function checkNewsPayload(payload = {}, options = {}) {
         const reportDate = t(payload?.reportDate);
         if (!reportDate) throw new Error("Report date is locked.");
-        const saved = await api(STUDENT_NEWS_REPORTS_CHECK_PATH, {
-          method: "POST",
-          body: payload,
-        });
-        await handleNewsCheckResult(saved, options);
+        const grammarCheckStartedAt = Date.now();
+        setNewsGrammarCheckBusy(true);
+        try {
+          const saved = await api(STUDENT_NEWS_REPORTS_CHECK_PATH, {
+            method: "POST",
+            body: payload,
+          });
+          await handleNewsCheckResult(saved, options);
+        } finally {
+          const remainingDisplayMs = NEWS_GRAMMAR_CHECK_MIN_DISPLAY_MS - (Date.now() - grammarCheckStartedAt);
+          if (remainingDisplayMs > 0) {
+            await new Promise((resolve) => setTimeout(resolve, remainingDisplayMs));
+          }
+          setNewsGrammarCheckBusy(false);
+        }
       }
 
       async function saveNewsDraft({ auto = false } = {}) {
@@ -5330,6 +5353,7 @@
       });
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
+        if (state.newsGrammarCheckBusy) return;
         if (state.newWordsLightboxOpen) {
           setNewWordsImageLightboxOpen(false);
           return;

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SIS additions to Java LanguageTool's English rules. -->
+<rules lang="en" xsi:noNamespaceSchemaLocation="../../../../../../../../../languagetool-core/src/main/resources/org/languagetool/rules/rules.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <category id="SIS_GRAMMAR" name="SIS Grammar" type="grammar" external="yes">
+    <rule id="SIS_PROPER_NAME_ARE" name="singular proper name with are">
+      <antipattern>
+        <token postag="NNP" />
+        <token>and</token>
+        <token postag="NNP" />
+        <token>are</token>
+      </antipattern>
+      <pattern raw_pos="yes">
+        <token postag="NNP">
+          <exception regexp="yes">Eagles|States|Netherlands|Philippines</exception>
+        </token>
+        <marker><token>are</token></marker>
+      </pattern>
+      <message>A singular name needs a singular verb here, such as <suggestion>is</suggestion>.</message>
+      <short>Subject-verb agreement</short>
+      <example correction="is">Mark <marker>are</marker> playing football.</example>
+      <example>Mark is playing football.</example>
+    </rule>
+    <rule id="SIS_PROPER_NAME_WERE" name="singular proper name with were">
+      <pattern>
+        <token postag="NNP">
+          <exception regexp="yes">Eagles|States|Netherlands|Philippines</exception>
+        </token>
+        <marker><token>were</token></marker>
+      </pattern>
+      <message>A singular name needs a singular past-tense verb here, such as <suggestion>was</suggestion>.</message>
+      <short>Subject-verb agreement</short>
+      <example correction="was">Brian <marker>were</marker> late.</example>
+      <example>Brian was late.</example>
+    </rule>
+    <rule id="SIS_SINGULAR_NOUN_COMMON_BASE_VERB" name="singular noun with common base-form verb">
+      <pattern>
+        <token postag="DT|PRP.*" postag_regexp="yes" />
+        <token postag="NN|NN:UN" postag_regexp="yes" />
+        <marker><token regexp="yes">do|go|have|like|live|need|play|read|speak|study|want|watch|work|write</token></marker>
+      </pattern>
+      <message>A singular subject needs a third-person singular verb form here.</message>
+      <short>Subject-verb agreement</short>
+      <example>The boy <marker>play</marker> football.</example>
+      <example>My sister <marker>have</marker> a book.</example>
+      <example>The boy plays football.</example>
+      <example>My sister has a book.</example>
+    </rule>
+    <rule id="SIS_SINGULAR_NOUN_ARE" name="singular noun with are">
+      <pattern>
+        <token postag="DT|PRP.*" postag_regexp="yes" />
+        <token postag="NN|NN:UN" postag_regexp="yes" />
+        <marker><token>are</token></marker>
+      </pattern>
+      <message>A singular subject needs <suggestion>is</suggestion>, not “are.”</message>
+      <short>Subject-verb agreement</short>
+      <example correction="is">The student <marker>are</marker> happy.</example>
+      <example>The student is happy.</example>
+    </rule>
+    <rule id="SIS_SINGULAR_NOUN_WERE" name="singular noun with were">
+      <pattern>
+        <token postag="DT|PRP.*" postag_regexp="yes" />
+        <token postag="NN|NN:UN" postag_regexp="yes" />
+        <marker><token>were</token></marker>
+      </pattern>
+      <message>A singular subject needs <suggestion>was</suggestion>, not “were.”</message>
+      <short>Subject-verb agreement</short>
+      <example correction="was">The student <marker>were</marker> happy.</example>
+      <example>The student was happy.</example>
+    </rule>
+    <rule id="SIS_SINGULAR_NOUN_MISSING_COPULA" name="singular noun missing copula">
+      <pattern>
+        <token postag="DT" />
+        <token postag="NN|NN:UN" postag_regexp="yes" />
+        <marker><token postag="JJ.*" postag_regexp="yes" /></marker>
+      </pattern>
+      <message>A complete sentence needs a verb. Add <suggestion>is</suggestion> before this adjective.</message>
+      <short>Missing verb</short>
+      <example correction="is happy">The student <marker>happy</marker>.</example>
+      <example>The student is happy.</example>
+    </rule>
+    <rule id="SIS_STANDALONE_SUBORDINATE_CLAUSE" name="standalone subordinate clause">
+      <regexp mark="1">(?i)^((?:after|although|because|before|if|once|since|unless|until|whenever|whereas|while)\b[^,;:.!?]*[.!?])$</regexp>
+      <message>A clause beginning with this subordinating conjunction needs an independent main clause.</message>
+      <short>Sentence fragment</short>
+      <example>Because the students were late<marker>.</marker></example>
+      <example>Because the students were late, the teacher repeated the instructions.</example>
+    </rule>
+    <rule id="SIS_STANDALONE_WHEN_CLAUSE" name="standalone when clause">
+      <regexp mark="1">(?i)^(when\s+(?!(?:did|do|does|is|are|was|were|will|can|could|should|would|have|has|had)\b)[^,;:.!?]*[.!?])$</regexp>
+      <message>A clause beginning with “when” needs an independent main clause.</message>
+      <short>Sentence fragment</short>
+      <example>When the lesson ended<marker>.</marker></example>
+      <example>When the lesson ended, the students went home.</example>
+    </rule>
+    <rule id="SIS_COMMA_SPLICE_PRONOUN_CLAUSES" name="comma splice between pronoun clauses">
+      <regexp mark="1">^(?:I|You|He|She|It|We|They)\b[^,;:.!?]*(\s*,\s*)(?:I|you|he|she|it|we|they|[A-Z][A-Za-z'-]*)\b</regexp>
+      <message>Two independent clauses need a coordinating conjunction or a semicolon, not only a comma.</message>
+      <short>Comma splice</short>
+      <example>I like coffee<marker>,</marker> Mary likes tea.</example>
+      <example>I like coffee, but Mary likes tea.</example>
+      <example>I like coffee; Mary likes tea.</example>
+    </rule>
+    <rule id="SIS_OBJECT_PRONOUN_AS_SUBJECT" name="object pronoun used as a subject">
+      <regexp mark="1">(?i)^(me|him|her|us|them)\b(?=\s+(?:am|are|is|was|were|have|has|had|do|does|did|will|can|could|should|would|must|[a-z]+(?:s|ed|ing)?\b))</regexp>
+      <message>Use a subject pronoun here: I, he, she, we, or they.</message>
+      <short>Subject pronoun needed</short>
+      <example correction="He"> <marker>Him</marker> went to school.</example>
+      <example>He went to school.</example>
+    </rule>
+    <rule id="SIS_SUBJECT_PRONOUN_AS_OBJECT" name="subject pronoun used as an object">
+      <regexp mark="1">(?i)\b(?:saw|met|called|helped|invited|visited|told|asked|heard|found|watched)\s+(he|she|we|they)\b</regexp>
+      <message>Use an object pronoun here: him, her, us, or them.</message>
+      <short>Object pronoun needed</short>
+      <example correction="him">I saw <marker>he</marker> yesterday.</example>
+      <example>I saw him yesterday.</example>
+    </rule>
+    <rule id="SIS_POSSESSIVE_PRONOUN_BEFORE_NOUN" name="possessive pronoun before a noun">
+      <regexp mark="1">(?i)\b(mine|yours|ours|theirs|hers)\s+(?=[a-z]+\b)</regexp>
+      <message>Use a possessive determiner before a noun: my, your, our, their, or her.</message>
+      <short>Possessive determiner needed</short>
+      <example correction="my">This is <marker>mine</marker> book.</example>
+      <example>This is my book.</example>
+    </rule>
+    <rule id="SIS_REFLEXIVE_PRONOUN_AGREEMENT" name="reflexive pronoun agreement">
+      <regexp mark="1">(?i)\b(?:he|him)\s+(?:hurt|introduced|taught|blamed|cut|saw)\s+(herself|itself|ourselves|themselves)\b</regexp>
+      <message>The reflexive pronoun must agree with its subject. Use <suggestion>himself</suggestion>.</message>
+      <short>Reflexive pronoun agreement</short>
+      <example correction="himself">He hurt <marker>herself</marker>.</example>
+      <example>He hurt himself.</example>
+    </rule>
+  </category>
+</rules>

@@ -18,6 +18,7 @@ services:
       - /tmp:size=128m,noexec,nosuid,nodev
     volumes:
       - ./server.properties:/etc/languagetool/server.properties:ro
+      - ./grammar_custom.xml:/opt/languagetool/LanguageTool-6.8/org/languagetool/rules/en/grammar_custom.xml:ro
 
   languagetool-2:
     build:
@@ -38,3 +39,4 @@ services:
       - /tmp:size=128m,noexec,nosuid,nodev
     volumes:
       - ./server.properties:/etc/languagetool/server.properties:ro
+      - ./grammar_custom.xml:/opt/languagetool/LanguageTool-6.8/org/languagetool/rules/en/grammar_custom.xml:ro

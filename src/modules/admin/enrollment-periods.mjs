@@ -677,7 +677,10 @@ export async function listEnrollmentRoster({
     .filter((entry) => studentMatchesSearch(entry, query))
     .filter((entry) => {
       const currentEnrollment = entry.currentEnrollment
-      if (!currentEnrollment) return Boolean(includeUnenrolled)
+      // Newly created student profiles may not have a class assignment yet.
+      // Keep them visible in unfiltered rosters so staff can complete enrollment;
+      // only omit them when a specific class-level filter is requested.
+      if (!currentEnrollment) return !levelFilter
       if (levelFilter === ENROLLMENT_LEVEL_FILTER_UNENROLLED_ONLY) {
         return currentEnrollment.status === ENROLLMENT_STATUS_UNENROLLED
       }

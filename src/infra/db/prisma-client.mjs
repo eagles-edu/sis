@@ -37,7 +37,8 @@ function isOptionsObjectRequiredError(error) {
   const message = getErrorMessage(error)
   return (
     message.includes("needs to be constructed with a non-empty, valid `prismaclientoptions`") ||
-    message.includes("needs to be constructed with a non-empty, valid prismaclientoptions")
+    message.includes("needs to be constructed with a non-empty, valid prismaclientoptions") ||
+    message.includes("prismaclient was instantiated without any options")
   )
 }
 
@@ -55,6 +56,17 @@ function isAdapterRequiredError(error) {
  * @returns {Promise<import("@prisma/client").PrismaClient>}
  */
 async function createPrismaClientWithFallback(PrismaClient, databaseUrl = "") {
+  const resolvedDatabaseUrl = normalizeText(databaseUrl || getConfiguredDatabaseUrlSync() || process.env.DATABASE_URL)
+
+  // Prisma 7's client engine requires an adapter, but throws that error only
+  // when the first query connects. Prefer the adapter whenever a database URL
+  // is configured so initialization is valid in both eager and lazy paths.
+  if (resolvedDatabaseUrl) {
+    const { PrismaPg } = await import("@prisma/adapter-pg")
+    const adapter = new PrismaPg({ connectionString: resolvedDatabaseUrl })
+    return new PrismaClient({ adapter })
+  }
+
   try {
     return new PrismaClient()
   } catch (error) {
@@ -67,18 +79,10 @@ async function createPrismaClientWithFallback(PrismaClient, databaseUrl = "") {
     if (!isAdapterRequiredError(error)) throw error
   }
 
-  const resolvedDatabaseUrl = normalizeText(databaseUrl || getConfiguredDatabaseUrlSync() || process.env.DATABASE_URL)
-  if (!resolvedDatabaseUrl) {
-    /** @type {Error & { statusCode?: number }} */
-    const error = new Error("DATABASE_URL is required for Prisma adapter mode")
-    error.statusCode = 500
-    throw error
-  }
-
-  const [{ Pool }, { PrismaPg }] = await Promise.all([import("pg"), import("@prisma/adapter-pg")])
-  const pool = new Pool({ connectionString: resolvedDatabaseUrl })
-  const adapter = new PrismaPg(pool)
-  return new PrismaClient({ adapter })
+  /** @type {Error & { statusCode?: number }} */
+  const error = new Error("DATABASE_URL is required for Prisma adapter mode")
+  error.statusCode = 500
+  throw error
 }
 
 /**
