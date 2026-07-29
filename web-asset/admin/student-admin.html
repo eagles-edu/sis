@@ -28,6 +28,7 @@
         Keep the shell theme render-blocking: the inline critical block is
         intentionally small, so an async theme creates an observable FOUT. -->
     <link rel="stylesheet" href="/web-asset/admin/admin-portal-theme.min.css">
+    <link rel="stylesheet" href="/web-asset/vendor/tabulatorz/tabulator.min.css">
     <noscript><link rel="stylesheet" href="/web-asset/admin/admin-portal-theme.min.css"></noscript>
     <style id="admin-critical-css">
 /* ADMIN_CRITICAL_CSS_START */
@@ -2742,25 +2743,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <h3 class="section-title">Tracked metric table</h3>
                       <p class="small" id="assignmentEngagementTableSummary">Select a class day to inspect its recipients.</p>
                       <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
-                        <table class="performance-engagement-table">
-                      <thead>
-                        <tr>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="reviewed" tabindex="0" aria-sort="none">reviewed</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="id" tabindex="0" aria-sort="none">eaglesId</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="englishName" tabindex="0" aria-sort="none">english-name</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="level" tabindex="0" aria-sort="none">level</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="sentOkReturned" tabindex="0" aria-sort="none">sent-ok?</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="emailOpened" tabindex="0" aria-sort="none">Email-open?</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="linkClicked" tabindex="0" aria-sort="none">Link-click</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="pdfDownloaded" tabindex="0" aria-sort="none">PDF-DL?</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="acknowledged" tabindex="0" aria-sort="none">acknowledged</th>
-                          <th scope="col" data-table-sort="assignmentEngagement" data-sort-field="emailUsed" tabindex="0" aria-sort="none">Email used</th>
-                        </tr>
-                      </thead>
-                      <tbody id="assignmentEngagementRows">
-                        <tr><td colspan="10">Loading engagement records...</td></tr>
-                      </tbody>
-                        </table>
+                        <div id="assignmentEngagementRows" aria-label="Assignment engagement event matrix">
+                          Loading engagement records...
+                        </div>
                       </div>
                     </section>
                   </div>
@@ -4390,90 +4375,16 @@ Select a homework link to inspect details.</pre>
                     <section
                       class="performance-engagement-detail panel"
                       data-surface-role="panel">
-                      <h3 class="section-title">Tracked metric table</h3>
+                      <h3 class="section-title">Tracked event matrix</h3>
                       <p class="small" id="performanceEngagementTableSummary">
-                        Select a class day to inspect the tracked rows.
+                        Select a class day to inspect every Brevo and SIS event.
                       </p>
                       <div
                         class="table-scroll-wrap data-surface"
                         data-surface-role="data-surface">
-                        <table class="performance-engagement-table">
-                          <thead>
-                            <tr>
-                              <th
-                                scope="col"
-                                data-performance-engagement-sort="reviewed"
-                                tabindex="0"
-                                aria-sort="none">
-                                reviewed
-                              </th>
-                              <th
-                                scope="col"
-                                data-performance-engagement-sort="id"
-                                tabindex="0"
-                                aria-sort="none">
-                                eaglesId
-                              </th>
-                              <th
-                                scope="col"
-                                data-performance-engagement-sort="englishName"
-                                tabindex="0"
-                                aria-sort="none">
-                                english-name
-                              </th>
-                              <th
-                                scope="col"
-                                data-performance-engagement-sort="level"
-                                tabindex="0"
-                                aria-sort="none">
-                                level
-                              </th>
-                              <th
-                                scope="col"
-                                data-performance-engagement-sort="sentOkReturned"
-                                tabindex="0"
-                                aria-sort="none">
-                                sent-ok?
-                              </th>
-                              <th
-                                scope="col"
-                                data-performance-engagement-sort="emailOpened"
-                                tabindex="0"
-                                aria-sort="none">
-                                Email-open?
-                              </th>
-                              <th
-                                scope="col"
-                                data-performance-engagement-sort="linkClicked"
-                                tabindex="0"
-                                aria-sort="none">
-                                Link-click
-                              </th>
-                              <th
-                                scope="col"
-                                data-performance-engagement-sort="pdfDownloaded"
-                                tabindex="0"
-                                aria-sort="none">
-                                PDF-DL?
-                              </th>
-                              <th
-                                scope="col"
-                                data-performance-engagement-sort="acknowledged"
-                                tabindex="0"
-                                aria-sort="none">
-                                acknowledged
-                              </th>
-                              <th scope="col">Email used</th>
-                            </tr>
-                          </thead>
-                          <tbody id="performanceEngagementRows">
-                            <tr>
-                              <td colspan="10">
-                                Select a class day to load engagement rows.
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
+                        <div id="performanceEngagementRows" aria-label="Report engagement event matrix">
+                          Select a class day to load engagement rows.
+                        </div>
                       </div>
                     </section>
                   </div>

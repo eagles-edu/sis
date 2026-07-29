@@ -93,6 +93,8 @@ import {
   buildReportCardFilename,
   generateStudentReportCardPdf,
 } from "../../../server/student-report-card-pdf.mjs"
+import { isBrevoEmailProvider, sendBrevoEmail } from "../email/brevo.mjs"
+import { recordBrevoEmailDeliverySafely } from "../email/brevo-delivery.mjs"
 
 /** @type {Promise<{ createTransport: Function }> | null} */
 let nodemailerModule = null
@@ -393,6 +395,70 @@ function normalizeAnnouncementPayload(payload = {}, options = {}) {
 export async function sendAnnouncementEmail(payload = {}) {
   const normalizedPayload = normalizeAnnouncementPayload(payload)
   const queueType = normalizeQueueType(payload.queueType)
+
+  if (isBrevoEmailProvider()) {
+    const from = {
+      email: normalizeText(process.env.BREVO_FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER),
+      name: normalizeText(process.env.BREVO_FROM_NAME || normalizedPayload.senderName),
+    }
+    if (queueType === "parent-report") {
+      const attachments = await buildParentReportPdfAttachment(payload)
+      let sent = 0
+      for (let i = 0; i < normalizedPayload.recipients.length; i += 1) {
+        const recipient = normalizedPayload.recipients[i]
+        const emailContent = buildParentReportEmailContent({ ...payload, ...normalizedPayload }, recipient)
+        const sentResult = await sendBrevoEmail({
+          from,
+          to: [{ email: recipient }],
+          subject: emailContent.subject,
+          text: emailContent.text,
+          html: emailContent.html,
+          attachments,
+        })
+        await recordBrevoEmailDeliverySafely({
+          messageId: sentResult.messageId,
+          batchId: payload.queueId,
+          recipientEmail: recipient,
+          reportId: payload.reportId,
+          queueType,
+          subject: emailContent.subject,
+          metadata: { provider: sentResult.provider },
+        })
+        sent += 1
+      }
+      return {
+        ok: true,
+        sent,
+        subject: normalizeText(normalizedPayload.assignmentTitle) || "Performance report",
+        deliveryMode: "immediate",
+      }
+    }
+
+    const emailContent = buildAnnouncementEmailContent({ ...payload, ...normalizedPayload })
+    const sentResult = await sendBrevoEmail({
+      from,
+      to: [{ email: from.email }],
+      bcc: normalizedPayload.recipients.map((email) => ({ email })),
+      subject: emailContent.subject,
+      text: emailContent.lines.join("\n"),
+      html: `<p>${emailContent.htmlLines}</p>`,
+    })
+    await Promise.all(normalizedPayload.recipients.map((recipient) => recordBrevoEmailDeliverySafely({
+      messageId: sentResult.messageId,
+      batchId: payload.queueId,
+      recipientEmail: recipient,
+      reportId: payload.reportId,
+      queueType,
+      subject: emailContent.subject,
+      metadata: { provider: sentResult.provider, deliveryMode: "bcc" },
+    })))
+    return {
+      ok: true,
+      sent: normalizedPayload.recipients.length,
+      subject: emailContent.subject,
+      deliveryMode: "immediate",
+    }
+  }
 
   const nodemailer = await getNodemailer()
   const smtp = smtpConfigFromEnv()

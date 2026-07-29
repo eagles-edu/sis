@@ -95,6 +95,7 @@ function buildRoleRow({
   events,
   role,
   recipientEmails,
+  brevoDeliveries = [],
 }) {
   const profile = student?.profile && typeof student.profile === "object" ? student.profile : {}
   const reportId = normalizeText(report?.id)
@@ -114,7 +115,22 @@ function buildRoleRow({
     role === "student" ? normalizeText(profile?.englishName || profile?.fullName) : ""
   const rowEvents = Array.isArray(events) ? events : []
   const recipientSet = new Set(uniqueText(recipientEmails))
-  const emailOpenedAt = firstEventTime(
+  const recipientDeliveries = (Array.isArray(brevoDeliveries) ? brevoDeliveries : [])
+    .filter((delivery) => recipientSet.has(normalizeLower(delivery?.recipientEmail)))
+  const firstDeliveryTime = (field) => {
+    const delivery = recipientDeliveries.find((entry) => entry?.[field])
+    return delivery?.[field] ? new Date(delivery[field]).toISOString() : ""
+  }
+  const emailSentAt = firstDeliveryTime("sentAt")
+  const emailDeliveredAt = firstDeliveryTime("deliveredAt")
+  const brevoOpenedAt = firstDeliveryTime("openedAt")
+  const brevoClickedAt = firstDeliveryTime("clickedAt")
+  const emailDeferredAt = firstDeliveryTime("deferredAt")
+  const emailBouncedAt = firstDeliveryTime("bouncedAt")
+  const emailBlockedAt = firstDeliveryTime("blockedAt")
+  const emailComplainedAt = firstDeliveryTime("complainedAt")
+  const emailUnsubscribedAt = firstDeliveryTime("unsubscribedAt")
+  const localEmailOpenedAt = firstEventTime(
     rowEvents,
     (event) =>
       normalizeLower(event?.eventType) === "email_opened" &&
@@ -149,15 +165,35 @@ function buildRoleRow({
   const row = {
     reviewed: role,
     id: role === "student" ? normalizeText(student?.eaglesId) : normalizeText(profile?.parentsId),
+    familyId: normalizeText(profile?.familyId || profile?.parentsId),
     emailUsed: normalizeText(recipientEmails?.[0]),
+    batchId: normalizeText(recipientDeliveries[0]?.batchId),
+    queueType: normalizeText(recipientDeliveries[0]?.queueType),
+    providerMessageId: normalizeText(recipientDeliveries[0]?.providerMessageId),
     englishName,
     level,
     sentOkReturned,
-    emailOpened: emailOpenedAt ? "yes" : "",
+    emailSent: emailSentAt ? "yes" : (sentOkReturned === "yes" ? "yes" : ""),
+    emailDelivered: emailDeliveredAt ? "yes" : "",
+    emailOpened: brevoOpenedAt || localEmailOpenedAt ? "yes" : "",
+    emailClicked: brevoClickedAt ? "yes" : "",
+    emailDeferred: emailDeferredAt ? "yes" : "",
+    emailBounced: emailBouncedAt ? "yes" : "",
+    emailBlocked: emailBlockedAt ? "yes" : "",
+    emailComplained: emailComplainedAt ? "yes" : "",
+    emailUnsubscribed: emailUnsubscribedAt ? "yes" : "",
+    emailSentAt,
+    emailDeliveredAt,
+    emailOpenedAt: brevoOpenedAt || localEmailOpenedAt,
+    emailClickedAt: brevoClickedAt,
+    emailDeferredAt,
+    emailBouncedAt,
+    emailBlockedAt,
+    emailComplainedAt,
+    emailUnsubscribedAt,
     linkClicked: linkClickedAt ? "yes" : "",
     pdfDownloaded: pdfDownloadedAt ? "yes" : "",
     acknowledged: acknowledgedAt ? "yes" : "",
-    emailOpenedAt,
     linkClickedAt,
     pdfDownloadedAt,
     acknowledgedAt,
@@ -212,12 +248,19 @@ export async function listPerformanceEngagementData({
           profile: true,
         },
       },
+      brevoDeliveries: {
+        include: { webhookEvents: true },
+        orderBy: { sentAt: "asc" },
+      },
     },
     orderBy: [{ generatedAt: "desc" }, { updatedAt: "desc" }],
   })
 
   const mappedReports = reports
-    .map((report) => mapParentClassReport(report))
+    .map((report) => ({
+      ...mapParentClassReport(report),
+      brevoDeliveries: report.brevoDeliveries,
+    }))
     .filter((report) => isParentReportPortalVisible(report))
     .filter((report) => {
       const classDate = normalizeDateKey(report?.classDate || report?.generatedAt)
@@ -249,6 +292,7 @@ export async function listPerformanceEngagementData({
   mappedReports.forEach((report) => {
     const student = report?.student && typeof report.student === "object" ? report.student : {}
     const reportEvents = eventsByReportId.get(normalizeText(report?.id)) || []
+    const brevoDeliveries = Array.isArray(report?.brevoDeliveries) ? report.brevoDeliveries : []
     const classDate = normalizeDateKey(report?.classDate || report?.generatedAt)
     const classDay = normalizeText(report?.classDay) || formatDayLabel(classDate)
     const className = normalizeText(report?.className)
@@ -260,6 +304,7 @@ export async function listPerformanceEngagementData({
       events: reportEvents,
       role: "parent",
       recipientEmails: parentEmails,
+      brevoDeliveries,
     })
     const studentRow = buildRoleRow({
       report,
@@ -267,6 +312,7 @@ export async function listPerformanceEngagementData({
       events: reportEvents,
       role: "student",
       recipientEmails: studentEmails,
+      brevoDeliveries,
     })
     ;[parentRow, studentRow].forEach((row) => {
       rows.push(row)

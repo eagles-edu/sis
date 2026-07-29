@@ -5,6 +5,8 @@ import fs from "node:fs"
 import http from "node:http"
 import path from "node:path"
 import { URL, fileURLToPath } from "node:url"
+import { getEmailProviderStatus, isBrevoEmailProvider, sendBrevoEmail } from "../src/modules/email/brevo.mjs"
+import { recordBrevoEmailDeliverySafely } from "../src/modules/email/brevo-delivery.mjs"
 
 const require = createRequire(import.meta.url)
 const isDebugEnabled = () =>
@@ -966,6 +968,7 @@ async function buildRuntimeHealthPayload() {
     lastSendOk: STATUS.lastSendOk,
     lastSendAt: STATUS.lastSendAt,
     lastError: STATUS.lastError,
+    emailProvider: getEmailProviderStatus(),
     node: process.version,
     endpoint: DEFAULT_PATH,
     intakeEndpoint: DEFAULT_INTAKE_PATH,
@@ -1617,12 +1620,39 @@ function createTransport() {
   return transporter
 }
 
+/**
+ * @param {import("nodemailer").Transporter | null} transporter
+ * @param {{ from: string, to: string | string[], subject: string, text?: string, html?: string, replyTo?: string }} message
+ * @param {"brevo" | "smtp"} provider
+ */
+async function sendMailerMessage(transporter, message, provider) {
+  if (provider === "brevo") {
+    const recipients = Array.isArray(message.to) ? message.to : [message.to]
+    const result = await sendBrevoEmail({
+      from: { email: message.from },
+      to: recipients.map((email) => ({ email })),
+      subject: message.subject,
+      text: message.text,
+      html: message.html,
+    })
+    await Promise.all(recipients.map((recipient) => recordBrevoEmailDeliverySafely({
+      messageId: result.messageId,
+      recipientEmail: recipient,
+      subject: message.subject,
+      metadata: { source: "exercise-mailer" },
+    })))
+    return
+  }
+  if (!transporter) throw new Error("SMTP transporter is unavailable")
+  await transporter.sendMail(message)
+}
+
 /* =========================
     Request Handler
    ========================= */
 
-/** @param {MailerRequest} request @param {MailerResponse} response @param {import("nodemailer").Transporter} transporter */
-async function handleRequest(request, response, transporter) {
+/** @param {MailerRequest} request @param {MailerResponse} response @param {import("nodemailer").Transporter | null} transporter @param {"brevo" | "smtp"} provider */
+async function handleRequest(request, response, transporter, provider) {
   const { method } = request
   const url = new URL(request.url || "", `http://${request.headers.host || "localhost"}`)
 
@@ -1825,24 +1855,24 @@ async function handleRequest(request, response, transporter) {
           })
         }
 
-        await transporter.sendMail({
+        await sendMailerMessage(transporter, {
           from,
           to: teacherTo,
           subject: emailData.teacherEmail.subject,
           text: emailData.teacherEmail.text,
           html: emailData.teacherEmail.html,
           replyTo: validated.email || undefined,
-        })
+        }, provider)
       }
 
       if (shouldSendLearnerNotification && emailData.learnerEmail) {
-        await transporter.sendMail({
+        await sendMailerMessage(transporter, {
           from,
           to: emailData.learnerEmail.to,
           subject: emailData.learnerEmail.subject,
           text: emailData.learnerEmail.text,
           html: emailData.learnerEmail.html,
-        })
+        }, provider)
       }
 
       markSubmissionNotificationSent(notificationKey)
@@ -1894,7 +1924,8 @@ async function handleRequest(request, response, transporter) {
  */
 export function startExerciseMailer(options = {}) {
   assertRuntimeEnvironmentSeparation()
-  const transporter = options.transporter || createTransport()
+  const provider = options.transporter ? "smtp" : isBrevoEmailProvider() ? "brevo" : "smtp"
+  const transporter = options.transporter || (provider === "smtp" ? createTransport() : null)
   const hasExplicitPort = options.port !== undefined && options.port !== null
   const port = hasExplicitPort ? Number(options.port) : resolveRuntimeMailerPort()
   const host =
@@ -1904,7 +1935,7 @@ export function startExerciseMailer(options = {}) {
   setStudentAdminRuntimeHealthProvider(() => buildRuntimeHealthPayload())
 
   const server = http.createServer((request, response) => {
-    handleRequest(request, response, transporter).catch((error) => {
+    handleRequest(request, response, transporter, provider).catch((error) => {
       // Ensure CORS even on unexpected errors
       allowCors(request, response)
       response.writeHead(500, { "Content-Type": "application/json" })

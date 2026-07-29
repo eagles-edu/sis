@@ -246,6 +246,7 @@ model StudentProfile {
   memberSince                String?
   exercisePoints             Int?
   parentsId                  String?
+  familyId                   String?
   photoUrl                   String?
   genderSelections           String[]
   studentPhone               String?
@@ -422,12 +423,64 @@ model ParentClassReport {
   weekNumber             Int?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
+  brevoDeliveries        BrevoEmailDelivery[]
 
   @@unique([studentRefId, className, schoolYear, quarter, enrollmentPeriodId])
   @@index([enrollmentPeriodId])
   @@index([level, schoolYear, quarter])
   @@index([workflowState, schoolYear, quarter, generatedAt])
   @@index([approvedAt])
+}
+
+model BrevoEmailDelivery {
+  id                  String   @id @default(cuid())
+  providerMessageId   String
+  batchId             String?
+  recipientEmail      String
+  reportId            String?
+  report              ParentClassReport? @relation(fields: [reportId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  queueType           String?
+  subject             String?
+  status              String   @default("sent")
+  sentAt              DateTime?
+  deliveredAt         DateTime?
+  openedAt            DateTime?
+  clickedAt           DateTime?
+  deferredAt          DateTime?
+  bouncedAt           DateTime?
+  blockedAt           DateTime?
+  complainedAt        DateTime?
+  unsubscribedAt      DateTime?
+  lastEventAt         DateTime?
+  metadataJson        Json?
+  webhookEvents       BrevoEmailWebhookEvent[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([providerMessageId, recipientEmail])
+  @@index([providerMessageId])
+  @@index([batchId, recipientEmail, sentAt])
+  @@index([recipientEmail, status, lastEventAt])
+  @@index([reportId, status, updatedAt])
+}
+
+model BrevoEmailWebhookEvent {
+  id                  String   @id @default(cuid())
+  eventKey            String   @unique
+  providerMessageId   String?
+  recipientEmail      String?
+  eventType           String
+  eventAt             DateTime
+  subject             String?
+  payloadJson         Json
+  deliveryId          String?
+  delivery            BrevoEmailDelivery? @relation(fields: [deliveryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  receivedAt          DateTime @default(now())
+  processedAt         DateTime?
+
+  @@index([providerMessageId, recipientEmail, eventAt])
+  @@index([eventType, eventAt])
+  @@index([deliveryId, eventAt])
 }
 
 model ParentClassReportEvent {

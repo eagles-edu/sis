@@ -35,6 +35,7 @@ import {
   ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
   enqueueAsyncSideEffectJob,
 } from "../src/modules/async/side-effect-jobs.mjs"
+import { processBrevoWebhookEvent } from "../src/modules/email/brevo-delivery.mjs"
 import {
   getEmailBatchQueueRuntimeStatus,
   getEmailBatchQueueStatus,
@@ -269,6 +270,10 @@ const STUDENT_NEW_WORDS_PATH = `${STUDENT_API_PREFIX}/new-words`
 const STUDENT_REPORT_PAGE_PREFIX = `${STUDENT_PORTAL_PAGE_PATH}/reports`
 const GENERIC_REPORT_ACCESS_PAGE_PREFIX = "/reports/access"
 const REPORT_EVENT_EMAIL_OPEN_PATH = "/api/report-events/email-open.gif"
+const BREVO_WEBHOOK_PATH = normalizePathPrefix(
+  process.env.BREVO_WEBHOOK_PATH,
+  "/api/webhooks/brevo/transactional",
+)
 const ASSIGNMENT_REMINDER_CLICK_PATH_RE = /^\/api\/assignment-reminders\/track\/click\/([^/]+)$/
 const ASSIGNMENT_REMINDER_OPEN_PATH_RE = /^\/api\/assignment-reminders\/track\/open\/([^/]+)$/
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH = normalizePathPrefix(
@@ -703,6 +708,7 @@ const PARENT_PROFILE_EDITABLE_FIELDS = new Set([
   "memberSince",
   "exercisePoints",
   "parentsId",
+  "familyId",
   "photoUrl",
   "genderSelections",
   "studentPhone",
@@ -1722,6 +1728,7 @@ export function getStudentAdminRuntimeStatus() {
     notifyBatchStatusPath: ADMIN_NOTIFY_BATCH_STATUS_PATH,
     incomingExerciseResultsPath: ADMIN_INCOMING_EXERCISE_RESULTS_PATH,
     profileSubmissionsPath: ADMIN_PROFILE_SUBMISSIONS_PATH,
+    brevoWebhookPath: BREVO_WEBHOOK_PATH,
     runtimeHealthPath: ADMIN_RUNTIME_HEALTH_PATH,
     serviceControlPath: ADMIN_SERVICE_CONTROL_PATH,
     assignmentAnnouncementPreviewCreatePath: ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH,
@@ -2023,6 +2030,7 @@ const STUDENT_IMPORT_ROW_SIGNAL_KEYS = [
   "englishName",
   "password",
   "parentsId",
+  "familyId",
   "classLevel",
   "studentPhone",
   "studentEmail",
@@ -2626,6 +2634,31 @@ function parseBody(request) {
     })
     request.on("error", reject)
   })
+}
+
+function assertBrevoWebhookAuthorized(request) {
+  const configuredSecret = normalizeText(process.env.BREVO_WEBHOOK_SECRET)
+  if (!configuredSecret) {
+    const error = new Error("BREVO_WEBHOOK_SECRET is not configured")
+    error.statusCode = 503
+    throw error
+  }
+  const authorization = normalizeText(request.headers.authorization || "")
+  const suppliedSecret = normalizeText(
+    request.headers["x-brevo-webhook-secret"]
+      || (authorization.match(/^Bearer\s+(.+)$/iu)?.[1] || ""),
+  )
+  const configuredBuffer = Buffer.from(configuredSecret, "utf8")
+  const suppliedBuffer = Buffer.from(suppliedSecret, "utf8")
+  if (
+    !suppliedSecret
+    || configuredBuffer.length !== suppliedBuffer.length
+    || !crypto.timingSafeEqual(configuredBuffer, suppliedBuffer)
+  ) {
+    const error = new Error("Unauthorized Brevo webhook")
+    error.statusCode = 401
+    throw error
+  }
 }
 
 function normalizeUiSettingsPayload(payload = {}) {
@@ -6898,6 +6931,23 @@ async function handleApiRequest(request, response, pathname, url) {
           include: { dispatch: true },
         })
       : []
+    const assignmentBatchIds = Array.from(new Set(items.map((item) => normalizeText(item.dispatch?.queueId)).filter(Boolean)))
+    const assignmentRecipientEmails = Array.from(new Set(items.map((item) => normalizeLower(item.recipientEmail)).filter(Boolean)))
+    const brevoDeliveries = prisma?.brevoEmailDelivery && assignmentBatchIds.length && assignmentRecipientEmails.length
+      ? await prisma.brevoEmailDelivery.findMany({
+          where: {
+            batchId: { in: assignmentBatchIds },
+            recipientEmail: { in: assignmentRecipientEmails },
+          },
+          orderBy: { sentAt: "asc" },
+        })
+      : []
+    const brevoDeliveryByAssignment = new Map(
+      brevoDeliveries.map((delivery) => [
+        `${normalizeText(delivery.batchId)}|${normalizeLower(delivery.recipientEmail)}`,
+        delivery,
+      ]),
+    )
     const studentIds = Array.from(new Set(items.map((item) => normalizeText(item.dispatch?.studentRefId)).filter(Boolean)))
     const students = prisma?.student && studentIds.length
       ? await prisma.student.findMany({
@@ -6905,7 +6955,7 @@ async function handleApiRequest(request, response, pathname, url) {
           select: {
             id: true,
             eaglesId: true,
-            profile: { select: { englishName: true, currentGrade: true } },
+            profile: { select: { englishName: true, currentGrade: true, parentsId: true, familyId: true } },
           },
         })
       : []
@@ -6913,6 +6963,7 @@ async function handleApiRequest(request, response, pathname, url) {
       eaglesId: normalizeText(student.eaglesId),
       englishName: normalizeText(student.profile?.englishName),
       level: normalizeText(student.profile?.currentGrade),
+      familyId: normalizeText(student.profile?.familyId || student.profile?.parentsId),
     }]))
     sendJson(response, 200, {
       ok: true,
@@ -6928,6 +6979,26 @@ async function handleApiRequest(request, response, pathname, url) {
         openedAt: item.openedAt?.toISOString?.() || "",
         clickedAt: item.clickedAt?.toISOString?.() || "",
         actionCompletedAt: item.actionCompletedAt?.toISOString?.() || "",
+        brevoDelivery: (() => {
+          const delivery = brevoDeliveryByAssignment.get(
+            `${normalizeText(item.dispatch?.queueId)}|${normalizeLower(item.recipientEmail)}`,
+          )
+          if (!delivery) return null
+          return {
+            providerMessageId: delivery.providerMessageId,
+            batchId: delivery.batchId,
+            queueType: delivery.queueType,
+            sentAt: delivery.sentAt?.toISOString?.() || "",
+            deliveredAt: delivery.deliveredAt?.toISOString?.() || "",
+            openedAt: delivery.openedAt?.toISOString?.() || "",
+            clickedAt: delivery.clickedAt?.toISOString?.() || "",
+            deferredAt: delivery.deferredAt?.toISOString?.() || "",
+            bouncedAt: delivery.bouncedAt?.toISOString?.() || "",
+            blockedAt: delivery.blockedAt?.toISOString?.() || "",
+            complainedAt: delivery.complainedAt?.toISOString?.() || "",
+            unsubscribedAt: delivery.unsubscribedAt?.toISOString?.() || "",
+          }
+        })(),
         dispatch: {
           assignmentTemplateId: item.dispatch?.assignmentTemplateId || "",
           studentRefId: item.dispatch?.studentRefId || "",
@@ -8049,6 +8120,18 @@ export async function handleStudentAdminRequest(request, response) {
   const url = new URL(request.url || "/", `http://${host}`)
   const pathname = url.pathname
   const requestOrigin = resolveRequestOrigin(request)
+
+  if (method === "POST" && pathname === BREVO_WEBHOOK_PATH) {
+    try {
+      assertBrevoWebhookAuthorized(request)
+      const payload = await parseBody(request)
+      const result = await processBrevoWebhookEvent(payload)
+      sendJson(response, 200, { ok: true, ...result })
+    } catch (error) {
+      withError(response, request, error)
+    }
+    return true
+  }
 
   const llmsRoutes = new Map([
     ["/", ROOT_LLMS_PATH],

@@ -1,5 +1,7 @@
 // PERF-CONTRACT: ADMIN-PERFORMANCE-ISLAND
 // Performance-engagement code is route-owned and must not return to the critical admin bundle.
+import { clearEngagementMatrix, renderEngagementMatrix } from "/web-asset/admin/engagement-matrix.mjs"
+
 export function initPerformanceEngagementIsland({ document, state, api, helpers = {} }) {
   const {
     normalizeText, normalizeLower, compareTableText, compareTableIsoDate,
@@ -9,7 +11,6 @@ export function initPerformanceEngagementIsland({ document, state, api, helpers 
     const dateText = normalizeText(date) || "Unknown day";
     return weekNumber ? `${dateText} | Week ${weekNumber}` : dateText;
   });
-
 function normalizePerformanceEngagementSortField(field = "") {
   const normalized = normalizeText(field);
   if (
@@ -247,7 +248,6 @@ function renderPerformanceEngagementRows() {
   const summaryEl = document.getElementById("performanceEngagementTableSummary");
   const selectedDayEl = document.getElementById("performanceEngagementSelectedDaySummary");
   if (!rowsEl || !summaryEl || !selectedDayEl) return;
-  updatePerformanceEngagementSortIndicators();
   const engagementRows = performanceEngagementRowsForSelection();
   const selectedDay = normalizeText(state.performanceEngagement.selectedDayKey);
   const day = normalizeText(
@@ -262,57 +262,21 @@ function renderPerformanceEngagementRows() {
   summaryEl.textContent = engagementRows.length
     ? `${engagementRows.length} report groups | ${engagementRows.reduce((sum, entry) => sum + entry.rows.length, 0)} tracked rows`
     : "No engagement rows matched this day and search.";
-  rowsEl.innerHTML = "";
   if (!engagementRows.length) {
-    rowsEl.innerHTML = '<tr><td colspan="9">No engagement rows for the selected class day.</td></tr>';
+    clearEngagementMatrix(rowsEl);
+    rowsEl.textContent = "No engagement rows for the selected class day.";
     return;
   }
-  engagementRows.forEach((group, groupIndex) => {
-    group.rows.forEach((row, rowIndex) => {
-      const tr = document.createElement("tr");
-      if (group.rows.length > 1 && rowIndex === 0) tr.classList.add("pair-start");
-      if (group.rows.length > 1 && rowIndex === group.rows.length - 1) tr.classList.add("pair-end");
-      const reviewedClass =
-        normalizeLower(row.reviewed) === "parent" ? "is-parent"
-        : normalizeLower(row.reviewed) === "student" ? "is-student"
-        : "";
-      const sentClass =
-        normalizeLower(row.sentOkReturned) === "no" ? "is-no"
-        : normalizeLower(row.sentOkReturned) === "yes" ? "is-yes"
-        : "is-empty";
-      const emailClass = row.emailOpenedAt ? "is-set" : "is-empty";
-      const linkClass = row.linkClickedAt ? "is-set" : "is-empty";
-      const pdfClass = row.pdfDownloadedAt ? "is-set" : "is-empty";
-      const ackClass = row.acknowledgedAt ? "is-set" : "is-empty";
-      tr.innerHTML = `
-        <td class="performance-engagement-reviewed-cell ${reviewedClass}">${escapeHtml(row.reviewed || "-")}</td>
-        <td title="Email used: ${escapeHtml(row.emailUsed || "not available")}">${escapeHtml(row.id || "-")}</td>
-        <td>${escapeHtml(row.englishName || "-")}</td>
-        <td>${escapeHtml(row.level || "-")}</td>
-        <td class="performance-engagement-status-cell ${sentClass}" title="${escapeHtml(row.sentOkReturned)}">${escapeHtml(row.sentOkReturned || "-")}</td>
-        <td class="performance-engagement-event-cell ${emailClass}" title="${escapeHtml(row.emailOpenedAt || "")}">${escapeHtml(row.emailOpened || "-")}</td>
-        <td class="performance-engagement-event-cell ${linkClass}" title="${escapeHtml(row.linkClickedAt || "")}">${escapeHtml(row.linkClicked || "-")}</td>
-        <td class="performance-engagement-event-cell ${pdfClass}" title="${escapeHtml(row.pdfDownloadedAt || "")}">${escapeHtml(row.pdfDownloaded || "-")}</td>
-        <td class="performance-engagement-event-cell ${ackClass}" title="${escapeHtml(row.acknowledgedAt || "")}">${escapeHtml(row.acknowledged || "-")}</td>
-        <td>${escapeHtml(row.emailUsed || "-")}</td>
-      `;
-      rowsEl.appendChild(tr);
-    });
-    if (groupIndex < engagementRows.length - 1 && group.rows.length > 1
-      && engagementRows[groupIndex + 1]?.rows?.length > 1) {
-      const spacer = document.createElement("tr");
-      spacer.className = "performance-engagement-pair-spacer";
-      spacer.setAttribute("aria-hidden", "true");
-      spacer.innerHTML = '<td colspan="10"></td>';
-      rowsEl.appendChild(spacer);
-    }
-  });
+  const rows = engagementRows.flatMap((group) => group.rows.map((row) => ({
+    ...row,
+    reportGroup: group.reportId || `${group.classDate}|${group.className}`,
+  })));
+  void renderEngagementMatrix(rowsEl, rows, { groupBy: "reportGroup" });
 }
 
 function renderPerformanceEngagementPage() {
   renderPerformanceEngagementDayList();
   renderPerformanceEngagementRows();
-  updatePerformanceEngagementSortIndicators();
 }
 
 async function loadPerformanceEngagementData({ force = false } = {}) {

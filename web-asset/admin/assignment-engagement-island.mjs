@@ -2,6 +2,8 @@
  * This implementation is intentionally outside student-admin.min.js. Load it
  * only when the assignment-engagement page is opened. */
 
+import { renderEngagementMatrix, clearEngagementMatrix } from "/web-asset/admin/engagement-matrix.mjs"
+
 export function initAssignmentEngagementIsland({ document, state, api, helpers, onError }) {
   const {
     normalizeText,
@@ -86,16 +88,42 @@ export function initAssignmentEngagementIsland({ document, state, api, helpers, 
 
   const metric = (row = {}) => {
     const dispatch = row.dispatch || {}
+    const brevo = row.brevoDelivery || {}
     const status = normalizeLower(dispatch.status)
     return {
+      groupKey: `${normalizeText(dispatch.assignmentTemplateId)}:${normalizeText(dispatch.eaglesId || dispatch.studentRefId)}:${normalizeText(dispatch.reminderKind)}`,
+      batchId: normalizeText(brevo.batchId || dispatch.queueId),
+      queueType: normalizeText(brevo.queueType || "assignment-reminder"),
+      providerMessageId: normalizeText(brevo.providerMessageId),
       reviewed: normalizeText(row.audience),
       id: normalizeText(dispatch.eaglesId || dispatch.studentRefId),
+      familyId: normalizeText(dispatch.familyId),
       englishName: normalizeText(dispatch.englishName),
       level: normalizeText(dispatch.level),
-      sent: row.sentAt ? "yes" : status === "failed" ? "no" : status === "sent" ? "yes" : "queued",
-      emailOpened: row.openedAt ? "yes" : "-",
-      linkClicked: row.clickedAt ? "yes" : "-",
-      acknowledged: row.actionCompletedAt ? "yes" : "-",
+      emailSent: brevo.sentAt || row.sentAt ? "yes" : status === "sent" ? "yes" : "",
+      emailDelivered: brevo.deliveredAt || row.deliveredAt ? "yes" : "",
+      emailOpened: brevo.openedAt || row.openedAt ? "yes" : "",
+      emailClicked: brevo.clickedAt ? "yes" : "",
+      emailDeferred: brevo.deferredAt ? "yes" : "",
+      emailBounced: brevo.bouncedAt || status === "failed" ? "yes" : "",
+      emailBlocked: brevo.blockedAt ? "yes" : "",
+      emailComplained: brevo.complainedAt ? "yes" : "",
+      emailUnsubscribed: brevo.unsubscribedAt ? "yes" : "",
+      emailSentAt: brevo.sentAt || row.sentAt || "",
+      emailDeliveredAt: brevo.deliveredAt || row.deliveredAt || "",
+      emailOpenedAt: brevo.openedAt || row.openedAt || "",
+      emailClickedAt: brevo.clickedAt || "",
+      emailDeferredAt: brevo.deferredAt || "",
+      emailBouncedAt: brevo.bouncedAt || "",
+      emailBlockedAt: brevo.blockedAt || "",
+      emailComplainedAt: brevo.complainedAt || "",
+      emailUnsubscribedAt: brevo.unsubscribedAt || "",
+      linkClicked: row.clickedAt ? "yes" : "",
+      linkClickedAt: row.clickedAt || "",
+      pdfDownloaded: "",
+      acknowledged: "",
+      actionCompleted: row.actionCompletedAt ? "yes" : "",
+      actionCompletedAt: row.actionCompletedAt || "",
       emailUsed: normalizeText(row.recipientEmail),
     }
   }
@@ -137,9 +165,8 @@ export function initAssignmentEngagementIsland({ document, state, api, helpers, 
     const clicked = allRows.filter((row) => row.clickedAt).length
     summaryEl.textContent = `${rows.length}/${allRows.length} shown | sent ${sent} | opened ${opened} | clicked ${clicked}`
     if (tableSummaryEl) tableSummaryEl.textContent = `${rows.length} recipient${rows.length === 1 ? "" : "s"} in the selected reminder group.`
-    if (!rows.length) { rowsEl.innerHTML = '<tr><td colspan="10">No assignment engagement records match the current search.</td></tr>'; return }
-    rowsEl.innerHTML = rows.map((row) => { const value = metric(row); return `<tr><td>${escapeHtml(value.reviewed || "-")}</td><td>${escapeHtml(value.id || "-")}</td><td>${escapeHtml(value.englishName || "-")}</td><td>${escapeHtml(value.level || "-")}</td><td>${escapeHtml(value.sent)}</td><td>${escapeHtml(value.emailOpened)}</td><td>${escapeHtml(value.linkClicked)}</td><td>-</td><td>${escapeHtml(value.acknowledged)}</td><td>${escapeHtml(value.emailUsed || "-")}</td></tr>` }).join("")
-    updateTableHeaderSortIndicators()
+    if (!rows.length) { clearEngagementMatrix(rowsEl); rowsEl.textContent = "No assignment engagement records match the current search."; return }
+    void renderEngagementMatrix(rowsEl, rows.map(metric), { groupBy: "groupKey" })
   }
 
   async function load({ force = false } = {}) {

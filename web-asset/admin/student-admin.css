@@ -2814,6 +2814,51 @@ body {
         line-height: 1.35;
         margin-top: 3px;
       }
+      .performance-engagement-detail .tabulator {
+        background: var(--portal-surface-card);
+        border-color: var(--portal-border);
+        color: var(--portal-text);
+        font-size: 12px;
+        min-width: 1120px;
+      }
+      .performance-engagement-detail .tabulator .tabulator-header,
+      .performance-engagement-detail .tabulator .tabulator-col,
+      .performance-engagement-detail .tabulator .tabulator-col-group {
+        background: var(--portal-surface-support);
+        border-color: var(--portal-border);
+        color: var(--portal-text);
+      }
+      .performance-engagement-detail .tabulator .tabulator-col-title { white-space: normal; }
+      .performance-engagement-detail .tabulator .tabulator-row {
+        background: var(--portal-surface-card);
+        border-color: var(--portal-border);
+      }
+      .performance-engagement-detail .tabulator .tabulator-row:hover { background: var(--portal-surface-support); }
+      .performance-engagement-detail .tabulator .tabulator-cell { border-color: var(--portal-border); padding: 8px 7px; }
+      .performance-engagement-detail .tabulator .tabulator-group {
+        background: var(--portal-surface-panel);
+        border-color: var(--portal-border);
+        color: var(--portal-text);
+        font-weight: 700;
+      }
+      .engagement-matrix-mark {
+        align-items: center;
+        border-radius: 999px;
+        display: inline-flex;
+        font-size: 14px;
+        font-weight: 800;
+        height: 24px;
+        justify-content: center;
+        width: 24px;
+      }
+      .engagement-matrix-mark.is-set { background: var(--portal-color-b0e4f2e1c7); color: var(--portal-ods-accent-border); }
+      .engagement-matrix-mark.is-empty { color: var(--portal-muted-text); }
+      html[data-theme="dark"] .performance-engagement-detail .tabulator,
+      html[data-theme="dark"] .performance-engagement-detail .tabulator .tabulator-row { background: var(--portal-dark-surface-card); color: var(--portal-dark-text); }
+      html[data-theme="dark"] .performance-engagement-detail .tabulator .tabulator-header,
+      html[data-theme="dark"] .performance-engagement-detail .tabulator .tabulator-col,
+      html[data-theme="dark"] .performance-engagement-detail .tabulator .tabulator-col-group,
+      html[data-theme="dark"] .performance-engagement-detail .tabulator .tabulator-group { background: var(--portal-dark-surface-panel); color: var(--portal-dark-text); }
 body.admin-portal-page .performance-engagement-table {
         border-collapse: separate !important;
         border-spacing: 0;
