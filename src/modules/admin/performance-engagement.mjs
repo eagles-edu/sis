@@ -123,10 +123,16 @@ function buildRoleRow({
   }
   const emailSentAt = firstDeliveryTime("sentAt")
   const emailDeliveredAt = firstDeliveryTime("deliveredAt")
+  const emailProxyAt = firstDeliveryTime("proxyLoadedAt")
+  const emailFirstAt = firstDeliveryTime("firstOpenedAt")
+  const emailUniqueAt = firstDeliveryTime("uniqueOpenedAt")
   const brevoOpenedAt = firstDeliveryTime("openedAt")
   const brevoClickedAt = firstDeliveryTime("clickedAt")
   const emailDeferredAt = firstDeliveryTime("deferredAt")
-  const emailBouncedAt = firstDeliveryTime("bouncedAt")
+  const emailErrorAt = firstDeliveryTime("errorAt")
+  const emailInvalidAt = firstDeliveryTime("invalidAt")
+  const emailSoftBouncedAt = firstDeliveryTime("softBouncedAt")
+  const emailHardBouncedAt = firstDeliveryTime("hardBouncedAt") || firstDeliveryTime("bouncedAt")
   const emailBlockedAt = firstDeliveryTime("blockedAt")
   const emailComplainedAt = firstDeliveryTime("complainedAt")
   const emailUnsubscribedAt = firstDeliveryTime("unsubscribedAt")
@@ -173,22 +179,36 @@ function buildRoleRow({
     englishName,
     level,
     sentOkReturned,
+    emailQueued: recipientDeliveries.length ? "yes" : "",
+    emailQueuedAt: firstDeliveryTime("queuedAt"),
     emailSent: emailSentAt ? "yes" : (sentOkReturned === "yes" ? "yes" : ""),
     emailDelivered: emailDeliveredAt ? "yes" : "",
+    emailProxy: emailProxyAt ? "yes" : "",
+    emailFirst: emailFirstAt ? "yes" : "",
+    emailUnique: emailUniqueAt ? "yes" : "",
     emailOpened: brevoOpenedAt || localEmailOpenedAt ? "yes" : "",
     emailClicked: brevoClickedAt ? "yes" : "",
     emailDeferred: emailDeferredAt ? "yes" : "",
-    emailBounced: emailBouncedAt ? "yes" : "",
+    emailError: emailErrorAt ? "yes" : "",
+    emailInvalid: emailInvalidAt ? "yes" : "",
     emailBlocked: emailBlockedAt ? "yes" : "",
+    emailSoft: emailSoftBouncedAt ? "yes" : "",
+    emailHard: emailHardBouncedAt ? "yes" : "",
     emailComplained: emailComplainedAt ? "yes" : "",
     emailUnsubscribed: emailUnsubscribedAt ? "yes" : "",
     emailSentAt,
     emailDeliveredAt,
+    emailProxyAt,
+    emailFirstAt,
+    emailUniqueAt,
     emailOpenedAt: brevoOpenedAt || localEmailOpenedAt,
     emailClickedAt: brevoClickedAt,
     emailDeferredAt,
-    emailBouncedAt,
+    emailErrorAt,
+    emailInvalidAt,
     emailBlockedAt,
+    emailSoftAt: emailSoftBouncedAt,
+    emailHardAt: emailHardBouncedAt,
     emailComplainedAt,
     emailUnsubscribedAt,
     linkClicked: linkClickedAt ? "yes" : "",

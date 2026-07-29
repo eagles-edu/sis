@@ -31,6 +31,7 @@ test("Brevo webhook rejects unauthenticated requests and idempotently updates de
       recipientEmail,
       subject: "Webhook test",
       status: "sent",
+      queuedAt: new Date(),
       sentAt: new Date(),
     },
   })
@@ -76,7 +77,42 @@ test("Brevo webhook rejects unauthenticated requests and idempotently updates de
     })
     assert.equal(delivery?.status, "delivered")
     assert.ok(delivery?.deliveredAt)
-    assert.equal(await prisma.brevoEmailWebhookEvent.count({ where: { providerMessageId: messageId } }), 1)
+    assert.ok(delivery?.queuedAt)
+
+    const timeline = [
+      ["loaded_by_proxy", "proxyLoadedAt"],
+      ["first_opening", "firstOpenedAt"],
+      ["unique_opened", "uniqueOpenedAt"],
+      ["opened", "openedAt"],
+      ["clicked", "clickedAt"],
+      ["deferred", "deferredAt"],
+      ["error", "errorAt"],
+      ["invalid", "invalidAt"],
+      ["blocked", "blockedAt"],
+      ["soft_bounced", "softBouncedAt"],
+      ["hard_bounced", "hardBouncedAt"],
+      ["complaint", "complainedAt"],
+      ["unsubscribed", "unsubscribedAt"],
+    ]
+    for (const [event, field] of timeline) {
+      const response = await fetch(`${origin}${webhookPath}`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: "Bearer test-webhook-secret" },
+        body: JSON.stringify({
+          event,
+          "message-id": messageId,
+          email: recipientEmail,
+          ts: Math.floor(Date.now() / 1000) + timeline.indexOf(timeline.find((entry) => entry[0] === event)),
+          subject: "Webhook test",
+        }),
+      })
+      assert.equal(response.status, 200)
+      const updated = await prisma.brevoEmailDelivery.findUnique({
+        where: { providerMessageId_recipientEmail: { providerMessageId: messageId, recipientEmail } },
+      })
+      assert.ok(updated?.[field], `${event} should set ${field}`)
+    }
+    assert.equal(await prisma.brevoEmailWebhookEvent.count({ where: { providerMessageId: messageId } }), timeline.length + 1)
   } finally {
     await prisma.brevoEmailWebhookEvent.deleteMany({ where: { providerMessageId: messageId } })
     await prisma.brevoEmailDelivery.deleteMany({ where: { providerMessageId: messageId } })

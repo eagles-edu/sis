@@ -27,10 +27,16 @@ function eventKey(payload, eventType, messageId, recipientEmail, occurredAt) {
 function eventStatus(eventType) {
   const event = normalizeLower(eventType).replace(/[\s-]+/gu, "_")
   if (event === "delivered") return "delivered"
-  if (event === "opened" || event === "first_opening" || event === "firstopening" || event === "unique_opened" || event === "uniqueopened" || event === "proxy_open" || event === "proxyopen" || event === "unique_proxy_open" || event === "uniqueproxyopen") return "opened"
+  if (event === "loaded_by_proxy" || event === "loadedbyproxy" || event === "proxy_open" || event === "proxyopen" || event === "unique_proxy_open" || event === "uniqueproxyopen") return "proxy_loaded"
+  if (event === "first_opening" || event === "firstopening") return "first_opened"
+  if (event === "unique_opened" || event === "uniqueopened") return "unique_opened"
+  if (event === "opened") return "opened"
   if (event === "click" || event === "clicked" || event === "unique_clicked") return "clicked"
-  if (event === "hard_bounce" || event === "hardbounce" || event === "soft_bounce" || event === "softbounce" || event === "bounced") return "bounced"
-  if (event === "blocked" || event === "invalid" || event === "invalid_email" || event === "invalidemail" || event === "error") return "blocked"
+  if (event === "soft_bounce" || event === "softbounce" || event === "soft_bounced" || event === "softbounced") return "soft_bounced"
+  if (event === "hard_bounce" || event === "hardbounce" || event === "hard_bounced" || event === "hardbounced" || event === "bounced") return "hard_bounced"
+  if (event === "error") return "error"
+  if (event === "invalid" || event === "invalid_email" || event === "invalidemail") return "invalid"
+  if (event === "blocked") return "blocked"
   if (event === "deferred") return "deferred"
   if (event === "complaint" || event === "spam") return "complained"
   if (event === "unsubscribed") return "unsubscribed"
@@ -39,11 +45,17 @@ function eventStatus(eventType) {
 }
 
 function statusTimestampField(status) {
+  if (status === "proxy_loaded") return "proxyLoadedAt"
+  if (status === "first_opened") return "firstOpenedAt"
+  if (status === "unique_opened") return "uniqueOpenedAt"
   if (status === "delivered") return "deliveredAt"
   if (status === "opened") return "openedAt"
   if (status === "clicked") return "clickedAt"
   if (status === "deferred") return "deferredAt"
-  if (status === "bounced") return "bouncedAt"
+  if (status === "soft_bounced") return "softBouncedAt"
+  if (status === "hard_bounced") return "hardBouncedAt"
+  if (status === "error") return "errorAt"
+  if (status === "invalid") return "invalidAt"
   if (status === "blocked") return "blockedAt"
   if (status === "complained") return "complainedAt"
   if (status === "unsubscribed") return "unsubscribedAt"
@@ -94,6 +106,7 @@ export async function recordBrevoEmailDelivery(payload = {}) {
       queueType: normalizeText(payload.queueType) || null,
       subject: normalizeText(payload.subject) || null,
       status: "sent",
+      queuedAt: new Date(),
       sentAt: new Date(),
       metadataJson: payload.metadata && typeof payload.metadata === "object" ? payload.metadata : null,
     },
@@ -117,7 +130,8 @@ export async function processBrevoWebhookEvent(payload = {}) {
   const eventType = normalizeLower(payload.event || payload.eventType || payload.type)
   const messageId = normalizeText(payload["message-id"] || payload.messageId || payload.message_id)
   const recipientEmail = normalizeLower(payload.email || payload.recipient)
-  const occurredAt = eventDate(payload.ts_event ? Number(payload.ts_event) * 1000 : payload.date || payload.timestamp)
+  const timestamp = payload.ts_event || payload.ts
+  const occurredAt = eventDate(timestamp ? Number(timestamp) * 1000 : payload.date || payload.timestamp)
   if (!eventType) throw Object.assign(new Error("Brevo webhook event is required"), { statusCode: 400 })
   if (!messageId) throw Object.assign(new Error("Brevo webhook message-id is required"), { statusCode: 400 })
 

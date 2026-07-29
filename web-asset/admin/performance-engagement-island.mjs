@@ -2,7 +2,7 @@
 // Performance-engagement code is route-owned and must not return to the critical admin bundle.
 import { clearEngagementMatrix, renderEngagementMatrix } from "/web-asset/admin/engagement-matrix.mjs"
 
-export function initPerformanceEngagementIsland({ document, state, api, helpers = {} }) {
+export function initPerformanceEngagementIsland({ document, state, api, helpers = {}, onError }) {
   const {
     normalizeText, normalizeLower, compareTableText, compareTableIsoDate,
     applySortDirection, rowWeekNumber, escapeHtml,
@@ -11,6 +11,24 @@ export function initPerformanceEngagementIsland({ document, state, api, helpers 
     const dateText = normalizeText(date) || "Unknown day";
     return weekNumber ? `${dateText} | Week ${weekNumber}` : dateText;
   });
+let matrixVersion = 0;
+let matrixRender = Promise.resolve();
+
+function queueMatrixRender(rowsEl, rows) {
+  const version = ++matrixVersion;
+  matrixRender = matrixRender
+    .catch(() => {})
+    .then(async () => {
+      if (version !== matrixVersion) return;
+      if (!rows.length) {
+        clearEngagementMatrix(rowsEl);
+        rowsEl.textContent = "No engagement rows for the selected class day.";
+        return;
+      }
+      await renderEngagementMatrix(rowsEl, rows, { groupBy: "reportGroup" });
+    });
+  matrixRender.catch((error) => onError?.(error));
+}
 function normalizePerformanceEngagementSortField(field = "") {
   const normalized = normalizeText(field);
   if (
@@ -262,16 +280,11 @@ function renderPerformanceEngagementRows() {
   summaryEl.textContent = engagementRows.length
     ? `${engagementRows.length} report groups | ${engagementRows.reduce((sum, entry) => sum + entry.rows.length, 0)} tracked rows`
     : "No engagement rows matched this day and search.";
-  if (!engagementRows.length) {
-    clearEngagementMatrix(rowsEl);
-    rowsEl.textContent = "No engagement rows for the selected class day.";
-    return;
-  }
   const rows = engagementRows.flatMap((group) => group.rows.map((row) => ({
     ...row,
     reportGroup: group.reportId || `${group.classDate}|${group.className}`,
   })));
-  void renderEngagementMatrix(rowsEl, rows, { groupBy: "reportGroup" });
+  queueMatrixRender(rowsEl, rows);
 }
 
 function renderPerformanceEngagementPage() {
@@ -412,6 +425,14 @@ function updatePerformanceEngagementSortIndicators() {
     });
 }
 
+const root = document.querySelector('.page-section[data-page="performance-engagement"]')
+const dayListToggle = root?.querySelector("#performanceEngagementDayToggleBtn")
+const engagementGrid = root?.querySelector(".performance-engagement-grid")
+dayListToggle?.addEventListener("click", () => {
+  const collapsed = engagementGrid?.classList.toggle("is-day-list-collapsed") || false
+  dayListToggle.setAttribute("aria-expanded", collapsed ? "false" : "true")
+  dayListToggle.textContent = collapsed ? "Show class days" : "Hide class days"
+})
 
 
   return {

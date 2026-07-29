@@ -1,6 +1,6 @@
 {
-  "status": "warn",
-  "checkedAt": "2026-07-29T17:15:00.724Z",
+  "status": "error",
+  "checkedAt": "2026-07-29T21:30:29.102Z",
   "thresholds": {
     "backupStaleMinutes": 1560,
     "maxQueryLatencyMs": 500,
@@ -8,10 +8,10 @@
     "maxOrphanCount": 0
   },
   "db": {
-    "status": "ok",
-    "connected": true,
-    "queryLatencyMs": 77,
-    "error": ""
+    "status": "error",
+    "connected": false,
+    "queryLatencyMs": null,
+    "error": "Invalid `prisma.$queryRaw()` invocation:\n\n\nRaw query failed. Code: `N/A`. Message: `Can't reach database server at 127.0.0.1:5432`"
   },
   "backup": {
     "status": "warn",
@@ -27,8 +27,8 @@
     "queuedCount": 0,
     "temporaryCount": 0,
     "unmatchedCount": 0,
-    "latestVacuumReportPath": "/home/eagles/dockerz/sis/runtime-data/maintenance-reports/incoming-vacuum-20260728-201702Z.json",
-    "lastIncomingVacuumAt": "2026-07-28T20:17:01.814Z",
+    "latestVacuumReportPath": "/home/eagles/dockerz/sis/runtime-data/maintenance-reports/incoming-vacuum-20260729-201700Z.json",
+    "lastIncomingVacuumAt": "2026-07-29T20:17:00.471Z",
     "manualReviewCount": 0
   },
   "orphans": {

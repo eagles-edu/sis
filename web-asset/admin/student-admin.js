@@ -9557,6 +9557,7 @@
           [
             "attendance-admin",
             "assignments-data",
+            "assignment-engagement",
             "grades-data",
             "performance-data",
           ].forEach((slug) => {
@@ -10454,7 +10455,9 @@
         let slug = normalizePageSlug(pageSlug);
         if (!isPageAllowedForCurrentRole(slug)) slug = roleStartPage();
         state.activePage = slug;
-        document.dispatchEvent(new CustomEvent("sis-admin-page-activated", { detail: { page: slug } }));
+        // Assignment engagement is intentionally lazy. Insert its page before
+        // notifying route-owned islands, otherwise a direct page load can race
+        // the activation listener against the missing template DOM.
         ensureAssignmentEngagementPageLoaded(slug);
         if (slug !== "news-reports") closeNewsReviewViewer();
 
@@ -10467,6 +10470,10 @@
           if (linkEl.dataset.pageLink === slug) linkEl.classList.add("active");
           else linkEl.classList.remove("active");
         });
+
+        document.dispatchEvent(new CustomEvent("sis-admin-page-activated", {
+          detail: { page: slug },
+        }));
 
         updateMenuExpansion(pageGroupForSlug(slug));
         const gridMain = document.querySelector(".grid-main");

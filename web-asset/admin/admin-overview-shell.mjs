@@ -6,7 +6,11 @@
 
 const apiOrigin = String(window.__SIS_ADMIN_API_ORIGIN__ || "").trim();
 const apiPrefix = String(window.__SIS_ADMIN_API_PREFIX__ || "/api/admin").trim() || "/api/admin";
-const initialPageSlug = String(window.__SIS_ADMIN_PAGE_SLUG__ || "overview").trim().toLowerCase();
+// The server publishes __SIS_ADMIN_PAGE_SLUG (without a trailing pair of
+// underscores). Keep the older spelling as a compatibility fallback.
+const initialPageSlug = String(
+  window.__SIS_ADMIN_PAGE_SLUG || window.__SIS_ADMIN_PAGE_SLUG__ || "overview",
+).trim().toLowerCase();
 
 function apiUrl(path) {
   const suffix = String(path || "").startsWith("/") ? String(path) : `/${path}`;

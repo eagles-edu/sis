@@ -442,12 +442,20 @@ model BrevoEmailDelivery {
   queueType           String?
   subject             String?
   status              String   @default("sent")
+  queuedAt            DateTime?
   sentAt              DateTime?
   deliveredAt         DateTime?
+  proxyLoadedAt       DateTime?
+  firstOpenedAt       DateTime?
+  uniqueOpenedAt      DateTime?
   openedAt            DateTime?
   clickedAt           DateTime?
   deferredAt          DateTime?
+  errorAt             DateTime?
+  invalidAt           DateTime?
   bouncedAt           DateTime?
+  softBouncedAt       DateTime?
+  hardBouncedAt       DateTime?
   blockedAt           DateTime?
   complainedAt        DateTime?
   unsubscribedAt      DateTime?

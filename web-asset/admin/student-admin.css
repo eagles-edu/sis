@@ -2763,6 +2763,19 @@ body {
         align-items: start;
         margin-top: 10px;
       }
+      .engagement-layout-controls {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 10px;
+      }
+      .performance-engagement-grid.is-day-list-collapsed,
+      .assignment-engagement-grid.is-day-list-collapsed {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .performance-engagement-grid.is-day-list-collapsed > .performance-engagement-home,
+      .assignment-engagement-grid.is-day-list-collapsed > .performance-engagement-home {
+        display: none;
+      }
       .performance-engagement-home,
       .performance-engagement-detail {
         box-sizing: border-box;
@@ -2841,17 +2854,34 @@ body {
         color: var(--portal-text);
         font-weight: 700;
       }
+      .engagement-matrix-controls {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .engagement-matrix-column-toggle[aria-pressed="false"] {
+        opacity: .64;
+      }
+      .engagement-matrix-table-host {
+        min-width: max-content;
+      }
       .engagement-matrix-mark {
         align-items: center;
         border-radius: 999px;
         display: inline-flex;
-        font-size: 14px;
+        font-size: 11px;
         font-weight: 800;
         height: 24px;
         justify-content: center;
-        width: 24px;
+        min-width: 74px;
+        padding: 0 5px;
       }
-      .engagement-matrix-mark.is-set { background: var(--portal-color-b0e4f2e1c7); color: var(--portal-ods-accent-border); }
+      .engagement-matrix-mark.is-set.is-positive { background: var(--portal-ods-accent-good-bg); color: var(--portal-ods-accent-good-text); }
+      .engagement-matrix-mark.is-set.is-deferred { background: #e9d5ff; color: #581c87; }
+      .engagement-matrix-mark.is-set.is-negative { background: var(--portal-ods-accent-bad-bg); color: var(--portal-ods-accent-bad-text); }
+      .engagement-matrix-mark.is-set.is-interaction { background: var(--portal-color-b0e4f2e1c7); color: var(--portal-ods-accent-border); }
       .engagement-matrix-mark.is-empty { color: var(--portal-muted-text); }
       html[data-theme="dark"] .performance-engagement-detail .tabulator,
       html[data-theme="dark"] .performance-engagement-detail .tabulator .tabulator-row { background: var(--portal-dark-surface-card); color: var(--portal-dark-text); }

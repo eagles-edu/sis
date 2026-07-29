@@ -16,6 +16,24 @@ export function initAssignmentEngagementIsland({ document, state, api, helpers, 
     rowWeekNumber,
     updateTableHeaderSortIndicators,
   } = helpers
+  let matrixVersion = 0
+  let matrixRender = Promise.resolve()
+
+  function queueMatrixRender(rowsEl, rows) {
+    const version = ++matrixVersion
+    matrixRender = matrixRender
+      .catch(() => {})
+      .then(async () => {
+        if (version !== matrixVersion) return
+        if (!rows.length) {
+          clearEngagementMatrix(rowsEl)
+          rowsEl.textContent = "No assignment engagement records match the current search."
+          return
+        }
+        await renderEngagementMatrix(rowsEl, rows.map(metric), { groupBy: "groupKey" })
+      })
+    matrixRender.catch(onError)
+  }
 
   const searchText = (row = {}) => [
     row.dispatch?.assignmentTemplateId,
@@ -100,22 +118,36 @@ export function initAssignmentEngagementIsland({ document, state, api, helpers, 
       familyId: normalizeText(dispatch.familyId),
       englishName: normalizeText(dispatch.englishName),
       level: normalizeText(dispatch.level),
+      emailQueued: brevo.queuedAt || row.queuedAt ? "yes" : "",
+      emailQueuedAt: brevo.queuedAt || row.queuedAt || "",
       emailSent: brevo.sentAt || row.sentAt ? "yes" : status === "sent" ? "yes" : "",
       emailDelivered: brevo.deliveredAt || row.deliveredAt ? "yes" : "",
+      emailProxy: brevo.proxyLoadedAt ? "yes" : "",
+      emailFirst: brevo.firstOpenedAt ? "yes" : "",
+      emailUnique: brevo.uniqueOpenedAt ? "yes" : "",
       emailOpened: brevo.openedAt || row.openedAt ? "yes" : "",
       emailClicked: brevo.clickedAt ? "yes" : "",
       emailDeferred: brevo.deferredAt ? "yes" : "",
-      emailBounced: brevo.bouncedAt || status === "failed" ? "yes" : "",
+      emailError: brevo.errorAt ? "yes" : "",
+      emailInvalid: brevo.invalidAt ? "yes" : "",
       emailBlocked: brevo.blockedAt ? "yes" : "",
+      emailSoft: brevo.softBouncedAt ? "yes" : "",
+      emailHard: brevo.hardBouncedAt || status === "failed" ? "yes" : "",
       emailComplained: brevo.complainedAt ? "yes" : "",
       emailUnsubscribed: brevo.unsubscribedAt ? "yes" : "",
       emailSentAt: brevo.sentAt || row.sentAt || "",
       emailDeliveredAt: brevo.deliveredAt || row.deliveredAt || "",
+      emailProxyAt: brevo.proxyLoadedAt || "",
+      emailFirstAt: brevo.firstOpenedAt || "",
+      emailUniqueAt: brevo.uniqueOpenedAt || "",
       emailOpenedAt: brevo.openedAt || row.openedAt || "",
       emailClickedAt: brevo.clickedAt || "",
       emailDeferredAt: brevo.deferredAt || "",
-      emailBouncedAt: brevo.bouncedAt || "",
+      emailErrorAt: brevo.errorAt || "",
+      emailInvalidAt: brevo.invalidAt || "",
       emailBlockedAt: brevo.blockedAt || "",
+      emailSoftAt: brevo.softBouncedAt || "",
+      emailHardAt: brevo.hardBouncedAt || "",
       emailComplainedAt: brevo.complainedAt || "",
       emailUnsubscribedAt: brevo.unsubscribedAt || "",
       linkClicked: row.clickedAt ? "yes" : "",
@@ -165,8 +197,7 @@ export function initAssignmentEngagementIsland({ document, state, api, helpers, 
     const clicked = allRows.filter((row) => row.clickedAt).length
     summaryEl.textContent = `${rows.length}/${allRows.length} shown | sent ${sent} | opened ${opened} | clicked ${clicked}`
     if (tableSummaryEl) tableSummaryEl.textContent = `${rows.length} recipient${rows.length === 1 ? "" : "s"} in the selected reminder group.`
-    if (!rows.length) { clearEngagementMatrix(rowsEl); rowsEl.textContent = "No assignment engagement records match the current search."; return }
-    void renderEngagementMatrix(rowsEl, rows.map(metric), { groupBy: "groupKey" })
+    queueMatrixRender(rowsEl, rows)
   }
 
   async function load({ force = false } = {}) {
@@ -187,6 +218,13 @@ export function initAssignmentEngagementIsland({ document, state, api, helpers, 
   }
 
   const root = document.querySelector('.page-section[data-page="assignment-engagement"]')
+  const dayListToggle = root?.querySelector("#assignmentEngagementDayToggleBtn")
+  const engagementGrid = root?.querySelector(".assignment-engagement-grid")
+  dayListToggle?.addEventListener("click", () => {
+    const collapsed = engagementGrid?.classList.toggle("is-day-list-collapsed") || false
+    dayListToggle.setAttribute("aria-expanded", collapsed ? "false" : "true")
+    dayListToggle.textContent = collapsed ? "Show class days" : "Hide class days"
+  })
   root?.querySelector("#assignmentEngagementReloadBtn")?.addEventListener("click", () => load({ force: true }))
   root?.querySelector("#assignmentEngagementSearch")?.addEventListener("input", (event) => { state.assignmentEngagement.search = normalizeText(event.target.value); render() })
   root?.querySelector("#assignmentEngagementAudienceFilter")?.addEventListener("change", (event) => { state.assignmentEngagement.audience = normalizeText(event.target.value); render() })
