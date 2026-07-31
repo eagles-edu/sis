@@ -1,13 +1,38 @@
 const tableByElement = new WeakMap()
 const tableReadyByElement = new WeakMap()
+// SIVB = Sticky ID Viewport Beacon. This is the contract shared by all
+// engagement pages: ID text floats at the viewport centre over its matrix row
+// while the event columns scroll underneath it.
+export const ENGAGEMENT_IDENTITY_BLOCK_CONTRACT = "SIVB"
 const columnGroups = [
-  { label: "Recipient", fields: ["reviewed", "id", "familyId", "englishName", "level", "emailUsed", "batchId", "queueType", "providerMessageId"] },
+  { label: "Recipient", fields: ["reviewed", "id", "familyId", "englishName", "level", "emailUsed", "parentName", "parentEmail", "learners", "profileComplete", "invitationStatus", "batchId", "queueType", "providerMessageId"] },
   { label: "Positive events", fields: ["emailQueued", "emailSent", "emailDelivered", "emailProxy", "emailFirst", "emailUnique", "emailOpened", "emailClicked"] },
   { label: "Deferred", fields: ["emailDeferred"] },
   { label: "Negative events", fields: ["emailError", "emailInvalid", "emailBlocked", "emailSoft", "emailHard", "emailComplained", "emailUnsubscribed"] },
   { label: "SIS interaction", fields: ["linkClicked", "pdfDownloaded", "acknowledged", "actionCompleted"] },
 ]
 let tabulatorPromise
+
+function normalizeGroupText(value, fallback = "Unassigned") {
+  const text = value === undefined || value === null ? "" : String(value).trim()
+  return text || fallback
+}
+
+export function formatEngagementGroupKey({ level, week, date, familyId, studentId, parentId, event }) {
+  const weekText = normalizeGroupText(week, "-")
+  return `${normalizeGroupText(level)}: week ${weekText} | ${normalizeGroupText(date, "unknown")} | ${normalizeGroupText(familyId)}: ${normalizeGroupText(studentId)} / ${normalizeGroupText(parentId)} | ${normalizeGroupText(event, "event")}`
+}
+
+export function formatEngagementGroupLabel(fields, count) {
+  const countNumber = Number(count) || 0
+  return `${formatEngagementGroupKey(fields)} | ${countNumber} recipient${countNumber === 1 ? "" : "s"}`
+}
+
+export function formatEngagementGroupHeader(value, count) {
+  const label = String(value || "Unassigned")
+  const countNumber = Number(count) || 0
+  return `${label} | ${countNumber} recipient${countNumber === 1 ? "" : "s"}`
+}
 
 async function getTabulator() {
   if (globalThis.Tabulator) return globalThis.Tabulator
@@ -56,20 +81,40 @@ function eventColumn(title, field, tone) {
   return { title, field, width: 92, hozAlign: "center", formatter: (cell) => markFormatter(cell, tone) }
 }
 
-function columns() {
+function completionFormatter(cell) {
+  const value = String(cell.getValue() || "no").toLowerCase() === "yes" ? "yes" : "no"
+  return `<span class="engagement-matrix-completion is-${value}">${value}</span>`
+}
+
+function columns({ profileMode = false } = {}) {
+  const recipientColumns = profileMode
+    ? [
+        { title: "Name", field: "englishName", width: 180 },
+        { title: "ParentID", field: "id", width: 125, hozAlign: "center", headerHozAlign: "center" },
+        { title: "FamilyID", field: "familyId", width: 120 },
+        { title: "Level", field: "level", width: 125 },
+        { title: "Complete", field: "profileComplete", width: 135, hozAlign: "center", formatter: completionFormatter },
+        { title: "Email", field: "emailUsed", minWidth: 220, widthGrow: 2 },
+      ]
+    : [
+        { title: "Role", field: "reviewed", width: 90 },
+        { title: "EaglesID", field: "id", width: 105, hozAlign: "center", headerHozAlign: "center" },
+        { title: "FamilyID", field: "familyId", width: 120 },
+        { title: "Name", field: "englishName", minWidth: 150, widthGrow: 2 },
+        { title: "Level", field: "level", width: 125 },
+        { title: "Email", field: "emailUsed", minWidth: 210, widthGrow: 2 },
+        { title: "Parent", field: "parentName", minWidth: 170 },
+        { title: "Contact", field: "parentEmail", minWidth: 210 },
+        { title: "Learners", field: "learners", minWidth: 220 },
+        { title: "Complete", field: "profileComplete", width: 135 },
+        { title: "Invite", field: "invitationStatus", width: 115 },
+        { title: "BatchID", field: "batchId", minWidth: 145 },
+        { title: "Queue", field: "queueType", width: 115 },
+        { title: "MessageID", field: "providerMessageId", minWidth: 190 },
+      ]
   return [
-    { title: "Recipient", columns: [
-      { title: "Role", field: "reviewed", width: 90 },
-      { title: "Eagles ID", field: "id", width: 105 },
-      { title: "Family ID", field: "familyId", width: 120 },
-      { title: "Name", field: "englishName", minWidth: 150, widthGrow: 2 },
-      { title: "Level", field: "level", width: 125 },
-      { title: "Email", field: "emailUsed", minWidth: 210, widthGrow: 2 },
-      { title: "Batch ID", field: "batchId", minWidth: 145 },
-      { title: "Queue", field: "queueType", width: 115 },
-      { title: "Message ID", field: "providerMessageId", minWidth: 190 },
-    ] },
-    { title: "Positive events", columns: [
+    { title: "Recipient", columns: recipientColumns },
+    { title: "Positive", columns: [
       eventColumn("Queued", "emailQueued", "positive"),
       eventColumn("Sent", "emailSent", "positive"),
       eventColumn("Delivered", "emailDelivered", "positive"),
@@ -82,7 +127,7 @@ function columns() {
     { title: "Deferred", columns: [
       eventColumn("Deferred", "emailDeferred", "deferred"),
     ] },
-    { title: "Negative events", columns: [
+    { title: "Negative", columns: [
       eventColumn("Error", "emailError", "negative"),
       eventColumn("Invalid", "emailInvalid", "negative"),
       eventColumn("Blocked", "emailBlocked", "negative"),
@@ -91,13 +136,36 @@ function columns() {
       eventColumn("Complaint", "emailComplained", "negative"),
       eventColumn("Unsubscribed", "emailUnsubscribed", "negative"),
     ] },
-    { title: "SIS interaction", columns: [
-      eventColumn("Link clicked", "linkClicked", "interaction"),
-      eventColumn("PDF downloaded", "pdfDownloaded", "interaction"),
-      eventColumn("Acknowledged", "acknowledged", "interaction"),
-      eventColumn("Action completed", "actionCompleted", "interaction"),
+    { title: "Interaction", columns: [
+      eventColumn("Link", "linkClicked", "interaction"),
+      eventColumn("PDF", "pdfDownloaded", "interaction"),
+      eventColumn("Ack", "acknowledged", "interaction"),
+      eventColumn("Action", "actionCompleted", "interaction"),
     ] },
   ]
+}
+
+function positionSivbBeacon(tableHost) {
+  const holder = tableHost.querySelector(".tabulator-tableholder")
+  const idCell = tableHost.querySelector('.tabulator-cell[tabulator-field="id"]')
+  if (!holder || !idCell) return
+  const holderLeft = holder.getBoundingClientRect().left
+  const idWidth = idCell.getBoundingClientRect().width
+  const left = Math.max(0, (window.innerWidth - idWidth) / 2 - holderLeft)
+  tableHost.style.setProperty("--sivb-id-anchor-left", `${left}px`)
+}
+
+function bindSivbBeacon(tableHost) {
+  const update = () => positionSivbBeacon(tableHost)
+  if (typeof ResizeObserver === "function") {
+    const observer = new ResizeObserver(update)
+    observer.observe(tableHost)
+  }
+  window.addEventListener("resize", update)
+  if (typeof requestAnimationFrame === "function") requestAnimationFrame(update)
+  else update()
+  // Tabulator fires tableBuilt before the first rows/cells are attached.
+  setTimeout(update, 0)
 }
 
 function createMatrixControls(element) {
@@ -127,10 +195,27 @@ function createMatrixControls(element) {
   return { controls, buttons, reset }
 }
 
+function findMatrixColumn(table, field) {
+  const visit = (column) => {
+    if (!column) return null
+    if (column.getField?.() === field) return column
+    for (const child of column.getSubColumns?.() || []) {
+      const match = visit(child)
+      if (match) return match
+    }
+    return null
+  }
+  for (const column of table.getColumns?.(true) || table.getColumns?.() || []) {
+    const match = visit(column)
+    if (match) return match
+  }
+  return null
+}
+
 function bindMatrixControls({ table, buttons, reset }) {
   const setGroupVisibility = (group, visible) => {
     for (const field of group.fields) {
-      const column = table.getColumn(field)
+      const column = findMatrixColumn(table, field)
       if (column) visible ? column.show() : column.hide()
     }
     const button = buttons.get(group.label)
@@ -148,7 +233,7 @@ function bindMatrixControls({ table, buttons, reset }) {
   })
 }
 
-export async function renderEngagementMatrix(element, rows = [], { groupBy = "groupKey" } = {}) {
+export async function renderEngagementMatrix(element, rows = [], { groupBy = "groupKey", initialSort, profileMode = false, groupHeader } = {}) {
   if (!element) return null
   const Tabulator = await getTabulator()
   let table = tableByElement.get(element)
@@ -156,7 +241,8 @@ export async function renderEngagementMatrix(element, rows = [], { groupBy = "gr
     element.replaceChildren()
     const controls = createMatrixControls(element)
     const tableHost = document.createElement("div")
-    tableHost.className = "engagement-matrix-table-host"
+    tableHost.className = `engagement-matrix-table-host${profileMode ? " engagement-matrix-profile" : ""}`
+    tableHost.dataset.engagementIdentityBlock = ENGAGEMENT_IDENTITY_BLOCK_CONTRACT
     element.appendChild(tableHost)
     let markTableReady
     const tableReady = new Promise((resolve) => {
@@ -164,21 +250,25 @@ export async function renderEngagementMatrix(element, rows = [], { groupBy = "gr
     })
     table = new Tabulator(tableHost, {
       data: rows,
-      columns: columns(),
+      columns: columns({ profileMode }),
       layout: "fitData",
       height: "min(68vh, 680px)",
       movableColumns: true,
       groupBy,
       groupStartOpen: true,
-      groupHeader: (value, count) => `${String(value || "Un grouped")} · ${count} recipient${count === 1 ? "" : "s"}`,
+      groupHeader: groupHeader || ((value, count) => `${String(value || "Un grouped")} · ${count} recipient${count === 1 ? "" : "s"}`),
       placeholder: "No engagement rows.",
-      initialSort: [{ column: "id", dir: "asc" }],
-      tableBuilt: markTableReady,
+      initialSort: initialSort || [{ column: "familyId", dir: "asc" }, { column: "id", dir: "asc" }],
+      renderComplete: () => positionSivbBeacon(tableHost),
+      tableBuilt: () => {
+        bindSivbBeacon(tableHost)
+        markTableReady()
+      },
     })
     tableByElement.set(element, table)
     tableReadyByElement.set(element, tableReady)
-    await tableReady
     bindMatrixControls({ table, ...controls })
+    await tableReady
   } else {
     await tableReadyByElement.get(element)
     await table.replaceData(rows)

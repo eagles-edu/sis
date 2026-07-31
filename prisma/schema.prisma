@@ -27,6 +27,7 @@ model Student {
   studentPortalAccount StudentPortalAccount?
   parentProfileSubmissions ParentProfileSubmissionQueue[]
   parentProfileFieldLocks ParentProfileFieldLock[]
+  parentProfileInvitations ParentProfileInvitation[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
 
@@ -307,6 +308,14 @@ model StudentProfile {
   updatedAt                  DateTime @updatedAt
 
   @@index([sourceFormId, createdAt])
+}
+
+model Family {
+  id        String   @id @default(cuid())
+  familyId  String   @unique
+  sequence  Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model StudentIntakeSubmission {
@@ -728,10 +737,12 @@ model ParentPortalAccount {
   parentsId        String   @unique
   email            String?  @unique
   passwordHash     String
+  mustChangePassword Boolean @default(false)
   status           String   @default("active")
   lastLoginAt      DateTime?
   links            ParentPortalStudentLink[]
   profileSubmissions ParentProfileSubmissionQueue[]
+  profileInvitations ParentProfileInvitation[]
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -773,6 +784,32 @@ model ParentProfileSubmissionQueue {
   @@index([status, submittedAt, createdAt])
   @@index([parentAccountId, status, createdAt])
   @@index([studentRefId, status, createdAt])
+}
+
+model ParentProfileInvitation {
+  id                String   @id @default(cuid())
+  tokenHash         String   @unique
+  recipientEmail    String
+  studentRefId      String
+  student            Student  @relation(fields: [studentRefId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  parentAccountId   String?
+  parentAccount     ParentPortalAccount? @relation(fields: [parentAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  status            String   @default("queued")
+  batchId           String?
+  providerMessageId String?
+  queuedAt          DateTime @default(now())
+  sentAt            DateTime?
+  openedAt          DateTime?
+  clickedAt         DateTime?
+  completedAt       DateTime?
+  expiresAt         DateTime
+  lastError         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([studentRefId, status, createdAt])
+  @@index([recipientEmail, status, createdAt])
+  @@index([expiresAt, status])
 }
 
 model ParentProfileFieldLock {

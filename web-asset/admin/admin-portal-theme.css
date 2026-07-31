@@ -4363,12 +4363,23 @@ html[data-theme="dark"] body.admin-portal-page .menu-group.expanded .menu-group-
   color: var(--portal-dark-text);
 }
 body.admin-portal-page .menu-group-links {
-  background: var(--portal-role-data-surface-bg);
+  background: var(--portal-surface-support);
   gap: 6px;
   padding: 10px;
 }
 html[data-theme="dark"] body.admin-portal-page .menu-group-links {
-  background: var(--portal-dark-surface-support);
+  background: var(--portal-surface-panel);
+}
+body:is(.admin-portal-page, .parent-portal-page, .student-portal-page)
+  :where(select, .menu-group-links, .menu-sub-links, .row-options-dropdown, .quick-link-select, [role="listbox"], [role="menu"], .pt-score-legend-popover) {
+  background: var(--portal-surface-support) !important;
+}
+html[data-theme="dark"] body:is(.admin-portal-page, .parent-portal-page, .student-portal-page)
+  :where(select, .menu-group-links, .menu-sub-links, .row-options-dropdown, .quick-link-select, [role="listbox"], [role="menu"], .pt-score-legend-popover) {
+  background: var(--portal-surface-panel) !important;
+}
+body:is(.admin-portal-page, .parent-portal-page, .student-portal-page) .quick-link-select select {
+  background: transparent !important;
 }
 body.admin-portal-page .menu-group-btn::after {
   background: currentColor;

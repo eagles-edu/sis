@@ -46,11 +46,13 @@
         hubPollTimer: null,
         globalTextZoomPercent: 100,
         currentStudent: null,
+        familyIds: [],
         selectedEnrollmentPeriodId: "",
         uiSettingsMeta: null,
         profileFormConfig: null,
         profileActiveTab: "profile",
         profileMode: "info",
+        profileContactType: "mother",
         profileLayoutExpanded: false,
         assignmentTemplates: [],
         exerciseTitles: [],
@@ -646,6 +648,14 @@
         "feverMedicineAllowed",
       ]);
       const PROFILE_LOCKED_FIELD_KEYS = new Set(["eaglesId"]);
+      const PROFILE_NEW_REQUIRED_KEYS = new Set([
+        "eaglesId",
+        "fullNameStudent",
+        "classLevel",
+        "fullNameMother",
+        "emailMa",
+        "mothersPhone",
+      ]);
       const PROFILE_INFO_PRIMARY_ID_SUFFIXES = new Set([
         "studentPhoto",
         "fullName",
@@ -792,6 +802,20 @@
           4,
         ],
         [
+          "familyId",
+          "familyId",
+          "Mã gia đình",
+          "Family ID",
+          "profile",
+          "Thông tin của người học",
+          "text",
+          "fam-0001",
+          "",
+          "familyId",
+          "",
+          4,
+        ],
+        [
           "studentPhone",
           "studentPhone",
           "Số điện thoại của học sinh",
@@ -812,7 +836,7 @@
           "Student email",
           "profile",
           "Thông tin của người học",
-          "text",
+          "email",
           "ten@vidu.com",
           "",
           "studentEmail",
@@ -1681,6 +1705,10 @@
           seenByKey.add(normalized.key);
           fields.push(normalized);
         });
+        const familyField = defaultConfig.fields.find((field) => field.key === "familyId");
+        if (familyField && !seenByKey.has("familyId")) {
+          fields.push({ ...familyField, sequence: nextProfileFieldSequence(fields) });
+        }
         if (!fields.length) return defaultConfig;
         const byDefaultKey = new Map(
           defaultConfig.fields.map((field) => [field.key, field]),
@@ -9418,7 +9446,7 @@
         initialHubProbeMode === "auth" ? "non-loopback-default" : "",
       );
       const PAGE_GROUPS = {
-        students: ["overview", "queue-hub", "profile"],
+        students: ["overview", "queue-hub", "profile", "profile-engagement"],
         tracking: [
           "attendance",
           "attendance-admin",
@@ -9450,6 +9478,7 @@
         "performance-data",
         "performance-engagement",
         "assignment-engagement",
+        "profile-engagement",
         "news-reports",
         "school-setup",
         "settings",
@@ -10361,7 +10390,7 @@
           return performanceEngagementIsland;
         }
         if (!performanceEngagementIslandPromise) {
-          performanceEngagementIslandPromise = import("/web-asset/admin/performance-engagement-island.mjs")
+          performanceEngagementIslandPromise = import("/web-asset/admin/performance-engagement-island.mjs?v=20260801-sivb")
             .then((mod) => {
               performanceEngagementIsland = mod.initPerformanceEngagementIsland({
                 document,
@@ -10401,11 +10430,36 @@
 
       let assignmentEngagementIsland = null;
       let assignmentEngagementIslandPromise = null;
+      let profileEngagementIsland = null;
+      let profileEngagementIslandPromise = null;
+
+      async function ensureProfileEngagementIsland() {
+        if (profileEngagementIsland) return profileEngagementIsland;
+        if (!profileEngagementIslandPromise) {
+          profileEngagementIslandPromise = import("/web-asset/admin/profile-engagement-island.mjs?v=20260801-sivb")
+            .then((mod) => {
+              profileEngagementIsland = mod.initProfileEngagementIsland({ document, api, onError: handleError });
+              return profileEngagementIsland;
+            });
+        }
+        return profileEngagementIslandPromise;
+      }
+
+      function ensureProfileEngagementPageLoaded(slug = "") {
+        if (slug !== "profile-engagement") return;
+        if (document.querySelector('.page-section[data-page="profile-engagement"]')) return;
+        const template = document.getElementById("profile-engagement-page-template");
+        const host = template?.parentElement;
+        if (!(template instanceof HTMLTemplateElement) || !host) return;
+        host.insertBefore(template.content.cloneNode(true), template);
+        template.remove();
+        void ensureProfileEngagementIsland();
+      }
 
       async function ensureAssignmentEngagementIsland() {
         if (assignmentEngagementIsland) return assignmentEngagementIsland;
         if (!assignmentEngagementIslandPromise) {
-          assignmentEngagementIslandPromise = import("/web-asset/admin/assignment-engagement-island.mjs")
+          assignmentEngagementIslandPromise = import("/web-asset/admin/assignment-engagement-island.mjs?v=20260801-sivb")
             .then((mod) => {
               assignmentEngagementIsland = mod.initAssignmentEngagementIsland({
                 document,
@@ -10459,6 +10513,7 @@
         // notifying route-owned islands, otherwise a direct page load can race
         // the activation listener against the missing template DOM.
         ensureAssignmentEngagementPageLoaded(slug);
+        ensureProfileEngagementPageLoaded(slug);
         if (slug !== "news-reports") closeNewsReviewViewer();
 
         document.querySelectorAll(".page-section[data-page]").forEach((sectionEl) => {
@@ -10577,6 +10632,9 @@
         }
         if (slug === "assignment-engagement") {
           loadAssignmentEngagementData({ force: false }).catch(handleError);
+        }
+        if (slug === "profile-engagement") {
+          ensureProfileEngagementIsland().then((island) => island.load()).catch(handleError);
         }
         if (slug === "news-reports") {
           loadNewsReviewQueue({ notify: false }).catch(handleError);
@@ -19077,6 +19135,10 @@
           if (Array.isArray(value)) el.value = normalizeText(value[0]);
           else el.value = value == null ? "" : String(value);
         }
+        if (field === "familyId") {
+          const familySelect = document.getElementById("familyIdExisting");
+          if (familySelect) familySelect.value = state.familyIds.includes(el.value) ? el.value : "";
+        }
       }
 
       function getFormValue(field) {
@@ -19109,6 +19171,18 @@
         return "off";
       }
 
+      function syncProfileContactTypeMarkers() {
+        const isAdultStudent = state.profileContactType === "adult"
+        document.querySelectorAll("[data-adult-student-marker]").forEach((marker) => {
+          marker.hidden = !isAdultStudent
+        })
+        document.querySelectorAll("[data-profile-contact-choice]").forEach((choice) => {
+          const selected = choice.dataset.profileContactChoice === state.profileContactType
+          choice.checked = selected
+          choice.setAttribute("aria-checked", selected ? "true" : "false")
+        })
+      }
+
       function renderProfileFieldControl(field = {}) {
         const wrapper = document.createElement("div");
         wrapper.className = `profile-field card col-${Math.max(1, Math.min(12, Number(field.width || 4)))}`;
@@ -19116,7 +19190,40 @@
         if (field.idSuffix === "schoolName") wrapper.id = "profileSchoolCol";
         const labelText = profileFieldLabel(field);
         const labelEl = document.createElement("label");
-        labelEl.textContent = labelText;
+        const isMotherContactName = field.key === "fullNameMother" || field.idSuffix === "motherName";
+        if (isMotherContactName) {
+          labelEl.appendChild(document.createTextNode("Full name of "));
+          [
+            ["mother", "mother"],
+            ["adult", "adult student"],
+          ].forEach(([value, label]) => {
+            const input = document.createElement("input")
+            input.type = "radio"
+            input.name = "profileContactType"
+            input.value = value
+            input.className = "profile-contact-type-choice"
+            input.dataset.profileContactChoice = value
+            input.checked = state.profileContactType === value
+            input.addEventListener("change", () => {
+              state.profileContactType = value
+              syncProfileContactTypeMarkers()
+            })
+            labelEl.appendChild(input)
+            labelEl.appendChild(document.createTextNode(` ${label} `))
+          })
+        } else {
+          labelEl.textContent = labelText;
+        }
+        if (PROFILE_NEW_REQUIRED_KEYS.has(field.key)) {
+          const required = document.createElement("span");
+          required.className = "profile-required-mark";
+          required.textContent = " *";
+          required.style.color = "#c62828";
+          required.style.fontWeight = "900";
+          required.setAttribute("aria-label", "required");
+          labelEl.appendChild(required);
+          wrapper.classList.add("profile-field-required");
+        }
 
         const controlId = `f_${field.idSuffix}`;
         const inputType = normalizeLower(field.inputType || "text");
@@ -19232,6 +19339,32 @@
           return wrapper;
         }
 
+        if (field.key === "familyId") {
+          const familySelect = document.createElement("select");
+          familySelect.id = "familyIdExisting";
+          familySelect.dataset.surfaceRole = "card";
+          familySelect.innerHTML = '<option value="">New family (auto-generate)</option>';
+          state.familyIds.forEach((familyId) => {
+            const option = document.createElement("option");
+            option.value = familyId;
+            option.textContent = familyId;
+            familySelect.appendChild(option);
+          });
+          const familyInput = document.createElement("input");
+          familyInput.id = controlId;
+          familyInput.type = "text";
+          familyInput.autocomplete = "off";
+          familyInput.placeholder = field.placeholderVi || "fam-0001";
+          familySelect.addEventListener("change", () => {
+            familyInput.value = familySelect.value;
+          });
+          labelEl.htmlFor = controlId;
+          wrapper.appendChild(labelEl);
+          wrapper.appendChild(familySelect);
+          wrapper.appendChild(familyInput);
+          return wrapper;
+        }
+
         const input = document.createElement("input");
         input.id = controlId;
         if (inputType === "level-select") input.type = "text";
@@ -19243,6 +19376,20 @@
         labelEl.htmlFor = controlId;
         wrapper.appendChild(labelEl);
         wrapper.appendChild(input);
+        if (field.key === "emailMa") {
+          const previousInvitationCheckbox = document.getElementById("sendParentCompletionEmail");
+          const inviteLabel = document.createElement("label");
+          inviteLabel.className = "profile-invitation-option";
+          inviteLabel.style.marginTop = "0.45rem";
+          inviteLabel.style.fontWeight = "600";
+          const inviteInput = document.createElement("input");
+          inviteInput.type = "checkbox";
+          inviteInput.id = "sendParentCompletionEmail";
+          inviteInput.checked = previousInvitationCheckbox ? previousInvitationCheckbox.checked : true;
+          inviteLabel.appendChild(inviteInput);
+          inviteLabel.appendChild(document.createTextNode(" Send profile-completion email"));
+          wrapper.appendChild(inviteLabel);
+        }
         return wrapper;
       }
 
@@ -19351,6 +19498,7 @@
 
         populateProfileLevelOptions();
         applyUiSettings();
+        syncProfileContactTypeMarkers();
         syncProfileFieldLayoutEditorMode();
         if (state.profileMode === "edit") {
           setProfileTabStatus(
@@ -19853,12 +20001,37 @@
         profile.normalizedFormPayload = normalizedFormPayload;
         profile.rawFormPayload = rawFormPayload;
 
+        if (!state.currentStudent?.id) {
+          const required = [
+            ["Eagles ID", eaglesId],
+            ["learner full name", profile.fullName],
+            ["class level", profile.currentGrade],
+            ["mother/adult student name", profile.motherName],
+            ["mother/adult student email", profile.motherEmail],
+            ["mother/adult student phone", profile.motherPhone],
+          ].filter(([, value]) => !normalizeText(value)).map(([label]) => label);
+          if (required.length) throw new Error(`Required new-student fields missing: ${required.join(", ")}`);
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeLower(profile.motherEmail))) {
+            throw new Error("mother/adult student email is invalid");
+          }
+        }
+
         return {
           studentNumber: studentNumber || null,
           eaglesId: normalizeText(eaglesId),
           email: normalizeText(email),
+          sendParentCompletionEmail: !state.currentStudent?.id && Boolean(document.getElementById("sendParentCompletionEmail")?.checked),
           profile,
         };
+      }
+
+      async function loadFamilyIds() {
+        const data = await api("/api/admin/family-ids");
+        state.familyIds = Array.isArray(data?.familyIds) ? data.familyIds.map(normalizeText).filter(Boolean) : [];
+        if (state.profileMode === "edit") {
+          renderProfileFormLayout();
+          if (state.currentStudent?.id) fillStudentForm(state.currentStudent);
+        }
       }
 
       async function loadFilters() {
@@ -19930,6 +20103,7 @@
             state.activePage === "attendance-admin",
         });
         await refreshParentTracking({ preserveStudentSelection: true });
+        await loadFamilyIds();
       }
 
       async function loadStudents() {
@@ -20108,6 +20282,9 @@
             body: payload,
           });
           state.currentStudent = result.student;
+          if (result.invitation) {
+            setStatus(`Student saved. Profile-completion email queued for ${result.invitation.recipientEmail}.`);
+          }
         }
 
         await loadFilters();

@@ -469,10 +469,7 @@ body {
           display: none;
         }
       }
-      .profile-edit-shell {
-        display: grid;
-        gap: 8px;
-      }
+      .profile-edit-shell,
       .profile-editor-form {
         display: grid;
         gap: 8px;
@@ -514,13 +511,15 @@ body {
         max-inline-size: none;
         min-inline-size: var(--portal-button-inline);
       }
-      .profile-tab-panel {
+      .profile-tab-panel,
+      .profile-info-panel {
         border-radius: var(--radius-3);
         display: none;
         gap: 12px;
         padding: 12px;
       }
-      .profile-tab-panel.active {
+      .profile-tab-panel.active,
+      .profile-info-panel.active {
         display: grid;
       }
       .profile-info-summary {
@@ -600,16 +599,8 @@ body {
         margin: 0;
         word-break: break-word;
       }
-      .profile-info-panel {
-        border-radius: var(--radius-3);
-        display: none;
-        gap: 12px;
-        padding: 12px;
-      }
-      .profile-info-panel.active {
-        display: grid;
-      }
-      .profile-info-group {
+      .profile-info-group,
+      .profile-field-group {
         display: grid;
         gap: 8px;
       }
@@ -667,14 +658,11 @@ body {
       .profile-info-empty {
         font-weight: 600;
       }
-      .profile-info-empty-note {
+      .profile-info-empty-note,
+      .profile-file-row+.file-caption {
         font-size: 12px;
         line-height: 1.4;
         margin: 0;
-      }
-      .profile-field-group {
-        display: grid;
-        gap: 8px;
       }
       .profile-field-group h3 {
         font-size: 14px;
@@ -754,11 +742,6 @@ body {
         display: grid;
         gap: 8px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .profile-file-row+.file-caption {
-        font-size: 12px;
-        line-height: 1.4;
-        margin: 0;
       }
       .page-section[data-page="profile"] {
         padding: 12px;
@@ -2827,29 +2810,81 @@ body {
         line-height: 1.35;
         margin-top: 3px;
       }
-      .performance-engagement-detail .tabulator {
-        background: var(--portal-surface-card);
+      .engagement-matrix-table-host {
+        --engagement-matrix-shell-bg: var(--portal-surface-panel);
+        --engagement-matrix-header-bg: var(--portal-surface-support);
+        --engagement-matrix-row-bg: var(--portal-surface-card);
+        --engagement-matrix-row-even-bg: var(--portal-surface-support);
+        --engagement-matrix-group-bg: var(--portal-surface-panel);
+        /* Immutable LM/DM table-chip palette: AAA against --secondary-color. */
+        --engagement-chip-positive-bg: #0c5c3d;
+        --engagement-chip-deferred-bg: #3b0764;
+        --engagement-chip-negative-bg: #8f0000;
+        --engagement-chip-interaction-bg: #075985;
+        --engagement-chip-neutral-bg: #334155;
+        /* SIVB needs Tabulator's own tableholder to own horizontal scrolling. */
+        min-width: 0;
+        width: 100%;
+      }
+      .engagement-matrix-table-host.tabulator {
+        background: var(--engagement-matrix-shell-bg);
         border-color: var(--portal-border);
         color: var(--portal-text);
         font-size: 12px;
-        min-width: 1120px;
+        min-width: 0;
+        width: 100%;
       }
-      .performance-engagement-detail .tabulator .tabulator-header,
-      .performance-engagement-detail .tabulator .tabulator-col,
-      .performance-engagement-detail .tabulator .tabulator-col-group {
-        background: var(--portal-surface-support);
+      .engagement-matrix-table-host.tabulator .tabulator-header,
+      .engagement-matrix-table-host.tabulator .tabulator-col,
+      .engagement-matrix-table-host.tabulator .tabulator-col-group {
+        background: var(--engagement-matrix-header-bg);
         border-color: var(--portal-border);
         color: var(--portal-text);
       }
-      .performance-engagement-detail .tabulator .tabulator-col-title { white-space: normal; }
-      .performance-engagement-detail .tabulator .tabulator-row {
-        background: var(--portal-surface-card);
+      .engagement-matrix-table-host.tabulator .tabulator-col-title {
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+      .engagement-matrix-table-host.tabulator .tabulator-row {
+        background: var(--engagement-matrix-row-bg) !important;
         border-color: var(--portal-border);
       }
-      .performance-engagement-detail .tabulator .tabulator-row:hover { background: var(--portal-surface-support); }
-      .performance-engagement-detail .tabulator .tabulator-cell { border-color: var(--portal-border); padding: 8px 7px; }
-      .performance-engagement-detail .tabulator .tabulator-group {
-        background: var(--portal-surface-panel);
+      .engagement-matrix-table-host.tabulator .tabulator-row.tabulator-row-even,
+      .engagement-matrix-table-host.tabulator .tabulator-row.tabulator-row-even .tabulator-cell {
+        background: var(--engagement-matrix-row-even-bg) !important;
+      }
+      .engagement-matrix-table-host.tabulator .tabulator-row:hover,
+      .engagement-matrix-table-host.tabulator .tabulator-row.tabulator-row-even:hover {
+        background: var(--portal-surface-support) !important;
+      }
+      .engagement-matrix-table-host.tabulator .tabulator-cell {
+        background: var(--engagement-matrix-row-bg);
+        border-color: var(--portal-border);
+        padding: 8px 7px;
+      }
+      .engagement-matrix-table-host.tabulator .tabulator-row.tabulator-row-even .tabulator-cell {
+        background: var(--engagement-matrix-row-even-bg);
+      }
+      .engagement-matrix-table-host.tabulator .tabulator-col[tabulator-field="id"],
+      .engagement-matrix-table-host.tabulator .tabulator-cell[tabulator-field="id"] {
+        text-align: center;
+      }
+      .engagement-matrix-table-host.tabulator .tabulator-col[tabulator-field="id"] {
+        font-weight: 800;
+      }
+      .engagement-matrix-table-host.tabulator[data-engagement-identity-block="SIVB"] .tabulator-cell[tabulator-field="id"] {
+        /* SIVB: the ID text is a viewport-centred beacon, not a frozen column. */
+        background: var(--engagement-matrix-row-bg) !important;
+        box-shadow: 0 2px 8px rgba(19, 35, 61, .18);
+        left: var(--sivb-id-anchor-left, 0px);
+        position: sticky;
+        z-index: 6;
+      }
+      .engagement-matrix-table-host.tabulator[data-engagement-identity-block="SIVB"] .tabulator-row.tabulator-row-even .tabulator-cell[tabulator-field="id"] {
+        background: var(--engagement-matrix-row-even-bg) !important;
+      }
+      .engagement-matrix-table-host.tabulator .tabulator-group {
+        background: var(--engagement-matrix-group-bg);
         border-color: var(--portal-border);
         color: var(--portal-text);
         font-weight: 700;
@@ -2864,8 +2899,11 @@ body {
       .engagement-matrix-column-toggle[aria-pressed="false"] {
         opacity: .64;
       }
-      .engagement-matrix-table-host {
-        min-width: max-content;
+      .engagement-matrix-table-host .tabulator-group {
+        background: var(--engagement-matrix-group-bg);
+        border-color: var(--portal-border);
+        box-shadow: 0 2px 8px rgba(19, 35, 61, .18);
+        color: var(--portal-text);
       }
       .engagement-matrix-mark {
         align-items: center;
@@ -2878,17 +2916,74 @@ body {
         min-width: 74px;
         padding: 0 5px;
       }
-      .engagement-matrix-mark.is-set.is-positive { background: var(--portal-ods-accent-good-bg); color: var(--portal-ods-accent-good-text); }
-      .engagement-matrix-mark.is-set.is-deferred { background: #e9d5ff; color: #581c87; }
-      .engagement-matrix-mark.is-set.is-negative { background: var(--portal-ods-accent-bad-bg); color: var(--portal-ods-accent-bad-text); }
-      .engagement-matrix-mark.is-set.is-interaction { background: var(--portal-color-b0e4f2e1c7); color: var(--portal-ods-accent-border); }
+      .engagement-matrix-mark.is-set { color: var(--secondary-color) !important; }
+      .engagement-matrix-mark.is-set.is-positive { background: var(--engagement-chip-positive-bg); }
+      .engagement-matrix-mark.is-set.is-deferred { background: var(--engagement-chip-deferred-bg); }
+      .engagement-matrix-mark.is-set.is-negative { background: var(--engagement-chip-negative-bg); }
+      .engagement-matrix-mark.is-set.is-interaction { background: var(--engagement-chip-interaction-bg); }
       .engagement-matrix-mark.is-empty { color: var(--portal-muted-text); }
-      html[data-theme="dark"] .performance-engagement-detail .tabulator,
-      html[data-theme="dark"] .performance-engagement-detail .tabulator .tabulator-row { background: var(--portal-dark-surface-card); color: var(--portal-dark-text); }
-      html[data-theme="dark"] .performance-engagement-detail .tabulator .tabulator-header,
-      html[data-theme="dark"] .performance-engagement-detail .tabulator .tabulator-col,
-      html[data-theme="dark"] .performance-engagement-detail .tabulator .tabulator-col-group,
-      html[data-theme="dark"] .performance-engagement-detail .tabulator .tabulator-group { background: var(--portal-dark-surface-panel); color: var(--portal-dark-text); }
+      .engagement-matrix-completion {
+        border-radius: 999px;
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 800;
+        min-width: 48px;
+        padding: 3px 8px;
+        text-align: center;
+        text-transform: uppercase;
+      }
+      .engagement-matrix-completion.is-yes { background: var(--engagement-chip-positive-bg); color: var(--secondary-color) !important; }
+      .engagement-matrix-completion.is-no { background: var(--engagement-chip-neutral-bg); color: var(--secondary-color) !important; }
+      .profile-adult-student-marker {
+        background: #ff7f00;
+        border: 2px solid #ff7f00;
+        border-radius: 4px;
+        color: #000;
+        display: inline-block;
+        font-size: .78em;
+        font-weight: 950;
+        letter-spacing: .08em;
+        margin-left: .45rem;
+        padding: .12rem .42rem;
+        text-transform: uppercase;
+      }
+      .profile-adult-student-marker[hidden] { display: none; }
+      .profile-contact-type-choice { font-weight: 800; margin: 0 .18rem; }
+      html[data-theme="dark"] .engagement-matrix-table-host {
+        --engagement-matrix-shell-bg: var(--portal-dark-surface-panel);
+        --engagement-matrix-header-bg: var(--portal-dark-surface-support);
+        --engagement-matrix-row-bg: var(--portal-dark-surface-card);
+        --engagement-matrix-row-even-bg: var(--portal-dark-surface-support);
+        --engagement-matrix-group-bg: var(--portal-dark-surface-panel);
+      }
+      html[data-theme="dark"] .engagement-matrix-table-host.tabulator,
+      html[data-theme="dark"] .engagement-matrix-table-host.tabulator .tabulator-tableholder,
+      html[data-theme="dark"] .engagement-matrix-table-host.tabulator .tabulator-table {
+        background: var(--engagement-matrix-shell-bg) !important;
+        border-color: var(--portal-border) !important;
+        color: var(--portal-dark-text) !important;
+      }
+      html[data-theme="dark"] .engagement-matrix-table-host.tabulator .tabulator-row,
+      html[data-theme="dark"] .engagement-matrix-table-host.tabulator .tabulator-cell {
+        background: var(--engagement-matrix-row-bg) !important;
+        border-color: var(--portal-border) !important;
+        color: var(--portal-dark-text) !important;
+      }
+      html[data-theme="dark"] .engagement-matrix-table-host.tabulator .tabulator-row.tabulator-row-even,
+      html[data-theme="dark"] .engagement-matrix-table-host.tabulator .tabulator-row.tabulator-row-even .tabulator-cell {
+        background: var(--engagement-matrix-row-even-bg) !important;
+      }
+      html[data-theme="dark"] .engagement-matrix-table-host.tabulator .tabulator-header,
+      html[data-theme="dark"] .engagement-matrix-table-host.tabulator .tabulator-col,
+      html[data-theme="dark"] .engagement-matrix-table-host.tabulator .tabulator-col-group,
+      html[data-theme="dark"] .engagement-matrix-table-host.tabulator .tabulator-group {
+        background: var(--engagement-matrix-group-bg) !important;
+        border-color: var(--portal-border) !important;
+        color: var(--portal-dark-text) !important;
+      }
+      html[data-theme="dark"] .engagement-matrix-table-host.tabulator .tabulator-row:hover {
+        background: var(--portal-dark-surface-support) !important;
+      }
 body.admin-portal-page .performance-engagement-table {
         border-collapse: separate !important;
         border-spacing: 0;
@@ -3782,7 +3877,6 @@ body.admin-portal-page .performance-engagement-table {
           font-size: 10px;
         }
       }
-      /* modern CSS reset */
       *,
       *::before,
       *::after {

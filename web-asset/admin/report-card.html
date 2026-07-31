@@ -39,7 +39,13 @@
       <nav class="menu-groups admin-mobile-menu" id="navMenu" aria-label="Admin navigation">
         <a href="/admin" class="menu-link menu-link-top" data-page-link="overview">DASHBOARD</a>
         <a href="/admin/queue-hub" class="menu-link menu-link-top" data-page-link="queue-hub">QUEUE HUB</a>
-        <a href="/admin/profile" class="menu-link menu-link-top" data-page-link="profile">STUDENTS</a>
+        <div class="menu-group" data-menu-group="students">
+          <button type="button" class="menu-group-btn" data-menu-toggle="students" aria-expanded="false">STUDENTS</button>
+          <div class="menu-group-links">
+            <a href="/admin/profile" class="menu-link" data-page-link="profile">Student Profile</a>
+            <a href="/admin/profile-engagement" class="menu-link menu-sublink" data-page-link="profile-engagement">Profile engagement</a>
+          </div>
+        </div>
         <div class="menu-group expanded" data-menu-group="tracking">
           <button type="button" class="menu-group-btn" aria-expanded="true">TRACKING</button>
           <div class="menu-group-links">

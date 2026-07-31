@@ -10,6 +10,7 @@ import crypto from "node:crypto"
  *   eaglesId?: unknown,
  *   studentRefId?: unknown,
  *   email?: unknown,
+ *   mustChangePassword?: unknown,
  * }} SessionPrincipal
  *
  * @typedef {{
@@ -171,6 +172,7 @@ function makeSessionPayload(id, principal, ttlSeconds) {
     ...(normalizeText(principal?.eaglesId) ? { eaglesId: normalizeText(principal.eaglesId) } : {}),
     ...(normalizeText(principal?.studentRefId) ? { studentRefId: normalizeText(principal.studentRefId) } : {}),
     ...(normalizeText(principal?.email) ? { email: normalizeText(principal.email) } : {}),
+    ...(principal?.mustChangePassword !== undefined ? { mustChangePassword: Boolean(principal.mustChangePassword) } : {}),
     createdAt: now,
     updatedAt: now,
     expiresAt,

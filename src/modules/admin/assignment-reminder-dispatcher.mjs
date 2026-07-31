@@ -104,7 +104,7 @@ function appendTrackingToken(url, token) {
 }
 
 function reminderTrackingOrigin() {
-  return (text(process.env.STUDENT_ADMIN_PUBLIC_ORIGIN || process.env.PUBLIC_APP_ORIGIN || "https://eagles.edu.vn")).replace(/\/+$/, "")
+  return (text(process.env.STUDENT_ADMIN_PUBLIC_ORIGIN || process.env.PUBLIC_APP_ORIGIN || process.env.APP_ORIGIN || process.env.EXERCISE_MAILER_ORIGIN || "https://eagles.edu.vn")).replace(/\/+$/, "")
 }
 
 function buildTrackedActionUrl(url, token) {

@@ -22,8 +22,8 @@ test("applyImportIdentityDefaults auto-fills blank eaglesId and studentNumber fo
   assert.equal(result.autoFilledEaglesIds, 2)
   assert.equal(result.autoFilledStudentNumbers, 1)
 
-  assert.equal(result.rows[0].studentNumber, 231)
-  assert.equal(result.rows[0].eaglesId, "SIS-000231")
+  assert.equal(result.rows[0].studentNumber, 100)
+  assert.equal(result.rows[0].eaglesId, "SIS-000100")
 
   assert.equal(result.rows[1].studentNumber, 230)
   assert.equal(result.rows[1].eaglesId, "SIS-000230")

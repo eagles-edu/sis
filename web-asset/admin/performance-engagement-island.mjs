@@ -1,6 +1,11 @@
 // PERF-CONTRACT: ADMIN-PERFORMANCE-ISLAND
 // Performance-engagement code is route-owned and must not return to the critical admin bundle.
-import { clearEngagementMatrix, renderEngagementMatrix } from "/web-asset/admin/engagement-matrix.mjs"
+import {
+  clearEngagementMatrix,
+  renderEngagementMatrix,
+  formatEngagementGroupKey,
+  formatEngagementGroupHeader,
+} from "/web-asset/admin/engagement-matrix.mjs?v=20260801-sivb"
 
 export function initPerformanceEngagementIsland({ document, state, api, helpers = {}, onError }) {
   const {
@@ -25,7 +30,10 @@ function queueMatrixRender(rowsEl, rows) {
         rowsEl.textContent = "No engagement rows for the selected class day.";
         return;
       }
-      await renderEngagementMatrix(rowsEl, rows, { groupBy: "reportGroup" });
+      await renderEngagementMatrix(rowsEl, rows, {
+        groupBy: "reportGroup",
+        groupHeader: formatEngagementGroupHeader,
+      });
     });
   matrixRender.catch((error) => onError?.(error));
 }
@@ -81,7 +89,9 @@ function normalizePerformanceEngagementRows(rows = []) {
 }
 
 function performanceEngagementGroupKey(row = {}) {
-  return normalizeText(row?.reportId) || `${normalizeText(row?.classDate)}-${normalizeText(row?.id)}`
+  const batchId = normalizeText(row?.batchId)
+  const reportId = normalizeText(row?.reportId)
+  return `${batchId || "no-batch"}:${reportId || `${normalizeText(row?.classDate)}-${normalizeText(row?.id)}`}`
 }
 
 function comparePerformanceEngagementGroupRows(left = {}, right = {}) {
@@ -282,7 +292,15 @@ function renderPerformanceEngagementRows() {
     : "No engagement rows matched this day and search.";
   const rows = engagementRows.flatMap((group) => group.rows.map((row) => ({
     ...row,
-    reportGroup: group.reportId || `${group.classDate}|${group.className}`,
+    reportGroup: formatEngagementGroupKey({
+      level: (group.rows.find((entry) => entry.reviewed === "student") || row).level,
+      week: rowWeekNumber("performance", row),
+      date: group.classDate,
+      familyId: row.familyId,
+      studentId: (group.rows.find((entry) => entry.reviewed === "student") || row).id,
+      parentId: (group.rows.find((entry) => entry.reviewed === "parent") || {}).id,
+      event: "performance-report-created",
+    }),
   })));
   queueMatrixRender(rowsEl, rows);
 }

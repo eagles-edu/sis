@@ -2,7 +2,12 @@
  * This implementation is intentionally outside student-admin.min.js. Load it
  * only when the assignment-engagement page is opened. */
 
-import { renderEngagementMatrix, clearEngagementMatrix } from "/web-asset/admin/engagement-matrix.mjs"
+import {
+  renderEngagementMatrix,
+  clearEngagementMatrix,
+  formatEngagementGroupKey,
+  formatEngagementGroupHeader,
+} from "/web-asset/admin/engagement-matrix.mjs?v=20260801-sivb"
 
 export function initAssignmentEngagementIsland({ document, state, api, helpers, onError }) {
   const {
@@ -30,7 +35,10 @@ export function initAssignmentEngagementIsland({ document, state, api, helpers, 
           rowsEl.textContent = "No assignment engagement records match the current search."
           return
         }
-        await renderEngagementMatrix(rowsEl, rows.map(metric), { groupBy: "groupKey" })
+        await renderEngagementMatrix(rowsEl, rows.map(metric), {
+          groupBy: "groupKey",
+          groupHeader: formatEngagementGroupHeader,
+        })
       })
     matrixRender.catch(onError)
   }
@@ -50,7 +58,30 @@ export function initAssignmentEngagementIsland({ document, state, api, helpers, 
 
   const dayKey = (row = {}) => {
     const dispatch = row.dispatch || {}
-    return `${normalizeText(dispatch.localDate) || "unknown"}:${normalizeText(dispatch.reminderKind) || "unknown"}`
+    const batchId = normalizeText(row.brevoDelivery?.batchId || dispatch.queueId)
+    return `${normalizeText(dispatch.localDate) || "unknown"}:${batchId || normalizeText(dispatch.reminderKind) || "unknown"}`
+  }
+
+  const rawGroupKey = (row = {}) => {
+    const dispatch = row.dispatch || {}
+    const brevo = row.brevoDelivery || {}
+    return `${normalizeText(brevo.batchId || dispatch.queueId) || "no-batch"}:${normalizeText(dispatch.assignmentTemplateId)}:${normalizeText(dispatch.eaglesId || dispatch.studentRefId)}:${normalizeText(dispatch.reminderKind)}`
+  }
+
+  const groupLabel = (group = []) => {
+    const first = group[0] || {}
+    const dispatch = first.dispatch || {}
+    const student = group.find((row) => normalizeLower(row.audience) === "student") || first
+    const studentDispatch = student.dispatch || dispatch
+    return formatEngagementGroupKey({
+      level: studentDispatch.level,
+      week: rowWeekNumber("assignments", dispatch),
+      date: dispatch.localDate,
+      familyId: studentDispatch.familyId,
+      studentId: studentDispatch.eaglesId || studentDispatch.studentRefId,
+      parentId: (group.find((row) => normalizeLower(row.audience) === "parent") || {}).dispatch?.parentsId,
+      event: "assignment-created",
+    })
   }
 
   const weekForDate = (value = "") => {
@@ -85,7 +116,8 @@ export function initAssignmentEngagementIsland({ document, state, api, helpers, 
       if (reminderKind && normalizeLower(dispatch.reminderKind) !== reminderKind) continue
       if (status && normalizeLower(dispatch.status) !== status) continue
       if (includeSelectedDay && selectedDayKey && dayKey(row) !== selectedDayKey) continue
-      const key = `${normalizeText(dispatch.assignmentTemplateId)}:${normalizeText(dispatch.eaglesId || dispatch.studentRefId)}:${normalizeText(dispatch.reminderKind)}`
+      const batchId = normalizeText(row.brevoDelivery?.batchId || dispatch.queueId)
+      const key = rawGroupKey(row)
       const group = grouped.get(key) || []
       group.push(row)
       grouped.set(key, group)
@@ -93,7 +125,10 @@ export function initAssignmentEngagementIsland({ document, state, api, helpers, 
     const rows = Array.from(grouped.values()).filter((group) => {
       const paired = group.some((row) => normalizeLower(row.audience) === "parent") && group.some((row) => normalizeLower(row.audience) === "student")
       return paired && (!terms.length || group.some((row) => terms.every((term) => searchText(row).includes(term))))
-    }).flat()
+    }).flatMap((group) => {
+      const displayKey = groupLabel(group)
+      return group.map((row) => ({ ...row, __engagementGroupKey: displayKey }))
+    })
     return rows.sort((left, right) => {
       const ld = left.dispatch || {}, rd = right.dispatch || {}
       const textValue = (row, dispatch) => ({ assignment: dispatch.assignmentTemplateId, student: dispatch.eaglesId || dispatch.studentRefId, recipient: row.recipientEmail, reminder: dispatch.reminderKind, status: dispatch.status }[sortField] || "")
@@ -109,7 +144,7 @@ export function initAssignmentEngagementIsland({ document, state, api, helpers, 
     const brevo = row.brevoDelivery || {}
     const status = normalizeLower(dispatch.status)
     return {
-      groupKey: `${normalizeText(dispatch.assignmentTemplateId)}:${normalizeText(dispatch.eaglesId || dispatch.studentRefId)}:${normalizeText(dispatch.reminderKind)}`,
+      groupKey: normalizeText(row.__engagementGroupKey) || rawGroupKey(row),
       batchId: normalizeText(brevo.batchId || dispatch.queueId),
       queueType: normalizeText(brevo.queueType || "assignment-reminder"),
       providerMessageId: normalizeText(brevo.providerMessageId),
@@ -173,7 +208,7 @@ export function initAssignmentEngagementIsland({ document, state, api, helpers, 
     for (const row of rowsForDisplay(false)) {
       const dispatch = row.dispatch || {}
       const key = dayKey(row)
-      const day = days.get(key) || { key, date: normalizeText(dispatch.localDate) || "unknown", kind: normalizeText(dispatch.reminderKind) || "unknown", week: rowWeekNumber("assignments", { dueAt: dispatch.localDate }), assignments: new Set(), recipients: 0, opened: 0, clicked: 0 }
+      const day = days.get(key) || { key, date: normalizeText(dispatch.localDate) || "unknown", kind: normalizeText(dispatch.reminderKind) || "unknown", week: rowWeekNumber("assignments", dispatch), assignments: new Set(), recipients: 0, opened: 0, clicked: 0 }
       if (dispatch.assignmentTemplateId) day.assignments.add(normalizeText(dispatch.assignmentTemplateId))
       day.recipients += 1; if (row.openedAt) day.opened += 1; if (row.clickedAt) day.clicked += 1
       days.set(key, day)

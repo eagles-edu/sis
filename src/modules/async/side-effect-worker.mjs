@@ -6,6 +6,7 @@ import {
   ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED,
   ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
   ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF,
+  ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION,
   claimAsyncSideEffectJobs,
   completeAsyncSideEffectJob,
   failAsyncSideEffectJob,
@@ -19,6 +20,7 @@ import {
   generateStudentReportCardPdf,
 } from "../../../server/student-report-card-pdf.mjs"
 import { markAssignmentReminderEngagementSent } from "../admin/assignment-reminder-dispatcher.mjs"
+import { processParentProfileInvitationJob } from "../admin/parent-profile-invitations.mjs"
 
 /**
  * @param {unknown} value
@@ -148,6 +150,10 @@ export async function processReportCardPdfSideEffectJob(job = {}) {
   }
 }
 
+export async function processParentProfileInvitationSideEffectJob(job = {}) {
+  return processParentProfileInvitationJob(job)
+}
+
 /**
  * @param {Record<string, unknown>} [job]
  * @returns {Promise<Record<string, unknown>>}
@@ -159,6 +165,9 @@ export async function processAsyncSideEffectJob(job = {}) {
   }
   if (jobType === ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF) {
     return processReportCardPdfSideEffectJob(job)
+  }
+  if (jobType === ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION) {
+    return processParentProfileInvitationSideEffectJob(job)
   }
 
   const error = new Error(`Unsupported async side effect job type: ${jobType || "(missing)"}`)

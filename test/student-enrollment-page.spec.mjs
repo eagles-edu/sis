@@ -24,6 +24,7 @@ test("student enrollment page ships as a standalone portal surface", () => {
   assert.match(html, /class="hub-footer"/)
   assert.match(html, /id="floatingMenuBtn"/)
   assert.match(html, /id="appSidebarNav"/)
+  assert.match(html, /data-menu-group="students"[\s\S]*?data-page-link="profile">Student Profile<\/a>[\s\S]*?data-page-link="profile-engagement">Profile engagement<\/a>/)
   assert.match(html, /<main id="appMain" class="section-stack" aria-label="Enrollment workspace">/)
   assert.match(html, /<section class="content topbar" data-surface-role="content">/)
   assert.match(html, /<section class="content" aria-label="Enrollment summary" data-surface-role="content">[\s\S]*?<article class="portal-theme-card enrollment-summary-card panel" data-surface-role="panel">/)

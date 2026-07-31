@@ -572,6 +572,9 @@ test("parent portal static preview over http uses explicit apiOrigin for login",
   )
 
   const document = dom.window.document
+  await waitFor(() => {
+    assert.ok(calls.includes("GET http://127.0.0.1:8788/api/parent/auth/me"))
+  })
   document.getElementById("parentsId").value = "cmkramer001"
   document.getElementById("parentPassword").value = "family-pass-123"
   document.getElementById("loginForm").dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true }))

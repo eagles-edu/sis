@@ -240,7 +240,7 @@ function applyIdentityFixes(rows, floor = STUDENT_NUMBER_FLOOR) {
         .filter((value) => value !== null && Number.isInteger(value) && value > 0)
     )
   )
-  let nextStudentNumber = Math.max(floor - 1, ...(usedNumbers.size ? [...usedNumbers] : [0]))
+  let nextStudentNumber = floor - 1
 
   /** @type {number[]} */
   const rowsWithAutoFilledStudentNumber = []

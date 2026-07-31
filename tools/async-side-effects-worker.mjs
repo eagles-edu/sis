@@ -3,6 +3,7 @@
 import { drainAsyncSideEffectJobs } from "../src/modules/async/side-effect-worker.mjs"
 import {
   ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
+  ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION,
   ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF,
 } from "../src/modules/async/side-effect-jobs.mjs"
 import { updateQueuedAnnouncement, nowIso } from "../src/modules/admin/notification-queue.mjs"
@@ -115,7 +116,11 @@ async function runWorkerOnce() {
   return drainAsyncSideEffectJobs({
     workerId: resolveWorkerId(),
     take: resolveTake(),
-    jobTypes: [ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL, ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF],
+    jobTypes: [
+      ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
+      ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF,
+      ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION,
+    ],
     maxAttempts: 3,
     retryDelayMs: 30 * 1000,
     onJobComplete: async (job, result) => {
@@ -160,7 +165,6 @@ export async function startAsyncSideEffectsWorker() {
       console.error(`[async-side-effects] worker loop failed: ${normalizeErrorMessage(error)}`)
     })
   }, pollIntervalMs)
-  if (typeof timer.unref === "function") timer.unref()
 
   return {
     stop() {

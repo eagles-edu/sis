@@ -188,6 +188,9 @@
       display: grid;
       gap: 10px;
       grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      list-style: none;
+      margin: 0;
+      padding: 0;
     }
 
     .enrollment-level-tile {

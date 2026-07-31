@@ -1,0 +1,28 @@
+[Unit]
+Description=SIS Test Async Side Effects Worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=eagles
+Group=eagles
+WorkingDirectory=/home/test.eagles.edu.vn/sis
+EnvironmentFile=/home/test.eagles.edu.vn/sis/.env.test
+Environment=NODE_ENV=test
+Environment=SIS_ENV_FILE=.env.test
+Environment=ASYNC_SIDE_EFFECTS_WORKER_POLL_MS=15000
+Environment=ASYNC_SIDE_EFFECTS_WORKER_TAKE=10
+Environment=PATH=/home/eagles/.nvm/versions/node/v22.22.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/home/eagles/.nvm/versions/node/v22.22.1/bin/node --env-file=.env.test /home/test.eagles.edu.vn/sis/tools/async-side-effects-worker.mjs
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sis-async-side-effects-test
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=false
+
+[Install]
+WantedBy=multi-user.target

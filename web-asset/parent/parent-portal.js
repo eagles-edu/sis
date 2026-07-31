@@ -6232,9 +6232,22 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
       }
 
       function syncDashboardPageVisibility() {
+        const passwordSetupRequired = Boolean(state.me?.mustChangePassword)
         const authenticated = document
           .getElementById("loginCard")
           ?.classList.contains("hidden")
+        document
+          .getElementById("passwordSetupCard")
+          ?.classList.toggle("hidden", !passwordSetupRequired)
+        if (passwordSetupRequired) {
+          document.getElementById("loginCard")?.classList.add("hidden")
+          document.getElementById("passwordSetupParentsId").textContent =
+            normalizeText(state.me?.parentsId) || "-"
+          document.getElementById("portalCard")?.classList.add("hidden")
+          document.getElementById("portalDetailCard")?.classList.add("hidden")
+          document.getElementById("childPageCard")?.classList.add("hidden")
+          return
+        }
         if (!authenticated) {
           document.getElementById("portalCard")?.classList.add("hidden")
           document.getElementById("portalDetailCard")?.classList.add("hidden")
@@ -6659,6 +6672,8 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
             Boolean(state.me?.parentsId),
           )
         }
+        syncDashboardPageVisibility()
+        if (state.me?.mustChangePassword) return
         const childrenPayload = await api(PARENT_CHILDREN_PATH)
         state.children =
           Array.isArray(childrenPayload.items) ? childrenPayload.items : []
@@ -6666,8 +6681,16 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         const selected = normalizeText(
           document.getElementById("childSelect").value,
         )
+        const requestedCompletionId = normalizeText(
+          new URLSearchParams(window.location.search || "").get("complete"),
+        )
+        const requestedChild = state.children.find(
+          (child) => normalizeText(child?.eaglesId) === requestedCompletionId,
+        )
         const defaultEaglesId =
-          selected || normalizeText(state.children[0]?.eaglesId)
+          (requestedChild && requestedCompletionId) ||
+          selected ||
+          normalizeText(state.children[0]?.eaglesId)
         state.selectedEaglesId = defaultEaglesId
         const selectedChild = selectedDashboardChild()
         state.newsItems =
@@ -6686,6 +6709,10 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
           updateChildPageBadge()
         }
         setActivePortalView(state.activeView)
+        if (requestedChild) {
+          setActivePortalView("child")
+          window.SISPortalNav?.scrollElementIntoView?.("#childPageCard")
+        }
       }
       async function login() {
         const parentsId = normalizeText(
@@ -6711,11 +6738,38 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         }
         document.documentElement.dataset.parentAuthState = "authenticated"
         document.getElementById("loginCard").classList.add("hidden")
+        syncDashboardPageVisibility()
         setActivePortalView("dashboard")
         await hydratePortal({ initialUser: state.me })
         if (handlePortalPostAuthRouteState()) return
         openReportAccessErrorModalIfNeeded()
         setStatus("Đăng nhập thành công.", "ok")
+      }
+      async function setParentPassword() {
+        const password = normalizeText(document.getElementById("newParentPassword")?.value)
+        const confirmation = normalizeText(document.getElementById("confirmParentPassword")?.value)
+        const status = document.getElementById("passwordSetupStatus")
+        if (password.length < 10) {
+          status.textContent = "Choose a password with at least 10 characters."
+          status.className = "status err"
+          return
+        }
+        if (password !== confirmation) {
+          status.textContent = "The passwords do not match."
+          status.className = "status err"
+          return
+        }
+        const result = await api(`${PARENT_AUTH_PREFIX}/set-password`, {
+          method: "POST",
+          body: { password, confirmation },
+        })
+        state.me = result?.user || { ...state.me, mustChangePassword: false }
+        status.textContent = "Password saved. Your browser may offer to save it."
+        status.className = "status ok"
+        syncDashboardPageVisibility()
+        setActivePortalView("dashboard")
+        await hydratePortal({ initialUser: state.me })
+        if (handlePortalPostAuthRouteState()) return
       }
       async function logout() {
         await api(`${PARENT_AUTH_PREFIX}/logout`, {
@@ -6912,6 +6966,16 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         ?.addEventListener("submit", (event) => {
           event.preventDefault()
           login().catch((error) => setStatus(error.message, "err"))
+        })
+      document
+        .getElementById("passwordSetupForm")
+        ?.addEventListener("submit", (event) => {
+          event.preventDefault()
+          setParentPassword().catch((error) => {
+            const status = document.getElementById("passwordSetupStatus")
+            status.textContent = error.message
+            status.className = "status err"
+          })
         })
       document.getElementById("loginForm")?.addEventListener("reset", () => {
         setStatus("", "")

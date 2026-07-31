@@ -188,7 +188,16 @@ function renderCriticalCssHtml(html, criticalCss) {
 async function buildAdminCss(sourcePath) {
   const source = await fs.readFile(sourcePath, "utf8")
   const minifySelectors = sourcePath === path.join(REPO_ROOT, "web-asset/admin/student-admin.css")
+  const removeReplacedPerformanceTableRules = sourcePath === path.join(REPO_ROOT, "web-asset/admin/student-admin.css")
   const processor = postcss([
+    ...(removeReplacedPerformanceTableRules ? [{
+      postcssPlugin: "sis-remove-replaced-performance-table-rules",
+      Once(root) {
+        root.walkRules((rule) => {
+          if (rule.selector?.includes(".performance-engagement-table")) rule.remove()
+        })
+      },
+    }] : []),
     cssnano({
       preset: [
         "default",

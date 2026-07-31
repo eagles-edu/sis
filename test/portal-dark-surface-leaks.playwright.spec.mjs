@@ -48,7 +48,7 @@ function resolvePlaywrightSkipReason() {
   return false
 }
 
-function startStaticServer(port) {
+function startStaticServer() {
   return http.createServer((request, response) => {
     const urlPath = decodeURIComponent((request.url || "/").split("?")[0])
     const filePath = path.join(ROOT_DIR, urlPath === "/" ? "web-asset/admin/portal-hub.html" : urlPath.slice(1))
@@ -73,7 +73,14 @@ function startStaticServer(port) {
       response.setHeader("Content-Type", type)
       response.end(data)
     })
-  }).listen(port)
+  }).listen(0, "127.0.0.1")
+}
+
+async function serverOrigin(server) {
+  if (!server.listening) await new Promise((resolve) => server.once("listening", resolve))
+  const address = server.address()
+  if (!address || typeof address === "string") throw new Error("static test server did not expose a TCP port")
+  return `http://127.0.0.1:${address.port}`
 }
 
 function themeInitScript() {
@@ -212,7 +219,8 @@ function assertMutedText(label, style) {
 }
 
 test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolvePlaywrightSkipReason() }, async () => {
-  const server = startStaticServer(8097)
+  const server = startStaticServer()
+  const origin = await serverOrigin(server)
   const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
   const page = await browser.newPage({ viewport: { width: 1440, height: 1600 } })
   await page.addInitScript(themeInitScript())
@@ -261,7 +269,7 @@ test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolve
 
   try {
     for (const testCase of cases) {
-      await page.goto(`http://127.0.0.1:8097${testCase.url}`, { waitUntil: "networkidle" })
+      await page.goto(`${origin}${testCase.url}`, { waitUntil: "networkidle" })
       await page.waitForTimeout(400)
       for (const [label, selector] of testCase.checks) {
         const style = await readStyle(page, selector)
@@ -302,7 +310,8 @@ test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolve
 })
 
 test("grades tabulator immutable buttons and chips keep shared chrome in dark mode", { skip: resolvePlaywrightSkipReason() }, async () => {
-  const server = startStaticServer(8094)
+  const server = startStaticServer()
+  const origin = await serverOrigin(server)
   const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
   const page = await browser.newPage({ viewport: { width: 1440, height: 1600 } })
   await page.addInitScript(themeInitScript())
@@ -326,7 +335,7 @@ test("grades tabulator immutable buttons and chips keep shared chrome in dark mo
 
   try {
     for (const testCase of cases) {
-      await page.goto(`http://127.0.0.1:8094${testCase.url}`, { waitUntil: "networkidle" })
+      await page.goto(`${origin}${testCase.url}`, { waitUntil: "networkidle" })
       await page.waitForTimeout(400)
       for (const check of testCase.checks) {
         const [label, selector, expectedBackground] = check
@@ -355,7 +364,8 @@ test("grades tabulator immutable buttons and chips keep shared chrome in dark mo
 })
 
 test("dark theme form fields stay legible in login shells and modals", { skip: resolvePlaywrightSkipReason() }, async () => {
-  const server = startStaticServer(8095)
+  const server = startStaticServer()
+  const origin = await serverOrigin(server)
   const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
   const page = await browser.newPage({ viewport: { width: 1440, height: 1600 } })
   await page.addInitScript(themeInitScript())
@@ -389,7 +399,7 @@ test("dark theme form fields stay legible in login shells and modals", { skip: r
 
   try {
     for (const testCase of cases) {
-      await page.goto(`http://127.0.0.1:8095${testCase.url}`, { waitUntil: "networkidle" })
+      await page.goto(`${origin}${testCase.url}`, { waitUntil: "networkidle" })
       await page.waitForTimeout(400)
 
       if (testCase.revealSelector) {
@@ -447,7 +457,8 @@ test("dark theme form fields stay legible in login shells and modals", { skip: r
 })
 
 test("standalone admin pages use the shared portal theme in dark mode", { skip: resolvePlaywrightSkipReason() }, async () => {
-  const server = startStaticServer(8096)
+  const server = startStaticServer()
+  const origin = await serverOrigin(server)
   const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
   const page = await browser.newPage({ viewport: { width: 1440, height: 1600 } })
   await page.addInitScript(themeInitScript())
@@ -467,7 +478,7 @@ test("standalone admin pages use the shared portal theme in dark mode", { skip: 
 
   try {
     for (const testCase of cases) {
-      await page.goto(`http://127.0.0.1:8096${testCase.url}`, { waitUntil: "networkidle" })
+      await page.goto(`${origin}${testCase.url}`, { waitUntil: "networkidle" })
       await page.waitForTimeout(400)
       for (const selector of testCase.surfaces) {
         const style = await readStyle(page, selector)

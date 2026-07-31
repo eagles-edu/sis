@@ -1,0 +1,180 @@
+// @ts-check
+import crypto from "node:crypto"
+import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { recordBrevoEmailDeliverySafely } from "../email/brevo-delivery.mjs"
+import { enqueueAsyncSideEffectJob } from "../async/side-effect-jobs.mjs"
+import { sendBrevoEmail, isBrevoEmailProvider } from "../email/brevo.mjs"
+import { hashScryptPassword } from "./users.mjs"
+
+export const ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION = "parent-profile-invitation"
+const INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000
+
+function text(value) { return value === undefined || value === null ? "" : String(value).trim() }
+function lower(value) { return text(value).toLowerCase() }
+function tokenHash(token) { return crypto.createHash("sha256").update(token).digest("hex") }
+function publicOrigin() {
+  const origin = text(process.env.STUDENT_ADMIN_PUBLIC_ORIGIN || process.env.PUBLIC_APP_ORIGIN || process.env.APP_ORIGIN || process.env.EXERCISE_MAILER_ORIGIN)
+  if (!origin) throw Object.assign(new Error("A public application origin is required for profile invitations"), { statusCode: 503 })
+  return origin.replace(/\/+$/, "")
+}
+function invitationUrl(token) { return `${publicOrigin()}/parent/profile-invitations/${encodeURIComponent(token)}` }
+
+function initialPassword() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
+  const bytes = crypto.randomBytes(14)
+  return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("")
+}
+
+export async function ensureParentPortalAccount(prisma, student, recipientEmail = "") {
+  if (!prisma?.parentPortalAccount || !prisma?.parentPortalStudentLink) {
+    throw Object.assign(new Error("Parent portal persistence is unavailable"), { statusCode: 503 })
+  }
+  const profile = student?.profile || {}
+  const eaglesId = text(student?.eaglesId)
+  const parentsId = eaglesId ? `cm${eaglesId}` : text(profile.parentsId) || `cm${text(student?.studentNumber)}`
+  const email = lower(profile.motherEmail || profile.studentEmail || recipientEmail)
+  let account = await prisma.parentPortalAccount.findUnique({ where: { parentsId } })
+  if (!account && email) account = await prisma.parentPortalAccount.findUnique({ where: { email } })
+  if (account && account.parentsId !== parentsId) {
+    try {
+      account = await prisma.parentPortalAccount.update({ where: { id: account.id }, data: { parentsId } })
+    } catch (error) {
+      if (error?.code !== "P2002") throw error
+      account = await prisma.parentPortalAccount.findUnique({ where: { parentsId } })
+      if (!account) throw error
+    }
+  }
+  let firstPassword = ""
+  if (!account) {
+    firstPassword = initialPassword()
+    try {
+      account = await prisma.parentPortalAccount.create({
+        data: { parentsId, email: email || null, passwordHash: hashScryptPassword(firstPassword), mustChangePassword: true, status: "active" },
+      })
+    } catch (error) {
+      if (error?.code !== "P2002") throw error
+      account = (email && await prisma.parentPortalAccount.findUnique({ where: { email } }))
+        || await prisma.parentPortalAccount.findUnique({ where: { parentsId } })
+      if (!account) throw error
+      firstPassword = ""
+    }
+  }
+  if (account.email == null && email) {
+    account = await prisma.parentPortalAccount.update({ where: { id: account.id }, data: { email } })
+  }
+  await prisma.parentPortalStudentLink.upsert({
+    where: { parentAccountId_studentRefId: { parentAccountId: account.id, studentRefId: student.id } },
+    update: {},
+    create: { parentAccountId: account.id, studentRefId: student.id },
+  })
+  return { account }
+}
+
+function invitationMessage({ student, url, parentId, mustChangePassword }) {
+  const name = text(student?.profile?.fullName || student?.profile?.englishName || student?.eaglesId) || "your learner"
+  const subject = `Complete the Eagles student profile for ${name}`
+  const credentials = mustChangePassword
+    ? `Parent ID: ${parentId}\nWhen the completion link opens, choose a new password and save both your Parent ID and password in a safe place.\n\n`
+    : `Parent ID: ${parentId}\nUse your existing parent-portal password at ${publicOrigin()}/parent.\n\n`
+  const textBody = `Complete the student profile for ${name} using this secure link. It opens the form automatically and expires in 7 days:\n\n${url}\n\n${credentials}If you did not expect this email, you can ignore it.`
+  const openUrl = `${publicOrigin()}/api/parent/profile-invitations/${encodeURIComponent(url.split("/").pop() || "")}/open.gif`
+  const safe = (value) => text(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]))
+  const completionHtml = `<p><strong>Complete the student profile using this link:</strong></p><p><a href="${url}">Complete the student profile</a></p><p>This secure link opens the form automatically, expires in 7 days, and can be used once.</p>`
+  const credentialHtml = mustChangePassword
+    ? `<p><strong>Parent ID:</strong> ${safe(parentId)}<br>When the completion link opens, choose a new password and save both your Parent ID and password in a safe place.</p>`
+    : `<p><strong>Parent ID:</strong> ${safe(parentId)}<br>Use your existing parent-portal password at <a href="${publicOrigin()}/parent">the parent portal</a>.</p>`
+  const html = `${completionHtml}<p>Student: <strong>${safe(name)}</strong></p>${credentialHtml}<img src="${openUrl}" width="1" height="1" alt="">`
+  return { subject, textBody, html }
+}
+
+async function sendInvitationEmail({ recipientEmail, student, token, parentId, mustChangePassword }) {
+  const url = invitationUrl(token)
+  const message = invitationMessage({ student, url, parentId, mustChangePassword })
+  const fromEmail = text(process.env.BREVO_FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER)
+  const fromName = text(process.env.BREVO_FROM_NAME || "The Eagles Club")
+  if (isBrevoEmailProvider()) {
+    const result = await sendBrevoEmail({ from: { email: fromEmail, name: fromName }, to: [{ email: recipientEmail }], subject: message.subject, text: message.textBody, html: message.html })
+    return { providerMessageId: text(result.messageId), provider: "brevo" }
+  }
+  const nodemailer = await import("nodemailer")
+  const host = text(process.env.SMTP_HOST)
+  const port = Number.parseInt(text(process.env.SMTP_PORT || "465"), 10) || 465
+  if (!host || !fromEmail) throw Object.assign(new Error("SMTP invitation settings are incomplete"), { statusCode: 503 })
+  const transporter = nodemailer.default.createTransport({ host, port, secure: String(process.env.SMTP_SECURE || "true").toLowerCase() === "true", auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS || "" } : undefined })
+  const result = await transporter.sendMail({ from: fromEmail, to: recipientEmail, subject: message.subject, text: message.textBody, html: message.html })
+  return { providerMessageId: text(result.messageId), provider: "smtp" }
+}
+
+export async function createParentProfileInvitation({ studentRefId, recipientEmail, queuedBy = "" } = {}) {
+  const prisma = await getSharedPrismaClient()
+  if (!prisma?.parentProfileInvitation) throw Object.assign(new Error("Parent profile invitation persistence is unavailable"), { statusCode: 503 })
+  const email = lower(recipientEmail)
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Object.assign(new Error("A valid parent/adult student email is required"), { statusCode: 400 })
+  const student = await prisma.student.findUnique({ where: { id: text(studentRefId) }, include: { profile: true } })
+  if (!student) throw Object.assign(new Error("Student not found"), { statusCode: 404 })
+  const account = await ensureParentPortalAccount(prisma, student, email)
+  const token = crypto.randomBytes(32).toString("base64url")
+  const invitation = await prisma.$transaction(async (tx) => {
+    await tx.parentProfileInvitation.updateMany({ where: { studentRefId: student.id, status: { in: ["queued", "sent"] } }, data: { status: "expired", lastError: "Superseded by a newer invitation" } })
+    return tx.parentProfileInvitation.create({ data: { tokenHash: tokenHash(token), recipientEmail: email, studentRefId: student.id, parentAccountId: account.account.id, status: "queued", expiresAt: new Date(Date.now() + INVITATION_TTL_MS), batchId: `profile-invite-${student.id}-${Date.now().toString(36)}` } })
+  })
+  await enqueueAsyncSideEffectJob(ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION, { invitationId: invitation.id, token, queuedBy, parentId: account.account.parentsId, mustChangePassword: Boolean(account.account.mustChangePassword) }, { dedupeKey: invitation.id })
+  return { id: invitation.id, status: invitation.status, recipientEmail: email, expiresAt: invitation.expiresAt.toISOString() }
+}
+
+export async function resendParentProfileInvitation({ invitationId, queuedBy = "" } = {}) {
+  const prisma = await getSharedPrismaClient()
+  const previous = await prisma.parentProfileInvitation.findUnique({ where: { id: text(invitationId) } })
+  if (!previous) throw Object.assign(new Error("Parent profile invitation not found"), { statusCode: 404 })
+  return createParentProfileInvitation({ studentRefId: previous.studentRefId, recipientEmail: previous.recipientEmail, queuedBy })
+}
+
+export async function processParentProfileInvitationJob(job = {}) {
+  const prisma = await getSharedPrismaClient()
+  const invitationId = text(job?.payloadJson?.invitationId)
+  const token = text(job?.payloadJson?.token)
+  const invitation = await prisma.parentProfileInvitation.findUnique({ where: { id: invitationId }, include: { student: { include: { profile: true } } } })
+  if (!invitation) throw Object.assign(new Error("Parent profile invitation not found"), { statusCode: 404 })
+  if (invitation.expiresAt <= new Date() || ["expired", "completed"].includes(lower(invitation.status))) {
+    await prisma.parentProfileInvitation.update({ where: { id: invitation.id }, data: { status: "expired", lastError: "Invitation is expired or already completed" } })
+    return { ok: false, status: "expired" }
+  }
+  try {
+    const sent = await sendInvitationEmail({ recipientEmail: invitation.recipientEmail, student: invitation.student, token, parentId: text(job?.payloadJson?.parentId || invitation.parentAccount?.parentsId), mustChangePassword: Boolean(job?.payloadJson?.mustChangePassword) })
+    await recordBrevoEmailDeliverySafely({
+      messageId: sent.providerMessageId,
+      recipientEmail: invitation.recipientEmail,
+      batchId: invitation.batchId,
+      queueType: "profile-invitation",
+      subject: "Complete your Eagles student profile",
+      metadata: { invitationId: invitation.id, studentRefId: invitation.studentRefId },
+    })
+    await prisma.parentProfileInvitation.update({ where: { id: invitation.id }, data: { status: "sent", sentAt: new Date(), providerMessageId: sent.providerMessageId || null } })
+    return { ok: true, status: "sent", providerMessageId: sent.providerMessageId || "" }
+  } catch (error) {
+    await prisma.parentProfileInvitation.update({ where: { id: invitation.id }, data: { status: "failed", lastError: text(error?.message || error).slice(0, 1000) } })
+    throw error
+  }
+}
+
+export async function consumeParentProfileInvitation(token, { mark = "clicked" } = {}) {
+  const prisma = await getSharedPrismaClient()
+  const invitation = await prisma.parentProfileInvitation.findUnique({ where: { tokenHash: tokenHash(text(token)) }, include: { student: { include: { profile: true } } } })
+  if (!invitation || invitation.expiresAt <= new Date() || ["expired", "completed"].includes(lower(invitation.status))) {
+    if (invitation && invitation.status !== "completed") await prisma.parentProfileInvitation.update({ where: { id: invitation.id }, data: { status: "expired" } })
+    throw Object.assign(new Error("This profile invitation is expired or has already been used"), { statusCode: 410 })
+  }
+  const data = mark === "opened" ? { openedAt: invitation.openedAt || new Date() } : { clickedAt: invitation.clickedAt || new Date(), status: "clicked" }
+  const updated = await prisma.parentProfileInvitation.update({ where: { id: invitation.id }, data })
+  return { invitation: updated, student: invitation.student }
+}
+
+export async function markParentProfileInvitationCompleted({ studentRefId } = {}) {
+  const prisma = await getSharedPrismaClient()
+  await prisma.parentProfileInvitation.updateMany({ where: { studentRefId: text(studentRefId), status: { in: ["sent", "clicked"] } }, data: { status: "completed", completedAt: new Date() } })
+}
+
+export async function listParentProfileInvitations({ studentRefId = "", take = 100 } = {}) {
+  const prisma = await getSharedPrismaClient()
+  return prisma.parentProfileInvitation.findMany({ where: studentRefId ? { studentRefId: text(studentRefId) } : {}, orderBy: { createdAt: "desc" }, take: Math.min(500, Math.max(1, Number.parseInt(String(take), 10) || 100)) })
+}

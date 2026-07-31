@@ -79,6 +79,15 @@ import {
   listLevelAndSchoolFilters,
 } from "../src/modules/admin/student-admin-queries.mjs"
 import {
+  createParentProfileInvitation,
+  resendParentProfileInvitation,
+  consumeParentProfileInvitation,
+  listParentProfileInvitations,
+  markParentProfileInvitationCompleted,
+  ensureParentPortalAccount,
+} from "../src/modules/admin/parent-profile-invitations.mjs"
+import { hashScryptPassword } from "../src/modules/admin/users.mjs"
+import {
   readSchoolSetupSnapshot,
 } from "../src/modules/admin/school-setup-store.mjs"
 import {
@@ -198,6 +207,7 @@ const ADMIN_PAGE_SECTIONS = [
   "enrollment",
   "student-admin",
   "profile",
+  "profile-engagement",
   "attendance",
   "attendance-admin",
   "assignments",
@@ -366,6 +376,10 @@ const ADMIN_REPORT_CARD_PREVIEW_PATH = normalizePathPrefix(
 const PARENT_CHILD_PROFILE_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile$`)
 const PARENT_CHILD_PROFILE_DRAFT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-draft$`)
 const PARENT_CHILD_PROFILE_SUBMIT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-submit$`)
+const PARENT_PROFILE_INVITATION_PATH_RE = new RegExp(`^${escapeRegex(PARENT_PORTAL_PAGE_PATH)}/profile-invitations/([^/]+)$`)
+const PARENT_PROFILE_INVITATION_OPEN_PATH_RE = new RegExp(`^${escapeRegex(PARENT_API_PREFIX)}/profile-invitations/([^/]+)/open\\.gif$`)
+const ADMIN_PARENT_PROFILE_INVITATION_RESEND_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_API_PREFIX)}/parent-profile-invitations/([^/]+)/resend$`)
+const PARENT_SET_PASSWORD_PATH = `${PARENT_AUTH_PREFIX}/set-password`
 const PARENT_CHILD_NEWS_CALENDAR_PATH_RE = new RegExp(
   `^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/news-reports/calendar$`
 )
@@ -1398,7 +1412,7 @@ function setInitialAdminLayoutState(html, pageSlug) {
   const hideTopSearch = new Set([
     "overview", "queue-hub", "attendance", "attendance-admin", "assignments",
     "assignments-data", "grades", "grades-data", "parent-tracking", "performance-data",
-    "performance-engagement", "assignment-engagement", "news-reports", "school-setup", "settings",
+    "performance-engagement", "assignment-engagement", "profile-engagement", "news-reports", "school-setup", "settings",
   ]).has(normalizedSlug)
   let nextHtml = html.replace(
     /(<[^>]+\bclass=")([^"]*\bgrid-main\b[^"]*)("[^>]*>)/i,
@@ -1461,6 +1475,7 @@ function buildParentInitialAuthState(session = null) {
     user: {
       parentsId: normalizeText(session.parentsId || session.username),
       role: "parent",
+      mustChangePassword: Boolean(session.mustChangePassword),
     },
   }
 }
@@ -3868,6 +3883,26 @@ function configuredParentPortalAccounts() {
   return accounts
 }
 
+async function establishInvitationParentSession(response, student = {}) {
+  const prisma = await getSharedPrismaClient()
+  const { account } = await ensureParentPortalAccount(prisma, student)
+  await prisma.parentPortalStudentLink.upsert({
+    where: { parentAccountId_studentRefId: { parentAccountId: account.id, studentRefId: student.id } },
+    update: {},
+    create: { parentAccountId: account.id, studentRefId: student.id },
+  })
+  const session = await PARENT_SESSION_STORE.createSession({
+    username: account.parentsId,
+    role: "parent",
+    parentsId: account.parentsId,
+    email: account.email,
+    accountId: account.id,
+    mustChangePassword: Boolean(account.mustChangePassword),
+  })
+  response.setHeader("Set-Cookie", makeParentSessionCookieValue(session.id, PARENT_SESSION_TTL_SECONDS))
+  return account
+}
+
 async function verifyParentPortalCredentials(parentsId, password) {
   const requestedParentsId = normalizeText(parentsId)
   const requestedEmail = normalizeLower(parentsId)
@@ -3892,6 +3927,7 @@ async function verifyParentPortalCredentials(parentsId, password) {
           accountId: account.id,
           parentsId: account.parentsId,
           email: normalizeLower(account.email),
+          mustChangePassword: Boolean(account.mustChangePassword),
           source: "database",
         }
       },
@@ -6933,6 +6969,14 @@ async function handleApiRequest(request, response, pathname, url) {
       : []
     const assignmentBatchIds = Array.from(new Set(items.map((item) => normalizeText(item.dispatch?.queueId)).filter(Boolean)))
     const assignmentRecipientEmails = Array.from(new Set(items.map((item) => normalizeLower(item.recipientEmail)).filter(Boolean)))
+    const assignmentTemplateIds = Array.from(new Set(items.map((item) => normalizeText(item.dispatch?.assignmentTemplateId)).filter(Boolean)))
+    const assignmentTemplates = prisma?.assignmentTemplate && assignmentTemplateIds.length
+      ? await prisma.assignmentTemplate.findMany({
+          where: { id: { in: assignmentTemplateIds } },
+          select: { id: true, assignmentTitle: true, weekNumber: true, assignedAt: true, dueAt: true },
+        })
+      : []
+    const assignmentTemplateById = new Map(assignmentTemplates.map((template) => [template.id, template]))
     const brevoDeliveries = prisma?.brevoEmailDelivery && assignmentBatchIds.length && assignmentRecipientEmails.length
       ? await prisma.brevoEmailDelivery.findMany({
           where: {
@@ -6961,6 +7005,7 @@ async function handleApiRequest(request, response, pathname, url) {
       : []
     const studentIdentityByRef = new Map(students.map((student) => [student.id, {
       eaglesId: normalizeText(student.eaglesId),
+      parentsId: normalizeText(student.profile?.parentsId),
       englishName: normalizeText(student.profile?.englishName),
       level: normalizeText(student.profile?.currentGrade),
       familyId: normalizeText(student.profile?.familyId || student.profile?.parentsId),
@@ -7010,6 +7055,15 @@ async function handleApiRequest(request, response, pathname, url) {
           assignmentTemplateId: item.dispatch?.assignmentTemplateId || "",
           studentRefId: item.dispatch?.studentRefId || "",
           ...(studentIdentityByRef.get(normalizeText(item.dispatch?.studentRefId)) || {}),
+          weekNumber: (() => {
+            const template = assignmentTemplateById.get(normalizeText(item.dispatch?.assignmentTemplateId))
+            const match = String(template?.assignmentTitle || "").match(/\bweek\s*(\d{1,2})\b/i)
+            if (match) return Number.parseInt(match[1], 10)
+            const persisted = Number.parseInt(String(template?.weekNumber || ""), 10)
+            return Number.isInteger(persisted) ? persisted : null
+          })(),
+          assignedAt: assignmentTemplateById.get(normalizeText(item.dispatch?.assignmentTemplateId))?.assignedAt || "",
+          dueAt: assignmentTemplateById.get(normalizeText(item.dispatch?.assignmentTemplateId))?.dueAt || "",
           reminderKind: item.dispatch?.reminderKind || "",
           localDate: item.dispatch?.localDate || "",
           status: item.dispatch?.status || "",
@@ -7383,7 +7437,163 @@ async function handleApiRequest(request, response, pathname, url) {
       updatedByUsername: session?.username,
       updatedByRole: session?.role,
     })
-    sendJson(response, 200, result)
+    let invitation = null
+    if (payload?.sendParentCompletionEmail === true) {
+      const recipientEmail = normalizeText(result?.student?.profile?.motherEmail || result?.student?.profile?.studentEmail)
+      invitation = await createParentProfileInvitation({
+        studentRefId: result.student.id,
+        recipientEmail,
+        queuedBy: session?.username,
+      })
+    }
+    sendJson(response, 200, { ...result, invitation })
+    return true
+  }
+
+  if (method === "GET" && pathname === `${ADMIN_API_PREFIX}/parent-profile-invitations`) {
+    assertCanManageUsers(rolePolicy)
+    const items = await listParentProfileInvitations({
+      studentRefId: url.searchParams.get("studentRefId") || "",
+      take: url.searchParams.get("take") || "100",
+    })
+    sendJson(response, 200, { ok: true, items })
+    return true
+  }
+
+  const resendInvitationMatch = pathname.match(ADMIN_PARENT_PROFILE_INVITATION_RESEND_PATH_RE)
+  if (resendInvitationMatch && method === "POST") {
+    assertCanManageUsers(rolePolicy)
+    const invitation = await resendParentProfileInvitation({
+      invitationId: decodeURIComponent(resendInvitationMatch[1]),
+      queuedBy: session?.username,
+    })
+    sendJson(response, 200, { ok: true, invitation })
+    return true
+  }
+
+  if (method === "GET" && pathname === `${ADMIN_API_PREFIX}/family-ids`) {
+    assertStoreEnabled()
+    const prisma = await getSharedPrismaClient()
+    const [profileRows, generatedFamilies] = await Promise.all([
+      prisma.studentProfile.findMany({
+        where: { familyId: { not: null } },
+        select: { familyId: true },
+        distinct: ["familyId"],
+      }),
+      prisma.family.findMany({ select: { familyId: true }, orderBy: { sequence: "asc" } }),
+    ])
+    const familyIds = [...new Set([
+      ...generatedFamilies.map((row) => normalizeText(row.familyId)),
+      ...profileRows.map((row) => normalizeText(row.familyId)),
+    ].filter(Boolean))].sort((left, right) => left.localeCompare(right, undefined, { numeric: true }))
+    sendJson(response, 200, { ok: true, familyIds })
+    return true
+  }
+
+  if (method === "GET" && pathname === `${ADMIN_API_PREFIX}/profile-engagement`) {
+    assertStoreEnabled()
+    const prisma = await getSharedPrismaClient()
+    const students = await prisma.student.findMany({
+      include: { profile: true, parentProfileInvitations: { orderBy: { createdAt: "desc" }, take: 1 } },
+      orderBy: [{ profile: { familyId: "asc" } }, { eaglesId: "asc" }],
+      take: Math.min(2000, Math.max(1, Number.parseInt(url.searchParams.get("take") || "1000", 10) || 1000)),
+    })
+    const profileBatchIds = Array.from(new Set(
+      students
+        .flatMap((student) => student.parentProfileInvitations || [])
+        .map((invitation) => normalizeText(invitation.batchId))
+        .filter(Boolean),
+    ))
+    const profileBrevoDeliveries = prisma.brevoEmailDelivery && profileBatchIds.length
+      ? await prisma.brevoEmailDelivery.findMany({
+          where: { batchId: { in: profileBatchIds } },
+          orderBy: { sentAt: "asc" },
+        })
+      : []
+    const profileBrevoByBatch = new Map()
+    for (const delivery of profileBrevoDeliveries) {
+      const key = `${normalizeText(delivery.batchId)}|${normalizeLower(delivery.recipientEmail)}`
+      const existing = profileBrevoByBatch.get(key)
+      if (!existing || (delivery.sentAt || delivery.createdAt) < (existing.sentAt || existing.createdAt)) {
+        profileBrevoByBatch.set(key, delivery)
+      }
+    }
+    const familyRows = new Map()
+    students.forEach((student) => {
+      const profile = student.profile || {}
+      const invitation = student.parentProfileInvitations?.[0] || null
+      const required = [profile.fullName, profile.currentGrade, profile.motherName, profile.motherEmail, profile.motherPhone]
+      const familyId = normalizeText(profile.familyId || profile.parentsId)
+      const key = familyId || `unassigned:${normalizeText(profile.parentsId) || student.id}`
+      const row = familyRows.get(key) || {
+        id: key,
+        parentsId: "",
+        familyId: familyId || "Unassigned",
+        parentName: "",
+        parentEmail: "",
+        parentPhone: "",
+        eaglesIds: [],
+        learners: [],
+        learnerCount: 0,
+        completeCount: 0,
+        invitation: null,
+      }
+      row.parentsId ||= normalizeText(profile.parentsId)
+      row.parentName ||= normalizeText(profile.motherName)
+      row.parentEmail ||= normalizeText(profile.motherEmail)
+      row.parentPhone ||= normalizeText(profile.motherPhone)
+      const eaglesId = normalizeText(student.eaglesId)
+      if (eaglesId && !row.eaglesIds.includes(eaglesId)) row.eaglesIds.push(eaglesId)
+      row.learners.push(normalizeText(profile.fullName || profile.englishName || student.eaglesId))
+      row.learnerCount += 1
+      if (required.every(Boolean)) row.completeCount += 1
+      if (invitation && (!row.invitation || invitation.createdAt > row.invitation.createdAt)) row.invitation = invitation
+      familyRows.set(key, row)
+    })
+    const rows = [...familyRows.values()].map((row) => ({
+      id: row.parentsId,
+      parentsId: row.parentsId,
+      familyId: row.familyId,
+      eaglesIds: row.eaglesIds.join(", "),
+      parentName: row.parentName,
+      parentEmail: row.parentEmail,
+      parentPhone: row.parentPhone,
+      learners: row.learners.filter(Boolean).join(", "),
+      learnerCount: row.learnerCount,
+      profileComplete: row.completeCount === row.learnerCount ? "yes" : "no",
+      invitationStatus: normalizeText(row.invitation?.status),
+      invitationSentAt: row.invitation?.sentAt || null,
+      invitationCompletedAt: row.invitation?.completedAt || null,
+      brevoDelivery: (() => {
+        const invitation = row.invitation
+        const delivery = invitation
+          ? profileBrevoByBatch.get(`${normalizeText(invitation.batchId)}|${normalizeLower(invitation.recipientEmail)}`)
+          : null
+        if (!delivery) return null
+        return {
+          providerMessageId: delivery.providerMessageId,
+          batchId: delivery.batchId,
+          queueType: delivery.queueType,
+          queuedAt: delivery.queuedAt?.toISOString?.() || "",
+          sentAt: delivery.sentAt?.toISOString?.() || "",
+          deliveredAt: delivery.deliveredAt?.toISOString?.() || "",
+          proxyLoadedAt: delivery.proxyLoadedAt?.toISOString?.() || "",
+          firstOpenedAt: delivery.firstOpenedAt?.toISOString?.() || "",
+          uniqueOpenedAt: delivery.uniqueOpenedAt?.toISOString?.() || "",
+          openedAt: delivery.openedAt?.toISOString?.() || "",
+          clickedAt: delivery.clickedAt?.toISOString?.() || "",
+          deferredAt: delivery.deferredAt?.toISOString?.() || "",
+          errorAt: delivery.errorAt?.toISOString?.() || "",
+          invalidAt: delivery.invalidAt?.toISOString?.() || "",
+          blockedAt: delivery.blockedAt?.toISOString?.() || "",
+          softBouncedAt: delivery.softBouncedAt?.toISOString?.() || "",
+          hardBouncedAt: (delivery.hardBouncedAt || delivery.bouncedAt)?.toISOString?.() || "",
+          complainedAt: delivery.complainedAt?.toISOString?.() || "",
+          unsubscribedAt: delivery.unsubscribedAt?.toISOString?.() || "",
+        }
+      })(),
+    }))
+    sendJson(response, 200, { ok: true, rows })
     return true
   }
 
@@ -7701,6 +7911,15 @@ async function handleParentApiRequest(request, response, pathname, url) {
   const loginPath = `${PARENT_AUTH_PREFIX}/login`
   const logoutPath = `${PARENT_AUTH_PREFIX}/logout`
   const mePath = `${PARENT_AUTH_PREFIX}/me`
+  const requestOrigin = resolveRequestOrigin(request)
+
+  const invitationOpenMatch = pathname.match(PARENT_PROFILE_INVITATION_OPEN_PATH_RE)
+  if (method === "GET" && invitationOpenMatch) {
+    await consumeParentProfileInvitation(decodeURIComponent(invitationOpenMatch[1]), { mark: "opened" })
+    response.writeHead(200, { "Content-Type": "image/gif", "Content-Length": "43", "Cache-Control": "no-store" })
+    response.end(Buffer.from("R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "base64"))
+    return true
+  }
 
   if (method === "POST" && pathname === loginPath) {
     const payload = await parseBody(request)
@@ -7719,6 +7938,7 @@ async function handleParentApiRequest(request, response, pathname, url) {
       parentsId: principal.parentsId,
       email: principal.email,
       accountId: principal.accountId,
+      mustChangePassword: Boolean(principal.mustChangePassword),
     })
     if (!session?.id) {
       const error = new Error("Unable to establish parent session")
@@ -7731,7 +7951,57 @@ async function handleParentApiRequest(request, response, pathname, url) {
       user: {
         parentsId: principal.parentsId,
         role: "parent",
+        mustChangePassword: Boolean(principal.mustChangePassword),
       },
+    })
+    return true
+  }
+
+  if (method === "POST" && pathname === PARENT_SET_PASSWORD_PATH) {
+    const session = await requireAuthenticatedParentSession(request, response)
+    if (!session?.mustChangePassword) {
+      const error = new Error("Password setup is not required")
+      error.statusCode = 400
+      throw error
+    }
+    const payload = await parseBody(request)
+    const password = normalizeText(payload?.password)
+    const confirmation = normalizeText(payload?.confirmation || payload?.confirmPassword)
+    if (password.length < 10) {
+      const error = new Error("Choose a password with at least 10 characters")
+      error.statusCode = 400
+      throw error
+    }
+    if (password !== confirmation) {
+      const error = new Error("The passwords do not match")
+      error.statusCode = 400
+      throw error
+    }
+    const prisma = await getSharedPrismaClient()
+    if (!session.accountId || !prisma?.parentPortalAccount) {
+      const error = new Error("Parent account persistence is unavailable")
+      error.statusCode = 503
+      throw error
+    }
+    await prisma.parentPortalAccount.update({
+      where: { id: session.accountId },
+      data: { passwordHash: hashScryptPassword(password), mustChangePassword: false },
+    })
+    const replacement = await PARENT_SESSION_STORE.createSession({
+      username: session.username,
+      role: "parent",
+      parentsId: session.parentsId,
+      email: session.email,
+      accountId: session.accountId,
+      mustChangePassword: false,
+    })
+    const oldSessionId = readParentSessionIdFromRequest(request)
+    if (oldSessionId) await PARENT_SESSION_STORE.deleteSession(oldSessionId)
+    response.setHeader("Set-Cookie", makeParentSessionCookieValue(replacement.id, PARENT_SESSION_TTL_SECONDS))
+    sendJson(response, 200, {
+      ok: true,
+      authenticated: true,
+      user: { parentsId: normalizeText(session.parentsId || session.username), role: "parent", mustChangePassword: false },
     })
     return true
   }
@@ -7751,8 +8021,24 @@ async function handleParentApiRequest(request, response, pathname, url) {
       user: {
         parentsId: normalizeText(session?.parentsId || session?.username),
         role: "parent",
+        mustChangePassword: Boolean(session?.mustChangePassword),
       },
     })
+    return true
+  }
+
+  const invitationLinkMatch = pathname.match(PARENT_PROFILE_INVITATION_PATH_RE)
+  if (method === "GET" && invitationLinkMatch) {
+    try {
+      const consumed = await consumeParentProfileInvitation(decodeURIComponent(invitationLinkMatch[1]))
+      const account = await establishInvitationParentSession(response, consumed.student)
+      const next = new URL(PARENT_PORTAL_PAGE_PATH, requestOrigin || `http://${host}`)
+      next.searchParams.set("complete", normalizeText(consumed.student.eaglesId))
+      next.searchParams.set("invitation", "1")
+      sendRedirect(response, 302, `${next.pathname}${next.search}`)
+    } catch (error) {
+      sendJson(response, Number(error?.statusCode || 410), { error: normalizeText(error?.message || error) })
+    }
     return true
   }
 
@@ -7937,6 +8223,7 @@ async function handleParentApiRequest(request, response, pathname, url) {
       error.statusCode = 400
       throw error
     }
+    await markParentProfileInvitationCompleted({ studentRefId: child.studentRefId })
     sendJson(response, 200, {
       ok: true,
       submissionId: submitted.id,
@@ -8138,6 +8425,15 @@ export async function handleStudentAdminRequest(request, response) {
       withError(response, request, error)
     }
     return true
+  }
+
+  if (method === "GET" && PARENT_PROFILE_INVITATION_PATH_RE.test(pathname)) {
+    try {
+      return await handleParentApiRequest(request, response, pathname, url)
+    } catch (error) {
+      withError(response, request, error)
+      return true
+    }
   }
 
   const llmsRoutes = new Map([

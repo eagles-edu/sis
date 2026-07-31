@@ -78,7 +78,20 @@
   <title>
       Trang chủ dành cho phụ huynh - Câu lạc bộ Eagles
     </title>
-
+    <!-- Brevo Conversations {literal} -->
+    <script>
+        (function(d, w, c) {
+            w.BrevoConversationsID = '6a69c88b5131e8e4fc0cf347';
+            w[c] = w[c] || function() {
+                (w[c].q = w[c].q || []).push(arguments);
+            };
+            var s = d.createElement('script');
+            s.async = true;
+            s.src = 'https://conversations-widget.brevo.com/brevo-conversations.js';
+            if (d.head) d.head.appendChild(s);
+        })(document, window, 'BrevoConversations');
+    </script>
+    <!-- /Brevo Conversations {/literal} -->
   </head>
 
   <body class="parent-portal-page" id="top">
@@ -302,6 +315,30 @@
             >
           </div>
           <p id="loginStatus" class="status"></p>
+        </section>
+        <section class="panel hidden" id="passwordSetupCard" data-surface-role="panel">
+          <div class="section-head">
+            <h1>Choose your parent password</h1>
+            <span class="chip chip-warning">Required first step</span>
+          </div>
+          <p class="hint">
+            Parent ID: <strong id="passwordSetupParentsId"></strong><br>
+            Choose your password now, then save both your Parent ID and password in a safe place.
+          </p>
+          <form id="passwordSetupForm" class="login-form" novalidate>
+            <div class="form-row">
+              <label for="newParentPassword">New password</label>
+              <input id="newParentPassword" type="password" autocomplete="new-password" minlength="10" required>
+            </div>
+            <div class="form-row">
+              <label for="confirmParentPassword">Confirm password</label>
+              <input id="confirmParentPassword" type="password" autocomplete="new-password" minlength="10" required>
+            </div>
+            <div class="login-actions">
+              <button id="saveParentPasswordBtn" class="portal-button portal-button-primary" type="submit">Save password and continue</button>
+            </div>
+          </form>
+          <p id="passwordSetupStatus" class="status"></p>
         </section>
         <section
           class="content hidden"

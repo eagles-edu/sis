@@ -4,6 +4,7 @@ import { getConfiguredDatabaseUrlSync } from "./sis-config-store.mjs"
 import { invalidateLevelAndSchoolFiltersCache } from "./student-admin-queries.mjs"
 import { getStudentById as getStudentRosterById } from "./student-roster.mjs"
 import { canonicalizeLevel as canonicalizeCatalogLevel } from "./level-catalog.mjs"
+import { getConfiguredSchoolYear } from "./school-setup-store.mjs"
 import { hashScryptPassword } from "./users.mjs"
 import { writeStudentProfileBackupSnapshot } from "./student-profile-backups.mjs"
 
@@ -380,6 +381,27 @@ function normalizeProfilePayload(payload = {}) {
   }
 }
 
+async function resolveNewStudentFamilyId(client, requestedFamilyId = "") {
+  const requested = normalizeText(requestedFamilyId)
+  if (requested) {
+    const existingFamily = await client.family.findUnique({ where: { familyId: requested } })
+    if (existingFamily) return requested
+    const existingStudent = await client.studentProfile.findFirst({ where: { familyId: requested }, select: { familyId: true } })
+    assertWithStatus(Boolean(existingStudent), 400, "Selected familyId does not exist")
+    return requested
+  }
+  const aggregate = await client.family.aggregate({ _max: { sequence: true } })
+  const sequence = (normalizePositiveInteger(aggregate?._max?.sequence) || 0) + 1
+  const family = await client.family.create({
+    data: {
+      id: `family-${sequence}-${Date.now().toString(36)}`,
+      familyId: `fam-${String(sequence).padStart(4, "0")}`,
+      sequence,
+    },
+  })
+  return family.familyId
+}
+
 /**
  * @returns {Promise<unknown>}
  */
@@ -690,10 +712,6 @@ export function applyImportIdentityDefaults(
   })
 
   let nextStudentNumber = minimumStudentNumber
-  reservedStudentNumbers.forEach((number) => {
-    if (number >= nextStudentNumber) nextStudentNumber = number + 1
-  })
-
   let autoFilledEaglesIds = 0
   let autoFilledStudentNumbers = 0
 
@@ -888,7 +906,7 @@ async function assertStudentNumberIsUniqueForClient(client, studentNumber, exclu
  * @param {string} [studentRefId]
  * @returns {Promise<{ action: string, studentRefId: string }>}
  */
-async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
+async function saveStudentWithClient(client, payload = {}, studentRefId = "", options = {}) {
   const eaglesId = normalizeText(payload.eaglesId)
   assertWithStatus(Boolean(eaglesId), 400, "eaglesId is required")
 
@@ -914,6 +932,26 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
   const persistedEmail = profileEmail || studentEmail
   const requestedStudentNumber = requestedStudentNumberFromPayload(payload)
   const requestedId = normalizeText(studentRefId)
+
+  if (!requestedId) {
+    const fullName = normalizeText(profilePayload.fullName)
+    const level = canonicalizeCatalogLevel(payload.level || profilePayload.currentGrade)
+    const motherName = normalizeText(profilePayload.motherName)
+    const motherEmail = normalizeLower(profilePayload.motherEmail)
+    const motherPhone = normalizeText(profilePayload.motherPhone)
+    const missing = [
+      !eaglesId && "Eagles ID",
+      !fullName && "learner full name",
+      !level && "class level",
+      !motherName && "mother/adult student name",
+      !motherEmail && "mother/adult student email",
+      !motherPhone && "mother/adult student phone",
+    ].filter(Boolean)
+    assertWithStatus(!missing.length, 400, `Required new-student fields missing: ${missing.join(", ")}`)
+    assertWithStatus(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(motherEmail), 400, "mother/adult student email is invalid")
+    profilePayload.currentGrade = level
+    profilePayload.familyId = await resolveNewStudentFamilyId(client, payload?.profile?.familyId)
+  }
 
   if (requestedId) {
     const existing = await client.student.findUnique({ where: { id: requestedId } })
@@ -1006,6 +1044,19 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
       ...profilePayload,
     },
   })
+  const schoolYear = getConfiguredSchoolYear({ required: true })
+  const enrolledLevel = canonicalizeCatalogLevel(profilePayload.currentGrade)
+  await client.studentEnrollmentPeriod.create({
+    data: {
+      studentRefId: student.id,
+      schoolYear,
+      level: enrolledLevel,
+      status: "active",
+      startedAt: new Date(),
+      createdBy: normalizeNullableText(options.updatedByUsername),
+      updatedBy: normalizeNullableText(options.updatedByUsername),
+    },
+  })
   if (portalPasswordHash) {
     await client.studentPortalAccount.create({
       data: {
@@ -1035,11 +1086,14 @@ async function resolveNextStudentNumberForClient(client, floor = STUDENT_NUMBER_
       studentNumber: true,
     },
   })
-  const highest = rows.reduce((value, row) => {
-    const candidate = normalizePositiveInteger(row?.studentNumber) || 0
-    return candidate > value ? candidate : value
-  }, minimum - 1)
-  return Math.max(minimum, highest + 1)
+  const usedNumbers = new Set(
+    rows
+      .map((row) => normalizePositiveInteger(row?.studentNumber))
+      .filter((studentNumber) => studentNumber >= minimum),
+  )
+  let nextStudentNumber = minimum
+  while (usedNumbers.has(nextStudentNumber)) nextStudentNumber += 1
+  return nextStudentNumber
 }
 
 /**
@@ -1066,7 +1120,7 @@ export async function saveStudent(payload = {}, studentRefId = "", options = {})
     actorRole: options.updatedByRole,
     data: existing || payload,
   })
-  const result = await prisma.$transaction((tx) => saveStudentWithClient(tx, payload, studentRefId))
+  const result = await prisma.$transaction((tx) => saveStudentWithClient(tx, payload, studentRefId, options))
 
   if (!skipFilterCacheInvalidation) {
     await invalidateLevelAndSchoolFiltersCache()

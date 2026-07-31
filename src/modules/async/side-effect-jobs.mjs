@@ -33,6 +33,7 @@ import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 
 export const ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL = "announcement-email"
 export const ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF = "report-card-pdf"
+export const ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION = "parent-profile-invitation"
 
 export const ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED = "queued"
 export const ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING = "processing"

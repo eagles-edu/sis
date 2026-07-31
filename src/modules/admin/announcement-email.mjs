@@ -159,6 +159,7 @@ function normalizeOrigin(value) {
     || normalizeText(process.env.STUDENT_ADMIN_PUBLIC_ORIGIN)
     || normalizeText(process.env.PUBLIC_APP_ORIGIN)
     || normalizeText(process.env.APP_ORIGIN)
+    || normalizeText(process.env.EXERCISE_MAILER_ORIGIN)
   if (!raw) return ""
   return raw.replace(/\/+$/, "")
 }

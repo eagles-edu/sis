@@ -158,6 +158,9 @@ test(
         document.getElementById("childPageCard")?.classList.add("hidden")
       }
       document.querySelectorAll(".hidden,[hidden]").forEach((element) => {
+        // Keep the parent password gate closed; it is only shown when the
+        // authenticated account explicitly requires first-login setup.
+        if (element.id === "passwordSetupCard") return
         element.classList?.remove("hidden")
         element.removeAttribute("hidden")
         if (element instanceof HTMLElement) {

@@ -682,8 +682,14 @@ async function resolveNextStudentNumberForClient(client, floor = STUDENT_NUMBER_
       studentNumber: true,
     },
   })
-  const highest = maxStudentNumberFromRows(rows, minimum)
-  return Math.max(minimum, highest + 1)
+  const usedNumbers = new Set(
+    rows
+      .map((row) => normalizePositiveInteger(row?.studentNumber))
+      .filter((studentNumber) => studentNumber >= minimum),
+  )
+  let nextStudentNumber = minimum
+  while (usedNumbers.has(nextStudentNumber)) nextStudentNumber += 1
+  return nextStudentNumber
 }
 
 /**
@@ -949,9 +955,6 @@ function applyImportIdentityDefaults(
   })
 
   let nextStudentNumber = minimumStudentNumber
-  reservedStudentNumbers.forEach((number) => {
-    if (number >= nextStudentNumber) nextStudentNumber = number + 1
-  })
 
   let autoFilledEaglesIds = 0
   let autoFilledStudentNumbers = 0

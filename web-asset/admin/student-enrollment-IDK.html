@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260525i">
   <!-- Route-owned CSS stays blocking and follows shared/admin tokens so standalone overrides retain their established cascade. -->
   <link rel="stylesheet" href="/web-asset/admin/student-enrollment.min.css">
+  
 </head>
   <body class="admin-portal-page page student-enrollment-page" id="top">
   <div class="wrap">
@@ -188,7 +189,7 @@
                   </div>
                   <button id="enrollmentLevelAllBtn" type="button" class="portal-button portal-button-alt">All levels</button>
                 </div>
-                <ul id="enrollmentLevelTiles" class="enrollment-level-grid"></ul>
+                <div id="enrollmentLevelTiles" class="enrollment-level-grid" role="list" aria-label="Class level filters"></div>
               </div>
               <div class="row">
                 <div class="field c4">

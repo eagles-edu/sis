@@ -951,10 +951,10 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
     </style>
     <link
       rel="preload"
-      href="/web-asset/admin/student-admin.min.css?v=20260530a"
+      href="/web-asset/admin/student-admin.min.css?v=20260801-sivb"
       as="style"
       onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a"></noscript>
+    <noscript><link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260801-sivb"></noscript>
   </head>
 
   <body class="admin-portal-page admin-auth-booting page" id="top">
@@ -1086,9 +1086,19 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
             <a href="/admin/queue-hub" class="menu-link menu-link-top" data-page-link="queue-hub">
               QUEUE HUB
             </a>
-            <a href="/admin/profile" class="menu-link menu-link-top" data-page-link="profile">
-              STUDENTS
-            </a>
+            <div class="menu-group" data-menu-group="students">
+              <button type="button" class="menu-group-btn" data-menu-toggle="students" aria-expanded="false">
+                STUDENTS
+              </button>
+              <div class="menu-group-links">
+                <a href="/admin/profile" class="menu-link" data-page-link="profile">
+                  Student Profile
+                </a>
+                <a href="/admin/profile-engagement" class="menu-link menu-sublink" data-page-link="profile-engagement">
+                  Profile engagement
+                </a>
+              </div>
+            </div>
             <div class="menu-group" data-menu-group="tracking">
               <button type="button" class="menu-group-btn" data-menu-toggle="tracking" aria-expanded="false">
                 TRACKING
@@ -1985,7 +1995,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   class="content page-section"
                   data-page="profile"
                   data-surface-role="content">
-                  <h2>Student Profile</h2>
+                  <h2>Student Profile <span class="profile-adult-student-marker" data-adult-student-marker hidden>ADULT STUDENT</span></h2>
                   <p class="small page-note">
                     View one student at a time, then switch to edit or create
                     mode from the controls below.
@@ -2051,7 +2061,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       autocomplete="off"
                       novalidate>
                       <div class="profile-editor-toolbar">
-                        <h3>New / Edit Form</h3>
+                        <h3>Student Profile <span class="profile-adult-student-marker" data-adult-student-marker hidden>ADULT STUDENT</span></h3>
                         <div class="actions actions-2">
                       <button
                         id="profileBackToInfoBtn"
@@ -2691,6 +2701,28 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   </div>
                 </div>
 
+                <template id="profile-engagement-page-template">
+                <div class="content page-section" data-page="profile-engagement" data-surface-role="content">
+                  <h2>Profile engagement</h2>
+                  <p class="small page-note">Track parent/adult profile-completion activity. Learners are shown only as family context; they are not engagement actors.</p>
+                  <div class="table-toolbar">
+                    <div class="toolbar-field">
+                      <label for="profileEngagementSearch">Search</label>
+                      <input id="profileEngagementSearch" type="search" placeholder="family ID | learner | parent email">
+                    </div>
+                    <div class="toolbar-field compact">
+                      <p class="small" id="profileEngagementSummary">Loading profile engagement...</p>
+                    </div>
+                    <div class="toolbar-field compact">
+                      <button id="profileEngagementReloadBtn" type="button" class="portal-button portal-button-teal-refresh">Reload</button>
+                    </div>
+                  </div>
+                  <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
+                    <div id="profileEngagementRows">Loading profile engagement...</div>
+                  </div>
+                </div>
+                </template>
+
                 <template id="assignment-engagement-page-template">
                 <div
                   class="content page-section"
@@ -2746,7 +2778,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <h3 class="section-title">Tracked metric table</h3>
                       <p class="small" id="assignmentEngagementTableSummary">Select a class day to inspect its recipients.</p>
                       <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
-                        <div id="assignmentEngagementRows" aria-label="Assignment engagement event matrix">
+                        <div id="assignmentEngagementRows">
                           Loading engagement records...
                         </div>
                       </div>
@@ -4388,7 +4420,7 @@ Select a homework link to inspect details.</pre>
                       <div
                         class="table-scroll-wrap data-surface"
                         data-surface-role="data-surface">
-                        <div id="performanceEngagementRows" aria-label="Report engagement event matrix">
+                        <div id="performanceEngagementRows">
                           Select a class day to load engagement rows.
                         </div>
                       </div>
@@ -6918,7 +6950,7 @@ No family lookup yet.</pre>
           if (adminAppLoaded) return
           adminAppLoaded = true
           const script = document.createElement("script")
-          script.src = "/web-asset/admin/student-admin.min.js?v=20260723-overview-paint"
+          script.src = "/web-asset/admin/student-admin.min.js?v=20260801-sivb"
           script.defer = true
           if (replaySubmit || replayClick || replayPage) {
             script.addEventListener("load", () => {
