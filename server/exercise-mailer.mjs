@@ -55,6 +55,17 @@ function loadEnvironmentFile() {
 
 loadEnvironmentFile()
 
+const { default: posthog } = await import("./posthog.mjs")
+
+async function captureUnhandledError(error) {
+  if (!posthog) return
+  posthog.captureException(error)
+  await posthog.flush()
+}
+
+process.on("uncaughtException", captureUnhandledError)
+process.on("unhandledRejection", captureUnhandledError)
+
 // Load SIS route/store modules after env hydration so their module-level config reads
 // the intended env file values instead of shell defaults.
 const { isExerciseStoreRequired, persistExerciseSubmission } = await import("./exercise-store.mjs")
@@ -1437,7 +1448,8 @@ export function startExerciseMailer(options = {}) {
   setStudentAdminRuntimeHealthProvider(() => buildRuntimeHealthPayload())
 
   const server = http.createServer((request, response) => {
-    handleRequest(request, response, transporter).catch((error) => {
+    handleRequest(request, response, transporter).catch(async (error) => {
+      await captureUnhandledError(error)
       // Ensure CORS even on unexpected errors
       allowCors(request, response)
       response.writeHead(500, { "Content-Type": "application/json" })
@@ -1465,6 +1477,7 @@ export function startExerciseMailer(options = {}) {
     if (selfHealLoop && typeof selfHealLoop.stop === "function") {
       selfHealLoop.stop()
     }
+    if (posthog) void posthog.shutdown()
   })
 
   return server

@@ -112,6 +112,7 @@
     "pdfkit": "^0.19.1",
     "pg": "^8.21.0",
     "postcss": "^8.5.15",
+    "posthog-node": "^5.47.3",
     "redis": "^5.12.1",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },

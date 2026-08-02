@@ -62,6 +62,7 @@ import {
 } from "./student-report-card-pdf.mjs"
 import { createStudentAdminSessionStore } from "./student-admin-session-store.mjs"
 import { getSharedPrismaClient } from "./prisma-client-factory.mjs"
+import { posthog } from "./posthog.mjs"
 
 const ADMIN_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_ADMIN_PAGE_PATH, "/admin")
 const ADMIN_POINTS_PAGE_PATH = normalizePathPrefix(
@@ -1678,6 +1679,7 @@ async function verifyCredentials(username, password) {
       return {
         username: dbUser.username,
         role: normalizeRoleName(dbUser.role),
+        posthogDistinctId: normalizeText(dbUser.id),
       }
     }
   }
@@ -1746,6 +1748,30 @@ function clearSessionCookie(response) {
   response.setHeader("Set-Cookie", makeSessionCookieValue("", 0))
 }
 
+function identifyPostHogPrincipal(principal) {
+  const distinctId = normalizeText(principal?.posthogDistinctId)
+  if (!posthog || !distinctId) return
+  posthog.identify({
+    distinctId,
+    properties: {
+      role: normalizeRoleName(principal?.role),
+    },
+  })
+  posthog.enterContext({ distinctId })
+}
+
+function bindPostHogRequestIdentity(session) {
+  const distinctId = normalizeText(session?.posthogDistinctId)
+  if (!posthog || !distinctId) return
+  posthog.enterContext({ distinctId })
+}
+
+async function capturePostHogEvent(event, properties = {}) {
+  if (!posthog) return
+  posthog.capture({ event, properties })
+  await posthog.flush()
+}
+
 function readSessionIdFromRequest(request) {
   const cookies = parseCookies(request.headers.cookie)
   return normalizeText(cookies[SESSION_COOKIE_NAME] || "")
@@ -1768,6 +1794,7 @@ async function requireAuthenticatedSession(request, response) {
   }
 
   response.setHeader("Set-Cookie", makeSessionCookieValue(sessionId, SESSION_TTL_SECONDS))
+  bindPostHogRequestIdentity(session)
   return session
 }
 
@@ -1814,6 +1841,7 @@ async function requireAuthenticatedParentSession(request, response) {
   }
 
   response.setHeader("Set-Cookie", makeParentSessionCookieValue(sessionId, PARENT_SESSION_TTL_SECONDS))
+  bindPostHogRequestIdentity(session)
   return session
 }
 
@@ -1860,6 +1888,7 @@ async function requireAuthenticatedStudentSession(request, response) {
   }
 
   response.setHeader("Set-Cookie", makeStudentSessionCookieValue(sessionId, STUDENT_SESSION_TTL_SECONDS))
+  bindPostHogRequestIdentity(session)
   return session
 }
 
@@ -2419,7 +2448,7 @@ async function restartExerciseMailerServiceControl() {
   }
 }
 
-function withError(response, request, error) {
+async function withError(response, request, error) {
   let statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500
   let message = normalizeText(error?.message) || "Request failed"
   const code = normalizeText(error?.code).toUpperCase()
@@ -2447,6 +2476,10 @@ function withError(response, request, error) {
       ? error.payload
       : null
   const responseBody = payload ? { error: message, ...payload } : { error: message }
+  if (posthog && statusCode >= 500) {
+    posthog.captureException(error)
+    await posthog.flush()
+  }
   allowCors(request, response)
   sendJson(response, statusCode, responseBody)
 }
@@ -2463,6 +2496,11 @@ async function handleLogin(request, response) {
     throw error
   }
 
+  identifyPostHogPrincipal(principal)
+  await capturePostHogEvent("admin_login_succeeded", {
+    role: normalizeRoleName(principal.role),
+    authentication_source: normalizeText(principal.source) || "configured",
+  })
   const session = await SESSION_STORE.createSession(principal)
   if (!session?.id) {
     const error = new Error("Unable to establish admin session")
@@ -5319,6 +5357,9 @@ async function handleApiRequest(request, response, pathname, url) {
     const adjustment = await createStudentPointsAdjustment(studentRefId, payload, {
       adjustedByUsername: normalizeText(session?.username),
     })
+    await capturePostHogEvent("student_points_adjusted", {
+      adjustment_type: normalizeText(adjustment?.type) || "unspecified",
+    })
     sendJson(response, 200, {
       ok: true,
       item: adjustment,
@@ -5371,6 +5412,9 @@ async function handleApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const result = await reviewStudentNewsReport(reportId, payload, {
       reviewedByUsername: normalizeText(session?.username),
+    })
+    await capturePostHogEvent("student_news_report_reviewed", {
+      review_status: normalizeText(result?.status) || "updated",
     })
     sendJson(response, 200, {
       ok: true,
@@ -5866,6 +5910,9 @@ async function handleApiRequest(request, response, pathname, url) {
     assertStoreEnabled()
     const payload = await parseBody(request)
     const result = await saveStudent(payload)
+    await capturePostHogEvent("student_created", {
+      storage_driver: normalizeText(result?.driver) || "default",
+    })
     sendJson(response, 200, result)
     return true
   }
@@ -5875,6 +5922,9 @@ async function handleApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const rows = parseSpreadsheetRowsFromUploadPayload(payload)
     const result = await importStudentsFromRows(rows)
+    await capturePostHogEvent("students_imported", {
+      import_row_count: rows.length,
+    })
     sendJson(response, 200, result)
     return true
   }
@@ -5967,12 +6017,14 @@ async function handleApiRequest(request, response, pathname, url) {
     if (method === "PUT") {
       const payload = await parseBody(request)
       const result = await saveStudent(payload, studentRefId)
+      await capturePostHogEvent("student_updated")
       sendJson(response, 200, result)
       return true
     }
 
     if (method === "DELETE") {
       const result = await deleteStudent(studentRefId)
+      await capturePostHogEvent("student_deleted")
       sendJson(response, 200, result)
       return true
     }
@@ -5985,6 +6037,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const record = await saveAttendanceRecord(studentRefId, payload)
     const student = await getStudentByIdWithReportBackfill(studentRefId)
+    await capturePostHogEvent("attendance_record_saved")
     sendJson(response, 200, { record, student })
     return true
   }
@@ -6007,6 +6060,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const record = await saveGradeRecord(studentRefId, payload)
     const student = await getStudentByIdWithReportBackfill(studentRefId)
+    await capturePostHogEvent("grade_record_saved")
     sendJson(response, 200, { record, student })
     return true
   }
@@ -6029,6 +6083,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const report = await saveParentClassReport(studentRefId, payload)
     const student = await getStudentByIdWithReportBackfill(studentRefId)
+    await capturePostHogEvent("parent_report_created")
     sendJson(response, 200, { report, student })
     return true
   }
@@ -6040,6 +6095,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const report = await generateParentClassReportFromGrades(studentRefId, payload)
     const student = await getStudentByIdWithReportBackfill(studentRefId)
+    await capturePostHogEvent("parent_report_generated")
     sendJson(response, 200, { report, student })
     return true
   }
@@ -6080,12 +6136,14 @@ async function handleParentApiRequest(request, response, pathname, url) {
       role: "parent",
       parentsId: principal.parentsId,
       accountId: principal.accountId,
+      posthogDistinctId: principal.source === "database" ? normalizeText(principal.accountId) : "",
     })
     if (!session?.id) {
       const error = new Error("Unable to establish parent session")
       error.statusCode = 500
       throw error
     }
+    identifyPostHogPrincipal(session)
     response.setHeader("Set-Cookie", makeParentSessionCookieValue(session.id, PARENT_SESSION_TTL_SECONDS))
     sendJson(response, 200, {
       authenticated: true,
@@ -6271,6 +6329,7 @@ async function handleParentApiRequest(request, response, pathname, url) {
       error.statusCode = 400
       throw error
     }
+    await capturePostHogEvent("parent_profile_submitted")
     sendJson(response, 200, {
       ok: true,
       submissionId: submitted.id,
@@ -6308,12 +6367,16 @@ async function handleStudentApiRequest(request, response, pathname, url) {
       eaglesId: principal.eaglesId,
       studentRefId: principal.studentRefId,
       accountId: principal.accountId,
+      posthogDistinctId: normalizeText(principal.studentRefId) || (
+        principal.source === "database" ? normalizeText(principal.accountId) : ""
+      ),
     })
     if (!session?.id) {
       const error = new Error("Unable to establish student session")
       error.statusCode = 500
       throw error
     }
+    identifyPostHogPrincipal(session)
     response.setHeader("Set-Cookie", makeStudentSessionCookieValue(session.id, STUDENT_SESSION_TTL_SECONDS))
     sendJson(response, 200, {
       authenticated: true,
@@ -6384,6 +6447,7 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     const result = await saveStudentNewsReport(studentRefId, payload, {
       validationConfig,
     })
+    await capturePostHogEvent("student_news_report_submitted")
     sendJson(response, 200, result)
     return true
   }
@@ -6489,7 +6553,7 @@ export async function handleStudentAdminRequest(request, response) {
       if (!handled) sendJson(response, 404, { error: "Parent endpoint not found" })
       return true
     } catch (error) {
-      withError(response, request, error)
+      await withError(response, request, error)
       return true
     }
   }
@@ -6508,7 +6572,7 @@ export async function handleStudentAdminRequest(request, response) {
       if (!handled) sendJson(response, 404, { error: "Student endpoint not found" })
       return true
     } catch (error) {
-      withError(response, request, error)
+      await withError(response, request, error)
       return true
     }
   }
@@ -6530,7 +6594,7 @@ export async function handleStudentAdminRequest(request, response) {
     }
     return true
   } catch (error) {
-    withError(response, request, error)
+    await withError(response, request, error)
     return true
   }
 }
