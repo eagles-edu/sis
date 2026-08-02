@@ -36,6 +36,7 @@ import {
   enqueueAsyncSideEffectJob,
 } from "../src/modules/async/side-effect-jobs.mjs"
 import { processBrevoWebhookEvent } from "../src/modules/email/brevo-delivery.mjs"
+import { getBrevoStatistics } from "../src/modules/email/brevo.mjs"
 import {
   getEmailBatchQueueRuntimeStatus,
   getEmailBatchQueueStatus,
@@ -81,12 +82,14 @@ import {
 import {
   createParentProfileInvitation,
   resendParentProfileInvitation,
+  recoverParentProfileInvitation,
   consumeParentProfileInvitation,
+  redeemParentProfileInvitation,
   listParentProfileInvitations,
   markParentProfileInvitationCompleted,
   ensureParentPortalAccount,
 } from "../src/modules/admin/parent-profile-invitations.mjs"
-import { hashScryptPassword } from "../src/modules/admin/users.mjs"
+import { assertPortalPasswordPolicy, hashScryptPassword } from "../src/modules/admin/users.mjs"
 import {
   readSchoolSetupSnapshot,
 } from "../src/modules/admin/school-setup-store.mjs"
@@ -253,6 +256,7 @@ const ADMIN_ASSIGNMENT_REMINDER_ENGAGEMENT_PATH = `${ADMIN_API_PREFIX}/assignmen
 const ADMIN_INCOMING_EXERCISE_RESULTS_PATH = `${ADMIN_API_PREFIX}/exercise-results/incoming`
 const ADMIN_PROFILE_SUBMISSIONS_PATH = `${ADMIN_API_PREFIX}/profile-submissions`
 const ADMIN_RUNTIME_HEALTH_PATH = `${ADMIN_API_PREFIX}/runtime/health`
+const ADMIN_BREVO_STATISTICS_PATH = `${ADMIN_API_PREFIX}/runtime/brevo-statistics`
 const ADMIN_SIS_CONFIG_REPAIR_PATH = `${ADMIN_API_PREFIX}/runtime/sis-config-repair`
 const ADMIN_SERVICE_CONTROL_PATH = `${ADMIN_API_PREFIX}/runtime/service-control`
 const ADMIN_POINTS_SUMMARY_PATH = `${ADMIN_API_PREFIX}/points/summary`
@@ -380,6 +384,8 @@ const PARENT_PROFILE_INVITATION_PATH_RE = new RegExp(`^${escapeRegex(PARENT_PORT
 const PARENT_PROFILE_INVITATION_OPEN_PATH_RE = new RegExp(`^${escapeRegex(PARENT_API_PREFIX)}/profile-invitations/([^/]+)/open\\.gif$`)
 const ADMIN_PARENT_PROFILE_INVITATION_RESEND_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_API_PREFIX)}/parent-profile-invitations/([^/]+)/resend$`)
 const PARENT_SET_PASSWORD_PATH = `${PARENT_AUTH_PREFIX}/set-password`
+const PARENT_ACTIVATION_EXCHANGE_PATH = `${PARENT_AUTH_PREFIX}/activation/exchange`
+const PARENT_ACTIVATION_RECOVERY_PATH = `${PARENT_AUTH_PREFIX}/activation/recover`
 const PARENT_CHILD_NEWS_CALENDAR_PATH_RE = new RegExp(
   `^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/news-reports/calendar$`
 )
@@ -1233,9 +1239,10 @@ function sendText(response, statusCode, text, headers = {}) {
 }
 
 function sendRedirect(response, statusCode, location) {
-  response.writeHead(statusCode, {
-    Location: location,
-  })
+  // Do not let a redirect replace a pending Set-Cookie (notably the parent
+  // invitation session that must survive the redirect to password setup).
+  response.statusCode = statusCode
+  response.setHeader("Location", location)
   response.end()
 }
 
@@ -1519,7 +1526,7 @@ function injectAdminRuntimeConfig(html, pageSlug, origin, initialAuthState = { a
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_PREFERENCES_PATH=${JSON.stringify(ADMIN_PREFERENCES_PATH)};window.__SIS_ADMIN_ASSETS_PATH=${JSON.stringify(ADMIN_ASSETS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SIS_CONFIG_REPAIR_PATH=${JSON.stringify(ADMIN_SIS_CONFIG_REPAIR_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_PREFERENCES_PATH=${JSON.stringify(ADMIN_PREFERENCES_PATH)};window.__SIS_ADMIN_ASSETS_PATH=${JSON.stringify(ADMIN_ASSETS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_BREVO_STATISTICS_PATH=${JSON.stringify(ADMIN_BREVO_STATISTICS_PATH)};window.__SIS_ADMIN_SIS_CONFIG_REPAIR_PATH=${JSON.stringify(ADMIN_SIS_CONFIG_REPAIR_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-admin-auth-state", authStateName)
   const bodyClassName =
     normalizedAuthState.authenticated ?
@@ -1745,6 +1752,7 @@ export function getStudentAdminRuntimeStatus() {
     profileSubmissionsPath: ADMIN_PROFILE_SUBMISSIONS_PATH,
     brevoWebhookPath: BREVO_WEBHOOK_PATH,
     runtimeHealthPath: ADMIN_RUNTIME_HEALTH_PATH,
+    brevoStatisticsPath: ADMIN_BREVO_STATISTICS_PATH,
     serviceControlPath: ADMIN_SERVICE_CONTROL_PATH,
     assignmentAnnouncementPreviewCreatePath: ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH,
     assignmentAnnouncementPreviewPath: ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH,
@@ -2458,12 +2466,12 @@ async function requireAuthenticatedSession(request, response) {
   return session
 }
 
-function makeParentSessionCookieValue(sessionId, maxAgeSeconds) {
+function makeParentSessionCookieValue(sessionId, maxAgeSeconds, { sameSite = PARENT_SESSION_COOKIE_SAME_SITE } = {}) {
   const parts = [
     `${PARENT_SESSION_COOKIE_NAME}=${encodeURIComponent(sessionId)}`,
     `Path=${PARENT_SESSION_COOKIE_PATH}`,
     "HttpOnly",
-    `SameSite=${normalizeSameSite(PARENT_SESSION_COOKIE_SAME_SITE)}`,
+    `SameSite=${normalizeSameSite(sameSite)}`,
   ]
 
   if (PARENT_SESSION_COOKIE_SECURE) parts.push("Secure")
@@ -3899,8 +3907,35 @@ async function establishInvitationParentSession(response, student = {}) {
     accountId: account.id,
     mustChangePassword: Boolean(account.mustChangePassword),
   })
+  // Brevo/Gmail opens the invite through a cross-site tracking redirect. Lax
+  // permits this one top-level GET redirect to carry the setup session; normal
+  // parent-session issuance remains governed by the configured Strict policy.
+  response.setHeader("Set-Cookie", makeParentSessionCookieValue(session.id, PARENT_SESSION_TTL_SECONDS, { sameSite: "Lax" }))
+  return account
+}
+
+async function establishParentActivationSession(response, invitation = {}) {
+  const prisma = await getSharedPrismaClient()
+  let account = invitation.parentAccount
+  if (!account) {
+    const resolved = await ensureParentPortalAccount(prisma, invitation.student || {})
+    account = resolved.account
+  }
+  const session = await PARENT_SESSION_STORE.createSession({
+    username: account.parentsId,
+    role: "parent",
+    parentsId: account.parentsId,
+    email: account.email,
+    accountId: account.id,
+    mustChangePassword: Boolean(account.mustChangePassword),
+  })
   response.setHeader("Set-Cookie", makeParentSessionCookieValue(session.id, PARENT_SESSION_TTL_SECONDS))
   return account
+}
+
+function parentActivationSourceKey(request) {
+  const forwarded = normalizeText(request.headers["x-forwarded-for"]).split(",")[0]
+  return forwarded || normalizeText(request.socket?.remoteAddress) || "unknown"
 }
 
 async function verifyParentPortalCredentials(parentsId, password) {
@@ -6458,6 +6493,13 @@ async function handleApiRequest(request, response, pathname, url) {
     return true
   }
 
+  if (method === "GET" && pathname === ADMIN_BREVO_STATISTICS_PATH) {
+    const days = Math.min(90, Math.max(1, Number.parseInt(url.searchParams.get("days") || "30", 10) || 30))
+    const payload = await getBrevoStatistics({ days })
+    sendJson(response, 200, payload)
+    return true
+  }
+
   if (method === "POST" && pathname === ADMIN_SIS_CONFIG_REPAIR_PATH) {
     assertCanManageUsers(rolePolicy)
     const snapshot = await ensureSisConfigLoaded({ refresh: true })
@@ -7477,8 +7519,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const [profileRows, generatedFamilies] = await Promise.all([
       prisma.studentProfile.findMany({
         where: { familyId: { not: null } },
-        select: { familyId: true },
-        distinct: ["familyId"],
+        select: { familyId: true, parentsId: true },
       }),
       prisma.family.findMany({ select: { familyId: true }, orderBy: { sequence: "asc" } }),
     ])
@@ -7486,7 +7527,17 @@ async function handleApiRequest(request, response, pathname, url) {
       ...generatedFamilies.map((row) => normalizeText(row.familyId)),
       ...profileRows.map((row) => normalizeText(row.familyId)),
     ].filter(Boolean))].sort((left, right) => left.localeCompare(right, undefined, { numeric: true }))
-    sendJson(response, 200, { ok: true, familyIds })
+    const parentIdByFamilyId = new Map()
+    profileRows.forEach((row) => {
+      const familyId = normalizeText(row.familyId)
+      const parentId = normalizeText(row.parentsId)
+      if (familyId && parentId && !parentIdByFamilyId.has(familyId)) parentIdByFamilyId.set(familyId, parentId)
+    })
+    const familyOptions = familyIds.map((familyId) => {
+      const parentId = parentIdByFamilyId.get(familyId) || "Unassigned"
+      return { familyId, parentId, label: `${familyId} - ${parentId} (familyId - parentId)` }
+    })
+    sendJson(response, 200, { ok: true, familyIds, familyOptions })
     return true
   }
 
@@ -7957,6 +8008,38 @@ async function handleParentApiRequest(request, response, pathname, url) {
     return true
   }
 
+  if (method === "POST" && pathname === PARENT_ACTIVATION_EXCHANGE_PATH) {
+    const payload = await parseBody(request)
+    const invitation = await redeemParentProfileInvitation({
+      token: normalizeText(payload?.token),
+      sourceKey: parentActivationSourceKey(request),
+    })
+    const account = await establishParentActivationSession(response, invitation)
+    sendJson(response, 200, {
+      ok: true,
+      authenticated: true,
+      user: {
+        parentsId: account.parentsId,
+        role: "parent",
+        mustChangePassword: Boolean(account.mustChangePassword),
+      },
+    })
+    return true
+  }
+
+  if (method === "POST" && pathname === PARENT_ACTIVATION_RECOVERY_PATH) {
+    const payload = await parseBody(request)
+    const invitation = await recoverParentProfileInvitation({
+      token: normalizeText(payload?.token),
+      queuedBy: `parent-recovery:${parentActivationSourceKey(request)}`,
+    })
+    sendJson(response, 200, {
+      ok: true,
+      invitation: { status: invitation.status, expiresAt: invitation.expiresAt },
+    })
+    return true
+  }
+
   if (method === "POST" && pathname === PARENT_SET_PASSWORD_PATH) {
     const session = await requireAuthenticatedParentSession(request, response)
     if (!session?.mustChangePassword) {
@@ -7967,11 +8050,7 @@ async function handleParentApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const password = normalizeText(payload?.password)
     const confirmation = normalizeText(payload?.confirmation || payload?.confirmPassword)
-    if (password.length < 10) {
-      const error = new Error("Choose a password with at least 10 characters")
-      error.statusCode = 400
-      throw error
-    }
+    const validatedPassword = assertPortalPasswordPolicy(password)
     if (password !== confirmation) {
       const error = new Error("The passwords do not match")
       error.statusCode = 400
@@ -7985,7 +8064,11 @@ async function handleParentApiRequest(request, response, pathname, url) {
     }
     await prisma.parentPortalAccount.update({
       where: { id: session.accountId },
-      data: { passwordHash: hashScryptPassword(password), mustChangePassword: false },
+      data: { passwordHash: hashScryptPassword(validatedPassword), mustChangePassword: false },
+    })
+    await prisma.parentProfileInvitation?.updateMany?.({
+      where: { parentAccountId: session.accountId, status: "activated" },
+      data: { status: "completed", completedAt: new Date() },
     })
     const replacement = await PARENT_SESSION_STORE.createSession({
       username: session.username,
@@ -8030,11 +8113,8 @@ async function handleParentApiRequest(request, response, pathname, url) {
   const invitationLinkMatch = pathname.match(PARENT_PROFILE_INVITATION_PATH_RE)
   if (method === "GET" && invitationLinkMatch) {
     try {
-      const consumed = await consumeParentProfileInvitation(decodeURIComponent(invitationLinkMatch[1]))
-      const account = await establishInvitationParentSession(response, consumed.student)
-      const next = new URL(PARENT_PORTAL_PAGE_PATH, requestOrigin || `http://${host}`)
-      next.searchParams.set("complete", normalizeText(consumed.student.eaglesId))
-      next.searchParams.set("invitation", "1")
+      const next = new URL(PARENT_PORTAL_PAGE_PATH, requestOrigin)
+      next.searchParams.set("activate", decodeURIComponent(invitationLinkMatch[1]))
       sendRedirect(response, 302, `${next.pathname}${next.search}`)
     } catch (error) {
       sendJson(response, Number(error?.statusCode || 410), { error: normalizeText(error?.message || error) })

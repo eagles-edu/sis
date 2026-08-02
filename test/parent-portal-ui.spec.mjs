@@ -11,6 +11,7 @@ const PARENT_PORTAL_JS = fs.readFileSync(path.resolve(process.cwd(), "web-asset/
 const PARENT_PORTAL_CSS = fs.readFileSync(path.resolve(process.cwd(), "web-asset/parent/parent-portal.css"), "utf8")
 const SHARED_THEME = fs.readFileSync(SHARED_THEME_PATH, "utf8")
 const PARENT_PORTAL_HTML_FOR_TEST = PARENT_PORTAL_HTML
+  .replace(/<!-- Brevo Conversations \{literal\} -->[\s\S]*?<!-- \/Brevo Conversations \{\/literal\} -->\s*/i, "")
   .replace(/<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>\s*/i, "")
   .replace(/<link rel="stylesheet" href="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.css">\s*/i, "")
   .replace(/<link rel="stylesheet" href="\.\.\/vendor\/tabulatorz\/tabulator\.min\.css">\s*/i, "")
@@ -386,6 +387,86 @@ test("parent portal initial auth paints the dashboard without probing /me", asyn
   assert.match(document.documentElement.getAttribute("data-parent-auth-state") || "", /authenticated/i)
 
   dom.window.close()
+})
+
+test("parent invitation automatically redeems a query token and opens password setup", async () => {
+  const calls = []
+  const dom = await createParentPortalDom(
+    async (resource, init = {}) => {
+      const urlText = toUrlText(resource)
+      const method = String(init.method || "GET").toUpperCase()
+      const parsed = new URL(urlText, "http://preview.invalid")
+      calls.push({ method, pathname: parsed.pathname, body: init.body })
+      if (parsed.pathname === "/api/parent/auth/activation/exchange" && method === "POST") {
+        return jsonTextResponse(200, {
+          ok: true,
+          authenticated: true,
+          user: { parentsId: "cmabc001", role: "parent", mustChangePassword: true },
+        })
+      }
+      return jsonTextResponse(401, { error: "Unauthorized" })
+    },
+    "http://127.0.0.1:46145/parent?activate=opaque-one-time-token",
+  )
+
+  const document = dom.window.document
+  await waitFor(() => {
+    assert.equal(document.getElementById("passwordSetupCard").classList.contains("hidden"), false)
+  })
+
+  assert.deepEqual(calls, [
+    {
+      method: "POST",
+      pathname: "/api/parent/auth/activation/exchange",
+      body: JSON.stringify({ token: "opaque-one-time-token" }),
+    },
+  ])
+  assert.equal(dom.window.location.search, "")
+  assert.equal(document.getElementById("loginCard").classList.contains("hidden"), true)
+  assert.equal(document.getElementById("invitationRecoveryCard").classList.contains("hidden"), true)
+  assert.equal(document.getElementById("passwordSetupParentsId").textContent, "cmabc001")
+  dom.window.close()
+})
+
+test("expired parent invitation shows recovery without login fields", async () => {
+  const calls = []
+  const dom = await createParentPortalDom(
+    async (resource, init = {}) => {
+      const parsed = new URL(toUrlText(resource), "http://preview.invalid")
+      const method = String(init.method || "GET").toUpperCase()
+      calls.push({ method, pathname: parsed.pathname, body: init.body })
+      if (parsed.pathname === "/api/parent/auth/activation/exchange") return jsonTextResponse(410, { error: "This invitation link is invalid, expired, or has already been used." })
+      if (parsed.pathname === "/api/parent/auth/activation/recover") return jsonTextResponse(200, { ok: true })
+      return jsonTextResponse(401, { error: "Unauthorized" })
+    },
+    "http://127.0.0.1:46145/parent?activate=expired-token",
+  )
+
+  const document = dom.window.document
+  await waitFor(() => {
+    assert.equal(document.getElementById("invitationRecoveryCard").classList.contains("hidden"), false)
+  })
+  assert.equal(document.getElementById("loginCard").classList.contains("hidden"), true)
+  assert.equal(document.getElementById("passwordSetupCard").classList.contains("hidden"), true)
+  assert.equal(dom.window.location.search, "")
+
+  document.getElementById("requestParentInvitationBtn").click()
+  await waitFor(() => {
+    assert.match(document.getElementById("invitationRecoveryStatus").textContent || "", /new link was sent/i)
+  })
+  assert.equal(document.getElementById("requestParentInvitationBtn").disabled, true)
+  assert.deepEqual(calls.filter((call) => call.pathname.includes("/activation/")), [
+    { method: "POST", pathname: "/api/parent/auth/activation/exchange", body: JSON.stringify({ token: "expired-token" }) },
+    { method: "POST", pathname: "/api/parent/auth/activation/recover", body: JSON.stringify({ token: "expired-token" }) },
+  ])
+  dom.window.close()
+})
+
+test("parent portal has no public activation-code controls", () => {
+  assert.doesNotMatch(PARENT_PORTAL_HTML, /activationCode|openParentActivationBtn|activationCard/)
+  assert.doesNotMatch(PARENT_PORTAL_JS, /activationCode|showActivationCard|activationCard/)
+  assert.match(PARENT_PORTAL_HTML, /id="invitationRecoveryCard"/)
+  assert.match(PARENT_PORTAL_JS, /await hydratePortal\(\{ initialUser: state\.me \}\)\s*if \(handlePortalPostAuthRouteState\(\)\) return\s*setActivePortalView\("child"\)/)
 })
 
 test("parent portal static preview over http falls back to dev apiOrigin when omitted", async () => {

@@ -20,6 +20,8 @@
         runtimeHealth: null,
         runtimeHealthFetchedAt: 0,
         runtimeHealthRequest: null,
+        brevoStatistics: null,
+        brevoStatisticsBusy: false,
         sisConfigRepairBusy: false,
         hubConnection: {
           state: "pending",
@@ -47,6 +49,7 @@
         globalTextZoomPercent: 100,
         currentStudent: null,
         familyIds: [],
+        familyOptions: [],
         selectedEnrollmentPeriodId: "",
         uiSettingsMeta: null,
         profileFormConfig: null,
@@ -2030,16 +2033,47 @@
           action: selfHealAction,
         });
 
-        const smtpState = healthFlagToState(runtimeHealth.lastVerifyOk);
-        checks.push({
-          key: "smtp",
-          label: "SMTP Verify",
-          state: smtpState === "pending" ? "warn" : smtpState,
-          detail:
-            runtimeHealth.lastVerifyAt ?
-              `last verify ${runtimeHealth.lastVerifyAt}`
-            : "no verify recorded yet",
-        });
+        const emailProvider =
+          runtimeHealth.emailProvider && typeof runtimeHealth.emailProvider === "object" ?
+            runtimeHealth.emailProvider
+          : {};
+        const providerName = normalizeLower(emailProvider.provider);
+        if (providerName === "brevo") {
+          const brevoConfigured = Boolean(emailProvider.configured);
+          const brevoSendState = healthFlagToState(runtimeHealth.lastSendOk);
+          const brevoState = !brevoConfigured ? "error" : brevoSendState === "error" ? "error" : "ok";
+          const brevoSendDetail =
+            runtimeHealth.lastSendOk === true && runtimeHealth.lastSendAt ?
+              `last successful send ${runtimeHealth.lastSendAt}`
+            : "no successful send recorded yet";
+          checks.push({
+            key: "emailProvider",
+            label: "Brevo API",
+            state: brevoState,
+            detail: `configured=${brevoConfigured ? "yes" : "no"} | ${brevoSendDetail}`,
+            action: brevoConfigured ? { label: "View Statistics", action: "brevo-statistics" } : null,
+          });
+          const webhook =
+            runtimeHealth.brevoWebhook && typeof runtimeHealth.brevoWebhook === "object" ?
+              runtimeHealth.brevoWebhook
+            : {};
+          const webhookState = normalizeSystemState(webhook.state);
+          const webhookDetail = webhook.lastReceivedAt ?
+            `last ${normalizeText(webhook.lastEventType) || "event"} received ${webhook.lastReceivedAt}${webhook.lastProcessedAt ? ` | processed ${webhook.lastProcessedAt}` : " | not processed"}`
+            : webhook.lastError || "no webhook receipt recorded yet";
+          checks.push({ key: "brevoWebhook", label: "Webhook Receipt", state: webhookState, detail: webhookDetail });
+        } else {
+          const smtpState = healthFlagToState(runtimeHealth.lastVerifyOk);
+          checks.push({
+            key: "smtp",
+            label: "SMTP Verify",
+            state: smtpState === "pending" ? "warn" : smtpState,
+            detail:
+              runtimeHealth.lastVerifyAt ?
+                `last verify ${runtimeHealth.lastVerifyAt}`
+              : "no verify recorded yet",
+          });
+        }
 
         const pipelineFlags = [
           runtimeHealth.lastStoreOk,
@@ -2235,6 +2269,17 @@
             });
             item.appendChild(actionBtn);
           }
+          if (action?.label && action?.action === "brevo-statistics") {
+            const actionBtn = document.createElement("button");
+            actionBtn.type = "button";
+            actionBtn.className = "portal-button portal-button-primary system-health-action-btn";
+            const actionLabel = document.createElement("span");
+            actionLabel.className = "portal-button__label";
+            actionLabel.textContent = action.label;
+            actionBtn.replaceChildren(actionLabel);
+            actionBtn.addEventListener("click", () => openBrevoStatisticsModal());
+            item.appendChild(actionBtn);
+          }
 
           return item;
         };
@@ -2248,6 +2293,68 @@
         });
 
         summaryEl.textContent = `OK ${counts.ok} | Warning ${counts.warn} | Error ${counts.error} | Pending ${counts.pending}`;
+      }
+
+      function closeBrevoStatisticsModal() {
+        const modal = document.getElementById("brevoStatisticsModal");
+        if (!(modal instanceof HTMLDivElement)) return;
+        modal.classList.add("hidden");
+        modal.setAttribute("aria-hidden", "true");
+      }
+
+      function renderBrevoStatisticsModal() {
+        const stats = state.brevoStatistics || {};
+        const aggregate = stats.aggregated || {};
+        const setText = (id, value) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = String(value ?? "n/a");
+        };
+        setText("brevoStatsRange", aggregate.range || `${stats.days || 30} days`);
+        setText("brevoStatsFetchedAt", stats.fetchedAt || "n/a");
+        ["requests", "delivered", "opens", "uniqueOpens", "clicks", "uniqueClicks", "hardBounces", "softBounces", "blocked", "invalid", "spamReports", "unsubscribed"].forEach((key) => {
+          setText(`brevoStats_${key}`, Number(aggregate[key] || 0).toLocaleString());
+        });
+        const reportsEl = document.getElementById("brevoStatsReports");
+        if (reportsEl) {
+          reportsEl.replaceChildren();
+          for (const report of Array.isArray(stats.reports) ? stats.reports : []) {
+            const row = document.createElement("tr");
+            [report.date, report.requests, report.delivered, report.opens, report.clicks, report.hardBounces, report.softBounces].forEach((value) => {
+              const cell = document.createElement("td");
+              cell.textContent = String(value ?? 0);
+              row.appendChild(cell);
+            });
+            reportsEl.appendChild(row);
+          }
+        }
+        setText("brevoStatsStatus", state.brevoStatisticsBusy ? "Loading Brevo statistics..." : "");
+      }
+
+      async function loadBrevoStatistics() {
+        state.brevoStatisticsBusy = true;
+        renderBrevoStatisticsModal();
+        try {
+          const endpoint = `${resolveApiUrl(ADMIN_BREVO_STATISTICS_PATH)}?days=30`;
+          const response = await fetch(endpoint, { method: "GET", cache: "no-store", credentials: "include" });
+          const body = await response.json().catch(() => ({}));
+          if (!response.ok || !body?.ok) throw new Error(body?.error || "Unable to load Brevo statistics");
+          state.brevoStatistics = body;
+        } finally {
+          state.brevoStatisticsBusy = false;
+          renderBrevoStatisticsModal();
+        }
+      }
+
+      function openBrevoStatisticsModal() {
+        const modal = document.getElementById("brevoStatisticsModal");
+        if (!(modal instanceof HTMLDivElement)) return;
+        modal.classList.remove("hidden");
+        modal.setAttribute("aria-hidden", "false");
+        renderBrevoStatisticsModal();
+        loadBrevoStatistics().catch((error) => {
+          const status = document.getElementById("brevoStatsStatus");
+          if (status) status.textContent = error?.message || "Unable to load Brevo statistics";
+        });
       }
 
       function renderHubConnectionStatus() {
@@ -9414,6 +9521,9 @@
       const ADMIN_RUNTIME_HEALTH_PATH =
         normalizeText(window.__SIS_ADMIN_RUNTIME_HEALTH_PATH) ||
         "/api/admin/runtime/health";
+      const ADMIN_BREVO_STATISTICS_PATH =
+        normalizeText(window.__SIS_ADMIN_BREVO_STATISTICS_PATH) ||
+        "/api/admin/runtime/brevo-statistics";
       const ADMIN_SIS_CONFIG_REPAIR_PATH =
         normalizeText(window.__SIS_ADMIN_SIS_CONFIG_REPAIR_PATH) ||
         "/api/admin/runtime/sis-config-repair";
@@ -19344,10 +19454,13 @@
           familySelect.id = "familyIdExisting";
           familySelect.dataset.surfaceRole = "card";
           familySelect.innerHTML = '<option value="">New family (auto-generate)</option>';
-          state.familyIds.forEach((familyId) => {
+          const familyOptions = state.familyOptions.length
+            ? state.familyOptions
+            : state.familyIds.map((familyId) => ({ familyId, label: familyId }));
+          familyOptions.forEach(({ familyId, label }) => {
             const option = document.createElement("option");
             option.value = familyId;
-            option.textContent = familyId;
+            option.textContent = label;
             familySelect.appendChild(option);
           });
           const familyInput = document.createElement("input");
@@ -19375,6 +19488,28 @@
         if (field.placeholderVi) input.placeholder = field.placeholderVi;
         labelEl.htmlFor = controlId;
         wrapper.appendChild(labelEl);
+        if (field.key === "password") {
+          input.minLength = 8;
+          input.setAttribute("data-password-visibility", "");
+          const passwordField = document.createElement("div");
+          passwordField.className = "password-visibility-field";
+          const toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "password-visibility-toggle portal-button-info portal-button-amber-ink-dark";
+          toggle.setAttribute("data-password-visibility-toggle", "");
+          toggle.setAttribute("aria-label", "Show password");
+          toggle.setAttribute("aria-pressed", "false");
+          toggle.title = "Show password";
+          passwordField.appendChild(input);
+          passwordField.appendChild(toggle);
+          const help = document.createElement("p");
+          help.className = "small";
+          help.textContent = "At least 8 characters: 1 uppercase, 1 lowercase, and 1 symbol. Prohibited: spaces, < > \\\" ' ` and \\\\.";
+          wrapper.appendChild(passwordField);
+          wrapper.appendChild(help);
+          window.SIS_PASSWORD_VISIBILITY?.bind(wrapper);
+          return wrapper;
+        }
         wrapper.appendChild(input);
         if (field.key === "emailMa") {
           const previousInvitationCheckbox = document.getElementById("sendParentCompletionEmail");
@@ -20028,6 +20163,11 @@
       async function loadFamilyIds() {
         const data = await api("/api/admin/family-ids");
         state.familyIds = Array.isArray(data?.familyIds) ? data.familyIds.map(normalizeText).filter(Boolean) : [];
+        state.familyOptions = Array.isArray(data?.familyOptions)
+          ? data.familyOptions
+            .map((entry) => ({ familyId: normalizeText(entry?.familyId), label: normalizeText(entry?.label) }))
+            .filter((entry) => entry.familyId)
+          : [];
         if (state.profileMode === "edit") {
           renderProfileFormLayout();
           if (state.currentStudent?.id) fillStudentForm(state.currentStudent);
@@ -22313,6 +22453,10 @@
       });
       bindById("schoolSetupWarningCloseBtn", "click", () => closeSchoolSetupWarningModal());
       bindById("schoolSetupWarningOpenBtn", "click", () => closeSchoolSetupWarningModal());
+      bindById("brevoStatisticsModalCloseBtn", "click", () => closeBrevoStatisticsModal());
+      document.getElementById("brevoStatisticsModal")?.addEventListener("click", (event) => {
+        if (event.target === event.currentTarget) closeBrevoStatisticsModal();
+      });
       bindById("schoolSetupWarningAutoFixBtn", "click", async () => {
         const statusEl = document.getElementById("schoolSetupWarningModalActionStatus");
         try {
@@ -22341,6 +22485,9 @@
         }
       });
       document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !document.getElementById("brevoStatisticsModal")?.classList.contains("hidden")) {
+          closeBrevoStatisticsModal();
+        }
         if (event.key === "Escape" && !document.getElementById("schoolSetupWarningModal")?.classList.contains("hidden")) {
           closeSchoolSetupWarningModal();
         }

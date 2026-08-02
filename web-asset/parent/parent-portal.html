@@ -316,6 +316,17 @@
           </div>
           <p id="loginStatus" class="status"></p>
         </section>
+        <section class="panel hidden" id="invitationRecoveryCard" data-surface-role="panel">
+          <div class="section-head">
+            <h1>This link is no longer available</h1>
+            <span class="chip chip-warning">A new link is needed</span>
+          </div>
+          <p class="hint">Request a new link and check the same email address. If you need help, call 0937 667 818 or email support@eagles.edu.vn.</p>
+          <div class="login-actions">
+            <button id="requestParentInvitationBtn" class="portal-button portal-button-primary" type="button">Send a new link</button>
+          </div>
+          <p id="invitationRecoveryStatus" class="status" aria-live="polite"></p>
+        </section>
         <section class="panel hidden" id="passwordSetupCard" data-surface-role="panel">
           <div class="section-head">
             <h1>Choose your parent password</h1>
@@ -328,12 +339,13 @@
           <form id="passwordSetupForm" class="login-form" novalidate>
             <div class="form-row">
               <label for="newParentPassword">New password</label>
-              <input id="newParentPassword" type="password" autocomplete="new-password" minlength="10" required>
+              <input id="newParentPassword" type="password" autocomplete="new-password" minlength="8" required>
             </div>
             <div class="form-row">
               <label for="confirmParentPassword">Confirm password</label>
-              <input id="confirmParentPassword" type="password" autocomplete="new-password" minlength="10" required>
+              <input id="confirmParentPassword" type="password" autocomplete="new-password" minlength="8" required>
             </div>
+            <p class="hint">At least 8 characters: 1 uppercase, 1 lowercase, and 1 symbol. Prohibited: spaces, &lt; &gt; &quot; ' ` and \.</p>
             <div class="login-actions">
               <button id="saveParentPasswordBtn" class="portal-button portal-button-primary" type="submit">Save password and continue</button>
             </div>

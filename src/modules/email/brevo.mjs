@@ -54,6 +54,75 @@ function brevoConfig() {
   }
 }
 
+function brevoStatisticsConfig() {
+  const apiKey = normalizeText(process.env.BREVO_API_KEY)
+  if (!apiKey) {
+    const error = new Error("BREVO_API_KEY is required for Brevo statistics")
+    error.statusCode = 503
+    throw error
+  }
+  const configuredEndpoint = normalizeText(process.env.BREVO_API_URL)
+  let apiBase = normalizeText(process.env.BREVO_API_BASE_URL)
+  if (!apiBase && configuredEndpoint) {
+    try {
+      apiBase = new URL(configuredEndpoint).origin + "/v3"
+    } catch (error) {
+      void error
+    }
+  }
+  return {
+    apiKey,
+    apiBase: (apiBase || "https://api.brevo.com/v3").replace(/\/$/, ""),
+  }
+}
+
+async function getBrevoStatisticsResource(resource, params = {}) {
+  const config = brevoStatisticsConfig()
+  const query = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && String(value) !== "") query.set(key, String(value))
+  }
+  let response
+  try {
+    response = await fetch(`${config.apiBase}${resource}?${query.toString()}`, {
+      method: "GET",
+      headers: { accept: "application/json", "api-key": config.apiKey },
+      signal: AbortSignal.timeout(15000),
+    })
+  } catch (cause) {
+    const detail = normalizeText(cause?.message || cause)
+    const error = new Error(`Brevo statistics request failed${detail ? `: ${detail}` : ""}`)
+    error.statusCode = 503
+    throw error
+  }
+  const body = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    const detail = normalizeText(body?.message || body?.code || response.statusText)
+    const error = new Error(`Brevo statistics request failed (${response.status})${detail ? `: ${detail}` : ""}`)
+    error.statusCode = response.status >= 500 ? 503 : 502
+    throw error
+  }
+  return body
+}
+
+/** @returns {Promise<Record<string, unknown>>} */
+export async function getBrevoStatistics({ days = 30 } = {}) {
+  const requestedDays = Math.min(90, Math.max(1, Number.parseInt(String(days), 10) || 30))
+  const reportDays = Math.min(30, requestedDays)
+  const [aggregated, reports] = await Promise.all([
+    getBrevoStatisticsResource("/smtp/statistics/aggregatedReport", { days: requestedDays }),
+    getBrevoStatisticsResource("/smtp/statistics/reports", { days: reportDays, sort: "asc" }),
+  ])
+  return {
+    ok: true,
+    days: requestedDays,
+    reportDays,
+    fetchedAt: new Date().toISOString(),
+    aggregated,
+    reports: Array.isArray(reports?.reports) ? reports.reports : [],
+  }
+}
+
 /**
  * @param {{
  *   from?: { email?: unknown, name?: unknown },

@@ -109,6 +109,25 @@ export function hashScryptPassword(password) {
 }
 
 /**
+ * Portal passwords are stricter than internal admin-user passwords, so legacy
+ * administrator and teacher credentials remain unaffected.
+ *
+ * @param {unknown} password
+ * @returns {string}
+ */
+export function assertPortalPasswordPolicy(password) {
+  const rawPassword = password === undefined || password === null ? "" : String(password)
+  const normalizedPassword = normalizeText(rawPassword)
+  const prohibited = /[\s<>"'`\\]/u
+  assertWithStatus(normalizedPassword.length >= 8, 400, "password must be at least 8 characters")
+  assertWithStatus(/[A-Z]/u.test(normalizedPassword), 400, "password must include an uppercase letter")
+  assertWithStatus(/[a-z]/u.test(normalizedPassword), 400, "password must include a lowercase letter")
+  assertWithStatus(/[^A-Za-z0-9\s]/u.test(normalizedPassword), 400, "password must include a symbol")
+  assertWithStatus(!prohibited.test(rawPassword), 400, "password cannot contain spaces, <, >, quotes, backticks, or backslashes")
+  return normalizedPassword
+}
+
+/**
  * @param {AdminUserPayload} [payload]
  * @param {{ required?: boolean }} [options]
  * @returns {string}

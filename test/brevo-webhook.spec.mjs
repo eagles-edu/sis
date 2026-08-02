@@ -51,6 +51,8 @@ test("Brevo webhook rejects unauthenticated requests and idempotently updates de
 
     const payload = {
       event: "delivered",
+      id: 2103186,
+      uuid: `webhook-event-${Date.now()}-delivered`,
       "message-id": messageId,
       email: recipientEmail,
       ts_event: Math.floor(Date.now() / 1000),
@@ -100,6 +102,8 @@ test("Brevo webhook rejects unauthenticated requests and idempotently updates de
         headers: { "content-type": "application/json", authorization: "Bearer test-webhook-secret" },
         body: JSON.stringify({
           event,
+          id: 2103186,
+          uuid: `webhook-event-${Date.now()}-${event}`,
           "message-id": messageId,
           email: recipientEmail,
           ts: Math.floor(Date.now() / 1000) + timeline.indexOf(timeline.find((entry) => entry[0] === event)),

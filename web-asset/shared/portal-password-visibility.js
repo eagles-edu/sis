@@ -26,6 +26,8 @@
     })
   }
 
+  window.SIS_PASSWORD_VISIBILITY = { bind }
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => bind(), { once: true })
   } else {

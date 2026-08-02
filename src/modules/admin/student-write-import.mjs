@@ -5,7 +5,7 @@ import { invalidateLevelAndSchoolFiltersCache } from "./student-admin-queries.mj
 import { getStudentById as getStudentRosterById } from "./student-roster.mjs"
 import { canonicalizeLevel as canonicalizeCatalogLevel } from "./level-catalog.mjs"
 import { getConfiguredSchoolYear } from "./school-setup-store.mjs"
-import { hashScryptPassword } from "./users.mjs"
+import { assertPortalPasswordPolicy, hashScryptPassword } from "./users.mjs"
 import { writeStudentProfileBackupSnapshot } from "./student-profile-backups.mjs"
 
 /**
@@ -920,14 +920,15 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
     profilePayload.normalizedFormPayload && typeof profilePayload.normalizedFormPayload === "object" ?
       { ...profilePayload.normalizedFormPayload }
     : {}
-  const portalPassword = normalizeText(
-    rawFormPayload.password || normalizedFormPayload.password || payload.password,
-  )
+  const portalPasswordValue = rawFormPayload.password ?? normalizedFormPayload.password ?? payload.password ?? ""
+  const portalPassword = portalPasswordValue === undefined || portalPasswordValue === null ? "" : String(portalPasswordValue)
   delete rawFormPayload.password
   delete normalizedFormPayload.password
   profilePayload.rawFormPayload = rawFormPayload
   profilePayload.normalizedFormPayload = normalizedFormPayload
-  const portalPasswordHash = portalPassword ? hashScryptPassword(portalPassword) : ""
+  const portalPasswordHash = portalPassword
+    ? hashScryptPassword(assertPortalPasswordPolicy(portalPassword))
+    : ""
   const profileEmail = profilePayload.studentEmail || null
   const persistedEmail = profileEmail || studentEmail
   const requestedStudentNumber = requestedStudentNumberFromPayload(payload)

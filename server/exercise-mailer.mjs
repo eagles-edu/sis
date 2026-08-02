@@ -6,7 +6,7 @@ import http from "node:http"
 import path from "node:path"
 import { URL, fileURLToPath } from "node:url"
 import { getEmailProviderStatus, isBrevoEmailProvider, sendBrevoEmail } from "../src/modules/email/brevo.mjs"
-import { recordBrevoEmailDeliverySafely } from "../src/modules/email/brevo-delivery.mjs"
+import { getBrevoWebhookHealth, recordBrevoEmailDeliverySafely } from "../src/modules/email/brevo-delivery.mjs"
 
 const require = createRequire(import.meta.url)
 const isDebugEnabled = () =>
@@ -969,6 +969,7 @@ async function buildRuntimeHealthPayload() {
     lastSendAt: STATUS.lastSendAt,
     lastError: STATUS.lastError,
     emailProvider: getEmailProviderStatus(),
+    brevoWebhook: isBrevoEmailProvider() ? await getBrevoWebhookHealth() : null,
     node: process.version,
     endpoint: DEFAULT_PATH,
     intakeEndpoint: DEFAULT_INTAKE_PATH,

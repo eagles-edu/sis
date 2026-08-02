@@ -806,6 +806,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         newsWeekSetViewerItems: [],
         newsWeekSetViewerIndex: -1,
         status: "",
+        invitationToken: "",
         textZoomPct: TEXT_ZOOM_DEFAULT,
         detailGradeTable: null,
       }
@@ -6745,12 +6746,75 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         openReportAccessErrorModalIfNeeded()
         setStatus("Đăng nhập thành công.", "ok")
       }
+      function activationTokenFromLocation() {
+        return normalizeText(new URL(window.location.href).searchParams.get("activate"))
+      }
+      function clearActivationTokenFromLocation() {
+        const url = new URL(window.location.href)
+        if (!url.searchParams.has("activate")) return
+        url.searchParams.delete("activate")
+        window.history.replaceState({}, "", `${url.pathname}${url.search}`)
+      }
+      function hidePortalForInvitation() {
+        document.getElementById("loginCard")?.classList.add("hidden")
+        document.getElementById("passwordSetupCard")?.classList.add("hidden")
+        document.getElementById("portalCard")?.classList.add("hidden")
+        document.getElementById("portalDetailCard")?.classList.add("hidden")
+        document.getElementById("childPageCard")?.classList.add("hidden")
+      }
+      function showInvitationRecovery({ token = "" } = {}) {
+        state.invitationToken = normalizeText(token)
+        hidePortalForInvitation()
+        document.getElementById("invitationRecoveryCard")?.classList.remove("hidden")
+        const status = document.getElementById("invitationRecoveryStatus")
+        if (status) {
+          status.textContent = ""
+          status.className = "status"
+        }
+      }
+      function hideInvitationRecovery() {
+        document.getElementById("invitationRecoveryCard")?.classList.add("hidden")
+      }
+      async function activateParentInvitation(token) {
+        state.invitationToken = normalizeText(token)
+        hidePortalForInvitation()
+        const result = await api(`${PARENT_AUTH_PREFIX}/activation/exchange`, {
+          method: "POST",
+          body: { token: state.invitationToken },
+        })
+        state.me = result?.user || null
+        clearActivationTokenFromLocation()
+        hideInvitationRecovery()
+        document.documentElement.dataset.parentAuthState = "authenticated"
+        syncDashboardPageVisibility()
+        if (Boolean(state.me?.mustChangePassword)) return
+        setActivePortalView("dashboard")
+        await hydratePortal({ initialUser: state.me })
+      }
+      async function requestReplacementInvitation() {
+        const status = document.getElementById("invitationRecoveryStatus")
+        if (!state.invitationToken) return
+        if (status) {
+          status.textContent = "Sending a new link..."
+          status.className = "status"
+        }
+        await api(`${PARENT_AUTH_PREFIX}/activation/recover`, {
+          method: "POST",
+          body: { token: state.invitationToken },
+        })
+        clearActivationTokenFromLocation()
+        if (status) {
+          status.textContent = "A new link was sent to your email address."
+          status.className = "status ok"
+        }
+        document.getElementById("requestParentInvitationBtn").disabled = true
+      }
       async function setParentPassword() {
         const password = normalizeText(document.getElementById("newParentPassword")?.value)
         const confirmation = normalizeText(document.getElementById("confirmParentPassword")?.value)
         const status = document.getElementById("passwordSetupStatus")
-        if (password.length < 10) {
-          status.textContent = "Choose a password with at least 10 characters."
+        if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[^A-Za-z0-9\s]/.test(password) || /[\s<>"'`\\]/.test(password)) {
+          status.textContent = "Use 8+ characters with uppercase, lowercase, and a symbol. Spaces and < > \" ' ` \\ are prohibited."
           status.className = "status err"
           return
         }
@@ -6767,9 +6831,9 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         status.textContent = "Password saved. Your browser may offer to save it."
         status.className = "status ok"
         syncDashboardPageVisibility()
-        setActivePortalView("dashboard")
         await hydratePortal({ initialUser: state.me })
         if (handlePortalPostAuthRouteState()) return
+        setActivePortalView("child")
       }
       async function logout() {
         await api(`${PARENT_AUTH_PREFIX}/logout`, {
@@ -6893,8 +6957,32 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
                 .getElementById("portalDetailCard")
                 .classList.add("hidden")
               document.getElementById("childPageCard").classList.add("hidden")
-              document.getElementById("loginCard").classList.remove("hidden")
-              setStatus("Vui lòng đăng nhập.", "")
+              const activationToken = activationTokenFromLocation()
+              if (activationToken) {
+                try {
+                  await activateParentInvitation(activationToken)
+                } catch (error) {
+                  clearActivationTokenFromLocation()
+                  showInvitationRecovery({ token: activationToken })
+                }
+              }
+              else {
+                document.getElementById("loginCard").classList.remove("hidden")
+                setStatus("Vui lòng đăng nhập.", "")
+              }
+            }
+            updateDraftBadge()
+            return
+          }
+          const activationToken = activationTokenFromLocation()
+          if (activationToken) {
+            document.documentElement.dataset.parentAuthState = "unauthenticated"
+            updateSessionBadge("Chưa đăng nhập", false)
+            try {
+              await activateParentInvitation(activationToken)
+            } catch (error) {
+              clearActivationTokenFromLocation()
+              showInvitationRecovery({ token: activationToken })
             }
             updateDraftBadge()
             return
@@ -6967,6 +7055,15 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
           event.preventDefault()
           login().catch((error) => setStatus(error.message, "err"))
         })
+      document.getElementById("requestParentInvitationBtn")?.addEventListener("click", () => {
+        requestReplacementInvitation().catch((error) => {
+          const status = document.getElementById("invitationRecoveryStatus")
+          if (status) {
+            status.textContent = error?.message || "Unable to send a replacement link."
+            status.className = "status err"
+          }
+        })
+      })
       document
         .getElementById("passwordSetupForm")
         ?.addEventListener("submit", (event) => {

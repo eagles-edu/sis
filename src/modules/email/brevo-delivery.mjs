@@ -19,7 +19,9 @@ function eventDate(value) {
 }
 
 function eventKey(payload, eventType, messageId, recipientEmail, occurredAt) {
-  const explicitId = normalizeText(payload?.id || payload?.eventId)
+  // Brevo's `id` is the webhook ID and is reused for every event sent to
+  // this endpoint. Only use a per-event identifier as an explicit key.
+  const explicitId = normalizeText(payload?.uuid || payload?.eventId || payload?.eventUuid)
   const basis = explicitId || [eventType, messageId, recipientEmail, occurredAt.toISOString(), normalizeText(payload?.subject)].join("|")
   return crypto.createHash("sha256").update(basis).digest("hex")
 }
@@ -119,6 +121,42 @@ export async function recordBrevoEmailDeliverySafely(payload = {}) {
   } catch (error) {
     console.warn(`Brevo delivery correlation persistence failed: ${normalizeText(error?.message || error)}`)
     return null
+  }
+}
+
+/** @returns {Promise<Record<string, unknown>>} */
+export async function getBrevoWebhookHealth() {
+  const configured = Boolean(normalizeText(process.env.BREVO_WEBHOOK_SECRET))
+  if (!configured) {
+    return { configured: false, state: "error", lastEventType: "", lastReceivedAt: "", lastProcessedAt: "" }
+  }
+  try {
+    const prisma = await getSharedPrismaClient()
+    const event = prisma?.brevoEmailWebhookEvent?.findFirst
+      ? await prisma.brevoEmailWebhookEvent.findFirst({
+          orderBy: { receivedAt: "desc" },
+          select: { eventType: true, receivedAt: true, processedAt: true },
+        })
+      : null
+    if (!event) {
+      return { configured: true, state: "pending", lastEventType: "", lastReceivedAt: "", lastProcessedAt: "" }
+    }
+    return {
+      configured: true,
+      state: event.processedAt ? "ok" : "error",
+      lastEventType: normalizeText(event.eventType),
+      lastReceivedAt: event.receivedAt?.toISOString?.() || "",
+      lastProcessedAt: event.processedAt?.toISOString?.() || "",
+    }
+  } catch (error) {
+    return {
+      configured: true,
+      state: "error",
+      lastEventType: "",
+      lastReceivedAt: "",
+      lastProcessedAt: "",
+      lastError: normalizeText(error?.message || error),
+    }
   }
 }
 

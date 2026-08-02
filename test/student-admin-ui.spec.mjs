@@ -3221,6 +3221,12 @@ test("student admin child page owns students panel while search stays visible", 
     void init
 
     if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+    if (url.includes("/api/admin/family-ids")) {
+      return jsonResponse(200, {
+        familyIds: ["fam-0037"],
+        familyOptions: [{ familyId: "fam-0037", label: "fam-0037 - cmson002 (familyId - parentId)" }],
+      })
+    }
 
     if (url.includes("/api/admin/auth/login")) {
       return jsonResponse(200, {
@@ -8026,6 +8032,9 @@ test("profile payload mapping preserves mapped fields and custom form payload ke
     assert.ok(document.getElementById("f_customAlias"))
     assert.ok(document.getElementById("profileEditorForm"))
     assert.ok(document.getElementById("f_password")?.closest("form"))
+    assert.equal(document.getElementById("f_password")?.type, "password")
+    assert.ok(document.querySelector("#f_password + [data-password-visibility-toggle]"))
+    assert.match(document.getElementById("f_password")?.closest(".profile-field")?.textContent || "", /At least 8 characters/i)
     assert.equal(document.getElementById("f_studentNumber")?.value, "1001")
     assert.equal(document.getElementById("f_eaglesId")?.value, "1001")
     assert.equal(document.getElementById("saveBtn")?.disabled, false)

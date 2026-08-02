@@ -6897,6 +6897,42 @@ No family lookup yet.</pre>
       </div>
     </div>
 
+    <div
+      id="brevoStatisticsModal"
+      class="queue-modal hidden"
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Brevo transactional email statistics">
+      <div class="queue-modal-card">
+        <div class="queue-modal-header">
+          <div>
+            <h3>Brevo Transactional Statistics</h3>
+            <p class="small">Range: <span id="brevoStatsRange">30 days</span> | Fetched: <span id="brevoStatsFetchedAt">n/a</span></p>
+          </div>
+          <button id="brevoStatisticsModalCloseBtn" type="button" class="portal-button portal-button-warning">Close</button>
+        </div>
+        <div class="queue-modal-body">
+          <div class="stats-grid">
+            <div class="stat-card card"><div class="stat-label">Requests</div><strong id="brevoStats_requests">n/a</strong></div>
+            <div class="stat-card card"><div class="stat-label">Delivered</div><strong id="brevoStats_delivered">n/a</strong></div>
+            <div class="stat-card card"><div class="stat-label">Opens</div><strong id="brevoStats_opens">n/a</strong></div>
+            <div class="stat-card card"><div class="stat-label">Unique Opens</div><strong id="brevoStats_uniqueOpens">n/a</strong></div>
+            <div class="stat-card card"><div class="stat-label">Clicks</div><strong id="brevoStats_clicks">n/a</strong></div>
+            <div class="stat-card card"><div class="stat-label">Unique Clicks</div><strong id="brevoStats_uniqueClicks">n/a</strong></div>
+            <div class="stat-card card"><div class="stat-label">Hard Bounces</div><strong id="brevoStats_hardBounces">n/a</strong></div>
+            <div class="stat-card card"><div class="stat-label">Soft Bounces</div><strong id="brevoStats_softBounces">n/a</strong></div>
+            <div class="stat-card card"><div class="stat-label">Blocked</div><strong id="brevoStats_blocked">n/a</strong></div>
+            <div class="stat-card card"><div class="stat-label">Spam Reports</div><strong id="brevoStats_spamReports">n/a</strong></div>
+          </div>
+          <p id="brevoStatsStatus" class="small" aria-live="polite"></p>
+          <div class="table-scroll">
+            <table class="data-table"><thead><tr><th>Date</th><th>Requests</th><th>Delivered</th><th>Opens</th><th>Clicks</th><th>Hard bounces</th><th>Soft bounces</th></tr></thead><tbody id="brevoStatsReports"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
       ;(() => {
         const root = document.documentElement

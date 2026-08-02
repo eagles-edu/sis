@@ -789,6 +789,7 @@ model ParentProfileSubmissionQueue {
 model ParentProfileInvitation {
   id                String   @id @default(cuid())
   tokenHash         String   @unique
+  activationCodeHash String? @unique
   recipientEmail    String
   studentRefId      String
   student            Student  @relation(fields: [studentRefId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -801,6 +802,7 @@ model ParentProfileInvitation {
   sentAt            DateTime?
   openedAt          DateTime?
   clickedAt         DateTime?
+  activatedAt       DateTime?
   completedAt       DateTime?
   expiresAt         DateTime
   lastError         String?

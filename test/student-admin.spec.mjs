@@ -13,6 +13,7 @@ import {
 } from "../server/student-admin-routes.mjs"
 import { buildStudentReportCardPayload, generateStudentReportCardPdf } from "../server/student-report-card-pdf.mjs"
 import { LEVEL_DEFINITIONS, canonicalizeLevel } from "../src/modules/admin/level-catalog.mjs"
+import { assertPortalPasswordPolicy } from "../src/modules/admin/users.mjs"
 
 const TEST_ADMIN_UI_SETTINGS_FILE = `/tmp/sis-admin-ui-settings-${process.pid}.json`
 const ADMIN_HTML_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.html", import.meta.url), "utf8")
@@ -33,6 +34,13 @@ test("class and level aliases resolve to one canonical catalog value", () => {
   assert.equal(canonicalizeLevel("  eggchicks  "), "Eggs & Chicks")
   assert.equal(canonicalizeLevel("grade 6"), "A2 Flyers")
   assert.equal(canonicalizeLevel("  custom   class  "), "custom class")
+})
+
+test("portal password policy requires 8 characters, letter case, a symbol, and safe characters", () => {
+  assert.equal(assertPortalPasswordPolicy("Eagles!8"), "Eagles!8")
+  for (const password of ["eagles!8", "EAGLES!8", "Eagles88", "Eag! 88", "Eag<88!x", "Eag\\88!x"]) {
+    assert.throws(() => assertPortalPasswordPolicy(password), /password/i)
+  }
 })
 
 function withAdminAssets(html = "") {

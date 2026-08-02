@@ -13,4 +13,6 @@
         body.parent-portal-page
         #loginCard{display:block!important}html[data-parent-auth-state="unauthenticated"]
         body.parent-portal-page
+        #loginCard.hidden,html[data-parent-auth-state="unauthenticated"]
+        body.parent-portal-page
         #portalCard{display:none!important}
