@@ -532,28 +532,6 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
   opacity: 1;
   pointer-events: auto;
 }
-#floatingMenuBtn.floating-menu-btn {
-  block-size: 44px;
-  inline-size: 44px;
-  inset-block-start: 12px;
-  inset-inline-end: 12px;
-  position: fixed;
-  z-index: 90;
-}
-#floatingMenuBtn .floating-menu-icon,
-#floatingMenuBtn .floating-menu-icon::before,
-#floatingMenuBtn .floating-menu-icon::after {
-  border-radius: 2px;
-  content: "";
-  display: block;
-  height: 2px;
-  width: 18px;
-}
-#floatingMenuBtn .floating-menu-icon { position: relative; }
-#floatingMenuBtn .floating-menu-icon::before,
-#floatingMenuBtn .floating-menu-icon::after { position: absolute; }
-#floatingMenuBtn .floating-menu-icon::before { transform: translateY(-6px); }
-#floatingMenuBtn .floating-menu-icon::after { transform: translateY(6px); }
 #sidebarLogoWrap.sidebar-logo-wrap {
   align-items: center;
   box-sizing: border-box;
@@ -654,6 +632,49 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       #appSchoolSetupWarning:not(.hidden) {
         visibility: visible;
       }
+      #brevoStatisticsModal .stat-card {
+        min-block-size: 104px;
+        padding: 12px;
+      }
+      #brevoStatisticsModal .stat-card .stat-label {
+        color: var(--stat-card-label);
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.045em;
+      }
+      #brevoStatisticsModal .stat-card > strong {
+        color: var(--stat-card-value);
+        display: block;
+        font-size: clamp(1.45rem, 1.1rem + 1vw, 1.85rem);
+        font-variant-numeric: tabular-nums;
+        font-weight: 800;
+        line-height: 1.05;
+        margin-top: 7px;
+      }
+      #brevoStatisticsModal .stat-card--blue {
+        --stat-card-bg-start: color-mix(in srgb, var(--portal-status-info-bg) 82%, var(--portal-status-info-border) 18%);
+        --stat-card-bg-end: color-mix(in srgb, var(--portal-status-info-bg) 70%, var(--portal-surface-card) 30%);
+        --stat-card-label: var(--portal-status-info-text);
+        --stat-card-value: var(--portal-status-info-text);
+      }
+      #brevoStatisticsModal .stat-card--good {
+        --stat-card-bg-start: color-mix(in srgb, var(--portal-status-good-bg) 82%, var(--portal-status-good-border) 18%);
+        --stat-card-bg-end: color-mix(in srgb, var(--portal-status-good-bg) 70%, var(--portal-surface-card) 30%);
+        --stat-card-label: var(--portal-status-good-text);
+        --stat-card-value: var(--portal-status-good-text);
+      }
+      #brevoStatisticsModal .stat-card--bad {
+        --stat-card-bg-start: color-mix(in srgb, var(--portal-status-bad-bg) 82%, var(--portal-status-bad-border) 18%);
+        --stat-card-bg-end: color-mix(in srgb, var(--portal-status-bad-bg) 70%, var(--portal-surface-card) 30%);
+        --stat-card-label: var(--portal-status-bad-text);
+        --stat-card-value: var(--portal-status-bad-text);
+      }
+      #brevoStatisticsModal .stat-card--purple {
+        --stat-card-bg-start: color-mix(in srgb, var(--portal-chip-purple-fill) 82%, var(--portal-chip-purple-stroke) 18%);
+        --stat-card-bg-end: color-mix(in srgb, var(--portal-chip-purple-fill) 70%, var(--portal-surface-card) 30%);
+        --stat-card-label: var(--portal-chip-purple-ink);
+        --stat-card-value: var(--portal-chip-purple-ink);
+      }
       #levelDetailPanel .table-scroll-wrap table {
         min-width: 760px;
       }
@@ -742,4 +763,10 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       html[data-theme="dark"] body.admin-portal-page .bar-chart-shell .small,
       html[data-theme="dark"] body.admin-portal-page #overviewRiskStudents {
         color: var(--portal-support-message);
+      }
+      html[data-theme="dark"] body.admin-portal-page #brevoStatisticsModal .stat-card .stat-label {
+        color: var(--portal-dark-text-soft);
+      }
+      html[data-theme="dark"] body.admin-portal-page #brevoStatisticsModal .stat-card > strong {
+        color: var(--portal-dark-text);
       }

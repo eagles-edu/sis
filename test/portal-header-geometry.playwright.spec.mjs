@@ -206,6 +206,7 @@ async function measureGeometry(page, url, selectors) {
       menu: readRect(input.menu),
       header: readRect(input.header),
       logo: readRect(input.logo),
+      container: readRect(input.container),
     };
   }, selectors);
 }
@@ -378,6 +379,30 @@ test(
           assert.ok(geometry.header.h <= 78, `${label} header should stay compact on desktop`);
         }
       }
+
+      await page.setViewportSize({ width: 1920, height: 900 });
+      const parentLarge = await measureGeometry(
+        page,
+        `http://127.0.0.1:${port}/web-asset/parent/parent-portal.html?geo=large-desktop`,
+        { menu: "#parentMenuBtn", header: ".topbar", logo: ".brand-logo-wrap", container: ".portal-main" }
+      );
+      const studentLarge = await measureGeometry(
+        page,
+        `http://127.0.0.1:${port}/web-asset/student/student-portal.html?geo=large-desktop`,
+        { menu: "#menuBtn", header: ".topbar", logo: ".brand-logo-wrap", container: ".portal-main" }
+      );
+      for (const [label, geometry] of [["parent-large", parentLarge], ["student-large", studentLarge]]) {
+        assert.ok(geometry.menu, `${label}: missing menu button`);
+        assert.ok(geometry.container, `${label}: missing content container`);
+        near(
+          geometry.container.x + geometry.container.w - geometry.menu.x,
+          5,
+          2,
+          `${label} menu left edge to content right edge`
+        );
+      }
+
+      await page.setViewportSize({ width: 1366, height: 900 });
 
       const studentLoginDesktop = await measureStudentLoginLayout(
         page,

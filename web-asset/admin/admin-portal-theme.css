@@ -321,6 +321,8 @@
   --portal-floating-menu-fill-hover: #173f89;
   --portal-floating-menu-ink: #fbffff;
   --portal-floating-menu-stroke: #fbffff;
+  --portal-floating-menu-content-max-inline-size: 1440px;
+  --portal-floating-menu-content-edge-gap: 5px;
   --portal-footer-fill: var(--theme-footer-bg);
   --portal-footer-ink: var(--theme-footer-text);
   --portal-header-bar-fill: var(--primary-color);
@@ -4505,9 +4507,6 @@ body.menu-open.admin-portal-page .menu-backdrop {
   opacity: 1;
   pointer-events: auto;
 }
-body.admin-portal-page .floating-menu-btn {
-  inset-inline-end: 12px;
-}
 @media (max-width: 860px) {
   body.admin-portal-page .app-sidebar {
     width: min(92vw, 320px);
@@ -4913,6 +4912,15 @@ html[data-theme="dark"] .field-hint {
   padding: 0;
   position: fixed;
   z-index: 90;
+}
+@media (min-width: 1440px) {
+  .floating-menu-btn {
+    inset-inline-end: auto;
+    inset-inline-start: calc(
+      50% + var(--portal-floating-menu-content-max-inline-size) / 2
+      - var(--portal-floating-menu-content-edge-gap)
+    );
+  }
 }
 .floating-menu-btn,
 .menu-toggle-btn,

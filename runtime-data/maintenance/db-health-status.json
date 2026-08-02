@@ -1,6 +1,6 @@
 {
   "status": "ok",
-  "checkedAt": "2026-08-02T05:30:00.466Z",
+  "checkedAt": "2026-08-02T08:00:00.593Z",
   "thresholds": {
     "backupStaleMinutes": 1560,
     "maxQueryLatencyMs": 500,
@@ -10,7 +10,7 @@
   "db": {
     "status": "ok",
     "connected": true,
-    "queryLatencyMs": 49,
+    "queryLatencyMs": 56,
     "error": ""
   },
   "backup": {
@@ -18,7 +18,7 @@
     "latestMetadataPath": "/home/eagles/dockerz/backups/postgres/latest.json",
     "latestBackupPath": "/home/eagles/dockerz/backups/postgres/postgres-20260801-193000Z.dump",
     "lastBackupAt": "2026-08-01T19:30:00.525Z",
-    "ageMinutes": 600,
+    "ageMinutes": 750,
     "staleThresholdMinutes": 1560,
     "isStale": false
   },

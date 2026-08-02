@@ -131,7 +131,7 @@ test("admin performance contract markers protect first-paint mitigations", () =>
   const criticalCss = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.critical.css"), "utf8")
   assert.match(
     criticalCss,
-    /#top\.admin-portal-page \.wrap[\s\S]*#appMain \.grid-main[\s\S]*#floatingMenuBtn\.floating-menu-btn/,
+    /#top\.admin-portal-page \.wrap[\s\S]*#appMain \.grid-main[\s\S]*#appSidebarNav\.app-sidebar/,
     "generated critical CSS must retain the protected shell geometry",
   )
 })
