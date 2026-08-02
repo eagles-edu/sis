@@ -80,6 +80,7 @@
     </title>
     <!-- Brevo Conversations {literal} -->
     <script>
+        window.SIS_PORTAL_THEME?.installBrevoConversationA11y?.();
         (function(d, w, c) {
             w.BrevoConversationsID = '6a69c88b5131e8e4fc0cf347';
             w[c] = w[c] || function() {
@@ -337,6 +338,7 @@
             Choose your password now, then save both your Parent ID and password in a safe place.
           </p>
           <form id="passwordSetupForm" class="login-form" novalidate>
+            <input id="passwordSetupUsername" name="username" type="text" autocomplete="username" tabindex="-1" aria-hidden="true" class="hidden">
             <div class="form-row">
               <label for="newParentPassword">New password</label>
               <input id="newParentPassword" type="password" autocomplete="new-password" minlength="8" required>

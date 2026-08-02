@@ -3166,6 +3166,49 @@ function resolveClientIpAddress(request) {
   return forwardedFor || socketAddress
 }
 
+export function buildFamilyOptionPayload({
+  profileRows = [],
+  generatedFamilies = [],
+  activeParentAccounts = [],
+} = {}) {
+  const familyIds = new Set([
+    ...generatedFamilies.map((row) => normalizeText(row?.familyId)),
+    ...profileRows.map((row) => normalizeText(row?.familyId)),
+  ].filter(Boolean))
+  const familyParentPairs = new Map()
+  const addFamilyParentPair = (familyId, parentId) => {
+    const normalizedFamilyId = normalizeText(familyId)
+    const normalizedParentId = normalizeText(parentId)
+    if (!normalizedFamilyId) return
+    familyIds.add(normalizedFamilyId)
+    if (!normalizedParentId) return
+    const pairKey = `${normalizedFamilyId}\u0000${normalizedParentId}`
+    if (!familyParentPairs.has(pairKey)) {
+      familyParentPairs.set(pairKey, { familyId: normalizedFamilyId, parentId: normalizedParentId })
+    }
+  }
+
+  profileRows.forEach((row) => addFamilyParentPair(row?.familyId, row?.parentsId))
+  activeParentAccounts.forEach((account) => {
+    ;(account?.links || []).forEach((link) => {
+      addFamilyParentPair(link?.student?.profile?.familyId, account?.parentsId)
+    })
+  })
+
+  const sortedFamilyIds = [...familyIds].sort((left, right) =>
+    left.localeCompare(right, undefined, { numeric: true }))
+  const familyOptions = sortedFamilyIds.flatMap((familyId) => {
+    const pairs = [...familyParentPairs.values()].filter((entry) => entry.familyId === familyId)
+    if (!pairs.length) {
+      return [{ familyId, parentId: "Unassigned", label: `${familyId} - Unassigned (familyId - parentId)` }]
+    }
+    return pairs
+      .sort((left, right) => left.parentId.localeCompare(right.parentId, undefined, { numeric: true }))
+      .map(({ parentId }) => ({ familyId, parentId, label: `${familyId} - ${parentId} (familyId - parentId)` }))
+  })
+  return { familyIds: sortedFamilyIds, familyOptions }
+}
+
 function buildAssignmentAnnouncementPreviewUrl(request, token) {
   return `${resolveRequestOrigin(request)}${ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH}/${encodeURIComponent(token)}`
 }
@@ -7516,26 +7559,26 @@ async function handleApiRequest(request, response, pathname, url) {
   if (method === "GET" && pathname === `${ADMIN_API_PREFIX}/family-ids`) {
     assertStoreEnabled()
     const prisma = await getSharedPrismaClient()
-    const [profileRows, generatedFamilies] = await Promise.all([
+    const [profileRows, generatedFamilies, activeParentAccounts] = await Promise.all([
       prisma.studentProfile.findMany({
         where: { familyId: { not: null } },
         select: { familyId: true, parentsId: true },
       }),
       prisma.family.findMany({ select: { familyId: true }, orderBy: { sequence: "asc" } }),
+      prisma.parentPortalAccount.findMany({
+        where: { status: "active" },
+        select: {
+          parentsId: true,
+          links: {
+            select: { student: { select: { profile: { select: { familyId: true } } } } },
+          },
+        },
+      }),
     ])
-    const familyIds = [...new Set([
-      ...generatedFamilies.map((row) => normalizeText(row.familyId)),
-      ...profileRows.map((row) => normalizeText(row.familyId)),
-    ].filter(Boolean))].sort((left, right) => left.localeCompare(right, undefined, { numeric: true }))
-    const parentIdByFamilyId = new Map()
-    profileRows.forEach((row) => {
-      const familyId = normalizeText(row.familyId)
-      const parentId = normalizeText(row.parentsId)
-      if (familyId && parentId && !parentIdByFamilyId.has(familyId)) parentIdByFamilyId.set(familyId, parentId)
-    })
-    const familyOptions = familyIds.map((familyId) => {
-      const parentId = parentIdByFamilyId.get(familyId) || "Unassigned"
-      return { familyId, parentId, label: `${familyId} - ${parentId} (familyId - parentId)` }
+    const { familyIds, familyOptions } = buildFamilyOptionPayload({
+      profileRows,
+      generatedFamilies,
+      activeParentAccounts,
     })
     sendJson(response, 200, { ok: true, familyIds, familyOptions })
     return true

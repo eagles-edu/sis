@@ -1,6 +1,8 @@
-# The Eagles SIS
+#  The Eagles American English Club, Ltd.
 
-> The Eagles SIS is a private school-management system with authenticated staff, parent, and student portals.
+## Student Information System (SIS)
+
+> The Eagles Club SIS is a private school-management system with authenticated staff, parent, and student portals.
 
 Public entry points:
 

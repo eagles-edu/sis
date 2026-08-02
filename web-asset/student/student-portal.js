@@ -3941,7 +3941,7 @@
           return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/${weeklyMinimumNewsReports()}`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn portal-button portal-button-info portal-button-open-week-set" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Open Week Set</button></td>\n          </tr>`;
         }).join("");
         body.querySelectorAll(".queue-row-btn").forEach((button) => {
-          button.title = "Mở các báo cáo tin tức thuộc tuần này để xem chi tiết";
+          button.title = "Open Week Set";
           button.setAttribute("aria-label", button.title);
         });
       }

@@ -9,6 +9,7 @@ import * as XLSX from "xlsx"
 import {
   buildChildDashboardSnapshot,
   buildStudentPortalCalendarTracks,
+  buildFamilyOptionPayload,
   parseSpreadsheetRowsFromUploadPayload,
 } from "../server/student-admin-routes.mjs"
 import { buildStudentReportCardPayload, generateStudentReportCardPdf } from "../server/student-report-card-pdf.mjs"
@@ -34,6 +35,28 @@ test("class and level aliases resolve to one canonical catalog value", () => {
   assert.equal(canonicalizeLevel("  eggchicks  "), "Eggs & Chicks")
   assert.equal(canonicalizeLevel("grade 6"), "A2 Flyers")
   assert.equal(canonicalizeLevel("  custom   class  "), "custom class")
+})
+
+test("family profile options include every familyId and parentId pair", () => {
+  const result = buildFamilyOptionPayload({
+    profileRows: [
+      { familyId: "fam-0002", parentsId: "parent-b" },
+      { familyId: "fam-0002", parentsId: "parent-a" },
+    ],
+    generatedFamilies: [{ familyId: "fam-0001" }],
+    activeParentAccounts: [{
+      parentsId: "parent-c",
+      links: [{ student: { profile: { familyId: "fam-0002" } } }],
+    }],
+  })
+
+  assert.deepEqual(result.familyIds, ["fam-0001", "fam-0002"])
+  assert.deepEqual(result.familyOptions, [
+    { familyId: "fam-0001", parentId: "Unassigned", label: "fam-0001 - Unassigned (familyId - parentId)" },
+    { familyId: "fam-0002", parentId: "parent-a", label: "fam-0002 - parent-a (familyId - parentId)" },
+    { familyId: "fam-0002", parentId: "parent-b", label: "fam-0002 - parent-b (familyId - parentId)" },
+    { familyId: "fam-0002", parentId: "parent-c", label: "fam-0002 - parent-c (familyId - parentId)" },
+  ])
 })
 
 test("portal password policy requires 8 characters, letter case, a symbol, and safe characters", () => {
@@ -1244,6 +1267,24 @@ test("GET /llms.txt returns the root agent guidance as plain text", async () => 
   assert.match(body, /^# The Eagles SIS\s/m)
   assert.match(body, /https:\/\/admin\.eagles\.edu\.vn\/admin/)
   assert.doesNotMatch(body, /<html/i)
+})
+
+test("portal llms.txt routes return their scoped agent guidance as plain text", async () => {
+  const cases = [
+    ["/admin/llms.txt", "# The Eagles SIS Admin Portal"],
+    ["/parent/llms.txt", "# The Eagles Parent Portal"],
+    ["/student/llms.txt", "# The Eagles Student Portal"],
+  ]
+
+  for (const [pathname, heading] of cases) {
+    const res = await fetchLocal(port, pathname)
+    assert.equal(res.status, 200, pathname)
+    assert.match(res.headers.get("content-type") || "", /text\/plain/i, pathname)
+    const body = await res.text()
+    assert.match(body, new RegExp(`^${heading}$`, "m"), pathname)
+    assert.match(body, /^\s*- \[[^\]]+\]\(https?:\/\//m, pathname)
+    assert.doesNotMatch(body, /<html/i, pathname)
+  }
 })
 
 test("legacy portal routes redirect to canonical routes", async () => {

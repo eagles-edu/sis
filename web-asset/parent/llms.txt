@@ -1,6 +1,8 @@
-# The Eagles Parent Portal
+# The Eagles American English Club, Ltd., Parent Portal
 
-> Authenticated family portal for viewing linked students' learning progress, homework, attendance, grades, performance reports, news reports, and profile information.
+## Student Information System (SIS)
+
+> The Eagles Club authenticated family portal for viewing linked students' learning progress, homework, attendance, grades, performance reports, news reports, and profile information.
 
 This portal is for authorized parents and guardians. It uses cookie-based sessions. Student and family records are private; an agent must not guess identities, expose account data, or treat an unauthenticated response as evidence that a child is linked.
 

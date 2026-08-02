@@ -13,6 +13,19 @@
     return ""
   }
 
+  function isAuthenticated() {
+    const authState = document.documentElement?.dataset || {}
+    const stateKey = endpoint().includes("/parent/") ? "parentAuthState"
+      : endpoint().includes("/student/") ? "studentAuthState"
+      : "adminAuthState"
+    if (authState[stateKey] === "authenticated") return true
+    if (authState[stateKey] === "unauthenticated") return false
+    const initialAuth = window.__SIS_ADMIN_INITIAL_AUTH__
+      || window.__SIS_PARENT_INITIAL_AUTH__
+      || window.__SIS_STUDENT_INITIAL_AUTH__
+    return initialAuth?.authenticated === true
+  }
+
   function safeObject(value) {
     return value && typeof value === "object" && !Array.isArray(value) ? value : {}
   }
@@ -80,7 +93,7 @@
       try { window.localStorage.setItem(key, value) } catch (error) { void error }
     }
     const path = endpoint()
-    if (!path) return false
+    if (!path || !isAuthenticated()) return false
     try {
       const response = await fetch(path, {
         method: "PUT",

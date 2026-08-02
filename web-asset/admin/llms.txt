@@ -1,6 +1,8 @@
-# The Eagles SIS Admin Portal
+# The Eagles American English Club, Ltd.,Admin Portal
 
-> Authenticated operations portal for administrators and teachers managing student records, enrollment, attendance, grades, assignments, parent reports, news reports, and notification queues for The Eagles American English Club.
+## Student Information System (SIS)
+
+> The Eagles Club authenticated operations portal for administrators and teachers managing student records, enrollment, attendance, grades, assignments, parent reports, news reports, and notification queues for The Eagles American English Club.
 
 This portal is for authorized staff only. It uses cookie-based sessions; API routes under `/api/admin` are not public documentation endpoints and require an authenticated session. Do not infer student, family, credential, or school-configuration data from an unauthenticated response.
 

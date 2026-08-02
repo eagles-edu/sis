@@ -666,49 +666,6 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       #appSchoolSetupWarning:not(.hidden) {
         visibility: visible;
       }
-      #brevoStatisticsModal .stat-card {
-        min-block-size: 104px;
-        padding: 12px;
-      }
-      #brevoStatisticsModal .stat-card .stat-label {
-        color: var(--stat-card-label);
-        font-size: 13px;
-        font-weight: 800;
-        letter-spacing: 0.045em;
-      }
-      #brevoStatisticsModal .stat-card > strong {
-        color: var(--stat-card-value);
-        display: block;
-        font-size: clamp(1.45rem, 1.1rem + 1vw, 1.85rem);
-        font-variant-numeric: tabular-nums;
-        font-weight: 800;
-        line-height: 1.05;
-        margin-top: 7px;
-      }
-      #brevoStatisticsModal .stat-card--blue {
-        --stat-card-bg-start: color-mix(in srgb, var(--portal-status-info-bg) 82%, var(--portal-status-info-border) 18%);
-        --stat-card-bg-end: color-mix(in srgb, var(--portal-status-info-bg) 70%, var(--portal-surface-card) 30%);
-        --stat-card-label: var(--portal-status-info-text);
-        --stat-card-value: var(--portal-status-info-text);
-      }
-      #brevoStatisticsModal .stat-card--good {
-        --stat-card-bg-start: color-mix(in srgb, var(--portal-status-good-bg) 82%, var(--portal-status-good-border) 18%);
-        --stat-card-bg-end: color-mix(in srgb, var(--portal-status-good-bg) 70%, var(--portal-surface-card) 30%);
-        --stat-card-label: var(--portal-status-good-text);
-        --stat-card-value: var(--portal-status-good-text);
-      }
-      #brevoStatisticsModal .stat-card--bad {
-        --stat-card-bg-start: color-mix(in srgb, var(--portal-status-bad-bg) 82%, var(--portal-status-bad-border) 18%);
-        --stat-card-bg-end: color-mix(in srgb, var(--portal-status-bad-bg) 70%, var(--portal-surface-card) 30%);
-        --stat-card-label: var(--portal-status-bad-text);
-        --stat-card-value: var(--portal-status-bad-text);
-      }
-      #brevoStatisticsModal .stat-card--purple {
-        --stat-card-bg-start: color-mix(in srgb, var(--portal-chip-purple-fill) 82%, var(--portal-chip-purple-stroke) 18%);
-        --stat-card-bg-end: color-mix(in srgb, var(--portal-chip-purple-fill) 70%, var(--portal-surface-card) 30%);
-        --stat-card-label: var(--portal-chip-purple-ink);
-        --stat-card-value: var(--portal-chip-purple-ink);
-      }
       #levelDetailPanel .table-scroll-wrap table {
         min-width: 760px;
       }
@@ -797,12 +754,6 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       html[data-theme="dark"] body.admin-portal-page .bar-chart-shell .small,
       html[data-theme="dark"] body.admin-portal-page #overviewRiskStudents {
         color: var(--portal-support-message);
-      }
-      html[data-theme="dark"] body.admin-portal-page #brevoStatisticsModal .stat-card .stat-label {
-        color: var(--portal-dark-text-soft);
-      }
-      html[data-theme="dark"] body.admin-portal-page #brevoStatisticsModal .stat-card > strong {
-        color: var(--portal-dark-text);
       }
 /* ADMIN_CRITICAL_CSS_END */
 </style>
@@ -6568,7 +6519,7 @@ No family lookup yet.</pre>
       role="dialog"
       aria-modal="true"
       aria-label="Queued performance report review">
-      <div class="queue-modal-card brevo-statistics-modal-card">
+      <div class="queue-modal-card">
         <div class="queue-modal-header">
           <div class="queue-modal-nav">
             <button
@@ -6939,16 +6890,16 @@ No family lookup yet.</pre>
           </div>
           <button id="brevoStatisticsModalCloseBtn" type="button" class="portal-button portal-button-warning">Close</button>
         </div>
-        <div class="queue-modal-body brevo-statistics-modal-body">
+        <div class="queue-modal-body">
           <div class="stats-grid">
             <div class="stat-card stat-card--blue card"><div class="stat-label">Requests</div><strong id="brevoStats_requests">n/a</strong></div>
             <div class="stat-card stat-card--good card"><div class="stat-label">Delivered</div><strong id="brevoStats_delivered">n/a</strong></div>
-            <div class="stat-card stat-card--blue card"><div class="stat-label">Opens</div><strong id="brevoStats_opens">n/a</strong></div>
-            <div class="stat-card stat-card--blue card"><div class="stat-label">Unique Opens</div><strong id="brevoStats_uniqueOpens">n/a</strong></div>
-            <div class="stat-card stat-card--blue card"><div class="stat-label">Clicks</div><strong id="brevoStats_clicks">n/a</strong></div>
-            <div class="stat-card stat-card--blue card"><div class="stat-label">Unique Clicks</div><strong id="brevoStats_uniqueClicks">n/a</strong></div>
+            <div class="stat-card stat-card--good card"><div class="stat-label">Opens</div><strong id="brevoStats_opens">n/a</strong></div>
+            <div class="stat-card stat-card--good card"><div class="stat-label">Unique Opens</div><strong id="brevoStats_uniqueOpens">n/a</strong></div>
+            <div class="stat-card stat-card--good card"><div class="stat-label">Clicks</div><strong id="brevoStats_clicks">n/a</strong></div>
+            <div class="stat-card stat-card--good card"><div class="stat-label">Unique Clicks</div><strong id="brevoStats_uniqueClicks">n/a</strong></div>
             <div class="stat-card stat-card--bad card"><div class="stat-label">Hard Bounces</div><strong id="brevoStats_hardBounces">n/a</strong></div>
-            <div class="stat-card stat-card--purple card"><div class="stat-label">Soft Bounces</div><strong id="brevoStats_softBounces">n/a</strong></div>
+            <div class="stat-card stat-card--warn card"><div class="stat-label">Soft Bounces</div><strong id="brevoStats_softBounces">n/a</strong></div>
             <div class="stat-card stat-card--bad card"><div class="stat-label">Blocked</div><strong id="brevoStats_blocked">n/a</strong></div>
             <div class="stat-card stat-card--bad card"><div class="stat-label">Spam Reports</div><strong id="brevoStats_spamReports">n/a</strong></div>
           </div>

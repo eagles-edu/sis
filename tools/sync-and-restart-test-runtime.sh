@@ -49,10 +49,14 @@ const parentPortalPagePath = contract.parentPortalPagePath || "/parent"
 const studentPortalPagePath = contract.studentPortalPagePath || "/student"
 const entries = [
   [`http://127.0.0.1:${port}/`, 200, `window.__SIS_RUNTIME_ENV=${JSON.stringify(runtimeEnv)}`, ""],
+  [`http://127.0.0.1:${port}/llms.txt`, 200, "# The Eagles SIS", ""],
   [`http://127.0.0.1:${port}${adminPagePath}`, 200, "Student Admin Login", ""],
+  [`http://127.0.0.1:${port}${adminPagePath}/llms.txt`, 200, "# The Eagles SIS Admin Portal", ""],
   [`http://127.0.0.1:${port}${adminEnrollmentPagePath}`, 200, "The Eagles Club Student Enrollment", ""],
   [`http://127.0.0.1:${port}${parentPortalPagePath}`, 200, "dành cho phụ huynh", ""],
+  [`http://127.0.0.1:${port}${parentPortalPagePath}/llms.txt`, 200, "# The Eagles Parent Portal", ""],
   [`http://127.0.0.1:${port}${studentPortalPagePath}`, 200, "Student Portal", ""],
+  [`http://127.0.0.1:${port}${studentPortalPagePath}/llms.txt`, 200, "# The Eagles Student Portal", ""],
   [`http://127.0.0.1:${port}${contract.adminLegacyPagePath || "/admin/students"}`, 308, "", adminPagePath],
   [`http://127.0.0.1:${port}${contract.parentLegacyPagePath || "/parent/portal"}`, 308, "", parentPortalPagePath],
   [`http://127.0.0.1:${port}${contract.studentLegacyPagePath || "/student/portal"}`, 308, "", studentPortalPagePath],
@@ -380,6 +384,10 @@ TEST_PRESERVED_RUNTIME_FILES=(
 )
 
 TEST_RUNTIME_WEBFILE_MAP=(
+  "web-asset/llms.txt|web-asset/llms.txt"
+  "web-asset/admin/llms.txt|web-asset/admin/llms.txt"
+  "web-asset/parent/llms.txt|web-asset/parent/llms.txt"
+  "web-asset/student/llms.txt|web-asset/student/llms.txt"
   "web-asset/admin/student-admin.html|web-asset/admin/student-admin.html"
   "web-asset/admin/student-enrollment.html|web-asset/admin/student-enrollment.html"
   "web-asset/admin/portal-hub.html|web-asset/admin/portal-hub.html"
@@ -530,6 +538,10 @@ TEST_LOCAL_UI_RUNTIME_PARITY_MAP=(
 
 TEST_PUBLIC_WEBFILE_MAP=(
   "robots.txt|robots.txt"
+  "web-asset/llms.txt|llms.txt"
+  "web-asset/admin/llms.txt|sis-admin/llms.txt"
+  "web-asset/parent/llms.txt|sis-parent/llms.txt"
+  "web-asset/student/llms.txt|sis-student/llms.txt"
   "web-asset/admin/student-admin.html|sis-admin/student-admin.html"
   "web-asset/admin/student-enrollment.html|sis-admin/student-enrollment.html"
   "web-asset/admin/portal-hub.html|sis-admin/portal-hub.html"

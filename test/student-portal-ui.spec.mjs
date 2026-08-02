@@ -28,6 +28,13 @@ test("student portal uses the mirrored shared favicon", () => {
   assert.doesNotMatch(STUDENT_PORTAL_HTML, /\/web-asset\/student\/favicon\.ico/)
 })
 
+test("student news week-set controls keep visible and accessible names aligned", () => {
+  assert.match(
+    STUDENT_PORTAL_JS,
+    /button\.title = "Open Week Set";\s*button\.setAttribute\("aria-label", button\.title\);/,
+  )
+})
+
 function jsonTextResponse(status, payload = {}) {
   return {
     status,

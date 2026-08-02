@@ -89,6 +89,30 @@
     return setTheme(current === "dark" ? "light" : "dark")
   }
 
+  function installBrevoConversationA11y() {
+    if (globalThis.__SIS_BREVO_CONVERSATION_A11Y__) return
+    globalThis.__SIS_BREVO_CONVERSATION_A11Y__ = true
+
+    const normalizeFields = () => {
+      document.querySelectorAll("textarea.js-chat-textarea").forEach((field, index) => {
+        if (!field.id) field.id = `brevoConversationMessage${index ? `-${index + 1}` : ""}`
+        if (!field.name) field.name = "message"
+        if (field.getAttribute("autocomplete") !== "off") field.setAttribute("autocomplete", "off")
+      })
+    }
+
+    normalizeFields()
+    if (globalThis.MutationObserver && document.documentElement) {
+      const observer = new MutationObserver(normalizeFields)
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["autocomplete", "id", "name"],
+        childList: true,
+        subtree: true,
+      })
+    }
+  }
+
   globalThis.SIS_PORTAL_THEME = {
     STORAGE_KEY,
     LEGACY_KEYS,
@@ -97,5 +121,6 @@
     setTheme,
     getTheme,
     toggleTheme,
+    installBrevoConversationA11y,
   }
 })()

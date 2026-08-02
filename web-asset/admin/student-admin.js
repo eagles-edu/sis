@@ -19130,6 +19130,11 @@
         if (editorShell)
           editorShell.classList.toggle("hidden", normalizedMode !== "edit");
 
+        if (normalizedMode === "edit") {
+          renderProfileFormLayout();
+          if (state.currentStudent?.id) fillStudentForm(state.currentStudent);
+        }
+
         const editBtn = document.getElementById("profileEditInfoBtn");
         const refreshBtn = document.getElementById("profileRefreshInfoBtn");
         if (editBtn) editBtn.disabled = !state.currentStudent?.id || !canWriteData();
@@ -19330,6 +19335,7 @@
           required.textContent = " *";
           required.style.color = "#c62828";
           required.style.fontWeight = "900";
+          required.style.fontSize = "x-large";
           required.setAttribute("aria-label", "required");
           labelEl.appendChild(required);
           wrapper.classList.add("profile-field-required");

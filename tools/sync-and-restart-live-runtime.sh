@@ -61,6 +61,10 @@ LIVE_PRESERVED_RUNTIME_FILES=(
 )
 
 LIVE_RUNTIME_WEBFILE_MAP=(
+  "web-asset/llms.txt|web-asset/llms.txt"
+  "web-asset/admin/llms.txt|web-asset/admin/llms.txt"
+  "web-asset/parent/llms.txt|web-asset/parent/llms.txt"
+  "web-asset/student/llms.txt|web-asset/student/llms.txt"
   "web-asset/admin/student-admin.html|web-asset/admin/student-admin.html"
   "web-asset/admin/student-enrollment.html|web-asset/admin/student-enrollment.html"
   "web-asset/admin/portal-hub.html|web-asset/admin/portal-hub.html"
@@ -208,6 +212,10 @@ LIVE_LOCAL_UI_RUNTIME_PARITY_MAP=(
 
 LIVE_PUBLIC_WEBFILE_MAP=(
   "robots.txt|robots.txt"
+  "web-asset/llms.txt|llms.txt"
+  "web-asset/admin/llms.txt|sis-admin/llms.txt"
+  "web-asset/parent/llms.txt|sis-parent/llms.txt"
+  "web-asset/student/llms.txt|sis-student/llms.txt"
   "web-asset/admin/student-admin.html|sis-admin/student-admin.html"
   "web-asset/admin/student-enrollment.html|sis-admin/student-enrollment.html"
   "web-asset/admin/portal-hub.html|sis-admin/portal-hub.html"
