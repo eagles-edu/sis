@@ -52,11 +52,18 @@ test("family profile options include every familyId and parentId pair", () => {
 
   assert.deepEqual(result.familyIds, ["fam-0001", "fam-0002"])
   assert.deepEqual(result.familyOptions, [
-    { familyId: "fam-0001", parentId: "Unassigned", label: "fam-0001 - Unassigned (familyId - parentId)" },
-    { familyId: "fam-0002", parentId: "parent-a", label: "fam-0002 - parent-a (familyId - parentId)" },
-    { familyId: "fam-0002", parentId: "parent-b", label: "fam-0002 - parent-b (familyId - parentId)" },
-    { familyId: "fam-0002", parentId: "parent-c", label: "fam-0002 - parent-c (familyId - parentId)" },
+    { familyId: "fam-0001", parentId: "Unassigned", label: "fam-0001 - Unassigned" },
+    { familyId: "fam-0002", parentId: "parent-a", label: "fam-0002 - parent-a" },
+    { familyId: "fam-0002", parentId: "parent-b", label: "fam-0002 - parent-b" },
+    { familyId: "fam-0002", parentId: "parent-c", label: "fam-0002 - parent-c" },
   ])
+})
+
+test("student profile bootstrap hydrates family options before rendering the form", () => {
+  assert.match(
+    ADMIN_JS_SOURCE,
+    /if \(slug === "profile"\) \{[\s\S]*?renderProfileInfoLayout\(state\.currentStudent\);[\s\S]*?loadFamilyIds\(\)\.catch\(handleError\);/u,
+  )
 })
 
 test("portal password policy requires 8 characters, letter case, a symbol, and safe characters", () => {
@@ -1264,16 +1271,16 @@ test("GET /llms.txt returns the root agent guidance as plain text", async () => 
   assert.match(res.headers.get("content-type") || "", /text\/plain/i)
   assert.match(res.headers.get("cache-control") || "", /public/i)
   const body = await res.text()
-  assert.match(body, /^# The Eagles SIS\s/m)
+  assert.match(body, /^#  The Eagles American English Club, Ltd\.\s/m)
   assert.match(body, /https:\/\/admin\.eagles\.edu\.vn\/admin/)
   assert.doesNotMatch(body, /<html/i)
 })
 
 test("portal llms.txt routes return their scoped agent guidance as plain text", async () => {
   const cases = [
-    ["/admin/llms.txt", "# The Eagles SIS Admin Portal"],
-    ["/parent/llms.txt", "# The Eagles Parent Portal"],
-    ["/student/llms.txt", "# The Eagles Student Portal"],
+    ["/admin/llms.txt", "# The Eagles American English Club, Ltd., Admin Portal"],
+    ["/parent/llms.txt", "# The Eagles American English Club, Ltd., Parent Portal"],
+    ["/student/llms.txt", "# The Eagles American English Club, Ltd., Student Portal"],
   ]
 
   for (const [pathname, heading] of cases) {

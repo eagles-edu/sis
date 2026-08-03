@@ -1,4 +1,4 @@
-# The Eagles American English Club, Ltd.,Admin Portal
+# The Eagles American English Club, Ltd., Admin Portal
 
 ## Student Information System (SIS)
 

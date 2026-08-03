@@ -75,3 +75,28 @@ test("portal theme state applies the cached theme before async preferences load"
   assert.equal(document.documentElement.dataset.theme, "dark")
   assert.equal(document.documentElement.style.colorScheme, "dark")
 })
+
+test("portal consent preferences persist explicit choices across reads", () => {
+  const { document, store, theme } = createSandbox()
+
+  const saved = theme.writeConsentPreferences("granted", "denied")
+
+  assert.equal(saved.version, 1)
+  assert.equal(saved.supportChat, "granted")
+  assert.equal(saved.analytics, "denied")
+  assert.deepEqual(theme.readConsentPreferences(), saved)
+  assert.equal(JSON.parse(store.get("sis-consent-preferences")).analytics, "denied")
+  assert.equal(document.documentElement.dataset.sisSupportChatConsent, undefined)
+})
+
+test("portal consent preferences expire after the review period", () => {
+  const expired = JSON.stringify({
+    version: 1,
+    supportChat: "granted",
+    analytics: "granted",
+    updatedAt: new Date(Date.now() - 366 * 24 * 60 * 60 * 1000).toISOString(),
+  })
+  const { theme } = createSandbox({ "sis-consent-preferences": expired })
+
+  assert.equal(theme.readConsentPreferences(), null)
+})

@@ -78,21 +78,6 @@
   <title>
       Trang chủ dành cho phụ huynh - Câu lạc bộ Eagles
     </title>
-    <!-- Brevo Conversations {literal} -->
-    <script>
-        window.SIS_PORTAL_THEME?.installBrevoConversationA11y?.();
-        (function(d, w, c) {
-            w.BrevoConversationsID = '6a69c88b5131e8e4fc0cf347';
-            w[c] = w[c] || function() {
-                (w[c].q = w[c].q || []).push(arguments);
-            };
-            var s = d.createElement('script');
-            s.async = true;
-            s.src = 'https://conversations-widget.brevo.com/brevo-conversations.js';
-            if (d.head) d.head.appendChild(s);
-        })(document, window, 'BrevoConversations');
-    </script>
-    <!-- /Brevo Conversations {/literal} -->
   </head>
 
   <body class="parent-portal-page" id="top">
@@ -1252,6 +1237,7 @@
     </div>
 
     <script src="/web-asset/shared/portal-environment.js"></script>
+    <script>window.SIS_PORTAL_THEME?.initPrivacyConsent?.({ locale: "vi" })</script>
     <!-- Source-contract markers for functions implemented by parent-portal.js. -->
     <!-- function renderCurrentHomeworkOverviewCard() {} function renderPastDueHomeworkOverviewCard() {} function setPastDueHomeworkModalOpen() {} function loadPortalAsset() {} function assertApiOriginConfiguredForStaticPreview() {} function inferLoopbackPreviewApiOrigin() {} function formatQueueDateTimeTz7() {} function formatQueueLatestSubmissionHtml() {} fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js" http://127.0.0.1:8788 queue-compact-datetime ${hour}:${minute}:${second} +07 id="newsWeekSetModalVocabularyRows" active?.vocabulary class="new-word-entry" -->
     <script src="/web-asset/shared/portal-preferences.js"></script>

@@ -49,14 +49,14 @@ const parentPortalPagePath = contract.parentPortalPagePath || "/parent"
 const studentPortalPagePath = contract.studentPortalPagePath || "/student"
 const entries = [
   [`http://127.0.0.1:${port}/`, 200, `window.__SIS_RUNTIME_ENV=${JSON.stringify(runtimeEnv)}`, ""],
-  [`http://127.0.0.1:${port}/llms.txt`, 200, "# The Eagles SIS", ""],
+  [`http://127.0.0.1:${port}/llms.txt`, 200, "#  The Eagles American English Club, Ltd.", ""],
   [`http://127.0.0.1:${port}${adminPagePath}`, 200, "Student Admin Login", ""],
-  [`http://127.0.0.1:${port}${adminPagePath}/llms.txt`, 200, "# The Eagles SIS Admin Portal", ""],
+  [`http://127.0.0.1:${port}${adminPagePath}/llms.txt`, 200, "# The Eagles American English Club, Ltd., Admin Portal", ""],
   [`http://127.0.0.1:${port}${adminEnrollmentPagePath}`, 200, "The Eagles Club Student Enrollment", ""],
   [`http://127.0.0.1:${port}${parentPortalPagePath}`, 200, "dành cho phụ huynh", ""],
-  [`http://127.0.0.1:${port}${parentPortalPagePath}/llms.txt`, 200, "# The Eagles Parent Portal", ""],
+  [`http://127.0.0.1:${port}${parentPortalPagePath}/llms.txt`, 200, "# The Eagles American English Club, Ltd., Parent Portal", ""],
   [`http://127.0.0.1:${port}${studentPortalPagePath}`, 200, "Student Portal", ""],
-  [`http://127.0.0.1:${port}${studentPortalPagePath}/llms.txt`, 200, "# The Eagles Student Portal", ""],
+  [`http://127.0.0.1:${port}${studentPortalPagePath}/llms.txt`, 200, "# The Eagles American English Club, Ltd., Student Portal", ""],
   [`http://127.0.0.1:${port}${contract.adminLegacyPagePath || "/admin/students"}`, 308, "", adminPagePath],
   [`http://127.0.0.1:${port}${contract.parentLegacyPagePath || "/parent/portal"}`, 308, "", parentPortalPagePath],
   [`http://127.0.0.1:${port}${contract.studentLegacyPagePath || "/student/portal"}`, 308, "", studentPortalPagePath],
@@ -393,7 +393,6 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/portal-hub.html|web-asset/admin/portal-hub.html"
   "web-asset/admin/report-card.html|web-asset/admin/report-card.html"
   "web-asset/admin/grades-tabulator.html|web-asset/admin/grades-tabulator.html"
-  "web-asset/admin/student-points.html|web-asset/admin/student-points.html"
   "web-asset/admin/grades-tabulator.css|web-asset/admin/grades-tabulator.css"
   "web-asset/admin/grades-tabulator.min.css|web-asset/admin/grades-tabulator.min.css"
   "web-asset/admin/grades-tabulator.js|web-asset/admin/grades-tabulator.js"
@@ -556,7 +555,6 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/report-card.min.css|web-asset/admin/report-card.min.css"
   "web-asset/admin/report-card.min.js|web-asset/admin/report-card.min.js"
   "web-asset/admin/report-card.min.js.map|web-asset/admin/report-card.min.js.map"
-  "web-asset/admin/student-points.html|sis-admin/student-points.html"
   "web-asset/admin/assignment-controls-island.mjs|web-asset/admin/assignment-controls-island.mjs"
   "web-asset/admin/assignment-engagement-island.mjs|web-asset/admin/assignment-engagement-island.mjs"
   "web-asset/admin/performance-engagement-island.mjs|web-asset/admin/performance-engagement-island.mjs"
@@ -1101,7 +1099,6 @@ verify_test_public_assets() {
     "${target_public_root}/sis-admin/student-admin.html"
     "${target_public_root}/sis-admin/portal-hub.html"
     "${target_public_root}/sis-admin/grades-tabulator.html"
-    "${target_public_root}/sis-admin/student-points.html"
     "${target_public_root}/sis-parent/parent-portal.html"
     "${target_public_root}/sis-student/student-portal.html"
     "${target_public_root}/web-asset/shared/portal-theme.min.css"

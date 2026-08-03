@@ -3224,7 +3224,7 @@ test("student admin child page owns students panel while search stays visible", 
     if (url.includes("/api/admin/family-ids")) {
       return jsonResponse(200, {
         familyIds: ["fam-0037"],
-        familyOptions: [{ familyId: "fam-0037", label: "fam-0037 - cmson002 (familyId - parentId)" }],
+        familyOptions: [{ familyId: "fam-0037", label: "fam-0037 - cmson002" }],
       })
     }
 

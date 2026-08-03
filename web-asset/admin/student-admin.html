@@ -554,7 +554,9 @@ body#top.admin-portal-page {
   will-change: transform;
   z-index: 82;
 }
-body#top.menu-open #appSidebarNav.app-sidebar { transform: translateX(0); }
+body#top.menu-open #appSidebarNav.app-sidebar {
+ transform: translateX(0);
+}
 #menuBackdrop.menu-backdrop {
   inset: 0;
   opacity: 0;
@@ -583,14 +585,16 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
   object-fit: contain;
   width: 100%;
 }
-#appMain .page-section:not(.active) { display: none !important; }
+#appMain .page-section:not(.active) {
+ display: none !important;
+}
 #appMain .brand-logo-wrap--sm {
   block-size: 38px;
   inline-size: 38px;
 }
 #appMain .brand-logo {
-  display: block;
   block-size: 100%;
+  display: block;
   inline-size: 100%;
   object-fit: cover;
 }
@@ -603,36 +607,36 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       #status,
       #parentQueueModal .queue-modal-card {
         zoom: var(--sis-global-text-zoom, 1);
-      }
+  }
       #authPanel {
         margin: 0 auto;
         margin-top: clamp(3rem, 5vw, 4rem);
         padding: 20px;
-      }
+  }
       #profileTabStatus {
         font-size: 13px;
-      }
+  }
       #studentListPanel hr {
         border-style: solid !important;
-        border-width: 1px 0 0 !important;
         border-top: 1px solid var(--border-strong) !important;
+        border-width: 1px 0 0 !important;
         margin: 12px 0 !important;
-      }
+  }
       html[data-theme="dark"] body.admin-portal-page #studentListPanel hr {
         border-top-color: var(--portal-dark-border-strong) !important;
-      }
+  }
       #topSearchCount {
         margin: 0;
-      }
+  }
       #topSearchRows tr.top-search-row {
         cursor: pointer;
-      }
+  }
       #topSearchResultsPanel th[data-top-search-sort] {
         cursor: pointer;
         padding-right: 18px;
         position: relative;
         user-select: none;
-      }
+  }
       #topSearchResultsPanel th.sort-active-asc::after,
       #topSearchResultsPanel th.sort-active-desc::after {
         font-size: 10px;
@@ -640,49 +644,49 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
         right: 6px;
         top: 50%;
         transform: translateY(-50%);
-      }
+  }
       #topSearchResultsPanel th.sort-active-asc::after {
         content: "▲";
-      }
+  }
       #topSearchResultsPanel th.sort-active-desc::after {
         content: "▼";
-      }
+  }
       #overviewStatsGrid {
         min-height: 132px;
-      }
+  }
       #overviewClassTableWrap,
       #overviewAssignmentTableWrap {
         min-height: 108px;
-      }
+  }
       #overviewRiskStudents {
         overflow: auto;
-      }
+  }
       #appSchoolSetupWarning.hidden {
         display: none !important;
-        min-height: 0;
         margin: 0;
+        min-height: 0;
         visibility: hidden;
-      }
+  }
       #appSchoolSetupWarning:not(.hidden) {
         visibility: visible;
-      }
+  }
       #levelDetailPanel .table-scroll-wrap table {
         min-width: 760px;
-      }
+  }
       #levelDetailRows td {
         font-size: 11px;
         overflow-wrap: anywhere;
-      }
+  }
       #hubStatusMeta {
         font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
         margin-top: 4px;
-      }
+  }
       #pt_actionHelperStatus {
         margin-top: 2px;
-      }
+  }
       .parent-tracking-grid #pt_outstandingRows td {
         vertical-align: top;
-      }
+  }
       #performanceQueueDetails summary,
       #overviewIncomingExerciseDetails summary {
         align-items: center;
@@ -693,68 +697,68 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
         gap: 8px;
         justify-content: space-between;
         list-style: none;
-      }
+  }
       #performanceQueueDetails summary::-webkit-details-marker,
       #overviewIncomingExerciseDetails summary::-webkit-details-marker {
         display: none;
-      }
+  }
       #overviewIncomingExerciseActionStatus {
         margin-top: 4px;
         overflow-wrap: anywhere;
-      }
+  }
       #overviewClassTableWrap table {
         min-width: 420px;
-      }
+  }
       #overviewIncomingExerciseDetails .table-scroll-wrap table {
         min-width: 980px;
-      }
+  }
       #performanceQueueDetails .table-scroll-wrap table {
         min-width: 760px;
-      }
+  }
       #overviewClassRows td,
       #overviewIncomingExerciseRows td,
       #performanceQueueRows td {
         overflow-wrap: anywhere;
-      }
+  }
       #status {
         color: var(--ink-muted);
         font-size: 12px;
         min-height: 28px;
         white-space: pre-wrap;
-      }
+  }
       @media (max-width: 820px) {
         #appMain .topbar {
           padding-inline-end: 10px;
-        }
+    }
         #performanceQueueDetails summary,
         #overviewIncomingExerciseDetails summary {
           align-items: flex-start;
           flex-wrap: wrap;
-        }
+    }
         #performanceQueueSummary,
         #overviewIncomingExerciseSummary {
           width: 100%;
-        }
+    }
         #overviewClassTableWrap table {
           min-width: 360px;
-        }
+    }
         #overviewIncomingExerciseDetails .table-scroll-wrap table {
           min-width: 820px;
-        }
+    }
         #performanceQueueDetails .table-scroll-wrap table {
           min-width: 680px;
-        }
+    }
         #levelDetailPanel .actions,
         #overviewIncomingExerciseSection .actions,
         #performanceQueueSection .actions {
           grid-template-columns: 1fr;
-        }
-      }
+    }
+  }
       html[data-theme="dark"] body.admin-portal-page .chart-legend,
       html[data-theme="dark"] body.admin-portal-page .bar-chart-shell .small,
       html[data-theme="dark"] body.admin-portal-page #overviewRiskStudents {
         color: var(--portal-support-message);
-      }
+  }
 /* ADMIN_CRITICAL_CSS_END */
 </style>
     <style>

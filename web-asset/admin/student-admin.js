@@ -10688,6 +10688,7 @@
         if (slug === "profile") {
           setProfileMode("info");
           renderProfileInfoLayout(state.currentStudent);
+          loadFamilyIds().catch(handleError);
           if (!state.currentStudent?.id) {
             scheduleAfterFirstPaint(() => hydrateNextStudentNumberFromApi().catch((error) => {
               if (error && (error.status === 401 || error.status === 404 || error.status === 503)) return;
@@ -19132,6 +19133,7 @@
 
         if (normalizedMode === "edit") {
           renderProfileFormLayout();
+          loadFamilyIds().catch(handleError);
           if (state.currentStudent?.id) fillStudentForm(state.currentStudent);
         }
 
@@ -19252,7 +19254,17 @@
         }
         if (field === "familyId") {
           const familySelect = document.getElementById("familyIdExisting");
-          if (familySelect) familySelect.value = state.familyIds.includes(el.value) ? el.value : "";
+          if (familySelect) {
+            const currentFamilyId = normalizeText(el.value);
+            const currentParentId = normalizeText(getFormValue("parentsId"));
+            const matchingOption = Array.from(familySelect.options).find((option) =>
+              normalizeText(option.dataset.familyId) === currentFamilyId &&
+              normalizeText(option.dataset.parentId) === currentParentId,
+            ) || Array.from(familySelect.options).find((option) =>
+              normalizeText(option.dataset.familyId) === currentFamilyId,
+            );
+            familySelect.value = matchingOption?.value || "";
+          }
         }
       }
 
@@ -19463,9 +19475,11 @@
           const familyOptions = state.familyOptions.length
             ? state.familyOptions
             : state.familyIds.map((familyId) => ({ familyId, label: familyId }));
-          familyOptions.forEach(({ familyId, label }) => {
+          familyOptions.forEach(({ familyId, parentId, label }) => {
             const option = document.createElement("option");
-            option.value = familyId;
+            option.value = `${familyId}\u0000${parentId || "Unassigned"}`;
+            option.dataset.familyId = familyId;
+            option.dataset.parentId = parentId || "Unassigned";
             option.textContent = label;
             familySelect.appendChild(option);
           });
@@ -19475,7 +19489,11 @@
           familyInput.autocomplete = "off";
           familyInput.placeholder = field.placeholderVi || "fam-0001";
           familySelect.addEventListener("change", () => {
-            familyInput.value = familySelect.value;
+            const selected = familySelect.selectedOptions[0];
+            familyInput.value = normalizeText(selected?.dataset.familyId);
+            const parentInput = document.getElementById("f_parentsId");
+            const parentId = normalizeText(selected?.dataset.parentId);
+            if (parentInput && parentId && parentId !== "Unassigned") parentInput.value = parentId;
           });
           labelEl.htmlFor = controlId;
           wrapper.appendChild(labelEl);
@@ -20171,7 +20189,11 @@
         state.familyIds = Array.isArray(data?.familyIds) ? data.familyIds.map(normalizeText).filter(Boolean) : [];
         state.familyOptions = Array.isArray(data?.familyOptions)
           ? data.familyOptions
-            .map((entry) => ({ familyId: normalizeText(entry?.familyId), label: normalizeText(entry?.label) }))
+            .map((entry) => ({
+              familyId: normalizeText(entry?.familyId),
+              parentId: normalizeText(entry?.parentId),
+              label: normalizeText(entry?.label),
+            }))
             .filter((entry) => entry.familyId)
           : [];
         if (state.profileMode === "edit") {
@@ -22744,6 +22766,7 @@
         bindById("newBtn", "click", () => {
           clearStudentForm();
           setProfileMode("edit");
+          loadFamilyIds().catch(handleError);
           setStatus("New student form ready.");
         });
         bindById("studentClearBtn", "click", () => {
@@ -22805,9 +22828,10 @@
           .then((mod) =>
             mod.initProfileIsland({
               document,
-              onProfileNewStudent() {
+          onProfileNewStudent() {
                 clearStudentForm();
                 setProfileMode("edit");
+                loadFamilyIds().catch(handleError);
                 setStatus("New student form ready.");
               },
               onProfileClearStudent() {
@@ -22833,6 +22857,7 @@
               onProfileCreateInfo() {
                 clearStudentForm();
                 setProfileMode("edit");
+                loadFamilyIds().catch(handleError);
                 setStatus("New student form ready.");
               },
               onProfileRefreshInfo() {

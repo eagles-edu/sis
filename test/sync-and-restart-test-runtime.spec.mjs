@@ -28,6 +28,7 @@ test("full test-mirror sync creates a restorable database backup without purging
 })
 
 test("sync-and-restart-test-runtime skips Prisma refresh in public mode only", () => {
+  assert.doesNotMatch(script, /student-points\.html/)
   assert.match(
     script,
     /should_refresh_prisma\(\) \{\s+\[\[ "\$MODE" == "full" \|\| "\$MODE" == "restart-only" \|\| "\$MODE" == "boot-prep" \]\]/

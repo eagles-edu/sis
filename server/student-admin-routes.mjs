@@ -1547,7 +1547,7 @@ function injectParentRuntimeConfig(html, origin, initialAuthState = { authentica
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_PARENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_PREFERENCES_PATH=${JSON.stringify(PARENT_PREFERENCES_PATH)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};window.__SIS_PARENT_REPORT_PAGE_PREFIX=${JSON.stringify(PARENT_REPORT_PAGE_PREFIX)};window.__SIS_PARENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_GA4_MEASUREMENT_ID=${JSON.stringify(normalizeText(process.env.GA4_MEASUREMENT_ID))};window.__SIS_PARENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_PREFERENCES_PATH=${JSON.stringify(PARENT_PREFERENCES_PATH)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};window.__SIS_PARENT_REPORT_PAGE_PREFIX=${JSON.stringify(PARENT_REPORT_PAGE_PREFIX)};window.__SIS_PARENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-parent-auth-state", authStateName)
   if (html.includes("</head>")) {
     return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
@@ -1591,7 +1591,7 @@ function injectStudentPortalRuntimeConfig(html, origin, initialAuthState = { aut
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_PREFERENCES_PATH=${JSON.stringify(STUDENT_PREFERENCES_PATH)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_CHECK_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_NEW_WORDS_PATH=${JSON.stringify(STUDENT_NEW_WORDS_PATH)};window.__SIS_STUDENT_REPORT_PAGE_PREFIX=${JSON.stringify(STUDENT_REPORT_PAGE_PREFIX)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_GA4_MEASUREMENT_ID=${JSON.stringify(normalizeText(process.env.GA4_MEASUREMENT_ID))};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_PREFERENCES_PATH=${JSON.stringify(STUDENT_PREFERENCES_PATH)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_CHECK_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_NEW_WORDS_PATH=${JSON.stringify(STUDENT_NEW_WORDS_PATH)};window.__SIS_STUDENT_REPORT_PAGE_PREFIX=${JSON.stringify(STUDENT_REPORT_PAGE_PREFIX)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-student-auth-state", authStateName)
   if (html.includes("</head>")) {
     return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
@@ -3200,11 +3200,11 @@ export function buildFamilyOptionPayload({
   const familyOptions = sortedFamilyIds.flatMap((familyId) => {
     const pairs = [...familyParentPairs.values()].filter((entry) => entry.familyId === familyId)
     if (!pairs.length) {
-      return [{ familyId, parentId: "Unassigned", label: `${familyId} - Unassigned (familyId - parentId)` }]
+      return [{ familyId, parentId: "Unassigned", label: `${familyId} - Unassigned` }]
     }
     return pairs
       .sort((left, right) => left.parentId.localeCompare(right.parentId, undefined, { numeric: true }))
-      .map(({ parentId }) => ({ familyId, parentId, label: `${familyId} - ${parentId} (familyId - parentId)` }))
+      .map(({ parentId }) => ({ familyId, parentId, label: `${familyId} - ${parentId}` }))
   })
   return { familyIds: sortedFamilyIds, familyOptions }
 }
