@@ -108,23 +108,7 @@ function installViewportHandoff() {
   window.addEventListener("resize", checkViewport, { passive: true });
 }
 
-async function boot() {
-  if (initialPageSlug && initialPageSlug !== "overview") {
-    handOffToFullApp();
-    return;
-  }
-  try {
-    renderDashboard(await loadDashboard());
-    const shell = document.getElementById("adminOverviewShellStatus");
-    if (shell) shell.textContent = "Overview ready. Select a tool to continue.";
-    // Keep the shell light until the user scrolls to deferred content.
-    // Click remains the explicit fallback for keyboard and direct interaction.
-    installViewportHandoff();
-  } catch (error) {
-    const shell = document.getElementById("adminOverviewShellStatus");
-    if (shell) shell.textContent = error?.message || "Overview data unavailable.";
-  }
-
+function installClickHandoff() {
   document.addEventListener("click", (event) => {
     const target = event.target instanceof Element ? event.target.closest("a, button") : null;
     if (!target || target.id === "adminOverviewShellStatus") return;
@@ -137,6 +121,31 @@ async function boot() {
     }
     window.__SIS_LOAD_ADMIN_APP__?.({ replayClick: target });
   }, { capture: true, once: true });
+}
+
+async function boot() {
+  if (initialPageSlug && initialPageSlug !== "overview") {
+    handOffToFullApp();
+    return;
+  }
+  // The authenticated shell owns the first interactive surface while the
+  // full app is deferred; release the auth boot gate before accepting clicks.
+  document.body.classList.remove("admin-auth-booting");
+  // Install the explicit interaction fallback before the dashboard request so
+  // a fast click cannot land between shell startup and data readiness.
+  installClickHandoff();
+  try {
+    renderDashboard(await loadDashboard());
+    const shell = document.getElementById("adminOverviewShellStatus");
+    if (shell) shell.textContent = "Overview ready. Select a tool to continue.";
+    // Keep the shell light until the user scrolls to deferred content.
+    // Click remains the explicit fallback for keyboard and direct interaction.
+    installViewportHandoff();
+  } catch (error) {
+    const shell = document.getElementById("adminOverviewShellStatus");
+    if (shell) shell.textContent = error?.message || "Overview data unavailable.";
+  }
+
 }
 
 boot();

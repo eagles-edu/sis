@@ -309,3 +309,4 @@ test("grades-tabulator inherits shared dark text instead of redefining it locall
     "grades-tabulator.html dark text overrides",
   )
 })
+

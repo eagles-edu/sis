@@ -991,9 +991,10 @@
   -->
   <script src="/web-asset/shared/portal-preferences.js"></script>
   <script src="/web-asset/shared/portal-password-visibility.js"></script>
-  <script type="module" src="https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-wc@latest/dist/dotlottie-wc.js"></script>
   <script>
     (() => {
+      const DOT_LOTTIE_MODULE_URL = "https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-wc@latest/dist/dotlottie-wc.js";
+      let dotLottieLoadPromise = null;
       const configureDotLottiePlayers = () => {
         document.querySelectorAll("dotlottie-wc").forEach((player) => {
           const contain = () => {
@@ -1004,8 +1005,21 @@
           player.addEventListener("load", contain, { once: true });
         });
       };
-      if (customElements.get("dotlottie-wc")) configureDotLottiePlayers();
-      else customElements.whenDefined("dotlottie-wc").then(configureDotLottiePlayers);
+      const loadDotLottieForNewsFlow = () => {
+        if (customElements.get("dotlottie-wc")) {
+          configureDotLottiePlayers();
+          return;
+        }
+        dotLottieLoadPromise ||= import(DOT_LOTTIE_MODULE_URL).then(() => {
+          configureDotLottiePlayers();
+        });
+      };
+      document.addEventListener("click", (event) => {
+        const trigger = event.target?.closest?.(
+          '#openNewsPageBtn, #newsQueueOpenBtn, [data-view-target="news"], button[data-open-news-week-set]',
+        );
+        if (trigger) loadDotLottieForNewsFlow();
+      });
     })();
   </script>
   <script src="/web-asset/student/student-portal.min.js"></script>

@@ -837,6 +837,19 @@ test(
       browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
       page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
       await page.addInitScript(({ fixedNowIso }) => {
+        try {
+          globalThis.localStorage?.setItem(
+            "sis-consent-preferences",
+            JSON.stringify({
+              version: 1,
+              supportChat: "denied",
+              analytics: "denied",
+              updatedAt: new Date().toISOString(),
+            }),
+          );
+        } catch {
+          // Consent storage may be unavailable in the browser context.
+        }
         const fixedNow = new Date(fixedNowIso).valueOf();
         if (!Number.isFinite(fixedNow)) return;
         const RealDate = Date;

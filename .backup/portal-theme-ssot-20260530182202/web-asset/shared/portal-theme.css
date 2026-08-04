@@ -6779,8 +6779,8 @@ body.admin-portal-page div.header-bar,
 body.parent-portal-page div.header-bar,
 body.student-portal-page div.header-bar {
   background: var(--primary-color);
-  /*border: 1px solid rgb(255 255 255 / 18%);*/
-  border-radius: clamp(4px, 0.9cqi, 8px);
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: var(--radius-3);
   color: var(--secondary-color);
   display: flex;
   font-size: calc(0.72rem * var(--hub-phi));

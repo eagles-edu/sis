@@ -40,12 +40,13 @@ test("class and level aliases resolve to one canonical catalog value", () => {
 test("family profile options include every familyId and parentId pair", () => {
   const result = buildFamilyOptionPayload({
     profileRows: [
-      { familyId: "fam-0002", parentsId: "parent-b" },
-      { familyId: "fam-0002", parentsId: "parent-a" },
+      { familyId: "fam-0002", parentsId: "parent-b", motherEmail: "b@example.com" },
+      { familyId: "fam-0002", parentsId: "parent-a", motherEmail: "a@example.com" },
     ],
     generatedFamilies: [{ familyId: "fam-0001" }],
     activeParentAccounts: [{
       parentsId: "parent-c",
+      email: "c@example.com",
       links: [{ student: { profile: { familyId: "fam-0002" } } }],
     }],
   })
@@ -53,9 +54,9 @@ test("family profile options include every familyId and parentId pair", () => {
   assert.deepEqual(result.familyIds, ["fam-0001", "fam-0002"])
   assert.deepEqual(result.familyOptions, [
     { familyId: "fam-0001", parentId: "Unassigned", label: "fam-0001 - Unassigned" },
-    { familyId: "fam-0002", parentId: "parent-a", label: "fam-0002 - parent-a" },
-    { familyId: "fam-0002", parentId: "parent-b", label: "fam-0002 - parent-b" },
-    { familyId: "fam-0002", parentId: "parent-c", label: "fam-0002 - parent-c" },
+    { familyId: "fam-0002", parentId: "parent-a", parentEmail: "a@example.com", label: "fam-0002 - parent-a" },
+    { familyId: "fam-0002", parentId: "parent-b", parentEmail: "b@example.com", label: "fam-0002 - parent-b" },
+    { familyId: "fam-0002", parentId: "parent-c", parentEmail: "c@example.com", label: "fam-0002 - parent-c" },
   ])
 })
 
@@ -64,6 +65,12 @@ test("student profile bootstrap hydrates family options before rendering the for
     ADMIN_JS_SOURCE,
     /if \(slug === "profile"\) \{[\s\S]*?renderProfileInfoLayout\(state\.currentStudent\);[\s\S]*?loadFamilyIds\(\)\.catch\(handleError\);/u,
   )
+})
+
+test("family options carry parent email for profile assignment", () => {
+  assert.match(ADMIN_JS_SOURCE, /option\.dataset\.parentEmail = parentEmail \|\| ""/u)
+  assert.match(ADMIN_JS_SOURCE, /document\.getElementById\("f_motherEmail"\)/u)
+  assert.match(ADMIN_JS_SOURCE, /parentEmail: normalizeLower\(entry\?\.parentEmail\)/u)
 })
 
 test("portal password policy requires 8 characters, letter case, a symbol, and safe characters", () => {
@@ -1271,7 +1278,7 @@ test("GET /llms.txt returns the root agent guidance as plain text", async () => 
   assert.match(res.headers.get("content-type") || "", /text\/plain/i)
   assert.match(res.headers.get("cache-control") || "", /public/i)
   const body = await res.text()
-  assert.match(body, /^#  The Eagles American English Club, Ltd\.\s/m)
+  assert.match(body, /^# {2}The Eagles American English Club, Ltd\.\s/m)
   assert.match(body, /https:\/\/admin\.eagles\.edu\.vn\/admin/)
   assert.doesNotMatch(body, /<html/i)
 })

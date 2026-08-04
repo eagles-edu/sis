@@ -263,7 +263,6 @@
             const safeUrl = config.imageDataUrl.replace(/"/g, "%22");
             tile.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, .12), rgba(0, 0, 0, .12)), url("${safeUrl}")`;
           }
-          tile.innerHTML = `<strong>${escapeHtml(level)}</strong><span>${normalizeLower(selected) === normalizeLower(level) ? "Selected" : "View roster"}</span>`;
           tile.addEventListener("click", () => {
             const select = document.getElementById("filterLevel");
             if (select instanceof HTMLSelectElement) select.value = level;

@@ -7,6 +7,7 @@ import { canonicalizeLevel as canonicalizeCatalogLevel } from "./level-catalog.m
 import { getConfiguredSchoolYear } from "./school-setup-store.mjs"
 import { assertPortalPasswordPolicy, hashScryptPassword } from "./users.mjs"
 import { writeStudentProfileBackupSnapshot } from "./student-profile-backups.mjs"
+import { timeStudentWritePhase } from "../../infra/observability/student-write-metrics.mjs"
 
 /**
  * @typedef {{
@@ -957,6 +958,10 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
   if (requestedId) {
     const existing = await client.student.findUnique({ where: { id: requestedId } })
     assertWithStatus(Boolean(existing), 404, "Student not found")
+    const existingProfile = await client.studentProfile.findUnique({
+      where: { studentRefId: requestedId },
+      select: { parentsId: true },
+    })
     assertWithStatus(
       normalizeLower(eaglesId) === normalizeLower(existing.eaglesId),
       409,
@@ -1001,6 +1006,25 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
         ...profilePayload,
       },
     })
+    const previousParentsId = normalizeText(existingProfile?.parentsId)
+    const requestedParentsId = normalizeText(profilePayload.parentsId)
+    if (requestedParentsId && requestedParentsId !== previousParentsId) {
+      const linkedAccounts = await client.parentPortalStudentLink.findMany({
+        where: { studentRefId: student.id },
+        select: { parentAccountId: true },
+      })
+      for (const link of linkedAccounts) {
+        const conflictingAccount = await client.parentPortalAccount.findUnique({
+          where: { parentsId: requestedParentsId },
+          select: { id: true },
+        })
+        assertWithStatus(!conflictingAccount || conflictingAccount.id === link.parentAccountId, 409, "parentsId already exists")
+        await client.parentPortalAccount.update({
+          where: { id: link.parentAccountId },
+          data: { parentsId: requestedParentsId },
+        })
+      }
+    }
     if (portalPasswordHash) {
       await client.studentPortalAccount.upsert({
         where: { eaglesId: student.eaglesId },
@@ -1113,30 +1137,33 @@ export async function saveStudent(payload = {}, studentRefId = "", options = {})
         include: { profile: true, studentPortalAccount: true },
       })
     : null
-  await writeStudentProfileBackupSnapshot({
+  await timeStudentWritePhase("profile_backup_pre", () => writeStudentProfileBackupSnapshot({
     studentRefId: requestedId || normalizeText(payload.eaglesId) || "new-student",
     action: requestedId ? "updated" : "created",
     phase: "pre-save",
     actorUsername: options.updatedByUsername,
     actorRole: options.updatedByRole,
     data: existing || payload,
-  })
-  const result = await prisma.$transaction((tx) => saveStudentWithClient(tx, payload, studentRefId, options))
+  }))
+  const result = await timeStudentWritePhase(
+    "database_transaction",
+    () => prisma.$transaction((tx) => saveStudentWithClient(tx, payload, studentRefId, options)),
+  )
 
   if (!skipFilterCacheInvalidation) {
-    await invalidateLevelAndSchoolFiltersCache()
+    await timeStudentWritePhase("filter_cache_invalidation", () => invalidateLevelAndSchoolFiltersCache())
   }
 
-  const savedStudent = await getStudentRosterById(result.studentRefId)
+  const savedStudent = await timeStudentWritePhase("roster_reload", () => getStudentRosterById(result.studentRefId))
   try {
-    await writeStudentProfileBackupSnapshot({
+    await timeStudentWritePhase("profile_backup_post", () => writeStudentProfileBackupSnapshot({
       studentRefId: result.studentRefId,
       action: result.action,
       phase: "post-save",
       actorUsername: options.updatedByUsername,
       actorRole: options.updatedByRole,
       data: savedStudent,
-    })
+    }))
   } catch (error) {
     console.error("student profile post-save backup failed", {
       studentRefId: result.studentRefId,
@@ -1152,28 +1179,68 @@ export async function saveStudent(payload = {}, studentRefId = "", options = {})
 
 /**
  * @param {string} studentRefId
+ * @param {{ deleteParentAccounts?: boolean }} [options]
  * @returns {Promise<{ deleted: true, studentRefId: string }>}
  */
-export async function deleteStudent(studentRefId) {
+export async function deleteStudent(studentRefId, options = {}) {
   const prisma = await getPrismaClient()
   const id = normalizeText(studentRefId)
   assertWithStatus(Boolean(id), 400, "studentRefId is required")
+  const deleteParentAccounts = options.deleteParentAccounts === true
 
   await prisma.$transaction(async (tx) => {
+    const parentLinks = await tx.parentPortalStudentLink.findMany({
+      where: { studentRefId: id },
+      select: { parentAccountId: true },
+    })
+    const parentAccountIds = [...new Set(parentLinks.map((link) => link.parentAccountId).filter(Boolean))]
+    const reports = await tx.parentClassReport.findMany({
+      where: { studentRefId: id },
+      select: { id: true },
+    })
+    const reportIds = reports.map((report) => report.id)
+    if (reportIds.length) {
+      await tx.parentClassReportEvent.deleteMany({ where: { reportId: { in: reportIds } } })
+      const deliveries = await tx.brevoEmailDelivery.findMany({
+        where: { reportId: { in: reportIds } },
+        select: { id: true },
+      })
+      const deliveryIds = deliveries.map((delivery) => delivery.id)
+      if (deliveryIds.length) {
+        await tx.brevoEmailWebhookEvent.deleteMany({ where: { deliveryId: { in: deliveryIds } } })
+        await tx.brevoEmailDelivery.deleteMany({ where: { id: { in: deliveryIds } } })
+      }
+    }
     await tx.parentClassReport.deleteMany({ where: { studentRefId: id } })
     await tx.studentGradeRecord.deleteMany({ where: { studentRefId: id } })
     await tx.studentAttendance.deleteMany({ where: { studentRefId: id } })
     await tx.exerciseSubmission.deleteMany({ where: { studentRefId: id } })
+    await tx.incomingExerciseResult.deleteMany({ where: { matchedStudentRefId: id } })
     await tx.studentIntakeSubmission.deleteMany({ where: { studentRefId: id } })
     await tx.studentNewsReport.deleteMany({ where: { studentRefId: id } })
     await tx.studentPointsAdjustment.deleteMany({ where: { studentRefId: id } })
+    await tx.studentNewWord.deleteMany({ where: { studentRefId: id } })
+    await tx.assignmentReminderDispatch.deleteMany({ where: { studentRefId: id } })
     await tx.parentPortalStudentLink.deleteMany({ where: { studentRefId: id } })
+    await tx.parentProfileInvitation.deleteMany({ where: { studentRefId: id } })
     await tx.parentProfileSubmissionQueue.deleteMany({ where: { studentRefId: id } })
     await tx.parentProfileFieldLock.deleteMany({ where: { studentRefId: id } })
     await tx.studentEnrollmentPeriod.deleteMany({ where: { studentRefId: id } })
     await tx.studentPortalAccount.deleteMany({ where: { studentRefId: id } })
     await tx.studentProfile.deleteMany({ where: { studentRefId: id } })
     await tx.student.delete({ where: { id } })
+
+    if (deleteParentAccounts && parentAccountIds.length) {
+      const remainingLinks = await tx.parentPortalStudentLink.findMany({
+        where: { parentAccountId: { in: parentAccountIds } },
+        select: { parentAccountId: true },
+      })
+      const remainingAccountIds = new Set(remainingLinks.map((link) => link.parentAccountId))
+      const deletableAccountIds = parentAccountIds.filter((accountId) => !remainingAccountIds.has(accountId))
+      if (deletableAccountIds.length) {
+        await tx.parentPortalAccount.deleteMany({ where: { id: { in: deletableAccountIds } } })
+      }
+    }
   })
 
   await invalidateLevelAndSchoolFiltersCache()

@@ -1,0 +1,81 @@
+{
+  "uid": "sis-test-mirror-overview",
+  "title": "SIS Test Mirror Health",
+  "tags": ["sis", "test-mirror", "operations"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "5s",
+  "time": {"from": "now-30m", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Public admin probe",
+      "gridPos": {"h": 5, "w": 6, "x": 0, "y": 0},
+      "targets": [{"expr": "probe_success{job=\"blackbox-test-mirror\"}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"mappings": [{"type": "value", "options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}]}, "overrides": []}
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Public admin response time",
+      "gridPos": {"h": 5, "w": 6, "x": 6, "y": 0},
+      "targets": [{"expr": "probe_duration_seconds{job=\"blackbox-test-mirror\"}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Test API process",
+      "gridPos": {"h": 5, "w": 6, "x": 12, "y": 0},
+      "targets": [{"expr": "namedprocess_namegroup_num_procs{groupname=\"sis_test_api\"}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"mappings": [{"type": "value", "options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}]}, "overrides": []}
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Test async worker",
+      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 0},
+      "targets": [{"expr": "namedprocess_namegroup_num_procs{groupname=\"sis_test_async_worker\"}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"mappings": [{"type": "value", "options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}]}, "overrides": []}
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Test mirror process CPU",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5},
+      "targets": [{"expr": "100 * rate(namedprocess_namegroup_cpu_seconds_total{groupname=~\"sis_test_.*\"}[1m])", "legendFormat": "{{groupname}}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []}
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Test mirror process memory",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 5},
+      "targets": [{"expr": "namedprocess_namegroup_memory_bytes{groupname=~\"sis_test_.*\"}", "legendFormat": "{{groupname}}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Host CPU and memory pressure",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 13},
+      "targets": [
+        {"expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[1m])))", "legendFormat": "Host CPU", "refId": "A"},
+        {"expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)", "legendFormat": "Host memory", "refId": "B"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "percent", "max": 100}, "overrides": []}
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "PostgreSQL and Redis container resources",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 21},
+      "targets": [
+        {"expr": "100 * sum by (name) (rate(container_cpu_usage_seconds_total{name=~\"/(sis-postgres|redis-stack)\"}[1m]))", "legendFormat": "{{name}} CPU", "refId": "A"},
+        {"expr": "sum by (name) (container_memory_working_set_bytes{name=~\"/(sis-postgres|redis-stack)\"})", "legendFormat": "{{name}} memory", "refId": "B"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
+    }
+  ]
+}

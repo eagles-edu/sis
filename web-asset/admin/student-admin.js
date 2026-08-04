@@ -2300,6 +2300,7 @@
         if (!(modal instanceof HTMLDivElement)) return;
         modal.classList.add("hidden");
         modal.setAttribute("aria-hidden", "true");
+        modal.inert = true;
       }
 
       function renderBrevoStatisticsModal() {
@@ -2350,6 +2351,7 @@
         if (!(modal instanceof HTMLDivElement)) return;
         modal.classList.remove("hidden");
         modal.setAttribute("aria-hidden", "false");
+        modal.inert = false;
         renderBrevoStatisticsModal();
         loadBrevoStatistics().catch((error) => {
           const status = document.getElementById("brevoStatsStatus");
@@ -11696,11 +11698,6 @@
           }
           tile.setAttribute("data-level", canonicalLevel);
           tile.setAttribute("aria-label", fullLevelLabel(canonicalLevel));
-          const safeTitle = normalizeText(config.title);
-          tile.innerHTML =
-            safeTitle ?
-              `<span class="attendance-level-tile-title">${escapeHtml(safeTitle)}</span>`
-            : "";
           tile.addEventListener("click", () => {
             applyAssignmentLevelSelection(canonicalLevel, { applyDefaults: true });
           });
@@ -17618,11 +17615,6 @@
           } else {
             tile.style.backgroundImage = "none";
           }
-          const safeTitle = normalizeText(config.title);
-          tile.innerHTML =
-            safeTitle ?
-              `<span class="attendance-level-tile-title">${escapeHtml(safeTitle)}</span>`
-            : "";
           tile.addEventListener("click", () => {
             if (levelNamesMatch(state.parentTracking.selectedLevel, canonicalLevel))
               return;
@@ -19475,11 +19467,12 @@
           const familyOptions = state.familyOptions.length
             ? state.familyOptions
             : state.familyIds.map((familyId) => ({ familyId, label: familyId }));
-          familyOptions.forEach(({ familyId, parentId, label }) => {
+          familyOptions.forEach(({ familyId, parentId, parentEmail, label }) => {
             const option = document.createElement("option");
             option.value = `${familyId}\u0000${parentId || "Unassigned"}`;
             option.dataset.familyId = familyId;
             option.dataset.parentId = parentId || "Unassigned";
+            option.dataset.parentEmail = parentEmail || "";
             option.textContent = label;
             familySelect.appendChild(option);
           });
@@ -19494,6 +19487,9 @@
             const parentInput = document.getElementById("f_parentsId");
             const parentId = normalizeText(selected?.dataset.parentId);
             if (parentInput && parentId && parentId !== "Unassigned") parentInput.value = parentId;
+            const parentEmailInput = document.getElementById("f_motherEmail");
+            const parentEmail = normalizeText(selected?.dataset.parentEmail);
+            if (parentEmailInput && parentEmail) parentEmailInput.value = parentEmail;
           });
           labelEl.htmlFor = controlId;
           wrapper.appendChild(labelEl);
@@ -20192,6 +20188,7 @@
             .map((entry) => ({
               familyId: normalizeText(entry?.familyId),
               parentId: normalizeText(entry?.parentId),
+              parentEmail: normalizeLower(entry?.parentEmail),
               label: normalizeText(entry?.label),
             }))
             .filter((entry) => entry.familyId)
@@ -20274,7 +20271,7 @@
         await loadFamilyIds();
       }
 
-      async function loadStudents() {
+      async function loadStudents({ preserveStudentRefId = "" } = {}) {
         const qInput = normalizeText(document.getElementById("searchQ")?.value || "");
         const qRaw = normalizeTopSearchQuery(qInput);
         const levelControlValue = normalizeText(
@@ -20354,7 +20351,7 @@
         renderTopSearchStudentOptions();
         updateTopSearchScopeHint();
 
-        if (state.currentStudent) {
+        if (state.currentStudent && normalizeText(preserveStudentRefId) !== normalizeText(state.currentStudent.id)) {
           const exists = state.students.find(
             (entry) => entry.id === state.currentStudent.id,
           );
@@ -20456,7 +20453,11 @@
         }
 
         await loadFilters();
-        await loadStudents();
+        // A newly created student can be absent from a scoped roster response
+        // (for example while enrollment is still being assigned). Keep the
+        // saved record selected until its detail has been reloaded; otherwise
+        // loadStudents() clears the form even though the save succeeded.
+        await loadStudents({ preserveStudentRefId: state.currentStudent?.id || "" });
         if (state.currentStudent?.id) await loadStudentDetail(state.currentStudent.id);
         setProfileMode("info");
         renderProfileInfoLayout(state.currentStudent);
@@ -20467,13 +20468,47 @@
         );
       }
 
+      let pendingDeleteStudentConfirmation = null;
+
+      function resolveDeleteStudentConfirmation(result = null) {
+        const modal = document.getElementById("deleteStudentModal");
+        if (modal instanceof HTMLElement) {
+          modal.classList.add("hidden");
+          modal.setAttribute("aria-hidden", "true");
+          modal.inert = true;
+        }
+        document.body.classList.remove("modal-open");
+        const resolve = pendingDeleteStudentConfirmation;
+        pendingDeleteStudentConfirmation = null;
+        if (typeof resolve === "function") resolve(result);
+      }
+
+      function requestDeleteStudentConfirmation() {
+        const modal = document.getElementById("deleteStudentModal");
+        const checkbox = document.getElementById("deleteParentAccountCheckbox");
+        if (!(modal instanceof HTMLElement)) return Promise.resolve(null);
+        if (checkbox instanceof HTMLInputElement) checkbox.checked = false;
+        modal.classList.remove("hidden");
+        modal.setAttribute("aria-hidden", "false");
+        modal.inert = false;
+        document.body.classList.add("modal-open");
+        document.getElementById("deleteStudentCancelBtn")?.focus();
+        return new Promise((resolve) => {
+          pendingDeleteStudentConfirmation = resolve;
+        });
+      }
+
       async function deleteCurrentStudent() {
         const id = selectedStudentId();
         if (!id) throw new Error("Select a student first");
-        if (!confirm("Delete this student and linked records?")) return;
+        const confirmation = await requestDeleteStudentConfirmation();
+        if (!confirmation) return;
 
         await api(`/api/admin/students/${encodeURIComponent(id)}`, {
           method: "DELETE",
+          body: {
+            deleteParentAccounts: confirmation.deleteParentAccounts === true,
+          },
         });
         clearStudentForm({ refreshStudentList: false });
         setProfileMode("info");
@@ -20989,11 +21024,6 @@
             } else {
               tile.style.backgroundImage = "none";
             }
-            const safeTitle = normalizeText(config.title);
-            tile.innerHTML =
-              safeTitle ?
-                `<span class="attendance-level-tile-title">${escapeHtml(safeTitle)}</span>`
-              : "";
             tile.addEventListener("click", () => {
               if (
                 levelNamesMatch(state.attendanceLanding.selectedLevel, canonicalLevel)
@@ -22481,6 +22511,13 @@
       });
       bindById("schoolSetupWarningCloseBtn", "click", () => closeSchoolSetupWarningModal());
       bindById("schoolSetupWarningOpenBtn", "click", () => closeSchoolSetupWarningModal());
+      bindById("deleteStudentCancelBtn", "click", () => resolveDeleteStudentConfirmation(null));
+      bindById("deleteStudentConfirmBtn", "click", () => {
+        const checkbox = document.getElementById("deleteParentAccountCheckbox");
+        resolveDeleteStudentConfirmation({
+          deleteParentAccounts: checkbox instanceof HTMLInputElement && checkbox.checked,
+        });
+      });
       bindById("brevoStatisticsModalCloseBtn", "click", () => closeBrevoStatisticsModal());
       document.getElementById("brevoStatisticsModal")?.addEventListener("click", (event) => {
         if (event.target === event.currentTarget) closeBrevoStatisticsModal();
@@ -22518,6 +22555,9 @@
         }
         if (event.key === "Escape" && !document.getElementById("schoolSetupWarningModal")?.classList.contains("hidden")) {
           closeSchoolSetupWarningModal();
+        }
+        if (event.key === "Escape" && !document.getElementById("deleteStudentModal")?.classList.contains("hidden")) {
+          resolveDeleteStudentConfirmation(null);
         }
       });
       document

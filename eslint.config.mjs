@@ -9,6 +9,7 @@ const ignores = [
   ".github/",
   ".codex/",
   ".continue/",
+  ".lottie/",
   "tmp/",
   "node_modules/",
   "dist/",

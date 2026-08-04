@@ -3,6 +3,7 @@ node_modules/
 # Environment and secrets
 .env
 .env.*
+ops/monitoring/.exporters.env
 !.env.example
 !.env.sample
 !.env.template
@@ -47,6 +48,8 @@ docs/**
 !docs/mapping/**
 docs/mapping/out/*
 !docs/mapping/out/.gitkeep
+!docs/monitoring.md
+!docs/test-mirror-monitoring.md
 .sync.ffs_db
 .playwright-cli/
 nginx

@@ -88,6 +88,7 @@ import {
   listParentProfileInvitations,
   markParentProfileInvitationCompleted,
   ensureParentPortalAccount,
+  resolveParentPortalAccountIdentity,
 } from "../src/modules/admin/parent-profile-invitations.mjs"
 import { assertPortalPasswordPolicy, hashScryptPassword } from "../src/modules/admin/users.mjs"
 import {
@@ -188,6 +189,7 @@ import {
   savePortalPreferences,
 } from "../src/modules/portal/portal-preference-store.mjs"
 import { readPortalAsset, savePortalAsset } from "../src/modules/portal/portal-asset-store.mjs"
+import { markStudentWriteRequestAuthenticated } from "../src/infra/observability/student-write-metrics.mjs"
 
 const ADMIN_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_ADMIN_PAGE_PATH, "/admin")
 const ADMIN_POINTS_PAGE_PATH = normalizePathPrefix(
@@ -3176,22 +3178,26 @@ export function buildFamilyOptionPayload({
     ...profileRows.map((row) => normalizeText(row?.familyId)),
   ].filter(Boolean))
   const familyParentPairs = new Map()
-  const addFamilyParentPair = (familyId, parentId) => {
+  const addFamilyParentPair = (familyId, parentId, parentEmail) => {
     const normalizedFamilyId = normalizeText(familyId)
     const normalizedParentId = normalizeText(parentId)
+    const normalizedParentEmail = normalizeLower(parentEmail)
     if (!normalizedFamilyId) return
     familyIds.add(normalizedFamilyId)
     if (!normalizedParentId) return
     const pairKey = `${normalizedFamilyId}\u0000${normalizedParentId}`
-    if (!familyParentPairs.has(pairKey)) {
-      familyParentPairs.set(pairKey, { familyId: normalizedFamilyId, parentId: normalizedParentId })
-    }
+    const existing = familyParentPairs.get(pairKey)
+    familyParentPairs.set(pairKey, {
+      familyId: normalizedFamilyId,
+      parentId: normalizedParentId,
+      parentEmail: existing?.parentEmail || normalizedParentEmail,
+    })
   }
 
-  profileRows.forEach((row) => addFamilyParentPair(row?.familyId, row?.parentsId))
+  profileRows.forEach((row) => addFamilyParentPair(row?.familyId, row?.parentsId, row?.motherEmail))
   activeParentAccounts.forEach((account) => {
     ;(account?.links || []).forEach((link) => {
-      addFamilyParentPair(link?.student?.profile?.familyId, account?.parentsId)
+      addFamilyParentPair(link?.student?.profile?.familyId, account?.parentsId, account?.email)
     })
   })
 
@@ -3204,7 +3210,12 @@ export function buildFamilyOptionPayload({
     }
     return pairs
       .sort((left, right) => left.parentId.localeCompare(right.parentId, undefined, { numeric: true }))
-      .map(({ parentId }) => ({ familyId, parentId, label: `${familyId} - ${parentId}` }))
+      .map(({ parentId, parentEmail }) => ({
+        familyId,
+        parentId,
+        parentEmail,
+        label: `${familyId} - ${parentId}`,
+      }))
   })
   return { familyIds: sortedFamilyIds, familyOptions }
 }
@@ -6409,6 +6420,12 @@ async function handleApiRequest(request, response, pathname, url) {
 
   const session = await requireAuthenticatedSession(request, response)
   const rolePolicy = enforceRoleAccess(session, method, pathname)
+  if (
+    (method === "POST" && pathname === ADMIN_STUDENTS_PREFIX) ||
+    (method === "PUT" && ADMIN_STUDENT_PATH_RE.test(pathname))
+  ) {
+    markStudentWriteRequestAuthenticated()
+  }
 
   if (pathname === ADMIN_PREFERENCES_PATH) {
     const principalId = normalizeText(session?.username)
@@ -7518,6 +7535,15 @@ async function handleApiRequest(request, response, pathname, url) {
   if (method === "POST" && pathname === ADMIN_STUDENTS_PREFIX) {
     assertStoreEnabled()
     const payload = await parseBody(request)
+    const parentEmail = normalizeText(payload?.profile?.motherEmail || payload?.profile?.studentEmail)
+    if (payload?.sendParentCompletionEmail === true || (normalizeText(payload?.profile?.parentsId) && parentEmail)) {
+      const prisma = await getSharedPrismaClient()
+      await resolveParentPortalAccountIdentity(prisma, {
+        eaglesId: payload?.eaglesId,
+        studentNumber: payload?.studentNumber,
+        profile: payload?.profile,
+      })
+    }
     const result = await saveStudent(payload, "", {
       updatedByUsername: session?.username,
       updatedByRole: session?.role,
@@ -7562,13 +7588,14 @@ async function handleApiRequest(request, response, pathname, url) {
     const [profileRows, generatedFamilies, activeParentAccounts] = await Promise.all([
       prisma.studentProfile.findMany({
         where: { familyId: { not: null } },
-        select: { familyId: true, parentsId: true },
+        select: { familyId: true, parentsId: true, motherEmail: true },
       }),
       prisma.family.findMany({ select: { familyId: true }, orderBy: { sequence: "asc" } }),
       prisma.parentPortalAccount.findMany({
         where: { status: "active" },
         select: {
           parentsId: true,
+          email: true,
           links: {
             select: { student: { select: { profile: { select: { familyId: true } } } } },
           },
@@ -7826,6 +7853,15 @@ async function handleApiRequest(request, response, pathname, url) {
 
     if (method === "PUT") {
       const payload = await parseBody(request)
+      const parentEmail = normalizeText(payload?.profile?.motherEmail || payload?.profile?.studentEmail)
+      if (normalizeText(payload?.profile?.parentsId) && parentEmail) {
+        const prisma = await getSharedPrismaClient()
+        await resolveParentPortalAccountIdentity(prisma, {
+          eaglesId: payload?.eaglesId,
+          studentNumber: payload?.studentNumber,
+          profile: payload?.profile,
+        })
+      }
       const result = await saveStudent(payload, studentRefId, {
         updatedByUsername: session?.username,
         updatedByRole: session?.role,
@@ -7835,7 +7871,10 @@ async function handleApiRequest(request, response, pathname, url) {
     }
 
     if (method === "DELETE") {
-      const result = await deleteStudent(studentRefId)
+      const payload = await parseBody(request)
+      const result = await deleteStudent(studentRefId, {
+        deleteParentAccounts: payload?.deleteParentAccounts === true,
+      })
       sendJson(response, 200, result)
       return true
     }

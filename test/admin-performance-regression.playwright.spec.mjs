@@ -91,7 +91,7 @@ test("authenticated admin overview preserves desktop/mobile critical performance
       `CLS=${Number(metrics.cls || 0).toFixed(4)} ` +
       `LCP=${Math.round(metrics.lcp || 0)}ms ` +
       `dashboardRequests=${requests.filter((url) => /\/api\/admin\/dashboard(?:\?|$)/u.test(url)).length} ` +
-      `fullBundleBeforeInteraction=${requests.filter((url) => /student-admin\\.min\\.js(?:\\?|$)/u.test(url)).length}`,
+      `fullBundleBeforeInteraction=${requests.filter((url) => /student-admin\.min\.js(?:\?|$)/u.test(url)).length}`,
     )
     assert.match(metrics.shellStatus, /\d+/u, `${viewport.name}: overview shell did not become ready`)
     assert.equal(metrics.activePage, "overview", `${viewport.name}: wrong initial page`)
@@ -108,12 +108,15 @@ test("authenticated admin overview preserves desktop/mobile critical performance
       `${viewport.name}: overview dashboard should load once`,
     )
 
-    const fullAppResponse = page.waitForResponse(
-      (response) => /student-admin\.min\.js(?:\?|$)/u.test(response.url()),
+    await page.locator("#floatingMenuBtn").click()
+    // The bundle may be served from the browser cache, in which case
+    // Playwright does not emit a new response event. The script element is
+    // the stable proof that the deferred application was handed off.
+    await page.waitForFunction(
+      () => [...document.scripts].some((script) => /student-admin\.min\.js(?:\?|$)/u.test(script.src)),
+      null,
       { timeout: 30000 },
     )
-    await page.locator("#floatingMenuBtn").click()
-    await fullAppResponse
     await context.close()
   }
 })

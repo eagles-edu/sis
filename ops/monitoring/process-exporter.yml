@@ -1,0 +1,10 @@
+process_names:
+  - name: sis_test_api
+    cmdline:
+      - /home/test.eagles.edu.vn/sis/server/exercise-mailer.mjs
+  - name: sis_test_async_worker
+    cmdline:
+      - /home/test.eagles.edu.vn/sis/tools/async-side-effects-worker.mjs
+  - name: sis_test_static_server
+    cmdline:
+      - /home/test.eagles.edu.vn/public_html

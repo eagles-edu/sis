@@ -7,6 +7,7 @@ import path from "node:path"
 import { URL, fileURLToPath } from "node:url"
 import { getEmailProviderStatus, isBrevoEmailProvider, sendBrevoEmail } from "../src/modules/email/brevo.mjs"
 import { getBrevoWebhookHealth, recordBrevoEmailDeliverySafely } from "../src/modules/email/brevo-delivery.mjs"
+import { observeStudentWriteRequest } from "../src/infra/observability/student-write-metrics.mjs"
 
 const require = createRequire(import.meta.url)
 const isDebugEnabled = () =>
@@ -1936,12 +1937,25 @@ export function startExerciseMailer(options = {}) {
   setStudentAdminRuntimeHealthProvider(() => buildRuntimeHealthPayload())
 
   const server = http.createServer((request, response) => {
-    handleRequest(request, response, transporter, provider).catch((error) => {
-      // Ensure CORS even on unexpected errors
+    void observeStudentWriteRequest(request, response, async () => {
+      try {
+        await handleRequest(request, response, transporter, provider)
+      } catch (error) {
+        // Ensure CORS even on unexpected errors
+        allowCors(request, response)
+        response.writeHead(500, { "Content-Type": "application/json" })
+        const err = error instanceof Error ? error : new Error(String(error))
+        response.end(JSON.stringify({ error: err.message || "Submission failed" }))
+      }
+    }).catch((error) => {
+      console.error(JSON.stringify({
+        event: "sis_request_observability_failed",
+        error: error instanceof Error ? error.message : String(error),
+      }))
+      if (response.writableEnded) return
       allowCors(request, response)
       response.writeHead(500, { "Content-Type": "application/json" })
-      const err = error instanceof Error ? error : new Error(String(error))
-      response.end(JSON.stringify({ error: err.message || "Submission failed" }))
+      response.end(JSON.stringify({ error: "Submission failed" }))
     })
   })
 

@@ -30,6 +30,15 @@ const faviconUrls = faviconFiles.map((file) => `/web-asset/images/${file}?=v2`)
 const mobileWidths = [320, 360, 375, 390, 430, 639]
 const failures = []
 
+function isExpectedTelemetryFailure(url) {
+  try {
+    const parsed = new URL(url)
+    return parsed.hostname === "www.google-analytics.com" && parsed.pathname === "/g/collect"
+  } catch {
+    return false
+  }
+}
+
 function fail(message) {
   failures.push(message)
 }
@@ -80,7 +89,8 @@ if (origin) {
             const response = await page.context().request.get(String(new URL(url, origin)))
             if (!response.ok()) fail(`${route} favicon ${url} returned ${response.status()}`)
           }
-          if (failedRequests.length) fail(`${route} failed requests: ${failedRequests.join(", ")}`)
+          const unexpectedFailedRequests = failedRequests.filter((url) => !isExpectedTelemetryFailure(url))
+          if (unexpectedFailedRequests.length) fail(`${route} failed requests: ${unexpectedFailedRequests.join(", ")}`)
         } catch (error) {
           fail(`${route} browser check failed at ${width}px: ${error.message}`)
         } finally {

@@ -5,8 +5,6 @@
   --border-dg: #727272;
   --brand: var(--primary-color);
   --brand-strong: #8f1620;
-  --bright-gold-1: #ffd700;
-  --bright-gold-2: #fdd017;
   --card: #fbffff;
   --card-soft: #f5f9ff;
   --err: #9e1d1d;
@@ -142,6 +140,9 @@
   --portal-assignment-head-bg: linear-gradient(180deg, color-mix(in srgb, var(--portal-surface-card) 92%, var(--brand) 8%), var(--portal-surface-card));
   --portal-border: rgba(115, 136, 163, 0.96);
   --portal-border-strong: rgba(95, 115, 145, 1);
+  --portal-brand-header-block-size: 58px;
+  --portal-brand-header-mobile-block-size: 110px;
+  --portal-brand-header-row-block-size: 44px;
   --portal-button-alt-fill: #BCC6CC;
   --portal-button-alt-fill-active: #7d8d97;
   --portal-button-alt-fill-hover: #e9f7ff;
@@ -317,33 +318,26 @@
   --portal-field-state-info: #5774a5;
   --portal-field-state-locked: #8f3939;
   --portal-field-state-muted: #5f6d7b;
+  --portal-floating-menu-content-edge-gap: 5px;
+  --portal-floating-menu-content-max-inline-size: 1440px;
   --portal-floating-menu-fill: #002786;
   --portal-floating-menu-fill-hover: #173f89;
   --portal-floating-menu-ink: #fbffff;
   --portal-floating-menu-stroke: #fbffff;
-  --portal-floating-menu-content-max-inline-size: 1440px;
-  --portal-floating-menu-content-edge-gap: 5px;
+  --portal-footer-block-size: 52px;
   --portal-footer-fill: var(--theme-footer-bg);
   --portal-footer-ink: var(--theme-footer-text);
+  --portal-footer-min-block-size: 52px;
   --portal-header-bar-fill: var(--primary-color);
   --portal-header-bar-ink: var(--secondary-color);
   --portal-header-bar-line-height: 1;
   --portal-header-bar-max-block-size: 40px;
   --portal-header-bar-min-block-size: 20px;
+  --portal-header-bar-mobile-block-size: 64px;
   --portal-header-bar-mobile-max-block-size: 64px;
   --portal-header-bar-mobile-min-block-size: 40px;
-  --portal-header-bar-mobile-block-size: 64px;
   --portal-header-bar-padding-block: 0.75rem;
   --portal-header-bar-padding-inline: 1rem;
-  /* Page-stack contract: the fixed rhythm between shared chrome and content. */
-  --portal-page-stack-gap: 12px;
-  --portal-shell-gap: var(--portal-page-stack-gap);
-  --portal-brand-header-block-size: 58px;
-  --portal-brand-header-mobile-block-size: 110px;
-  --portal-brand-header-row-block-size: 44px;
-  --portal-prefooter-block-size: 30px;
-  --portal-footer-block-size: 52px;
-  --portal-footer-min-block-size: 52px;
   --portal-homework-link: #174f92;
   --portal-homework-link-hover: #0f3c70;
   --portal-homework-square-border: #b7c8dd;
@@ -402,12 +396,14 @@
   --portal-ods-accent-warning-text: #333333;
   --portal-page-bg: #e8eef4;
   --portal-page-bg-base: #e8eef4;
+  --portal-page-stack-gap: 12px;
   --portal-panel-shadow: 0 8px 22px rgba(17, 38, 63, 0.08);
   --portal-panel-shadow-soft: 0 8px 22px rgba(10, 28, 48, 0.18);
   --portal-panel-shadow-strong: 0 26px 60px rgba(8, 22, 40, 0.26);
   --portal-pill-bg: #eff6ff;
   --portal-pill-border: #cde0fb;
   --portal-pill-text: #184372;
+  --portal-prefooter-block-size: 30px;
   --portal-primary-text-strong: #fbffff;
   --portal-quarter-button-active-bg: linear-gradient(180deg, color-mix(in srgb, var(--brand) 92%, #ffffff 8%), var(--brand));
   --portal-quarter-button-active-border: var(--brand);
@@ -438,6 +434,7 @@
   --portal-role-shadow-strong: var(--portal-panel-shadow-strong);
   --portal-role-text: var(--portal-text);
   --portal-score-bar-fill: linear-gradient(90deg, #f39c12 0%, #3ba853 100%);
+  --portal-shell-gap: var(--portal-page-stack-gap);
   --portal-stat-card-bg-end: #f7faff;
   --portal-stat-card-bg-start: #edf3fa;
   --portal-stat-card-border: rgba(115, 136, 163, 0.96);
@@ -494,6 +491,8 @@
   --theme-footer-text: var(--secondary-color);
   --warn: #a46000;
 
+  --bright-gold-1: #ffd700;
+  --bright-gold-2: #fdd017;
   --portal-page-bg-wash:
     radial-gradient(920px 420px at -15% -20%, rgba(87, 114, 132, 0.24) 0%, transparent 62%),
     radial-gradient(980px 520px at 110% -25%, rgba(87, 114, 132, 0.14) 0%, transparent 55%),
@@ -509,6 +508,8 @@
   --radius-1: var(--radius-base);
   --radius-2: calc(var(--radius-base) * 2);
   --radius-3: calc(var(--radius-base) * 3);
+
+  /* Page-stack contract: the fixed rhythm between shared chrome and content. */
 }
 
 .sis-action-feedback {
@@ -1039,9 +1040,9 @@ summary.portal-button.portal-button-immutable-chrome {
   .portal-button:not(.portal-button-immutable-chrome):not(.portal-button-alt-nav),
   a.portal-button:not(.portal-button-immutable-chrome):not(.portal-button-alt-nav),
   summary.portal-button:not(.portal-button-immutable-chrome):not(.portal-button-alt-nav) {
-    inline-size: 100%;
-    max-inline-size: none;
-    min-inline-size: 100%;
+    inline-size: min(100%, var(--portal-button-inline));
+    max-inline-size: var(--portal-button-inline);
+    min-inline-size: min(100%, var(--portal-button-inline));
   }
 }
 
@@ -1499,6 +1500,7 @@ body.student-portal-page .row > .grid-actions > .portal-button,
   inline-size: var(--portal-button-inline);
 }
 @media (max-width: 860px) {
+
   body.admin-portal-page .row > .grid-actions > .portal-button,
   body.parent-portal-page .row > .grid-actions > .portal-button,
   body.student-portal-page .row > .grid-actions > .portal-button,
@@ -1584,8 +1586,9 @@ body.admin-portal-page.admin-auth-booting .portal-login-footer {
   width: min(100%, var(--portal-login-panel-max-width));
 }
 @media (max-width: 430px) {
+
   /* Keep the parent/student login stack at the requested 320px mobile cap;
-     portal-main padding supplies the remaining viewport gap. */
+portal-main padding supplies the remaining viewport gap. */
 }
 html[data-student-auth-state="unauthenticated"] .portal-login-footer .hub-footer__copy,
 html[data-parent-auth-state="unauthenticated"] .portal-login-footer .hub-footer__copy {
@@ -2973,17 +2976,17 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
   margin-inline-end: auto;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head .new-word-edit {
+  --portal-button-max-inline: 72px;
   --portal-button-min-block: 36px;
   --portal-button-min-inline: 72px;
-  --portal-button-max-inline: 72px;
   block-size: 36px;
   margin-inline-start: auto;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition {
   font-family: ui-monospace, Courier, monospace;
   font-size: 1.08rem;
-  margin: 0;
   line-height: 1.35;
+  margin: 0;
   overflow-wrap: anywhere;
   padding-inline-start: 18px;
   text-align: left;
@@ -3648,6 +3651,22 @@ html[data-theme="dark"] body.admin-portal-page .queue-modal-card {
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
+html[data-theme="dark"] body.admin-portal-page #brevoStatisticsModal .brevo-statistics-modal-card {
+  background: #3b3c3e;
+}
+@media (max-width: 639px) {
+  body.admin-portal-page #brevoStatisticsModal .brevo-statistics-modal-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body.admin-portal-page #brevoStatisticsModal .queue-modal-header {
+    flex-wrap: wrap;
+    min-inline-size: 0;
+  }
+  body.admin-portal-page #brevoStatisticsModal .queue-modal-header > div {
+    flex: 1 1 100%;
+    min-inline-size: 0;
+  }
+}
 html[data-theme="dark"] body.admin-portal-page .queue-modal-card.content {
   background: var(--portal-neutral-content-dark);
   border-color: var(--portal-dark-border-strong);
@@ -4010,7 +4029,8 @@ html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
   text-align: left;
   text-transform: uppercase;
   width: 100%;
-  transition:
+
+transition:
     background-color 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -4298,13 +4318,14 @@ body.admin-portal-page .menu-group-btn {
   position: relative;
   text-align: left;
   text-decoration: none;
-  transition:
+  width: 100%;
+
+transition:
     background-color 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease,
     color 160ms ease,
     transform 160ms ease;
-  width: 100%;
 }
 body.admin-portal-page .menu-link.menu-link-top:hover,
 body.admin-portal-page .menu-link.menu-link-top:focus-visible,
@@ -4356,8 +4377,8 @@ html[data-theme="dark"] body.admin-portal-page .menu-group-btn:focus-visible {
 body.admin-portal-page .menu-group.expanded .menu-group-btn {
   background: var(--menu-link-bg);
   border-color: var(--menu-border);
-  color: var(--portal-role-text);
   box-shadow: none;
+  color: var(--portal-role-text);
 }
 html[data-theme="dark"] body.admin-portal-page .menu-group.expanded .menu-group-btn {
   background: var(--portal-dark-surface-support);
@@ -4384,15 +4405,15 @@ body:is(.admin-portal-page, .parent-portal-page, .student-portal-page) .quick-li
   background: transparent !important;
 }
 body.admin-portal-page .menu-group-btn::after {
+  -webkit-mask: url("/web-asset/images/caret-down.svg") center / contain no-repeat;
   background: currentColor;
+  block-size: 16px;
   content: "";
   display: block;
   flex: 0 0 16px;
-  block-size: 16px;
   inline-size: 16px;
   margin: 0 0 0 auto;
   mask: url("/web-asset/images/caret-down.svg") center / contain no-repeat;
-  -webkit-mask: url("/web-asset/images/caret-down.svg") center / contain no-repeat;
   opacity: 0.72;
   position: static;
   transform: none;
@@ -4414,7 +4435,8 @@ body.admin-portal-page .menu-link {
   min-height: 40px;
   padding: 8px 10px;
   text-decoration: none;
-  transition:
+
+transition:
     background-color 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -4434,7 +4456,8 @@ body.admin-portal-page .menu-link.active {
   border-color: var(--menu-link-active-border);
   color: var(--menu-link-active-text);
   font-weight: 800;
-  box-shadow:
+
+box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.32),
     0 0 0 1px color-mix(in srgb, var(--menu-link-active-border) 68%, transparent);
 }
@@ -4752,10 +4775,7 @@ body.report-template-page .summary-card {
   min-width: 0;
   padding: 14px;
 }
-@media (max-width: 700px) {
-  /* Report cards are served in Admin, Parent, and Student modes. Keep the
-     summary readable and confine the intentionally wide rubric table to its
-     own horizontal scroller on narrow screens. */
+@media (max-width: 700px) {  
   body.report-template-page .summary-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -4766,6 +4786,10 @@ body.report-template-page .summary-card {
     overflow-x: auto;
     overflow-y: hidden;
   }
+
+  /* Report cards are served in Admin, Parent, and Student modes. Keep the
+     summary readable and confine the intentionally wide rubric table to its
+     own horizontal scroller on narrow screens. */
 }
 .summary-label {
   color: var(--portal-data-label);
@@ -4913,10 +4937,11 @@ html[data-theme="dark"] .field-hint {
   position: fixed;
   z-index: 90;
 }
-@media (min-width: 1440px) {
+@media (min-width: 1441px) {
   .floating-menu-btn {
     inset-inline-end: auto;
-    inset-inline-start: calc(
+
+inset-inline-start: calc(
       50% + var(--portal-floating-menu-content-max-inline-size) / 2
       - var(--portal-floating-menu-content-edge-gap)
     );
@@ -5539,23 +5564,23 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   align-items: center;
   appearance: none;
   background: var(--portal-button-amber-fill) !important;
+  block-size: 48px;
   border: 1px solid var(--portal-button-amber-stroke) !important;
   border-radius: var(--portal-radius-button);
   box-sizing: border-box;
   color: var(--portal-button-amber-ink) !important;
   cursor: pointer;
   display: inline-flex;
-  block-size: 48px;
-  justify-content: center;
-  margin: 0 !important;
   flex: 0 0 48px;
+  gap: 0 !important;
   height: 48px !important;
   inline-size: 48px;
+  justify-content: center;
+  margin: 0 !important;
   max-block-size: 48px;
   max-inline-size: 48px !important;
   min-block-size: 48px !important;
   min-inline-size: 48px !important;
-  gap: 0 !important;
   padding: 6px !important;
   position: static;
   width: 48px !important;
@@ -5752,7 +5777,6 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   }
 }
 @media (max-width: 430px) {
-
   html {
     overflow-x: clip;
   }
@@ -5779,11 +5803,11 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   }
   body.admin-portal-page .portal-login-header {
     align-items: flex-start;
+    block-size: var(--portal-header-bar-mobile-block-size) !important;
     flex-wrap: wrap;
     gap: 4px 10px;
     justify-content: flex-end;
     line-height: 1.15;
-    block-size: var(--portal-header-bar-mobile-block-size) !important;
     max-block-size: var(--portal-header-bar-mobile-block-size) !important;
     min-block-size: var(--portal-header-bar-mobile-block-size) !important;
     padding: 0.55rem 0.75rem;
@@ -5810,11 +5834,11 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   body.admin-portal-page .hub-footer {
     align-items: flex-start;
     block-size: auto;
+    flex-direction: column;
     gap: 4px;
     justify-content: center;
     max-block-size: none;
     min-block-size: 70px;
-    flex-direction: column;
   }
   body.admin-portal-page .hub-footer__copy {
     white-space: normal;
@@ -5887,6 +5911,7 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
 .hub-footer {
   align-items: center;
   background: var(--portal-footer-fill, var(--theme-footer-bg, var(--tertiary-color)));
+  block-size: var(--portal-footer-block-size);
   border: 1px solid var(--hub-surface-border, var(--paper-border));
   border-radius: var(--radius-2);
   box-sizing: border-box;
@@ -5897,9 +5922,8 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   gap: calc(var(--hub-space-1, 12px) / 2) var(--hub-space-1, 12px);
   justify-content: space-between;
   margin: 0 auto;
-  max-width: none;
-  block-size: var(--portal-footer-block-size);
   max-block-size: var(--portal-footer-block-size);
+  max-width: none;
   min-block-size: var(--portal-footer-min-block-size);
   padding: 12px 16px;
   width: 100%;
@@ -5925,8 +5949,8 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   box-sizing: border-box;
   display: flex;
   justify-content: flex-end;
-  max-block-size: var(--portal-prefooter-block-size);
   margin: 0;
+  max-block-size: var(--portal-prefooter-block-size);
   min-block-size: var(--portal-prefooter-block-size);
   width: 100%;
 }
@@ -6038,7 +6062,8 @@ body.admin-portal-page .header-bar,
 body.parent-portal-page .header-bar,
 body.student-portal-page .header-bar {
   background: var(--portal-header-bar-fill);
-  border-radius: var(--radius-2);
+  block-size: var(--portal-header-bar-max-block-size);
+  border-radius: var(--radius-3);
   box-sizing: border-box;
   color: var(--portal-header-bar-ink);
   display: flex;
@@ -6049,13 +6074,13 @@ body.student-portal-page .header-bar {
   letter-spacing: 0.08em;
   line-height: 1;
   margin: 0;
-  block-size: var(--portal-header-bar-max-block-size);
   max-block-size: var(--portal-header-bar-max-block-size);
   min-block-size: var(--portal-header-bar-max-block-size);
   padding: .75rem 1rem;
 }
 #portalLoginHeader {
   background: var(--portal-header-bar-fill);
+  block-size: var(--portal-header-bar-max-block-size);
   border-radius: var(--radius-2);
   box-sizing: border-box;
   color: var(--portal-header-bar-ink);
@@ -6067,7 +6092,6 @@ body.student-portal-page .header-bar {
   letter-spacing: 0.08em;
   line-height: 1;
   margin: 0;
-  block-size: var(--portal-header-bar-max-block-size);
   max-block-size: var(--portal-header-bar-max-block-size);
   min-block-size: var(--portal-header-bar-max-block-size);
   padding: .75rem 1rem;
@@ -6078,13 +6102,14 @@ body.admin-portal-page .wrap > .portal-login-header {
   margin-inline: auto !important;
 }
 @media (max-width: 430px) {
+
   body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page, .student-points-page) .header-bar,
   #portalLoginHeader {
     align-items: flex-start;
     block-size: var(--portal-header-bar-mobile-block-size);
     flex-wrap: wrap;
-    max-block-size: var(--portal-header-bar-mobile-max-block-size);
     justify-content: flex-end;
+    max-block-size: var(--portal-header-bar-mobile-max-block-size);
     min-block-size: var(--portal-header-bar-mobile-block-size);
     row-gap: .35rem;
   }
@@ -6115,6 +6140,7 @@ body.student-points-page .header-bar a:hover,
   text-underline-offset: 3px;
 }
 @media (max-width: 430px) {
+
   body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page, .student-points-page) .header-bar a:first-child,
   #portalLoginHeader a:first-child {
     margin-inline-end: auto;
@@ -6428,8 +6454,8 @@ body.parent-portal-page :is(.actions, .login-actions, .portal-modal-actions, .po
 /* Parent's read-only week-set viewer follows the same mobile-first shell. */
 
 .fcontainer {
-  display: flex;
   align-items: center;
+  display: flex;
 }
 
 .fcontainer span {
@@ -6504,8 +6530,8 @@ body.parent-portal-page :is(.actions, .login-actions, .portal-modal-actions, .po
   accent-color: var(--brand);
   flex: 0 0 auto;
   height: 18px;
-  max-width: 18px;
   margin-top: 3px;
+  max-width: 18px;
   width: 18px;
 }
 

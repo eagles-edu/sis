@@ -56,6 +56,6 @@ test("all engagement matrices keep their ID column visible while horizontally sc
   assert.match(adminCss, /tabulator-row\.tabulator-row-even/u)
   assert.match(adminCss, /--engagement-matrix-row-even-bg: var\(--portal-dark-surface-support\)/u)
   assert.match(adminCss, /Immutable LM\/DM table-chip palette: AAA against --secondary-color/u)
-  assert.match(adminCss, /\.engagement-matrix-mark\.is-set \{ color: var\(--secondary-color\) !important; \}/u)
-  assert.match(adminCss, /\.engagement-matrix-completion\.is-yes \{ background: var\(--engagement-chip-positive-bg\); color: var\(--secondary-color\) !important; \}/u)
+  assert.match(adminCss, /\.engagement-matrix-mark\.is-set\s*\{\s*color: var\(--secondary-color\) !important;\s*\}/u)
+  assert.match(adminCss, /\.engagement-matrix-completion\.is-yes\s*\{\s*background: var\(--engagement-chip-positive-bg\);\s*color: var\(--secondary-color\) !important;\s*\}/u)
 })

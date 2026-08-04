@@ -362,6 +362,22 @@ body.parent-portal-page #loginCard .login-links,
 body.admin-portal-page #authPanel .login-links {
   margin-bottom: 4px;
 }
+html[data-theme="dark"] body.admin-portal-page #brevoStatisticsModal .brevo-statistics-modal-card {
+  background: #3b3c3e;
+}
+@media (max-width: 639px) {
+  body.admin-portal-page #brevoStatisticsModal .brevo-statistics-modal-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body.admin-portal-page #brevoStatisticsModal .queue-modal-header {
+    flex-wrap: wrap;
+    min-inline-size: 0;
+  }
+  body.admin-portal-page #brevoStatisticsModal .queue-modal-header > div {
+    flex: 1 1 100%;
+    min-inline-size: 0;
+  }
+}
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review label,
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review .small,
 html[data-theme="dark"] body.admin-portal-page #newsReviewViewerStatus,
@@ -399,6 +415,7 @@ html[data-theme="dark"] body.admin-portal-page #performanceQueueSection .section
 }
 #portalLoginHeader {
   background: var(--portal-header-bar-fill);
+  block-size: var(--portal-header-bar-max-block-size);
   border-radius: var(--radius-2);
   box-sizing: border-box;
   color: var(--portal-header-bar-ink);
@@ -410,19 +427,19 @@ html[data-theme="dark"] body.admin-portal-page #performanceQueueSection .section
   letter-spacing: 0.08em;
   line-height: 1;
   margin: 0;
-  block-size: var(--portal-header-bar-max-block-size);
   max-block-size: var(--portal-header-bar-max-block-size);
   min-block-size: var(--portal-header-bar-max-block-size);
   padding: .75rem 1rem;
 }
 @media (max-width: 430px) {
+
   body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page, .student-points-page) .header-bar,
   #portalLoginHeader {
     align-items: flex-start;
     block-size: var(--portal-header-bar-mobile-block-size);
     flex-wrap: wrap;
-    max-block-size: var(--portal-header-bar-mobile-max-block-size);
     justify-content: flex-end;
+    max-block-size: var(--portal-header-bar-mobile-max-block-size);
     min-block-size: var(--portal-header-bar-mobile-block-size);
     row-gap: .35rem;
   }
@@ -448,6 +465,7 @@ body.student-points-page .header-bar a:hover,
   text-underline-offset: 3px;
 }
 @media (max-width: 430px) {
+
   body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page, .student-points-page) .header-bar a:first-child,
   #portalLoginHeader a:first-child {
     margin-inline-end: auto;

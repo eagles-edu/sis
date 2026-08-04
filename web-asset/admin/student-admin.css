@@ -1815,6 +1815,22 @@ transition:
       .school-setup-warning-modal-card {
         max-inline-size: 720px;
   }
+      .student-delete-modal-card {
+        max-inline-size: 620px;
+  }
+      .student-delete-parent-option {
+        align-items: flex-start;
+        display: flex;
+        gap: 8px;
+        line-height: 1.35;
+  }
+      .student-delete-parent-option input {
+        flex: 0 0 auto;
+        margin-block-start: 3px;
+  }
+      .student-delete-parent-note {
+        margin: 0;
+  }
       .school-setup-warning-modal-body {
         background: var(--portal-surface-support);
         border: 1px solid var(--portal-border);
@@ -1841,6 +1857,9 @@ transition:
         gap: 8px;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         margin-top: 8px;
+  }
+      .brevo-stats-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
   }
       .system-health-grid {
         display: grid;
@@ -2022,7 +2041,7 @@ transition:
         height: 14px;
         position: relative;
         width: 14px;
-        background:
+        background-image:
           radial-gradient(
             circle at 40% 35%,
             var(--portal-led-core-highlight) 0 10%,
@@ -2462,7 +2481,7 @@ background: linear-gradient(
         font-size: 11px;
         font-weight: 700;
         justify-content: center;
-        min-height: 92px;
+        min-height: 0;
         padding: 6px;
         text-align: center;
 
@@ -3658,6 +3677,9 @@ body.admin-portal-page .performance-engagement-table {
           grid-template-columns: repeat(2, minmax(0, 1fr));
     }
         .stats-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+        .brevo-stats-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
     }
         .system-health-grid {

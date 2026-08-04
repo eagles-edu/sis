@@ -396,6 +396,22 @@ body.parent-portal-page #loginCard .login-links,
 body.admin-portal-page #authPanel .login-links {
   margin-bottom: 4px;
 }
+html[data-theme="dark"] body.admin-portal-page #brevoStatisticsModal .brevo-statistics-modal-card {
+  background: #3b3c3e;
+}
+@media (max-width: 639px) {
+  body.admin-portal-page #brevoStatisticsModal .brevo-statistics-modal-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body.admin-portal-page #brevoStatisticsModal .queue-modal-header {
+    flex-wrap: wrap;
+    min-inline-size: 0;
+  }
+  body.admin-portal-page #brevoStatisticsModal .queue-modal-header > div {
+    flex: 1 1 100%;
+    min-inline-size: 0;
+  }
+}
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review label,
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review .small,
 html[data-theme="dark"] body.admin-portal-page #newsReviewViewerStatus,
@@ -433,6 +449,7 @@ html[data-theme="dark"] body.admin-portal-page #performanceQueueSection .section
 }
 #portalLoginHeader {
   background: var(--portal-header-bar-fill);
+  block-size: var(--portal-header-bar-max-block-size);
   border-radius: var(--radius-2);
   box-sizing: border-box;
   color: var(--portal-header-bar-ink);
@@ -444,19 +461,19 @@ html[data-theme="dark"] body.admin-portal-page #performanceQueueSection .section
   letter-spacing: 0.08em;
   line-height: 1;
   margin: 0;
-  block-size: var(--portal-header-bar-max-block-size);
   max-block-size: var(--portal-header-bar-max-block-size);
   min-block-size: var(--portal-header-bar-max-block-size);
   padding: .75rem 1rem;
 }
 @media (max-width: 430px) {
+
   body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page, .student-points-page) .header-bar,
   #portalLoginHeader {
     align-items: flex-start;
     block-size: var(--portal-header-bar-mobile-block-size);
     flex-wrap: wrap;
-    max-block-size: var(--portal-header-bar-mobile-max-block-size);
     justify-content: flex-end;
+    max-block-size: var(--portal-header-bar-mobile-max-block-size);
     min-block-size: var(--portal-header-bar-mobile-block-size);
     row-gap: .35rem;
   }
@@ -482,6 +499,7 @@ body.student-points-page .header-bar a:hover,
   text-underline-offset: 3px;
 }
 @media (max-width: 430px) {
+
   body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page, .student-points-page) .header-bar a:first-child,
   #portalLoginHeader a:first-child {
     margin-inline-end: auto;
@@ -6518,6 +6536,43 @@ No family lookup yet.</pre>
     </div>
 
     <div
+      id="deleteStudentModal"
+      class="queue-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden="true"
+      inert
+      aria-labelledby="deleteStudentModalTitle"
+      aria-describedby="deleteStudentModalDescription">
+      <div class="queue-modal-card student-delete-modal-card">
+        <div class="queue-modal-header">
+          <div>
+            <h2 id="deleteStudentModalTitle">Permanently delete student</h2>
+            <p id="deleteStudentModalDescription" class="small">
+              This permanently removes the student and all student-linked records.
+              Unenrollment is safer when history should be preserved.
+            </p>
+          </div>
+        </div>
+        <label class="student-delete-parent-option">
+          <input id="deleteParentAccountCheckbox" type="checkbox">
+          <span>Also delete parent account(s) if this student has no other linked children</span>
+        </label>
+        <p class="small student-delete-parent-note">
+          Parent accounts with other linked children are always preserved.
+        </p>
+        <div class="queue-modal-actions">
+          <button id="deleteStudentCancelBtn" type="button" class="portal-button portal-button-alt">
+            Cancel
+          </button>
+          <button id="deleteStudentConfirmBtn" type="button" class="portal-button portal-button-danger">
+            Permanently Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
       id="parentQueueModal"
       class="queue-modal hidden"
       role="dialog"
@@ -6883,10 +6938,11 @@ No family lookup yet.</pre>
       id="brevoStatisticsModal"
       class="queue-modal hidden"
       aria-hidden="true"
+      inert
       role="dialog"
       aria-modal="true"
       aria-label="Brevo transactional email statistics">
-      <div class="queue-modal-card">
+      <div class="queue-modal-card brevo-statistics-modal-card">
         <div class="queue-modal-header">
           <div>
             <h3>Brevo Transactional Statistics</h3>
@@ -6895,7 +6951,7 @@ No family lookup yet.</pre>
           <button id="brevoStatisticsModalCloseBtn" type="button" class="portal-button portal-button-warning">Close</button>
         </div>
         <div class="queue-modal-body">
-          <div class="stats-grid">
+          <div class="stats-grid brevo-stats-grid">
             <div class="stat-card stat-card--blue card"><div class="stat-label">Requests</div><strong id="brevoStats_requests">n/a</strong></div>
             <div class="stat-card stat-card--good card"><div class="stat-label">Delivered</div><strong id="brevoStats_delivered">n/a</strong></div>
             <div class="stat-card stat-card--good card"><div class="stat-label">Opens</div><strong id="brevoStats_opens">n/a</strong></div>
@@ -6982,6 +7038,20 @@ No family lookup yet.</pre>
 
         window.__SIS_LOAD_ADMIN_APP__ = loadAdminApp
 
+        const installAuthenticatedClickHandoff = () => {
+          document.addEventListener("click", (event) => {
+            const target = event.target instanceof Element ? event.target.closest("a, button") : null
+            if (!target || target.id === "adminOverviewShellStatus") return
+            event.preventDefault()
+            if (target instanceof HTMLAnchorElement && target.href) {
+              window.history.pushState({}, "", target.href)
+              loadAdminApp({ replayPage: target.dataset.pageLink || "" })
+              return
+            }
+            loadAdminApp({ replayClick: target })
+          }, { capture: true, once: true })
+        }
+
         const loadAdminOverviewShell = () => {
           const script = document.createElement("script")
           script.type = "module"
@@ -7002,6 +7072,7 @@ No family lookup yet.</pre>
         }
 
         if (window.__SIS_ADMIN_INITIAL_AUTH__?.authenticated) {
+          installAuthenticatedClickHandoff()
           loadAdminAppAfterFirstPaint()
           return
         }
