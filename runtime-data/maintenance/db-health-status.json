@@ -1,6 +1,6 @@
 {
   "status": "warn",
-  "checkedAt": "2026-08-04T15:45:01.609Z",
+  "checkedAt": "2026-08-04T16:00:01.553Z",
   "thresholds": {
     "backupStaleMinutes": 1560,
     "maxQueryLatencyMs": 500,
@@ -8,9 +8,9 @@
     "maxOrphanCount": 0
   },
   "db": {
-    "status": "warn",
+    "status": "ok",
     "connected": true,
-    "queryLatencyMs": 546,
+    "queryLatencyMs": 415,
     "error": ""
   },
   "backup": {
