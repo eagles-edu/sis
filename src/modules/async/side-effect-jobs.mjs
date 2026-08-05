@@ -41,11 +41,12 @@ export const ASYNC_SIDE_EFFECT_JOB_STATUS_SUCCEEDED = "succeeded"
 export const ASYNC_SIDE_EFFECT_JOB_STATUS_FAILED = "failed"
 
 const MEMORY_JOBS = []
+const DEFAULT_PROCESSING_LOCK_TIMEOUT_MS = 10 * 60 * 1000
 let SIDE_EFFECT_JOB_DB_DISABLED = !String(process.env.DATABASE_URL || "").trim()
 let SIDE_EFFECT_JOB_DB_WARNED = false
 
 function allowVolatileUnitTestStorage() {
-  return normalizeLower(process.env.NODE_ENV) === "test"
+  return normalizeLower(process.env.NODE_ENV) === "test" && !normalizeText(process.env.DATABASE_URL)
 }
 
 function sideEffectPersistenceUnavailable() {
@@ -163,8 +164,11 @@ async function getJobPrismaClient() {
     }
     return prisma
   } catch (error) {
-    markDatabaseFallback(error)
-    return null
+    if (allowVolatileUnitTestStorage()) {
+      markDatabaseFallback(error)
+      return null
+    }
+    throw error
   }
 }
 
@@ -172,6 +176,11 @@ function normalizeAvailableAt(value) {
   const date = value ? (value instanceof Date ? value : new Date(value)) : new Date()
   if (Number.isNaN(date.valueOf())) return new Date()
   return date
+}
+
+function processingLockTimeoutMs() {
+  const configured = Number.parseInt(String(process.env.ASYNC_SIDE_EFFECT_JOB_LOCK_TIMEOUT_MS || DEFAULT_PROCESSING_LOCK_TIMEOUT_MS), 10)
+  return Number.isFinite(configured) && configured >= 60 * 1000 ? configured : DEFAULT_PROCESSING_LOCK_TIMEOUT_MS
 }
 
 function cloneMemoryJob(job) {
@@ -355,6 +364,22 @@ export async function claimAsyncSideEffectJobs({ jobTypes = [], take = 10, worke
     OR: [{ availableAt: null }, { availableAt: { lte: availableAt } }],
   }
   if (normalizedJobTypes.length) where.jobType = { in: normalizedJobTypes }
+
+  const staleBefore = new Date(availableAt.valueOf() - processingLockTimeoutMs())
+  const staleWhere = {
+    status: ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING,
+    lockedAt: { lte: staleBefore },
+  }
+  if (normalizedJobTypes.length) staleWhere.jobType = { in: normalizedJobTypes }
+  await prisma.asyncSideEffectJob.updateMany({
+    where: staleWhere,
+    data: {
+      status: ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED,
+      availableAt,
+      lockedAt: null,
+      lockedBy: null,
+    },
+  })
 
   const candidates = await prisma.asyncSideEffectJob.findMany({
     where,

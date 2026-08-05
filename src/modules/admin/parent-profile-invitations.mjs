@@ -17,6 +17,10 @@ const invitationRecoveryById = new Map()
 function text(value) { return value === undefined || value === null ? "" : String(value).trim() }
 function lower(value) { return text(value).toLowerCase() }
 function tokenHash(token) { return crypto.createHash("sha256").update(token).digest("hex") }
+function invitationIdempotencyKey(invitationId) {
+  const hex = crypto.createHash("sha256").update(text(invitationId)).digest("hex").slice(0, 32)
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-${((Number.parseInt(hex[16], 16) & 3) | 8).toString(16)}${hex.slice(17, 20)}-${hex.slice(20)}`
+}
 function invitationExpiryDays() {
   const requested = Number.parseInt(text(process.env.PARENT_PROFILE_INVITATION_EXPIRY_DAYS || INVITATION_EXPIRY_DEFAULT_DAYS), 10)
   return Math.min(INVITATION_EXPIRY_MAX_DAYS, Math.max(1, Number.isInteger(requested) ? requested : INVITATION_EXPIRY_DEFAULT_DAYS))
@@ -75,9 +79,9 @@ export async function resolveParentPortalAccountIdentity(prisma, student, recipi
   const accountByEmail = email
     ? await prisma.parentPortalAccount.findUnique({ where: { email } })
     : null
-  if (accountByParentsId && accountByEmail && accountByParentsId.id !== accountByEmail.id) {
+  if (accountByEmail && accountByEmail.parentsId !== parentsId) {
     const error = new Error(
-      `Parent identity conflict: parentsId ${accountByParentsId.parentsId} belongs to one account, but ${email} belongs to ${accountByEmail.parentsId}. Correct the Parents ID or parent email before sending the invitation.`,
+      `Parent identity conflict: parentsId ${parentsId} does not own ${email}; that email belongs to ${accountByEmail.parentsId}. Correct the Parents ID or choose the verified existing family before sending the invitation.`,
     )
     error.statusCode = 409
     error.code = "PARENT_ID_EMAIL_CONFLICT"
@@ -91,7 +95,7 @@ export async function ensureParentPortalAccount(prisma, student, recipientEmail 
     throw Object.assign(new Error("Parent portal persistence is unavailable"), { statusCode: 503 })
   }
   const { parentsId, email, accountByParentsId, accountByEmail } = await resolveParentPortalAccountIdentity(prisma, student, recipientEmail)
-  let account = accountByParentsId || accountByEmail
+  let account = accountByParentsId
   let firstPassword = ""
   if (!account) {
     firstPassword = initialPassword()
@@ -101,13 +105,12 @@ export async function ensureParentPortalAccount(prisma, student, recipientEmail 
       })
     } catch (error) {
       if (error?.code !== "P2002") throw error
-      account = (email && await prisma.parentPortalAccount.findUnique({ where: { email } }))
-        || await prisma.parentPortalAccount.findUnique({ where: { parentsId } })
+      account = await prisma.parentPortalAccount.findUnique({ where: { parentsId } })
       if (!account) throw error
       firstPassword = ""
     }
   }
-  if (account.email == null && email) {
+  if (account.email == null && email && !accountByEmail) {
     account = await prisma.parentPortalAccount.update({ where: { id: account.id }, data: { email } })
   }
   await prisma.parentPortalStudentLink.upsert({
@@ -135,13 +138,13 @@ function invitationMessage({ student, url, parentId, mustChangePassword, expires
   return { subject, textBody, html }
 }
 
-async function sendInvitationEmail({ recipientEmail, student, token, expiresAt, parentId, mustChangePassword }) {
+async function sendInvitationEmail({ invitationId, recipientEmail, student, token, expiresAt, parentId, mustChangePassword }) {
   const url = invitationUrl(token)
   const message = invitationMessage({ student, url, parentId, mustChangePassword, expiresAt })
   const fromEmail = text(process.env.BREVO_FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER)
   const fromName = text(process.env.BREVO_FROM_NAME || "The Eagles Club")
   if (isBrevoEmailProvider()) {
-    const result = await sendBrevoEmail({ from: { email: fromEmail, name: fromName }, to: [{ email: recipientEmail }], subject: message.subject, text: message.textBody, html: message.html })
+    const result = await sendBrevoEmail({ from: { email: fromEmail, name: fromName }, to: [{ email: recipientEmail }], subject: message.subject, text: message.textBody, html: message.html, idempotencyKey: invitationIdempotencyKey(invitationId) })
     return { providerMessageId: text(result.messageId), provider: "brevo" }
   }
   const nodemailer = await import("nodemailer")
@@ -183,13 +186,16 @@ export async function processParentProfileInvitationJob(job = {}) {
   const invitationId = text(job?.payloadJson?.invitationId)
   const token = text(job?.payloadJson?.token)
   const invitation = await prisma.parentProfileInvitation.findUnique({ where: { id: invitationId }, include: { student: { include: { profile: true } } } })
-  if (!invitation) throw Object.assign(new Error("Parent profile invitation not found"), { statusCode: 404 })
+  if (!invitation) return { ok: false, status: "missing", duplicate: true }
+  if (lower(invitation.status) === "sent") {
+    return { ok: true, status: "sent", providerMessageId: text(invitation.providerMessageId), duplicate: true }
+  }
   if (invitation.expiresAt <= new Date() || ["expired", "completed", "activated"].includes(lower(invitation.status))) {
     await prisma.parentProfileInvitation.update({ where: { id: invitation.id }, data: { status: "expired", lastError: "Invitation is expired or already completed" } })
     return { ok: false, status: "expired" }
   }
   try {
-    const sent = await sendInvitationEmail({ recipientEmail: invitation.recipientEmail, student: invitation.student, token, expiresAt: invitation.expiresAt, parentId: text(job?.payloadJson?.parentId || invitation.parentAccount?.parentsId), mustChangePassword: Boolean(job?.payloadJson?.mustChangePassword) })
+    const sent = await sendInvitationEmail({ invitationId: invitation.id, recipientEmail: invitation.recipientEmail, student: invitation.student, token, expiresAt: invitation.expiresAt, parentId: text(job?.payloadJson?.parentId || invitation.parentAccount?.parentsId), mustChangePassword: Boolean(job?.payloadJson?.mustChangePassword) })
     await recordBrevoEmailDeliverySafely({
       messageId: sent.providerMessageId,
       recipientEmail: invitation.recipientEmail,

@@ -2759,7 +2759,7 @@ test("parent portal profile draft submit surfaces API errors on child page", asy
   dom.window.close()
 })
 
-test("parent portal profile review submit surfaces API errors when no draft exists", async () => {
+test("parent portal profile review submit requires signature and agreement before calling the API", async () => {
   const calls = []
   const dom = await createParentPortalDom(
     async (resource, init = {}) => {
@@ -2818,9 +2818,6 @@ test("parent portal profile review submit surfaces API errors when no draft exis
           immutableFields: ["eaglesId", "studentNumber"],
         })
       }
-      if (pathname === "/api/parent/children/vi001/profile-submit" && method === "POST") {
-        return jsonTextResponse(400, { error: "No saved draft found to submit" })
-      }
       return jsonTextResponse(404, { error: "Not found" })
     },
     "http://127.0.0.1:8787/parent/portal"
@@ -2838,12 +2835,10 @@ test("parent portal profile review submit surfaces API errors when no draft exis
 
   document.getElementById("submitReviewBtn").click()
   await waitFor(() => {
-    assert.ok(calls.includes("POST /api/parent/children/vi001/profile-submit"))
-  })
-  await waitFor(() => {
     const statusText = normalizeText(document.getElementById("childPageStatus").textContent)
-    assert.match(statusText, /no saved draft found to submit/i)
+    assert.match(statusText, /ký, đồng ý và lưu biểu mẫu/i)
   })
+  assert.ok(!calls.includes("POST /api/parent/children/vi001/profile-submit"))
 
   await settleDomAsync(dom)
   dom.window.close()

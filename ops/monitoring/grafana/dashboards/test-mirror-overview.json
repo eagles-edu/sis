@@ -28,31 +28,31 @@
       "type": "stat",
       "title": "Test API process",
       "gridPos": {"h": 5, "w": 6, "x": 12, "y": 0},
-      "targets": [{"expr": "namedprocess_namegroup_num_procs{groupname=\"sis_test_api\"}", "refId": "A"}],
+      "targets": [{"expr": "node_systemd_unit_state{name=\"exercise-mailer-test.service\",state=\"active\"}", "refId": "A"}],
       "fieldConfig": {"defaults": {"mappings": [{"type": "value", "options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}]}, "overrides": []}
     },
     {
       "id": 4,
       "type": "stat",
-      "title": "Test async worker",
+      "title": "Test Node runtime",
       "gridPos": {"h": 5, "w": 6, "x": 18, "y": 0},
-      "targets": [{"expr": "namedprocess_namegroup_num_procs{groupname=\"sis_test_async_worker\"}", "refId": "A"}],
+      "targets": [{"expr": "count(node_systemd_unit_state{name=\"exercise-mailer-test.service\",state=\"active\"})", "refId": "A"}],
       "fieldConfig": {"defaults": {"mappings": [{"type": "value", "options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}]}, "overrides": []}
     },
     {
       "id": 5,
       "type": "timeseries",
-      "title": "Test mirror process CPU",
+      "title": "Student-save latency by stage",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5},
-      "targets": [{"expr": "100 * rate(namedprocess_namegroup_cpu_seconds_total{groupname=~\"sis_test_.*\"}[1m])", "legendFormat": "{{groupname}}", "refId": "A"}],
+      "targets": [{"expr": "histogram_quantile(0.95, sum by (le,stage) (rate(sis_admin_student_write_stage_duration_seconds_bucket[10m])))", "legendFormat": "p95 {{stage}}", "refId": "A"}],
       "fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []}
     },
     {
       "id": 6,
       "type": "timeseries",
-      "title": "Test mirror process memory",
+      "title": "SIS runtime RSS",
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 5},
-      "targets": [{"expr": "namedprocess_namegroup_memory_bytes{groupname=~\"sis_test_.*\"}", "legendFormat": "{{groupname}}", "refId": "A"}],
+      "targets": [{"expr": "sis_nodejs_rss_bytes", "legendFormat": "RSS", "refId": "A"}],
       "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}
     },
     {
@@ -69,11 +69,11 @@
     {
       "id": 8,
       "type": "timeseries",
-      "title": "PostgreSQL and Redis container resources",
+      "title": "Optional Redis diagnostics",
       "gridPos": {"h": 8, "w": 24, "x": 0, "y": 21},
       "targets": [
-        {"expr": "100 * sum by (name) (rate(container_cpu_usage_seconds_total{name=~\"/(sis-postgres|redis-stack)\"}[1m]))", "legendFormat": "{{name}} CPU", "refId": "A"},
-        {"expr": "sum by (name) (container_memory_working_set_bytes{name=~\"/(sis-postgres|redis-stack)\"})", "legendFormat": "{{name}} memory", "refId": "B"}
+        {"expr": "redis_memory_used_bytes", "legendFormat": "Redis memory", "refId": "A"},
+        {"expr": "redis_connected_clients", "legendFormat": "Redis clients", "refId": "B"}
       ],
       "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
     }

@@ -8,3 +8,24 @@ process_names:
   - name: sis_test_static_server
     cmdline:
       - /home/test.eagles.edu.vn/public_html
+  - name: sis_dev_api
+    cmdline:
+      - /home/eagles/dockerz/sis/server/exercise-mailer.mjs
+  - name: sis_live_api
+    cmdline:
+      - /home/admin.eagles.edu.vn/sis/server/exercise-mailer.mjs
+  - name: chrome_renderer
+    cmdline:
+      - /opt/google/chrome/chrome
+      - --type=renderer
+  - name: vscode_renderer
+    cmdline:
+      - /usr/share/code/code
+      - --type=renderer
+  - name: openlitespeed
+    comm:
+      - litespeed
+      - lshttpd
+  - name: cyberpanel
+    cmdline:
+      - cyberpanel

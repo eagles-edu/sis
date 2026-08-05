@@ -26,27 +26,27 @@
     {
       "id": 3,
       "type": "timeseries",
-      "title": "Container CPU",
+      "title": "Host load average",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
-      "targets": [{"expr": "100 * sum by (name) (rate(container_cpu_usage_seconds_total{name!=\"\"}[1m]))", "legendFormat": "{{name}}", "refId": "A"}],
+      "targets": [{"expr": "node_load1", "legendFormat": "1 minute", "refId": "A"}, {"expr": "node_load5", "legendFormat": "5 minutes", "refId": "B"}],
       "fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []}
     },
     {
       "id": 4,
       "type": "timeseries",
-      "title": "Container memory",
+      "title": "Swap and root filesystem",
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
-      "targets": [{"expr": "sum by (name) (container_memory_working_set_bytes{name!=\"\"})", "legendFormat": "{{name}}", "refId": "A"}],
+      "targets": [{"expr": "node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes", "legendFormat": "swap used", "refId": "A"}, {"expr": "node_filesystem_avail_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"}", "legendFormat": "root free", "refId": "B"}],
       "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}
     },
     {
       "id": 5,
       "type": "timeseries",
-      "title": "PostgreSQL container CPU and memory",
+      "title": "SIS student-save path",
       "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
       "targets": [
-        {"expr": "100 * sum(rate(container_cpu_usage_seconds_total{name=\"/sis-postgres\"}[1m]))", "legendFormat": "CPU %", "refId": "A"},
-        {"expr": "sum(container_memory_working_set_bytes{name=\"/sis-postgres\"})", "legendFormat": "Memory", "refId": "B"}
+        {"expr": "sum(rate(sis_admin_student_write_requests_total[5m]))", "legendFormat": "writes/s", "refId": "A"},
+        {"expr": "histogram_quantile(0.95, sum by (le) (rate(sis_admin_student_write_duration_seconds_bucket[10m])))", "legendFormat": "p95 latency", "refId": "B"}
       ],
       "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
     }

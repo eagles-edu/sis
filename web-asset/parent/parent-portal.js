@@ -699,6 +699,18 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
               placeholder: "ten@vidu.com",
               autocomplete: "email",
             },
+            {
+              key: "signatureAgreed",
+              label: "Tôi đã đọc, đồng ý và ký xác nhận thông tin trên. *",
+              control: "checkbox",
+              required: true,
+              options: [
+                {
+                  value: "yes",
+                  label: "Tôi đồng ý",
+                },
+              ],
+            },
           ],
         },
       ]
@@ -6910,6 +6922,15 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
             silentSuccess: true,
             silentNoChanges: true,
           })
+        }
+        const signatureFullName = normalizeText(state.profile?.signatureFullName)
+        const signatureEmail = normalizeText(state.profile?.signatureEmail)
+        const signatureAgreed = Array.isArray(state.profile?.signatureAgreed)
+          ? state.profile.signatureAgreed.some((value) => normalizeText(value).toLowerCase() === "yes")
+          : state.profile?.signatureAgreed === true
+        if (!signatureFullName || !signatureEmail || !signatureAgreed) {
+          setStatus("Vui lòng ký, đồng ý và lưu biểu mẫu thành công trước khi gửi duyệt.", "err")
+          return
         }
         const result = await api(
           `${PARENT_CHILDREN_PATH}/${encodeURIComponent(state.selectedEaglesId)}/profile-submit`,

@@ -16,7 +16,7 @@ export function initProfileEngagementIsland({ document, api, onError }) {
   const visibleRows = () => {
     const terms = normalize(searchEl?.value).toLowerCase().split("|").map((value) => value.trim()).filter(Boolean)
     if (!terms.length) return rows
-    return rows.filter((row) => terms.every((term) => [row.familyId, row.learners, row.parentName, row.parentEmail].join(" ").toLowerCase().includes(term)))
+    return rows.filter((row) => terms.every((term) => [row.parentsId, row.familyId, row.eaglesIds, row.learners, row.parentName, row.parentEmail].join(" ").toLowerCase().includes(term)))
   }
 
   const metric = (row = {}) => {
@@ -42,9 +42,9 @@ export function initProfileEngagementIsland({ document, api, onError }) {
       learners: normalize(row.learners),
       profileComplete: normalize(row.profileComplete),
       invitationStatus: normalize(row.invitationStatus),
-      emailQueued: event("queuedAt") || row.invitationStatus ? "yes" : "",
-      emailQueuedAt: event("queuedAt") || row.invitationSentAt || "",
-      emailSent: yes("sentAt"),
+      emailQueued: event("queuedAt") || row.invitationQueuedAt ? "yes" : "",
+      emailQueuedAt: event("queuedAt") || row.invitationQueuedAt || "",
+      emailSent: event("sentAt") || row.invitationSentAt ? "yes" : "",
       emailSentAt: event("sentAt") || row.invitationSentAt || "",
       emailDelivered: yes("deliveredAt"), emailDeliveredAt: event("deliveredAt"),
       emailProxy: yes("proxyLoadedAt"), emailProxyAt: event("proxyLoadedAt"),
@@ -60,7 +60,7 @@ export function initProfileEngagementIsland({ document, api, onError }) {
       emailHard: yes("hardBouncedAt"), emailHardAt: event("hardBouncedAt"),
       emailComplained: yes("complainedAt"), emailComplainedAt: event("complainedAt"),
       emailUnsubscribed: yes("unsubscribedAt"), emailUnsubscribedAt: event("unsubscribedAt"),
-      searchText: [row.familyId, row.parentName, row.parentEmail, row.learners].map(lower).join(" "),
+      searchText: [row.parentsId, row.familyId, row.eaglesIds, row.parentName, row.parentEmail, row.learners].map(lower).join(" "),
     }
   }
 

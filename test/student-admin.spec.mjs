@@ -60,6 +60,29 @@ test("family profile options include every familyId and parentId pair", () => {
   ])
 })
 
+test("active parent account is authoritative when a profile reused its email across families", () => {
+  const result = buildFamilyOptionPayload({
+    profileRows: [
+      { familyId: "fam-0149", parentsId: "cmamos001", motherEmail: "shared@example.com" },
+      { familyId: "fam-0007", parentsId: "cmandy001", motherEmail: "shared@example.com" },
+    ],
+    activeParentAccounts: [{
+      parentsId: "cmandy001",
+      email: "shared@example.com",
+      links: [{ student: { profile: { familyId: "fam-0007" } } }],
+    }],
+  })
+
+  assert.equal(
+    result.familyOptions.find((entry) => entry.parentId === "cmamos001")?.parentEmail,
+    "",
+  )
+  assert.equal(
+    result.familyOptions.find((entry) => entry.parentId === "cmandy001")?.parentEmail,
+    "shared@example.com",
+  )
+})
+
 test("student profile bootstrap hydrates family options before rendering the form", () => {
   assert.match(
     ADMIN_JS_SOURCE,
@@ -71,6 +94,14 @@ test("family options carry parent email for profile assignment", () => {
   assert.match(ADMIN_JS_SOURCE, /option\.dataset\.parentEmail = parentEmail \|\| ""/u)
   assert.match(ADMIN_JS_SOURCE, /document\.getElementById\("f_motherEmail"\)/u)
   assert.match(ADMIN_JS_SOURCE, /parentEmail: normalizeLower\(entry\?\.parentEmail\)/u)
+})
+
+test("new student form requires a password, derives Parents ID, and blocks flagged email reuse", () => {
+  assert.match(ADMIN_JS_SOURCE, /const PROFILE_NEW_REQUIRED_KEYS = new Set\(\[[\s\S]*?"password"/u)
+  assert.match(ADMIN_JS_SOURCE, /const nextValue = eaglesId \? `cm\$\{eaglesId\}` : ""/u)
+  assert.match(ADMIN_JS_SOURCE, /parentEmailInput\?\.addEventListener\("blur", \(\) => \{/u)
+  assert.match(ADMIN_JS_SOURCE, /Verbally verify the familial relationship/u)
+  assert.match(ADMIN_CSS_SOURCE, /input\.profile-family-email-conflict/u)
 })
 
 test("portal password policy requires 8 characters, letter case, a symbol, and safe characters", () => {

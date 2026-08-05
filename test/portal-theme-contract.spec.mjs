@@ -93,6 +93,7 @@ test("portal pages load the shared portal theme stylesheet", () => {
   }
 })
 
+
 test("every header-bearing portal page has a shared page-stack owner", () => {
   for (const [label, relPath, bodyClass, stackClass] of pageStackPaths) {
     const html = fs.readFileSync(path.resolve(rootDir, relPath), "utf8")
@@ -997,4 +998,3 @@ test("admin dark surfaces keep form controls and chart empty states readable", (
     "admin dark empty chart state should use the shared support surface",
   )
 })
-

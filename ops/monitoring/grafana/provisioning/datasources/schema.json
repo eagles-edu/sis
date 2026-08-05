@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Grafana datasource provisioning",
+  "type": "object",
+  "required": ["apiVersion", "datasources"],
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": { "const": 1 },
+    "prune": { "type": "boolean" },
+    "deleteDatasources": { "type": "array" },
+    "datasources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "url"],
+        "additionalProperties": true,
+        "properties": {
+          "name": { "type": "string" },
+          "uid": { "type": "string" },
+          "type": { "type": "string" },
+          "access": { "enum": ["proxy", "direct"] },
+          "url": { "type": "string" },
+          "isDefault": { "type": "boolean" },
+          "editable": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

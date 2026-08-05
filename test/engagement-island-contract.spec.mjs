@@ -25,6 +25,10 @@ test("engagement pages remain wired to the shared matrix and their own data endp
   assert.match(assignment, /assignmentEngagementDayToggleBtn/u)
   assert.match(performance, /performanceEngagementDayToggleBtn/u)
   assert.match(profile, /groupKey: `\$\{parentsId \|\| "Unassigned"\}: \$\{familyId \|\| "Unassigned"\} - \$\{eaglesIds\}`/u)
+  assert.match(profile, /emailQueuedAt: event\("queuedAt"\) \|\| row\.invitationQueuedAt/u)
+  assert.match(profile, /emailSent: event\("sentAt"\) \|\| row\.invitationSentAt/u)
+  assert.match(profile, /\[row\.parentsId, row\.familyId, row\.eaglesIds, row\.learners, row\.parentName, row\.parentEmail\]/u)
+  assert.match(read("server/student-admin-routes.mjs"), /invitationQueuedAt: row\.invitation\?\.queuedAt/u)
 })
 
 test("profile engagement stays under Students and exposes the matrix host", () => {

@@ -1,0 +1,13 @@
+{
+  "uid":"diagnostics-process-redis","title":"On-demand Diagnostics: Processes and Redis","tags":["diagnostics","process","redis"],"timezone":"browser","schemaVersion":39,"refresh":"5s","time":{"from":"now-1h","to":"now"},
+  "panels":[
+    {"id":1,"type":"text","title":"Enable when investigating","gridPos":{"h":4,"w":24,"x":0,"y":0},"options":{"mode":"markdown","content":"Run `tools/monitoring-diagnostics.sh process on` for named process CPU/RSS, `redis on` for Redis metrics, and `litespeed on` after the official LiteSpeed exporter is installed. Turn each off after diagnosis."}},
+    {"id":2,"type":"timeseries","title":"Named process CPU","gridPos":{"h":8,"w":12,"x":0,"y":4},"targets":[{"expr":"100 * rate(namedprocess_namegroup_cpu_seconds_total[1m])","legendFormat":"{{groupname}}","refId":"A"}],"fieldConfig":{"defaults":{"unit":"percent"},"overrides":[]}},
+    {"id":3,"type":"timeseries","title":"Named process RSS","gridPos":{"h":8,"w":12,"x":12,"y":4},"targets":[{"expr":"namedprocess_namegroup_memory_bytes","legendFormat":"{{groupname}}","refId":"A"}],"fieldConfig":{"defaults":{"unit":"bytes"},"overrides":[]}},
+    {"id":4,"type":"stat","title":"Redis memory","gridPos":{"h":5,"w":6,"x":0,"y":12},"targets":[{"expr":"redis_memory_used_bytes","refId":"A"}],"fieldConfig":{"defaults":{"unit":"bytes"},"overrides":[]}},
+    {"id":5,"type":"stat","title":"Redis connected clients","gridPos":{"h":5,"w":6,"x":6,"y":12},"targets":[{"expr":"redis_connected_clients","refId":"A"}],"fieldConfig":{"defaults":{"unit":"short"},"overrides":[]}},
+    {"id":6,"type":"stat","title":"Redis blocked clients","gridPos":{"h":5,"w":6,"x":12,"y":12},"targets":[{"expr":"redis_blocked_clients","refId":"A"}],"fieldConfig":{"defaults":{"unit":"short"},"overrides":[]}},
+    {"id":7,"type":"stat","title":"Redis evictions/s","gridPos":{"h":5,"w":6,"x":18,"y":12},"targets":[{"expr":"rate(redis_evicted_keys_total[5m])","refId":"A"}],"fieldConfig":{"defaults":{"unit":"ops"},"overrides":[]}},
+    {"id":8,"type":"timeseries","title":"Redis commands and ops","gridPos":{"h":8,"w":24,"x":0,"y":17},"targets":[{"expr":"rate(redis_commands_processed_total[1m])","legendFormat":"commands/s","refId":"A"},{"expr":"rate(redis_keyspace_hits_total[1m])","legendFormat":"hits/s","refId":"B"},{"expr":"rate(redis_keyspace_misses_total[1m])","legendFormat":"misses/s","refId":"C"}],"fieldConfig":{"defaults":{"unit":"ops"},"overrides":[]}}
+  ]
+}

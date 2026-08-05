@@ -41,8 +41,11 @@ test("admin deletion exposes an explicit parent-account checkbox", () => {
 test("parent email reuse preserves the explicit parent ID and reports conflicts", () => {
   assert.match(invitations, /const accountByEmail = email\s*\? await prisma\.parentPortalAccount\.findUnique\(\{ where: \{ email \} \}\)/)
   assert.match(invitations, /Parent identity conflict: parentsId/)
+  assert.match(invitations, /if \(accountByParentsId\?\.email && accountByEmail && accountByParentsId\.id !== accountByEmail\.id\)/)
   assert.match(invitations, /error\.statusCode = 409/)
-  assert.match(invitations, /let account = accountByParentsId \|\| accountByEmail/)
+  assert.match(invitations, /let account = accountByParentsId/)
+  assert.match(invitations, /email: accountByEmail \? null : \(email \|\| null\)/)
+  assert.doesNotMatch(invitations, /account = \(email && await prisma\.parentPortalAccount\.findUnique/)
   assert.doesNotMatch(invitations, /parentPortalAccount\.update\(\{ where: \{ id: account\.id \}, data: \{ parentsId \}/)
   assert.match(routes, /resolveParentPortalAccountIdentity\(prisma, \{[\s\S]*?profile: payload\?\.profile,[\s\S]*?\}\)/)
 })

@@ -27,6 +27,7 @@ import { timeStudentWritePhase } from "../../infra/observability/student-write-m
  *   skipFilterCacheInvalidation?: boolean,
  *   updatedByUsername?: unknown,
  *   updatedByRole?: unknown,
+ *   requireStudentPassword?: boolean,
  * }} SaveStudentOptions
  */
 
@@ -319,7 +320,7 @@ function normalizeProfilePayload(payload = {}) {
     memberSince: normalizeNullableText(payload.memberSince),
     exercisePoints: normalizeInteger(payload.exercisePoints),
     parentsId: normalizeNullableText(payload.parentsId),
-    familyId: normalizeNullableText(payload.familyId || payload.parentsId),
+    familyId: normalizeNullableText(payload.familyId),
     photoUrl: normalizeNullableText(payload.photoUrl),
     genderSelections: normalizeTextArray(payload.genderSelections),
     studentPhone: normalizeNullableText(payload.studentPhone),
@@ -401,6 +402,54 @@ async function resolveNewStudentFamilyId(client, requestedFamilyId = "") {
     },
   })
   return family.familyId
+}
+
+async function assertParentEmailFamilyBoundary(client, {
+  email = "",
+  familyId = "",
+  parentsId = "",
+  excludedStudentId = "",
+} = {}) {
+  const normalizedEmail = normalizeLower(email)
+  if (!normalizedEmail) return
+  const account = await client.parentPortalAccount.findUnique({
+    where: { email: normalizedEmail },
+    select: {
+      parentsId: true,
+      links: {
+        where: excludedStudentId ? { studentRefId: { not: excludedStudentId } } : undefined,
+        select: { student: { select: { profile: { select: { familyId: true } } } } },
+      },
+    },
+  })
+  let ownerParentsIds = []
+  let ownerFamilyIds = []
+  if (account) {
+    ownerParentsIds = [normalizeText(account.parentsId)].filter(Boolean)
+    ownerFamilyIds = account.links.map((link) => normalizeText(link?.student?.profile?.familyId)).filter(Boolean)
+  } else {
+    const profiles = await client.studentProfile.findMany({
+      where: {
+        motherEmail: normalizedEmail,
+        ...(excludedStudentId ? { studentRefId: { not: excludedStudentId } } : {}),
+      },
+      select: { familyId: true, parentsId: true },
+    })
+    ownerParentsIds = profiles.map((profile) => normalizeText(profile.parentsId)).filter(Boolean)
+    ownerFamilyIds = profiles.map((profile) => normalizeText(profile.familyId)).filter(Boolean)
+  }
+  ownerParentsIds = [...new Set(ownerParentsIds)]
+  ownerFamilyIds = [...new Set(ownerFamilyIds)]
+  if (!ownerParentsIds.length && !ownerFamilyIds.length) return
+  const requestedFamilyId = normalizeText(familyId)
+  const requestedParentsId = normalizeText(parentsId)
+  const familyMatches = ownerFamilyIds.length > 0 && ownerFamilyIds.includes(requestedFamilyId)
+  const parentMatches = ownerParentsIds.length === 0 || ownerParentsIds.includes(requestedParentsId)
+  assertWithStatus(
+    familyMatches && parentMatches,
+    409,
+    `Flagged parent email ${normalizedEmail} belongs to ${ownerFamilyIds.join(", ") || "an existing family"} (${ownerParentsIds.join(", ") || "existing Parents ID"}). Verbally verify the familial relationship and select that exact existing family before saving.`,
+  )
 }
 
 /**
@@ -934,6 +983,10 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
   const persistedEmail = profileEmail || studentEmail
   const requestedStudentNumber = requestedStudentNumberFromPayload(payload)
   const requestedId = normalizeText(studentRefId)
+  const requestedFamilyId = normalizeText(payload?.profile?.familyId)
+  if (!requestedId && !requestedFamilyId && !normalizeText(profilePayload.parentsId)) {
+    profilePayload.parentsId = `cm${eaglesId}`
+  }
 
   if (!requestedId) {
     const fullName = normalizeText(profilePayload.fullName)
@@ -948,9 +1001,15 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
       !motherName && "mother/adult student name",
       !motherEmail && "mother/adult student email",
       !motherPhone && "mother/adult student phone",
+      options.requireStudentPassword === true && !portalPassword && "student password",
     ].filter(Boolean)
     assertWithStatus(!missing.length, 400, `Required new-student fields missing: ${missing.join(", ")}`)
     assertWithStatus(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(motherEmail), 400, "mother/adult student email is invalid")
+    await assertParentEmailFamilyBoundary(client, {
+      email: motherEmail,
+      familyId: requestedFamilyId,
+      parentsId: profilePayload.parentsId,
+    })
     profilePayload.currentGrade = level
     profilePayload.familyId = await resolveNewStudentFamilyId(client, payload?.profile?.familyId)
   }
@@ -961,6 +1020,12 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
     const existingProfile = await client.studentProfile.findUnique({
       where: { studentRefId: requestedId },
       select: { parentsId: true },
+    })
+    await assertParentEmailFamilyBoundary(client, {
+      email: profilePayload.motherEmail,
+      familyId: profilePayload.familyId,
+      parentsId: profilePayload.parentsId,
+      excludedStudentId: requestedId,
     })
     assertWithStatus(
       normalizeLower(eaglesId) === normalizeLower(existing.eaglesId),

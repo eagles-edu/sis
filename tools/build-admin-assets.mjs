@@ -1,6 +1,7 @@
 // @ts-check
 
 import fs from "node:fs/promises"
+import crypto from "node:crypto"
 import path from "node:path"
 import process from "node:process"
 import { createRequire } from "node:module"
@@ -62,6 +63,8 @@ const ADMIN_ASSET_TASKS = [
 
 const ADMIN_THEME_OUTPUT = path.join(REPO_ROOT, "web-asset/admin/admin-portal-theme.css")
 const ADMIN_THEME_MIN_OUTPUT = path.join(REPO_ROOT, "web-asset/admin/admin-portal-theme.min.css")
+const ADMIN_APP_CSS_OUTPUT = path.join(REPO_ROOT, "web-asset/admin/student-admin.min.css")
+const ADMIN_APP_JS_OUTPUT = path.join(REPO_ROOT, "web-asset/admin/student-admin.min.js")
 
 // PERF-CONTRACT: ADMIN-THEME-SPLIT
 // Keep the shared source authoritative. The admin theme retains global rules,
@@ -179,6 +182,26 @@ function renderCriticalCssHtml(html, criticalCss) {
     throw new Error("admin HTML is missing the critical CSS marker")
   }
   return html.replace(CRITICAL_CSS_MARKER_RE, block)
+}
+
+/** @param {string} content */
+function assetVersion(content) {
+  return `sha256-${crypto.createHash("sha256").update(content).digest("hex").slice(0, 16)}`
+}
+
+/**
+ * Keep cache-busting tokens coupled to generated content. A fixed token lets
+ * an already-open admin session run an obsolete application bundle after a
+ * sync, even though source/runtime hashes are otherwise in parity.
+ * @param {string} html
+ * @param {{css: string, js: string}} assets
+ */
+function renderAdminAssetVersions(html, assets) {
+  const replacements = [
+    [/(\/web-asset\/admin\/student-admin\.min\.css)\?v=[^"']+/gu, `$1?v=${assetVersion(assets.css)}`],
+    [/(\/web-asset\/admin\/student-admin\.min\.js)\?v=[^"']+/gu, `$1?v=${assetVersion(assets.js)}`],
+  ]
+  return replacements.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), html)
 }
 
 /**
@@ -310,13 +333,8 @@ async function main() {
   if (checkOnly) {
     const currentCriticalCss = await readFileIfExists(CRITICAL_CSS_TASK.output)
     if (currentCriticalCss !== criticalCss) staleFiles.push(path.relative(REPO_ROOT, CRITICAL_CSS_TASK.output))
-    const currentHtml = await readFileIfExists(CRITICAL_CSS_TASK.html)
-    if (currentHtml !== criticalHtml) staleFiles.push(path.relative(REPO_ROOT, CRITICAL_CSS_TASK.html))
   } else if (await writeFileIfChanged(CRITICAL_CSS_TASK.output, criticalCss)) {
     changedFiles.push(path.relative(REPO_ROOT, CRITICAL_CSS_TASK.output))
-  }
-  if (!checkOnly && await writeFileIfChanged(CRITICAL_CSS_TASK.html, criticalHtml)) {
-    changedFiles.push(path.relative(REPO_ROOT, CRITICAL_CSS_TASK.html))
   }
 
   for (const task of ADMIN_ASSET_TASKS) {
@@ -348,6 +366,17 @@ async function main() {
     if (task.mapOutput && await writeFileIfChanged(task.mapOutput, next.map)) {
       changedFiles.push(path.relative(REPO_ROOT, task.mapOutput))
     }
+  }
+
+  const versionedHtml = renderAdminAssetVersions(criticalHtml, {
+    css: await fs.readFile(ADMIN_APP_CSS_OUTPUT, "utf8"),
+    js: await fs.readFile(ADMIN_APP_JS_OUTPUT, "utf8"),
+  })
+  if (checkOnly) {
+    const currentHtml = await readFileIfExists(CRITICAL_CSS_TASK.html)
+    if (currentHtml !== versionedHtml) staleFiles.push(path.relative(REPO_ROOT, CRITICAL_CSS_TASK.html))
+  } else if (await writeFileIfChanged(CRITICAL_CSS_TASK.html, versionedHtml)) {
+    changedFiles.push(path.relative(REPO_ROOT, CRITICAL_CSS_TASK.html))
   }
 
   if (checkOnly) {

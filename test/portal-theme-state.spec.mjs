@@ -8,7 +8,7 @@ const rootDir = process.cwd()
 const scriptPath = path.resolve(rootDir, "web-asset/shared/portal-theme-state.js")
 const scriptSource = fs.readFileSync(scriptPath, "utf8")
 
-function createSandbox(initialStorage = {}) {
+function createSandbox(initialStorage = {}, portalPreferences = null) {
   const store = new Map(Object.entries(initialStorage))
   const document = {
     documentElement: {
@@ -30,6 +30,7 @@ function createSandbox(initialStorage = {}) {
   const sandbox = {
     document,
     localStorage,
+    SIS_PORTAL_PREFERENCES: portalPreferences,
     globalThis: null,
   }
   sandbox.globalThis = sandbox
@@ -74,6 +75,21 @@ test("portal theme state applies the cached theme before async preferences load"
   assert.equal(theme.initTheme("light"), "dark")
   assert.equal(document.documentElement.dataset.theme, "dark")
   assert.equal(document.documentElement.style.colorScheme, "dark")
+})
+
+test("portal theme state never reads or writes deferred server preferences", () => {
+  const calls = []
+  const preferences = {
+    get() { calls.push("get"); return "dark" },
+    save() { calls.push("save"); return Promise.resolve(true) },
+  }
+  const { document, store, theme } = createSandbox({}, preferences)
+
+  assert.equal(theme.initTheme("light"), "light")
+  assert.equal(theme.toggleTheme("light"), "dark")
+  assert.deepEqual(calls, [])
+  assert.equal(document.documentElement.dataset.theme, "dark")
+  assert.equal(store.get("sis-theme"), "dark")
 })
 
 test("portal consent preferences persist explicit choices across reads", () => {

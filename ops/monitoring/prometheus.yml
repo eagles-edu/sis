@@ -30,3 +30,17 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox-exporter:9115
+
+  # These jobs intentionally have no targets until tools/monitoring-diagnostics.sh
+  # enables the corresponding low-overhead diagnostic exporter.
+  - job_name: process-diagnostics
+    file_sd_configs:
+      - files: [/etc/prometheus/diagnostic-targets/process.json]
+
+  - job_name: redis-diagnostics
+    file_sd_configs:
+      - files: [/etc/prometheus/diagnostic-targets/redis.json]
+
+  - job_name: litespeed-diagnostics
+    file_sd_configs:
+      - files: [/etc/prometheus/diagnostic-targets/litespeed.json]

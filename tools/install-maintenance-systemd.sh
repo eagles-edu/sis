@@ -9,7 +9,9 @@ RUNTIME_ROOT="${SIS_RUNTIME_ROOT:-/home/admin.eagles.edu.vn/sis}"
 ENV_FILE="${SIS_ENV_FILE:-${RUNTIME_ROOT}/.env}"
 USER_NAME="${SIS_SERVICE_USER:-eagles}"
 GROUP_NAME="${SIS_SERVICE_GROUP:-eagles}"
-NODE_BIN="${SIS_NODE_BIN:-$(command -v node)}"
+PROJECT_NODE_VERSION="$(tr -d '[:space:]' < "${SOURCE_ROOT}/.nvmrc")"
+PROJECT_NODE_BIN="/home/${USER_NAME}/.nvm/versions/node/v${PROJECT_NODE_VERSION}/bin/node"
+NODE_BIN="${SIS_NODE_BIN:-${PROJECT_NODE_BIN}}"
 INSTALL_DIR="${SIS_SYSTEMD_INSTALL_DIR:-/etc/systemd/system}"
 REPORT_DIR="${SIS_MAINTENANCE_REPORT_DIR:-${RUNTIME_ROOT}/runtime-data/maintenance-reports}"
 DB_HEALTH_OUTPUT="${SIS_DB_HEALTH_STATUS_FILE:-${RUNTIME_ROOT}/runtime-data/maintenance/db-health-status.json}"
@@ -65,6 +67,10 @@ done
 
 if [[ -z "${NODE_BIN}" ]]; then
   echo "[install-maintenance-systemd] unable to resolve node binary" >&2
+  exit 1
+fi
+if [[ ! -x "${NODE_BIN}" ]]; then
+  echo "[install-maintenance-systemd] configured Node binary is not executable: ${NODE_BIN}" >&2
   exit 1
 fi
 if [[ ! -d "${TEMPLATE_DIR}" ]]; then

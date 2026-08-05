@@ -131,9 +131,10 @@ export async function getBrevoStatistics({ days = 30 } = {}) {
  *   subject: string,
  *   text?: string,
  *   html?: string,
+ *   idempotencyKey?: unknown,
  *   attachments?: Array<{ filename?: unknown, content?: unknown, contentType?: unknown }>,
  * }} message
- * @returns {Promise<{ messageId: string, provider: "brevo" }>}
+ * @returns {Promise<{ messageId: string, provider: "brevo", duplicate?: boolean }>}
  */
 export async function sendBrevoEmail(message) {
   const config = brevoConfig()
@@ -150,6 +151,7 @@ export async function sendBrevoEmail(message) {
           : {}),
       }))
     : []
+  const idempotencyKey = normalizeText(message.idempotencyKey)
   const payload = {
     sender: {
       email: normalizeText(message.from?.email) || config.fromEmail,
@@ -162,6 +164,7 @@ export async function sendBrevoEmail(message) {
     subject: normalizeText(message.subject),
     textContent: normalizeText(message.text),
     htmlContent: normalizeText(message.html),
+    ...(idempotencyKey ? { headers: { "Idempotency-Key": idempotencyKey } } : {}),
     ...(attachments.length ? { attachment: attachments } : {}),
   }
 
@@ -185,6 +188,9 @@ export async function sendBrevoEmail(message) {
   }
   const responseBody = await response.json().catch(() => ({}))
   if (!response.ok) {
+    if (idempotencyKey && normalizeLower(responseBody?.code) === "duplicate_parameter") {
+      return { messageId: "", provider: "brevo", duplicate: true }
+    }
     const detail = normalizeText(responseBody?.message || responseBody?.code || response.statusText)
     const error = new Error(`Brevo email request failed (${response.status})${detail ? `: ${detail}` : ""}`)
     error.statusCode = response.status >= 500 ? 503 : 502

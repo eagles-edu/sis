@@ -54,12 +54,12 @@ Persistent Docker volumes:
 
 | Service | Local endpoint | Purpose |
 | --- | ---: | --- |
-| Grafana | `127.0.0.1:3030` | Dashboard UI |
-| Prometheus | `127.0.0.1:9090` | Query and metric storage |
-| cAdvisor | `127.0.0.1:8089` | Docker metrics |
-| node-exporter | `127.0.0.1:9100` | Host metrics |
-| process-exporter | `127.0.0.1:9256` | Test-mirror process metrics |
-| blackbox-exporter | `127.0.0.1:9115` | Public HTTP(S) probe metrics |
+| Grafana | `http://127.0.0.1:3030` | Dashboard UI |
+| Prometheus | `http://127.0.0.1:9090` | Query and metric storage |
+| cAdvisor | `http://127.0.0.1:8089` | Docker metrics |
+| node-exporter | `http://127.0.0.1:9100` | Host metrics |
+| process-exporter | `http://127.0.0.1:9256` | Test-mirror process metrics |
+| blackbox-exporter | `http://127.0.0.1:9115` | Public HTTP(S) probe metrics |
 
 All endpoints are bound to loopback. They are not public web services and should remain behind SSH access or an authenticated internal reverse proxy.
 
@@ -494,6 +494,31 @@ Recommended safeguards:
 - back up Grafana dashboards and provisioning files, not secret environment files.
 
 ## Operational commands
+
+### Dashboard map
+
+- **SIS Operations**: student-save throughput, p95 latency by stage, RSS, and the test-mirror synthetic probe.
+- **Ubuntu Host Overview**: CPU, memory, swap, root filesystem, disk/network pressure, and required systemd services.
+- **Availability and Edge**: blackbox availability and HTTP phases; OpenLiteSpeed/CyberPanel state and LiteSpeed traffic when its exporter is enabled.
+- **On-demand Diagnostics: Processes and Redis**: use for a short investigation window, especially browser, VS Code, Redis, or Node CPU/RSS contention.
+
+The on-demand exporters have no Prometheus target while disabled, so they do not create a misleading down target or continuous collection overhead. Enable one only for an investigation:
+
+```bash
+tools/monitoring-diagnostics.sh process on
+tools/monitoring-diagnostics.sh redis on
+tools/monitoring-diagnostics.sh litespeed on
+```
+
+Disable it when finished:
+
+```bash
+tools/monitoring-diagnostics.sh process off
+tools/monitoring-diagnostics.sh redis off
+tools/monitoring-diagnostics.sh litespeed off
+```
+
+`litespeed on` requires the official LiteSpeed Prometheus Exporter already listening privately on `127.0.0.1:9936`; the helper fails closed when it is absent. The Redis exporter is also loopback-only and takes its address from `SIS_REDIS_EXPORTER_ADDR` if Redis is not on the default local address.
 
 Restart only the monitoring stack:
 

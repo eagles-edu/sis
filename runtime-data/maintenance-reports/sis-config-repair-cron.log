@@ -16306,3 +16306,130 @@ file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:482
 
 SyntaxError: Unexpected token '?'
     at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:482
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:482
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:482
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:482
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:482
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:482
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:482
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:482
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:482
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+[2026-08-05T01:26:23+07:00] [2026-08-04T18:26:22.984Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from database at 2026-07-25T05:06:28.917Z
+[2026-08-05T01:28:50+07:00] [2026-08-04T18:28:50.247Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T01:30:04+07:00] [2026-08-04T18:30:04.970Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T01:45:04+07:00] [2026-08-04T18:45:04.894Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T02:00:07+07:00] [2026-08-04T19:00:07.738Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T02:15:05+07:00] [2026-08-04T19:15:05.108Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T02:30:06+07:00] [2026-08-04T19:30:06.705Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T02:45:05+07:00] [2026-08-04T19:45:05.098Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T03:00:06+07:00] [2026-08-04T20:00:06.786Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T03:15:04+07:00] [2026-08-04T20:15:04.389Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T03:30:04+07:00] [2026-08-04T20:30:04.941Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T03:45:04+07:00] [2026-08-04T20:45:04.369Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T04:00:06+07:00] [2026-08-04T21:00:06.643Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T04:15:04+07:00] [2026-08-04T21:15:04.973Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T04:30:05+07:00] [2026-08-04T21:30:05.957Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T04:45:04+07:00] [2026-08-04T21:45:04.198Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T05:00:07+07:00] [2026-08-04T22:00:07.433Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T05:15:06+07:00] [2026-08-04T22:15:06.838Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T05:30:05+07:00] [2026-08-04T22:30:05.780Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T05:45:04+07:00] [2026-08-04T22:45:04.121Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T06:00:05+07:00] [2026-08-04T23:00:05.248Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T06:15:03+07:00] [2026-08-04T23:15:03.830Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T06:30:03+07:00] [2026-08-04T23:30:03.833Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T06:45:03+07:00] [2026-08-04T23:45:03.692Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T07:00:04+07:00] [2026-08-05T00:00:04.887Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T07:15:03+07:00] [2026-08-05T00:15:03.772Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T07:30:04+07:00] [2026-08-05T00:30:04.037Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T07:45:03+07:00] [2026-08-05T00:45:03.491Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T08:00:05+07:00] [2026-08-05T01:00:05.203Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T08:15:03+07:00] [2026-08-05T01:15:03.773Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T08:30:04+07:00] [2026-08-05T01:30:04.989Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T08:45:03+07:00] [2026-08-05T01:45:03.838Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T09:00:06+07:00] [2026-08-05T02:00:06.111Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T09:15:04+07:00] [2026-08-05T02:15:03.994Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T09:30:04+07:00] [2026-08-05T02:30:04.013Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T09:45:03+07:00] [2026-08-05T02:45:03.718Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T10:00:05+07:00] [2026-08-05T03:00:05.394Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T10:15:03+07:00] [2026-08-05T03:15:03.863Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T10:30:03+07:00] [2026-08-05T03:30:03.877Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T10:45:03+07:00] [2026-08-05T03:45:03.833Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T11:00:02+07:00] [2026-08-05T04:00:02.630Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T11:15:02+07:00] [2026-08-05T04:15:02.478Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T11:30:02+07:00] [2026-08-05T04:30:02.128Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T11:45:02+07:00] [2026-08-05T04:45:02.495Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T12:00:03+07:00] [2026-08-05T05:00:03.240Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T12:15:01+07:00] [2026-08-05T05:15:01.902Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T12:30:02+07:00] [2026-08-05T05:30:02.149Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T12:45:01+07:00] [2026-08-05T05:45:01.961Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T13:00:02+07:00] [2026-08-05T06:00:02.321Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T13:15:01+07:00] [2026-08-05T06:15:01.896Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T13:30:02+07:00] [2026-08-05T06:30:02.001Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T13:45:02+07:00] [2026-08-05T06:45:02.443Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T14:00:02+07:00] [2026-08-05T07:00:02.831Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T14:15:02+07:00] [2026-08-05T07:15:02.471Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T14:30:02+07:00] [2026-08-05T07:30:02.181Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T14:45:02+07:00] [2026-08-05T07:45:02.575Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T15:00:02+07:00] [2026-08-05T08:00:02.149Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T15:15:02+07:00] [2026-08-05T08:15:02.386Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T15:30:02+07:00] [2026-08-05T08:30:02.604Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T15:45:02+07:00] [2026-08-05T08:45:02.472Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T16:00:02+07:00] [2026-08-05T09:00:02.538Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T16:15:01+07:00] [2026-08-05T09:15:01.849Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T16:30:01+07:00] [2026-08-05T09:30:01.928Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T16:45:01+07:00] [2026-08-05T09:45:01.798Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T17:00:03+07:00] [2026-08-05T10:00:03.430Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T17:15:02+07:00] [2026-08-05T10:15:02.324Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T17:30:02+07:00] [2026-08-05T10:30:02.623Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T17:45:01+07:00] [2026-08-05T10:45:01.702Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T18:00:02+07:00] [2026-08-05T11:00:02.977Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T18:15:02+07:00] [2026-08-05T11:15:02.522Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T18:30:02+07:00] [2026-08-05T11:30:02.280Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T18:45:01+07:00] [2026-08-05T11:45:01.943Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z
+[2026-08-05T19:00:02+07:00] [2026-08-05T12:00:02.674Z] [sis-config-repair] synced /home/eagles/dockerz/sis/SIS_CONFIG.json from file at 2026-07-25T05:06:28.917Z

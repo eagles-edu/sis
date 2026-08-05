@@ -184,6 +184,7 @@ sync_exact_file() {
   local owner
   local group
   local target_dir
+  local install_mode="0644"
 
   if [[ ! -f "$source_path" ]]; then
     echo "missing source file: $source_path" >&2
@@ -201,7 +202,10 @@ sync_exact_file() {
     return 1
   fi
 
-  install -D -m 0644 "$source_path" "$target_path"
+  if [[ -x "$source_path" ]]; then
+    install_mode="0755"
+  fi
+  install -D -m "$install_mode" "$source_path" "$target_path"
 }
 
 remove_managed_paths() {
@@ -371,6 +375,8 @@ TEST_RUNTIME_CODE_FILES=(
   ".nvmrc"
   "tools/async-side-effects-worker.mjs"
   "tools/run-assignment-reminder-dispatcher.mjs"
+  "tools/run-sis-config-repair-cron.sh"
+  "tools/sis-config-repair.mjs"
   "ops/systemd/sis-assignment-reminders.service"
   "ops/systemd/sis-assignment-reminders.timer"
 )
@@ -1289,7 +1295,11 @@ main() {
   backup_test_state
   wipe_test_target_contents
   verify_test_preserved_runtime_files
-  wipe_target_contents "$TEST_PUBLIC_ROOT"
+  if [[ "$MODE" != "boot-prep" ]]; then
+    wipe_target_contents "$TEST_PUBLIC_ROOT"
+  else
+    log "preserving public_html during mode=boot-prep"
+  fi
   run_sync
   log "syncing test runtime web assets into ${TEST_ROOT}"
   sync_test_runtime_assets

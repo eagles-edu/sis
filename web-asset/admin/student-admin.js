@@ -48,8 +48,11 @@
         hubPollTimer: null,
         globalTextZoomPercent: 100,
         currentStudent: null,
+        studentSaveBusy: false,
+        studentRosterRequestId: 0,
         familyIds: [],
         familyOptions: [],
+        familyOptionsLoaded: false,
         selectedEnrollmentPeriodId: "",
         uiSettingsMeta: null,
         profileFormConfig: null,
@@ -653,6 +656,7 @@
       const PROFILE_LOCKED_FIELD_KEYS = new Set(["eaglesId"]);
       const PROFILE_NEW_REQUIRED_KEYS = new Set([
         "eaglesId",
+        "password",
         "fullNameStudent",
         "classLevel",
         "fullNameMother",
@@ -783,7 +787,7 @@
           "Password",
           "profile",
           "Thông tin của người học",
-          "text",
+          "password",
           "",
           "",
           "",
@@ -19126,7 +19130,6 @@
         if (normalizedMode === "edit") {
           renderProfileFormLayout();
           loadFamilyIds().catch(handleError);
-          if (state.currentStudent?.id) fillStudentForm(state.currentStudent);
         }
 
         const editBtn = document.getElementById("profileEditInfoBtn");
@@ -19276,6 +19279,81 @@
         }
 
         return "value" in el ? normalizeText(el.value) : "";
+      }
+
+      function syncNewStudentParentsId({ force = false } = {}) {
+        if (state.currentStudent?.id) return;
+        const familySelect = document.getElementById("familyIdExisting");
+        const familyInput = document.getElementById("f_familyId");
+        if (normalizeText(familySelect?.value) || normalizeText(familyInput?.value)) return;
+        const eaglesId = normalizeText(document.getElementById("f_eaglesId")?.value);
+        const parentInput = document.getElementById("f_parentsId");
+        if (!parentInput) return;
+        const previousAutoValue = normalizeText(parentInput.dataset.autoParentsId);
+        if (!force && normalizeText(parentInput.value) && normalizeText(parentInput.value) !== previousAutoValue) return;
+        const nextValue = eaglesId ? `cm${eaglesId}` : "";
+        parentInput.value = nextValue;
+        parentInput.dataset.autoParentsId = nextValue;
+      }
+
+      function setParentEmailFamilyWarning(message = "") {
+        const input = document.getElementById("f_motherEmail");
+        const warning = document.getElementById("parentEmailFamilyWarning");
+        const text = normalizeText(message);
+        if (input) {
+          input.classList.toggle("profile-family-email-conflict", Boolean(text));
+          input.setAttribute("aria-invalid", text ? "true" : "false");
+          if (text) input.setAttribute("aria-describedby", "parentEmailFamilyWarning");
+          else input.removeAttribute("aria-describedby");
+        }
+        if (warning) {
+          warning.hidden = !text;
+          warning.textContent = text;
+        }
+      }
+
+      function validateParentEmailFamilySelection() {
+        const email = normalizeLower(document.getElementById("f_motherEmail")?.value);
+        if (!email) {
+          setParentEmailFamilyWarning("");
+          return true;
+        }
+        const owners = state.familyOptions.filter((entry) => entry.parentEmail === email);
+        if (!owners.length) {
+          setParentEmailFamilyWarning("");
+          return true;
+        }
+        const selected = document.getElementById("familyIdExisting")?.selectedOptions?.[0];
+        const selectedFamilyId = normalizeText(selected?.dataset.familyId);
+        const selectedParentId = normalizeText(selected?.dataset.parentId);
+        const validOwner = owners.some((owner) =>
+          owner.familyId === selectedFamilyId && owner.parentId === selectedParentId,
+        );
+        if (validOwner) {
+          setParentEmailFamilyWarning("");
+          return true;
+        }
+        const ownerLabels = owners.map((owner) => `${owner.familyId} - ${owner.parentId}`).join(", ");
+        setParentEmailFamilyWarning(
+          `Flagged email: ${email} belongs to ${ownerLabels}. Verbally verify the familial relationship, then choose that exact existing family before saving.`,
+        );
+        return false;
+      }
+
+      function wireProfileIdentityGuards() {
+        const eaglesIdInput = document.getElementById("f_eaglesId");
+        const parentsIdInput = document.getElementById("f_parentsId");
+        const parentEmailInput = document.getElementById("f_motherEmail");
+        eaglesIdInput?.addEventListener("input", () => syncNewStudentParentsId());
+        parentsIdInput?.addEventListener("input", () => {
+          delete parentsIdInput.dataset.autoParentsId;
+        });
+        parentEmailInput?.addEventListener("input", () => setParentEmailFamilyWarning(""));
+        parentEmailInput?.addEventListener("blur", () => {
+          if (state.familyOptionsLoaded) validateParentEmailFamilySelection();
+          else loadFamilyIds().then(validateParentEmailFamilySelection).catch(handleError);
+        });
+        syncNewStudentParentsId();
       }
 
       function profileFieldAutocompleteValue(field = {}, inputType = "text") {
@@ -19486,10 +19564,16 @@
             familyInput.value = normalizeText(selected?.dataset.familyId);
             const parentInput = document.getElementById("f_parentsId");
             const parentId = normalizeText(selected?.dataset.parentId);
-            if (parentInput && parentId && parentId !== "Unassigned") parentInput.value = parentId;
+            if (parentInput && parentId && parentId !== "Unassigned") {
+              parentInput.value = parentId;
+              delete parentInput.dataset.autoParentsId;
+            } else {
+              syncNewStudentParentsId({ force: true });
+            }
             const parentEmailInput = document.getElementById("f_motherEmail");
             const parentEmail = normalizeText(selected?.dataset.parentEmail);
             if (parentEmailInput && parentEmail) parentEmailInput.value = parentEmail;
+            validateParentEmailFamilySelection();
           });
           labelEl.htmlFor = controlId;
           wrapper.appendChild(labelEl);
@@ -19505,6 +19589,7 @@
         else if (["email", "number", "url"].includes(inputType)) input.type = inputType;
         else input.type = "text";
         input.autocomplete = autocompleteValue;
+        if (!state.currentStudent?.id && PROFILE_NEW_REQUIRED_KEYS.has(field.key)) input.required = true;
         if (field.placeholderVi) input.placeholder = field.placeholderVi;
         labelEl.htmlFor = controlId;
         wrapper.appendChild(labelEl);
@@ -19532,6 +19617,12 @@
         }
         wrapper.appendChild(input);
         if (field.key === "emailMa") {
+          const warning = document.createElement("p");
+          warning.id = "parentEmailFamilyWarning";
+          warning.className = "profile-family-email-warning";
+          warning.hidden = true;
+          warning.setAttribute("role", "alert");
+          wrapper.appendChild(warning);
           const previousInvitationCheckbox = document.getElementById("sendParentCompletionEmail");
           const inviteLabel = document.createElement("label");
           inviteLabel.className = "profile-invitation-option";
@@ -19554,6 +19645,16 @@
         if (!navEl || !formEl) return;
         const actionsEl = formEl.querySelector(".actions.actions-4");
         if (!actionsEl) return;
+
+        const preservedValues = new Map();
+        if (state.profileMode === "edit") {
+          formEl.querySelectorAll("input[id^=f_], select[id^=f_], textarea[id^=f_]").forEach((control) => {
+            preservedValues.set(control.id, {
+              checked: "checked" in control ? Boolean(control.checked) : null,
+              value: "value" in control ? control.value : "",
+            });
+          });
+        }
 
         const fields = sortedProfileFields(false);
         navEl.innerHTML = "";
@@ -19655,6 +19756,13 @@
         applyUiSettings();
         syncProfileContactTypeMarkers();
         syncProfileFieldLayoutEditorMode();
+        preservedValues.forEach((snapshot, id) => {
+          const control = document.getElementById(id);
+          if (!control) return;
+          if (snapshot.checked !== null) control.checked = snapshot.checked;
+          if ("value" in control) control.value = snapshot.value;
+        });
+        wireProfileIdentityGuards();
         if (state.profileMode === "edit") {
           setProfileTabStatus(
             `${fields.length} fields rendered across ${tabs.length} tabs.`,
@@ -20029,6 +20137,7 @@
 
       function clearStudentForm({ refreshStudentList = true, hydrateNextStudentNumber = true } = {}) {
         state.currentStudent = null;
+        state.familyOptionsLoaded = false;
         state.tableRows.attendance = [];
         state.tableRows.performance = [];
         state.tableRows.grades = [];
@@ -20094,6 +20203,10 @@
       }
 
       function collectStudentPayload() {
+        syncNewStudentParentsId();
+        if (!validateParentEmailFamilySelection()) {
+          throw new Error("Select the verified family that owns the flagged parent email before saving.");
+        }
         const baseProfile =
           (
             state.currentStudent?.profile &&
@@ -20159,6 +20272,7 @@
         if (!state.currentStudent?.id) {
           const required = [
             ["Eagles ID", eaglesId],
+            ["student password", scalarFromProfileFormFieldValue(normalizedFormPayload.password)],
             ["learner full name", profile.fullName],
             ["class level", profile.currentGrade],
             ["mother/adult student name", profile.motherName],
@@ -20193,9 +20307,15 @@
             }))
             .filter((entry) => entry.familyId)
           : [];
+        state.familyOptionsLoaded = true;
         if (state.profileMode === "edit") {
-          renderProfileFormLayout();
-          if (state.currentStudent?.id) fillStudentForm(state.currentStudent);
+          const profileInputHasValue = Array.from(
+            document.querySelectorAll("input[id^=f_], select[id^=f_], textarea[id^=f_]")
+          ).some((control) => {
+            if ("checked" in control && control.checked) return true;
+            return Boolean(normalizeText(control.value));
+          });
+          if (!profileInputHasValue) renderProfileFormLayout();
         }
       }
 
@@ -20271,7 +20391,10 @@
         await loadFamilyIds();
       }
 
-      async function loadStudents({ preserveStudentRefId = "" } = {}) {
+      async function loadStudents(
+        { preserveStudentRefId = "", refreshRelated = true } = {},
+      ) {
+        const requestId = ++state.studentRosterRequestId;
         const qInput = normalizeText(document.getElementById("searchQ")?.value || "");
         const qRaw = normalizeTopSearchQuery(qInput);
         const levelControlValue = normalizeText(
@@ -20303,6 +20426,7 @@
           );
           students = Array.isArray(fallback?.items) ? fallback.items : [];
         }
+        if (requestId !== state.studentRosterRequestId) return;
         let missingEaglesId = 0;
         let missingStudentNumber = 0;
         const studentsWithIdentity = students.filter((student) => {
@@ -20357,14 +20481,16 @@
           );
           if (!exists) clearStudentForm();
         }
-        await refreshAttendanceLanding({
-          reloadRows:
-            state.activePage === "attendance" ||
-            state.activePage === "attendance-admin",
-        });
-        const activeAdminDataTable = adminDataTableKeyForPage(state.activePage);
-        if (activeAdminDataTable) await loadAdminDataRowsForTable(activeAdminDataTable);
-        await refreshParentTracking({ preserveStudentSelection: true });
+        if (refreshRelated) {
+          await refreshAttendanceLanding({
+            reloadRows:
+              state.activePage === "attendance" ||
+              state.activePage === "attendance-admin",
+          });
+          const activeAdminDataTable = adminDataTableKeyForPage(state.activePage);
+          if (activeAdminDataTable) await loadAdminDataRowsForTable(activeAdminDataTable);
+          await refreshParentTracking({ preserveStudentSelection: true });
+        }
         if (state.dashboardSummary) renderDashboardSummary(state.dashboardSummary);
       }
 
@@ -20429,43 +20555,59 @@
       }
 
       async function saveStudent() {
-        const payload = collectStudentPayload();
-        if (!payload.eaglesId) throw new Error("eaglesId is required");
+        if (state.studentSaveBusy) return;
+        state.studentSaveBusy = true;
+        const saveBtn = document.getElementById("saveBtn");
+        if (saveBtn instanceof HTMLButtonElement) saveBtn.disabled = true;
+        try {
+          if (!state.familyOptionsLoaded) await loadFamilyIds();
+          const payload = collectStudentPayload();
+          if (!payload.eaglesId) throw new Error("eaglesId is required");
 
-        if (state.currentStudent && state.currentStudent.id) {
-          const result = await api(
-            `/api/admin/students/${encodeURIComponent(state.currentStudent.id)}`,
-            {
-              method: "PUT",
+          let invitation = null;
+          if (state.currentStudent && state.currentStudent.id) {
+            const result = await api(
+              `/api/admin/students/${encodeURIComponent(state.currentStudent.id)}`,
+              {
+                method: "PUT",
+                body: payload,
+              },
+            );
+            state.currentStudent = result.student;
+          } else {
+            const result = await api("/api/admin/students", {
+              method: "POST",
               body: payload,
-            },
-          );
-          state.currentStudent = result.student;
-        } else {
-          const result = await api("/api/admin/students", {
-            method: "POST",
-            body: payload,
-          });
-          state.currentStudent = result.student;
-          if (result.invitation) {
-            setStatus(`Student saved. Profile-completion email queued for ${result.invitation.recipientEmail}.`);
+            });
+            state.currentStudent = result.student;
+            invitation = result.invitation || null;
           }
-        }
 
-        await loadFilters();
-        // A newly created student can be absent from a scoped roster response
-        // (for example while enrollment is still being assigned). Keep the
-        // saved record selected until its detail has been reloaded; otherwise
-        // loadStudents() clears the form even though the save succeeded.
-        await loadStudents({ preserveStudentRefId: state.currentStudent?.id || "" });
-        if (state.currentStudent?.id) await loadStudentDetail(state.currentStudent.id);
-        setProfileMode("info");
-        renderProfileInfoLayout(state.currentStudent);
-        setStatus(
-          studentNeedsEnrollment(state.currentStudent) ?
-            "Student saved. Warning: no enrollment or class assigned; use Include unenrolled to find this student."
-          : "Student saved.",
-        );
+          // The write response already contains the complete roster record,
+          // including its enrollment period. Exit edit mode immediately and
+          // never reload the same detail through fillStudentForm after save.
+          setProfileMode("info");
+          renderProfileInfoLayout(state.currentStudent);
+          setStatus(
+            invitation ?
+              `Student saved. Profile-completion email queued for ${invitation.recipientEmail}.`
+            : studentNeedsEnrollment(state.currentStudent) ?
+              "Student saved. Warning: no enrollment or class assigned; use Include unenrolled to find this student."
+            : "Student saved.",
+          );
+
+          // Refresh only the roster in the background. Saving and leaving the
+          // editor must not wait for unrelated admin surfaces or another detail
+          // hydration pass.
+          void loadStudents({
+            preserveStudentRefId: state.currentStudent?.id || "",
+            refreshRelated: false,
+          }).catch(handleError);
+        } finally {
+          state.studentSaveBusy = false;
+          if (saveBtn instanceof HTMLButtonElement)
+            saveBtn.disabled = !canWriteData();
+        }
       }
 
       let pendingDeleteStudentConfirmation = null;
@@ -22575,6 +22717,7 @@
             timer = null;
             if (!hasLiveDom()) return;
             renderStudents();
+            void loadStudents({ refreshRelated: false }).catch(handleError);
           }, SEARCH_INPUT_DEBOUNCE_MS);
         };
       })();

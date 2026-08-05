@@ -712,6 +712,7 @@ const PARENT_PROFILE_ARRAY_FIELDS = new Set([
   "learningDisorders",
   "covidShotHistory",
   "feverMedicineAllowed",
+  "signatureAgreed",
 ])
 const PARENT_PROFILE_INTEGER_FIELDS = new Set([
   "exercisePoints",
@@ -783,6 +784,7 @@ const PARENT_PROFILE_EDITABLE_FIELDS = new Set([
   "whiteOilAllowed",
   "signatureFullName",
   "signatureEmail",
+  "signatureAgreed",
   "extraComments",
   "requiredValidationOk",
   "rawFormPayload",
@@ -3178,6 +3180,18 @@ export function buildFamilyOptionPayload({
     ...profileRows.map((row) => normalizeText(row?.familyId)),
   ].filter(Boolean))
   const familyParentPairs = new Map()
+  const accountEmailOwners = new Map()
+  activeParentAccounts.forEach((account) => {
+    const parentEmail = normalizeLower(account?.email)
+    const parentId = normalizeText(account?.parentsId)
+    if (!parentEmail || !parentId) return
+    const ownerKeys = accountEmailOwners.get(parentEmail) || new Set()
+    ;(account?.links || []).forEach((link) => {
+      const familyId = normalizeText(link?.student?.profile?.familyId)
+      if (familyId) ownerKeys.add(`${familyId}\u0000${parentId}`)
+    })
+    accountEmailOwners.set(parentEmail, ownerKeys)
+  })
   const addFamilyParentPair = (familyId, parentId, parentEmail) => {
     const normalizedFamilyId = normalizeText(familyId)
     const normalizedParentId = normalizeText(parentId)
@@ -3194,7 +3208,18 @@ export function buildFamilyOptionPayload({
     })
   }
 
-  profileRows.forEach((row) => addFamilyParentPair(row?.familyId, row?.parentsId, row?.motherEmail))
+  profileRows.forEach((row) => {
+    const familyId = normalizeText(row?.familyId)
+    const parentId = normalizeText(row?.parentsId)
+    const parentEmail = normalizeLower(row?.motherEmail)
+    const accountOwners = accountEmailOwners.get(parentEmail)
+    const pairKey = `${familyId}\u0000${parentId}`
+    addFamilyParentPair(
+      familyId,
+      parentId,
+      accountOwners && !accountOwners.has(pairKey) ? "" : parentEmail,
+    )
+  })
   activeParentAccounts.forEach((account) => {
     ;(account?.links || []).forEach((link) => {
       addFamilyParentPair(link?.student?.profile?.familyId, account?.parentsId, account?.email)
@@ -4484,6 +4509,19 @@ async function setParentProfileSubmissionSubmitted({ parentAccountId = "", stude
         orderBy: { updatedAt: "desc" },
       })
       if (!latestDraft) return null
+      const draft = latestDraft.draftPayloadJson && typeof latestDraft.draftPayloadJson === "object"
+        ? latestDraft.draftPayloadJson
+        : {}
+      const signatureFullName = normalizeText(draft.signatureFullName)
+      const signatureEmail = normalizeLower(draft.signatureEmail)
+      const signatureAgreed = Array.isArray(draft.signatureAgreed)
+        ? draft.signatureAgreed.some((value) => normalizeLower(value) === "yes")
+        : resolveBoolean(draft.signatureAgreed, false)
+      if (!signatureFullName || !signatureEmail || !signatureAgreed) {
+        const error = new Error("The form must be signed, explicitly agreed to, and saved before it can be completed")
+        error.statusCode = 400
+        throw error
+      }
       const submittedAt = new Date()
       const updated = await prisma.parentProfileSubmissionQueue.update({
         where: { id: latestDraft.id },
@@ -4511,6 +4549,20 @@ async function setParentProfileSubmissionSubmitted({ parentAccountId = "", stude
           && normalizeText(row.status) === PARENT_PROFILE_QUEUE_STATUS_DRAFT
       )
       if (index < 0) return null
+      const draft = PARENT_PORTAL_MEMORY.submissions[index]?.draftPayloadJson
+        && typeof PARENT_PORTAL_MEMORY.submissions[index].draftPayloadJson === "object"
+        ? PARENT_PORTAL_MEMORY.submissions[index].draftPayloadJson
+        : {}
+      const signatureFullName = normalizeText(draft.signatureFullName)
+      const signatureEmail = normalizeLower(draft.signatureEmail)
+      const signatureAgreed = Array.isArray(draft.signatureAgreed)
+        ? draft.signatureAgreed.some((value) => normalizeLower(value) === "yes")
+        : resolveBoolean(draft.signatureAgreed, false)
+      if (!signatureFullName || !signatureEmail || !signatureAgreed) {
+        const error = new Error("The form must be signed, explicitly agreed to, and saved before it can be completed")
+        error.statusCode = 400
+        throw error
+      }
       const nowIsoText = nowIso()
       const updated = {
         ...PARENT_PORTAL_MEMORY.submissions[index],
@@ -7547,6 +7599,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const result = await saveStudent(payload, "", {
       updatedByUsername: session?.username,
       updatedByRole: session?.role,
+      requireStudentPassword: true,
     })
     let invitation = null
     if (payload?.sendParentCompletionEmail === true) {
@@ -7683,7 +7736,9 @@ async function handleApiRequest(request, response, pathname, url) {
       learnerCount: row.learnerCount,
       profileComplete: row.completeCount === row.learnerCount ? "yes" : "no",
       invitationStatus: normalizeText(row.invitation?.status),
+      invitationQueuedAt: row.invitation?.queuedAt || null,
       invitationSentAt: row.invitation?.sentAt || null,
+      invitationLastError: normalizeText(row.invitation?.lastError),
       invitationCompletedAt: row.invitation?.completedAt || null,
       brevoDelivery: (() => {
         const invitation = row.invitation
@@ -8147,10 +8202,6 @@ async function handleParentApiRequest(request, response, pathname, url) {
     await prisma.parentPortalAccount.update({
       where: { id: session.accountId },
       data: { passwordHash: hashScryptPassword(validatedPassword), mustChangePassword: false },
-    })
-    await prisma.parentProfileInvitation?.updateMany?.({
-      where: { parentAccountId: session.accountId, status: "activated" },
-      data: { status: "completed", completedAt: new Date() },
     })
     const replacement = await PARENT_SESSION_STORE.createSession({
       username: session.username,

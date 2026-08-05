@@ -11,7 +11,10 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ../../runtime-data/prometheus/diagnostic-targets:/etc/prometheus/diagnostic-targets:ro
       - prometheus-data:/prometheus
+    extra_hosts:
+      - host.docker.internal:host-gateway
     ports:
       - 127.0.0.1:9090:9090
   grafana:
@@ -38,12 +41,17 @@ services:
     image: prom/node-exporter:v1.9.1
     container_name: sis-node-exporter
     restart: unless-stopped
+    user: "0:0"
     command:
       - --path.rootfs=/host
       - --collector.textfile.directory=/host/home/eagles/dockerz/sis/runtime-data/prometheus
+      - --collector.systemd
+      - --collector.processes
     pid: host
     volumes:
       - /:/host:ro,rslave
+      - /run/udev/data:/run/udev/data:ro
+      - /run/systemd/private:/run/systemd/private
     ports:
       - 127.0.0.1:9100:9100
 
@@ -57,6 +65,31 @@ services:
       - --config.file=/config/blackbox.yml
     ports:
       - 127.0.0.1:9115:9115
+
+  # Optional: enable only while investigating host or application process load.
+  process-exporter:
+    image: ncabatoff/process-exporter:0.8.7
+    container_name: sis-process-exporter
+    restart: unless-stopped
+    profiles: [diagnostics]
+    pid: host
+    command:
+      - --procfs=/host/proc
+      - --config.path=/config/process-exporter.yml
+    volumes:
+      - /proc:/host/proc:ro
+      - ./process-exporter.yml:/config/process-exporter.yml:ro
+
+  # Optional: exposes only on the host and reads the host's loopback Redis.
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.80.1
+    container_name: sis-redis-exporter
+    restart: unless-stopped
+    profiles: [diagnostics]
+    network_mode: host
+    environment:
+      REDIS_ADDR: ${SIS_REDIS_EXPORTER_ADDR:-redis://127.0.0.1:6379}
+      REDIS_EXPORTER_WEB_LISTEN_ADDRESS: 127.0.0.1:9121
 
 volumes:
   prometheus-data:

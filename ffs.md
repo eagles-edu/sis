@@ -224,7 +224,7 @@ Service file: `/etc/systemd/system/exercise-mailer.service`
 ```ini
 [Service]
 WorkingDirectory=/home/admin.eagles.edu.vn/sis
-ExecStart=/home/eagles/.nvm/versions/node/v20.19.4/bin/node /home/admin.eagles.edu.vn/sis/server/exercise-mailer.mjs
+ExecStart=/home/eagles/.nvm/versions/node/v22.22.1/bin/node /home/admin.eagles.edu.vn/sis/server/exercise-mailer.mjs
 EnvironmentFile=/home/admin.eagles.edu.vn/sis/.env
 User=eagles
 Group=eagles

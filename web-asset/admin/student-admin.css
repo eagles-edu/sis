@@ -689,6 +689,19 @@ grid-template-areas:
       .profile-field textarea:focus {
         outline-offset: 1px;
   }
+      .profile-field input.profile-family-email-conflict,
+      .profile-field input.profile-family-email-conflict:focus {
+        border-color: #c62828;
+        box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.2);
+        outline-color: #c62828;
+  }
+      .profile-family-email-warning {
+        color: #b71c1c;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.4;
+        margin: 6px 0 0;
+  }
       .profile-choice-grid {
         align-items: start;
         display: grid;

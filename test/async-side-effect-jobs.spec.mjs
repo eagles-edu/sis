@@ -4,6 +4,14 @@ import os from "node:os"
 import path from "node:path"
 import test from "node:test"
 
+const jobsSource = await fs.readFile(new URL("../src/modules/async/side-effect-jobs.mjs", import.meta.url), "utf8")
+
+test("configured mirror runtimes never fall back to volatile side-effect jobs", () => {
+  assert.match(jobsSource, /normalizeLower\(process\.env\.NODE_ENV\) === "test" && !normalizeText\(process\.env\.DATABASE_URL\)/)
+  assert.match(jobsSource, /status: ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING,[\s\S]*?lockedAt: \{ lte: staleBefore \}/)
+  assert.match(jobsSource, /status: ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED,[\s\S]*?lockedAt: null,[\s\S]*?lockedBy: null/)
+})
+
 test("async side effect jobs dedupe, revive, and claim in memory mode", async () => {
   process.env.NODE_ENV = "test"
   const previousDatabaseUrl = process.env.DATABASE_URL

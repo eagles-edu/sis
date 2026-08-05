@@ -2,6 +2,7 @@
   "use strict"
 
   const VERSION = 1
+  const LOCAL_ONLY_KEYS = new Set(["sis-theme", "sis-theme-admin", "sis-theme-parent", "sis-theme-student"])
   const memory = Object.create(null)
   let loaded = false
   let loadPromise = null
@@ -30,21 +31,6 @@
     return value && typeof value === "object" && !Array.isArray(value) ? value : {}
   }
 
-  function applySavedTheme() {
-    let cachedTheme = ""
-    try { cachedTheme = window.localStorage.getItem("sis-theme") || "" } catch (error) { void error }
-    const theme = cachedTheme === "dark" || cachedTheme === "light" ? cachedTheme : memory["sis-theme"]
-    if (theme !== "dark" && theme !== "light") return
-    document.documentElement.dataset.theme = theme
-    document.documentElement.style.colorScheme = theme
-    if (!cachedTheme) {
-      try { window.localStorage.setItem("sis-theme", theme) } catch (error) { void error }
-    }
-    try {
-      window.dispatchEvent(new CustomEvent("sis-theme-change", { detail: { theme } }))
-    } catch (error) { void error }
-  }
-
   function legacyKeys() {
     const keys = []
     for (let index = 0; index < window.localStorage.length; index += 1) {
@@ -55,7 +41,7 @@
       const key = window.sessionStorage.key(index)
       if (key) keys.push(key)
     }
-    return Array.from(new Set(keys)).filter((key) => key !== "sis-admin-authenticated")
+    return Array.from(new Set(keys)).filter((key) => key !== "sis-admin-authenticated" && !LOCAL_ONLY_KEYS.has(key))
   }
 
   async function load() {
@@ -74,7 +60,6 @@
           void error
         }
       }
-      applySavedTheme()
       loaded = true
       return memory
     })().finally(() => {
@@ -91,6 +76,7 @@
     memory[key] = value
     if (key === "sis-theme" && (value === "dark" || value === "light")) {
       try { window.localStorage.setItem(key, value) } catch (error) { void error }
+      return true
     }
     const path = endpoint()
     if (!path || !isAuthenticated()) return false

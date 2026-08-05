@@ -60,8 +60,7 @@
   }
 
   function migrateLegacyTheme() {
-    const current = globalThis.SIS_PORTAL_PREFERENCES?.get(STORAGE_KEY, "")
-    return validTheme(current) ? current : readCachedTheme() || migrateCachedLegacyTheme()
+    return readCachedTheme() || migrateCachedLegacyTheme()
   }
 
   function initTheme(defaultTheme = "light") {
@@ -79,7 +78,6 @@
     syncColorScheme(next)
     cacheTheme(next)
     announceTheme(next)
-    void globalThis.SIS_PORTAL_PREFERENCES?.save(STORAGE_KEY, next)
     return next
   }
 
