@@ -483,7 +483,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1148
+              "height": 3918
             },
             ".wrap": {
               "selector": ".wrap",
@@ -495,7 +495,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1100
+              "height": 3870
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -507,7 +507,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 475
+              "height": 3786
             },
             ".panel": {
               "selector": ".panel",
@@ -1929,7 +1929,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3033
+              "height": 1454
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1941,7 +1941,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2985
+              "height": 1406
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1953,7 +1953,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2901
+              "height": 1322
             },
             ".panel": {
               "selector": ".panel",
@@ -2001,7 +2001,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1363,
-              "height": 1406
+              "height": 492
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -2012,8 +2012,8 @@
               "color": "rgb(0, 0, 0)",
               "border": "rgb(0, 0, 0)",
               "display": "block",
-              "width": 0,
-              "height": 0
+              "width": 664,
+              "height": 19
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -2155,7 +2155,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3784
+              "height": 3688
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2167,7 +2167,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3736
+              "height": 3640
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2179,7 +2179,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3652
+              "height": 3556
             },
             ".panel": {
               "selector": ".panel",
@@ -2270,27 +2270,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "label-title-only",
-              "impact": "serious",
-              "help": "Form elements should have a visible label",
-              "nodes": [
-                {
-                  "target": "textarea[name=\"pt_rec_internationalNews\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_readingEnglishEnjoyment\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_vocabularyLookup\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -3104,7 +3084,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "flex",
               "width": 1440,
-              "height": 19847
+              "height": 20022
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3116,7 +3096,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 19799
+              "height": 19974
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3127,8 +3107,8 @@
               "color": "rgb(0, 0, 0)",
               "border": "rgb(0, 0, 0)",
               "display": "grid",
-              "width": 1250,
-              "height": 19579
+              "width": 1280,
+              "height": 19784
             },
             ".panel": {
               "selector": ".panel",
@@ -7916,7 +7896,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3033
+              "height": 1454
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7928,7 +7908,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2985
+              "height": 1406
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7940,7 +7920,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2901
+              "height": 1322
             },
             ".panel": {
               "selector": ".panel",
@@ -7988,7 +7968,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
               "width": 1363,
-              "height": 1406
+              "height": 492
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -7999,8 +7979,8 @@
               "color": "rgb(229, 245, 255)",
               "border": "rgba(255, 255, 255, 0.36)",
               "display": "block",
-              "width": 0,
-              "height": 0
+              "width": 664,
+              "height": 19
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -8142,7 +8122,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3784
+              "height": 3688
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8154,7 +8134,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3736
+              "height": 3640
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8166,7 +8146,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3652
+              "height": 3556
             },
             ".panel": {
               "selector": ".panel",
@@ -8257,27 +8237,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "label-title-only",
-              "impact": "serious",
-              "help": "Form elements should have a visible label",
-              "nodes": [
-                {
-                  "target": "textarea[name=\"pt_rec_internationalNews\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_readingEnglishEnjoyment\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_vocabularyLookup\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -9091,7 +9051,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "flex",
               "width": 1440,
-              "height": 19847
+              "height": 20022
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9103,7 +9063,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 19799
+              "height": 19974
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9114,8 +9074,8 @@
               "color": "rgb(251, 255, 255)",
               "border": "rgb(251, 255, 255)",
               "display": "grid",
-              "width": 1250,
-              "height": 19579
+              "width": 1280,
+              "height": 19784
             },
             ".panel": {
               "selector": ".panel",
@@ -9257,7 +9217,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1759
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9269,7 +9229,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1711
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9281,7 +9241,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1627
+              "height": 892
             },
             ".panel": {
               "selector": ".panel",

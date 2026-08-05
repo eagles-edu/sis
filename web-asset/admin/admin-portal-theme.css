@@ -3651,22 +3651,6 @@ html[data-theme="dark"] body.admin-portal-page .queue-modal-card {
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
-html[data-theme="dark"] body.admin-portal-page #brevoStatisticsModal .brevo-statistics-modal-card {
-  background: #3b3c3e;
-}
-@media (max-width: 639px) {
-  body.admin-portal-page #brevoStatisticsModal .brevo-statistics-modal-card {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  body.admin-portal-page #brevoStatisticsModal .queue-modal-header {
-    flex-wrap: wrap;
-    min-inline-size: 0;
-  }
-  body.admin-portal-page #brevoStatisticsModal .queue-modal-header > div {
-    flex: 1 1 100%;
-    min-inline-size: 0;
-  }
-}
 html[data-theme="dark"] body.admin-portal-page .queue-modal-card.content {
   background: var(--portal-neutral-content-dark);
   border-color: var(--portal-dark-border-strong);

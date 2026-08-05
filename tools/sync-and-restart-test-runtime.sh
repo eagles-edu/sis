@@ -230,6 +230,11 @@ remove_managed_paths() {
 wipe_target_contents() {
   local target_root="$1"
 
+  if [[ "$MODE" == "boot-prep" && "$target_root" == "$TEST_PUBLIC_ROOT" ]]; then
+    log "preserving public_html during mode=boot-prep"
+    return 0
+  fi
+
   if [[ ! -d "$target_root" ]]; then
     return 0
   fi
@@ -536,6 +541,7 @@ TEST_LOCAL_UI_RUNTIME_PARITY_MAP=(
   "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
   "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
   "web-asset/images/K9f9G9VR1Z.lottie|web-asset/images/K9f9G9VR1Z.lottie"
+  "web-asset/shared/portal-password-visibility.js|web-asset/shared/portal-password-visibility.js"
   "web-asset/shared/portal-action-feedback.js|web-asset/shared/portal-action-feedback.js"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
@@ -1295,11 +1301,7 @@ main() {
   backup_test_state
   wipe_test_target_contents
   verify_test_preserved_runtime_files
-  if [[ "$MODE" != "boot-prep" ]]; then
-    wipe_target_contents "$TEST_PUBLIC_ROOT"
-  else
-    log "preserving public_html during mode=boot-prep"
-  fi
+  wipe_target_contents "$TEST_PUBLIC_ROOT"
   run_sync
   log "syncing test runtime web assets into ${TEST_ROOT}"
   sync_test_runtime_assets

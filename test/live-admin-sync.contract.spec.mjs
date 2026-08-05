@@ -9,7 +9,7 @@ const testScript = fs.readFileSync(path.join(rootDir, "tools/sync-and-restart-te
 const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, "package.json"), "utf8"))
 const liveLinksDoc = fs.readFileSync(path.join(rootDir, "docs/Live portal links.md"), "utf8")
 const liveNginxConf = fs.readFileSync(path.join(rootDir, "deploy/nginx/admin.eagles.edu.vn.conf"), "utf8")
-const TEST_ONLY_SYNC_SOURCES = new Set(["web-asset/icons/svg/water-ripples.svg"])
+const TEST_ONLY_SYNC_SOURCES = new Set()
 
 function extractMapSources(script, mapName) {
   const match = script.match(new RegExp(`${mapName}=\\(([^]*?)\\n\\)`, "m"))
@@ -110,12 +110,12 @@ test("test and live sync wrappers share the same strict whitelist sources except
     extractMapSources(liveScript, "LIVE_PUBLIC_WEBFILE_MAP"),
   )
   assert.deepEqual(
-    extractQuotedEntries(testScript, "TEST_RUNTIME_WEBFILE_MAP").filter((entry) => !TEST_ONLY_SYNC_SOURCES.has(entry.split("|")[0])),
-    extractQuotedEntries(liveScript, "LIVE_RUNTIME_WEBFILE_MAP"),
+    extractQuotedEntries(testScript, "TEST_RUNTIME_WEBFILE_MAP").filter((entry) => !TEST_ONLY_SYNC_SOURCES.has(entry.split("|")[0])).sort(),
+    extractQuotedEntries(liveScript, "LIVE_RUNTIME_WEBFILE_MAP").sort(),
   )
   assert.deepEqual(
-    extractQuotedEntries(testScript, "TEST_PUBLIC_WEBFILE_MAP").filter((entry) => !TEST_ONLY_SYNC_SOURCES.has(entry.split("|")[0])),
-    extractQuotedEntries(liveScript, "LIVE_PUBLIC_WEBFILE_MAP"),
+    extractQuotedEntries(testScript, "TEST_PUBLIC_WEBFILE_MAP").filter((entry) => !TEST_ONLY_SYNC_SOURCES.has(entry.split("|")[0])).sort(),
+    extractQuotedEntries(liveScript, "LIVE_PUBLIC_WEBFILE_MAP").sort(),
   )
   assert.deepEqual(
     extractQuotedEntries(testScript, "TEST_RUNTIME_CODE_DIRS"),
@@ -124,6 +124,14 @@ test("test and live sync wrappers share the same strict whitelist sources except
   assert.deepEqual(
     extractQuotedEntries(testScript, "TEST_RUNTIME_CODE_FILES"),
     extractQuotedEntries(liveScript, "LIVE_RUNTIME_CODE_FILES"),
+  )
+  assert.deepEqual(
+    extractMapSources(testScript, "TEST_LOCAL_UI_RUNTIME_PARITY_MAP"),
+    extractMapSources(liveScript, "LIVE_LOCAL_UI_RUNTIME_PARITY_MAP"),
+  )
+  assert.deepEqual(
+    extractQuotedEntries(testScript, "TEST_LOCAL_UI_RUNTIME_PARITY_MAP").sort(),
+    extractQuotedEntries(liveScript, "LIVE_LOCAL_UI_RUNTIME_PARITY_MAP").sort(),
   )
 })
 

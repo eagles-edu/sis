@@ -10683,6 +10683,7 @@
               }
               if (slug === "parent-tracking") {
                 renderParentTrackingTeacherOptions();
+                refreshParentTracking({ preserveStudentSelection: true }).catch(handleError);
               }
             })
             .catch(handleError);
@@ -11701,6 +11702,7 @@
             tile.style.backgroundImage = "none";
           }
           tile.setAttribute("data-level", canonicalLevel);
+          tile.textContent = config.title;
           tile.setAttribute("aria-label", fullLevelLabel(canonicalLevel));
           tile.addEventListener("click", () => {
             applyAssignmentLevelSelection(canonicalLevel, { applyDefaults: true });
@@ -17608,6 +17610,7 @@
           if (levelNamesMatch(canonicalLevel, selectedLevel))
             tile.classList.add("active");
           const config = attendanceLevelTileConfig(canonicalLevel);
+          tile.textContent = config.title;
           tile.style.backgroundColor = config.bgColor;
           tile.style.color = theme.textColor;
           tile.style.borderColor = theme.borderColor;
@@ -21154,6 +21157,7 @@
             if (levelNamesMatch(canonicalLevel, state.attendanceLanding.selectedLevel))
               tile.classList.add("active");
             tile.setAttribute("data-level", canonicalLevel);
+            tile.textContent = config.title;
             tile.setAttribute("aria-label", fullLevelLabel(canonicalLevel));
             tile.style.backgroundColor = config.bgColor;
             tile.style.color = theme.textColor;

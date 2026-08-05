@@ -48,6 +48,8 @@ LIVE_RUNTIME_CODE_FILES=(
   ".nvmrc"
   "tools/async-side-effects-worker.mjs"
   "tools/run-assignment-reminder-dispatcher.mjs"
+  "tools/run-sis-config-repair-cron.sh"
+  "tools/sis-config-repair.mjs"
   "ops/systemd/sis-assignment-reminders.service"
   "ops/systemd/sis-assignment-reminders.timer"
 )
@@ -154,6 +156,7 @@ LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/icons/web-component/svgs/joggling-lava.svg|web-asset/icons/web-component/svgs/joggling-lava.svg"
   "web-asset/icons/web-component/svgs/joggling-triangles.svg|web-asset/icons/web-component/svgs/joggling-triangles.svg"
   "web-asset/icons/web-component/svgs/spiral.svg|web-asset/icons/web-component/svgs/spiral.svg"
+  "web-asset/icons/svg/water-ripples.svg|web-asset/icons/svg/water-ripples.svg"
   "web-asset/vendor/fullcalendar/index.global.min.js|web-asset/vendor/fullcalendar/index.global.min.js"
   "web-asset/vendor/tabulatorz/tabulator.min.css|web-asset/vendor/tabulatorz/tabulator.min.css"
   "web-asset/vendor/tabulatorz/tabulator.min.css.map|web-asset/vendor/tabulatorz/tabulator.min.css.map"
@@ -204,9 +207,11 @@ LIVE_LOCAL_UI_RUNTIME_PARITY_MAP=(
   "web-asset/parent/parent-portal.min.js.map|web-asset/parent/parent-portal.min.js.map"
   "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
   "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
+  "web-asset/images/K9f9G9VR1Z.lottie|web-asset/images/K9f9G9VR1Z.lottie"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
   "web-asset/shared/portal-password-visibility.js|web-asset/shared/portal-password-visibility.js"
+  "web-asset/shared/portal-action-feedback.js|web-asset/shared/portal-action-feedback.js"
 )
 
 LIVE_PUBLIC_WEBFILE_MAP=(
@@ -302,6 +307,7 @@ LIVE_PUBLIC_WEBFILE_MAP=(
   "web-asset/images/favicon.ico|favicon.ico"
   "web-asset/images/favicon.png|favicon.png"
   "web-asset/images/favicon.svg|favicon.svg"
+  "web-asset/icons/svg/water-ripples.svg|web-asset/icons/svg/water-ripples.svg"
 )
 
 LIVE_ROUTE_MATRIX=(

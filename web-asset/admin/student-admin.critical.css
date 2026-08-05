@@ -362,22 +362,6 @@ body.parent-portal-page #loginCard .login-links,
 body.admin-portal-page #authPanel .login-links {
   margin-bottom: 4px;
 }
-html[data-theme="dark"] body.admin-portal-page #brevoStatisticsModal .brevo-statistics-modal-card {
-  background: #3b3c3e;
-}
-@media (max-width: 639px) {
-  body.admin-portal-page #brevoStatisticsModal .brevo-statistics-modal-card {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  body.admin-portal-page #brevoStatisticsModal .queue-modal-header {
-    flex-wrap: wrap;
-    min-inline-size: 0;
-  }
-  body.admin-portal-page #brevoStatisticsModal .queue-modal-header > div {
-    flex: 1 1 100%;
-    min-inline-size: 0;
-  }
-}
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review label,
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review .small,
 html[data-theme="dark"] body.admin-portal-page #newsReviewViewerStatus,
