@@ -162,6 +162,35 @@
     root.dataset.sisAnalyticsConsent = preferences?.analytics || "undecided"
   }
 
+  function normalizeBrevoIdentity(identity) {
+    const next = identity && typeof identity === "object" ? identity : {}
+    const eaglesId = String(next.eaglesId || "").trim()
+    const parentId = String(next.parentId || "").trim()
+    const displayId = eaglesId || parentId
+    return {
+      firstName: displayId || null,
+      notes: displayId || null,
+      eaglesId: eaglesId || null,
+      parentId: parentId || null,
+    }
+  }
+
+  function setBrevoIdentity(identity) {
+    const next = normalizeBrevoIdentity(identity)
+    globalThis.__SIS_BREVO_IDENTITY__ = next
+    if (typeof globalThis.BrevoConversations === "function") {
+      globalThis.BrevoConversations("updateIntegrationData", next)
+    }
+    return next
+  }
+
+  if (!globalThis.__SIS_BREVO_IDENTITY_LISTENER__) {
+    globalThis.__SIS_BREVO_IDENTITY_LISTENER__ = true
+    globalThis.addEventListener?.("sis-brevo-identity-change", (event) => {
+      setBrevoIdentity(event?.detail)
+    })
+  }
+
   function installBrevoConversation() {
     if (globalThis.__SIS_BREVO_CONVERSATION_LOADED__ || globalThis.__SIS_BREVO_CONVERSATION_DISABLED__ || document.querySelector('script[data-sis-consent-integration="brevo"]')) return
     globalThis.BrevoConversationsID = BREVO_CONVERSATIONS_ID
@@ -174,6 +203,7 @@
     script.dataset.sisConsentIntegration = "brevo"
     script.addEventListener("load", () => {
       globalThis.__SIS_BREVO_CONVERSATION_LOADED__ = true
+      setBrevoIdentity(globalThis.__SIS_BREVO_IDENTITY__)
       installBrevoConversationA11y()
     }, { once: true })
     document.head?.appendChild(script)
@@ -408,5 +438,6 @@
     writeConsentPreferences,
     initPrivacyConsent,
     applyConsentPreferences,
+    setBrevoIdentity,
   }
 })()

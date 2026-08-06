@@ -103,6 +103,10 @@
       }
       const INITIAL_AUTH_STATE = window.__SIS_STUDENT_INITIAL_AUTH__;
 
+      function setBrevoStudentIdentity(eaglesId) {
+        window.SIS_PORTAL_THEME?.setBrevoIdentity({ eaglesId });
+      }
+
       function updateEnvBadge() {
         const badge = document.getElementById("envBadge");
         if (!badge) return;
@@ -5194,6 +5198,7 @@
         await api(`${STUDENT_AUTH_PREFIX}/logout`, {
           method: "POST"
         });
+        setBrevoStudentIdentity(null);
         setReportAccessErrorModalOpen(false);
       }
       function handlePortalPostAuthRouteState() {
@@ -5212,6 +5217,7 @@
         updateEnvBadge();
         if (INITIAL_AUTH_STATE && typeof INITIAL_AUTH_STATE === "object") {
           if (INITIAL_AUTH_STATE.authenticated) {
+            setBrevoStudentIdentity(INITIAL_AUTH_STATE.user?.eaglesId);
             setGlobalStatus("Student session active.");
             if (handlePortalPostAuthRouteState()) return;
             await Promise.all([loadDashboard(), loadCalendar()]);
@@ -5274,6 +5280,7 @@
         setGlobalStatus("Signing in...");
         try {
           await login();
+          setBrevoStudentIdentity(field("loginEaglesId")?.value);
           setAuthenticatedView(true);
           setGlobalStatus("Student session active.");
           if (handlePortalPostAuthRouteState()) return;

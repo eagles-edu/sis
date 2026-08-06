@@ -860,6 +860,10 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
       }
       const INITIAL_AUTH_STATE = window.__SIS_PARENT_INITIAL_AUTH__
 
+      function setBrevoParentIdentity(parentsId) {
+        window.SIS_PORTAL_THEME?.setBrevoIdentity({ parentId: parentsId });
+      }
+
       function updateEnvBadgeParent() {
         const badge = document.getElementById("envBadge")
         if (!badge) return
@@ -6662,6 +6666,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
           options.revealAuthState !== false
         if (initialUser) {
           state.me = initialUser
+          setBrevoParentIdentity(state.me?.parentsId)
           if (revealAuthState) {
             document.documentElement.dataset.parentAuthState = "authenticated"
           }
@@ -6674,6 +6679,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         } else {
           const me = await api(`${PARENT_AUTH_PREFIX}/me`)
           state.me = me.user || null
+          setBrevoParentIdentity(state.me?.parentsId)
           if (revealAuthState) {
             document.documentElement.dataset.parentAuthState =
               state.me?.parentsId ? "authenticated" : "unauthenticated"
@@ -6749,6 +6755,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
           parentsId,
           role: "parent",
         }
+        setBrevoParentIdentity(state.me?.parentsId || parentsId)
         document.documentElement.dataset.parentAuthState = "authenticated"
         document.getElementById("loginCard").classList.add("hidden")
         syncDashboardPageVisibility()
@@ -6852,6 +6859,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
           method: "POST",
           body: {},
         })
+        setBrevoParentIdentity(null)
         document.documentElement.dataset.parentAuthState = "unauthenticated"
         document.getElementById("portalCard").classList.add("hidden")
         document.getElementById("portalDetailCard").classList.add("hidden")
