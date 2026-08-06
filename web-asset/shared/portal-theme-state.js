@@ -242,34 +242,34 @@
   function consentCopy(locale) {
     if (locale === "vi") {
       return {
-        title: "Quyền riêng tư của bạn",
+        title: "Chọn cài đặt quyền riêng tư",
         description:
-          "Vui lòng cho phép cookie đối với Chatbot Eagles Club để hỗ trợ việc học tập của bạn, cũng như Google Analytics để hiểu ẩn danh cách các thành viên sử dụng cổng thông tin.",
-        chat: "Eagles Club Chatbot.",
-        chatDescription: "Cho phép công cụ trò chuyện hỗ trợ của bên thứ ba.",
-        analytics: "Google Analytics",
-        analyticsDescription: "Cho phép đo lường ẩn danh việc sử dụng cổng thông tin.",
+          "Bạn có thể chọn những gì mình cho phép. Bạn có thể thay đổi lựa chọn này bất cứ lúc nào.",
+        chat: "Hỗ trợ trò chuyện",
+        chatDescription: "Nhận hỗ trợ từ đội ngũ Eagles Club.",
+        analytics: "Phân tích ẩn danh",
+        analyticsDescription: "Giúp chúng tôi cải thiện cổng thông tin.",
         acceptAll: "Cho phép tất cả",
-        rejectAll: "Từ chối tất cả",
+        rejectAll: "Chỉ cần thiết",
         save: "Lưu lựa chọn",
         manage: "Quản lý quyền riêng tư",
-        close: "Đóng",
+        close: "Để sau",
         saved: "Đã lưu lựa chọn quyền riêng tư.",
       };
     }
     return {
-      title: "Your privacy choices",
+      title: "Choose your privacy settings",
       description:
-        "Allow cookies for Eagles Club Chatbot to support your studies and Google Analytics to anonymously understand members' portal use.",
-      chat: "Eagles Club Chatbot",
-      chatDescription: "Allow the Eagles Club Chatbot.",
-      analytics: "Google Analytics",
-      analyticsDescription: "Allow anonymous measurement of portal usage.",
-      acceptAll: "Accept all",
-      rejectAll: "Reject all",
+        "You are in control. Choose what to allow, and change your choices anytime.",
+      chat: "Support chat",
+      chatDescription: "Get help from the Eagles Club team.",
+      analytics: "Anonymous analytics",
+      analyticsDescription: "Help us improve the portal.",
+      acceptAll: "Allow all",
+      rejectAll: "Only necessary",
       save: "Save choices",
       manage: "Manage privacy preferences",
-      close: "Close",
+      close: "Not now",
       saved: "Your privacy choices were saved.",
     };
   }

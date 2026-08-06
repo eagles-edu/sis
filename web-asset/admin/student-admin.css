@@ -1828,22 +1828,77 @@ transition:
       .school-setup-warning-modal-card {
         max-inline-size: 720px;
   }
-      .student-delete-modal-card {
+      body.admin-portal-page .student-delete-modal-card {
+        gap: 8px;
         max-inline-size: 620px;
-  }
+        padding: 14px;
+      }
+      .student-delete-modal-card .queue-modal-header {
+        align-items: flex-start;
+      }
+      .student-delete-modal-card h2 {
+        color: var(--primary-color);
+        font-size: 20px;
+        line-height: 1.15;
+      }
+      .student-delete-modal-card #deleteStudentModalDescription {
+        font-size: 14px;
+        line-height: 1.35;
+        margin: 6px 0 0;
+      }
+      .student-delete-modal-body {
+        display: grid;
+        gap: 8px;
+      }
       .student-delete-parent-option {
         align-items: flex-start;
+        background: var(--portal-surface-support);
+        border: 1px solid var(--portal-border);
+        border-radius: var(--radius-2);
         display: flex;
-        gap: 8px;
+        gap: 12px;
         line-height: 1.35;
-  }
-      .student-delete-parent-option input {
-        flex: 0 0 auto;
-        margin-block-start: 3px;
-  }
-      .student-delete-parent-note {
         margin: 0;
-  }
+        padding: 10px;
+      }
+      .student-delete-parent-option input {
+        accent-color: var(--primary-color);
+        block-size: 64px;
+        flex: 0 0 auto;
+        inline-size: 64px;
+        margin: 0;
+      }
+      .student-delete-parent-option-text {
+        align-self: center;
+        font-size: 14px;
+        min-inline-size: 0;
+      }
+      .student-delete-parent-note {
+        font-size: 13px;
+        line-height: 1.35;
+        margin: 0;
+      }
+      body.admin-portal-page .student-delete-modal-card .queue-modal-actions {
+        display: grid !important;
+        gap: 6px;
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+      .student-delete-modal-card .queue-modal-actions > .portal-button {
+        inline-size: 100% !important;
+        max-inline-size: 100% !important;
+        min-block-size: 42px;
+        min-inline-size: 0 !important;
+      }
+      @media (min-width: 640px) {
+        body.admin-portal-page .student-delete-modal-card .queue-modal-actions {
+          display: flex !important;
+        }
+        .student-delete-modal-card .queue-modal-actions > .portal-button {
+          flex: 1 1 160px;
+          inline-size: auto !important;
+          max-inline-size: var(--portal-button-inline);
+      }
+      }
       .school-setup-warning-modal-body {
         background: var(--portal-surface-support);
         border: 1px solid var(--portal-border);
@@ -2926,7 +2981,7 @@ box-shadow:
       .engagement-matrix-table-host.tabulator[data-engagement-identity-block="SIVB"] .tabulator-cell[tabulator-field="id"] {
         background: var(--engagement-matrix-row-bg) !important;
         box-shadow: 0 2px 8px rgba(19, 35, 61, .18);
-        left: var(--sivb-id-anchor-left, 0px);
+        left: var(--sivb-id-anchor-left, 0);
         position: sticky;
         z-index: 6;
 
@@ -4326,4 +4381,19 @@ background: linear-gradient(
         margin: .35rem 0 0;
         padding: .18rem .45rem;
         white-space: nowrap;
+  }
+
+      html[data-theme="dark"] body.admin-portal-page .student-delete-modal-card h2 {
+        color: var(--secondary-color);
+  }
+      html[data-theme="dark"] body.admin-portal-page .student-delete-parent-option {
+        background: var(--portal-neutral-panel-dark);
+        border-color: var(--portal-dark-border);
+        color: var(--portal-dark-text);
+  }
+      html[data-theme="dark"] body.admin-portal-page .student-delete-parent-option input {
+        accent-color: var(--portal-button-red-fill);
+  }
+      html[data-theme="dark"] body.admin-portal-page .student-delete-parent-note {
+        color: var(--secondary-color);
   }

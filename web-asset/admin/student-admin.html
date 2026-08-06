@@ -674,6 +674,11 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       #appSchoolSetupWarning:not(.hidden) {
         visibility: visible;
   }
+      .student-delete-modal-card #deleteStudentModalDescription {
+        font-size: 14px;
+        line-height: 1.35;
+        margin: 6px 0 0;
+      }
       #levelDetailPanel .table-scroll-wrap table {
         min-width: 760px;
   }
@@ -924,10 +929,10 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       display: none !important;
     }
   </style>
-  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=sha256-c72dfce32c7d986d" as="style"
+  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=sha256-584fa732f1650df7" as="style"
     onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
-    <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=sha256-c72dfce32c7d986d">
+    <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=sha256-584fa732f1650df7">
   </noscript>
 </head>
 
@@ -4658,24 +4663,28 @@ No family lookup yet.</pre>
         <div>
           <h2 id="deleteStudentModalTitle">Permanently delete student</h2>
           <p id="deleteStudentModalDescription" class="small">
-            This permanently removes the student and all student-linked records.
-            Unenrollment is safer when history should be preserved.
+            <b>This action permanently removes the student and linked records.</b>
+            <em><b>Unenrollment</b> is recommended when history must be preserved.</em>
           </p>
         </div>
       </div>
-      <label class="student-delete-parent-option">
-        <input id="deleteParentAccountCheckbox" type="checkbox">
-        <span>Also delete parent account(s) if this student has no other linked children</span>
-      </label>
-      <p class="small student-delete-parent-note">
-        Parent accounts with other linked children are always preserved.
-      </p>
+      <div class="student-delete-modal-body">
+        <label class="student-delete-parent-option">
+          <input id="deleteParentAccountCheckbox" type="checkbox">
+          <span class="student-delete-parent-option-text">
+            Also delete parent account(s) if this student has no other linked children
+          </span>
+        </label>
+        <p class="small student-delete-parent-note">
+          Parent accounts with other linked children are always preserved.
+        </p>
+      </div>
       <div class="queue-modal-actions">
         <button id="deleteStudentCancelBtn" type="button" class="portal-button portal-button-alt">
           Cancel
         </button>
         <button id="deleteStudentConfirmBtn" type="button" class="portal-button portal-button-danger">
-          Permanently Delete
+          Delete
         </button>
       </div>
     </div>

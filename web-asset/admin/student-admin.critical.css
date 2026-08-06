@@ -638,6 +638,11 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       #appSchoolSetupWarning:not(.hidden) {
         visibility: visible;
   }
+      .student-delete-modal-card #deleteStudentModalDescription {
+        font-size: 14px;
+        line-height: 1.35;
+        margin: 6px 0 0;
+      }
       #levelDetailPanel .table-scroll-wrap table {
         min-width: 760px;
   }
