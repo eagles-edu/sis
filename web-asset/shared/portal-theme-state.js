@@ -243,24 +243,26 @@
     if (locale === "vi") {
       return {
         title: "Quyền riêng tư của bạn",
-        description: "Bạn có thể cho phép trò chuyện hỗ trợ Brevo và Google Analytics đo lường việc sử dụng cổng thông tin. Cả hai đều không được tải trước khi bạn đồng ý.",
-        chat: "Trò chuyện hỗ trợ Brevo",
+        description:
+          "Vui lòng cho phép cookie đối với Chatbot Eagles Club để hỗ trợ việc học tập của bạn, cũng như Google Analytics để hiểu ẩn danh cách các thành viên sử dụng cổng thông tin.",
+        chat: "Eagles Club Chatbot.",
         chatDescription: "Cho phép công cụ trò chuyện hỗ trợ của bên thứ ba.",
         analytics: "Google Analytics",
-        analyticsDescription: "Cho phép đo lường ẩn danh về việc sử dụng cổng thông tin.",
+        analyticsDescription: "Cho phép đo lường ẩn danh việc sử dụng cổng thông tin.",
         acceptAll: "Cho phép tất cả",
         rejectAll: "Từ chối tất cả",
         save: "Lưu lựa chọn",
         manage: "Quản lý quyền riêng tư",
         close: "Đóng",
         saved: "Đã lưu lựa chọn quyền riêng tư.",
-      }
+      };
     }
     return {
       title: "Your privacy choices",
-      description: "You can allow Brevo support chat and Google Analytics to help us provide support and understand portal usage. Neither loads before you choose.",
-      chat: "Brevo support chat",
-      chatDescription: "Allow the third-party support chat tool.",
+      description:
+        "Allow cookies for Eagles Club Chatbot to support your studies and Google Analytics to anonymously understand members' portal use.",
+      chat: "Eagles Club Chatbot",
+      chatDescription: "Allow the Eagles Club Chatbot.",
       analytics: "Google Analytics",
       analyticsDescription: "Allow anonymous measurement of portal usage.",
       acceptAll: "Accept all",
@@ -269,7 +271,7 @@
       manage: "Manage privacy preferences",
       close: "Close",
       saved: "Your privacy choices were saved.",
-    }
+    };
   }
 
   function removeConsentUi() {

@@ -1,1250 +1,857 @@
 <!-- @format -->
 <!doctype html>
 <html lang="vi">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta
-      name="description"
-      content="The Eagles Club Cổng thông tin kết quả học tập của học sinh dành cho phụ huynh">
-    <meta
-      name="keywords"
-      content="The Eagles Club, cổng thông tin, kết quả học tập của học sinh, dành cho phụ huynh">
-    <meta name="author" content="The Eagles American Club, Ltd.">
-    <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
-    <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
-    <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
-    <script>
-      /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
-    </script>
-    <script src="/web-asset/shared/portal-theme-state.js"></script>
-    <script src="/web-asset/shared/portal-action-feedback.js"></script>
-    <script>
-      window.SIS_PORTAL_THEME?.initTheme("light")
-    </script>
-    <script>
-      document.documentElement.dataset.parentAuthState = "booting"
-    </script>
-    <script type="module">
-      import svgIcon from "/web-asset/icons/web-component/svg-icon.js"
 
-      if (!customElements.get("svg-icon")) {
-        svgIcon({
-          defaultSize: 28,
-          path: "/web-asset/icons/web-component/svgs/",
-        })
-      }
-    </script>
-    <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
-    <script src="/web-asset/shared/portal-navigation.js"></script>
-    <style>
-      html {
-        font-family: var(--font-base, system-ui, -apple-system, sans-serif);
-      }
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="The Eagles Club Cổng thông tin kết quả học tập của học sinh dành cho phụ huynh">
+  <meta name="keywords" content="The Eagles Club, cổng thông tin, kết quả học tập của học sinh, dành cho phụ huynh">
+  <meta name="author" content="The Eagles American Club, Ltd.">
+  <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+  <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+  <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
+  <script>
+    /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
+  </script>
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script src="/web-asset/shared/portal-action-feedback.js"></script>
+  <script>
+    window.SIS_PORTAL_THEME?.initTheme("light")
+  </script>
+  <script>
+    document.documentElement.dataset.parentAuthState = "booting"
+  </script>
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js"
 
-      body.parent-portal-page main.portal-main {
-        box-sizing: border-box;
-        display: grid;
-        gap: var(--portal-shell-gap);
-        grid-template-columns: minmax(0, 1fr);
-        margin: 0 auto;
-        max-width: 1440px;
-        padding: 16px;
-        width: 100%;
-      }
+    if (!customElements.get("svg-icon")) {
+      svgIcon({
+        defaultSize: 28,
+        path: "/web-asset/icons/web-component/svgs/",
+      })
+    }
+  </script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <script src="/web-asset/shared/portal-navigation.js"></script>
+  <style>
+    html {
+      font-family: var(--font-base, system-ui, -apple-system, sans-serif);
+    }
 
-      html[data-parent-auth-state="unauthenticated"]
-        body.parent-portal-page
-        main.portal-main {
-        gap: var(--portal-shell-gap);
-        margin-inline: auto;
-        max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
-        width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
-      }
+    body.parent-portal-page main.portal-main {
+      box-sizing: border-box;
+      display: grid;
+      gap: var(--portal-shell-gap);
+      grid-template-columns: minmax(0, 1fr);
+      margin: 0 auto;
+      max-width: 1440px;
+      padding: 16px;
+      width: 100%;
+    }
 
-      html[data-parent-auth-state="booting"] body.parent-portal-page {
-        opacity: 0;
-        visibility: hidden;
-      }
+    html[data-parent-auth-state="unauthenticated"] body.parent-portal-page main.portal-main {
+      gap: var(--portal-shell-gap);
+      margin-inline: auto;
+      max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
+      width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
+    }
 
-      html[data-parent-auth-state="booting"] body.parent-portal-page #loginCard,
-      html[data-parent-auth-state="booting"]
-        body.parent-portal-page
-        #portalCard {
-        display: none !important;
-      }
-    </style>
-    <link rel="stylesheet" href="/web-asset/parent/parent-portal.min.css">
+    html[data-parent-auth-state="booting"] body.parent-portal-page {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    html[data-parent-auth-state="booting"] body.parent-portal-page #loginCard,
+    html[data-parent-auth-state="booting"] body.parent-portal-page #portalCard {
+      display: none !important;
+    }
+  </style>
+  <link rel="stylesheet" href="/web-asset/parent/parent-portal.min.css">
   <title>
-      Trang chủ dành cho phụ huynh - Câu lạc bộ Eagles
-    </title>
-  </head>
+    Trang chủ dành cho phụ huynh - Câu lạc bộ Eagles
+  </title>
+</head>
 
-  <body class="parent-portal-page" id="top">
-    <div class="portal-layout portal-shell">
-      <aside
-        id="parentSideNav"
-        class="side-nav"
-        aria-label="Điều hướng cổng phụ huynh">
-        <div class="side-brand">
-          <strong>Bảng điều khiển dành cho phụ huynh</strong>
-          <span>Tổng quan kết quả học tập của học sinh</span>
-        </div>
-        <nav class="side-links">
-          <a
-            class="side-link active"
-            href="#portalCard"
-            data-view-target="dashboard"
-            data-page-target="home"
-            >Trang chủ</a
-          >
-          <a
-            class="side-link"
-            href="#portalCard"
-            data-view-target="dashboard"
-            data-page-target="news-reports"
-            >Báo cáo tin tức</a
-          >
-          <a
-            class="side-link"
-            href="#childPageCard"
-            data-view-target="child"
-            data-page-target="home"
-            >Chỉnh sửa hồ sơ học sinh</a
-          >
-          <a
-            class="side-link"
-            href="#portalDetailCard"
-            data-view-target="dashboard"
-            data-page-target="current-homework"
-            >Bài tập về nhà hiện tại</a
-          >
-          <a
-            class="side-link"
-            href="#portalDetailCard"
-            data-view-target="dashboard"
-            data-page-target="past-due-homework"
-            >Bài tập về nhà quá hạn</a
-          >
-          <a
-            class="side-link"
-            href="#portalDetailCard"
-            data-view-target="dashboard"
-            data-page-target="attendance-calendar"
-            >Điểm danh lớp học (SYTD)</a
-          >
-          <a
-            class="side-link"
-            href="#portalDetailCard"
-            data-view-target="dashboard"
-            data-page-target="performance-reports"
-            >Điểm danh lớp học: Lưu trữ tính đến thời điểm hiện tại của năm
-            học</a
-          >
-          <a
-            class="side-link"
-            href="#portalDetailCard"
-            data-view-target="dashboard"
-            data-page-target="grades-ytd"
-            >Điểm số học sinh từ đầu năm đến nay.</a
-          >
-          <a
-            class="side-link"
-            href="#portalDetailCard"
-            data-view-target="dashboard"
-            data-page-target="recommendations"
-            >Các khuyến nghị để đạt được thành công trong học tập</a
-          >
-        </nav>
-        <div class="side-actions">
-          <button
-            id="parentNavLogoutBtn"
-            type="button"
-            class="portal-button portal-button-danger"
-            title="Đăng xuất và kết thúc phiên làm việc trên cổng phụ huynh"
-            aria-label="Đăng xuất và kết thúc phiên làm việc trên cổng phụ huynh">
-            Đăng xuất
-          </button>
-        </div>
-      </aside>
-
-      <button
-        id="parentNavScrim"
-        class="nav-scrim portal-button portal-button-immutable-chrome"
-        type="button"
-        title="Đóng menu điều hướng và trở lại nội dung hiện tại"
-        aria-label="Đóng điều hướng"></button>
-
-      <main class="portal-main">
-        <div class="header-bar portal-login-header">
-          <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
-          <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer"
-            >eagles.edu.vn</a
-          >
-        </div>
-        <button
-          id="parentMenuBtn"
-          class="floating-menu-btn portal-button portal-button-immutable-chrome"
-          type="button"
-          title="Mở menu điều hướng để chuyển giữa các khu vực của cổng phụ huynh"
-          aria-label="Mở menu điều hướng để chuyển giữa các khu vực của cổng phụ huynh">
-          <span class="floating-menu-icon" aria-hidden="true"></span>
+<body class="parent-portal-page" id="top">
+  <div class="portal-layout portal-shell">
+    <aside id="parentSideNav" class="side-nav" aria-label="Điều hướng cổng phụ huynh">
+      <div class="side-brand">
+        <strong>Bảng điều khiển dành cho phụ huynh</strong>
+        <span>Tổng quan kết quả học tập của học sinh</span>
+      </div>
+      <nav class="side-links">
+        <a class="side-link active" href="#portalCard" data-view-target="dashboard" data-page-target="home">Trang
+          chủ</a>
+        <a class="side-link" href="#portalCard" data-view-target="dashboard" data-page-target="news-reports">Báo cáo tin
+          tức</a>
+        <a class="side-link" href="#childPageCard" data-view-target="child" data-page-target="home">Chỉnh sửa hồ sơ học
+          sinh</a>
+        <a class="side-link" href="#portalDetailCard" data-view-target="dashboard"
+          data-page-target="current-homework">Bài tập về nhà hiện tại</a>
+        <a class="side-link" href="#portalDetailCard" data-view-target="dashboard"
+          data-page-target="past-due-homework">Bài tập về nhà quá hạn</a>
+        <a class="side-link" href="#portalDetailCard" data-view-target="dashboard"
+          data-page-target="attendance-calendar">Điểm danh lớp học (SYTD)</a>
+        <a class="side-link" href="#portalDetailCard" data-view-target="dashboard"
+          data-page-target="performance-reports">Điểm danh lớp học: Lưu trữ tính đến thời điểm hiện tại của năm
+          học</a>
+        <a class="side-link" href="#portalDetailCard" data-view-target="dashboard" data-page-target="grades-ytd">Điểm số
+          học sinh từ đầu năm đến nay.</a>
+        <a class="side-link" href="#portalDetailCard" data-view-target="dashboard"
+          data-page-target="recommendations">Các khuyến nghị để đạt được thành công trong học tập</a>
+      </nav>
+      <div class="side-actions">
+        <button id="parentNavLogoutBtn" type="button" class="portal-button portal-button-danger"
+          title="Đăng xuất và kết thúc phiên làm việc trên cổng phụ huynh"
+          aria-label="Đăng xuất và kết thúc phiên làm việc trên cổng phụ huynh">
+          Đăng xuất
         </button>
-        <section class="content topbar" data-surface-role="content">
-          <div class="topbar-head">
-            <div class="brand-head">
-              <a
-                class="brand-logo-wrap brand-logo-wrap--sm"
-                href="/parent"
-                aria-label="Go to parent home">
-                <img
-                  class="brand-logo"
-                  src="/web-asset/images/logo.svg"
-                  alt="The Eagles Club logo">
-              </a>
-              <h1>THE EAGLES CLUB</h1>
-            </div>
-            <div class="header-actions">
-              <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle" type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
-                <span class="portal-theme-toggle__icon" aria-hidden="true">
-                  <svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon>
-                </span>
-              </button>
-              <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
-                <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" title="Giảm cỡ chữ">A-</button>
-                <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" title="Tăng cỡ chữ">A+</button>
-                <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" title="Đặt lại cỡ chữ">Reset</button>
-              </div>
-            </div>
-          </div>
-        </section>
+      </div>
+    </aside>
 
-        <section class="panel" id="loginCard" data-surface-role="panel">
-          <div class="section-head">
-            <h1>Đăng nhập</h1>
-            <div class="security-badge">
-              <img
-                class="security-badge__icon security-badge__icon--light"
-                src="/web-asset/shared/secure-network.svg"
-                alt=""
-                aria-hidden="true">
-              <img
-                class="security-badge__icon security-badge__icon--dark"
-                src="/web-asset/shared/secure-network-white.svg"
-                alt=""
-                aria-hidden="true">
-              <span class="security-badge__caption">Phiên bảo mật</span>
+    <button id="parentNavScrim" class="nav-scrim portal-button portal-button-immutable-chrome" type="button"
+      title="Đóng menu điều hướng và trở lại nội dung hiện tại" aria-label="Đóng điều hướng"></button>
+
+    <main class="portal-main">
+      <div class="header-bar portal-login-header">
+        <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+        <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+      </div>
+      <button id="parentMenuBtn" class="floating-menu-btn portal-button portal-button-immutable-chrome" type="button"
+        title="Mở menu điều hướng để chuyển giữa các khu vực của cổng phụ huynh"
+        aria-label="Mở menu điều hướng để chuyển giữa các khu vực của cổng phụ huynh">
+        <span class="floating-menu-icon" aria-hidden="true"></span>
+      </button>
+      <section class="content topbar" data-surface-role="content">
+        <div class="topbar-head">
+          <div class="brand-head">
+            <a class="brand-logo-wrap brand-logo-wrap--sm" href="/parent" aria-label="Go to parent home">
+              <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+            </a>
+            <h1>THE EAGLES CLUB</h1>
+          </div>
+          <div class="header-actions">
+            <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle"
+              type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
+              <span class="portal-theme-toggle__icon" aria-hidden="true">
+                <svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon>
+              </span>
+            </button>
+            <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
+              <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt"
+                title="Giảm cỡ chữ">A-</button>
+              <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt"
+                title="Tăng cỡ chữ">A+</button>
+              <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning"
+                title="Đặt lại cỡ chữ">Reset</button>
             </div>
           </div>
-          <form id="loginForm" class="login-form" novalidate>
-            <div class="form-row">
-              <label for="parentsId">Mã phụ huynh (parentsId)</label>
-              <input
-                id="parentsId"
-                type="text"
-                autocomplete="username"
-                placeholder="cm&lt;eaglesId&gt; hoặc mã gia đình">
-              <p class="field-hint">
-                Một tài khoản có thể liên kết nhiều học sinh.
-              </p>
-            </div>
-            <div class="form-row">
-              <label for="parentPassword">Mật khẩu</label>
-              <div class="password-visibility-field">
-                <input
-                  id="parentPassword"
-                  type="password"
-                  autocomplete="current-password"
-                  placeholder="Mật khẩu dùng chung phụ huynh - học sinh"
-                  data-password-visibility>
-                <button
-                  type="button"
-                  class="password-visibility-toggle portal-button-info portal-button-amber-ink-dark"
-                  data-password-visibility-toggle
-                  aria-label="Show password"
-                  aria-pressed="false"
-                  title="Show password"></button>
-              </div>
-              <p class="field-hint">
-                Nhập đúng mật khẩu hiện hành của tài khoản.
-              </p>
-            </div>
-            <div class="login-actions">
-              <button
-                id="loginBtn"
-                class="portal-button portal-button-primary"
-                type="submit"
-                title="Đăng nhập để xem thông tin và báo cáo của học sinh"
-                aria-label="Đăng nhập để xem thông tin và báo cáo của học sinh">
-                Đăng nhập
-              </button>
-              <button
-                id="loginClearBtn"
-                class="portal-button portal-button-warning"
-                type="reset"
-                title="Xóa nội dung đã nhập"
-                aria-label="Xóa nội dung đã nhập">
-                Xóa
-              </button>
-            </div>
-          </form>
-          <div class="login-links">
-            <a
-              class="login-link"
-              href="mailto:support@eagles.edu.vn?subject=Parent%20portal%20password%20reset"
-              title="Yêu cầu đặt lại mật khẩu"
-              aria-label="Yêu cầu đặt lại mật khẩu"
-              >Đặt lại mật khẩu</a
-            >
-            <a class="login-link" href="tel:0937667818"
-              >0937&nbsp;667&nbsp;818</a
-            >
+        </div>
+      </section>
+
+      <section class="panel" id="loginCard" data-surface-role="panel">
+        <div class="section-head">
+          <h1>Đăng nhập</h1>
+          <div class="security-badge">
+            <img class="security-badge__icon security-badge__icon--light" src="/web-asset/shared/secure-network.svg"
+              alt="" aria-hidden="true">
+            <img class="security-badge__icon security-badge__icon--dark"
+              src="/web-asset/shared/secure-network-white.svg" alt="" aria-hidden="true">
+            <span class="security-badge__caption">Phiên bảo mật</span>
           </div>
-          <p id="loginStatus" class="status"></p>
-        </section>
-        <section class="panel hidden" id="invitationRecoveryCard" data-surface-role="panel">
-          <div class="section-head">
-            <h1>This link is no longer available</h1>
-            <span class="chip chip-warning">A new link is needed</span>
+        </div>
+        <form id="loginForm" class="login-form" novalidate>
+          <div class="form-row">
+            <label for="parentsId">Mã phụ huynh (parentsId)</label>
+            <input id="parentsId" type="text" autocomplete="username" placeholder="cm&lt;eaglesId&gt; hoặc mã gia đình">
+            <p class="field-hint">
+              Một tài khoản có thể liên kết nhiều học sinh.
+            </p>
           </div>
-          <p class="hint">Request a new link and check the same email address. If you need help, call 0937 667 818 or email support@eagles.edu.vn.</p>
+          <div class="form-row">
+            <label for="parentPassword">Mật khẩu</label>
+            <div class="password-visibility-field">
+              <input id="parentPassword" type="password" autocomplete="current-password"
+                placeholder="Mật khẩu dùng chung phụ huynh - học sinh" data-password-visibility>
+              <button type="button" class="password-visibility-toggle portal-button-info portal-button-amber-ink-dark"
+                data-password-visibility-toggle aria-label="Show password" aria-pressed="false"
+                title="Show password"></button>
+            </div>
+            <p class="field-hint">
+              Nhập đúng mật khẩu hiện hành của tài khoản.
+            </p>
+          </div>
           <div class="login-actions">
-            <button id="requestParentInvitationBtn" class="portal-button portal-button-primary" type="button">Send a new link</button>
+            <button id="loginBtn" class="portal-button portal-button-primary" type="submit"
+              title="Đăng nhập để xem thông tin và báo cáo của học sinh"
+              aria-label="Đăng nhập để xem thông tin và báo cáo của học sinh">
+              Đăng nhập
+            </button>
+            <button id="loginClearBtn" class="portal-button portal-button-warning" type="reset"
+              title="Xóa nội dung đã nhập" aria-label="Xóa nội dung đã nhập">
+              Xóa
+            </button>
           </div>
-          <p id="invitationRecoveryStatus" class="status" aria-live="polite"></p>
-        </section>
-        <section class="panel hidden" id="passwordSetupCard" data-surface-role="panel">
-          <div class="section-head">
-            <h1>Choose your parent password</h1>
-            <span class="chip chip-warning">Required first step</span>
+        </form>
+        <div class="login-links">
+          <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Parent%20portal%20password%20reset"
+            title="Yêu cầu đặt lại mật khẩu" aria-label="Yêu cầu đặt lại mật khẩu">Đặt lại mật khẩu</a>
+          <a class="login-link" href="tel:0937667818">0937&nbsp;667&nbsp;818</a>
+        </div>
+        <p id="loginStatus" class="status"></p>
+      </section>
+      <section class="panel hidden" id="invitationRecoveryCard" data-surface-role="panel">
+        <div class="section-head">
+          <h1>This link is no longer available</h1>
+          <span class="chip chip-warning">A new link is needed</span>
+        </div>
+        <p class="hint">Request a new link and check the same email address. If you need help, call 0937 667 818 or
+          email support@eagles.edu.vn.</p>
+        <div class="login-actions">
+          <button id="requestParentInvitationBtn" class="portal-button portal-button-primary" type="button">Send a new
+            link</button>
+        </div>
+        <p id="invitationRecoveryStatus" class="status" aria-live="polite"></p>
+      </section>
+      <section class="panel hidden" id="passwordSetupCard" data-surface-role="panel">
+        <div class="section-head">
+          <h1>Choose your parent password</h1>
+          <span class="chip chip-warning">Required first step</span>
+        </div>
+        <p class="hint">
+          Parent ID: <strong id="passwordSetupParentsId"></strong><br>
+          Choose your password now, then save both your Parent ID and password in a safe place.
+        </p>
+        <form id="passwordSetupForm" class="login-form" novalidate>
+          <input id="passwordSetupUsername" name="username" type="text" autocomplete="username" tabindex="-1"
+            aria-hidden="true" class="hidden">
+          <div class="form-row">
+            <label for="newParentPassword">New password</label>
+            <input id="newParentPassword" type="password" autocomplete="new-password" minlength="8" required>
           </div>
-          <p class="hint">
-            Parent ID: <strong id="passwordSetupParentsId"></strong><br>
-            Choose your password now, then save both your Parent ID and password in a safe place.
-          </p>
-          <form id="passwordSetupForm" class="login-form" novalidate>
-            <input id="passwordSetupUsername" name="username" type="text" autocomplete="username" tabindex="-1" aria-hidden="true" class="hidden">
-            <div class="form-row">
-              <label for="newParentPassword">New password</label>
-              <input id="newParentPassword" type="password" autocomplete="new-password" minlength="8" required>
-            </div>
-            <div class="form-row">
-              <label for="confirmParentPassword">Confirm password</label>
-              <input id="confirmParentPassword" type="password" autocomplete="new-password" minlength="8" required>
-            </div>
-            <p class="hint">At least 8 characters: 1 uppercase, 1 lowercase, and 1 symbol. Prohibited: spaces, &lt; &gt; &quot; ' ` and \.</p>
-            <div class="login-actions">
-              <button id="saveParentPasswordBtn" class="portal-button portal-button-primary" type="submit">Save password and continue</button>
-            </div>
-          </form>
-          <p id="passwordSetupStatus" class="status"></p>
-        </section>
-        <section
-          class="content hidden"
-          id="portalCard"
-          data-surface-role="content">
-          <div class="portal-grid">
-            <div class="portal-col">
-              <h2
-                id="parentOverviewSummary"
-                class="panel parent-overview-title-head"
-                data-surface-role="panel">
-                Đang tải bảng điều khiển học sinh...
-              </h2>
-
-              <section
-                class="panel"
-                id="identityPanel"
-                data-surface-role="panel">
-                <div class="section-head">
-                  <h3>Thông tin định danh học sinh</h3>
-                  <span class="chip chip-lock">Chỉ xem</span>
-                </div>
-                <div id="quickLinksPanel" class="portal-action-strip">
-                  <label class="quick-link-select">
-                    <span class="quick-link-select__label">Chọn học sinh</span>
-                    <select
-                      id="childSelect"
-                      aria-label="Chọn học sinh"></select>
-                  </label>
-                  <div class="portal-action-strip__actions">
-                    <button
-                      id="openChildPageBtn"
-                      type="button"
-                      class="portal-button portal-button-primary"
-                      title="Mở hồ sơ học sinh để xem và cập nhật thông tin"
-                      aria-label="Mở hồ sơ học sinh để xem và cập nhật thông tin">
-                      Hồ sơ
-                    </button>
-                    <button
-                      id="reloadBtn"
-                      type="button"
-                      class="portal-button portal-button-teal-refresh"
-                      title="Tải lại thông tin học sinh và số liệu mới nhất"
-                      aria-label="Tải lại thông tin học sinh và số liệu mới nhất">
-                      Tải lại
-                    </button>
-                    <button
-                      id="logoutBtn"
-                      type="button"
-                      class="portal-button portal-button-danger"
-                      title="Đăng xuất khỏi cổng phụ huynh"
-                      aria-label="Đăng xuất khỏi cổng phụ huynh">
-                      Đăng xuất
-                    </button>
-                  </div>
-                </div>
-                <p id="studentIdentity" class="hint">
-                  Đang tải thông tin học sinh...
-                </p>
-                <div class="identity-list">
-                  <div class="identity-item portal-theme-card">
-                    <span class="identity-label">Eagles ID</span>
-                    <span id="studentEaglesIdValue" class="identity-value"
-                      >-</span
-                    >
-                  </div>
-                  <div class="identity-item portal-theme-card">
-                    <span class="identity-label">Mã số học sinh</span>
-                    <span id="studentNumberValue" class="identity-value"
-                      >-</span
-                    >
-                  </div>
-                  <div class="identity-item portal-theme-card">
-                    <span class="identity-label">Họ và tên</span>
-                    <span id="studentNameValue" class="identity-value">-</span>
-                  </div>
-                  <div class="identity-item portal-theme-card">
-                    <span class="identity-label">Lớp hiện tại</span>
-                    <span id="studentGradeValue" class="identity-value">-</span>
-                    <span id="immutableGrade" class="identity-value hidden"
-                      >-</span
-                    >
-                  </div>
-                </div>
-              </section>
-
-              <section
-                id="metricsPanel"
-                class="panel"
-                data-surface-role="panel">
-                <div class="section-head">
-                  <h3>Tổng quan nhanh</h3>
-                  <span class="chip chip-neutral" id="snapshotBadge"
-                    >Chưa có dữ liệu</span
-                  >
-                </div>
-                <div class="metrics" id="dashboardMetrics"></div>
-              </section>
-
-              <section
-                id="pastDueHomeworkCard"
-                class="panel homework-card"
-                data-surface-role="panel">
-                <h3 class="homework-card-label">Bài tập về nhà quá hạn</h3>
-                <div class="homework-card-shell">
-                  <div
-                    id="pastDueHomeworkBadge"
-                    class="homework-square is-clear">
-                    <span class="homework-square-k">Quá hạn</span>
-                    <strong
-                      id="pastDueHomeworkBadgeValue"
-                      class="homework-square-v is-count"
-                      >0</strong
-                    >
-                  </div>
-                  <div class="homework-card-content">
-                    <h4 class="homework-content-title">
-                      Bài tập về nhà quá hạn
-                    </h4>
-                    <button
-                      id="openPastDueHomeworkModalBtn"
-                      class="homework-modal-btn portal-button portal-button-info"
-                      type="button"
-                      title="Xem danh sách bài tập về nhà quá hạn"
-                      aria-label="Xem danh sách bài tập về nhà quá hạn">
-                      Quá hạn
-                    </button>
-                    <p class="hint" id="pastDueHomeworkSummary">
-                      Chưa có dữ liệu.
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <section
-                id="newsQueueCard"
-                class="panel queue-panel"
-                data-surface-role="panel">
-                <div id="newsQueueDetails">
-                  <div class="queue-summary-head">
-                    <div class="queue-summary-stack">
-                      <h3 class="summary-title">Hàng chờ báo cáo tin tức</h3>
-                      <span
-                        id="newsQueueSummary"
-                        class="queue-summary-chips"
-                        aria-live="polite"></span>
-                    </div>
-                  </div>
-                  <div
-                    class="queue-table-wrap data-surface"
-                    data-surface-role="data-surface">
-                    <table class="news-queue-table">
-                      <thead>
-                        <tr>
-                          <th scope="col">Tuần báo cáo</th>
-                          <th scope="col">#</th>
-                          <th scope="col">Tình trạng</th>
-                          <th scope="col">Nộp gần nhất</th>
-                          <th scope="col">Mở</th>
-                        </tr>
-                      </thead>
-                      <tbody id="newsQueueBody">
-                        <tr>
-                          <td colspan="5">Đang tải...</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div class="actions actions-2">
-              <button
-                id="openNewsQueueDetailBtn"
-                type="button"
-                class="portal-button portal-button-primary"
-                title="Mở chi tiết các báo cáo tin tức đang chờ xem"
-                aria-label="Mở chi tiết các báo cáo tin tức đang chờ xem">
-                      Chi tiết
-                    </button>
-              <button
-                id="refreshNewsQueueBtn"
-                type="button"
-                class="portal-button portal-button-teal-refresh"
-                title="Tải lại hàng chờ báo cáo tin tức mới nhất"
-                aria-label="Tải lại hàng chờ báo cáo tin tức mới nhất">
-                      Tải lại
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <section
-                id="currentHomeworkCard"
-                class="panel homework-card"
-                data-surface-role="panel">
-                <h3 class="homework-card-label">Bài tập về nhà hiện tại</h3>
-                <div class="homework-card-shell">
-                  <div
-                    id="currentHomeworkBadge"
-                    class="homework-square is-none">
-                    <span class="homework-square-k">Tình trạng</span>
-                    <strong
-                      id="currentHomeworkBadgeValue"
-                      class="homework-square-v is-status"
-                      >Không</strong
-                    >
-                  </div>
-                  <div class="homework-card-content">
-                    <h4
-                      id="currentHomeworkHeader"
-                      class="homework-content-title">
-                      Bài tập về nhà hiện tại
-                    </h4>
-                    <a
-                      id="currentHomeworkAssignmentLink"
-                      class="homework-link hidden"
-                      href="#"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Xem thông báo phân công nhiệm vụ.</a
-                    >
-                    <p class="hint" id="currentHomeworkSummary">
-                      Chưa có dữ liệu.
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <section id="pastDueHomeworkModal" class="portal-modal hidden">
-                <div
-                  class="portal-modal-backdrop"
-                  id="pastDueHomeworkModalBackdrop"></div>
-                <div
-                  class="portal-modal-dialog"
-                  role="dialog"
-                  aria-modal="true"
-                  aria-labelledby="pastDueHomeworkModalTitle">
-                  <div class="portal-modal-head">
-                    <h4 id="pastDueHomeworkModalTitle">
-                      Bài tập về nhà quá hạn
-                    </h4>
-                    <button
-                      id="closePastDueHomeworkModalBtn"
-                class="portal-modal-close portal-button portal-button-warning"
-                      type="button"
-                      title="Đóng cửa sổ bài tập quá hạn và quay lại bảng điều khiển"
-                      aria-label="Đóng cửa sổ bài tập quá hạn và quay lại bảng điều khiển">
-                      Đóng
-                    </button>
-                  </div>
-                  <table class="homework-modal-table">
-                    <thead>
-                      <tr>
-                        <th scope="col">Ngày đến hạn</th>
-                        <th scope="col">Bài tập về nhà</th>
-                      </tr>
-                    </thead>
-                    <tbody id="pastDueHomeworkTableBody"></tbody>
-                  </table>
-                </div>
-              </section>
-
-              <section id="newsWeekSetModal" class="portal-modal hidden">
-                <div
-                  class="portal-modal-backdrop"
-                  id="newsWeekSetModalBackdrop"></div>
-                <div
-                  class="portal-modal-dialog"
-                  role="dialog"
-                  aria-modal="true"
-                  aria-labelledby="newsWeekSetModalTitle">
-                  <div class="portal-modal-head queue-modal-header">
-                    <div
-                      class="actions news-week-set-modal-nav queue-modal-nav">
-                      <strong id="newsWeekSetModalTitle"
-                        >Trình xem báo cáo tin tức học sinh</strong
-                      >
-                      <button
-                        id="newsWeekSetModalPrevBtn"
-                        type="button"
-                        class="portal-button portal-button-alt portal-button-alt-nav"
-                        title="Xem báo cáo tin tức liền trước trong tuần này"
-                        aria-label="Xem báo cáo tin tức liền trước trong tuần này">
-                        &lt;
-                      </button>
-                      <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
-                      <button
-                        id="newsWeekSetModalNextBtn"
-                        type="button"
-                        class="portal-button portal-button-alt portal-button-alt-nav"
-                        title="Xem báo cáo tin tức liền sau trong tuần này"
-                        aria-label="Xem báo cáo tin tức liền sau trong tuần này">
-                        &gt;
-                      </button>
-                    </div>
-                    <button
-                      id="closeNewsWeekSetModalBtn"
-                      class="portal-modal-close portal-button portal-button-warning"
-                      type="button"
-                      title="Đóng trình xem báo cáo tin tức"
-                      aria-label="Đóng trình xem báo cáo tin tức">
-                      Đóng
-                    </button>
-                  </div>
-                  <div class="portal-modal-body">
-                    <p id="newsWeekSetModalMeta" class="hint">
-                      Mở một tuần báo cáo để xem các bài đã nộp.
-                    </p>
-                    <div class="row">
-                      <div class="field c4">
-                        <label for="newsViewerReportDate"
-                          >1. Ngày báo cáo</label
-                        >
-                        <input
-                          id="newsViewerReportDate"
-                          type="date"
-                          readonly
-                          aria-readonly="true">
-                      </div>
-                      <div class="field c4">
-                        <h5>Tình trạng</h5>
-                        <span
-                          id="newsViewerReviewStatusChip"
-                          class="chip chip-neutral"
-                          >-</span
-                        >
-                      </div>
-                      <div class="field c4">
-                        <label for="newsViewerSubmittedAt">Thời gian nộp</label>
-                        <input
-                          id="newsViewerSubmittedAt"
-                          type="text"
-                          readonly
-                          aria-readonly="true">
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div class="field c12">
-                        <label for="newsViewerSourceLink"
-                          >2. Nguồn: dán liên kết đầy đủ của bài báo</label
-                        >
-                        <input
-                          id="newsViewerSourceLink"
-                          type="url"
-                          readonly
-                          aria-readonly="true">
-                      </div>
-                      <div class="field c12">
-                        <label for="newsViewerArticleTitle"
-                          >3. Dán tiêu đề đầy đủ của bài báo</label
-                        >
-                        <input
-                          id="newsViewerArticleTitle"
-                          type="text"
-                          readonly
-                          aria-readonly="true">
-                      </div>
-                      <div class="field c6">
-                        <label for="newsViewerByline"
-                          >4. Dán tác giả (byline; nếu không có, nhập CNN hoặc
-                          BBC)</label
-                        >
-                        <input
-                          id="newsViewerByline"
-                          type="text"
-                          readonly
-                          aria-readonly="true">
-                      </div>
-                      <div class="field c6">
-                        <label for="newsViewerArticleDateline"
-                          >5. Mốc thời gian (dateline) / Ngày đăng</label
-                        >
-                        <input
-                          id="newsViewerArticleDateline"
-                          type="text"
-                          readonly
-                          aria-readonly="true">
-                      </div>
-                      <div class="field c12">
-                        <label for="newsViewerLeadSynopsis"
-                          >6. Dán tóm tắt mở bài (đoạn đầu của bài báo)</label
-                        >
-                        <textarea
-                          id="newsViewerLeadSynopsis"
-                          readonly
-                          aria-readonly="true"></textarea>
-                      </div>
-                      <div class="field c6">
-                        <label for="newsViewerActionActor"
-                          >7. Ai hoặc cái gì thực hiện hành động tin tức?</label
-                        >
-                        <textarea
-                          id="newsViewerActionActor"
-                          readonly
-                          aria-readonly="true"></textarea>
-                      </div>
-                      <div class="field c6">
-                        <label for="newsViewerActionAffected"
-                          >8. Ai hoặc cái gì nhận chịu tác động của hành động
-                          tin tức?</label
-                        >
-                        <textarea
-                          id="newsViewerActionAffected"
-                          readonly
-                          aria-readonly="true"></textarea>
-                      </div>
-                      <div class="field c6">
-                        <label for="newsViewerActionWhere"
-                          >9. Hành động tin tức xảy ra ở đâu?</label
-                        >
-                        <textarea
-                          id="newsViewerActionWhere"
-                          readonly
-                          aria-readonly="true"></textarea>
-                      </div>
-                      <div class="field c6">
-                        <label for="newsViewerActionWhat"
-                          >10. Mô tả hành động tin tức hiện tại (đã xảy ra điều
-                          gì)?</label
-                        >
-                        <textarea
-                          id="newsViewerActionWhat"
-                          readonly
-                          aria-readonly="true"></textarea>
-                      </div>
-                      <div class="field c12">
-                        <label for="newsViewerActionWhy"
-                          >11. Vì sao hoặc bằng cách nào hành động tin tức xảy
-                          ra?</label
-                        >
-                        <textarea
-                          id="newsViewerActionWhy"
-                          readonly
-                          aria-readonly="true"></textarea>
-                      </div>
-                      <div class="field c12">
-                        <label for="newsViewerBiasAssessment"
-                          >12. Bạn có nghi ngờ bài báo có thiên kiến, chủ đích,
-                          định hướng hoặc xuyên tạc không? Hãy giải
-                          thích.</label
-                        >
-                        <textarea
-                          id="newsViewerBiasAssessment"
-                          readonly
-                          aria-readonly="true"></textarea>
-                      </div>
-                      <section
-                        id="newsWeekSetModalVocabulary"
-                        class="news-review-vocabulary"
-                        aria-label="Vocabulary">
-                        <strong>13. Từ vựng</strong>
-                        <div
-                          id="newsWeekSetModalVocabularyRows"
-                          class="news-review-vocabulary-rows"></div>
-                        <hr>
-                      </section>
-                    </div>
-                  </div>
-                  <div class="portal-modal-actions">
-                    <button
-                      id="newsWeekSetModalCloseActionBtn"
-                      type="button"
-                      class="portal-button portal-button-warning"
-                      title="Đóng trình xem báo cáo tin tức"
-                      aria-label="Đóng trình xem báo cáo tin tức">
-                      Đóng
-                    </button>
-                  </div>
-                  <p id="newsWeekSetModalStatus" class="hint">
-                    Trình xem đã sẵn sàng.
-                  </p>
-                </div>
-              </section>
-
-              <section
-                id="attendanceCalendarCard"
-                class="panel"
-                data-surface-role="panel">
-                <div class="section-head">
-                  <h3>Hồ sơ điểm danh lớp học</h3>
-                </div>
-                <div
-                  id="attendanceCalendarMetrics"
-                  class="attendance-overview-grid"></div>
-                <div class="hidden" aria-hidden="true">
-                  <strong id="attendanceClassesAttendedValue">0</strong>
-                  <strong id="attendanceClassesTotalValue">0</strong>
-                  <strong id="attendanceRateValue">0%</strong>
-                  <strong id="attendanceLateTardy10Value">0</strong>
-                  <strong id="attendanceLateTardy30Value">0</strong>
-                  <strong id="attendanceLateRateValue">0%</strong>
-                </div>
-                <p class="hint" id="attendanceCalendarSummary">
-                  Chưa có dữ liệu.
-                </p>
-              </section>
-
-              <section
-                id="performanceReportsCard"
-                class="panel"
-                data-surface-role="panel">
-                <div class="section-head">
-                  <h3>Lưu trữ báo cáo kết quả học tập của học sinh</h3>
-                </div>
-                <div
-                  id="performanceReportsList"
-                  class="report-archive-list"></div>
-                <p class="hint" id="performanceReportsSummary">
-                  Chưa có dữ liệu.
-                </p>
-              </section>
-
-              <section id="performanceReportModal" class="portal-modal hidden">
-                <div
-                  class="portal-modal-backdrop"
-                  id="performanceReportModalBackdrop"></div>
-                <div
-                  class="portal-modal-dialog"
-                  role="dialog"
-                  aria-modal="true"
-                  aria-labelledby="performanceReportModalTitle">
-                  <div class="portal-modal-head">
-                    <h4 id="performanceReportModalTitle">
-                      Báo cáo kết quả học tập
-                    </h4>
-                    <div class="report-modal-nav">
-                      <button
-                      id="performanceReportPrevBtn"
-                      type="button"
-                      class="portal-button portal-button-alt"
-                      title="Xem báo cáo kết quả liền trước"
-                      aria-label="Xem báo cáo kết quả liền trước">
-                        Trước
-                      </button>
-                      <button
-                      id="performanceReportNextBtn"
-                      type="button"
-                      class="portal-button portal-button-alt"
-                      title="Xem báo cáo kết quả liền sau"
-                      aria-label="Xem báo cáo kết quả liền sau">
-                        Tiếp
-                      </button>
-                      <button
-                      id="closePerformanceReportModalBtn"
-                      class="portal-modal-close portal-button portal-button-warning"
-                      type="button"
-                      title="Đóng báo cáo kết quả và quay lại bảng điều khiển"
-                      aria-label="Đóng báo cáo kết quả và quay lại bảng điều khiển">
-                        Đóng
-                      </button>
-                    </div>
-                  </div>
-                  <div class="report-modal-body">
-                    <section
-                      id="performanceReportHeader"
-                      class="report-head-grid">
-                      <article class="report-head-card">
-                        <h5>Ngày | Thứ | Giờ</h5>
-                        <p
-                          id="performanceReportModalMeta"
-                          class="report-head-value">
-                          -
-                        </p>
-                      </article>
-                      <article class="report-head-card">
-                        <h5>Lớp | Mã số HS | Họ tên học sinh | Eagles ID</h5>
-                        <p
-                          id="performanceReportIdentity"
-                          class="report-head-value">
-                          -
-                        </p>
-                      </article>
-                    </section>
-                    <section
-                      id="performanceReportHomeworkBlock"
-                      class="report-block">
-                      <h5>Bài tập về nhà hiện tại | Bài tập về nhà quá hạn</h5>
-                      <div class="report-homework-cards">
-                        <section class="homework-card">
-                          <h3 class="homework-card-label">
-                            Bài tập về nhà hiện tại
-                          </h3>
-                          <div class="homework-card-shell">
-                            <div
-                              id="reportCurrentHomeworkBadge"
-                              class="homework-square is-none">
-                              <span class="homework-square-k">Tình trạng</span>
-                              <strong
-                                id="reportCurrentHomeworkBadgeValue"
-                                class="homework-square-v is-status"
-                                >Không có</strong
-                              >
-                            </div>
-                            <div class="homework-card-content">
-                              <h4
-                                id="reportCurrentHomeworkHeader"
-                                class="homework-content-title">
-                                Bài tập hiện tại
-                              </h4>
-                              <p class="hint" id="reportCurrentHomeworkSummary">
-                                Không có bài tập hiện tại.
-                              </p>
-                            </div>
-                          </div>
-                        </section>
-                        <section class="homework-card">
-                          <h3 class="homework-card-label">
-                            Bài tập về nhà quá hạn
-                          </h3>
-                          <div class="homework-card-shell">
-                            <div
-                              id="reportPastDueHomeworkBadge"
-                              class="homework-square is-clear">
-                              <span class="homework-square-k">Quá hạn</span>
-                              <strong
-                                id="reportPastDueHomeworkBadgeValue"
-                                class="homework-square-v is-count"
-                                >0</strong
-                              >
-                            </div>
-                            <div class="homework-card-content">
-                              <h4 class="homework-content-title">
-                                Bài tập về nhà quá hạn
-                              </h4>
-                              <button
-                                id="reportPastDueHomeworkPreviewBtn"
-                                class="homework-modal-btn portal-button portal-button-info"
-                                type="button"
-                                title="Xem danh sách bài tập về nhà quá hạn"
-                                aria-label="Xem danh sách bài tập về nhà quá hạn">
-                                Xem quá hạn
-                              </button>
-                              <p class="hint" id="reportPastDueHomeworkSummary">
-                                Không có bài tập quá hạn.
-                              </p>
-                            </div>
-                          </div>
-                        </section>
-                      </div>
-                    </section>
-                    <div
-                      id="performanceReportModalSections"
-                      class="report-bands"></div>
-                    <section class="report-grade-block">
-                      <h5>Điểm YTD</h5>
-                      <div class="report-grade-card">
-                        <div
-                          id="performanceReportGradesTable"
-                          class="report-grades-table portal-theme-table-shell data-surface"
-                          data-surface-role="data-surface"></div>
-                      </div>
-                      <p
-                        id="performanceReportGradesHint"
-                        class="report-grades-hint hidden">
-                        Chưa có dữ liệu điểm để hiển thị.
-                      </p>
-                    </section>
-                    <section
-                      id="performanceReportAttendanceBlock"
-                      class="report-block">
-                      <h5>Hồ sơ điểm danh lớp học</h5>
-                      <div
-                        id="performanceReportAttendanceMetrics"
-                        class="metrics report-metrics"></div>
-                    </section>
-                    <div class="report-modal-ack">
-                    <button
-                      id="acknowledgePerformanceReportBtn"
-                      type="button"
-                      class="portal-button portal-button-affirm"
-                      title="Xác nhận bạn đã xem báo cáo kết quả"
-                      aria-label="Xác nhận bạn đã xem báo cáo kết quả">
-                        Đã xem
-                      </button>
-                      <span
-                        id="performanceReportAckStatus"
-                        class="report-modal-ack-status"
-                        >Chưa xác nhận.</span
-                      >
-                      <div
-                        id="performanceReportStudentReviewStatus"
-                        class="report-modal-ack-status is-peer">
-                        Chờ học sinh xác nhận.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section>
-              <section id="reportAccessErrorModal" class="portal-modal hidden">
-                <div
-                  class="portal-modal-backdrop"
-                  id="reportAccessErrorModalBackdrop"></div>
-                <div
-                  class="portal-modal-dialog"
-                  role="dialog"
-                  aria-modal="true"
-                  aria-labelledby="reportAccessErrorModalTitle">
-                  <div class="portal-modal-head">
-                    <h4 id="reportAccessErrorModalTitle">
-                      Report access warning
-                    </h4>
-                    <button
-                      id="closeReportAccessErrorModalBtn"
-                      class="portal-modal-close portal-button portal-button-warning"
-                      type="button"
-                      title="Đóng cảnh báo và quay lại bảng điều khiển"
-                      aria-label="Đóng cảnh báo và quay lại bảng điều khiển">
-                      Đóng
-                    </button>
-                  </div>
-                  <div class="portal-modal-body">
-                    <p id="reportAccessErrorModalMessage">
-                      LINK doesn't MATCH STUDENT OR FAMILY ACCOUNT
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <section
-                id="gradesYtdCard"
-                class="panel"
-                data-surface-role="panel">
-                <div class="section-head">
-                  <h3>Điểm YTD</h3>
-                </div>
-                <p class="hint" id="gradesYtdSummary">Chưa có dữ liệu.</p>
-              </section>
-
-              <section
-                id="recommendationsCard"
-                class="panel"
-                data-surface-role="panel">
-                <div class="section-head">
-                  <h3>Khuyến nghị học tập</h3>
-                </div>
-                <p class="hint" id="recommendationsSummary">Chưa có dữ liệu.</p>
-              </section>
-
-              <p id="portalStatus" class="status"></p>
-            </div>
+          <div class="form-row">
+            <label for="confirmParentPassword">Confirm password</label>
+            <input id="confirmParentPassword" type="password" autocomplete="new-password" minlength="8" required>
           </div>
-        </section>
-
-        <section
-          class="content hidden"
-          id="portalDetailCard"
-          data-surface-role="content">
-          <div class="section-head">
-            <h2 id="portalDetailTitle">Chi tiết học sinh</h2>
-            <div class="actions">
-              <button
-                id="portalDetailBackToMainBtn"
-                type="button"
-                class="portal-button portal-button-alt"
-                title="Quay lại bảng điều khiển chính"
-                aria-label="Quay lại bảng điều khiển chính">
-                Quay lại
-              </button>
-            </div>
+          <p class="hint">At least 8 characters: 1 uppercase, 1 lowercase, and 1 symbol. Prohibited: spaces, &lt; &gt;
+            &quot; ' ` and \.</p>
+          <div class="login-actions">
+            <button id="saveParentPasswordBtn" class="portal-button portal-button-primary" type="submit">Save password
+              and continue</button>
           </div>
-          <p id="portalDetailLead" class="detail-copy">
-            Đang tải chi tiết học sinh...
-          </p>
-          <div class="metrics" id="portalDetailMetrics"></div>
-          <div class="detail-layout">
-            <section
-              class="panel detail-calendar-panel"
-              data-surface-role="panel">
+        </form>
+        <p id="passwordSetupStatus" class="status"></p>
+      </section>
+      <section class="content hidden" id="portalCard" data-surface-role="content">
+        <div class="portal-grid">
+          <div class="portal-col">
+            <h2 id="parentOverviewSummary" class="panel parent-overview-title-head" data-surface-role="panel">
+              Đang tải bảng điều khiển học sinh...
+            </h2>
+
+            <section class="panel" id="identityPanel" data-surface-role="panel">
               <div class="section-head">
-                <h3 id="portalDetailCalendarTitle">Lịch</h3>
+                <h3>Thông tin định danh học sinh</h3>
+                <span class="chip chip-lock">Chỉ xem</span>
               </div>
-              <p id="portalDetailCalendarSummary" class="hint">
-                Chưa có dữ liệu.
+              <div id="quickLinksPanel" class="portal-action-strip">
+                <label class="quick-link-select">
+                  <span class="quick-link-select__label">Chọn học sinh</span>
+                  <select id="childSelect" aria-label="Chọn học sinh"></select>
+                </label>
+                <div class="portal-action-strip__actions">
+                  <button id="openChildPageBtn" type="button" class="portal-button portal-button-primary"
+                    title="Mở hồ sơ học sinh để xem và cập nhật thông tin"
+                    aria-label="Mở hồ sơ học sinh để xem và cập nhật thông tin">
+                    Hồ sơ
+                  </button>
+                  <button id="reloadBtn" type="button" class="portal-button portal-button-teal-refresh"
+                    title="Tải lại thông tin học sinh và số liệu mới nhất"
+                    aria-label="Tải lại thông tin học sinh và số liệu mới nhất">
+                    Tải lại
+                  </button>
+                  <button id="logoutBtn" type="button" class="portal-button portal-button-danger"
+                    title="Đăng xuất khỏi cổng phụ huynh" aria-label="Đăng xuất khỏi cổng phụ huynh">
+                    Đăng xuất
+                  </button>
+                </div>
+              </div>
+              <p id="studentIdentity" class="hint">
+                Đang tải thông tin học sinh...
               </p>
-              <div
-                id="portalDetailCalendarGrid"
-                class="calendar-shell"
-                aria-live="polite"></div>
+              <div class="identity-list">
+                <div class="identity-item portal-theme-card">
+                  <span class="identity-label">Eagles ID</span>
+                  <span id="studentEaglesIdValue" class="identity-value">-</span>
+                </div>
+                <div class="identity-item portal-theme-card">
+                  <span class="identity-label">Mã số học sinh</span>
+                  <span id="studentNumberValue" class="identity-value">-</span>
+                </div>
+                <div class="identity-item portal-theme-card">
+                  <span class="identity-label">Họ và tên</span>
+                  <span id="studentNameValue" class="identity-value">-</span>
+                </div>
+                <div class="identity-item portal-theme-card">
+                  <span class="identity-label">Lớp hiện tại</span>
+                  <span id="studentGradeValue" class="identity-value">-</span>
+                  <span id="immutableGrade" class="identity-value hidden">-</span>
+                </div>
+              </div>
             </section>
 
-            <section class="panel" data-surface-role="panel">
+            <section id="metricsPanel" class="panel" data-surface-role="panel">
               <div class="section-head">
-                <h3 id="portalDetailPrimaryTitle">Trọng tâm hiện tại</h3>
+                <h3>Tổng quan nhanh</h3>
+                <span class="chip chip-neutral" id="snapshotBadge">Chưa có dữ liệu</span>
               </div>
-              <div id="portalDetailPrimaryList" class="detail-list"></div>
-              <div
-                id="portalDetailPrimaryTable"
-                class="queue-table-wrap data-surface hidden"
-                data-surface-role="data-surface">
-                <table class="news-queue-table">
+              <div class="metrics" id="dashboardMetrics"></div>
+            </section>
+
+            <section id="pastDueHomeworkCard" class="panel homework-card" data-surface-role="panel">
+              <h3 class="homework-card-label">Bài tập về nhà quá hạn</h3>
+              <div class="homework-card-shell">
+                <div id="pastDueHomeworkBadge" class="homework-square is-clear">
+                  <span class="homework-square-k">Quá hạn</span>
+                  <strong id="pastDueHomeworkBadgeValue" class="homework-square-v is-count">0</strong>
+                </div>
+                <div class="homework-card-content">
+                  <h4 class="homework-content-title">
+                    Bài tập về nhà quá hạn
+                  </h4>
+                  <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn portal-button portal-button-info"
+                    type="button" title="Xem danh sách bài tập về nhà quá hạn"
+                    aria-label="Xem danh sách bài tập về nhà quá hạn">
+                    Quá hạn
+                  </button>
+                  <p class="hint" id="pastDueHomeworkSummary">
+                    Chưa có dữ liệu.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section id="newsQueueCard" class="panel queue-panel" data-surface-role="panel">
+              <div id="newsQueueDetails">
+                <div class="queue-summary-head">
+                  <div class="queue-summary-stack">
+                    <h3 class="summary-title">Hàng chờ báo cáo tin tức</h3>
+                    <span id="newsQueueSummary" class="queue-summary-chips" aria-live="polite"></span>
+                  </div>
+                </div>
+                <div class="queue-table-wrap data-surface" data-surface-role="data-surface">
+                  <table class="news-queue-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Tuần báo cáo</th>
+                        <th scope="col">#</th>
+                        <th scope="col">Tình trạng</th>
+                        <th scope="col">Nộp gần nhất</th>
+                        <th scope="col">Mở</th>
+                      </tr>
+                    </thead>
+                    <tbody id="newsQueueBody">
+                      <tr>
+                        <td colspan="5">Đang tải...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="actions actions-2">
+                  <button id="openNewsQueueDetailBtn" type="button" class="portal-button portal-button-primary"
+                    title="Mở chi tiết các báo cáo tin tức đang chờ xem"
+                    aria-label="Mở chi tiết các báo cáo tin tức đang chờ xem">
+                    Chi tiết
+                  </button>
+                  <button id="refreshNewsQueueBtn" type="button" class="portal-button portal-button-teal-refresh"
+                    title="Tải lại hàng chờ báo cáo tin tức mới nhất"
+                    aria-label="Tải lại hàng chờ báo cáo tin tức mới nhất">
+                    Tải lại
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section id="currentHomeworkCard" class="panel homework-card" data-surface-role="panel">
+              <h3 class="homework-card-label">Bài tập về nhà hiện tại</h3>
+              <div class="homework-card-shell">
+                <div id="currentHomeworkBadge" class="homework-square is-none">
+                  <span class="homework-square-k">Tình trạng</span>
+                  <strong id="currentHomeworkBadgeValue" class="homework-square-v is-status">Không</strong>
+                </div>
+                <div class="homework-card-content">
+                  <h4 id="currentHomeworkHeader" class="homework-content-title">
+                    Bài tập về nhà hiện tại
+                  </h4>
+                  <a id="currentHomeworkAssignmentLink" class="homework-link hidden" href="#" target="_blank"
+                    rel="noopener noreferrer">Xem thông báo phân công nhiệm vụ.</a>
+                  <p class="hint" id="currentHomeworkSummary">
+                    Chưa có dữ liệu.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section id="pastDueHomeworkModal" class="portal-modal hidden">
+              <div class="portal-modal-backdrop" id="pastDueHomeworkModalBackdrop"></div>
+              <div class="portal-modal-dialog" role="dialog" aria-modal="true"
+                aria-labelledby="pastDueHomeworkModalTitle">
+                <div class="portal-modal-head">
+                  <h4 id="pastDueHomeworkModalTitle">
+                    Bài tập về nhà quá hạn
+                  </h4>
+                  <button id="closePastDueHomeworkModalBtn"
+                    class="portal-modal-close portal-button portal-button-warning" type="button"
+                    title="Đóng cửa sổ bài tập quá hạn và quay lại bảng điều khiển"
+                    aria-label="Đóng cửa sổ bài tập quá hạn và quay lại bảng điều khiển">
+                    Đóng
+                  </button>
+                </div>
+                <table class="homework-modal-table">
                   <thead>
                     <tr>
-                      <th scope="col">Tuần báo cáo</th>
-                      <th scope="col">#</th>
-                      <th scope="col">Tình trạng</th>
-                      <th scope="col">Nộp gần nhất</th>
-                      <th scope="col">Mở</th>
+                      <th scope="col">Ngày đến hạn</th>
+                      <th scope="col">Bài tập về nhà</th>
                     </tr>
                   </thead>
-                  <tbody id="portalDetailQueueBody">
-                    <tr>
-                      <td colspan="5">Chưa có báo cáo tin tức.</td>
-                    </tr>
-                  </tbody>
+                  <tbody id="pastDueHomeworkTableBody"></tbody>
                 </table>
               </div>
             </section>
 
-            <section class="panel" data-surface-role="panel">
-              <div class="section-head">
-                <h3 id="portalDetailHistoryTitle">Lịch sử gần đây</h3>
+            <section id="newsWeekSetModal" class="portal-modal hidden">
+              <div class="portal-modal-backdrop" id="newsWeekSetModalBackdrop"></div>
+              <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsWeekSetModalTitle">
+                <div class="portal-modal-head queue-modal-header">
+                  <div class="actions news-week-set-modal-nav queue-modal-nav">
+                    <strong id="newsWeekSetModalTitle">Trình xem báo cáo tin tức học sinh</strong>
+                    <button id="newsWeekSetModalPrevBtn" type="button"
+                      class="portal-button portal-button-alt portal-button-alt-nav"
+                      title="Xem báo cáo tin tức liền trước trong tuần này"
+                      aria-label="Xem báo cáo tin tức liền trước trong tuần này">
+                      &lt;
+                    </button>
+                    <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
+                    <button id="newsWeekSetModalNextBtn" type="button"
+                      class="portal-button portal-button-alt portal-button-alt-nav"
+                      title="Xem báo cáo tin tức liền sau trong tuần này"
+                      aria-label="Xem báo cáo tin tức liền sau trong tuần này">
+                      &gt;
+                    </button>
+                  </div>
+                  <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-warning"
+                    type="button" title="Đóng trình xem báo cáo tin tức" aria-label="Đóng trình xem báo cáo tin tức">
+                    Đóng
+                  </button>
+                </div>
+                <div class="portal-modal-body">
+                  <p id="newsWeekSetModalMeta" class="hint">
+                    Mở một tuần báo cáo để xem các bài đã nộp.
+                  </p>
+                  <div class="row">
+                    <div class="field c4">
+                      <label for="newsViewerReportDate">1. Ngày báo cáo</label>
+                      <input id="newsViewerReportDate" type="date" readonly aria-readonly="true">
+                    </div>
+                    <div class="field c4">
+                      <h5>Tình trạng</h5>
+                      <span id="newsViewerReviewStatusChip" class="chip chip-neutral">-</span>
+                    </div>
+                    <div class="field c4">
+                      <label for="newsViewerSubmittedAt">Thời gian nộp</label>
+                      <input id="newsViewerSubmittedAt" type="text" readonly aria-readonly="true">
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="field c12">
+                      <label for="newsViewerSourceLink">2. Nguồn: dán liên kết đầy đủ của bài báo</label>
+                      <input id="newsViewerSourceLink" type="url" readonly aria-readonly="true">
+                    </div>
+                    <div class="field c12">
+                      <label for="newsViewerArticleTitle">3. Dán tiêu đề đầy đủ của bài báo</label>
+                      <input id="newsViewerArticleTitle" type="text" readonly aria-readonly="true">
+                    </div>
+                    <div class="field c6">
+                      <label for="newsViewerByline">4. Dán tác giả (byline; nếu không có, nhập CNN hoặc
+                        BBC)</label>
+                      <input id="newsViewerByline" type="text" readonly aria-readonly="true">
+                    </div>
+                    <div class="field c6">
+                      <label for="newsViewerArticleDateline">5. Mốc thời gian (dateline) / Ngày đăng</label>
+                      <input id="newsViewerArticleDateline" type="text" readonly aria-readonly="true">
+                    </div>
+                    <div class="field c12">
+                      <label for="newsViewerLeadSynopsis">6. Dán tóm tắt mở bài (đoạn đầu của bài báo)</label>
+                      <textarea id="newsViewerLeadSynopsis" readonly aria-readonly="true"></textarea>
+                    </div>
+                    <div class="field c6">
+                      <label for="newsViewerActionActor">7. Ai hoặc cái gì thực hiện hành động tin tức?</label>
+                      <textarea id="newsViewerActionActor" readonly aria-readonly="true"></textarea>
+                    </div>
+                    <div class="field c6">
+                      <label for="newsViewerActionAffected">8. Ai hoặc cái gì nhận chịu tác động của hành động
+                        tin tức?</label>
+                      <textarea id="newsViewerActionAffected" readonly aria-readonly="true"></textarea>
+                    </div>
+                    <div class="field c6">
+                      <label for="newsViewerActionWhere">9. Hành động tin tức xảy ra ở đâu?</label>
+                      <textarea id="newsViewerActionWhere" readonly aria-readonly="true"></textarea>
+                    </div>
+                    <div class="field c6">
+                      <label for="newsViewerActionWhat">10. Mô tả hành động tin tức hiện tại (đã xảy ra điều
+                        gì)?</label>
+                      <textarea id="newsViewerActionWhat" readonly aria-readonly="true"></textarea>
+                    </div>
+                    <div class="field c12">
+                      <label for="newsViewerActionWhy">11. Vì sao hoặc bằng cách nào hành động tin tức xảy
+                        ra?</label>
+                      <textarea id="newsViewerActionWhy" readonly aria-readonly="true"></textarea>
+                    </div>
+                    <div class="field c12">
+                      <label for="newsViewerBiasAssessment">12. Bạn có nghi ngờ bài báo có thiên kiến, chủ đích,
+                        định hướng hoặc xuyên tạc không? Hãy giải
+                        thích.</label>
+                      <textarea id="newsViewerBiasAssessment" readonly aria-readonly="true"></textarea>
+                    </div>
+                    <section id="newsWeekSetModalVocabulary" class="news-review-vocabulary" aria-label="Vocabulary">
+                      <strong>13. Từ vựng</strong>
+                      <div id="newsWeekSetModalVocabularyRows" class="news-review-vocabulary-rows"></div>
+                      <hr>
+                    </section>
+                  </div>
+                </div>
+                <div class="portal-modal-actions">
+                  <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-warning"
+                    title="Đóng trình xem báo cáo tin tức" aria-label="Đóng trình xem báo cáo tin tức">
+                    Đóng
+                  </button>
+                </div>
+                <p id="newsWeekSetModalStatus" class="hint">
+                  Trình xem đã sẵn sàng.
+                </p>
               </div>
-              <div id="portalDetailHistoryList" class="detail-list"></div>
             </section>
-          </div>
-          <p id="portalDetailStatus" class="status"></p>
-        </section>
 
-        <section
-          class="content hidden"
-          id="childPageCard"
-          data-surface-role="content">
-          <div class="section-head">
-            <h2>Trang học sinh: Biểu mẫu cập nhật hồ sơ</h2>
-            <div class="toolbar-actions">
-              <button
-                id="backToDashboardBtn"
-                type="button"
-                class="portal-button portal-button-alt"
-                title="Quay lại bảng điều khiển chính"
-                aria-label="Quay lại bảng điều khiển chính">
-                Quay lại
-              </button>
-              <button
-                id="logoutBtnChild"
-                type="button"
-                class="portal-button portal-button-danger"
-                title="Đăng xuất khỏi cổng phụ huynh"
-                aria-label="Đăng xuất khỏi cổng phụ huynh">
-                Đăng xuất
-              </button>
-            </div>
+            <section id="attendanceCalendarCard" class="panel" data-surface-role="panel">
+              <div class="section-head">
+                <h3>Hồ sơ điểm danh lớp học</h3>
+              </div>
+              <div id="attendanceCalendarMetrics" class="attendance-overview-grid"></div>
+              <div class="hidden" aria-hidden="true">
+                <strong id="attendanceClassesAttendedValue">0</strong>
+                <strong id="attendanceClassesTotalValue">0</strong>
+                <strong id="attendanceRateValue">0%</strong>
+                <strong id="attendanceLateTardy10Value">0</strong>
+                <strong id="attendanceLateTardy30Value">0</strong>
+                <strong id="attendanceLateRateValue">0%</strong>
+              </div>
+              <p class="hint" id="attendanceCalendarSummary">
+                Chưa có dữ liệu.
+              </p>
+            </section>
+
+            <section id="performanceReportsCard" class="panel" data-surface-role="panel">
+              <div class="section-head">
+                <h3>Lưu trữ báo cáo kết quả học tập của học sinh</h3>
+              </div>
+              <div id="performanceReportsList" class="report-archive-list"></div>
+              <p class="hint" id="performanceReportsSummary">
+                Chưa có dữ liệu.
+              </p>
+            </section>
+
+            <section id="performanceReportModal" class="portal-modal hidden">
+              <div class="portal-modal-backdrop" id="performanceReportModalBackdrop"></div>
+              <div class="portal-modal-dialog" role="dialog" aria-modal="true"
+                aria-labelledby="performanceReportModalTitle">
+                <div class="portal-modal-head">
+                  <h4 id="performanceReportModalTitle">
+                    Báo cáo kết quả học tập
+                  </h4>
+                  <div class="report-modal-nav">
+                    <button id="performanceReportPrevBtn" type="button" class="portal-button portal-button-alt"
+                      title="Xem báo cáo kết quả liền trước" aria-label="Xem báo cáo kết quả liền trước">
+                      Trước
+                    </button>
+                    <button id="performanceReportNextBtn" type="button" class="portal-button portal-button-alt"
+                      title="Xem báo cáo kết quả liền sau" aria-label="Xem báo cáo kết quả liền sau">
+                      Tiếp
+                    </button>
+                    <button id="closePerformanceReportModalBtn"
+                      class="portal-modal-close portal-button portal-button-warning" type="button"
+                      title="Đóng báo cáo kết quả và quay lại bảng điều khiển"
+                      aria-label="Đóng báo cáo kết quả và quay lại bảng điều khiển">
+                      Đóng
+                    </button>
+                  </div>
+                </div>
+                <div class="report-modal-body">
+                  <section id="performanceReportHeader" class="report-head-grid">
+                    <article class="report-head-card">
+                      <h5>Ngày | Thứ | Giờ</h5>
+                      <p id="performanceReportModalMeta" class="report-head-value">
+                        -
+                      </p>
+                    </article>
+                    <article class="report-head-card">
+                      <h5>Lớp | Mã số HS | Họ tên học sinh | Eagles ID</h5>
+                      <p id="performanceReportIdentity" class="report-head-value">
+                        -
+                      </p>
+                    </article>
+                  </section>
+                  <section id="performanceReportHomeworkBlock" class="report-block">
+                    <h5>Bài tập về nhà hiện tại | Bài tập về nhà quá hạn</h5>
+                    <div class="report-homework-cards">
+                      <section class="homework-card">
+                        <h3 class="homework-card-label">
+                          Bài tập về nhà hiện tại
+                        </h3>
+                        <div class="homework-card-shell">
+                          <div id="reportCurrentHomeworkBadge" class="homework-square is-none">
+                            <span class="homework-square-k">Tình trạng</span>
+                            <strong id="reportCurrentHomeworkBadgeValue" class="homework-square-v is-status">Không
+                              có</strong>
+                          </div>
+                          <div class="homework-card-content">
+                            <h4 id="reportCurrentHomeworkHeader" class="homework-content-title">
+                              Bài tập hiện tại
+                            </h4>
+                            <p class="hint" id="reportCurrentHomeworkSummary">
+                              Không có bài tập hiện tại.
+                            </p>
+                          </div>
+                        </div>
+                      </section>
+                      <section class="homework-card">
+                        <h3 class="homework-card-label">
+                          Bài tập về nhà quá hạn
+                        </h3>
+                        <div class="homework-card-shell">
+                          <div id="reportPastDueHomeworkBadge" class="homework-square is-clear">
+                            <span class="homework-square-k">Quá hạn</span>
+                            <strong id="reportPastDueHomeworkBadgeValue" class="homework-square-v is-count">0</strong>
+                          </div>
+                          <div class="homework-card-content">
+                            <h4 class="homework-content-title">
+                              Bài tập về nhà quá hạn
+                            </h4>
+                            <button id="reportPastDueHomeworkPreviewBtn"
+                              class="homework-modal-btn portal-button portal-button-info" type="button"
+                              title="Xem danh sách bài tập về nhà quá hạn"
+                              aria-label="Xem danh sách bài tập về nhà quá hạn">
+                              Xem quá hạn
+                            </button>
+                            <p class="hint" id="reportPastDueHomeworkSummary">
+                              Không có bài tập quá hạn.
+                            </p>
+                          </div>
+                        </div>
+                      </section>
+                    </div>
+                  </section>
+                  <div id="performanceReportModalSections" class="report-bands"></div>
+                  <section class="report-grade-block">
+                    <h5>Điểm YTD</h5>
+                    <div class="report-grade-card">
+                      <div id="performanceReportGradesTable"
+                        class="report-grades-table portal-theme-table-shell data-surface"
+                        data-surface-role="data-surface"></div>
+                    </div>
+                    <p id="performanceReportGradesHint" class="report-grades-hint hidden">
+                      Chưa có dữ liệu điểm để hiển thị.
+                    </p>
+                  </section>
+                  <section id="performanceReportAttendanceBlock" class="report-block">
+                    <h5>Hồ sơ điểm danh lớp học</h5>
+                    <div id="performanceReportAttendanceMetrics" class="metrics report-metrics"></div>
+                  </section>
+                  <div class="report-modal-ack">
+                    <button id="acknowledgePerformanceReportBtn" type="button"
+                      class="portal-button portal-button-affirm" title="Xác nhận bạn đã xem báo cáo kết quả"
+                      aria-label="Xác nhận bạn đã xem báo cáo kết quả">
+                      Đã xem
+                    </button>
+                    <span id="performanceReportAckStatus" class="report-modal-ack-status">Chưa xác nhận.</span>
+                    <div id="performanceReportStudentReviewStatus" class="report-modal-ack-status is-peer">
+                      Chờ học sinh xác nhận.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section id="reportAccessErrorModal" class="portal-modal hidden">
+              <div class="portal-modal-backdrop" id="reportAccessErrorModalBackdrop"></div>
+              <div class="portal-modal-dialog" role="dialog" aria-modal="true"
+                aria-labelledby="reportAccessErrorModalTitle">
+                <div class="portal-modal-head">
+                  <h4 id="reportAccessErrorModalTitle">
+                    Report access warning
+                  </h4>
+                  <button id="closeReportAccessErrorModalBtn"
+                    class="portal-modal-close portal-button portal-button-warning" type="button"
+                    title="Đóng cảnh báo và quay lại bảng điều khiển"
+                    aria-label="Đóng cảnh báo và quay lại bảng điều khiển">
+                    Đóng
+                  </button>
+                </div>
+                <div class="portal-modal-body">
+                  <p id="reportAccessErrorModalMessage">
+                    LINK doesn't MATCH STUDENT OR FAMILY ACCOUNT
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section id="gradesYtdCard" class="panel" data-surface-role="panel">
+              <div class="section-head">
+                <h3>Điểm YTD</h3>
+              </div>
+              <p class="hint" id="gradesYtdSummary">Chưa có dữ liệu.</p>
+            </section>
+
+            <section id="recommendationsCard" class="panel" data-surface-role="panel">
+              <div class="section-head">
+                <h3>Khuyến nghị học tập</h3>
+              </div>
+              <p class="hint" id="recommendationsSummary">Chưa có dữ liệu.</p>
+            </section>
+
+            <p id="portalStatus" class="status"></p>
           </div>
-          <p id="childPageBadge" class="hint">
-            Chọn học sinh từ Bảng điều khiển để chỉnh sửa hồ sơ.
-          </p>
-          <section class="panel" id="profilePanel" data-surface-role="panel">
+        </div>
+      </section>
+
+      <section class="content hidden" id="portalDetailCard" data-surface-role="content">
+        <div class="section-head">
+          <h2 id="portalDetailTitle">Chi tiết học sinh</h2>
+          <div class="actions">
+            <button id="portalDetailBackToMainBtn" type="button" class="portal-button portal-button-alt"
+              title="Quay lại bảng điều khiển chính" aria-label="Quay lại bảng điều khiển chính">
+              Quay lại
+            </button>
+          </div>
+        </div>
+        <p id="portalDetailLead" class="detail-copy">
+          Đang tải chi tiết học sinh...
+        </p>
+        <div class="metrics" id="portalDetailMetrics"></div>
+        <div class="detail-layout">
+          <section class="panel detail-calendar-panel" data-surface-role="panel">
             <div class="section-head">
-              <h3>Biểu mẫu cập nhật hồ sơ</h3>
-              <span class="chip chip-neutral" id="draftCountBadge"
-                >0 mục chưa lưu</span
-              >
+              <h3 id="portalDetailCalendarTitle">Lịch</h3>
             </div>
-            <p class="hint">
-              Cam kết bảo mật: thông tin được giữ riêng tư và chỉ dùng để hỗ trợ
-              học tập, chăm sóc học sinh tốt hơn.
+            <p id="portalDetailCalendarSummary" class="hint">
+              Chưa có dữ liệu.
             </p>
-            <br>
-            <br>
-            <div id="profileFields" class="profile-groups"></div>
+            <div id="portalDetailCalendarGrid" class="calendar-shell" aria-live="polite"></div>
           </section>
 
-          <div class="draft-actions" id="draftActions">
-            <button
-              id="saveDraftBtn"
-              type="button"
-              class="portal-button portal-button-affirm"
-              title="Lưu bản nháp hồ sơ"
-              aria-label="Lưu bản nháp hồ sơ">
-              Lưu nháp
+          <section class="panel" data-surface-role="panel">
+            <div class="section-head">
+              <h3 id="portalDetailPrimaryTitle">Trọng tâm hiện tại</h3>
+            </div>
+            <div id="portalDetailPrimaryList" class="detail-list"></div>
+            <div id="portalDetailPrimaryTable" class="queue-table-wrap data-surface hidden"
+              data-surface-role="data-surface">
+              <table class="news-queue-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Tuần báo cáo</th>
+                    <th scope="col">#</th>
+                    <th scope="col">Tình trạng</th>
+                    <th scope="col">Nộp gần nhất</th>
+                    <th scope="col">Mở</th>
+                  </tr>
+                </thead>
+                <tbody id="portalDetailQueueBody">
+                  <tr>
+                    <td colspan="5">Chưa có báo cáo tin tức.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel" data-surface-role="panel">
+            <div class="section-head">
+              <h3 id="portalDetailHistoryTitle">Lịch sử gần đây</h3>
+            </div>
+            <div id="portalDetailHistoryList" class="detail-list"></div>
+          </section>
+        </div>
+        <p id="portalDetailStatus" class="status"></p>
+      </section>
+
+      <section class="content hidden" id="childPageCard" data-surface-role="content">
+        <div class="section-head">
+          <h2>Trang học sinh: Biểu mẫu cập nhật hồ sơ</h2>
+          <div class="toolbar-actions">
+            <button id="backToDashboardBtn" type="button" class="portal-button portal-button-alt"
+              title="Quay lại bảng điều khiển chính" aria-label="Quay lại bảng điều khiển chính">
+              Quay lại
             </button>
-            <button
-              id="submitReviewBtn"
-              type="button"
-              class="portal-button portal-button-primary"
-              title="Gửi hồ sơ để duyệt"
-              aria-label="Gửi hồ sơ để duyệt">
-              Gửi duyệt
+            <button id="logoutBtnChild" type="button" class="portal-button portal-button-danger"
+              title="Đăng xuất khỏi cổng phụ huynh" aria-label="Đăng xuất khỏi cổng phụ huynh">
+              Đăng xuất
             </button>
           </div>
-
-          <p id="childPageStatus" class="status"></p>
-        </section>
-        <section class="content portal-prefooter" aria-label="Môi trường runtime" data-surface-role="content">
-          <span id="envBadge" class="env-badge" data-environment-prefooter aria-live="polite"></span>
-        </section>
-        <footer class="hub-footer portal-login-footer" aria-label="Chân trang">
-          <p class="hub-footer__copy">
-            © <span data-copyright-year="" data-start="2012"></span> The Eagles
-            American English Club Ltd. All rights reserved.
+        </div>
+        <p id="childPageBadge" class="hint">
+          Chọn học sinh từ Bảng điều khiển để chỉnh sửa hồ sơ.
+        </p>
+        <section class="panel" id="profilePanel" data-surface-role="panel">
+          <div class="section-head">
+            <h3>Biểu mẫu cập nhật hồ sơ</h3>
+            <span class="chip chip-neutral" id="draftCountBadge">0 mục chưa lưu</span>
+          </div>
+          <p class="hint">
+            Cam kết bảo mật: thông tin được giữ riêng tư và chỉ dùng để hỗ trợ
+            học tập, chăm sóc học sinh tốt hơn.
           </p>
-          <p class="hub-footer__action">
-            <a href="#top" id="back-top" aria-label="Về đầu trang"
-              >Về đầu trang</a
-            >
-          </p>
-        </footer>
-      </main>
-    </div>
+          <br>
+          <br>
+          <div id="profileFields" class="profile-groups"></div>
+        </section>
 
-    <script src="/web-asset/shared/portal-environment.js"></script>
-    <script>window.SIS_PORTAL_THEME?.initPrivacyConsent?.({ locale: "vi" })</script>
-    <!-- Source-contract markers for functions implemented by parent-portal.js. -->
-    <!-- function renderCurrentHomeworkOverviewCard() {} function renderPastDueHomeworkOverviewCard() {} function setPastDueHomeworkModalOpen() {} function loadPortalAsset() {} function assertApiOriginConfiguredForStaticPreview() {} function inferLoopbackPreviewApiOrigin() {} function formatQueueDateTimeTz7() {} function formatQueueLatestSubmissionHtml() {} fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js" http://127.0.0.1:8788 queue-compact-datetime ${hour}:${minute}:${second} +07 id="newsWeekSetModalVocabularyRows" active?.vocabulary class="new-word-entry" -->
-    <script src="/web-asset/shared/portal-preferences.js"></script>
-    <script src="/web-asset/shared/portal-password-visibility.js"></script>
-    <script src="/web-asset/parent/parent-portal.min.js"></script>
-    <script>
-      ;(() => {
+        <div class="draft-actions" id="draftActions">
+          <button id="saveDraftBtn" type="button" class="portal-button portal-button-affirm" title="Lưu bản nháp hồ sơ"
+            aria-label="Lưu bản nháp hồ sơ">
+            Lưu nháp
+          </button>
+          <button id="submitReviewBtn" type="button" class="portal-button portal-button-primary"
+            title="Gửi hồ sơ để duyệt" aria-label="Gửi hồ sơ để duyệt">
+            Gửi duyệt
+          </button>
+        </div>
+
+        <p id="childPageStatus" class="status"></p>
+      </section>
+      <section class="content portal-prefooter" aria-label="Môi trường runtime" data-surface-role="content">
+        <span id="envBadge" class="env-badge" data-environment-prefooter aria-live="polite"></span>
+      </section>
+      <footer class="hub-footer portal-login-footer" aria-label="Chân trang">
+        <p class="hub-footer__copy">
+          © <span data-copyright-year="" data-start="2012"></span> The Eagles
+          American English Club Ltd. All rights reserved.
+        </p>
+        <p class="hub-footer__action">
+          <a href="#top" id="back-top" aria-label="Về đầu trang">Về đầu trang</a>
+        </p>
+      </footer>
+    </main>
+  </div>
+
+  <script src="/web-asset/shared/portal-environment.js"></script>
+  <script>window.SIS_PORTAL_THEME?.initPrivacyConsent?.({ locale: "vi" })</script>
+  <!-- Source-contract markers for functions implemented by parent-portal.js. -->
+  <!-- function renderCurrentHomeworkOverviewCard() {} function renderPastDueHomeworkOverviewCard() {} function setPastDueHomeworkModalOpen() {} function loadPortalAsset() {} function assertApiOriginConfiguredForStaticPreview() {} function inferLoopbackPreviewApiOrigin() {} function formatQueueDateTimeTz7() {} function formatQueueLatestSubmissionHtml() {} fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js" http://127.0.0.1:8788 queue-compact-datetime ${hour}:${minute}:${second} +07 id="newsWeekSetModalVocabularyRows" active?.vocabulary class="new-word-entry" -->
+  <script src="/web-asset/shared/portal-preferences.js"></script>
+  <script src="/web-asset/shared/portal-password-visibility.js"></script>
+  <script src="/web-asset/parent/parent-portal.min.js"></script>
+  <script>
+      ; (() => {
         const root = document.documentElement
         const button = document.getElementById("studentThemeToggle")
         const icon = document.getElementById("studentThemeToggleIcon")
@@ -1267,24 +874,25 @@
         function apply(theme) {
           const next =
             themeState?.setTheme ? themeState.setTheme(theme)
-            : theme === "dark" ? "dark"
-            : "light"
+              : theme === "dark" ? "dark"
+                : "light"
           sync(next)
         }
 
         button?.addEventListener("click", () => {
           apply(
             themeState?.toggleTheme ? themeState.toggleTheme("light")
-            : root.dataset.theme === "dark" ? "light"
-            : "dark",
+              : root.dataset.theme === "dark" ? "light"
+                : "dark",
           )
         })
         apply(
           themeState?.getTheme ? themeState.getTheme("light")
-          : root.dataset.theme === "dark" ? "dark"
-          : "light",
+            : root.dataset.theme === "dark" ? "dark"
+              : "light",
         )
       })()
-    </script>
-  </body>
+  </script>
+</body>
+
 </html>

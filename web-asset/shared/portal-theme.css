@@ -11822,7 +11822,7 @@ body.parent-portal-page #newsWeekSetModal .news-review-vocabulary-row {
 }
 
 .sis-consent-panel {
-  background: var(--portal-surface-panel, var(--paper));
+  background: #adbed2;
   border: 1px solid var(--portal-border, var(--paper-border));
   border-radius: var(--radius-2, 12px);
   bottom: 16px;
@@ -11833,6 +11833,10 @@ body.parent-portal-page #newsWeekSetModal .news-review-vocabulary-row {
   padding: 18px;
   position: fixed;
   z-index: 10001;
+}
+
+html[data-theme="dark"] .sis-consent-panel {
+  background: var(--portal-neutral-page-dark);
 }
 
 .sis-consent-panel[hidden] {

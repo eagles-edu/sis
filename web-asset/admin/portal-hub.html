@@ -4,7 +4,7 @@
 <html lang="vi">
 
 <head>
-  <!-- SIS Public Website Google tag (gtag.js) 
+  <!-- SIS Public Website Google tag (gtag.js)
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-THMFP12GBR">
 </script>
 <script>
@@ -21,9 +21,9 @@
   <script>
     /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
   </script>
-    <script src="/web-asset/shared/portal-theme-state.js"></script>
-    <script src="/web-asset/shared/portal-preferences.js"></script>
-    <script src="/web-asset/shared/portal-action-feedback.js"></script>
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script src="/web-asset/shared/portal-preferences.js"></script>
+  <script src="/web-asset/shared/portal-action-feedback.js"></script>
   <script>
     window.SIS_PORTAL_THEME?.initTheme("dark")
   </script>
@@ -115,6 +115,7 @@
       min-width: 0;
       width: 100%;
     }
+
     body.portal-hub-page .hero-copy h1 {
       font-size: var(--hub-title-size);
       letter-spacing: -0.02em;
@@ -184,7 +185,7 @@
       padding: var(--hub-card-pad);
     }
 
-    body.portal-hub-page .portal-card > * {
+    body.portal-hub-page .portal-card>* {
       position: relative;
       z-index: 1;
     }
@@ -222,6 +223,7 @@
       display: -webkit-box;
       font-size: calc(0.82rem * var(--hub-phi) / 1.16);
       grid-area: subtitle;
+      line-clamp: 2;
       line-height: 1.38;
       margin: 0.5rem 0 0;
       max-width: none;
@@ -394,21 +396,26 @@
             <h1>THE EAGLES CLUB</h1>
           </div>
           <div class="header-actions">
-            <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle" type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
+            <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle"
+              type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
               <span class="portal-theme-toggle__icon" aria-hidden="true">
                 <svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon>
               </span>
             </button>
             <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
-              <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" title="Giảm cỡ chữ">A-</button>
-              <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" title="Tăng cỡ chữ">A+</button>
-              <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" title="Đặt lại cỡ chữ">Reset</button>
+              <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt"
+                title="Giảm cỡ chữ">A-</button>
+              <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt"
+                title="Tăng cỡ chữ">A+</button>
+              <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning"
+                title="Đặt lại cỡ chữ">Reset</button>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="card section-card section-card--primary" aria-labelledby="primary-portals" data-surface-role="content">
+      <section class="card section-card section-card--primary" aria-labelledby="primary-portals"
+        data-surface-role="content">
         <div class="section-head">
           <p class="section-kicker"></p>
           <h2 class="section-title" id="primary-portals">Hệ thống thông tin sinh viên</h2>
@@ -428,7 +435,8 @@
             <span class="portal-card__chev" aria-hidden="true">↗</span>
           </a>
 
-          <a class="portal-card portal-card--parent" href="/parent" data-portal-target="parent" data-surface-role="card">
+          <a class="portal-card portal-card--parent" href="/parent" data-portal-target="parent"
+            data-surface-role="card">
             <span class="portal-card__icon" aria-hidden="true">
               <svg-icon name="joggling-triangles" size="100%"></svg-icon>
             </span>
@@ -440,7 +448,8 @@
             <span class="portal-card__chev" aria-hidden="true">↗</span>
           </a>
 
-          <a class="portal-card portal-card--student" href="/student" data-portal-target="student" data-surface-role="card">
+          <a class="portal-card portal-card--student" href="/student" data-portal-target="student"
+            data-surface-role="card">
             <span class="portal-card__icon" aria-hidden="true">
               <svg-icon name="spiral" size="100%"></svg-icon>
             </span>
@@ -456,7 +465,8 @@
 
       <section class="card hub-prefooter" aria-label="Support links" data-surface-role="content">
         <nav class="hub-prefooter__links" aria-label="Support links">
-          <a class="hub-prefooter__link portal-button portal-button-alt" href="mailto:admin@eagles.edu.vn">Gửi email hỗ trợ</a>
+          <a class="hub-prefooter__link portal-button portal-button-alt" href="mailto:admin@eagles.edu.vn">Gửi email hỗ
+            trợ</a>
           <a class="hub-prefooter__link portal-button portal-button-alt" href="/admin">Mở admin portal</a>
         </nav>
         <span id="envBadge" class="env-badge" data-environment-prefooter aria-live="polite"></span>
@@ -464,7 +474,8 @@
 
       <footer class="hub-footer" aria-label="Site footer">
         <p class="hub-footer__copy">
-          © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
+          © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights
+          reserved.
         </p>
         <p class="hub-footer__action">
           <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
@@ -483,124 +494,124 @@
   </div>
 
   <script>
-      (() => {
-        const root = document.documentElement;
-        const themeToggle = document.getElementById("studentThemeToggle");
-        const themeIcon = document.getElementById("studentThemeToggleIcon");
-        const themeState = window.SIS_PORTAL_THEME;
-        const currentOrigin = window.location.origin;
-        const query = new URLSearchParams(window.location.search || "");
+    (() => {
+      const root = document.documentElement;
+      const themeToggle = document.getElementById("studentThemeToggle");
+      const themeIcon = document.getElementById("studentThemeToggleIcon");
+      const themeState = window.SIS_PORTAL_THEME;
+      const currentOrigin = window.location.origin;
+      const query = new URLSearchParams(window.location.search || "");
 
-        function getPreferredTheme() {
-          if (themeState?.getTheme) return themeState.getTheme("dark");
-          return root.dataset.theme === "dark" || root.dataset.theme === "light"
-            ? root.dataset.theme
-            : "dark";
-        }
+      function getPreferredTheme() {
+        if (themeState?.getTheme) return themeState.getTheme("dark");
+        return root.dataset.theme === "dark" || root.dataset.theme === "light"
+          ? root.dataset.theme
+          : "dark";
+      }
 
-        function syncThemeToggle(theme) {
-          if (!themeToggle || !themeIcon) return;
-          const isDark = theme === "dark";
-          const tooltip = isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối";
-          themeToggle.setAttribute("aria-pressed", String(isDark));
-          themeToggle.setAttribute("aria-label", tooltip);
-          themeIcon.setAttribute("name", isDark ? "theme-sun" : "theme-moon");
-        }
+      function syncThemeToggle(theme) {
+        if (!themeToggle || !themeIcon) return;
+        const isDark = theme === "dark";
+        const tooltip = isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối";
+        themeToggle.setAttribute("aria-pressed", String(isDark));
+        themeToggle.setAttribute("aria-label", tooltip);
+        themeIcon.setAttribute("name", isDark ? "theme-sun" : "theme-moon");
+      }
 
-        function applyTheme(theme) {
-          const next = themeState?.setTheme ? themeState.setTheme(theme) : (theme === "light" ? "light" : "dark");
-          root.dataset.theme = next;
-          syncThemeToggle(next);
-        }
+      function applyTheme(theme) {
+        const next = themeState?.setTheme ? themeState.setTheme(theme) : (theme === "light" ? "light" : "dark");
+        root.dataset.theme = next;
+        syncThemeToggle(next);
+      }
 
-        function isLoopbackHostname(hostname) {
-          const normalized = String(hostname || "").toLowerCase();
-          return normalized === "127.0.0.1" || normalized === "localhost" || normalized === "::1";
-        }
+      function isLoopbackHostname(hostname) {
+        const normalized = String(hostname || "").toLowerCase();
+        return normalized === "127.0.0.1" || normalized === "localhost" || normalized === "::1";
+      }
 
-        function inferLoopbackPreviewApiOrigin() {
-          const currentOriginUrl = new URL(currentOrigin);
-          // Keep 8786 (test mirror), 8787 (production/admin-live), and 8788 (dev) in both origin lists below.
+      function inferLoopbackPreviewApiOrigin() {
+        const currentOriginUrl = new URL(currentOrigin);
+        // Keep 8786 (test mirror), 8787 (production/admin-live), and 8788 (dev) in both origin lists below.
+        const knownRuntimePorts = new Set(["8786", "8787", "8788"]);
+        if (!isLoopbackHostname(currentOriginUrl.hostname)) return "";
+        // Dev runs on 8788. Keep the explicit runtime suffix on portal
+        // links so static and runtime-served pages use the same API origin.
+        if (currentOriginUrl.port === "8788") return currentOriginUrl.origin;
+        if (knownRuntimePorts.has(currentOriginUrl.port)) return "";
+        return "http://127.0.0.1:8788";
+      }
+
+      function resolvePreviewApiOrigin() {
+        const rawApiOrigin = query.get("apiOrigin");
+        if (rawApiOrigin) {
+          // This must match inferLoopbackPreviewApiOrigin: test refreshes use 8786.
           const knownRuntimePorts = new Set(["8786", "8787", "8788"]);
-          if (!isLoopbackHostname(currentOriginUrl.hostname)) return "";
-          // Dev runs on 8788. Keep the explicit runtime suffix on portal
-          // links so static and runtime-served pages use the same API origin.
-          if (currentOriginUrl.port === "8788") return currentOriginUrl.origin;
-          if (knownRuntimePorts.has(currentOriginUrl.port)) return "";
-          return "http://127.0.0.1:8788";
-        }
-
-        function resolvePreviewApiOrigin() {
-          const rawApiOrigin = query.get("apiOrigin");
-          if (rawApiOrigin) {
-            // This must match inferLoopbackPreviewApiOrigin: test refreshes use 8786.
-            const knownRuntimePorts = new Set(["8786", "8787", "8788"]);
-            try {
-              const parsed = new URL(rawApiOrigin, currentOrigin);
-              if (isLoopbackHostname(parsed.hostname) && !knownRuntimePorts.has(parsed.port)) {
-                return "http://127.0.0.1:8788";
-              }
-              return parsed.origin;
-            } catch {
-              return inferLoopbackPreviewApiOrigin();
+          try {
+            const parsed = new URL(rawApiOrigin, currentOrigin);
+            if (isLoopbackHostname(parsed.hostname) && !knownRuntimePorts.has(parsed.port)) {
+              return "http://127.0.0.1:8788";
             }
+            return parsed.origin;
+          } catch {
+            return inferLoopbackPreviewApiOrigin();
           }
-          return inferLoopbackPreviewApiOrigin();
         }
+        return inferLoopbackPreviewApiOrigin();
+      }
 
-        const portalPaths = {
-          admin: typeof window.__SIS_ADMIN_PAGE_PATH === "string" ? window.__SIS_ADMIN_PAGE_PATH : "",
-          parent: typeof window.__SIS_PARENT_PORTAL_PAGE_PATH === "string" ? window.__SIS_PARENT_PORTAL_PAGE_PATH : "",
-          student: typeof window.__SIS_STUDENT_PORTAL_PAGE_PATH === "string" ? window.__SIS_STUDENT_PORTAL_PAGE_PATH : "",
-        };
-        const portalFiles = {
-          admin: "/admin",
-          parent: "/parent",
-          student: "/student",
-        };
+      const portalPaths = {
+        admin: typeof window.__SIS_ADMIN_PAGE_PATH === "string" ? window.__SIS_ADMIN_PAGE_PATH : "",
+        parent: typeof window.__SIS_PARENT_PORTAL_PAGE_PATH === "string" ? window.__SIS_PARENT_PORTAL_PAGE_PATH : "",
+        student: typeof window.__SIS_STUDENT_PORTAL_PAGE_PATH === "string" ? window.__SIS_STUDENT_PORTAL_PAGE_PATH : "",
+      };
+      const portalFiles = {
+        admin: "/admin",
+        parent: "/parent",
+        student: "/student",
+      };
 
-        function resolveFallbackHref(target) {
-          const filePath = portalFiles[target];
-          if (!filePath) return "";
-          const fallbackUrl = new URL(filePath, currentOrigin);
+      function resolveFallbackHref(target) {
+        const filePath = portalFiles[target];
+        if (!filePath) return "";
+        const fallbackUrl = new URL(filePath, currentOrigin);
+        const apiOrigin = resolvePreviewApiOrigin();
+        if (apiOrigin && !fallbackUrl.searchParams.has("apiOrigin")) {
+          fallbackUrl.searchParams.set("apiOrigin", apiOrigin);
+        }
+        return `${fallbackUrl.pathname}${fallbackUrl.search}${fallbackUrl.hash}`;
+      }
+
+      document.querySelectorAll("[data-portal-target]").forEach((link) => {
+        const target = link.getAttribute("data-portal-target");
+        if (target && portalPaths[target]) {
+          const targetUrl = new URL(portalPaths[target], currentOrigin);
           const apiOrigin = resolvePreviewApiOrigin();
-          if (apiOrigin && !fallbackUrl.searchParams.has("apiOrigin")) {
-            fallbackUrl.searchParams.set("apiOrigin", apiOrigin);
+          if (apiOrigin && !targetUrl.searchParams.has("apiOrigin")) {
+            targetUrl.searchParams.set("apiOrigin", apiOrigin);
           }
-          return `${fallbackUrl.pathname}${fallbackUrl.search}${fallbackUrl.hash}`;
+          link.href = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+        } else if (target) {
+          link.href = resolveFallbackHref(target);
         }
+      });
 
-        document.querySelectorAll("[data-portal-target]").forEach((link) => {
-          const target = link.getAttribute("data-portal-target");
-          if (target && portalPaths[target]) {
-            const targetUrl = new URL(portalPaths[target], currentOrigin);
-            const apiOrigin = resolvePreviewApiOrigin();
-            if (apiOrigin && !targetUrl.searchParams.has("apiOrigin")) {
-              targetUrl.searchParams.set("apiOrigin", apiOrigin);
-            }
-            link.href = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
-          } else if (target) {
-            link.href = resolveFallbackHref(target);
-          }
-        });
-
-        syncThemeToggle(getPreferredTheme());
-        themeToggle?.addEventListener("click", () => {
-          applyTheme(themeState?.toggleTheme ? themeState.toggleTheme("dark") : (getPreferredTheme() === "dark" ? "light" : "dark"));
-        });
-        const textZoomKey = "sis.studentPortal.textZoomPct";
-        const applyTextZoom = (value) => {
-          const next = Math.min(120, Math.max(80, Number(value) || 100));
-          root.style.setProperty("--hub-phi", String(next / 100));
-          void window.SIS_PORTAL_PREFERENCES?.save(textZoomKey, String(next));
-        };
-        let textZoom = 100;
-        textZoom = Number(window.SIS_PORTAL_PREFERENCES?.get(textZoomKey, 100)) || 100;
-        applyTextZoom(textZoom);
-        document.getElementById("studentTextZoomDownBtn")?.addEventListener("click", () => applyTextZoom(textZoom = Math.max(80, textZoom - 5)));
-        document.getElementById("studentTextZoomUpBtn")?.addEventListener("click", () => applyTextZoom(textZoom = Math.min(120, textZoom + 5)));
-        document.getElementById("studentTextZoomResetBtn")?.addEventListener("click", () => applyTextZoom(textZoom = 100));
-      })();
+      syncThemeToggle(getPreferredTheme());
+      themeToggle?.addEventListener("click", () => {
+        applyTheme(themeState?.toggleTheme ? themeState.toggleTheme("dark") : (getPreferredTheme() === "dark" ? "light" : "dark"));
+      });
+      const textZoomKey = "sis.studentPortal.textZoomPct";
+      const applyTextZoom = (value) => {
+        const next = Math.min(120, Math.max(80, Number(value) || 100));
+        root.style.setProperty("--hub-phi", String(next / 100));
+        void window.SIS_PORTAL_PREFERENCES?.save(textZoomKey, String(next));
+      };
+      let textZoom = 100;
+      textZoom = Number(window.SIS_PORTAL_PREFERENCES?.get(textZoomKey, 100)) || 100;
+      applyTextZoom(textZoom);
+      document.getElementById("studentTextZoomDownBtn")?.addEventListener("click", () => applyTextZoom(textZoom = Math.max(80, textZoom - 5)));
+      document.getElementById("studentTextZoomUpBtn")?.addEventListener("click", () => applyTextZoom(textZoom = Math.min(120, textZoom + 5)));
+      document.getElementById("studentTextZoomResetBtn")?.addEventListener("click", () => applyTextZoom(textZoom = 100));
+    })();
   </script>
 </body>
 
