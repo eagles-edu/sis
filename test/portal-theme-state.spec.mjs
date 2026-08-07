@@ -105,6 +105,28 @@ test("portal consent preferences persist explicit choices across reads", () => {
   assert.equal(document.documentElement.dataset.sisSupportChatConsent, undefined)
 })
 
+test("member defaults enable anonymous analytics until an explicit account preference exists", () => {
+  const { theme } = createSandbox()
+
+  const acknowledged = theme.acknowledgePrivacyNotice()
+
+  assert.equal(acknowledged.supportChat, "denied")
+  assert.equal(acknowledged.analytics, "granted")
+  assert.ok(acknowledged.noticeAcknowledgedAt)
+})
+
+test("server preference hydration can clear a stale local notice acknowledgement", () => {
+  const { theme } = createSandbox()
+
+  const acknowledged = theme.acknowledgePrivacyNotice()
+  const hydrated = theme.writeConsentPreferences("denied", "denied", {
+    preserveNoticeAcknowledgement: false,
+  })
+
+  assert.ok(acknowledged.noticeAcknowledgedAt)
+  assert.equal(hydrated.noticeAcknowledgedAt, "")
+})
+
 test("portal consent preferences expire after the review period", () => {
   const expired = JSON.stringify({
     version: 1,

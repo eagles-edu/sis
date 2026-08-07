@@ -67,6 +67,20 @@ test("writes non-theme preferences after parent authentication", async () => {
   assert.equal(calls[0][1].method, "PUT")
 })
 
+test("marks a Settings privacy update so the server can create an admin alert for an opt-out", async () => {
+  const { calls, preferences } = createSandbox("authenticated")
+
+  await preferences.save("sis-consent-preferences", {
+    version: 1,
+    supportChat: "denied",
+    analytics: "denied",
+    updatedAt: new Date().toISOString(),
+  }, { privacyPreferenceSource: "settings" })
+
+  const body = JSON.parse(calls[0][1].body)
+  assert.equal(body.privacyPreferenceSource, "settings")
+})
+
 test("keeps theme local and ignores a deferred server theme", async () => {
   const { calls, preferences, sandbox, store } = createSandbox("authenticated", {
     initialStorage: { "sis-theme": "dark" },
@@ -97,6 +111,25 @@ test("hydrates consent preferences from the Redis-backed portal preference respo
 
   assert.equal(preferences.get("sis-consent-preferences").supportChat, "granted")
   assert.equal(JSON.parse(store.get("sis-consent-preferences")).analytics, "denied")
+})
+
+test("keeps the member notice visible when a prior preference has not acknowledged it", async () => {
+  let removed = false
+  const { preferences, sandbox } = createSandbox("unauthenticated", {
+    serverPreferences: {
+      "sis-consent-preferences": {
+        version: 1,
+        supportChat: "denied",
+        analytics: "denied",
+        updatedAt: new Date().toISOString(),
+      },
+    },
+  })
+  sandbox.document.getElementById = () => ({ remove: () => { removed = true } })
+
+  await preferences.load()
+
+  assert.equal(removed, false)
 })
 
 test("migration never uploads or removes canonical and legacy theme keys", async () => {

@@ -25,7 +25,23 @@ test("shared consent state exposes both integrations and versioned persistence",
   assert.match(source, /ad_user_data: "denied"/)
   assert.match(source, /ad_personalization: "denied"/)
   assert.match(source, /showPrivacyConsent/)
+  assert.match(source, /defaultMemberPreferences/)
+  assert.match(source, /noticeAcknowledgedAt/)
+  assert.match(source, /data-sis-consent-action="acknowledge"/)
+  assert.doesNotMatch(source, /data-sis-consent-action="reject-all"/)
   assert.match(source, /portal-button-privacy-shaded/)
+})
+
+test("admin overview exposes a private alert surface for member analytics opt-outs", () => {
+  const html = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.html"), "utf8")
+  const dashboard = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/overview-dashboard-island.mjs"), "utf8")
+  const routes = fs.readFileSync(path.resolve(rootDir, "server/student-admin-routes.mjs"), "utf8")
+
+  assert.match(html, /overviewAnalyticsOptOutAlertsSection/)
+  assert.match(dashboard, /analyticsOptOutAlerts/)
+  assert.match(routes, /recordAnalyticsOptOutAlert/)
+  assert.match(routes, /alertPrincipalId: parentContext\.parentsId/)
+  assert.match(routes, /alertPrincipalId: normalizeText\(session\?\.eaglesId \|\| session\?\.username\)/)
 })
 
 test("portal runtime config exposes only the optional public GA4 measurement ID", () => {

@@ -5343,7 +5343,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1663
+              "height": 1888
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -8765,7 +8765,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1783
+              "height": 1604
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8777,7 +8777,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1735
+              "height": 1556
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8789,7 +8789,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1651
+              "height": 1472
             },
             ".panel": {
               "selector": ".panel",
@@ -9211,7 +9211,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1759
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9223,7 +9223,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1711
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9235,7 +9235,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1627
+              "height": 892
             },
             ".panel": {
               "selector": ".panel",
@@ -11307,7 +11307,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1663
+              "height": 1888
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",

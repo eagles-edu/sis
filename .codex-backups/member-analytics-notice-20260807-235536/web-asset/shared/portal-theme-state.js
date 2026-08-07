@@ -115,21 +115,6 @@
     return value === "granted" || value === "denied"
   }
 
-  function normalizedNoticeAcknowledgement(value) {
-    const acknowledgedAtMs = Date.parse(String(value || ""))
-    return Number.isFinite(acknowledgedAtMs) ? new Date(acknowledgedAtMs).toISOString() : ""
-  }
-
-  function defaultMemberPreferences() {
-    return {
-      version: CONSENT_VERSION,
-      supportChat: "denied",
-      analytics: "granted",
-      noticeAcknowledgedAt: "",
-      updatedAt: "",
-    }
-  }
-
   function normalizeConsentPreferences(value) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return null
     if (Number(value.version) !== CONSENT_VERSION) return null
@@ -140,7 +125,6 @@
       version: CONSENT_VERSION,
       supportChat: value.supportChat,
       analytics: value.analytics,
-      noticeAcknowledgedAt: normalizedNoticeAcknowledgement(value.noticeAcknowledgedAt),
       updatedAt: new Date(updatedAtMs).toISOString(),
     }
   }
@@ -156,13 +140,11 @@
     }
   }
 
-  function writeConsentPreferences(supportChat, analytics, { noticeAcknowledgedAt, preserveNoticeAcknowledgement = true } = {}) {
-    const current = readConsentPreferences()
+  function writeConsentPreferences(supportChat, analytics) {
     const preferences = {
       version: CONSENT_VERSION,
       supportChat: validConsentValue(supportChat) ? supportChat : "denied",
-      analytics: validConsentValue(analytics) ? analytics : "granted",
-      noticeAcknowledgedAt: normalizedNoticeAcknowledgement(noticeAcknowledgedAt) || (preserveNoticeAcknowledgement ? current?.noticeAcknowledgedAt || "" : ""),
+      analytics: validConsentValue(analytics) ? analytics : "denied",
       updatedAt: new Date().toISOString(),
     }
     safeStorageWrite(CONSENT_STORAGE_KEY, JSON.stringify(preferences))
@@ -172,13 +154,6 @@
       void error
     }
     return preferences
-  }
-
-  function acknowledgePrivacyNotice() {
-    const preferences = readConsentPreferences() || defaultMemberPreferences()
-    return writeConsentPreferences(preferences.supportChat, preferences.analytics, {
-      noticeAcknowledgedAt: new Date().toISOString(),
-    })
   }
 
   function setConsentAttributes(preferences) {
@@ -305,27 +280,33 @@
     const settingsHref = portalKind === "parent" ? "/parent/settings" : "/student/settings"
     if (locale === "vi") {
       return {
-        title: `Thông báo quyền riêng tư trên ${portalLabel} Eagles`,
-        legalLead: `Cổng thành viên riêng tư của Eagles sử dụng dữ liệu phân tích ẩn danh để cải thiện trải nghiệm học tập. Bạn có thể thay đổi lựa chọn này bất cứ lúc nào trong`,
+        title: `Quyền riêng tư trên ${portalLabel} Eagles`,
+        legalLead: `Để biết thêm thông tin về cách quản lý quyền riêng tư trên ${portalLabel}, vui lòng truy cập`,
         settingsLabel: "Cài đặt",
         privacyLabel: "chính sách quyền riêng tư",
+        termsLabel: "các điều khoản và điều kiện",
         settingsHref,
         privacyHref: "https://eagles.edu.vn/lien-he/chinh-sach-bao-mat",
-        acknowledge: "Đồng ý",
-        manage: "Quản lý",
-        saved: "Đã ghi nhận thông báo quyền riêng tư.",
+        termsHref: "https://eagles.edu.vn/lien-he/cac-dieu-khoan-va-dieu-kien",
+        acceptAll: "Chấp nhận",
+        rejectAll: "Từ chối",
+        manage: "Quản lý cookie",
+        saved: "Đã lưu lựa chọn quyền riêng tư.",
       };
     }
     return {
-      title: `Privacy notice for the Eagles ${portalKind === "parent" ? "Parent" : "Student"} Portal`,
-      legalLead: "This private Eagles member portal uses anonymous analytics to improve the learning experience. You can change this at any time in",
+      title: `Privacy on the Eagles ${portalKind === "parent" ? "Parent" : "Student"} Portal`,
+      legalLead: `For more information on managing your privacy on the Eagles ${portalKind === "parent" ? "Parent" : "Student"} Portal, visit`,
       settingsLabel: "Settings",
       privacyLabel: "privacy policy",
+      termsLabel: "terms and conditions",
       settingsHref,
       privacyHref: "https://eagles.edu.vn/lien-he/chinh-sach-bao-mat",
-      acknowledge: "OK",
-      manage: "Manage",
-      saved: "Privacy notice acknowledged.",
+      termsHref: "https://eagles.edu.vn/lien-he/cac-dieu-khoan-va-dieu-kien",
+      acceptAll: "Accept",
+      rejectAll: "Reject",
+      manage: "Manage cookies",
+      saved: "Your privacy choices were saved.",
     };
   }
 
@@ -345,10 +326,11 @@
       <div class="sis-consent-panel__content">
         <span class="sis-consent-panel__info" aria-hidden="true">i</span>
         <div class="sis-consent-panel__message">
-          <p class="sis-consent-panel__links">${copy.legalLead} <a href="${copy.settingsHref}">${copy.settingsLabel}</a>. ${locale === "vi" ? "Xem" : "Read our"} <a href="${copy.privacyHref}" target="_blank" rel="noreferrer">${copy.privacyLabel}</a>.</p>
+          <p class="sis-consent-panel__links">${copy.legalLead} <a href="${copy.settingsHref}">${copy.settingsLabel}</a> ${locale === "vi" ? "để xem" : "to view our"} <a href="${copy.privacyHref}" target="_blank" rel="noreferrer">${copy.privacyLabel}</a> và <a href="${copy.termsHref}" target="_blank" rel="noreferrer">${copy.termsLabel}</a>.</p>
         </div>
         <div class="sis-consent-panel__actions">
-          <button type="button" class="portal-button portal-button-privacy-shaded" data-sis-consent-action="acknowledge">${copy.acknowledge}</button>
+          <button type="button" class="portal-button portal-button-privacy-shaded" data-sis-consent-action="accept-all">${copy.acceptAll}</button>
+          <button type="button" class="portal-button portal-button-privacy-shaded" data-sis-consent-action="reject-all">${copy.rejectAll}</button>
           <button type="button" class="portal-button portal-button-privacy-shaded" data-sis-consent-action="manage">${copy.manage}</button>
         </div>
         <p class="sis-consent-panel__status" role="status" aria-live="polite"></p>
@@ -361,9 +343,13 @@
         window.location.assign(copy.settingsHref)
         return
       }
-      const savedPreferences = acknowledgePrivacyNotice()
+      const next = action === "accept-all"
+        ? { supportChat: "granted", analytics: "granted" }
+        : action === "reject-all"
+          ? { supportChat: "denied", analytics: "denied" }
+          : { supportChat: "denied", analytics: "denied" }
+      const savedPreferences = writeConsentPreferences(next.supportChat, next.analytics)
       applyConsentPreferences(savedPreferences)
-      void globalThis.SIS_PORTAL_PREFERENCES?.save?.(CONSENT_STORAGE_KEY, savedPreferences)
       panel.hidden = true
       const status = panel.querySelector(".sis-consent-panel__status")
       if (status) status.textContent = copy.saved
@@ -413,10 +399,10 @@
     }
     if (globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__) return readConsentPreferences()
     globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__ = true
-    const preferences = readConsentPreferences() || defaultMemberPreferences()
+    const preferences = readConsentPreferences()
     setConsentAttributes(preferences)
-    const panel = renderConsentUi(normalizedLocale, preferences, !preferences.noticeAcknowledgedAt, normalizedPortal)
-    applyConsentPreferences(preferences)
+    const panel = renderConsentUi(normalizedLocale, preferences, !preferences, normalizedPortal)
+    if (preferences) applyConsentPreferences(preferences)
     return preferences
   }
 
@@ -464,7 +450,6 @@
     CONSENT_VERSION,
     readConsentPreferences,
     writeConsentPreferences,
-    acknowledgePrivacyNotice,
     initPrivacyConsent,
     showPrivacyConsent,
     applyConsentPreferences,

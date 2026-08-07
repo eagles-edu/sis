@@ -188,10 +188,6 @@ import {
   getPortalPreferences,
   savePortalPreferences,
 } from "../src/modules/portal/portal-preference-store.mjs"
-import {
-  listAnalyticsOptOutAlerts,
-  recordAnalyticsOptOutAlert,
-} from "../src/modules/portal/portal-privacy-alerts.mjs"
 import { readPortalAsset, savePortalAsset } from "../src/modules/portal/portal-asset-store.mjs"
 import { markStudentWriteRequestAuthenticated } from "../src/infra/observability/student-write-metrics.mjs"
 
@@ -1167,32 +1163,6 @@ function canManageUsers(sessionOrPolicy) {
       ? getRolePolicy(sessionOrPolicy.role)
       : sessionOrPolicy
   return resolveBoolean(policy?.canManageUsers, false)
-}
-
-function analyticsPreferenceValue(preferences) {
-  const consent = preferences && typeof preferences === "object" && !Array.isArray(preferences)
-    ? preferences["sis-consent-preferences"]
-    : null
-  return consent && typeof consent === "object" && !Array.isArray(consent) && consent.analytics === "denied"
-    ? "denied"
-    : consent && typeof consent === "object" && !Array.isArray(consent) && consent.analytics === "granted"
-      ? "granted"
-      : ""
-}
-
-async function savePortalPreferencesWithPrivacyAlert(principalType, principalId, payload, options = {}) {
-  const previous = await getPortalPreferences(principalType, principalId)
-  const result = await savePortalPreferences(principalType, principalId, payload, options)
-  const alertPrincipalId = normalizeText(options.alertPrincipalId)
-  if (
-    options.privacyPreferenceSource === "settings" &&
-    alertPrincipalId &&
-    analyticsPreferenceValue(previous.preferences) !== "denied" &&
-    analyticsPreferenceValue(result.preferences) === "denied"
-  ) {
-    await recordAnalyticsOptOutAlert({ principalType, principalId: alertPrincipalId })
-  }
-  return result
 }
 
 function canManagePermissions(sessionOrPolicy) {
@@ -6537,9 +6507,8 @@ async function handleApiRequest(request, response, pathname, url) {
     }
     if (method === "PUT" || method === "POST") {
       const payload = await parseBody(request)
-      const result = await savePortalPreferencesWithPrivacyAlert("admin", principalId, payload?.preferences || payload, {
+      const result = await savePortalPreferences("admin", principalId, payload?.preferences || payload, {
         migrationVersion: payload?.migrationVersion,
-        privacyPreferenceSource: payload?.privacyPreferenceSource,
       })
       sendJson(response, 200, { ok: true, ...result })
       return true
@@ -6741,7 +6710,6 @@ async function handleApiRequest(request, response, pathname, url) {
         hasMore: parentQueue.hasMore,
         items: parentQueue.items,
       }
-      data.analyticsOptOutAlerts = await listAnalyticsOptOutAlerts({ take: 20 })
     }
     sendJson(response, 200, data)
     return true
@@ -8321,10 +8289,8 @@ async function handleParentApiRequest(request, response, pathname, url) {
     }
     if (method === "PUT" || method === "POST") {
       const payload = await parseBody(request)
-      const result = await savePortalPreferencesWithPrivacyAlert("parent", principalId, payload?.preferences || payload, {
+      const result = await savePortalPreferences("parent", principalId, payload?.preferences || payload, {
         migrationVersion: payload?.migrationVersion,
-        privacyPreferenceSource: payload?.privacyPreferenceSource,
-        alertPrincipalId: parentContext.parentsId,
       })
       sendJson(response, 200, { ok: true, ...result })
       return true
@@ -8581,10 +8547,8 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     }
     if (method === "PUT" || method === "POST") {
       const payload = await parseBody(request)
-      const result = await savePortalPreferencesWithPrivacyAlert("student", principalId, payload?.preferences || payload, {
+      const result = await savePortalPreferences("student", principalId, payload?.preferences || payload, {
         migrationVersion: payload?.migrationVersion,
-        privacyPreferenceSource: payload?.privacyPreferenceSource,
-        alertPrincipalId: normalizeText(session?.eaglesId || session?.username),
       })
       sendJson(response, 200, { ok: true, ...result })
       return true
