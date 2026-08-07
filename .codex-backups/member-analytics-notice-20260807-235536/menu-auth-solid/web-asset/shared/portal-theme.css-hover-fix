@@ -5645,8 +5645,8 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
   margin-inline-start: auto;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition {
-  font-family: Verdana, Roboto, 'Segoe UI', Tahoma, Geneva, sans-serif;
-  font-size: 1.18rem;
+  font-family: ui-monospace, Courier, monospace;
+  font-size: 1.08rem;
   line-height: 1.35;
   margin: 0;
   overflow-wrap: anywhere;
@@ -9612,21 +9612,6 @@ body.menu-open .nav-overlay {
   opacity: 1;
   pointer-events: auto;
 }
-/* The click-away layer is a full-viewport button. Keep button states from
-   painting the page when the pointer crosses it. */
-.nav-scrim:hover,
-.nav-scrim:focus,
-.nav-scrim:active,
-.nav-overlay:hover,
-.nav-overlay:focus,
-.nav-overlay:active {
-  background: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-  color: transparent !important;
-  outline: none !important;
-  transform: none !important;
-}
 body.menu-open,
 body.modal-open {
   overflow: hidden;
@@ -12026,7 +12011,6 @@ html[data-theme="dark"] .sis-consent-panel {
   align-items: center;
   border: 1px solid currentColor;
   border-radius: 50%;
-  box-sizing: border-box;
   display: inline-flex;
   font-size: 0.85rem;
   font-weight: 800;

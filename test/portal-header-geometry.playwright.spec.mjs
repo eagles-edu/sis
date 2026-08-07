@@ -224,6 +224,8 @@ async function measureMenuState(page, url, selectors) {
     node.click();
   }, selectors.menu);
   await page.waitForTimeout(240);
+  const viewport = page.viewportSize();
+  await page.mouse.move((viewport?.width ?? 1280) - 4, (viewport?.height ?? 800) - 4);
   return await page.evaluate((input) => {
     const readRect = (selector) => {
       const node = globalThis.document.querySelector(selector);
@@ -272,6 +274,7 @@ async function measureStudentLoginLayout(page, url) {
       topbar: readRect(".topbar"),
       loginPanel: readRect("#loginPanel"),
       statusStrip: readRect(".status-strip"),
+      menu: readRect("#menuBtn"),
     };
   });
 }
@@ -337,11 +340,8 @@ test(
         assert.ok(geometry.nav.h < geometry.viewport.h, `${label}: side nav should not fill full viewport height`);
         assert.equal(geometry.overlay.w, geometry.viewport.w, `${label}: overlay width should cover viewport`);
         assert.equal(geometry.overlay.h, geometry.viewport.h, `${label}: overlay height should cover viewport`);
-        assert.ok(Number(geometry.overlayOpacity) > 0.9, `${label}: overlay should be visibly shaded`);
-        assert.ok(
-          geometry.overlayBg.startsWith("rgba(12, 22, 39,"),
-          `${label}: overlay color should stay dark scrim`
-        );
+        assert.equal(Number(geometry.overlayOpacity), 1, `${label}: transparent click-away overlay should be active`);
+        assert.equal(geometry.overlayBg, "rgba(0, 0, 0, 0)", `${label}: page behind drawer should stay visually solid`);
       }
 
       await page.setViewportSize({ width: 1366, height: 900 });
@@ -415,6 +415,7 @@ test(
         studentLoginDesktop.loginPanel.w <= 560,
         "student-login-desktop: login panel should stay centered and narrow"
       );
+      assert.equal(studentLoginDesktop.menu.w, 0, "student login must not expose a hamburger control");
     } finally {
       if (page) {
         await page.close().catch(() => {});

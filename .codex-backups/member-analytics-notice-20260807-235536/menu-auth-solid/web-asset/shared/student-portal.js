@@ -4010,7 +4010,6 @@
         field("loginPanel")?.classList.toggle("hidden", authenticated);
         field("appPanel")?.classList.toggle("hidden", !authenticated);
         if (!authenticated) {
-          setMenuOpen(false);
           state.activeView = "home";
           state.activePage = "home";
           setPastDueHomeworkModalOpen(false);
@@ -5277,7 +5276,6 @@
         });
       }
       async function logout() {
-        setMenuOpen(false);
         await api(`${STUDENT_AUTH_PREFIX}/logout`, {
           method: "POST"
         });

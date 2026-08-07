@@ -6857,7 +6857,6 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         setActivePortalView("child")
       }
       async function logout() {
-        setSideNavOpen(false)
         await api(`${PARENT_AUTH_PREFIX}/logout`, {
           method: "POST",
           body: {},

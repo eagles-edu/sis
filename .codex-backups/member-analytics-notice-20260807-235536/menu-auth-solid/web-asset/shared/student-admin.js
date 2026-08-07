@@ -11151,8 +11151,6 @@
 
       function showLogin() {
         document.documentElement.dataset.adminAuthState = "unauthenticated";
-        document.body.classList.remove("menu-open");
-        updateMenuToggleButtonLabel();
         document.getElementById("authShell")?.classList.remove("hidden");
         setAuthBootstrapping(false);
         // Reveal the login panel only after the auth probe finishes unauthenticated.

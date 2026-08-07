@@ -1594,22 +1594,12 @@ body.parent-portal-page .security-badge__caption {
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .topbar,
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .side-nav,
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .nav-overlay,
-html[data-student-auth-state="unauthenticated"] body.student-portal-page .floating-menu-btn,
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .status-strip,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .hero,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .side-nav,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .nav-scrim,
-html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .floating-menu-btn,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .topbar,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #portalCard {
-  display: none !important;
-}
-html[data-student-auth-state="booting"] body.student-portal-page .floating-menu-btn,
-html[data-parent-auth-state="booting"] body.parent-portal-page .floating-menu-btn,
-html[data-admin-auth-state="booting"] body.admin-portal-page .floating-menu-btn,
-html[data-admin-auth-state="booting"] body.admin-portal-page .menu-toggle-btn,
-html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .floating-menu-btn,
-html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .menu-toggle-btn {
   display: none !important;
 }
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .portal-shell,
@@ -5645,8 +5635,8 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
   margin-inline-start: auto;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition {
-  font-family: Verdana, Roboto, 'Segoe UI', Tahoma, Geneva, sans-serif;
-  font-size: 1.18rem;
+  font-family: Verdana, 'Segoe UI', Tahoma, Geneva, sans-serif;
+  font-size: 1.08rem;
   line-height: 1.35;
   margin: 0;
   overflow-wrap: anywhere;
@@ -9572,12 +9562,12 @@ html[data-theme="dark"] body.admin-portal-page .sidebar-actions {
   border-top-color: var(--portal-dark-border);
 }
 body.admin-portal-page .menu-backdrop {
-  background: transparent;
+  background: rgba(12, 22, 39, 0.44);
   inset: 0;
   opacity: 0;
   pointer-events: none;
   position: fixed;
-  transition: none;
+  transition: opacity 180ms ease;
   z-index: 81;
 }
 body.menu-open.admin-portal-page .menu-backdrop {
@@ -9591,8 +9581,8 @@ body.menu-open.admin-portal-page .menu-backdrop {
 }
 .nav-scrim,
 .nav-overlay {
-  backdrop-filter: none;
-  background: transparent;
+  backdrop-filter: blur(1px);
+  background: rgba(12, 22, 39, 0.4);
   border: none;
   cursor: pointer;
   inline-size: auto;
@@ -9604,28 +9594,13 @@ body.menu-open.admin-portal-page .menu-backdrop {
   padding: 0;
   pointer-events: none;
   position: fixed;
-  transition: none;
+  transition: opacity 180ms ease;
   z-index: 81;
 }
 body.menu-open .nav-scrim,
 body.menu-open .nav-overlay {
   opacity: 1;
   pointer-events: auto;
-}
-/* The click-away layer is a full-viewport button. Keep button states from
-   painting the page when the pointer crosses it. */
-.nav-scrim:hover,
-.nav-scrim:focus,
-.nav-scrim:active,
-.nav-overlay:hover,
-.nav-overlay:focus,
-.nav-overlay:active {
-  background: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-  color: transparent !important;
-  outline: none !important;
-  transform: none !important;
 }
 body.menu-open,
 body.modal-open {
