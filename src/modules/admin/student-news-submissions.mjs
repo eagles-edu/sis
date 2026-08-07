@@ -439,7 +439,9 @@ function normalizeStudentNewsPayload(payload = {}) {
       english: clampText(row?.english, 240).value,
       vietnamese: clampText(row?.vietnamese, 240).value,
       syllabication: normalizeSyllabication(clampText(row?.syllabication, 240).value),
-      definition: clampText(row?.definition, 1000).value,
+      // Definitions are stored verbatim; silently cutting a student's meaning
+      // changes its meaning and makes correction impossible.
+      definition: normalizeText(row?.definition),
     })) : [],
     reportDateText: normalizeText(payload?.reportDate),
   }

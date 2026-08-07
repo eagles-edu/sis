@@ -4093,7 +4093,50 @@
       }
 
       function normalizeSyllabication(value) {
-        return t(value);
+        return t(value).split(/(\s+|-)/u).map((token) =>
+          /[áéíóúýàèìòùâêîôûãẽĩõũÁÉÍÓÚÝÀÈÌÒÙÂÊÎÔÛÃẼĨÕŨ]/u.test(token) ? token.toLocaleUpperCase("en-US") : token,
+        ).join("");
+      }
+
+      function vocabularyEntryError(row = {}) {
+        const english = t(row.english);
+        if (/[A-Z]/u.test(english)) return "Word/Phrase EN must be lowercase.";
+        const words = normalizeSyllabication(row.syllabication).split(/\s+/u).filter(Boolean);
+        if (!words.length) return "Add syllabication.";
+        for (const word of words) {
+          const syllables = word.split("-").filter(Boolean);
+          if (!syllables.length || syllables.some((syllable) => !/^\p{L}+$/u.test(syllable))) return "Use letters, spaces, and hyphens only in syllabication.";
+          const partial = syllables.find((syllable) => /[A-Z]/u.test(syllable) && Array.from(syllable).length > 1 && syllable !== syllable.toLocaleUpperCase("en-US"));
+          if (partial) return `Capitalize the complete stressed syllable "${partial}", not only one character.`;
+          const stress = syllables.map((syllable, index) => /[A-Z]/u.test(syllable) ? index : -1).filter((index) => index >= 0);
+          if (stress.some((index) => Array.from(syllables[index]).length === 1 && index !== 0)) return "A single-character stressed syllable is allowed only as the first syllable.";
+          const exactCompound = english.toLocaleLowerCase("en-US").split(/\s+/u).includes(word.toLocaleLowerCase("en-US"));
+          if (syllables.length > 1 && !exactCompound && stress.length !== 1) return "Every split word needs exactly one fully capitalized stressed syllable, for example com-MEND-ed.";
+          if (syllables.length === 1 && stress.length) return "Do not capitalize an unsplit syllabication word.";
+          if (stress.length > 1) return "Use exactly one stressed syllable per word.";
+        }
+        return "";
+      }
+
+      function showVocabularyEntryErrors(container) {
+        let firstMessage = "";
+        Array.from(container?.querySelectorAll("[data-news-vocabulary-row]") || []).forEach((rowEl) => {
+          rowEl.querySelectorAll(".field-validation-message, [data-vocabulary-field].is-invalid").forEach((element) => {
+            element.classList.remove("is-invalid");
+            if (element.classList.contains("field-validation-message")) element.remove();
+          });
+          const row = Object.fromEntries(["english", "syllabication"].map((key) => [key, t(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value)]));
+          const message = vocabularyEntryError(row);
+          if (!message) return;
+          firstMessage ||= message;
+          rowEl.querySelector('[data-vocabulary-field="english"]')?.classList.add("is-invalid");
+          rowEl.querySelector('[data-vocabulary-field="syllabication"]')?.classList.add("is-invalid");
+          const help = document.createElement("p");
+          help.className = "field-validation-message news-vocabulary-row-validation-message";
+          help.textContent = message;
+          rowEl.appendChild(help);
+        });
+        return firstMessage;
       }
 
       function vocabularyLookupUrl(label, english) {
@@ -4138,7 +4181,7 @@
                 <button type="button" class="portal-button portal-button-warning new-word-close" title="Đóng trình chỉnh sửa từ vựng mà không lưu" aria-label="Đóng trình chỉnh sửa từ vựng mà không lưu">Close</button>` : "";
         return `<div class="news-vocabulary-row" data-news-vocabulary-row="${index}">
           <select name="vocabularyPartOfSpeech-${rowUid}" data-vocabulary-field="partOfSpeech" aria-label="Part of speech" required><option value="">POS</option>${options}</select>
-          <input name="vocabularyEnglish-${rowUid}" type="text" data-vocabulary-field="english" placeholder="Word/phrase EN" aria-label="Word or phrase in English" required>
+          <input name="vocabularyEnglish-${rowUid}" type="text" data-vocabulary-field="english" placeholder="Word/phrase EN" aria-label="Word or phrase in English" autocapitalize="off" required>
           <input name="vocabularyVietnamese-${rowUid}" type="text" data-vocabulary-field="vietnamese" placeholder="Word/phrase VI" aria-label="Word or phrase in Vietnamese" required>
           <input name="vocabularySyllabication-${rowUid}" type="text" data-vocabulary-field="syllabication" placeholder="Do: air-strike | Extra: air-con-di-tion-ing" aria-label="Syllabication: keep compounds exact; optionally split multi-syllable compound parts for extra points" required>
           <div class="news-vocabulary-definition-row">
@@ -4290,6 +4333,8 @@
 
       async function saveNewWords() {
         const words = sortedNewWords();
+        const entryError = showVocabularyEntryErrors(field("newWordsRows"));
+        if (entryError) throw new Error(`New words were not saved: ${entryError}`);
         Array.from(field("newWordsRows")?.querySelectorAll("[data-news-vocabulary-row]") || []).forEach((rowEl, index) => {
           const sourceIndex = Number.parseInt(rowEl.getAttribute("data-new-word-index"), 10);
           const word = words[sourceIndex];
@@ -5134,10 +5179,20 @@
         }
       }
       async function submitReport() {
+        const entryError = showVocabularyEntryErrors(field("newsVocabularyRows"));
+        if (entryError) {
+          setFormStatus(`Vocabulary needs correction: ${entryError}`, true);
+          return;
+        }
         await submitNewsPayload(reportPayload());
       }
 
       async function checkReport() {
+        const entryError = showVocabularyEntryErrors(field("newsVocabularyRows"));
+        if (entryError) {
+          setFormStatus(`Vocabulary needs correction: ${entryError}`, true);
+          return;
+        }
         await checkNewsPayload(reportPayload());
       }
 
@@ -5145,6 +5200,11 @@
         const active = newsWeekSetViewerCurrentItem();
         if (!active) throw new Error("Select a report in the week set viewer.");
         if (!canEditNewsWeekSetViewerItem(active)) throw new Error("This report is locked.");
+        const entryError = showVocabularyEntryErrors(field("newsWeekSetModalVocabularyRows"));
+        if (entryError) {
+          setNewsWeekSetModalStatus(`Vocabulary needs correction: ${entryError}`);
+          return;
+        }
         state.newsWeekSetViewerPending = true;
         state.newsWeekSetViewerPendingAction = "check";
         syncNewsWeekSetViewerControls();
@@ -5166,6 +5226,11 @@
         const active = newsWeekSetViewerCurrentItem();
         if (!active) throw new Error("Select a report in the week set viewer.");
         if (!canEditNewsWeekSetViewerItem(active)) throw new Error("This report is locked.");
+        const entryError = showVocabularyEntryErrors(field("newsWeekSetModalVocabularyRows"));
+        if (entryError) {
+          setNewsWeekSetModalStatus(`Vocabulary needs correction: ${entryError}`);
+          return;
+        }
         state.newsWeekSetViewerPending = true;
         state.newsWeekSetViewerPendingAction = "submit";
         syncNewsWeekSetViewerControls();
@@ -5471,6 +5536,9 @@
         });
       });
       field("newsWeekSetModal")?.addEventListener("input", (event) => {
+        if (event.target?.matches?.('[data-vocabulary-field="english"]')) {
+          event.target.value = event.target.value.toLocaleLowerCase("en-US");
+        }
         if (!event.target?.matches?.("input, select, textarea")) return;
         const active = newsWeekSetViewerCurrentItem();
         if (!active) return;
@@ -5482,7 +5550,12 @@
             markNewsDraftDirty();
           });
           field("newsVocabularyRows")?.addEventListener("input", () => {
+            const active = document.activeElement;
+            if (active?.matches?.('[data-vocabulary-field="english"]')) active.value = active.value.toLocaleLowerCase("en-US");
             markNewsDraftDirty();
+          });
+          field("newWordsRows")?.addEventListener("input", (event) => {
+            if (event.target?.matches?.('[data-vocabulary-field="english"]')) event.target.value = event.target.value.toLocaleLowerCase("en-US");
           });
           field("newsVocabularyRows")?.addEventListener("change", () => {
             markNewsDraftDirty();

@@ -1,7 +1,7 @@
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { normalizeVocabularySyllabication, vocabularyEntryError } from "./vocabulary-syllabication.mjs"
 
 const MAX_WORDS = 500
-const MAX_TEXT = 5000
 const FIXED_TIME_ZONE_OFFSET_MS = 7 * 60 * 60 * 1000
 
 function text(value) {
@@ -17,19 +17,6 @@ function syllableCount(value) {
   return parts.length || (text(value) ? 1 : 0)
 }
 
-function normalizeSyllabication(value) {
-  const vowels = { a: "á", e: "é", i: "í", o: "ó", u: "ú", y: "ý" }
-  return text(value).split("-").filter(Boolean).map((part) => {
-    const stressed = /[A-Z]/u.test(part)
-    const chars = Array.from(part.toLocaleLowerCase("en-US"))
-    if (stressed && !chars.some((char) => /[áéíóúý]/u.test(char))) {
-      const vowelIndex = chars.findIndex((char) => vowels[char])
-      if (vowelIndex >= 0) chars[vowelIndex] = vowels[chars[vowelIndex]]
-    }
-    return chars.join("")
-  }).join("-")
-}
-
 function localDateKey(value) {
   const date = value ? new Date(value) : null
   if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return ""
@@ -43,8 +30,8 @@ function normalizeWord(row = {}) {
     english: english.slice(0, 240),
     englishKey: wordKey(english).slice(0, 240),
     vietnamese: text(row.vietnamese).slice(0, 240),
-    syllabication: normalizeSyllabication(row.syllabication).slice(0, 240),
-    definition: text(row.definition).slice(0, MAX_TEXT),
+    syllabication: normalizeVocabularySyllabication(row.syllabication).slice(0, 240),
+    definition: text(row.definition),
     syllableCount: syllableCount(row.syllabication),
   }
 }
@@ -56,7 +43,7 @@ function mapWord(row = {}) {
     partOfSpeech: text(row.partOfSpeech),
     english: text(row.english),
     vietnamese: text(row.vietnamese),
-    syllabication: text(row.syllabication),
+    syllabication: normalizeVocabularySyllabication(row.syllabication),
     definition: text(row.definition),
     syllableCount: Number(row.syllableCount) || syllableCount(row.syllabication),
     sourceReportDate: localDateKey(row.sourceReportDate),
@@ -110,6 +97,12 @@ export async function listStudentNewWords(studentRefId) {
 export async function saveStudentNewWords(studentRefId, value) {
   const prisma = await getPrisma()
   const source = Array.isArray(value) ? value : []
+  const invalid = source.map((row, index) => ({ index, message: vocabularyEntryError(row) })).find((entry) => entry.message)
+  if (invalid) {
+    const error = new Error(`Word ${invalid.index + 1}: ${invalid.message}`)
+    error.statusCode = 400
+    throw error
+  }
   const deduped = new Map()
   source.slice(0, MAX_WORDS).forEach((row) => {
     const word = normalizeWord(row)

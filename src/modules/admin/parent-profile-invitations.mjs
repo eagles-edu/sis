@@ -79,7 +79,7 @@ export async function resolveParentPortalAccountIdentity(prisma, student, recipi
   const accountByEmail = email
     ? await prisma.parentPortalAccount.findUnique({ where: { email } })
     : null
-  if (accountByParentsId?.email && accountByEmail && accountByParentsId.id !== accountByEmail.id) {
+  if (accountByEmail && accountByEmail.parentsId !== parentsId) {
     const error = new Error(
       `Parent identity conflict: parentsId ${parentsId} does not own ${email}; that email belongs to ${accountByEmail.parentsId}. Correct the Parents ID or choose the verified existing family before sending the invitation.`,
     )
@@ -95,13 +95,13 @@ export async function ensureParentPortalAccount(prisma, student, recipientEmail 
     throw Object.assign(new Error("Parent portal persistence is unavailable"), { statusCode: 503 })
   }
   const { parentsId, email, accountByParentsId, accountByEmail } = await resolveParentPortalAccountIdentity(prisma, student, recipientEmail)
-  let account = accountByParentsId
+  let account = accountByParentsId || accountByEmail
   let firstPassword = ""
   if (!account) {
     firstPassword = initialPassword()
     try {
       account = await prisma.parentPortalAccount.create({
-        data: { parentsId, email: accountByEmail ? null : (email || null), passwordHash: hashScryptPassword(firstPassword), mustChangePassword: true, status: "active" },
+        data: { parentsId, email: email || null, passwordHash: hashScryptPassword(firstPassword), mustChangePassword: true, status: "active" },
       })
     } catch (error) {
       if (error?.code !== "P2002") throw error

@@ -57,7 +57,7 @@ test("student news vocabulary reports the offending entry", () => {
   assert.equal(result.passed, false)
   assert.match(result.message, /in the morning/)
   assert.equal(result.rowErrors[0].index, 0)
-  assert.match(result.rowErrors[0].message, /do mark one stress/)
+  assert.match(result.rowErrors[0].message, /fully capitalized stressed syllable/)
 })
 
 test("compound vocabulary passes required validation but can earn an extra-points warning", async () => {
@@ -112,16 +112,17 @@ test("air-strike never receives a false syllabication warning", async () => {
   assert.equal(result.warningFields.vocabulary, undefined)
 })
 
-test("syllabication requires stress only for multisyllabic words inside phrases", () => {
-  assert.equal(isValidStudentNewsSyllabication("po-tá-to"), true)
-  assert.equal(isValidStudentNewsSyllabication("po-TA-to"), true)
-  assert.equal(isValidStudentNewsSyllabication("po-ta-to"), true)
+test("syllabication rejects partial capitalization and missing stress", () => {
+  assert.equal(isValidStudentNewsSyllabication("po-tá-to", "potato"), true)
+  assert.equal(isValidStudentNewsSyllabication("po-TA-to", "potato"), true)
+  assert.equal(isValidStudentNewsSyllabication("po-ta-to", "potato"), false)
+  assert.equal(isValidStudentNewsSyllabication("pO-ta-to", "potato"), false)
   assert.equal(isValidStudentNewsSyllabication("word"), true)
   assert.equal(isValidStudentNewsSyllabication("air strike"), true)
-  assert.equal(isValidStudentNewsSyllabication("air-strike"), true)
-  assert.equal(isValidStudentNewsSyllabication("in the MÓRN-ing"), true)
+  assert.equal(isValidStudentNewsSyllabication("air-strike", "air-strike"), true)
+  assert.equal(isValidStudentNewsSyllabication("in the MÓRN-ing", "in the morning"), true)
   assert.equal(isValidStudentNewsSyllabication("potato"), true)
-  assert.equal(isValidStudentNewsSyllabication("in the morn-ing"), false)
+  assert.equal(isValidStudentNewsSyllabication("in the morn-ing", "in the morning"), false)
 })
 
 test("student vocabulary rows provide lookup controls for initial and added rows", () => {
@@ -149,7 +150,8 @@ test("student vocabulary rows provide lookup controls for initial and added rows
   assert.match(STUDENT_HTML, /autoResizeVocabularyDefinition\(textarea\)/)
   assert.match(STUDENT_HTML, /bindVocabularyDefinitionAutosize\(rowEl\)/)
   assert.match(STUDENT_HTML, /portal-button-danger news-vocabulary-remove/)
-  assert.match(STUDENT_HTML, /function normalizeSyllabication\(value\) \{\s*return t\(value\);\s*\}/)
+  assert.match(STUDENT_JS, /function vocabularyEntryError\(row = \{\}\)/)
+  assert.match(STUDENT_JS, /showVocabularyEntryErrors\(container\)/)
   assert.doesNotMatch(STUDENT_HTML, /function dictionaryPlural\(/)
 })
 
@@ -299,9 +301,10 @@ test("student New Words page exposes editable, sortable, paginated vocabulary", 
   assert.match(NEW_WORDS_MODULE, /new Map\(\)/)
   assert.match(NEW_WORDS_MODULE, /FIXED_TIME_ZONE_OFFSET_MS/)
   assert.match(NEW_WORDS_MODULE, /sourceReportDate: localDateKey\(row\.sourceReportDate\)/)
-  assert.match(NEW_WORDS_MODULE, /normalizeSyllabication\(row\.syllabication\)/)
+  assert.match(NEW_WORDS_MODULE, /normalizeVocabularySyllabication\(row\.syllabication\)/)
   assert.match(NEWS_SUBMISSIONS_MODULE, /syllabication: normalizeSyllabication\(/)
-  assert.match(STUDENT_HTML, /function normalizeSyllabication\(value\) \{\s*return t\(value\);\s*\}/)
+  assert.match(NEWS_SUBMISSIONS_MODULE, /definition: normalizeText\(row\?\.definition\)/)
+  assert.match(STUDENT_JS, /event\.target\.value = event\.target\.value\.toLocaleLowerCase\("en-US"\)/)
   assert.doesNotMatch(STUDENT_HTML, /syllableCount\s*===\s*1[\s\S]*?normalizeSyllabication/)
   assert.match(SHARED_THEME, /new-word-entry-definition[\s\S]*padding-inline-start: 18px/)
 })

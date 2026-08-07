@@ -209,6 +209,8 @@ LIVE_LOCAL_UI_RUNTIME_PARITY_MAP=(
   "web-asset/parent/parent-portal.min.js.map|web-asset/parent/parent-portal.min.js.map"
   "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
   "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
+  "web-asset/shared/portal-settings.html|web-asset/shared/portal-settings.html"
+  "web-asset/shared/portal-settings.js|web-asset/shared/portal-settings.js"
   "web-asset/images/K9f9G9VR1Z.lottie|web-asset/images/K9f9G9VR1Z.lottie"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"

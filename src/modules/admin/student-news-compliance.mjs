@@ -3,6 +3,7 @@
 
 import { checkTextWithLanguageTool } from "./student-news-language-tool.mjs"
 import { parseStudentNewsSentence } from "./student-news-parser.mjs"
+import { vocabularyEntryError } from "./vocabulary-syllabication.mjs"
 
 /**
  * @param {unknown} value
@@ -184,35 +185,26 @@ function normalizeStudentNewsVocabulary(value) {
   }))
 }
 
-function isValidStudentNewsSyllabication(value) {
-  const text = normalizeText(value)
-  const words = text.split(/\s+/u).filter(Boolean)
-  const syllables = words.flatMap((word) => word.split("-").filter(Boolean))
-  if (!syllables.length || syllables.some((syllable) => !/^\p{L}+$/u.test(syllable))) return false
-  // Stress is required only for a multi-syllabic word inside a phrase. Plain
-  // one-syllable phrases and closed/compound hyphenated words are accepted.
-  const phraseHasMultisyllabicWord = words.length > 1 && words.some((word) => word.includes("-"))
-  if (!phraseHasMultisyllabicWord) return true
-  const stressedSyllables = syllables.filter((syllable) =>
-    /[A-ZÁÉÍÓÚÀÈÌÒÙÂÊÎÔÛÃẼĨÕŨ]/u.test(syllable)
-    || /[\u0300-\u036f]/u.test(syllable.normalize("NFD"))
-  )
-  return stressedSyllables.length === 1
+function isValidStudentNewsSyllabication(value, english = "") {
+  return !vocabularyEntryError({ english, syllabication: value })
 }
 
 function studentNewsVocabularyRowError(row, index) {
   const missing = []
   if (!STUDENT_NEWS_VOCABULARY_PARTS_OF_SPEECH.includes(row.partOfSpeech)) missing.push("part of speech")
   if (!row.english) missing.push("English")
+  else if (/[A-Z]/u.test(row.english)) {
+    return { index, english: row.english, fields: ["english"], message: `Entry ${index + 1} must use lowercase for Word/Phrase EN.` }
+  }
   if (!row.vietnamese) missing.push("Vietnamese")
   if (!row.syllabication) missing.push("syllabication")
-  else if (!isValidStudentNewsSyllabication(row.syllabication)) {
+  else if (vocabularyEntryError(row)) {
     const entryLabel = row.english ? `\"${row.english}\"` : "this entry"
     return {
       index,
       english: row.english,
       fields: ["syllabication"],
-      message: `Entry ${index + 1} (${entryLabel}) has invalid syllabication: do mark one stressed syllable on the multi-syllabic word in the phrase (for example, in the MÓRN-ing); do not add stress to a one-syllable phrase or compound word such as air-strike.`,
+      message: `Entry ${index + 1} (${entryLabel}) has invalid syllabication: ${vocabularyEntryError(row)}`,
     }
   }
   if (!row.definition) missing.push("definition")
