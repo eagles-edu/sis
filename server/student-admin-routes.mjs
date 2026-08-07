@@ -202,6 +202,8 @@ const ADMIN_ENROLLMENT_PAGE_PATH = normalizePathPrefix(
 )
 const PARENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_PARENT_PORTAL_PAGE_PATH, "/parent")
 const STUDENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_STUDENT_PORTAL_PAGE_PATH, "/student")
+const PARENT_SETTINGS_PAGE_PATH = `${PARENT_PORTAL_PAGE_PATH}/settings`
+const STUDENT_SETTINGS_PAGE_PATH = `${STUDENT_PORTAL_PAGE_PATH}/settings`
 const LEGACY_ADMIN_PAGE_PATH = "/admin/students"
 const LEGACY_PARENT_PORTAL_PAGE_PATH = "/parent/portal"
 const LEGACY_STUDENT_PORTAL_PAGE_PATH = "/student/portal"
@@ -347,6 +349,7 @@ const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/pa
 const PARENT_LLMS_PATH = path.resolve(process.cwd(), "web-asset/parent/llms.txt")
 const STUDENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/student/student-portal.html")
 const STUDENT_LLMS_PATH = path.resolve(process.cwd(), "web-asset/student/llms.txt")
+const PORTAL_SETTINGS_HTML_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-settings.html")
 const ADMIN_IMPORT_TEMPLATE_PATH = path.resolve(process.cwd(), "schemas/student-import-template.xlsx")
 const ADMIN_UI_SETTINGS_FILE_PATH = path.resolve(
   process.cwd(),
@@ -1603,6 +1606,14 @@ function injectStudentPortalRuntimeConfig(html, origin, initialAuthState = { aut
   return `${runtimeConfig}\n${htmlWithAuthState}`
 }
 
+function injectPortalSettingsRuntimeConfig(html, locale, homePath, options = {}) {
+  const runtimeConfig = `<script>window.__SIS_SETTINGS_LOCALE=${JSON.stringify(locale === "vi" ? "vi" : "en")};window.__SIS_SETTINGS_HOME_PATH=${JSON.stringify(homePath || "/")};window.__SIS_SETTINGS_PREFERENCES_PATH=${JSON.stringify(options.preferencesPath || "")};window.__SIS_SETTINGS_INITIAL_AUTH__=${JSON.stringify(options.initialAuthState || { authenticated: false })};</script>`
+  if (html.includes("</head>")) {
+    return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
+  }
+  return `${runtimeConfig}\n${html}`
+}
+
 function injectPortalHubRuntimeConfig(html) {
   const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_PARENT_PORTAL_PAGE_PATH=${JSON.stringify(PARENT_PORTAL_PAGE_PATH)};window.__SIS_STUDENT_PORTAL_PAGE_PATH=${JSON.stringify(STUDENT_PORTAL_PAGE_PATH)};</script>`
   if (html.includes("</head>")) {
@@ -1739,6 +1750,8 @@ function resolveAdminPageSlugFromQuery(searchParams) {
 
 export function getStudentAdminRuntimeStatus() {
   const sessionRedis = normalizeSessionRedisRuntimeStatus(SESSION_STORE)
+  const parentSessionRedis = normalizeSessionRedisRuntimeStatus(PARENT_SESSION_STORE)
+  const studentSessionRedis = normalizeSessionRedisRuntimeStatus(STUDENT_SESSION_STORE)
   const maintenance = readMaintenanceRuntimeStatus()
   return {
     pagePath: ADMIN_PAGE_PATH,
@@ -1769,11 +1782,13 @@ export function getStudentAdminRuntimeStatus() {
     pointsLedgerPath: ADMIN_POINTS_LEDGER_PATH,
     pointsAdjustmentsPath: ADMIN_POINTS_ADJUSTMENTS_PATH,
     parentPortalPagePath: PARENT_PORTAL_PAGE_PATH,
+    parentSettingsPagePath: PARENT_SETTINGS_PAGE_PATH,
     parentApiPrefix: PARENT_API_PREFIX,
     parentDashboardPath: PARENT_DASHBOARD_PATH,
     parentChildrenPath: PARENT_CHILDREN_PATH,
     parentAuthPrefix: PARENT_AUTH_PREFIX,
     studentPortalPagePath: STUDENT_PORTAL_PAGE_PATH,
+    studentSettingsPagePath: STUDENT_SETTINGS_PAGE_PATH,
     studentApiPrefix: STUDENT_API_PREFIX,
     studentAuthPrefix: STUDENT_AUTH_PREFIX,
     studentDashboardPath: STUDENT_DASHBOARD_PATH,
@@ -1787,6 +1802,11 @@ export function getStudentAdminRuntimeStatus() {
     rolePermissions: getRolePermissionsSnapshot(),
     sessionDriver: SESSION_STORE.driver,
     sessionRedis,
+    sessionStores: {
+      admin: { driver: SESSION_STORE.driver, redis: sessionRedis },
+      parent: { driver: PARENT_SESSION_STORE.driver, redis: parentSessionRedis },
+      student: { driver: STUDENT_SESSION_STORE.driver, redis: studentSessionRedis },
+    },
     sessionTtlSeconds: SESSION_TTL_SECONDS,
     sessionCookieName: SESSION_COOKIE_NAME,
     filterCache: getStudentAdminFilterCacheStatus(),
@@ -9240,6 +9260,58 @@ export async function handleStudentAdminRequest(request, response) {
       return true
     }
     const html = injectAdminPointsRuntimeConfig(fs.readFileSync(ADMIN_POINTS_HTML_PATH, "utf8"), requestOrigin)
+    sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
+    return true
+  }
+
+  if (method === "GET" && pathname === PARENT_SETTINGS_PAGE_PATH) {
+    const parentSession = await peekParentSession(request)
+    if (!parentSession) {
+      const next = new URL(PARENT_PORTAL_PAGE_PATH, requestOrigin)
+      next.searchParams.set("next", PARENT_SETTINGS_PAGE_PATH)
+      sendRedirect(response, 302, `${next.pathname}${next.search}`)
+      return true
+    }
+    if (!fs.existsSync(PORTAL_SETTINGS_HTML_PATH)) {
+      sendJson(response, 404, { error: "Portal settings page not found" })
+      return true
+    }
+    response.setHeader(
+      "Set-Cookie",
+      makeParentSessionCookieValue(readParentSessionIdFromRequest(request), PARENT_SESSION_TTL_SECONDS),
+    )
+    const html = injectPortalSettingsRuntimeConfig(
+      fs.readFileSync(PORTAL_SETTINGS_HTML_PATH, "utf8"),
+      "vi",
+      PARENT_PORTAL_PAGE_PATH,
+      { preferencesPath: PARENT_PREFERENCES_PATH, initialAuthState: buildParentInitialAuthState(parentSession) },
+    )
+    sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
+    return true
+  }
+
+  if (method === "GET" && pathname === STUDENT_SETTINGS_PAGE_PATH) {
+    const studentSession = await peekStudentSession(request)
+    if (!studentSession) {
+      const next = new URL(STUDENT_PORTAL_PAGE_PATH, requestOrigin)
+      next.searchParams.set("next", STUDENT_SETTINGS_PAGE_PATH)
+      sendRedirect(response, 302, `${next.pathname}${next.search}`)
+      return true
+    }
+    if (!fs.existsSync(PORTAL_SETTINGS_HTML_PATH)) {
+      sendJson(response, 404, { error: "Portal settings page not found" })
+      return true
+    }
+    response.setHeader(
+      "Set-Cookie",
+      makeStudentSessionCookieValue(readStudentSessionIdFromRequest(request), STUDENT_SESSION_TTL_SECONDS),
+    )
+    const html = injectPortalSettingsRuntimeConfig(
+      fs.readFileSync(PORTAL_SETTINGS_HTML_PATH, "utf8"),
+      "en",
+      STUDENT_PORTAL_PAGE_PATH,
+      { preferencesPath: STUDENT_PREFERENCES_PATH, initialAuthState: buildStudentInitialAuthState(studentSession) },
+    )
     sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
     return true
   }

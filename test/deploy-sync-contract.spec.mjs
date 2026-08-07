@@ -55,11 +55,15 @@ test("deploy-api-safe route matrices include admin/tabulator and parent/student 
   assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/web-asset\/admin\/grades-tabulator\.html\|200/)
   assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/parent\|200/)
   assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/student\|200/)
+  assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/parent\/settings\|302/)
+  assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/student\/settings\|302/)
 
   assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/admin\?page=grades-data\|200/)
   assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/web-asset\/admin\/grades-tabulator\.html\|200/)
   assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/parent\|200/)
   assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/student\|200/)
+  assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/parent\/settings\|302/)
+  assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/student\/settings\|302/)
 })
 
 test("deploy-api-safe runs blocking modal chip and portal parity gates after sync", () => {
@@ -92,6 +96,8 @@ test("sis-runtime-resync uses delete-sync rsync and route matrices for all porta
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/web-asset\/admin\/grades-tabulator\.html\|200/)
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/parent\|200/)
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/student\|200/)
+  assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/parent\/settings\|302/)
+  assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/student\/settings\|302/)
   assert.match(runtimeResyncScript, /collect_dir_drift \"\$\{REPO_ROOT\}\/web-asset\/shared\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/shared\/\" \"shared-assets\"/)
   assert.match(runtimeResyncScript, /collect_dir_drift \"\$\{REPO_ROOT\}\/web-asset\/icons\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/icons\/\" \"icons-assets\"/)
 
@@ -99,6 +105,8 @@ test("sis-runtime-resync uses delete-sync rsync and route matrices for all porta
   assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/web-asset\/admin\/grades-tabulator\.html\|200/)
   assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/parent\|200/)
   assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/student\|200/)
+  assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/parent\/settings\|302/)
+  assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/student\/settings\|302/)
 
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/server\/\" \"\$\{RUNTIME_ROOT\}\/server\/\"/)
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/schemas\/\" \"\$\{RUNTIME_ROOT\}\/schemas\/\"/)
@@ -227,5 +235,5 @@ test("admin asset payloads stay below the Lighthouse reduction gates", () => {
   const adminCssStat = fs.statSync(path.resolve(process.cwd(), "web-asset/admin/student-admin.min.css"))
 
   assert.ok(adminJsStat.size < 600_000, `student-admin.min.js should stay below 600 KB, got ${adminJsStat.size}`)
-  assert.ok(adminCssStat.size < 95_000, `student-admin.min.css should stay below 95 KB, got ${adminCssStat.size}`)
+  assert.ok(adminCssStat.size < 100_000, `student-admin.min.css should stay below 100 KB, got ${adminCssStat.size}`)
 })

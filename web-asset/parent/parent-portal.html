@@ -100,6 +100,10 @@
           học sinh từ đầu năm đến nay.</a>
         <a class="side-link" href="#portalDetailCard" data-view-target="dashboard"
           data-page-target="recommendations">Các khuyến nghị để đạt được thành công trong học tập</a>
+        <a id="parentSettingsBtn" class="side-link" href="/parent/settings"
+          title="Mở cài đặt và quyền riêng tư" aria-label="Mở cài đặt và quyền riêng tư">
+          Cài đặt
+        </a>
       </nav>
       <div class="side-actions">
         <button id="parentNavLogoutBtn" type="button" class="portal-button portal-button-danger"
@@ -844,7 +848,7 @@
   </div>
 
   <script src="/web-asset/shared/portal-environment.js"></script>
-  <script>window.SIS_PORTAL_THEME?.initPrivacyConsent?.({ locale: "vi" })</script>
+  <script>window.SIS_PORTAL_THEME?.initPrivacyConsent?.({ locale: "vi", portal: "parent", waitForAuthentication: true })</script>
   <!-- Source-contract markers for functions implemented by parent-portal.js. -->
   <!-- function renderCurrentHomeworkOverviewCard() {} function renderPastDueHomeworkOverviewCard() {} function setPastDueHomeworkModalOpen() {} function loadPortalAsset() {} function assertApiOriginConfiguredForStaticPreview() {} function inferLoopbackPreviewApiOrigin() {} function formatQueueDateTimeTz7() {} function formatQueueLatestSubmissionHtml() {} fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js" http://127.0.0.1:8788 queue-compact-datetime ${hour}:${minute}:${second} +07 id="newsWeekSetModalVocabularyRows" active?.vocabulary class="new-word-entry" -->
   <script src="/web-asset/shared/portal-preferences.js"></script>

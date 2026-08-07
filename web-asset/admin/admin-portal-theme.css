@@ -397,6 +397,7 @@
   --portal-page-bg: #e8eef4;
   --portal-page-bg-base: #e8eef4;
   --portal-page-stack-gap: 12px;
+  --portal-content-gap: 12px;
   --portal-panel-shadow: 0 8px 22px rgba(17, 38, 63, 0.08);
   --portal-panel-shadow-soft: 0 8px 22px rgba(10, 28, 48, 0.18);
   --portal-panel-shadow-strong: 0 26px 60px rgba(8, 22, 40, 0.26);
@@ -3984,6 +3985,10 @@ html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
   box-sizing: border-box;
   width: 100%;
 }
+.side-actions {
+  display: grid;
+  gap: 8px;
+}
 .menu-groups {
   display: grid;
   gap: 10px;
@@ -6576,30 +6581,6 @@ html[data-theme="dark"] .sis-consent-panel .portal-button-secondary {
   font-size: 0.86rem;
 }
 
-.sis-consent-footer-action {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.sis-consent-manage {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  padding: 0;
-  text-decoration: underline;
-}
-
-.sis-consent-manage:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-}
-
 @media (max-width: 639px) {
   .sis-consent-panel {
     bottom: 8px;
@@ -6615,5 +6596,146 @@ html[data-theme="dark"] .sis-consent-panel .portal-button-secondary {
   .sis-consent-panel__actions > .portal-button {
     inline-size: 100%;
     min-inline-size: 0;
+  }
+
+}
+
+/* Consent banner: full-width, readable, and intentionally quieter than portal content. */
+.sis-consent-panel {
+  --privacy-banner-button-border: var(--portal-role-border-strong, var(--portal-role-border));
+  --privacy-banner-button-border-hover: var(--portal-role-text);
+  --privacy-banner-button-hover-bg: var(--portal-role-data-surface-bg);
+  --privacy-banner-button-text: var(--portal-role-text);
+  background: var(--portal-role-content-bg);
+  border: 1px solid var(--portal-role-border);
+  border-radius: 0;
+  bottom: 0;
+  box-shadow: 0 -10px 26px rgba(12, 35, 71, 0.18);
+  box-sizing: border-box;
+  color: var(--portal-role-text);
+  inset-inline: 0;
+  max-width: none;
+  padding: 12px max(16px, calc((100vw - 1280px) / 2));
+  width: 100%;
+}
+
+html[data-theme="dark"] .sis-consent-panel {
+  --privacy-banner-button-border: rgba(251, 255, 255, 0.82);
+  --privacy-banner-button-border-hover: #fff;
+  --privacy-banner-button-hover-bg: rgba(255, 255, 255, 0.1);
+  --privacy-banner-button-text: var(--portal-dark-text);
+  background: var(--portal-role-content-bg);
+  border-color: var(--portal-dark-border);
+  box-shadow: 0 -10px 26px rgba(0, 0, 0, 0.42);
+  color: var(--portal-dark-text);
+}
+
+.sis-consent-panel__content {
+  align-items: center;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  max-width: none;
+}
+
+.sis-consent-panel__info {
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 800;
+  height: 22px;
+  justify-content: center;
+  width: 22px;
+}
+
+.sis-consent-panel__message {
+  min-width: 0;
+}
+
+.sis-consent-panel__links {
+  font-size: 0.86rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.sis-consent-panel__links a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.sis-consent-panel__links a:hover,
+.sis-consent-panel__links a:focus-visible {
+  text-decoration-thickness: 2px;
+}
+
+.sis-consent-panel__actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+}
+
+.sis-consent-panel__actions > .portal-button {
+  min-inline-size: 150px;
+}
+
+.portal-button.portal-button-privacy-shaded {
+  background: transparent !important;
+  border: 1px solid var(--privacy-banner-button-border) !important;
+  box-shadow: none !important;
+  color: var(--privacy-banner-button-text) !important;
+}
+
+.portal-button.portal-button-privacy-shaded:hover,
+.portal-button.portal-button-privacy-shaded:focus-visible {
+  background: var(--privacy-banner-button-hover-bg) !important;
+  border-color: var(--privacy-banner-button-border-hover) !important;
+  color: var(--privacy-banner-button-text) !important;
+}
+
+.sis-consent-panel__status {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .sis-consent-panel__content {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .sis-consent-panel__actions {
+    grid-column: 2;
+  }
+
+  .sis-consent-panel__actions > .portal-button {
+    flex: 1 1 130px;
+    min-inline-size: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .sis-consent-panel {
+    padding: 12px;
+  }
+
+  .sis-consent-panel__content {
+    gap: 10px;
+  }
+
+  .sis-consent-panel__links {
+    font-size: 0.8rem;
+  }
+
+  .sis-consent-panel__actions {
+    grid-column: 1 / -1;
+  }
+
+  .sis-consent-panel__actions > .portal-button {
+    flex: 1 1 100%;
+    max-inline-size: none !important;
+    width: 100%;
   }
 }

@@ -8,6 +8,7 @@
   let loadPromise = null
 
   function endpoint() {
+    if (window.__SIS_SETTINGS_PREFERENCES_PATH) return window.__SIS_SETTINGS_PREFERENCES_PATH
     if (window.__SIS_ADMIN_PREFERENCES_PATH) return window.__SIS_ADMIN_PREFERENCES_PATH
     if (window.__SIS_PARENT_PREFERENCES_PATH) return window.__SIS_PARENT_PREFERENCES_PATH
     if (window.__SIS_STUDENT_PREFERENCES_PATH) return window.__SIS_STUDENT_PREFERENCES_PATH
@@ -22,13 +23,34 @@
     if (authState[stateKey] === "authenticated") return true
     if (authState[stateKey] === "unauthenticated") return false
     const initialAuth = window.__SIS_ADMIN_INITIAL_AUTH__
-      || window.__SIS_PARENT_INITIAL_AUTH__
-      || window.__SIS_STUDENT_INITIAL_AUTH__
+    || window.__SIS_PARENT_INITIAL_AUTH__
+    || window.__SIS_STUDENT_INITIAL_AUTH__
+    || window.__SIS_SETTINGS_INITIAL_AUTH__
     return initialAuth?.authenticated === true
   }
 
   function safeObject(value) {
     return value && typeof value === "object" && !Array.isArray(value) ? value : {}
+  }
+
+  function validConsentPreference(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false
+    if (Number(value.version) !== Number(window.SIS_PORTAL_THEME?.CONSENT_VERSION || 1)) return false
+    if (!((value.supportChat === "granted" || value.supportChat === "denied") &&
+      (value.analytics === "granted" || value.analytics === "denied"))) return false
+    const updatedAtMs = Date.parse(String(value.updatedAt || ""))
+    return Number.isFinite(updatedAtMs) && Date.now() - updatedAtMs <= 365 * 24 * 60 * 60 * 1000
+  }
+
+  function syncConsentPreference() {
+    const theme = window.SIS_PORTAL_THEME
+    const key = theme?.CONSENT_STORAGE_KEY || "sis-consent-preferences"
+    const preference = memory[key]
+    if (!validConsentPreference(preference) || !theme?.writeConsentPreferences) return false
+    const saved = theme.writeConsentPreferences(preference.supportChat, preference.analytics)
+    theme.applyConsentPreferences?.(saved)
+    document.getElementById("sisConsentPanel")?.remove()
+    return true
   }
 
   function legacyKeys() {
@@ -55,6 +77,7 @@
           if (response.ok) {
             const payload = await response.json()
             Object.assign(memory, safeObject(payload?.preferences))
+            syncConsentPreference()
           }
         } catch (error) {
           void error
@@ -120,6 +143,7 @@
           for (const key of Object.keys(imported)) {
             try { window.localStorage.removeItem(key); window.sessionStorage.removeItem(key) } catch (error) { void error }
           }
+          syncConsentPreference()
         }
       } catch (error) {
         void error
@@ -133,5 +157,6 @@
   const initialAuth = window.__SIS_ADMIN_INITIAL_AUTH__
     || window.__SIS_PARENT_INITIAL_AUTH__
     || window.__SIS_STUDENT_INITIAL_AUTH__
+    || window.__SIS_SETTINGS_INITIAL_AUTH__
   if (initialAuth?.authenticated) void migrate()
 })()

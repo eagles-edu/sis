@@ -125,6 +125,8 @@ LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
   "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
   "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
+  "web-asset/shared/portal-settings.html|web-asset/shared/portal-settings.html"
+  "web-asset/shared/portal-settings.js|web-asset/shared/portal-settings.js"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
   "web-asset/shared/portal-preferences.js|web-asset/shared/portal-preferences.js"
   "web-asset/shared/portal-password-visibility.js|web-asset/shared/portal-password-visibility.js"
@@ -269,6 +271,7 @@ LIVE_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/student-admin.css|web-asset/admin/student-admin.css"
   "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
+  "web-asset/shared/portal-settings.js|web-asset/shared/portal-settings.js"
   "web-asset/shared/portal-preferences.js|web-asset/shared/portal-preferences.js"
   "web-asset/shared/portal-password-visibility.js|web-asset/shared/portal-password-visibility.js"
   "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
@@ -727,7 +730,8 @@ verify_live_preserved_runtime_files() {
     if [[ -f "${LIVE_ROOT}/${rel_path}" ]]; then
       log "preserved immutable present: ${rel_path}"
     else
-      log "preserved immutable missing after wipe restore: ${rel_path}"
+      echo "preserved immutable missing after wipe restore: ${rel_path}" >&2
+      return 1
     fi
   done
 }
@@ -889,6 +893,56 @@ sync_runtime_code_trees() {
     fi
     sync_exact_file "${SOURCE_ROOT}/${code_file}" "${LIVE_ROOT}/${code_file}"
   done
+}
+
+restore_live_legacy_ui_settings_from_config() {
+  local target_path="${LIVE_ROOT}/runtime-data/admin-ui-settings.json"
+  local sis_config_path="${LIVE_ROOT}/SIS_CONFIG.json"
+  local temp_path=""
+
+  if [[ -f "${target_path}" ]]; then
+    log "preserved immutable present: runtime-data/admin-ui-settings.json"
+    return 0
+  fi
+
+  if [[ ! -f "${sis_config_path}" ]]; then
+    echo "live UI settings missing and SIS_CONFIG.json is unavailable for exact repair: ${target_path}" >&2
+    return 1
+  fi
+
+  temp_path="$(mktemp)"
+  if ! SIS_CONFIG_PATH="${sis_config_path}" node --input-type=module >"${temp_path}" <<'NODE'
+import fs from "node:fs"
+
+const sourcePath = process.env.SIS_CONFIG_PATH || ""
+const payload = JSON.parse(fs.readFileSync(sourcePath, "utf8"))
+if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+  throw new Error(`invalid SIS_CONFIG.json object: ${sourcePath}`)
+}
+if (!payload.uiSettings || typeof payload.uiSettings !== "object" || Array.isArray(payload.uiSettings)) {
+  throw new Error(`SIS_CONFIG.json has no exact uiSettings payload: ${sourcePath}`)
+}
+process.stdout.write(`${JSON.stringify({
+  uiSettings: payload.uiSettings,
+  updatedAt: payload.updatedAt || "",
+  updatedBy: payload.updatedBy || null,
+}, null, 2)}\n`)
+NODE
+  then
+    rm -f "${temp_path}"
+    echo "failed to derive exact legacy UI settings from ${sis_config_path}" >&2
+    return 1
+  fi
+
+  "${LIVE_WRITE_PREFIX[@]}" mkdir -p "$(dirname "${target_path}")"
+  "${LIVE_WRITE_PREFIX[@]}" install -m 0644 "${temp_path}" "${target_path}"
+  rm -f "${temp_path}"
+
+  if [[ ! -f "${target_path}" ]]; then
+    echo "exact legacy UI settings repair did not create: ${target_path}" >&2
+    return 1
+  fi
+  log "self-healed runtime-data/admin-ui-settings.json from live SIS_CONFIG.json"
 }
 
 sync_live_runtime_data_files() {
@@ -1148,7 +1202,7 @@ try {
     userAgent: process.env.CURL_BROWSER_USER_AGENT || undefined,
   })
   const page = await context.newPage()
-  const response = await page.goto(probeUrl, { waitUntil: "commit", timeout: 30000 })
+  const response = await page.goto(probeUrl, { waitUntil: "domcontentloaded", timeout: 30000 })
 
   if (expectedStatus === 308) {
     const finalUrl = page.url()
@@ -1162,6 +1216,11 @@ try {
       expectedStatus,
       `${probeUrl} expected ${expectedStatus}, got ${response?.status() || 0}`,
     )
+    await page.waitForFunction(
+      (needle) => String(document.body?.innerText || "").includes(needle),
+      expectedNeedle,
+      { timeout: 5000 },
+    ).catch(() => {})
     const bodyText = await page.textContent("body")
     const titleText = await page.title()
     const acceptsLoginGate =
@@ -1248,9 +1307,10 @@ run_apply() {
   build_admin_assets
   backup_live_state
   wipe_live_target_contents
-  verify_live_preserved_runtime_files
   verify_live_roots_cleared
   sync_runtime_code_trees
+  restore_live_legacy_ui_settings_from_config
+  verify_live_preserved_runtime_files
   sync_live_runtime_data_files
   sync_live_runtime_assets
   verify_local_ui_live_parity

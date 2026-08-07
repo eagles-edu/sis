@@ -18,10 +18,10 @@ PINNED_STATIC_PREVIEW_ORIGIN="${PINNED_STATIC_PREVIEW_ORIGIN:-http://127.0.0.1:5
 PINNED_RUNTIME_PRIMARY_ORIGIN="${PINNED_RUNTIME_PRIMARY_ORIGIN:-https://admin.eagles.edu.vn}"
 STRIP_STATIC_PREVIEW_ORIGIN="${STRIP_STATIC_PREVIEW_ORIGIN:-true}"
 CURL_BROWSER_USER_AGENT="${CURL_BROWSER_USER_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36}"
-LOCAL_ROUTE_CHECK_MATRIX="http://127.0.0.1:${PINNED_MAILER_PORT}/healthz|200;http://127.0.0.1:${PINNED_MAILER_PORT}/api/admin/auth/me|401;http://127.0.0.1:${PINNED_MAILER_PORT}/api/parent/auth/me|401;http://127.0.0.1:${PINNED_MAILER_PORT}/api/student/auth/me|401;http://127.0.0.1:${PINNED_MAILER_PORT}/admin?page=grades-data|200;http://127.0.0.1:${PINNED_MAILER_PORT}/web-asset/admin/grades-tabulator.html|200;http://127.0.0.1:${PINNED_MAILER_PORT}/admin/enrollment|200;http://127.0.0.1:${PINNED_MAILER_PORT}/parent|200;http://127.0.0.1:${PINNED_MAILER_PORT}/student|200"
+LOCAL_ROUTE_CHECK_MATRIX="http://127.0.0.1:${PINNED_MAILER_PORT}/healthz|200;http://127.0.0.1:${PINNED_MAILER_PORT}/api/admin/auth/me|401;http://127.0.0.1:${PINNED_MAILER_PORT}/api/parent/auth/me|401;http://127.0.0.1:${PINNED_MAILER_PORT}/api/student/auth/me|401;http://127.0.0.1:${PINNED_MAILER_PORT}/admin?page=grades-data|200;http://127.0.0.1:${PINNED_MAILER_PORT}/web-asset/admin/grades-tabulator.html|200;http://127.0.0.1:${PINNED_MAILER_PORT}/admin/enrollment|200;http://127.0.0.1:${PINNED_MAILER_PORT}/parent|200;http://127.0.0.1:${PINNED_MAILER_PORT}/student|200;http://127.0.0.1:${PINNED_MAILER_PORT}/parent/settings|302;http://127.0.0.1:${PINNED_MAILER_PORT}/student/settings|302"
 EDGE_HTTPS_CHECK_URL="${EDGE_HTTPS_CHECK_URL:-}"
 EDGE_HTTPS_CHECK_EXPECTED_CODE="${EDGE_HTTPS_CHECK_EXPECTED_CODE:-200}"
-EDGE_HTTPS_CHECK_MATRIX="${EDGE_HTTPS_CHECK_MATRIX:-https://admin.eagles.edu.vn/admin?page=grades-data|200;https://admin.eagles.edu.vn/web-asset/admin/grades-tabulator.html|200;https://admin.eagles.edu.vn/admin/enrollment|200;https://admin.eagles.edu.vn/parent|200;https://admin.eagles.edu.vn/student|200}"
+EDGE_HTTPS_CHECK_MATRIX="${EDGE_HTTPS_CHECK_MATRIX:-https://admin.eagles.edu.vn/admin?page=grades-data|200;https://admin.eagles.edu.vn/web-asset/admin/grades-tabulator.html|200;https://admin.eagles.edu.vn/admin/enrollment|200;https://admin.eagles.edu.vn/parent|200;https://admin.eagles.edu.vn/student|200;https://admin.eagles.edu.vn/parent/settings|302;https://admin.eagles.edu.vn/student/settings|302}"
 RSYNC_EXCLUDES=(
   "--exclude=*.BAK-*"
   "--exclude=*~"

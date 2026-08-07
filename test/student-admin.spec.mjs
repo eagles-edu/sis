@@ -1503,6 +1503,42 @@ test("GET /parent returns parent portal HTML with runtime config", async () => {
   const authenticatedHtml = await authenticatedRes.text()
   assert.match(authenticatedHtml, /data-parent-auth-state="authenticated"/i)
   assert.match(authenticatedHtml, /__SIS_PARENT_INITIAL_AUTH__=.*"authenticated":true/i)
+
+  const settingsRes = await fetchLocal(port, "/parent/settings", {
+    headers: { Cookie: parentCookie },
+  })
+  assert.equal(settingsRes.status, 200)
+  assert.match(settingsRes.headers.get("cache-control") || "", /no-store/i)
+  const settingsHtml = await settingsRes.text()
+  assert.match(settingsHtml, /__SIS_SETTINGS_LOCALE="vi"/i)
+  assert.match(settingsHtml, /id="settingsPrivacyForm"/i)
+  assert.match(settingsHtml, /data-settings-consent="supportChat"/i)
+  assert.match(settingsHtml, /data-settings-consent="analytics"/i)
+  assert.match(settingsHtml, /data-save-settings/i)
+  assert.match(settingsHtml, /portal-preferences\.js/i)
+  assert.match(settingsHtml, /settingsThemeToggle/i)
+  assert.match(settingsHtml, /settingsThemePreference/i)
+  assert.match(settingsHtml, /data-switch-state="supportChat"/i)
+  assert.match(settingsHtml, /data-switch-state="analytics"/i)
+  assert.match(settingsHtml, /data-switch-state="theme"/i)
+  assert.match(settingsHtml, /<div class="header-bar portal-login-header" id="portalLoginHeader">[\s\S]*?<button id="menuBtn" class="floating-menu-btn portal-button portal-button-immutable-chrome"/i)
+  assert.match(settingsHtml, /class="content topbar"/i)
+  assert.match(settingsHtml, /id="settingsThemeToggle"[\s\S]*?class="text-zoom-controls"[\s\S]*?id="studentTextZoomDownBtn"[\s\S]*?id="studentTextZoomUpBtn"[\s\S]*?id="studentTextZoomResetBtn"/i)
+  assert.match(settingsHtml, /settings-page-content/i)
+  assert.ok(settingsHtml.indexOf('class="content topbar"') < settingsHtml.indexOf('class="content settings-page-content"'), "shared portal header must remain a separate sibling before Settings content")
+  assert.doesNotMatch(settingsHtml, /class="portal-button portal-button-immutable-chrome" data-settings-home-link/i, "Settings must not replace the copied portal header controls with Back")
+  assert.doesNotMatch(settingsHtml, /sisConsentModal/i)
+})
+
+test("portal settings routes require the matching portal session", async () => {
+  for (const [pathname, expectedLocation] of [
+    ["/parent/settings", "/parent?next=%2Fparent%2Fsettings"],
+    ["/student/settings", "/student?next=%2Fstudent%2Fsettings"],
+  ]) {
+    const res = await fetchLocal(port, pathname, { redirect: "manual" })
+    assert.equal(res.status, 302)
+    assert.equal(new URL(res.headers.get("location"), "http://127.0.0.1").pathname + new URL(res.headers.get("location"), "http://127.0.0.1").search, expectedLocation)
+  }
 })
 
 test("GET /admin/points-management returns points page HTML with runtime config", async () => {
@@ -1607,6 +1643,26 @@ test("GET /student returns student portal HTML with runtime config", async () =>
   const authenticatedHtml = await authenticatedRes.text()
   assert.match(authenticatedHtml, /data-student-auth-state="authenticated"/i)
   assert.match(authenticatedHtml, /__SIS_STUDENT_INITIAL_AUTH__=.*"authenticated":true/i)
+
+  const settingsRes = await fetchLocal(port, "/student/settings", {
+    headers: { Cookie: studentCookie },
+  })
+  assert.equal(settingsRes.status, 200)
+  const settingsHtml = await settingsRes.text()
+  assert.match(settingsHtml, /__SIS_SETTINGS_LOCALE="en"/i)
+  assert.match(settingsHtml, /id="settingsPrivacyForm"/i)
+  assert.match(settingsHtml, /data-settings-consent="supportChat"/i)
+  assert.match(settingsHtml, /data-settings-consent="analytics"/i)
+  assert.match(settingsHtml, /data-save-settings/i)
+  assert.match(settingsHtml, /portal-preferences\.js/i)
+  assert.match(settingsHtml, /settingsThemeToggle/i)
+  assert.match(settingsHtml, /settingsThemePreference/i)
+  assert.match(settingsHtml, /data-switch-state="supportChat"/i)
+  assert.match(settingsHtml, /data-switch-state="analytics"/i)
+  assert.match(settingsHtml, /data-switch-state="theme"/i)
+  assert.match(settingsHtml, /class="content topbar"/i)
+  assert.match(settingsHtml, /settings-page-content/i)
+  assert.doesNotMatch(settingsHtml, /sisConsentModal/i)
 })
 
 test("GET /web-asset/vendor/fullcalendar/index.global.min.js returns runtime static asset", async () => {

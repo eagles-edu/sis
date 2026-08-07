@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script>window.SIS_PORTAL_THEME?.initTheme("light")</script>
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js"
+
+    if (!customElements.get("svg-icon")) {
+      svgIcon({ defaultSize: 28, path: "/web-asset/icons/web-component/svgs/" })
+    }
+  </script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <style>
+    body.portal-settings-page {
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body.portal-settings-page main.portal-center-column {
+      box-sizing: border-box;
+      display: grid;
+      gap: var(--portal-shell-gap);
+      grid-template-columns: minmax(0, 1fr);
+      padding: 16px;
+      width: 100%;
+    }
+    body.portal-settings-page .settings-page-content {
+      display: grid;
+      gap: var(--portal-content-gap);
+      min-width: 0;
+      padding: 24px 26px 26px;
+    }
+    body.portal-settings-page .portal-theme-toggle {
+      align-items: center;
+      appearance: none;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      color: var(--portal-theme-toggle-ink);
+      cursor: pointer;
+      display: inline-flex;
+      inline-size: 44px;
+      justify-content: center;
+      max-inline-size: 44px;
+      min-block-size: 44px;
+      min-inline-size: 44px;
+      padding: 0;
+      position: relative;
+    }
+    body.portal-settings-page .portal-theme-toggle:hover {
+      border-color: var(--portal-theme-toggle-hover-border);
+      transform: translateY(-1px);
+    }
+    body.portal-settings-page .portal-theme-toggle:focus-visible {
+      box-shadow: var(--portal-theme-toggle-focus-ring);
+      outline: none;
+    }
+    body.portal-settings-page .portal-theme-toggle__icon {
+      align-items: center;
+      background: var(--portal-theme-toggle-icon-bg);
+      border-radius: 999px;
+      color: var(--portal-theme-toggle-ink);
+      display: inline-flex;
+      flex: 0 0 auto;
+      height: 36px;
+      justify-content: center;
+      width: 36px;
+    }
+    body.portal-settings-page .portal-theme-toggle__icon svg-icon {
+      color: inherit;
+    }
+    html[data-theme="dark"] body.portal-settings-page .portal-theme-toggle {
+      color: var(--portal-theme-toggle-ink-dark);
+    }
+    html[data-theme="dark"] body.portal-settings-page .portal-theme-toggle:hover {
+      border-color: var(--portal-theme-toggle-hover-border-dark);
+    }
+    html[data-theme="dark"] body.portal-settings-page .portal-theme-toggle__icon {
+      background: var(--portal-theme-toggle-icon-bg-dark);
+      color: var(--portal-theme-toggle-ink-dark);
+    }
+    body.portal-settings-page .settings-intro {
+      margin: 0;
+    }
+    body.portal-settings-page .settings-intro h2 {
+      color: var(--portal-role-text);
+      font-size: clamp(1.7rem, 4vw, 2.25rem);
+      line-height: 1.1;
+      margin: 4px 0 0;
+    }
+    body.portal-settings-page .settings-intro .hint {
+      color: var(--portal-support-message);
+      font-size: 0.98rem;
+      line-height: 1.5;
+      margin: 8px 0 0;
+      max-width: 62ch;
+    }
+    body.portal-settings-page .settings-section-stack {
+      display: grid;
+      gap: var(--portal-content-gap);
+    }
+    body.portal-settings-page .settings-panel {
+      background: var(--portal-role-panel-bg);
+      border-color: var(--portal-role-border);
+      box-shadow: var(--portal-role-shadow);
+      color: var(--portal-role-text);
+      padding: 24px 26px 18px;
+    }
+    body.portal-settings-page .settings-panel .section-head {
+      margin-bottom: 4px;
+    }
+    body.portal-settings-page .settings-panel .section-head h3 {
+      color: var(--portal-role-text);
+      font-size: 1.8rem;
+      line-height: 1.25;
+    }
+    body.portal-settings-page .settings-panel h4 {
+      color: var(--portal-role-text);
+      font-size: 1.35rem;
+      line-height: 1;
+      margin: 12px 0 0 0;
+    }
+    body.portal-settings-page .settings-optional-description {
+      color: var(--portal-support-message);
+      display: block;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      margin: -6px 0 8px;
+    }
+    body.portal-settings-page .settings-panel > .hint {
+      color: var(--portal-support-message);
+      font-size: 0.9rem;
+      line-height: 1.4;
+      margin: 0 0 14px;
+    }
+    body.portal-settings-page .settings-option {
+      align-items: center;
+      border-bottom: 1px solid color-mix(in srgb, var(--portal-role-border) 72%, transparent);
+      cursor: pointer;
+      display: grid;
+      gap: var(--portal-content-gap);
+      grid-template-columns: minmax(0, 1fr) auto;
+      min-height: 72px;
+      padding: 15px 2px;
+      transition: background-color 160ms ease, border-color 160ms ease;
+    }
+    body.portal-settings-page .settings-option:last-child {
+      border-bottom: 0;
+    }
+    body.portal-settings-page .settings-option:hover,
+    body.portal-settings-page .settings-option:focus-within {
+      background: var(--portal-role-data-surface-bg);
+      border-radius: 10px;
+    }
+    body.portal-settings-page .settings-option__copy {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+    body.portal-settings-page .settings-option__copy strong {
+      color: var(--portal-role-text);
+      font-size: 0.98rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    body.portal-settings-page .settings-option__copy small {
+      color: var(--portal-support-message);
+      font-size: 0.88rem;
+      line-height: 1.4;
+    }
+    body.portal-settings-page .settings-option--essential {
+      cursor: default;
+    }
+    body.portal-settings-page .settings-switch-control {
+      align-items: center;
+      display: inline-flex;
+      flex: 0 0 auto;
+      gap: 8px;
+      justify-content: flex-end;
+      min-width: 92px;
+      position: relative;
+    }
+    body.portal-settings-page .settings-switch-input {
+      block-size: 100%;
+      cursor: pointer;
+      inline-size: 100%;
+      inset: 0;
+      margin: 0;
+      opacity: 0;
+      position: absolute;
+      z-index: 2;
+    }
+    body.portal-settings-page .settings-switch {
+      background: #c63d49;
+      border: 1px solid #a82d39;
+      border-radius: 999px;
+      box-sizing: border-box;
+      display: inline-flex;
+      flex: 0 0 auto;
+      height: 30px;
+      padding: 3px;
+      position: relative;
+      transition: background-color 160ms ease, border-color 160ms ease;
+      width: 54px;
+    }
+    body.portal-settings-page .settings-switch__thumb {
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+      display: block;
+      height: 22px;
+      transform: translateX(0);
+      transition: transform 160ms ease;
+      width: 22px;
+    }
+    body.portal-settings-page .settings-switch-input:checked + .settings-switch,
+    body.portal-settings-page .settings-switch--on {
+      background: #16834a;
+      border-color: #07552d;
+    }
+    body.portal-settings-page .settings-switch-input:checked + .settings-switch .settings-switch__thumb,
+    body.portal-settings-page .settings-switch--on .settings-switch__thumb {
+      transform: translateX(24px);
+    }
+    body.portal-settings-page .settings-switch-input:focus-visible + .settings-switch {
+      outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent);
+      outline-offset: 3px;
+    }
+    body.portal-settings-page .settings-switch-state {
+      color: #c63d49;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      min-width: 28px;
+      text-align: right;
+    }
+    body.portal-settings-page .settings-switch-state--on {
+      color: #16834a;
+    }
+    body.portal-settings-page .settings-switch-control--static {
+      cursor: default;
+    }
+    body.portal-settings-page .settings-privacy-links {
+      color: var(--portal-support-message);
+      font-size: 0.86rem;
+      line-height: 1.45;
+      margin: -4px 0 14px;
+      max-width: 78ch;
+    }
+    body.portal-settings-page .settings-privacy-links a {
+      color: var(--portal-role-text);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    html[data-theme="dark"] body.portal-settings-page .settings-panel {
+      background: var(--portal-role-panel-bg);
+      border-color: var(--portal-dark-border);
+      color: var(--portal-dark-text);
+    }
+    html[data-theme="dark"] body.portal-settings-page .settings-option:hover,
+    html[data-theme="dark"] body.portal-settings-page .settings-option:focus-within {
+      background: var(--portal-role-data-surface-bg);
+    }
+    html[data-theme="dark"] body.portal-settings-page .settings-switch {
+      background: #e0525d;
+      border-color: #b83a45;
+    }
+    html[data-theme="dark"] body.portal-settings-page .settings-switch-input:checked + .settings-switch,
+    html[data-theme="dark"] body.portal-settings-page .settings-switch--on {
+      background: #2fbd70;
+      border-color: #16834a;
+    }
+    html[data-theme="dark"] body.portal-settings-page .settings-switch-state {
+      color: #e0525d;
+    }
+    html[data-theme="dark"] body.portal-settings-page .settings-switch-state--on {
+      color: #2fbd70;
+    }
+    html[data-theme="dark"] body.portal-settings-page .settings-privacy-links a {
+      color: var(--portal-dark-text);
+    }
+    @media (max-width: 639px) {
+      body.portal-settings-page main.portal-center-column {
+        padding: 12px;
+      }
+      body.portal-settings-page .settings-page-content {
+        padding: 19px 16px 14px;
+      }
+      body.portal-settings-page .settings-panel {
+        padding: 19px 16px 14px;
+      }
+      body.portal-settings-page .settings-option {
+        gap: var(--portal-content-gap);
+        min-height: 76px;
+        padding: 14px 0;
+      }
+      body.portal-settings-page .settings-option__copy small {
+        font-size: 0.82rem;
+      }
+      body.portal-settings-page .settings-switch-control {
+        min-width: 86px;
+      }
+      body.portal-settings-page .hub-footer {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 76px;
+      }
+      body.portal-settings-page .hub-footer__copy {
+        flex: 0 1 auto;
+        max-width: 100%;
+        width: 100%;
+      }
+      body.portal-settings-page .hub-footer__action {
+        margin-inline-start: 0;
+      }
+    }
+  </style>
+  <title>Settings</title>
+</head>
+
+<body class="page portal-settings-page" id="top">
+  <main class="portal-center-column">
+    <div class="header-bar portal-login-header" id="portalLoginHeader">
+      <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+      <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+    </div>
+    <button id="menuBtn" class="floating-menu-btn portal-button portal-button-immutable-chrome" type="button"
+      title="Mở điều hướng" aria-label="Mở điều hướng">
+      <span class="floating-menu-icon" aria-hidden="true"></span>
+    </button>
+
+    <section class="content topbar" data-surface-role="content">
+      <div class="topbar-head">
+        <div class="brand-head">
+          <a class="brand-logo-wrap brand-logo-wrap--sm" data-settings-home-link href="/" aria-label="Go to portal home">
+            <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+          </a>
+          <h1 data-settings-brand-title>THE EAGLES CLUB</h1>
+        </div>
+        <div class="header-actions">
+          <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="settingsThemeToggle"
+            type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
+            <span class="portal-theme-toggle__icon" aria-hidden="true">
+              <svg-icon name="theme-moon" size="110%" id="settingsThemeToggleIcon"></svg-icon>
+            </span>
+          </button>
+          <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
+            <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt"
+              title="Giảm cỡ chữ">A-</button>
+            <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt"
+              title="Tăng cỡ chữ">A+</button>
+            <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning"
+              title="Đặt lại cỡ chữ">Reset</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content settings-page-content" data-surface-role="content" aria-labelledby="settingsPageTitle">
+      <div class="settings-intro">
+        <div>
+          <h2 id="settingsPageTitle" data-settings-title>Settings</h2>
+        </div>
+        <p class="hint" data-settings-description></p>
+      </div>
+
+      <div class="settings-section-stack">
+      <section class="panel settings-panel" data-surface-role="panel" aria-labelledby="privacySectionTitle">
+        <div class="section-head">
+          <h3 id="privacySectionTitle" data-privacy-title>Privacy</h3>
+        </div>
+        <p class="settings-privacy-links" data-privacy-links></p>
+
+        <form id="settingsPrivacyForm" novalidate>
+          <div class="sis-consent-options">
+            <div class="settings-option settings-option--essential" role="status">
+              <span class="settings-option__copy">
+                <strong data-essential-title>Essential portal operation</strong>
+                <small data-essential-description>Required for sign-in, security, and basic portal operation. Always active.</small>
+              </span>
+              <span class="settings-switch-control settings-switch-control--static">
+                <span class="settings-switch settings-switch--on" aria-hidden="true"><span class="settings-switch__thumb"></span></span>
+                <span class="settings-switch-state settings-switch-state--on" data-essential-status>ON</span>
+              </span>
+            </div>
+            <h4 data-optional-label>Optional services</h4>
+            <span class="settings-optional-description" data-privacy-description>Choose which optional services are allowed on this portal.</span>
+            <label class="settings-option">
+              <span class="settings-option__copy"><strong data-chat-title>Support chat</strong><small id="supportChatDescription" data-chat-description>Get help from the Eagles Club team.</small></span>
+              <span class="settings-switch-control">
+                <input class="settings-switch-input" type="checkbox" name="supportChat" data-settings-consent="supportChat" aria-describedby="supportChatDescription">
+                <span class="settings-switch" aria-hidden="true"><span class="settings-switch__thumb"></span></span>
+                <span class="settings-switch-state" data-switch-state="supportChat">OFF</span>
+              </span>
+            </label>
+            <label class="settings-option">
+              <span class="settings-option__copy"><strong data-analytics-title>Anonymous analytics</strong><small id="analyticsDescription" data-analytics-description>Help us improve the portal.</small></span>
+              <span class="settings-switch-control">
+                <input class="settings-switch-input" type="checkbox" name="analytics" data-settings-consent="analytics" aria-describedby="analyticsDescription">
+                <span class="settings-switch" aria-hidden="true"><span class="settings-switch__thumb"></span></span>
+                <span class="settings-switch-state" data-switch-state="analytics">OFF</span>
+              </span>
+            </label>
+          </div>
+          <div class="sis-consent-panel__actions">
+            <button type="submit" class="portal-button portal-button-primary" data-save-settings>Save changes</button>
+            <button type="button" class="portal-button portal-button-info" data-save-necessary>Only necessary</button>
+          </div>
+          <p class="sis-consent-panel__status" data-settings-status role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="panel settings-panel" data-surface-role="panel" aria-labelledby="themeSectionTitle">
+        <div class="section-head">
+          <h3 id="themeSectionTitle" data-theme-title>Theme preferences</h3>
+        </div>
+        <p class="hint" data-theme-description>Choose the appearance that works best for you.</p>
+        <label class="settings-option">
+          <span class="settings-option__copy"><strong data-dark-mode-title>Dark mode</strong><small id="darkModeDescription" data-dark-mode-description>Use a darker color palette across the portal.</small></span>
+          <span class="settings-switch-control">
+            <input class="settings-switch-input" type="checkbox" id="settingsThemePreference" data-theme-preference aria-describedby="darkModeDescription">
+            <span class="settings-switch" aria-hidden="true"><span class="settings-switch__thumb"></span></span>
+            <span class="settings-switch-state" data-switch-state="theme">OFF</span>
+          </span>
+        </label>
+      </section>
+      </div>
+    </section>
+
+    <footer class="hub-footer portal-login-footer" aria-label="Footer">
+      <p class="hub-footer__copy">
+        © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
+      </p>
+      <p class="hub-footer__action"><a href="#top" data-back-top>Back to top</a></p>
+    </footer>
+  </main>
+
+  <script src="/web-asset/shared/portal-preferences.js"></script>
+  <script src="/web-asset/shared/portal-settings.js"></script>
+</body>
+
+</html>

@@ -269,37 +269,43 @@
     clearFirstPartyAnalyticsCookies()
   }
 
-  function consentCopy(locale) {
+  function consentPortalKind(portal = "") {
+    if (portal === "parent" || portal === "student") return portal
+    return window.location?.pathname?.startsWith("/parent") ? "parent" : "student"
+  }
+
+  function consentCopy(locale, portal = "") {
+    const portalKind = consentPortalKind(portal)
+    const portalLabel = portalKind === "parent" ? "cổng phụ huynh" : "cổng học sinh"
+    const settingsHref = portalKind === "parent" ? "/parent/settings" : "/student/settings"
     if (locale === "vi") {
       return {
-        title: "Chọn cài đặt quyền riêng tư",
-        description:
-          "Bạn có thể chọn những gì mình cho phép. Bạn có thể thay đổi lựa chọn này bất cứ lúc nào.",
-        chat: "Hỗ trợ trò chuyện",
-        chatDescription: "Nhận hỗ trợ từ đội ngũ Eagles Club.",
-        analytics: "Phân tích ẩn danh",
-        analyticsDescription: "Giúp chúng tôi cải thiện cổng thông tin.",
-        acceptAll: "Cho phép tất cả",
-        rejectAll: "Chỉ cần thiết",
-        save: "Lưu lựa chọn",
-        manage: "Quản lý quyền riêng tư",
-        close: "Để sau",
+        title: `Quyền riêng tư trên ${portalLabel} Eagles`,
+        legalLead: `Để biết thêm thông tin về cách quản lý quyền riêng tư trên ${portalLabel}, vui lòng truy cập`,
+        settingsLabel: "Cài đặt",
+        privacyLabel: "chính sách quyền riêng tư",
+        termsLabel: "các điều khoản và điều kiện",
+        settingsHref,
+        privacyHref: "https://eagles.edu.vn/lien-he/chinh-sach-bao-mat",
+        termsHref: "https://eagles.edu.vn/lien-he/cac-dieu-khoan-va-dieu-kien",
+        acceptAll: "Chấp nhận",
+        rejectAll: "Từ chối",
+        manage: "Quản lý cookie",
         saved: "Đã lưu lựa chọn quyền riêng tư.",
       };
     }
     return {
-      title: "Choose your privacy settings",
-      description:
-        "You are in control. Choose what to allow, and change your choices anytime.",
-      chat: "Support chat",
-      chatDescription: "Get help from the Eagles Club team.",
-      analytics: "Anonymous analytics",
-      analyticsDescription: "Help us improve the portal.",
-      acceptAll: "Allow all",
-      rejectAll: "Only necessary",
-      save: "Save choices",
-      manage: "Manage privacy preferences",
-      close: "Not now",
+      title: `Privacy on the Eagles ${portalKind === "parent" ? "Parent" : "Student"} Portal`,
+      legalLead: `For more information on managing your privacy on the Eagles ${portalKind === "parent" ? "Parent" : "Student"} Portal, visit`,
+      settingsLabel: "Settings",
+      privacyLabel: "privacy policy",
+      termsLabel: "terms and conditions",
+      settingsHref,
+      privacyHref: "https://eagles.edu.vn/lien-he/chinh-sach-bao-mat",
+      termsHref: "https://eagles.edu.vn/lien-he/cac-dieu-khoan-va-dieu-kien",
+      acceptAll: "Accept",
+      rejectAll: "Reject",
+      manage: "Manage cookies",
       saved: "Your privacy choices were saved.",
     };
   }
@@ -308,54 +314,44 @@
     document.getElementById("sisConsentPanel")?.remove()
   }
 
-  function renderConsentUi(locale, preferences = null, open = false) {
-    const copy = consentCopy(locale)
+  function renderConsentUi(locale, preferences = null, open = false, portal = "") {
+    const copy = consentCopy(locale, portal)
     removeConsentUi()
     const panel = document.createElement("section")
     panel.id = "sisConsentPanel"
     panel.className = "sis-consent-panel"
     panel.hidden = !open
-    panel.setAttribute("aria-labelledby", "sisConsentTitle")
-    panel.setAttribute("aria-describedby", "sisConsentDescription")
+    panel.setAttribute("aria-label", copy.title)
     panel.innerHTML = `
       <div class="sis-consent-panel__content">
-        <h2 id="sisConsentTitle">${copy.title}</h2>
-        <p id="sisConsentDescription">${copy.description}</p>
-        <div class="sis-consent-options">
-          <label class="sis-consent-option"><input type="checkbox" data-sis-consent="supportChat"><span><strong>${copy.chat}</strong><small>${copy.chatDescription}</small></span></label>
-          <label class="sis-consent-option"><input type="checkbox" data-sis-consent="analytics"><span><strong>${copy.analytics}</strong><small>${copy.analyticsDescription}</small></span></label>
+        <span class="sis-consent-panel__info" aria-hidden="true">i</span>
+        <div class="sis-consent-panel__message">
+          <p class="sis-consent-panel__links">${copy.legalLead} <a href="${copy.settingsHref}">${copy.settingsLabel}</a> ${locale === "vi" ? "để xem" : "to view our"} <a href="${copy.privacyHref}" target="_blank" rel="noreferrer">${copy.privacyLabel}</a> và <a href="${copy.termsHref}" target="_blank" rel="noreferrer">${copy.termsLabel}</a>.</p>
         </div>
         <div class="sis-consent-panel__actions">
-          <button type="button" class="portal-button portal-button-primary" data-sis-consent-action="accept-all">${copy.acceptAll}</button>
-          <button type="button" class="portal-button portal-button-info" data-sis-consent-action="reject-all">${copy.rejectAll}</button>
-          <button type="button" class="portal-button portal-button-secondary" data-sis-consent-action="save">${copy.save}</button>
-          <button type="button" class="portal-button portal-button-immutable-chrome" data-sis-consent-action="close">${copy.close}</button>
+          <button type="button" class="portal-button portal-button-privacy-shaded" data-sis-consent-action="accept-all">${copy.acceptAll}</button>
+          <button type="button" class="portal-button portal-button-privacy-shaded" data-sis-consent-action="reject-all">${copy.rejectAll}</button>
+          <button type="button" class="portal-button portal-button-privacy-shaded" data-sis-consent-action="manage">${copy.manage}</button>
         </div>
         <p class="sis-consent-panel__status" role="status" aria-live="polite"></p>
       </div>`
     document.body?.appendChild(panel)
-    const saved = preferences || { supportChat: "denied", analytics: "denied" }
-    panel.querySelector('[data-sis-consent="supportChat"]').checked = saved.supportChat === "granted"
-    panel.querySelector('[data-sis-consent="analytics"]').checked = saved.analytics === "granted"
     panel.addEventListener("click", (event) => {
       const action = event.target.closest("[data-sis-consent-action]")?.dataset.sisConsentAction
       if (!action) return
-      if (action === "close") {
-        panel.hidden = true
+      if (action === "manage") {
+        window.location.assign(copy.settingsHref)
         return
       }
       const next = action === "accept-all"
         ? { supportChat: "granted", analytics: "granted" }
         : action === "reject-all"
           ? { supportChat: "denied", analytics: "denied" }
-          : {
-              supportChat: panel.querySelector('[data-sis-consent="supportChat"]').checked ? "granted" : "denied",
-              analytics: panel.querySelector('[data-sis-consent="analytics"]').checked ? "granted" : "denied",
-            }
+          : { supportChat: "denied", analytics: "denied" }
       const savedPreferences = writeConsentPreferences(next.supportChat, next.analytics)
       applyConsentPreferences(savedPreferences)
       panel.hidden = true
-      const status = document.getElementById("sisConsentStatus")
+      const status = panel.querySelector(".sis-consent-panel__status")
       if (status) status.textContent = copy.saved
     })
     return panel
@@ -377,26 +373,44 @@
     }
   }
 
-  function initPrivacyConsent({ locale = "en" } = {}) {
+  function portalAuthState() {
+    const dataset = document.documentElement?.dataset || {}
+    return dataset.studentAuthState || dataset.parentAuthState || dataset.adminAuthState || ""
+  }
+
+  function portalIsAuthenticated() {
+    const state = portalAuthState()
+    if (state === "authenticated") return true
+    if (state === "unauthenticated") return false
+    const initialAuth = globalThis.__SIS_ADMIN_INITIAL_AUTH__
+      || globalThis.__SIS_PARENT_INITIAL_AUTH__
+      || globalThis.__SIS_STUDENT_INITIAL_AUTH__
+      || globalThis.__SIS_SETTINGS_INITIAL_AUTH__
+    return initialAuth?.authenticated === true
+  }
+
+  function initPrivacyConsent({ locale = "en", waitForAuthentication = false, portal = "" } = {}) {
+    const normalizedLocale = locale === "vi" ? "vi" : "en"
+    const normalizedPortal = consentPortalKind(portal)
+    if (waitForAuthentication && !portalIsAuthenticated()) {
+      globalThis.__SIS_PRIVACY_CONSENT_LOCALE__ = normalizedLocale
+      globalThis.__SIS_PRIVACY_CONSENT_PORTAL__ = normalizedPortal
+      return readConsentPreferences()
+    }
     if (globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__) return readConsentPreferences()
     globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__ = true
-    const normalizedLocale = locale === "vi" ? "vi" : "en"
     const preferences = readConsentPreferences()
     setConsentAttributes(preferences)
-    const panel = renderConsentUi(normalizedLocale, preferences, !preferences)
-    const footer = document.querySelector(".portal-login-footer")
-    if (footer && !document.getElementById("sisConsentStatus")) {
-      const action = document.createElement("p")
-      action.className = "hub-footer__action sis-consent-footer-action"
-      action.innerHTML = '<button type="button" class="sis-consent-manage" id="sisConsentManage">' + consentCopy(normalizedLocale).manage + '</button><span class="sis-consent-status" id="sisConsentStatus" role="status" aria-live="polite"></span>'
-      footer.appendChild(action)
-      action.querySelector("button").addEventListener("click", () => {
-        panel.hidden = false
-        panel.querySelector('[data-sis-consent-action="close"]')?.focus()
-      })
-    }
+    const panel = renderConsentUi(normalizedLocale, preferences, !preferences, normalizedPortal)
     if (preferences) applyConsentPreferences(preferences)
     return preferences
+  }
+
+  function showPrivacyConsent({ locale, portal } = {}) {
+    return initPrivacyConsent({
+      locale: locale || globalThis.__SIS_PRIVACY_CONSENT_LOCALE__ || "en",
+      portal: portal || globalThis.__SIS_PRIVACY_CONSENT_PORTAL__ || "",
+    })
   }
 
   function installBrevoConversationA11y() {
@@ -437,6 +451,7 @@
     readConsentPreferences,
     writeConsentPreferences,
     initPrivacyConsent,
+    showPrivacyConsent,
     applyConsentPreferences,
     setBrevoIdentity,
   }

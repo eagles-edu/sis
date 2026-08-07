@@ -18,7 +18,7 @@ function createSandbox(authState = "unauthenticated", { initialStorage = {}, ser
     get length() { return store.size },
   }
   const sandbox = {
-    document: { documentElement: { dataset: { parentAuthState: authState }, style: {} } },
+    document: { documentElement: { dataset: { parentAuthState: authState }, style: {} }, getElementById: () => null },
     localStorage: storage,
     sessionStorage: storage,
     window: null,
@@ -26,6 +26,21 @@ function createSandbox(authState = "unauthenticated", { initialStorage = {}, ser
     fetch: async (...args) => {
       calls.push(args)
       return { ok: true, json: async () => ({ preferences: serverPreferences }) }
+    },
+    SIS_PORTAL_THEME: {
+      CONSENT_VERSION: 1,
+      CONSENT_STORAGE_KEY: "sis-consent-preferences",
+      writeConsentPreferences: (supportChat, analytics) => {
+        const saved = {
+          version: 1,
+          supportChat,
+          analytics,
+          updatedAt: new Date().toISOString(),
+        }
+        store.set("sis-consent-preferences", JSON.stringify(saved))
+        return saved
+      },
+      applyConsentPreferences: () => {},
     },
   }
   sandbox.window = sandbox
@@ -64,6 +79,24 @@ test("keeps theme local and ignores a deferred server theme", async () => {
   assert.equal(calls.length, 1)
   assert.equal(sandbox.document.documentElement.dataset.theme, "dark")
   assert.equal(store.get("sis-theme"), "dark")
+})
+
+test("hydrates consent preferences from the Redis-backed portal preference response", async () => {
+  const { preferences, sandbox, store } = createSandbox("unauthenticated", {
+    serverPreferences: {
+      "sis-consent-preferences": {
+        version: 1,
+        supportChat: "granted",
+        analytics: "denied",
+        updatedAt: new Date().toISOString(),
+      },
+    },
+  })
+
+  await preferences.load()
+
+  assert.equal(preferences.get("sis-consent-preferences").supportChat, "granted")
+  assert.equal(JSON.parse(store.get("sis-consent-preferences")).analytics, "denied")
 })
 
 test("migration never uploads or removes canonical and legacy theme keys", async () => {

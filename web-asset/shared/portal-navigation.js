@@ -31,8 +31,9 @@
     const links = rootNode.querySelectorAll(selector);
     links.forEach((link) => {
       link.addEventListener("click", (event) => {
-        event.preventDefault();
         const destination = getDestination(link) || "";
+        if (!destination.startsWith("#")) return;
+        event.preventDefault();
         if (typeof onActivate === "function") {
           onActivate({ link, destination });
         }

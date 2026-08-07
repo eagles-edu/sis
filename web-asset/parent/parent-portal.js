@@ -6758,6 +6758,8 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         setBrevoParentIdentity(state.me?.parentsId || parentsId)
         document.documentElement.dataset.parentAuthState = "authenticated"
         document.getElementById("loginCard").classList.add("hidden")
+        await window.SIS_PORTAL_PREFERENCES?.migrate?.()
+        window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "parent" })
         syncDashboardPageVisibility()
         setActivePortalView("dashboard")
         await hydratePortal({ initialUser: state.me })

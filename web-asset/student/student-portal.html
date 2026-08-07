@@ -92,6 +92,10 @@
           YTD</a>
         <a class="side-link" href="#studentDetailPageCard" data-view-target="home"
           data-page-target="recommendations">Recommendations for Success</a>
+        <a id="studentSettingsBtn" class="side-link" href="/student/settings"
+          title="Open settings and privacy controls" aria-label="Open settings and privacy controls">
+          Settings
+        </a>
       </nav>
       <div class="side-actions">
         <button id="studentNavLogoutBtn" type="button" class="portal-button portal-button-danger"
@@ -1128,7 +1132,7 @@
   </div>
 
   <script src="/web-asset/shared/portal-environment.js"></script>
-  <script>window.SIS_PORTAL_THEME?.initPrivacyConsent?.({ locale: "en" })</script>
+  <script>window.SIS_PORTAL_THEME?.initPrivacyConsent?.({ locale: "vi", portal: "student", waitForAuthentication: true })</script>
   <!--
     Source-contract markers for the external student portal module.
     function canEditNewsWeekSetViewerItem(item = {}) {

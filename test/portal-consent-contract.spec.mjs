@@ -8,9 +8,9 @@ const studentHtml = fs.readFileSync(path.resolve(rootDir, "web-asset/student/stu
 const parentHtml = fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.html"), "utf8")
 const serverSource = fs.readFileSync(path.resolve(rootDir, "server/student-admin-routes.mjs"), "utf8")
 
-for (const [label, html, locale] of [["student", studentHtml, "en"], ["parent", parentHtml, "vi"]]) {
+for (const [label, html, portal] of [["student", studentHtml, "student"], ["parent", parentHtml, "parent"]]) {
   test(`${label} portal gates third-party integrations behind shared consent`, () => {
-    assert.match(html, new RegExp(`initPrivacyConsent\\?\\.\\(\\{ locale: ["']${locale}["'] \\}\\)`))
+    assert.match(html, new RegExp(`initPrivacyConsent\\?\\.\\(\\{ locale: ["']vi["'], portal: ["']${portal}["'], waitForAuthentication: true \\}\\)`))
     assert.doesNotMatch(html, /conversations-widget\.brevo\.com\/brevo-conversations\.js/)
   })
 }
@@ -24,6 +24,8 @@ test("shared consent state exposes both integrations and versioned persistence",
   assert.match(source, /analytics_storage: "denied"/)
   assert.match(source, /ad_user_data: "denied"/)
   assert.match(source, /ad_personalization: "denied"/)
+  assert.match(source, /showPrivacyConsent/)
+  assert.match(source, /portal-button-privacy-shaded/)
 })
 
 test("portal runtime config exposes only the optional public GA4 measurement ID", () => {

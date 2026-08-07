@@ -35,6 +35,8 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 14. Portal origin helper edits must preserve the complete local runtime set: `8786` test mirror, `8787` production/admin-live, and `8788` dev, in every portal helper and both inferred/explicit-origin paths. The portal fallback contract test must pass before reporting a portal change complete.
 13. Local portal UI tweaks are authored only in `/home/eagles/dockerz/sis`; every `full` test sync must rebuild generated admin assets, copy the source and generated UI payloads through the strict whitelist, and fail on source-to-test hash drift before restart. Never rely on a mirror-only UI edit surviving a later sync.
 
+15. Before acting on a request, create a semantic lock from its exact words: preserve every literal constraint, map each one to an observable acceptance check, and keep that mapping active through implementation and verification. Do not silently replace an objective term with a weaker synonym, visual approximation, inferred preference, or narrower scope. If the requested term and the discovered source appear to conflict, stop and resolve the conflict from the source or ask; do not reinterpret the request.
+
 ## Literal Instruction Terms
 
 The following words are hard constraints, not emphasis: `all`, `every`, `everything`, `everywhere`, `none`, `nothing`, `never`, `always`, `completely`, `thoroughly`, `full`, `full sync`, `move all`, `no fallback`, `no trash fallback`, `only fallback to exact copy of data`, `parity`.
@@ -51,6 +53,13 @@ The following words are hard constraints, not emphasis: `all`, `every`, `everyth
 - Do not report completion unless exhaustive search, in-scope edits, generated-asset rebuilds, and verification have all been completed with zero remaining in-scope matches.
 - If the scope is genuinely ambiguous after inspection, stop and ask before making changes.
 - This contract overrides any weaker paraphrase or casual usage.
+
+### Semantic-drift prevention gate
+
+- Treat the user’s nouns, adjectives, adverbs, quantifiers, and scope words as requirements. Do not assign them an alternate meaning because a different implementation is easier or more familiar.
+- Before editing, identify the authoritative source and write down the exact structural/data/behavioral proof required by each term. For `identical`, proof includes source parity, DOM hierarchy, sibling order, controls, and rendered result; for `copy/paste`, proof includes direct source comparison; for `shared`, proof includes reuse of the established shared element/style contract.
+- During editing, reject substitutions that weaken the requirement: `identical` is not `similar`; `copy/paste` is not `recreate`; `shared` is not `page-local`; `always` is not `usually`; `full` is not `partial`; `all` is not `representative`.
+- Before reporting completion, check the semantic lock term by term and report any unverified term as incomplete. Never claim completion from a passing build alone when the request contains source, parity, structural, or rendered-result requirements.
 
 ## Communication
 
@@ -78,6 +87,17 @@ The following words are hard constraints, not emphasis: `all`, `every`, `everyth
 - Before making any out-of-scope UI or design change, stop and ask the user first.
 - Avoid regression-by-cleanup: do not rewrite or replace settled styling rules unless the current task requires it.
 - Parent portal ownership rule: `web-asset/parent/parent-portal.html` owns page structure and boot-gate behavior only; shared chrome, buttons, modal surfaces, placeholders, and typography belong in `web-asset/shared/portal-theme.css` unless the user explicitly requests a parent-only exception.
+
+## Literal Shared-UI Contract
+
+When a request says `identical`, `copy/paste`, `use the shared header`, `use the shared theme`, or names a shared element, interpret it as a structural implementation instruction, not a visual suggestion.
+
+- `identical` means the same DOM hierarchy, sibling order, element types, classes, control set, and shared selectors as the authoritative existing page. A different wrapper, merged surface, replacement control, or approximate recreation is not identical.
+- `copy/paste` means first read the authoritative source block and reproduce that block verbatim. Do not recreate it from memory, simplify it, substitute a `Back` link, omit controls, or redesign it. Only explicit runtime substitutions are permitted: portal-specific home path, locale-visible labels, authenticated identity values, and collision-safe IDs when the source contract requires them.
+- `use the shared header` means preserve the complete portal chrome sequence: contact header, floating navigation control, separate `.content.topbar` surface, `.topbar-head`, brand block, theme toggle, and text-zoom controls. The topbar remains a sibling of the page content; it must never be moved inside, merged with, or represented by the Settings/content container.
+- `use the shared theme` means use the established selectors and CSS variables from `web-asset/shared/portal-theme.css`/`.min.css`. Do not create page-local copies of shared header, button, surface, dark-mode, or spacing rules unless the request explicitly authorizes a page-only exception.
+- The canonical parent/student header source is the corresponding block in `web-asset/parent/parent-portal.html` and `web-asset/student/student-portal.html`. Any new portal page must be checked against those blocks before editing and must retain the same structural contract after editing.
+- Before reporting completion, verify both source structure and rendered structure. Add or update a contract test when a shared element is added to a new page so a future change fails loudly instead of drifting silently.
 
 ## OpenAI Docs
 

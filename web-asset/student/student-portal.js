@@ -5282,6 +5282,8 @@
           await login();
           setBrevoStudentIdentity(field("loginEaglesId")?.value);
           setAuthenticatedView(true);
+          await window.SIS_PORTAL_PREFERENCES?.migrate?.();
+          window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "student" });
           setGlobalStatus("Student session active.");
           if (handlePortalPostAuthRouteState()) return;
           await Promise.all([loadDashboard(), loadCalendar()]);
