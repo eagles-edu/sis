@@ -6,6 +6,10 @@ import {
   evaluateStudentNewsVocabulary,
   isValidStudentNewsSyllabication,
 } from "../src/modules/admin/student-news-compliance.mjs"
+import {
+  normalizeVocabularySyllabication,
+  vocabularyEntryError,
+} from "../src/modules/admin/vocabulary-syllabication.mjs"
 
 const STUDENT_HTML = fs.readFileSync(new URL("../web-asset/student/student-portal.html", import.meta.url), "utf8")
 const STUDENT_JS = fs.readFileSync(new URL("../web-asset/student/student-portal.js", import.meta.url), "utf8")
@@ -57,7 +61,7 @@ test("student news vocabulary reports the offending entry", () => {
   assert.equal(result.passed, false)
   assert.match(result.message, /in the morning/)
   assert.equal(result.rowErrors[0].index, 0)
-  assert.match(result.rowErrors[0].message, /fully capitalized stressed syllable/)
+  assert.match(result.rowErrors[0].message, /exactly one stressed syllable/)
 })
 
 test("compound vocabulary passes required validation but can earn an extra-points warning", async () => {
@@ -123,6 +127,43 @@ test("syllabication rejects partial capitalization and missing stress", () => {
   assert.equal(isValidStudentNewsSyllabication("in the MÓRN-ing", "in the morning"), true)
   assert.equal(isValidStudentNewsSyllabication("potato"), true)
   assert.equal(isValidStudentNewsSyllabication("in the morn-ing", "in the morning"), false)
+})
+
+test("vocabulary guard accepts uppercase or accented stress and preserves canonical accented entry", () => {
+  assert.equal(vocabularyEntryError({ english: "commended", syllabication: "com-MEND-ed" }), "")
+  assert.equal(vocabularyEntryError({ english: "commended", syllabication: "com-ménd-ed" }), "")
+  assert.match(vocabularyEntryError({ english: "Commended", syllabication: "com-MEND-ed" }), /lowercase/)
+  assert.match(vocabularyEntryError({ english: "commended", syllabication: "com-MEnd-ed" }), /complete stressed syllable/)
+  const missingStress = vocabularyEntryError({ english: "commended", syllabication: "com-mend-ed" })
+  assert.match(missingStress, /Research it using the provided dictionary links/)
+  assert.doesNotMatch(missingStress, /com-MEND-ed/)
+  assert.equal(normalizeVocabularySyllabication("com-MEND-ed"), "com-ménd-ed")
+  assert.equal(normalizeVocabularySyllabication("com-ménd-ed"), "com-ménd-ed")
+})
+
+test("New Words persistence keeps canonical accented stress without drift", () => {
+  const uppercaseStress = "com-MEND-ed"
+  const accentedStress = "com-ménd-ed"
+  assert.equal(normalizeVocabularySyllabication(uppercaseStress), accentedStress)
+  assert.equal(normalizeVocabularySyllabication(accentedStress), accentedStress)
+  assert.match(
+    NEW_WORDS_MODULE,
+    /syllabication: normalizeVocabularySyllabication\(row\.syllabication\)\.slice\(0, 240\)/,
+  )
+  assert.match(STUDENT_JS, /function normalizeSyllabication\(value\) \{\s*return t\(value\);\s*\}/)
+})
+
+test("all student vocabulary save and check surfaces run the same client guard", () => {
+  assert.match(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\)/)
+  assert.match(STUDENT_JS, /function validateVocabularyEntrySurface\(container, onInvalid\)/)
+  assert.match(STUDENT_JS, /if \(!row\.english && !row\.syllabication\) return;/)
+  assert.equal((STUDENT_JS.match(/validateVocabularyEntrySurface\(field\("newsVocabularyRows"\)/g) || []).length, 2)
+  assert.equal((STUDENT_JS.match(/validateVocabularyEntrySurface\(field\("newsWeekSetModalVocabularyRows"\)/g) || []).length, 2)
+  assert.match(STUDENT_JS, /validateVocabularyEntrySurface\(field\("newWordsRows"\)/)
+  // Declaration plus one input listener for News, Week Set, and New Words.
+  assert.equal((STUDENT_JS.match(/normalizeVocabularyEnglishEntry\(event\)/g) || []).length, 4)
+  assert.match(NEWS_SUBMISSIONS_MODULE, /definition: normalizeText\(row\?\.definition\)/)
+  assert.doesNotMatch(NEWS_SUBMISSIONS_MODULE, /definition: clampText\(row\?\.definition, 1000\)/)
 })
 
 test("student vocabulary rows provide lookup controls for initial and added rows", () => {
@@ -267,7 +308,7 @@ test("student New Words page exposes editable, sortable, paginated vocabulary", 
   assert.doesNotMatch(STUDENT_HTML, /new-words-intro" open/)
   assert.match(STUDENT_HTML, /class="new-words-intro-illustration"[\s\S]*water_ripples_one/)
   assert.equal((STUDENT_HTML.match(/<details class="panel student-new-words-instructions">/g) || []).length, 2)
-  assert.equal((STUDENT_HTML.match(/data-new-words-lightbox title/g) || []).length, 3)
+  assert.equal((STUDENT_HTML.match(/data-new-words-lightbox\s+title/g) || []).length, 3)
   assert.match(STUDENT_HTML, /id="newWordsImageLightbox"[\s\S]*id="newWordsImageLightboxCloseBtn"/)
   assert.match(STUDENT_HTML, /For a monosyllabic word[\s\S]*keep the spaces between words[\s\S]*air-strike[\s\S]*MÓRN-ing[\s\S]*air-con-di-tion-ing/)
   assert.match(SHARED_THEME, /student-new-words-instructions-body[\s\S]*background: #f5f9ff/)
@@ -304,7 +345,8 @@ test("student New Words page exposes editable, sortable, paginated vocabulary", 
   assert.match(NEW_WORDS_MODULE, /normalizeVocabularySyllabication\(row\.syllabication\)/)
   assert.match(NEWS_SUBMISSIONS_MODULE, /syllabication: normalizeSyllabication\(/)
   assert.match(NEWS_SUBMISSIONS_MODULE, /definition: normalizeText\(row\?\.definition\)/)
-  assert.match(STUDENT_JS, /event\.target\.value = event\.target\.value\.toLocaleLowerCase\("en-US"\)/)
+  assert.match(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\)/)
+  assert.match(STUDENT_JS, /field\("newWordsRows"\)\?\.addEventListener\("input", \(event\) => \{\s*normalizeVocabularyEnglishEntry\(event\);/)
   assert.doesNotMatch(STUDENT_HTML, /syllableCount\s*===\s*1[\s\S]*?normalizeSyllabication/)
   assert.match(SHARED_THEME, /new-word-entry-definition[\s\S]*padding-inline-start: 18px/)
 })

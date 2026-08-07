@@ -86,44 +86,44 @@
       "A2 KET": {
         "title": "A2 KET",
         "bgColor": "#038e9f",
-        "imageDataUrl": "web-asset/images/ket.svg",
-        "assetKey": "class-level-a2-ket"
+        "assetKey": "class-level-a2-ket",
+        "imageDataUrl": "web-asset/images/ket.svg"
       },
       "B1 PET": {
         "title": "B1 PET",
         "bgColor": "#cd1637",
-        "imageDataUrl": "web-asset/images/pet.svg",
-        "assetKey": "class-level-b1-pet"
+        "assetKey": "class-level-b1-pet",
+        "imageDataUrl": "web-asset/images/pet.svg"
       },
       "A1 Movers": {
         "title": "A1 Movers",
         "bgColor": "#913198",
-        "imageDataUrl": "web-asset/images/movers.svg",
-        "assetKey": "class-level-a1-movers"
+        "assetKey": "class-level-a1-movers",
+        "imageDataUrl": "web-asset/images/movers.svg"
       },
       "A2 Flyers": {
         "title": "A2 Flyers",
         "bgColor": "#b5d570",
-        "imageDataUrl": "web-asset/images/flyers.svg",
-        "assetKey": "class-level-a2-flyers"
-      },
-      "Eggs & Chicks": {
-        "title": "Eggs & Chicks",
-        "bgColor": "#e0162b",
-        "imageDataUrl": "web-asset/images/eggs-chicks.svg",
-        "assetKey": "class-level-eggs-chicks"
-      },
-      "Pre-A1 Starters": {
-        "title": "Pre-A1 Starters",
-        "bgColor": "#FCAB15",
-        "imageDataUrl": "web-asset/images/starters.svg",
-        "assetKey": "class-level-pre-a1-starters"
+        "assetKey": "class-level-a2-flyers",
+        "imageDataUrl": "web-asset/images/flyers.svg"
       },
       "B2+ IELTS": {
         "title": "B2+ IELTS",
         "bgColor": "#b10128",
         "assetKey": "class-level-b2-ielts",
         "imageDataUrl": "web-asset/images/ielts.svg"
+      },
+      "Eggs & Chicks": {
+        "title": "Eggs & Chicks",
+        "bgColor": "#e0162b",
+        "assetKey": "class-level-eggs-chicks",
+        "imageDataUrl": "web-asset/images/eggs-chicks.svg"
+      },
+      "Pre-A1 Starters": {
+        "title": "Pre-A1 Starters",
+        "bgColor": "#FCAB15",
+        "assetKey": "class-level-pre-a1-starters",
+        "imageDataUrl": "web-asset/images/starters.svg"
       }
     },
     "profileFormConfig": {},
@@ -144,6 +144,6 @@
     "autoApproveDelayHours": 16
   },
   "environment": "development",
-  "updatedAt": "2026-08-07T08:38:03.062Z",
+  "updatedAt": "2026-08-07T11:57:28.856Z",
   "updatedBy": "admin"
 }

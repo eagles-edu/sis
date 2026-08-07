@@ -4093,9 +4093,7 @@
       }
 
       function normalizeSyllabication(value) {
-        return t(value).split(/(\s+|-)/u).map((token) =>
-          /[áéíóúýàèìòùâêîôûãẽĩõũÁÉÍÓÚÝÀÈÌÒÙÂÊÎÔÛÃẼĨÕŨ]/u.test(token) ? token.toLocaleUpperCase("en-US") : token,
-        ).join("");
+        return t(value);
       }
 
       function vocabularyEntryError(row = {}) {
@@ -4108,10 +4106,10 @@
           if (!syllables.length || syllables.some((syllable) => !/^\p{L}+$/u.test(syllable))) return "Use letters, spaces, and hyphens only in syllabication.";
           const partial = syllables.find((syllable) => /[A-Z]/u.test(syllable) && Array.from(syllable).length > 1 && syllable !== syllable.toLocaleUpperCase("en-US"));
           if (partial) return `Capitalize the complete stressed syllable "${partial}", not only one character.`;
-          const stress = syllables.map((syllable, index) => /[A-Z]/u.test(syllable) ? index : -1).filter((index) => index >= 0);
+          const stress = syllables.map((syllable, index) => /[A-ZáéíóúýàèìòùâêîôûãẽĩõũÁÉÍÓÚÝÀÈÌÒÙÂÊÎÔÛÃẼĨÕŨ]/u.test(syllable) ? index : -1).filter((index) => index >= 0);
           if (stress.some((index) => Array.from(syllables[index]).length === 1 && index !== 0)) return "A single-character stressed syllable is allowed only as the first syllable.";
           const exactCompound = english.toLocaleLowerCase("en-US").split(/\s+/u).includes(word.toLocaleLowerCase("en-US"));
-          if (syllables.length > 1 && !exactCompound && stress.length !== 1) return "Every split word needs exactly one fully capitalized stressed syllable, for example com-MEND-ed.";
+          if (syllables.length > 1 && !exactCompound && stress.length !== 1) return "Every split word needs exactly one stressed syllable. Research it using the provided dictionary links.";
           if (syllables.length === 1 && stress.length) return "Do not capitalize an unsplit syllabication word.";
           if (stress.length > 1) return "Use exactly one stressed syllable per word.";
         }
@@ -4126,6 +4124,9 @@
             if (element.classList.contains("field-validation-message")) element.remove();
           });
           const row = Object.fromEntries(["english", "syllabication"].map((key) => [key, t(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value)]));
+          // Blank minimum-row placeholders are not entries. The server keeps
+          // ownership of required-row and completeness validation.
+          if (!row.english && !row.syllabication) return;
           const message = vocabularyEntryError(row);
           if (!message) return;
           firstMessage ||= message;
@@ -4137,6 +4138,19 @@
           rowEl.appendChild(help);
         });
         return firstMessage;
+      }
+
+      function normalizeVocabularyEnglishEntry(event) {
+        const input = event?.target;
+        if (!input?.matches?.('[data-vocabulary-field="english"]')) return;
+        input.value = input.value.toLocaleLowerCase("en-US");
+      }
+
+      function validateVocabularyEntrySurface(container, onInvalid) {
+        const message = showVocabularyEntryErrors(container);
+        if (!message) return true;
+        onInvalid?.(message);
+        return false;
       }
 
       function vocabularyLookupUrl(label, english) {
@@ -4333,8 +4347,10 @@
 
       async function saveNewWords() {
         const words = sortedNewWords();
-        const entryError = showVocabularyEntryErrors(field("newWordsRows"));
-        if (entryError) throw new Error(`New words were not saved: ${entryError}`);
+        let entryError = "";
+        if (!validateVocabularyEntrySurface(field("newWordsRows"), (message) => { entryError = message; })) {
+          throw new Error(`New words were not saved: ${entryError}`);
+        }
         Array.from(field("newWordsRows")?.querySelectorAll("[data-news-vocabulary-row]") || []).forEach((rowEl, index) => {
           const sourceIndex = Number.parseInt(rowEl.getAttribute("data-new-word-index"), 10);
           const word = words[sourceIndex];
@@ -5179,18 +5195,18 @@
         }
       }
       async function submitReport() {
-        const entryError = showVocabularyEntryErrors(field("newsVocabularyRows"));
-        if (entryError) {
-          setFormStatus(`Vocabulary needs correction: ${entryError}`, true);
+        if (!validateVocabularyEntrySurface(field("newsVocabularyRows"), (message) => {
+          setFormStatus(`Vocabulary needs correction: ${message}`, true);
+        })) {
           return;
         }
         await submitNewsPayload(reportPayload());
       }
 
       async function checkReport() {
-        const entryError = showVocabularyEntryErrors(field("newsVocabularyRows"));
-        if (entryError) {
-          setFormStatus(`Vocabulary needs correction: ${entryError}`, true);
+        if (!validateVocabularyEntrySurface(field("newsVocabularyRows"), (message) => {
+          setFormStatus(`Vocabulary needs correction: ${message}`, true);
+        })) {
           return;
         }
         await checkNewsPayload(reportPayload());
@@ -5200,9 +5216,9 @@
         const active = newsWeekSetViewerCurrentItem();
         if (!active) throw new Error("Select a report in the week set viewer.");
         if (!canEditNewsWeekSetViewerItem(active)) throw new Error("This report is locked.");
-        const entryError = showVocabularyEntryErrors(field("newsWeekSetModalVocabularyRows"));
-        if (entryError) {
-          setNewsWeekSetModalStatus(`Vocabulary needs correction: ${entryError}`);
+        if (!validateVocabularyEntrySurface(field("newsWeekSetModalVocabularyRows"), (message) => {
+          setNewsWeekSetModalStatus(`Vocabulary needs correction: ${message}`);
+        })) {
           return;
         }
         state.newsWeekSetViewerPending = true;
@@ -5226,9 +5242,9 @@
         const active = newsWeekSetViewerCurrentItem();
         if (!active) throw new Error("Select a report in the week set viewer.");
         if (!canEditNewsWeekSetViewerItem(active)) throw new Error("This report is locked.");
-        const entryError = showVocabularyEntryErrors(field("newsWeekSetModalVocabularyRows"));
-        if (entryError) {
-          setNewsWeekSetModalStatus(`Vocabulary needs correction: ${entryError}`);
+        if (!validateVocabularyEntrySurface(field("newsWeekSetModalVocabularyRows"), (message) => {
+          setNewsWeekSetModalStatus(`Vocabulary needs correction: ${message}`);
+        })) {
           return;
         }
         state.newsWeekSetViewerPending = true;
@@ -5536,9 +5552,7 @@
         });
       });
       field("newsWeekSetModal")?.addEventListener("input", (event) => {
-        if (event.target?.matches?.('[data-vocabulary-field="english"]')) {
-          event.target.value = event.target.value.toLocaleLowerCase("en-US");
-        }
+        normalizeVocabularyEnglishEntry(event);
         if (!event.target?.matches?.("input, select, textarea")) return;
         const active = newsWeekSetViewerCurrentItem();
         if (!active) return;
@@ -5549,13 +5563,12 @@
             addVocabularyRow(field("newsVocabularyRows"));
             markNewsDraftDirty();
           });
-          field("newsVocabularyRows")?.addEventListener("input", () => {
-            const active = document.activeElement;
-            if (active?.matches?.('[data-vocabulary-field="english"]')) active.value = active.value.toLocaleLowerCase("en-US");
+          field("newsVocabularyRows")?.addEventListener("input", (event) => {
+            normalizeVocabularyEnglishEntry(event);
             markNewsDraftDirty();
           });
           field("newWordsRows")?.addEventListener("input", (event) => {
-            if (event.target?.matches?.('[data-vocabulary-field="english"]')) event.target.value = event.target.value.toLocaleLowerCase("en-US");
+            normalizeVocabularyEnglishEntry(event);
           });
           field("newsVocabularyRows")?.addEventListener("change", () => {
             markNewsDraftDirty();
