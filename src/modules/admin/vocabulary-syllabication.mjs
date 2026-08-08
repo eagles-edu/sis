@@ -7,7 +7,14 @@ function hasUppercase(value) {
 }
 
 function hasAccentStress(value) {
-  return /[áéíóúýàèìòùâêîôûãẽĩõũÁÉÍÓÚÝÀÈÌÒÙÂÊÎÔÛÃẼĨÕŨ]/u.test(value)
+  return /[aeiouy]\p{M}+/iu.test(String(value).normalize("NFD"))
+}
+
+function normalizeSyllabicationText(value) {
+  return text(value)
+    .normalize("NFC")
+    .replace(/[\p{Pd}\u00AD\u2027\u00B7\u22C5\u2212]/gu, "-")
+    .replace(/\p{Z}+/gu, " ")
 }
 
 // New Words stores stress as an accented vowel. An already accented entry is
@@ -15,7 +22,7 @@ function hasAccentStress(value) {
 // converted to that same canonical representation on save.
 export function normalizeVocabularySyllabication(value) {
   const vowels = { a: "á", e: "é", i: "í", o: "ó", u: "ú", y: "ý" }
-  return text(value).split(/(\s+|-)/u).map((token) => {
+  return normalizeSyllabicationText(value).split(/(\s+|-)/u).map((token) => {
     if (!token || /^\s+$/u.test(token) || token === "-") return token
     if (hasAccentStress(token)) return token
     if (!hasUppercase(token)) return token
@@ -28,7 +35,7 @@ export function normalizeVocabularySyllabication(value) {
 
 export function vocabularySyllabicationError(english, syllabication) {
   const word = text(english).toLocaleLowerCase("en-US")
-  const value = text(syllabication)
+  const value = normalizeSyllabicationText(syllabication)
   const renderedWords = value.split(/\s+/u).filter(Boolean)
   if (!renderedWords.length) return "Add syllabication."
   for (const renderedWord of renderedWords) {

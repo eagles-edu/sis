@@ -845,6 +845,7 @@ test(
               supportChat: "denied",
               analytics: "denied",
               updatedAt: new Date().toISOString(),
+              noticeAcknowledgedAt: new Date().toISOString(),
             }),
           );
         } catch {

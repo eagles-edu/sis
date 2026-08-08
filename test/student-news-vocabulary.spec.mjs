@@ -14,6 +14,7 @@ import {
 const STUDENT_HTML = fs.readFileSync(new URL("../web-asset/student/student-portal.html", import.meta.url), "utf8")
 const STUDENT_JS = fs.readFileSync(new URL("../web-asset/student/student-portal.js", import.meta.url), "utf8")
 const SHARED_THEME = fs.readFileSync(new URL("../web-asset/shared/portal-theme.css", import.meta.url), "utf8")
+const ACTION_FEEDBACK_JS = fs.readFileSync(new URL("../web-asset/shared/portal-action-feedback.js", import.meta.url), "utf8")
 const PARENT_HTML = fs.readFileSync(new URL("../web-asset/parent/parent-portal.html", import.meta.url), "utf8")
 const ADMIN_JS = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
 const ADMIN_HTML = fs.readFileSync(new URL("../web-asset/admin/student-admin.html", import.meta.url), "utf8")
@@ -41,6 +42,15 @@ test("student test runtime accepts its same-origin HTTPS API origin", () => {
   assert.match(STUDENT_HTML, /if \(env === "development" && !isLoopback\)/)
   assert.match(STUDENT_HTML, /if \(env === "test" && !isLoopback && parsed\.origin !== window\.location\.origin\)/)
   assert.match(STUDENT_HTML, /if \(env !== "development" && env !== "test" && isLoopback\)/)
+})
+
+test("student New Words keeps server validation details visible in dark mode", () => {
+  assert.match(SHARED_THEME, /\.sis-action-feedback\[data-state="error"\] \{[\s\S]*background: var\(--primary-color\);[\s\S]*color: var\(--secondary-color\);/)
+  assert.match(SHARED_THEME, /html\[data-theme="dark"\] \.sis-action-feedback\[data-state="error"\] \{[\s\S]*background: var\(--primary-color\);[\s\S]*color: var\(--secondary-color\);/)
+  assert.match(ACTION_FEEDBACK_JS, /response\.clone\(\)\.json\(\)\.catch\(\(\) => null\)\.then\(/)
+  assert.match(ACTION_FEEDBACK_JS, /text\(payload\?\.error\) \|\| text\(payload\?\.message\) \|\| `Request failed/)
+  assert.equal(vocabularyEntryError({ english: "Word", syllabication: "word" }), "English word/phrase must be lowercase.")
+  assert.match(vocabularyEntryError({ english: "word", syllabication: "word-word" }), /exactly one stressed syllable/)
 })
 
 test("student news vocabulary minimum is configurable", () => {
@@ -132,6 +142,17 @@ test("syllabication rejects partial capitalization and missing stress", () => {
 test("vocabulary guard accepts uppercase or accented stress and preserves canonical accented entry", () => {
   assert.equal(vocabularyEntryError({ english: "commended", syllabication: "com-MEND-ed" }), "")
   assert.equal(vocabularyEntryError({ english: "commended", syllabication: "com-ménd-ed" }), "")
+  assert.equal(vocabularyEntryError({ english: "lion", syllabication: "LI-on" }), "")
+  assert.equal(vocabularyEntryError({ english: "lion", syllabication: "lí-on" }), "")
+  assert.equal(vocabularyEntryError({ english: "lion", syllabication: "li\u0301-on" }), "")
+  assert.equal(vocabularyEntryError({ english: "lion", syllabication: "li\u0301‑on" }), "")
+  ;["a\u0301-b", "e\u0301-b", "i\u0301-b", "o\u0301-b", "u\u0301-b"].forEach((syllabication) => {
+    assert.equal(vocabularyEntryError({ english: "example", syllabication }), "")
+  })
+  ;["-", "—", "－", "֊", "−", "­"].forEach((separator) => {
+    assert.equal(vocabularyEntryError({ english: "lion", syllabication: `lí${separator}on` }), "")
+  })
+  assert.equal(vocabularyEntryError({ english: "lion", syllabication: "lí‧on" }), "")
   assert.match(vocabularyEntryError({ english: "Commended", syllabication: "com-MEND-ed" }), /lowercase/)
   assert.match(vocabularyEntryError({ english: "commended", syllabication: "com-MEnd-ed" }), /complete stressed syllable/)
   const missingStress = vocabularyEntryError({ english: "commended", syllabication: "com-mend-ed" })
@@ -146,15 +167,22 @@ test("New Words persistence keeps canonical accented stress without drift", () =
   const accentedStress = "com-ménd-ed"
   assert.equal(normalizeVocabularySyllabication(uppercaseStress), accentedStress)
   assert.equal(normalizeVocabularySyllabication(accentedStress), accentedStress)
+  assert.equal(normalizeVocabularySyllabication("li\u0301-on"), "lí-on")
+  assert.equal(normalizeVocabularySyllabication("li\u0301‑on"), "lí-on")
+  assert.equal(normalizeVocabularySyllabication("li\u0301—on"), "lí-on")
+  assert.equal(normalizeVocabularySyllabication("li\u0301‧on"), "lí-on")
   assert.match(
     NEW_WORDS_MODULE,
     /syllabication: normalizeVocabularySyllabication\(row\.syllabication\)\.slice\(0, 240\)/,
   )
-  assert.match(STUDENT_JS, /function normalizeSyllabication\(value\) \{\s*return t\(value\);\s*\}/)
+  assert.match(STUDENT_JS, /function normalizeSyllabication\(value\) \{[\s\S]*\.normalize\("NFC"\)[\s\S]*replace\(\/\[\\p\{Pd\}\\u00AD\\u2027\\u00B7\\u22C5\\u2212\]\/gu, "-"\)/)
+  assert.match(NEW_WORDS_MODULE, /isUnchangedPersistedWord\(row, existingRow\)/)
+  assert.match(NEW_WORDS_MODULE, /existingById = new Map\(existing\.map\(/)
 })
 
 test("all student vocabulary save and check surfaces run the same client guard", () => {
   assert.match(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\)/)
+  assert.match(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\) \{[\s\S]*data-vocabulary-field="syllabication"[\s\S]*normalizeSyllabication\(input\.value\)/)
   assert.match(STUDENT_JS, /function validateVocabularyEntrySurface\(container, onInvalid\)/)
   assert.match(STUDENT_JS, /if \(!row\.english && !row\.syllabication\) return;/)
   assert.equal((STUDENT_JS.match(/validateVocabularyEntrySurface\(field\("newsVocabularyRows"\)/g) || []).length, 2)
@@ -203,11 +231,22 @@ test("student part-of-speech selectors use a fixed longest-option width", () => 
   assert.doesNotMatch(SHARED_THEME, /select\[data-vocabulary-field="partOfSpeech"\][\s\S]*?field-sizing: content;/)
 })
 
-test("student Save clears stale MMR UI without clearing saved form data", () => {
+test("student Save is draft-only and preserves a prior passing MMR result", () => {
   assert.match(STUDENT_HTML, /if \(saved\?\.item\) applyOpenReport\(saved\.item, \{ preserveExistingValidation: false \}\)/)
   assert.match(STUDENT_HTML, /applyNewsFieldValidationUi\(\{\}, \[\], \{\}, \[\]\)/)
   assert.match(STUDENT_HTML, /setNewsComplianceModalOpen\(false\)/)
+  assert.match(STUDENT_JS, /const mmrWasPassed = state\.newsCurrentMmrPassed === true && state\.newsFormDirty !== true/)
+  assert.match(STUDENT_JS, /state\.newsCurrentMmrPassed = mmrWasPassed/)
   assert.match(STUDENT_HTML, /setFormStatus\(auto \? "Draft autosaved\." : "Draft saved\. Check when you are ready to run MMR\."\)/)
+})
+
+test("student report work survives network interruptions and keeps Submit behind MMR", () => {
+  assert.match(STUDENT_JS, /NEWS_LOCAL_DRAFT_PREFIX = "sis\.student\.newsDraft\.v1:/)
+  assert.match(STUDENT_JS, /localStorage\.setItem\(key, JSON\.stringify\(\{ savedAt: new Date\(\)\.toISOString\(\), payload: reportPayload\(\) \}\)\)/)
+  assert.match(STUDENT_JS, /restoreNewsDraftLocally\(currentReport\)/)
+  assert.match(STUDENT_JS, /state\.newsCurrentMmrPassed = false;[\s\S]*updateSubmitAvailability\(\);/)
+  assert.match(STUDENT_JS, /const message = showVocabularyEntryErrors\(field\("newsVocabularyRows"\)\);\s*if \(message\) setFormStatus\(`Critical entry issue:/)
+  assert.match(STUDENT_JS, /if \(saved\?\.mmrPassed === true && saved\?\.complianceFailed !== true\) clearNewsDraftLocally\(\)/)
 })
 
 test("student news report dates render Vietnamese text while retaining ISO payload values", () => {

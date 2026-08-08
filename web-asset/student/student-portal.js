@@ -13,6 +13,7 @@
       const TEXT_ZOOM_MIN = 80;
       const TEXT_ZOOM_MAX = 140;
       const TEXT_ZOOM_STEP = 5;
+      const NEWS_LOCAL_DRAFT_PREFIX = "sis.student.newsDraft.v1:";
       const state = {
         window: null,
         dashboard: null,
@@ -64,6 +65,7 @@
         submitSuccessModalOpen: false,
         submitSuccessConfettiBuilt: false,
         detailGradeTable: null,
+        studentEaglesId: "",
       };
       const portalAssetPromises = new Map();
       const portalAssetUrls = {
@@ -104,6 +106,7 @@
       const INITIAL_AUTH_STATE = window.__SIS_STUDENT_INITIAL_AUTH__;
 
       function setBrevoStudentIdentity(eaglesId) {
+        state.studentEaglesId = t(eaglesId);
         window.SIS_PORTAL_THEME?.setBrevoIdentity({ eaglesId });
       }
 
@@ -4094,7 +4097,10 @@
       }
 
       function normalizeSyllabication(value) {
-        return t(value);
+        return t(value)
+          .normalize("NFC")
+          .replace(/[\p{Pd}\u00AD\u2027\u00B7\u22C5\u2212]/gu, "-")
+          .replace(/\p{Z}+/gu, " ");
       }
 
       function vocabularyEntryError(row = {}) {
@@ -4143,8 +4149,13 @@
 
       function normalizeVocabularyEnglishEntry(event) {
         const input = event?.target;
-        if (!input?.matches?.('[data-vocabulary-field="english"]')) return;
-        input.value = input.value.toLocaleLowerCase("en-US");
+        if (input?.matches?.('[data-vocabulary-field="english"]')) {
+          input.value = input.value.toLocaleLowerCase("en-US");
+          return;
+        }
+        if (input?.matches?.('[data-vocabulary-field="syllabication"]')) {
+          input.value = normalizeSyllabication(input.value);
+        }
       }
 
       function validateVocabularyEntrySurface(container, onInvalid) {
@@ -4906,7 +4917,49 @@
       function markNewsDraftDirty() {
         state.newsFormDirty = true;
         state.newsCurrentMmrPassed = false;
+        persistNewsDraftLocally();
         updateSubmitAvailability();
+      }
+
+      function newsLocalDraftKey() {
+        const identity = t(state.studentEaglesId || field("loginEaglesId")?.value).toLocaleLowerCase("en-US");
+        return identity ? `${NEWS_LOCAL_DRAFT_PREFIX}${identity}` : "";
+      }
+
+      function persistNewsDraftLocally() {
+        const key = newsLocalDraftKey();
+        if (!key) return;
+        try {
+          localStorage.setItem(key, JSON.stringify({ savedAt: new Date().toISOString(), payload: reportPayload() }));
+        } catch {
+          // Browser storage may be unavailable; keep the server draft path intact.
+        }
+      }
+
+      function clearNewsDraftLocally() {
+        const key = newsLocalDraftKey();
+        if (!key) return;
+        try { localStorage.removeItem(key); } catch { /* storage unavailable */ }
+      }
+
+      function restoreNewsDraftLocally(report = null) {
+        const key = newsLocalDraftKey();
+        if (!key || state.newsFormDirty) return false;
+        try {
+          const stored = JSON.parse(localStorage.getItem(key) || "null");
+          const payload = stored?.payload;
+          if (!payload || t(payload.reportDate) !== t(state.window?.reportDate)) return false;
+          const serverUpdated = Date.parse(report?.updatedAt || "") || 0;
+          const localSaved = Date.parse(stored.savedAt || "") || 0;
+          if (serverUpdated && localSaved <= serverUpdated) return false;
+          applyOpenReport(payload, { preserveExistingValidation: false });
+          state.newsFormDirty = true;
+          state.newsCurrentMmrPassed = false;
+          setFormStatus("Recovered local work in progress. Save when online; Check runs MMR before Submit.", true);
+          return true;
+        } catch {
+          return false;
+        }
       }
 
       function clearNewsReportForm() {
@@ -4982,6 +5035,7 @@
           applyOpenReport(currentReport, {
             preserveExistingValidation: options?.preserveValidation === true,
           });
+          restoreNewsDraftLocally(currentReport);
         }
         const openDate = t(data?.window?.reportDate);
         const closesAt = t(data?.window?.closesAt);
@@ -5086,6 +5140,7 @@
             body: payload,
           });
           await handleNewsCheckResult(saved, options);
+          if (saved?.mmrPassed === true && saved?.complianceFailed !== true) clearNewsDraftLocally();
         } finally {
           const remainingDisplayMs = NEWS_GRAMMAR_CHECK_MIN_DISPLAY_MS - (Date.now() - grammarCheckStartedAt);
           if (remainingDisplayMs > 0) {
@@ -5099,6 +5154,7 @@
         if (auto && !state.newsFormDirty) return;
         const payload = reportPayload();
         if (!t(payload?.reportDate)) throw new Error("Report date is locked.");
+        const mmrWasPassed = state.newsCurrentMmrPassed === true && state.newsFormDirty !== true;
         state.newsAutoSaveBusy = true;
         updateSubmitAvailability();
         try {
@@ -5107,14 +5163,14 @@
             body: payload,
           });
           if (saved?.item) applyOpenReport(saved.item, { preserveExistingValidation: false });
-          // Save is a draft-only operation. Clear stale Check/MMR markers so
-          // incomplete saved work is not presented as a new validation result.
+          // Save is draft-only: it never runs MMR and preserves a prior passing
+          // check when the saved content has not changed.
           applyNewsFieldValidationUi({}, [], {}, []);
           state.newsComplianceSummary = "";
           setNewsComplianceModalOpen(false);
-          // Save never runs MMR. Any changed content must be checked again.
-          state.newsCurrentMmrPassed = false;
+          state.newsCurrentMmrPassed = mmrWasPassed;
           state.newsFormDirty = false;
+          clearNewsDraftLocally();
           setFormStatus(auto ? "Draft autosaved." : "Draft saved. Check when you are ready to run MMR.");
         } finally {
           state.newsAutoSaveBusy = false;
@@ -5131,6 +5187,7 @@
             method: "POST",
             body: payload,
           });
+          clearNewsDraftLocally();
           if (saved?.complianceFailed === true) {
             await handleNewsCheckResult(saved, {
               reopenReportDate,
@@ -5568,6 +5625,8 @@
           field("newsVocabularyRows")?.addEventListener("input", (event) => {
             normalizeVocabularyEnglishEntry(event);
             markNewsDraftDirty();
+            const message = showVocabularyEntryErrors(field("newsVocabularyRows"));
+            if (message) setFormStatus(`Critical entry issue: ${message}`, true);
           });
           field("newWordsRows")?.addEventListener("input", (event) => {
             normalizeVocabularyEnglishEntry(event);

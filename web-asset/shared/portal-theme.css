@@ -539,9 +539,15 @@
 }
 
 .sis-action-feedback[data-state="error"] {
-  background: var(--portal-status-bad-bg, #fdebec);
-  border-color: var(--portal-status-bad-border, #f2b1b7);
-  color: var(--portal-status-bad-text, #9e1d1d);
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--secondary-color);
+}
+
+html[data-theme="dark"] .sis-action-feedback[data-state="error"] {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--secondary-color);
 }
 
 [data-action-feedback-state="pending"] {
@@ -5645,7 +5651,7 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
   margin-inline-start: auto;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition {
-  font-family: Verdana, Roboto, 'Segoe UI', Tahoma, Geneva, sans-serif;
+  font-family: inherit;
   font-size: 1.18rem;
   line-height: 1.35;
   margin: 0;

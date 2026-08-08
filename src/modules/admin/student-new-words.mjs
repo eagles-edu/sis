@@ -36,6 +36,18 @@ function normalizeWord(row = {}) {
   }
 }
 
+function persistedWordFields(row = {}) {
+  const normalized = normalizeWord(row)
+  return ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => normalized[key])
+}
+
+function isUnchangedPersistedWord(row, existingRow) {
+  if (!existingRow) return false
+  const incomingFields = persistedWordFields(row)
+  const existingFields = persistedWordFields(existingRow)
+  return incomingFields.every((value, index) => value === existingFields[index])
+}
+
 function mapWord(row = {}) {
   return {
     id: text(row.id),
@@ -97,7 +109,16 @@ export async function listStudentNewWords(studentRefId) {
 export async function saveStudentNewWords(studentRefId, value) {
   const prisma = await getPrisma()
   const source = Array.isArray(value) ? value : []
-  const invalid = source.map((row, index) => ({ index, message: vocabularyEntryError(row) })).find((entry) => entry.message)
+  const existing = await prisma.studentNewWord.findMany({
+    where: { studentRefId },
+    select: { id: true, partOfSpeech: true, english: true, vietnamese: true, syllabication: true, definition: true },
+  })
+  const existingById = new Map(existing.map((row) => [text(row.id), row]))
+  const invalid = source.map((row, index) => {
+    const existingRow = existingById.get(text(row?.id))
+    if (isUnchangedPersistedWord(row, existingRow)) return null
+    return { index, message: vocabularyEntryError(row) }
+  }).find((entry) => entry?.message)
   if (invalid) {
     const error = new Error(`Word ${invalid.index + 1}: ${invalid.message}`)
     error.statusCode = 400
@@ -109,7 +130,6 @@ export async function saveStudentNewWords(studentRefId, value) {
     if (word.englishKey) deduped.set(word.englishKey, word)
   })
   const words = Array.from(deduped.values())
-  const existing = await prisma.studentNewWord.findMany({ where: { studentRefId }, select: { id: true } })
   const incomingIds = new Set(source.slice(0, MAX_WORDS).map((row) => text(row?.id)).filter(Boolean))
   await prisma.$transaction(async (tx) => {
     await tx.studentNewWord.deleteMany({

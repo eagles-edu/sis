@@ -7355,7 +7355,7 @@ test("attendance main reloads saved statuses and admin child shows per-student s
     dom.window.document.getElementById("a_quarter").value,
     dom.window.currentQuarterFromToday(),
   )
-  assert.equal(dom.window.currentQuarterFromToday(), "q2")
+  assert.match(dom.window.currentQuarterFromToday(), /^q[1-4]$/)
   await waitFor(() => {
     const summaryText = normalizeText(dom.window.document.getElementById("attendanceLandingSummary")?.textContent)
     assert.match(summaryText, /students=1/i)
@@ -7366,11 +7366,15 @@ test("attendance main reloads saved statuses and admin child shows per-student s
   dom.window.document.getElementById("a_date").value = attendanceSunday
   dom.window.document.getElementById("a_date").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   dom.window.document.getElementById("a_schoolYear").value = "2025-2026"
-  dom.window.document.getElementById("a_quarter").value = "q3"
+  const attendanceSundayQuarter = defaultSchoolSetupFixture().schoolSetup.quarters.find(
+    (entry) => attendanceSunday >= entry.startDate && attendanceSunday <= entry.endDate,
+  )?.quarter
+  const mismatchedQuarter = attendanceSundayQuarter === "q3" ? "q2" : "q3"
+  dom.window.document.getElementById("a_quarter").value = mismatchedQuarter
   dom.window.document.getElementById("a_quarter").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   assert.match(
     normalizeText(dom.window.document.getElementById("attendanceQuarterWarning")?.textContent),
-    /Warning: .* is in .* but this form is set to q3/i,
+    new RegExp(`Warning: .* is in .* but this form is set to ${mismatchedQuarter}`, "i"),
   )
   const dashboardCallsBeforeSave = dashboardCalls
   dom.window.document.getElementById("attendanceLandingSaveAllBtn")?.click()
