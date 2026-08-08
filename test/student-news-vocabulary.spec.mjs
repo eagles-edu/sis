@@ -363,6 +363,8 @@ test("student New Words page exposes editable, sortable, paginated vocabulary", 
   assert.match(STUDENT_HTML, /new-word-entry-pronunciation/)
   assert.doesNotMatch(STUDENT_HTML, /dictionaryPlural\(word\.english, word\.partOfSpeech\)/)
   assert.match(STUDENT_HTML, /dictionaryDefinition\(word\.definition\)/)
+  assert.match(STUDENT_JS, /function dictionaryDefinition\(definition\) \{\s*return t\(definition\) \|\| "No definition yet\.";\s*\}/)
+  assert.doesNotMatch(STUDENT_JS, /return \/\^\\d\+\\\.\\s\/u\.test\(value\) \? value : `1\. \$\{value\}`/)
   assert.match(STUDENT_HTML, /new-word-entry-vietnamese/)
   assert.equal((STUDENT_HTML.match(/class="new-words-intro-illustration"/g) || []).length, 3)
   assert.match(STUDENT_HTML, /water_ripples_modal/)

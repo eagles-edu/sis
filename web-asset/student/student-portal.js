@@ -4288,8 +4288,7 @@
       }
 
       function dictionaryDefinition(definition) {
-        const value = t(definition) || "No definition yet.";
-        return /^\d+\.\s/u.test(value) ? value : `1. ${value}`;
+        return t(definition) || "No definition yet.";
       }
 
       function renderNewWordsRows() {

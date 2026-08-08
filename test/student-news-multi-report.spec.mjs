@@ -37,7 +37,7 @@ test("student Check feedback follows the codified field-order directive", () => 
 test("student report persistence keeps report identity and exact syllabication", () => {
   assert.match(studentJs, /reportId: t\(state\.newsReportId\)/)
   assert.match(studentJs, /reportSequence: Number\(state\.newsReportSequence\) \|\| null/)
-  assert.match(studentJs, /function normalizeSyllabication\(value\) \{\s*return t\(value\);\s*\}/)
+  assert.match(studentJs, /function normalizeSyllabication\(value\) \{[\s\S]*\.normalize\("NFC"\)[\s\S]*replace\(\[?\/\[\\p\{Pd\}/)
   assert.match(studentJs, /if \(options\?\.preserveForm !== true\)/)
   assert.match(studentJs, /Object\.prototype\.hasOwnProperty\.call\(report, fieldId\)/)
 })

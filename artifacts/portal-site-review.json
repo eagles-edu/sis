@@ -3247,7 +3247,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1759
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3259,7 +3259,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1711
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3271,7 +3271,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1627
+              "height": 892
             },
             ".panel": {
               "selector": ".panel",
@@ -9211,7 +9211,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1759
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9223,7 +9223,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1711
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9235,7 +9235,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1627
+              "height": 892
             },
             ".panel": {
               "selector": ".panel",
@@ -9943,7 +9943,7 @@
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(5) > input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
+                  "target": "input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
@@ -9951,7 +9951,7 @@
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(7) > input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
+                  "target": "input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
@@ -9962,19 +9962,19 @@
               "help": "Select element must have an accessible name",
               "nodes": [
                 {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
+                  "target": "select[data-layout-key=\"inputType\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
+                  "target": "select[data-layout-key=\"tabId\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
+                  "target": "select[data-layout-key=\"inputType\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
+                  "target": "select[data-layout-key=\"tabId\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
