@@ -261,6 +261,10 @@ test("student vocabulary warns immediately when POS and English already exist in
   assert.match(STUDENT_JS, /if \(!state\.newWordsLoaded\) await loadNewWords\(\)/)
 })
 
+test("student consent banner is evaluated for already-authenticated boot sessions", () => {
+  assert.equal((STUDENT_JS.match(/showPrivacyConsent\?\.\(\{ locale: "vi", portal: "student" \}\)/g) || []).length, 3)
+})
+
 test("student news report dates render Vietnamese text while retaining ISO payload values", () => {
   assert.match(STUDENT_HTML, /id="reportDate" type="text"[^>]*placeholder="dd\/mm\/yy"/)
   assert.match(STUDENT_HTML, /id="newsViewerReportDate" type="text"[^>]*placeholder="dd\/mm\/yy"/)

@@ -542,6 +542,15 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
         return;
       }
 
+      if (pathname === "/api/student/new-words" && request.method === "GET") {
+        if (!isStudentAuthenticated(request)) {
+          sendJson(response, 401, { error: "Unauthorized" });
+          return;
+        }
+        sendJson(response, 200, { ok: true, items: [] });
+        return;
+      }
+
       if (pathname === "/api/student/news-reports/calendar" && request.method === "GET") {
         if (!isStudentAuthenticated(request)) {
           sendJson(response, 401, { error: "Unauthorized" });

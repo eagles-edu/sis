@@ -10,7 +10,7 @@ const serverSource = fs.readFileSync(path.resolve(rootDir, "server/student-admin
 
 for (const [label, html, portal] of [["student", studentHtml, "student"], ["parent", parentHtml, "parent"]]) {
   test(`${label} portal gates third-party integrations behind shared consent`, () => {
-    assert.match(html, new RegExp(`initPrivacyConsent\\?\\.\\(\\{ locale: ["']vi["'], portal: ["']${portal}["'], waitForAuthentication: true \\}\\)`))
+    assert.match(html, new RegExp(`initPrivacyConsent\\?\\.\\(\\{ locale: ["']vi["'], portal: ["']${portal}["'] \\}\\)`))
     assert.doesNotMatch(html, /conversations-widget\.brevo\.com\/brevo-conversations\.js/)
   })
 }

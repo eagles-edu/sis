@@ -5377,6 +5377,7 @@
             if (handlePortalPostAuthRouteState()) return;
             await Promise.all([loadDashboard(), loadCalendar()]);
             setAuthenticatedView(true);
+            window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "student" });
             openReportAccessErrorModalIfNeeded();
             setFormStatus("Use Save to keep a draft. Check runs MMR; Submit unlocks only after Check passes.");
           } else {
@@ -5392,6 +5393,7 @@
           if (handlePortalPostAuthRouteState()) return;
           await Promise.all([loadDashboard(), loadCalendar()]);
           setAuthenticatedView(true);
+          window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "student" });
           openReportAccessErrorModalIfNeeded();
           setFormStatus("Use Save to keep a draft. Check runs MMR; Submit unlocks only after Check passes.");
         } catch (error) {

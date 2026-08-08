@@ -10042,8 +10042,9 @@ body.parent-portal-page .text-zoom-controls {
   .floating-menu-btn {
     inset-inline-end: auto;
 
-inset-inline-start: calc(
+    inset-inline-start: calc(
       50% + var(--portal-floating-menu-content-max-inline-size) / 2
+      - 44px
       - var(--portal-floating-menu-content-edge-gap)
     );
   }
