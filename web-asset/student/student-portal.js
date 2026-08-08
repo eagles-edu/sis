@@ -4135,14 +4135,29 @@
           // ownership of required-row and completeness validation.
           if (!row.english && !row.syllabication) return;
           const message = vocabularyEntryError(row);
-          if (!message) return;
-          firstMessage ||= message;
-          rowEl.querySelector('[data-vocabulary-field="english"]')?.classList.add("is-invalid");
-          rowEl.querySelector('[data-vocabulary-field="syllabication"]')?.classList.add("is-invalid");
-          const help = document.createElement("p");
-          help.className = "field-validation-message news-vocabulary-row-validation-message";
-          help.textContent = message;
-          rowEl.appendChild(help);
+          if (message) {
+            firstMessage ||= message;
+            rowEl.querySelector('[data-vocabulary-field="english"]')?.classList.add("is-invalid");
+            rowEl.querySelector('[data-vocabulary-field="syllabication"]')?.classList.add("is-invalid");
+            const help = document.createElement("p");
+            help.className = "field-validation-message news-vocabulary-row-validation-message";
+            help.textContent = message;
+            rowEl.appendChild(help);
+          }
+          if (container !== field("newWordsRows") && state.newWordsLoaded) {
+            const partOfSpeech = t(rowEl.querySelector('[data-vocabulary-field="partOfSpeech"]')?.value).toLowerCase();
+            const englishKey = t(row.english).normalize("NFC").toLocaleLowerCase("en-US");
+            const match = state.newWords.find((word) =>
+              t(word?.partOfSpeech).toLowerCase() === partOfSpeech &&
+              t(word?.english).normalize("NFC").toLocaleLowerCase("en-US") === englishKey,
+            );
+            if (match) {
+              const warning = document.createElement("p");
+              warning.className = "field-validation-message news-vocabulary-row-library-warning";
+              warning.textContent = `Warning: ${row.english} is already in your New Words library.`;
+              rowEl.appendChild(warning);
+            }
+          }
         });
         return firstMessage;
       }
@@ -5041,6 +5056,7 @@
         field("windowSummary").textContent = openDate ?
           `Open entry date: ${formatPortalDate(openDate)} (window closes at ${closesAt ? formatPortalDateTime(closesAt) : "today 23:59 +07"}).` :
           "No open date currently.";
+        if (!state.newWordsLoaded) await loadNewWords();
         updateSubmitAvailability();
       }
 

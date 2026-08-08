@@ -178,6 +178,10 @@ test("New Words persistence keeps canonical accented stress without drift", () =
   assert.match(STUDENT_JS, /function normalizeSyllabication\(value\) \{[\s\S]*\.normalize\("NFC"\)[\s\S]*replace\(\/\[\\p\{Pd\}\\u00AD\\u2027\\u00B7\\u22C5\\u2212\]\/gu, "-"\)/)
   assert.match(NEW_WORDS_MODULE, /isUnchangedPersistedWord\(row, existingRow\)/)
   assert.match(NEW_WORDS_MODULE, /existingById = new Map\(existing\.map\(/)
+  assert.match(NEW_WORDS_MODULE, /existingByEnglishKey = new Map\(existing\.map\(/)
+  assert.match(NEW_WORDS_MODULE, /This English word already exists in your New Words list\./)
+  assert.match(NEW_WORDS_MODULE, /Unique constraint failed\.\*englishKey/)
+  assert.match(NEW_WORDS_MODULE, /New Words contains a duplicate English word\./)
 })
 
 test("all student vocabulary save and check surfaces run the same client guard", () => {
@@ -247,6 +251,14 @@ test("student report work survives network interruptions and keeps Submit behind
   assert.match(STUDENT_JS, /state\.newsCurrentMmrPassed = false;[\s\S]*updateSubmitAvailability\(\);/)
   assert.match(STUDENT_JS, /const message = showVocabularyEntryErrors\(field\("newsVocabularyRows"\)\);\s*if \(message\) setFormStatus\(`Critical entry issue:/)
   assert.match(STUDENT_JS, /if \(saved\?\.mmrPassed === true && saved\?\.complianceFailed !== true\) clearNewsDraftLocally\(\)/)
+})
+
+test("student vocabulary warns immediately when POS and English already exist in the library", () => {
+  assert.match(STUDENT_JS, /if \(container !== field\("newWordsRows"\) && state\.newWordsLoaded\)/)
+  assert.match(STUDENT_JS, /t\(word\?\.partOfSpeech\)\.toLowerCase\(\) === partOfSpeech/)
+  assert.match(STUDENT_JS, /t\(word\?\.english\)\.normalize\("NFC"\)\.toLocaleLowerCase\("en-US"\) === englishKey/)
+  assert.match(STUDENT_JS, /Warning: \$\{row\.english\} is already in your New Words library\./)
+  assert.match(STUDENT_JS, /if \(!state\.newWordsLoaded\) await loadNewWords\(\)/)
 })
 
 test("student news report dates render Vietnamese text while retaining ISO payload values", () => {
