@@ -4097,10 +4097,22 @@
       }
 
       function normalizeSyllabication(value) {
+        const vowels = { a: "á", e: "é", i: "í", o: "ó", u: "ú", y: "ý" };
         return t(value)
           .normalize("NFC")
           .replace(/[\p{Pd}\u00AD\u2027\u00B7\u22C5\u2212]/gu, "-")
-          .replace(/\p{Z}+/gu, " ");
+          .replace(/\p{Z}+/gu, " ")
+          .split(/(\s+|-)/u)
+          .map((token) => {
+            if (!token || /^\s+$/u.test(token) || token === "-") return token;
+            if (/[aeiouy]\p{M}+/iu.test(token.normalize("NFD"))) return token.toLocaleLowerCase("en-US");
+            if (!/[A-Z]/u.test(token)) return token;
+            const chars = Array.from(token.toLocaleLowerCase("en-US"));
+            const vowelIndex = chars.findIndex((char) => vowels[char]);
+            if (vowelIndex >= 0) chars[vowelIndex] = vowels[chars[vowelIndex]];
+            return chars.join("");
+          })
+          .join("");
       }
 
       function vocabularyEntryError(row = {}) {

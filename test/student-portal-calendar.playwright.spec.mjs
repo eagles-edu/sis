@@ -850,7 +850,7 @@ test(
           globalThis.localStorage?.setItem(
             "sis-consent-preferences",
             JSON.stringify({
-              version: 1,
+              version: 2,
               supportChat: "denied",
               analytics: "denied",
               updatedAt: new Date().toISOString(),

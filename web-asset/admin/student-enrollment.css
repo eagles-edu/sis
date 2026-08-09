@@ -187,27 +187,33 @@
 
     .enrollment-level-grid {
       display: grid;
-      gap: 10px;
-      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 8px;
+      grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
       list-style: none;
       margin: 0;
       padding: 0;
     }
 
     .enrollment-level-tile {
+      align-items: flex-end;
+      appearance: none;
       aspect-ratio: 1 / 1;
       background-position: center;
       background-repeat: no-repeat;
-      background-size: cover;
-      border: 2px solid transparent;
-      border-radius: var(--radius-2);
+      background-size: cover, contain;
+      border: 1px solid var(--enrollment-level-border, var(--portal-border));
+      border-radius: var(--radius-3);
       color: #f8fbff;
-      display: block;
+      cursor: pointer;
+      display: flex;
+      font-size: 11px;
+      font-weight: 700;
+      justify-content: center;
       min-height: 0;
-      padding: 0;
+      padding: 6px;
       text-align: center;
       text-shadow: none;
-      transition: transform .15s ease, box-shadow .15s ease;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
     }
 
     .enrollment-level-tile:hover,

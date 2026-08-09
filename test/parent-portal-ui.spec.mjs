@@ -933,6 +933,8 @@ test("parent portal profile fields keep reference form section and label orderin
   assert.equal(document.getElementById("pf_dobText")?.getAttribute("type"), "text")
   assert.equal(document.getElementById("pf_dobText")?.getAttribute("inputmode"), "numeric")
   assert.equal(document.getElementById("pf_dobText")?.getAttribute("placeholder"), "nn/tt/nnnn")
+  assert.equal(document.getElementById("pf_dobText")?.getAttribute("name"), "dobText")
+  assert.equal(document.getElementById("pf_dobText")?.getAttribute("autocomplete"), "bday")
   assert.equal(document.getElementById("pf_dobText")?.value, "17/03/2011")
   assert.equal(document.getElementById("pf_birthOrder")?.getAttribute("type"), "text")
   assert.equal(document.getElementById("pf_birthOrder")?.getAttribute("inputmode"), "numeric")

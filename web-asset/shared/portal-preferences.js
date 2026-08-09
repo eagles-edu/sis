@@ -52,7 +52,12 @@
       preserveNoticeAcknowledgement: false,
     })
     theme.applyConsentPreferences?.(saved)
-    if (preference.noticeAcknowledgedAt) document.getElementById("sisConsentPanel")?.remove()
+    const panel = document.getElementById("sisConsentPanel")
+    if (saved.noticeAcknowledgedAt) {
+      panel?.remove()
+    } else if (panel) {
+      panel.hidden = false
+    }
     return true
   }
 

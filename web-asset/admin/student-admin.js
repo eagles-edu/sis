@@ -3203,6 +3203,7 @@
           parentSessionTtlSeconds: 28800,
           studentSessionTtlSeconds: 86400,
           redisConnectTimeoutMs: 5000,
+          consentVersion: 2,
         },
         newsReports: {
           weeklyMinimumReports: 5,
@@ -8456,6 +8457,11 @@
                 10,
               ) || DEFAULT_SIS_CONFIG.runtime.redisConnectTimeoutMs,
             ),
+          consentVersion: Math.max(
+            1,
+            Number.parseInt(String(candidate.consentVersion || DEFAULT_SIS_CONFIG.runtime.consentVersion), 10) ||
+              DEFAULT_SIS_CONFIG.runtime.consentVersion,
+          ),
         };
       }
 
@@ -18460,6 +18466,7 @@
             parentSessionTtlSeconds: document.getElementById("settingParentSessionTtl")?.value,
             studentSessionTtlSeconds: document.getElementById("settingStudentSessionTtl")?.value,
             redisConnectTimeoutMs: document.getElementById("settingRedisConnectTimeoutMs")?.value,
+            consentVersion: document.getElementById("settingConsentVersion")?.value,
           },
           newsReports: {
             weeklyMinimumReports: document.getElementById("settingWeeklyMinimumReports")?.value,
@@ -18486,6 +18493,7 @@
         setValue("settingParentSessionTtl", runtime.parentSessionTtlSeconds);
         setValue("settingStudentSessionTtl", runtime.studentSessionTtlSeconds);
         setValue("settingRedisConnectTimeoutMs", runtime.redisConnectTimeoutMs);
+        setValue("settingConsentVersion", runtime.consentVersion);
         setValue("settingWeeklyMinimumReports", newsReports.weeklyMinimumReports);
         const autoApproveEnabledEl = document.getElementById("settingNewsAutoApproveEnabled");
         if (autoApproveEnabledEl) autoApproveEnabledEl.checked = newsReports.autoApproveEnabled !== false;

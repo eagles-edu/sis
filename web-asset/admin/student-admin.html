@@ -4416,6 +4416,11 @@ No family lookup yet.</pre>
                     <input id="settingRedisConnectTimeoutMs" type="number" min="100" step="100">
                   </div>
                   <div class="col-4">
+                    <label for="settingConsentVersion">Consent version</label>
+                    <input id="settingConsentVersion" type="number" min="1" step="1">
+                    <p class="small">Increase this to force members to acknowledge new privacy services.</p>
+                  </div>
+                  <div class="col-4">
                     <label for="settingWeeklyMinimumReports">News reports required / week</label>
                     <input id="settingWeeklyMinimumReports" type="number" min="1" step="1" value="5">
                   </div>
@@ -5050,7 +5055,7 @@ No family lookup yet.</pre>
           if (adminAppLoaded) return
           adminAppLoaded = true
           const script = document.createElement("script")
-          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-958872310ba0c167"
+          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-fc2d7fae1e0c102b"
           script.defer = true
           if (replaySubmit || replayClick || replayPage) {
             script.addEventListener("load", () => {

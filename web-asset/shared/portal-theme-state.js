@@ -2,7 +2,7 @@
   const STORAGE_KEY = "sis-theme"
   const LEGACY_KEYS = ["sis-theme-admin", "sis-theme-parent", "sis-theme-student"]
   const CONSENT_STORAGE_KEY = "sis-consent-preferences"
-  const CONSENT_VERSION = 1
+  const CONSENT_VERSION = Math.max(1, Number.parseInt(String(globalThis.__SIS_CONSENT_VERSION__ || "2"), 10) || 2)
   const CONSENT_REVIEW_MS = 365 * 24 * 60 * 60 * 1000
   const BREVO_CONVERSATIONS_ID = "6a69c88b5131e8e4fc0cf347"
   const BREVO_CONVERSATIONS_SCRIPT = "https://conversations-widget.brevo.com/brevo-conversations.js"
@@ -123,7 +123,7 @@
   function defaultMemberPreferences() {
     return {
       version: CONSENT_VERSION,
-      supportChat: "denied",
+      supportChat: "granted",
       analytics: "granted",
       noticeAcknowledgedAt: "",
       updatedAt: "",
@@ -160,7 +160,7 @@
     const current = readConsentPreferences()
     const preferences = {
       version: CONSENT_VERSION,
-      supportChat: validConsentValue(supportChat) ? supportChat : "denied",
+      supportChat: validConsentValue(supportChat) ? supportChat : "granted",
       analytics: validConsentValue(analytics) ? analytics : "granted",
       noticeAcknowledgedAt: normalizedNoticeAcknowledgement(noticeAcknowledgedAt) || (preserveNoticeAcknowledgement ? current?.noticeAcknowledgedAt || "" : ""),
       updatedAt: new Date().toISOString(),
@@ -411,7 +411,13 @@
       globalThis.__SIS_PRIVACY_CONSENT_PORTAL__ = normalizedPortal
       return readConsentPreferences()
     }
-    if (globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__) return readConsentPreferences()
+    if (globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__) {
+      const preferences = readConsentPreferences()
+      if (!preferences?.noticeAcknowledgedAt && !document.getElementById("sisConsentPanel")) {
+        renderConsentUi(normalizedLocale, preferences || defaultMemberPreferences(), true, normalizedPortal)
+      }
+      return preferences
+    }
     globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__ = true
     const preferences = readConsentPreferences() || defaultMemberPreferences()
     setConsentAttributes(preferences)

@@ -2801,7 +2801,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1604
+              "height": 1783
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2813,7 +2813,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1556
+              "height": 1735
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2825,7 +2825,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1472
+              "height": 1651
             },
             ".panel": {
               "selector": ".panel",
@@ -3842,7 +3842,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2475
+              "height": 2547
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3854,7 +3854,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2427
+              "height": 2499
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3866,7 +3866,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2343
+              "height": 2415
             },
             ".panel": {
               "selector": ".panel",
@@ -8765,7 +8765,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1783
+              "height": 1604
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8777,7 +8777,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1735
+              "height": 1556
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8789,7 +8789,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1651
+              "height": 1472
             },
             ".panel": {
               "selector": ".panel",
@@ -9806,7 +9806,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2475
+              "height": 2547
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9818,7 +9818,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2427
+              "height": 2499
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9830,7 +9830,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2343
+              "height": 2415
             },
             ".panel": {
               "selector": ".panel",

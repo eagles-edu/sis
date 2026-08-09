@@ -97,7 +97,7 @@ test("portal consent preferences persist explicit choices across reads", () => {
 
   const saved = theme.writeConsentPreferences("granted", "denied")
 
-  assert.equal(saved.version, 1)
+  assert.equal(saved.version, 2)
   assert.equal(saved.supportChat, "granted")
   assert.equal(saved.analytics, "denied")
   assert.deepEqual(theme.readConsentPreferences(), saved)
@@ -105,12 +105,12 @@ test("portal consent preferences persist explicit choices across reads", () => {
   assert.equal(document.documentElement.dataset.sisSupportChatConsent, undefined)
 })
 
-test("member defaults enable anonymous analytics until an explicit account preference exists", () => {
+test("member defaults enable chat and anonymous analytics until an explicit account preference exists", () => {
   const { theme } = createSandbox()
 
   const acknowledged = theme.acknowledgePrivacyNotice()
 
-  assert.equal(acknowledged.supportChat, "denied")
+  assert.equal(acknowledged.supportChat, "granted")
   assert.equal(acknowledged.analytics, "granted")
   assert.ok(acknowledged.noticeAcknowledgedAt)
 })

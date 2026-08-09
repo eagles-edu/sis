@@ -160,6 +160,7 @@ test("vocabulary guard accepts uppercase or accented stress and preserves canoni
   assert.doesNotMatch(missingStress, /com-MEND-ed/)
   assert.equal(normalizeVocabularySyllabication("com-MEND-ed"), "com-ménd-ed")
   assert.equal(normalizeVocabularySyllabication("com-ménd-ed"), "com-ménd-ed")
+  assert.equal(normalizeVocabularySyllabication("con-GRÉS-sion-al"), "con-grés-sion-al")
 })
 
 test("New Words persistence keeps canonical accented stress without drift", () => {
@@ -176,6 +177,7 @@ test("New Words persistence keeps canonical accented stress without drift", () =
     /syllabication: normalizeVocabularySyllabication\(row\.syllabication\)\.slice\(0, 240\)/,
   )
   assert.match(STUDENT_JS, /function normalizeSyllabication\(value\) \{[\s\S]*\.normalize\("NFC"\)[\s\S]*replace\(\/\[\\p\{Pd\}\\u00AD\\u2027\\u00B7\\u22C5\\u2212\]\/gu, "-"\)/)
+  assert.match(STUDENT_JS, /token\.toLocaleLowerCase\("en-US"\)[\s\S]*vowels\[char\]/)
   assert.match(NEW_WORDS_MODULE, /isUnchangedPersistedWord\(row, existingRow\)/)
   assert.match(NEW_WORDS_MODULE, /existingById = new Map\(existing\.map\(/)
   assert.match(NEW_WORDS_MODULE, /existingByEnglishKey = new Map\(existing\.map\(/)

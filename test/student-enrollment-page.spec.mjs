@@ -47,3 +47,14 @@ test("student enrollment page ships as a standalone portal surface", () => {
   assert.doesNotMatch(html, /id="loginBtn"/)
   assert.match(`${html}\n${enrollmentJs}`, /\/api\/admin\/students\/\$\{encodeURIComponent\(row\.id\)\}\/enrollment/)
 })
+
+test("student enrollment level tiles match attendance sizing and only render populated levels", () => {
+  const css = fs.readFileSync(
+    path.resolve(rootDir, "web-asset/admin/student-enrollment.css"),
+    "utf8",
+  )
+  assert.match(css, /\.enrollment-level-grid[\s\S]*grid-template-columns:\s*repeat\(auto-fill, minmax\(92px, 1fr\)\)/)
+  assert.match(css, /\.enrollment-level-tile[\s\S]*aspect-ratio:\s*1 \/ 1/)
+  assert.match(enrollmentJs, /new Set\(levels\.filter\(Boolean\)\)/)
+  assert.match(enrollmentJs, /tile\.textContent = config\.title \|\| level/)
+})
