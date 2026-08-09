@@ -13,6 +13,7 @@ const DEFAULT_ADMIN_SESSION_TTL_SECONDS = 28800
 const DEFAULT_PARENT_SESSION_TTL_SECONDS = 28800
 const DEFAULT_STUDENT_SESSION_TTL_SECONDS = 86400
 const DEFAULT_SESSION_REDIS_CONNECT_TIMEOUT_MS = 5000
+const DEFAULT_CONSENT_VERSION = 2
 const DEFAULT_SCHOOL_LOGO_IMAGE_PATH = "web-asset/images/logo.svg"
 const DEFAULT_LEVEL_TILE_IMAGE_PATH_BY_LEVEL = new Map(
   [
@@ -108,6 +109,7 @@ const DEFAULT_SCHOOL_PROFILE = Object.freeze({
  *   parentSessionTtlSeconds: number,
  *   studentSessionTtlSeconds: number,
  *   redisConnectTimeoutMs: number,
+ *   consentVersion: number,
  * }} RuntimeConfig
  * @typedef {{
  *   weeklyMinimumReports: number,
@@ -494,6 +496,7 @@ function normalizeRuntimeConfig(source = {}) {
       candidate.redisConnectTimeoutMs ?? process.env.STUDENT_ADMIN_SESSION_REDIS_CONNECT_TIMEOUT_MS,
       DEFAULT_SESSION_REDIS_CONNECT_TIMEOUT_MS,
     ),
+    consentVersion: toPositiveInt(candidate.consentVersion ?? process.env.CONSENT_VERSION, DEFAULT_CONSENT_VERSION),
   }
 }
 

@@ -133,6 +133,31 @@ export function initOverviewDashboardIsland(deps = {}) {
     setValue("ovOutstanding", String(currentCompletedStudents));
     setValue("ovOutstandingYtd", formatPercent(currentCompletionPercent));
 
+    const privacyAlerts = Array.isArray(summary.analyticsOptOutAlerts) ? summary.analyticsOptOutAlerts : [];
+    const privacySection = document.getElementById("overviewAnalyticsOptOutAlertsSection");
+    const privacySummary = document.getElementById("overviewAnalyticsOptOutAlertsSummary");
+    const privacyRows = document.getElementById("overviewAnalyticsOptOutAlertRows");
+    if (privacySection) privacySection.classList.toggle("hidden", !privacyAlerts.length);
+    if (privacySummary) {
+      privacySummary.textContent = privacyAlerts.length === 1
+        ? "1 member turned off anonymous analytics."
+        : `${privacyAlerts.length} members recently turned off anonymous analytics.`;
+    }
+    if (privacyRows) {
+      privacyRows.innerHTML = "";
+      privacyAlerts.forEach((alert) => {
+        const tr = document.createElement("tr");
+        const portal = String(alert?.principalType || "member").replace(/^./u, (letter) => letter.toUpperCase());
+        const cells = [portal, String(alert?.principalId || ""), String(alert?.occurredAt || "")];
+        cells.forEach((value) => {
+          const td = document.createElement("td");
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        privacyRows.appendChild(tr);
+      });
+    }
+
     const classBody = document.getElementById("overviewClassRows");
     if (classBody) {
       classBody.innerHTML = "";

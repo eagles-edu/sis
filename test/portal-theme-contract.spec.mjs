@@ -544,6 +544,27 @@ test("shared portal theme defines the common shell, header, and card system", ()
   assert.match(sharedTheme, /\.portal-card,\s*\.resource-card/)
 })
 
+test("shared hamburger remains visible across the 1440px shell breakpoint", () => {
+  assert.match(
+    sharedThemeSource,
+    /@media\s*\(min-width:\s*1441px\)[\s\S]*?inset-inline-start:\s*calc\([\s\S]*?-\s*44px[\s\S]*?var\(--portal-floating-menu-content-edge-gap\)/,
+  )
+  for (const relPath of [
+    "web-asset/admin/grades-tabulator.html",
+    "web-asset/admin/report-card.html",
+    "web-asset/admin/student-admin.html",
+    "web-asset/admin/student-enrollment-IDK.html",
+    "web-asset/admin/student-enrollment.html",
+    "web-asset/parent/parent-portal.html",
+    "web-asset/shared/portal-settings.html",
+    "web-asset/student/student-portal.html",
+  ]) {
+    const html = fs.readFileSync(path.resolve(rootDir, relPath), "utf8")
+    assert.match(html, /floating-menu-btn/, `${relPath} must retain the shared hamburger control`)
+    assert.match(html, /portal-theme\.min\.css/, `${relPath} must load the shared breakpoint rule`)
+  }
+})
+
 test("shared portal theme owns reusable surface roles for columns, panels, cards, tables, charts, and dialogs", () => {
   for (const token of [
     ".portal-center-column",

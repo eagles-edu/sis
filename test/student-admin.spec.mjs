@@ -1366,6 +1366,16 @@ test("GET /admin?page=grades-data resolves query deep-link route", async () => {
   assert.match(html, /pageSlugFromLocationSearch/i)
 })
 
+test("GET /admin?page=enrollment resolves the standalone enrollment page", async () => {
+  const res = await fetchLocal(port, "/admin?page=enrollment")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  const responseHtml = await res.text()
+  assert.match(responseHtml, /aria-label="Enrollment workspace"/i)
+  assert.match(responseHtml, /id="enrollmentRows"/i)
+  assert.doesNotMatch(responseHtml, /id="studentAdminApp"/i)
+})
+
 test("GET /admin/attendance returns section page HTML with slug config", async () => {
   const res = await fetchLocal(port, "/admin/attendance")
   assert.equal(res.status, 200)

@@ -245,7 +245,7 @@
         const hintEl = document.getElementById("enrollmentLevelTilesHint");
         if (!tilesEl) return;
         const selected = normalizeText(document.getElementById("filterLevel")?.value || "");
-        const available = Array.from(new Set([...KNOWN_LEVELS, ...levels.filter(Boolean)]));
+        const available = Array.from(new Set(levels.filter(Boolean)));
         tilesEl.innerHTML = "";
         available.forEach((level) => {
           const config = levelTileConfig(level);
@@ -259,6 +259,7 @@
           tile.classList.toggle("is-active", normalizeLower(selected) === normalizeLower(level));
           tile.style.backgroundColor = config.bgColor;
           tile.style.color = preferredContrastText(config.bgColor);
+          tile.textContent = config.title || level;
           if (config.imageDataUrl) {
             const safeUrl = config.imageDataUrl.replace(/"/g, "%22");
             tile.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, .12), rgba(0, 0, 0, .12)), url("${safeUrl}")`;

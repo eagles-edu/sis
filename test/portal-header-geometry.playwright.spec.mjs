@@ -224,6 +224,8 @@ async function measureMenuState(page, url, selectors) {
     node.click();
   }, selectors.menu);
   await page.waitForTimeout(240);
+  const viewport = page.viewportSize();
+  await page.mouse.move((viewport?.width ?? 1280) - 4, (viewport?.height ?? 800) - 4);
   return await page.evaluate((input) => {
     const readRect = (selector) => {
       const node = globalThis.document.querySelector(selector);
@@ -272,6 +274,7 @@ async function measureStudentLoginLayout(page, url) {
       topbar: readRect(".topbar"),
       loginPanel: readRect("#loginPanel"),
       statusStrip: readRect(".status-strip"),
+      menu: readRect("#menuBtn"),
     };
   });
 }
@@ -337,11 +340,8 @@ test(
         assert.ok(geometry.nav.h < geometry.viewport.h, `${label}: side nav should not fill full viewport height`);
         assert.equal(geometry.overlay.w, geometry.viewport.w, `${label}: overlay width should cover viewport`);
         assert.equal(geometry.overlay.h, geometry.viewport.h, `${label}: overlay height should cover viewport`);
-        assert.ok(Number(geometry.overlayOpacity) > 0.9, `${label}: overlay should be visibly shaded`);
-        assert.ok(
-          geometry.overlayBg.startsWith("rgba(12, 22, 39,"),
-          `${label}: overlay color should stay dark scrim`
-        );
+        assert.equal(Number(geometry.overlayOpacity), 1, `${label}: transparent click-away overlay should be active`);
+        assert.equal(geometry.overlayBg, "rgba(0, 0, 0, 0)", `${label}: page behind drawer should stay visually solid`);
       }
 
       await page.setViewportSize({ width: 1366, height: 900 });
@@ -395,11 +395,30 @@ test(
         assert.ok(geometry.menu, `${label}: missing menu button`);
         assert.ok(geometry.container, `${label}: missing content container`);
         near(
-          geometry.container.x + geometry.container.w - geometry.menu.x,
+          geometry.container.x + geometry.container.w - (geometry.menu.x + geometry.menu.w),
           5,
           2,
-          `${label} menu left edge to content right edge`
+          `${label} menu right edge to content right edge`
         );
+      }
+
+      // The content-max-width breakpoint must never push the shared hamburger
+      // off the viewport. This covers the regression window immediately after
+      // the 1440px shell width, on both member portals.
+      for (const width of [1441, 1500, 1540]) {
+        await page.setViewportSize({ width, height: 900 });
+        for (const [label, url, selector] of [
+          ["parent-breakpoint", `http://127.0.0.1:${port}/web-asset/parent/parent-portal.html?geo=breakpoint-${width}`, "#parentMenuBtn"],
+          ["student-breakpoint", `http://127.0.0.1:${port}/web-asset/student/student-portal.html?geo=breakpoint-${width}`, "#menuBtn"],
+        ]) {
+          const geometry = await measureGeometry(page, url, { menu: selector });
+          assert.ok(geometry.menu, `${label}-${width}: missing menu button`);
+          assert.ok(geometry.menu.x >= 0, `${label}-${width}: menu must not start off-screen`);
+          assert.ok(
+            geometry.menu.x + geometry.menu.w <= geometry.viewport.w,
+            `${label}-${width}: menu must remain fully inside the viewport`,
+          );
+        }
       }
 
       await page.setViewportSize({ width: 1366, height: 900 });
@@ -415,6 +434,7 @@ test(
         studentLoginDesktop.loginPanel.w <= 560,
         "student-login-desktop: login panel should stay centered and narrow"
       );
+      assert.equal(studentLoginDesktop.menu.w, 0, "student login must not expose a hamburger control");
     } finally {
       if (page) {
         await page.close().catch(() => {});

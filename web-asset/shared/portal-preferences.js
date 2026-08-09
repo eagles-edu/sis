@@ -47,9 +47,17 @@
     const key = theme?.CONSENT_STORAGE_KEY || "sis-consent-preferences"
     const preference = memory[key]
     if (!validConsentPreference(preference) || !theme?.writeConsentPreferences) return false
-    const saved = theme.writeConsentPreferences(preference.supportChat, preference.analytics)
+    const saved = theme.writeConsentPreferences(preference.supportChat, preference.analytics, {
+      noticeAcknowledgedAt: preference.noticeAcknowledgedAt,
+      preserveNoticeAcknowledgement: false,
+    })
     theme.applyConsentPreferences?.(saved)
-    document.getElementById("sisConsentPanel")?.remove()
+    const panel = document.getElementById("sisConsentPanel")
+    if (saved.noticeAcknowledgedAt) {
+      panel?.remove()
+    } else if (panel) {
+      panel.hidden = false
+    }
     return true
   }
 
@@ -95,7 +103,7 @@
     return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : fallback
   }
 
-  async function save(key, value) {
+  async function save(key, value, options = {}) {
     memory[key] = value
     if (key === "sis-theme" && (value === "dark" || value === "light")) {
       try { window.localStorage.setItem(key, value) } catch (error) { void error }
@@ -108,7 +116,11 @@
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ preferences: { [key]: value }, migrationVersion: VERSION }),
+        body: JSON.stringify({
+          preferences: { [key]: value },
+          migrationVersion: VERSION,
+          privacyPreferenceSource: options?.privacyPreferenceSource,
+        }),
       })
       return response.ok
     } catch (error) {

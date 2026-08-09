@@ -188,6 +188,10 @@ import {
   getPortalPreferences,
   savePortalPreferences,
 } from "../src/modules/portal/portal-preference-store.mjs"
+import {
+  listAnalyticsOptOutAlerts,
+  recordAnalyticsOptOutAlert,
+} from "../src/modules/portal/portal-privacy-alerts.mjs"
 import { readPortalAsset, savePortalAsset } from "../src/modules/portal/portal-asset-store.mjs"
 import { markStudentWriteRequestAuthenticated } from "../src/infra/observability/student-write-metrics.mjs"
 
@@ -396,6 +400,11 @@ const PARENT_CHILD_NEWS_CALENDAR_PATH_RE = new RegExp(
 )
 const PARENT_REPORT_PAGE_PATH_RE = new RegExp(`^${escapeRegex(PARENT_REPORT_PAGE_PREFIX)}/([^/]+)$`)
 const STUDENT_REPORT_PAGE_PATH_RE = new RegExp(`^${escapeRegex(STUDENT_REPORT_PAGE_PREFIX)}/([^/]+)$`)
+
+function configuredConsentVersion() {
+  const runtime = getSisConfigSnapshotSync().runtime || {}
+  return Math.max(1, Number.parseInt(String(runtime.consentVersion || process.env.CONSENT_VERSION || "2"), 10) || 2)
+}
 
 const SIS_RUNTIME_CONFIG = getSisConfigSnapshotSync().runtime || {}
 const SESSION_TTL_SECONDS = Math.max(
@@ -1165,6 +1174,32 @@ function canManageUsers(sessionOrPolicy) {
   return resolveBoolean(policy?.canManageUsers, false)
 }
 
+function analyticsPreferenceValue(preferences) {
+  const consent = preferences && typeof preferences === "object" && !Array.isArray(preferences)
+    ? preferences["sis-consent-preferences"]
+    : null
+  return consent && typeof consent === "object" && !Array.isArray(consent) && consent.analytics === "denied"
+    ? "denied"
+    : consent && typeof consent === "object" && !Array.isArray(consent) && consent.analytics === "granted"
+      ? "granted"
+      : ""
+}
+
+async function savePortalPreferencesWithPrivacyAlert(principalType, principalId, payload, options = {}) {
+  const previous = await getPortalPreferences(principalType, principalId)
+  const result = await savePortalPreferences(principalType, principalId, payload, options)
+  const alertPrincipalId = normalizeText(options.alertPrincipalId)
+  if (
+    options.privacyPreferenceSource === "settings" &&
+    alertPrincipalId &&
+    analyticsPreferenceValue(previous.preferences) !== "denied" &&
+    analyticsPreferenceValue(result.preferences) === "denied"
+  ) {
+    await recordAnalyticsOptOutAlert({ principalType, principalId: alertPrincipalId })
+  }
+  return result
+}
+
 function canManagePermissions(sessionOrPolicy) {
   const policy =
     sessionOrPolicy && typeof sessionOrPolicy === "object" && Object.prototype.hasOwnProperty.call(sessionOrPolicy, "role")
@@ -1554,7 +1589,7 @@ function injectParentRuntimeConfig(html, origin, initialAuthState = { authentica
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_GA4_MEASUREMENT_ID=${JSON.stringify(normalizeText(process.env.GA4_MEASUREMENT_ID))};window.__SIS_PARENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_PREFERENCES_PATH=${JSON.stringify(PARENT_PREFERENCES_PATH)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};window.__SIS_PARENT_REPORT_PAGE_PREFIX=${JSON.stringify(PARENT_REPORT_PAGE_PREFIX)};window.__SIS_PARENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_CONSENT_VERSION=${JSON.stringify(configuredConsentVersion())};window.__SIS_GA4_MEASUREMENT_ID=${JSON.stringify(normalizeText(process.env.GA4_MEASUREMENT_ID))};window.__SIS_PARENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_PREFERENCES_PATH=${JSON.stringify(PARENT_PREFERENCES_PATH)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};window.__SIS_PARENT_REPORT_PAGE_PREFIX=${JSON.stringify(PARENT_REPORT_PAGE_PREFIX)};window.__SIS_PARENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-parent-auth-state", authStateName)
   if (html.includes("</head>")) {
     return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
@@ -1598,7 +1633,7 @@ function injectStudentPortalRuntimeConfig(html, origin, initialAuthState = { aut
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_GA4_MEASUREMENT_ID=${JSON.stringify(normalizeText(process.env.GA4_MEASUREMENT_ID))};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_PREFERENCES_PATH=${JSON.stringify(STUDENT_PREFERENCES_PATH)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_CHECK_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_NEW_WORDS_PATH=${JSON.stringify(STUDENT_NEW_WORDS_PATH)};window.__SIS_STUDENT_REPORT_PAGE_PREFIX=${JSON.stringify(STUDENT_REPORT_PAGE_PREFIX)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_CONSENT_VERSION=${JSON.stringify(configuredConsentVersion())};window.__SIS_GA4_MEASUREMENT_ID=${JSON.stringify(normalizeText(process.env.GA4_MEASUREMENT_ID))};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_PREFERENCES_PATH=${JSON.stringify(STUDENT_PREFERENCES_PATH)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_CHECK_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_NEW_WORDS_PATH=${JSON.stringify(STUDENT_NEW_WORDS_PATH)};window.__SIS_STUDENT_REPORT_PAGE_PREFIX=${JSON.stringify(STUDENT_REPORT_PAGE_PREFIX)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-student-auth-state", authStateName)
   if (html.includes("</head>")) {
     return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
@@ -1607,7 +1642,7 @@ function injectStudentPortalRuntimeConfig(html, origin, initialAuthState = { aut
 }
 
 function injectPortalSettingsRuntimeConfig(html, locale, homePath, options = {}) {
-  const runtimeConfig = `<script>window.__SIS_SETTINGS_LOCALE=${JSON.stringify(locale === "vi" ? "vi" : "en")};window.__SIS_SETTINGS_HOME_PATH=${JSON.stringify(homePath || "/")};window.__SIS_SETTINGS_PREFERENCES_PATH=${JSON.stringify(options.preferencesPath || "")};window.__SIS_SETTINGS_INITIAL_AUTH__=${JSON.stringify(options.initialAuthState || { authenticated: false })};</script>`
+  const runtimeConfig = `<script>window.__SIS_CONSENT_VERSION=${JSON.stringify(configuredConsentVersion())};window.__SIS_SETTINGS_LOCALE=${JSON.stringify(locale === "vi" ? "vi" : "en")};window.__SIS_SETTINGS_HOME_PATH=${JSON.stringify(homePath || "/")};window.__SIS_SETTINGS_PREFERENCES_PATH=${JSON.stringify(options.preferencesPath || "")};window.__SIS_SETTINGS_INITIAL_AUTH__=${JSON.stringify(options.initialAuthState || { authenticated: false })};</script>`
   if (html.includes("</head>")) {
     return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
@@ -6507,8 +6542,9 @@ async function handleApiRequest(request, response, pathname, url) {
     }
     if (method === "PUT" || method === "POST") {
       const payload = await parseBody(request)
-      const result = await savePortalPreferences("admin", principalId, payload?.preferences || payload, {
+      const result = await savePortalPreferencesWithPrivacyAlert("admin", principalId, payload?.preferences || payload, {
         migrationVersion: payload?.migrationVersion,
+        privacyPreferenceSource: payload?.privacyPreferenceSource,
       })
       sendJson(response, 200, { ok: true, ...result })
       return true
@@ -6710,6 +6746,7 @@ async function handleApiRequest(request, response, pathname, url) {
         hasMore: parentQueue.hasMore,
         items: parentQueue.items,
       }
+      data.analyticsOptOutAlerts = await listAnalyticsOptOutAlerts({ take: 20 })
     }
     sendJson(response, 200, data)
     return true
@@ -8289,8 +8326,10 @@ async function handleParentApiRequest(request, response, pathname, url) {
     }
     if (method === "PUT" || method === "POST") {
       const payload = await parseBody(request)
-      const result = await savePortalPreferences("parent", principalId, payload?.preferences || payload, {
+      const result = await savePortalPreferencesWithPrivacyAlert("parent", principalId, payload?.preferences || payload, {
         migrationVersion: payload?.migrationVersion,
+        privacyPreferenceSource: payload?.privacyPreferenceSource,
+        alertPrincipalId: parentContext.parentsId,
       })
       sendJson(response, 200, { ok: true, ...result })
       return true
@@ -8547,8 +8586,10 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     }
     if (method === "PUT" || method === "POST") {
       const payload = await parseBody(request)
-      const result = await savePortalPreferences("student", principalId, payload?.preferences || payload, {
+      const result = await savePortalPreferencesWithPrivacyAlert("student", principalId, payload?.preferences || payload, {
         migrationVersion: payload?.migrationVersion,
+        privacyPreferenceSource: payload?.privacyPreferenceSource,
+        alertPrincipalId: normalizeText(session?.eaglesId || session?.username),
       })
       sendJson(response, 200, { ok: true, ...result })
       return true
@@ -8893,7 +8934,12 @@ export async function handleStudentAdminRequest(request, response) {
     return true
   }
 
-  if (method === "GET" && pathname === ADMIN_ENROLLMENT_PAGE_PATH) {
+  if (
+    method === "GET" &&
+    (pathname === ADMIN_ENROLLMENT_PAGE_PATH ||
+      (pathname === ADMIN_PAGE_PATH &&
+        resolveAdminPageSlugFromQuery(url.searchParams) === "enrollment"))
+  ) {
     if (!fs.existsSync(ADMIN_ENROLLMENT_HTML_PATH)) {
       sendJson(response, 404, { error: "Student enrollment page not found" })
       return true
@@ -9229,7 +9275,7 @@ export async function handleStudentAdminRequest(request, response) {
   const pageSlugFromQuery =
     pathname === ADMIN_PAGE_PATH ? resolveAdminPageSlugFromQuery(url.searchParams) : ""
   const pageSlug = pageSlugFromQuery || pageSlugFromPath
-  if (method === "GET" && pageSlugFromPath) {
+  if (method === "GET" && pageSlugFromPath && pageSlug !== "enrollment") {
     const initialAuthState = buildAdminInitialAuthState(await peekAdminSession(request))
     if (pageSlug === "grades-tabulator") {
       if (!fs.existsSync(ADMIN_GRADES_TABULATOR_HTML_PATH)) {

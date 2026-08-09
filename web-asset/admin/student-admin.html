@@ -1567,6 +1567,24 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       No pending students for current not-yet-due assignments.
                     </div>
                   </section>
+                  <section class="overview-group full hidden panel" id="overviewAnalyticsOptOutAlertsSection"
+                    data-surface-role="panel">
+                    <h3>Privacy Alerts</h3>
+                    <p class="small" id="overviewAnalyticsOptOutAlertsSummary">No recent analytics opt-outs.</p>
+                    <div class="table-scroll-wrap data-surface" data-surface-role="data-surface" tabindex="0"
+                      aria-label="Recent analytics opt-outs">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th scope="col">Portal</th>
+                            <th scope="col">Account ID</th>
+                            <th scope="col">Turned Off</th>
+                          </tr>
+                        </thead>
+                        <tbody id="overviewAnalyticsOptOutAlertRows"></tbody>
+                      </table>
+                    </div>
+                  </section>
                   <section class="overview-group full hidden panel" id="overviewIncomingExerciseSection"
                     data-surface-role="panel">
                     <h3>Anonymous Exercise Submissions</h3>
@@ -4398,6 +4416,11 @@ No family lookup yet.</pre>
                     <input id="settingRedisConnectTimeoutMs" type="number" min="100" step="100">
                   </div>
                   <div class="col-4">
+                    <label for="settingConsentVersion">Consent version</label>
+                    <input id="settingConsentVersion" type="number" min="1" step="1">
+                    <p class="small">Increase this to force members to acknowledge new privacy services.</p>
+                  </div>
+                  <div class="col-4">
                     <label for="settingWeeklyMinimumReports">News reports required / week</label>
                     <input id="settingWeeklyMinimumReports" type="number" min="1" step="1" value="5">
                   </div>
@@ -5032,7 +5055,7 @@ No family lookup yet.</pre>
           if (adminAppLoaded) return
           adminAppLoaded = true
           const script = document.createElement("script")
-          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-b3bfccf7e9370fcb"
+          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-fc2d7fae1e0c102b"
           script.defer = true
           if (replaySubmit || replayClick || replayPage) {
             script.addEventListener("load", () => {

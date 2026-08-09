@@ -2,7 +2,7 @@
   const STORAGE_KEY = "sis-theme"
   const LEGACY_KEYS = ["sis-theme-admin", "sis-theme-parent", "sis-theme-student"]
   const CONSENT_STORAGE_KEY = "sis-consent-preferences"
-  const CONSENT_VERSION = 1
+  const CONSENT_VERSION = Math.max(1, Number.parseInt(String(globalThis.__SIS_CONSENT_VERSION__ || "2"), 10) || 2)
   const CONSENT_REVIEW_MS = 365 * 24 * 60 * 60 * 1000
   const BREVO_CONVERSATIONS_ID = "6a69c88b5131e8e4fc0cf347"
   const BREVO_CONVERSATIONS_SCRIPT = "https://conversations-widget.brevo.com/brevo-conversations.js"
@@ -115,6 +115,21 @@
     return value === "granted" || value === "denied"
   }
 
+  function normalizedNoticeAcknowledgement(value) {
+    const acknowledgedAtMs = Date.parse(String(value || ""))
+    return Number.isFinite(acknowledgedAtMs) ? new Date(acknowledgedAtMs).toISOString() : ""
+  }
+
+  function defaultMemberPreferences() {
+    return {
+      version: CONSENT_VERSION,
+      supportChat: "granted",
+      analytics: "granted",
+      noticeAcknowledgedAt: "",
+      updatedAt: "",
+    }
+  }
+
   function normalizeConsentPreferences(value) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return null
     if (Number(value.version) !== CONSENT_VERSION) return null
@@ -125,6 +140,7 @@
       version: CONSENT_VERSION,
       supportChat: value.supportChat,
       analytics: value.analytics,
+      noticeAcknowledgedAt: normalizedNoticeAcknowledgement(value.noticeAcknowledgedAt),
       updatedAt: new Date(updatedAtMs).toISOString(),
     }
   }
@@ -140,11 +156,13 @@
     }
   }
 
-  function writeConsentPreferences(supportChat, analytics) {
+  function writeConsentPreferences(supportChat, analytics, { noticeAcknowledgedAt, preserveNoticeAcknowledgement = true } = {}) {
+    const current = readConsentPreferences()
     const preferences = {
       version: CONSENT_VERSION,
-      supportChat: validConsentValue(supportChat) ? supportChat : "denied",
-      analytics: validConsentValue(analytics) ? analytics : "denied",
+      supportChat: validConsentValue(supportChat) ? supportChat : "granted",
+      analytics: validConsentValue(analytics) ? analytics : "granted",
+      noticeAcknowledgedAt: normalizedNoticeAcknowledgement(noticeAcknowledgedAt) || (preserveNoticeAcknowledgement ? current?.noticeAcknowledgedAt || "" : ""),
       updatedAt: new Date().toISOString(),
     }
     safeStorageWrite(CONSENT_STORAGE_KEY, JSON.stringify(preferences))
@@ -154,6 +172,13 @@
       void error
     }
     return preferences
+  }
+
+  function acknowledgePrivacyNotice() {
+    const preferences = readConsentPreferences() || defaultMemberPreferences()
+    return writeConsentPreferences(preferences.supportChat, preferences.analytics, {
+      noticeAcknowledgedAt: new Date().toISOString(),
+    })
   }
 
   function setConsentAttributes(preferences) {
@@ -280,33 +305,27 @@
     const settingsHref = portalKind === "parent" ? "/parent/settings" : "/student/settings"
     if (locale === "vi") {
       return {
-        title: `Quyền riêng tư trên ${portalLabel} Eagles`,
-        legalLead: `Để biết thêm thông tin về cách quản lý quyền riêng tư trên ${portalLabel}, vui lòng truy cập`,
+        title: `Thông báo quyền riêng tư trên ${portalLabel} Eagles`,
+        legalLead: `Cổng thành viên riêng tư của Eagles sử dụng dữ liệu phân tích ẩn danh để cải thiện trải nghiệm học tập. Bạn có thể thay đổi lựa chọn này bất cứ lúc nào trong`,
         settingsLabel: "Cài đặt",
         privacyLabel: "chính sách quyền riêng tư",
-        termsLabel: "các điều khoản và điều kiện",
         settingsHref,
         privacyHref: "https://eagles.edu.vn/lien-he/chinh-sach-bao-mat",
-        termsHref: "https://eagles.edu.vn/lien-he/cac-dieu-khoan-va-dieu-kien",
-        acceptAll: "Chấp nhận",
-        rejectAll: "Từ chối",
-        manage: "Quản lý cookie",
-        saved: "Đã lưu lựa chọn quyền riêng tư.",
+        acknowledge: "Đồng ý",
+        manage: "Quản lý",
+        saved: "Đã ghi nhận thông báo quyền riêng tư.",
       };
     }
     return {
-      title: `Privacy on the Eagles ${portalKind === "parent" ? "Parent" : "Student"} Portal`,
-      legalLead: `For more information on managing your privacy on the Eagles ${portalKind === "parent" ? "Parent" : "Student"} Portal, visit`,
+      title: `Privacy notice for the Eagles ${portalKind === "parent" ? "Parent" : "Student"} Portal`,
+      legalLead: "This private Eagles member portal uses anonymous analytics to improve the learning experience. You can change this at any time in",
       settingsLabel: "Settings",
       privacyLabel: "privacy policy",
-      termsLabel: "terms and conditions",
       settingsHref,
       privacyHref: "https://eagles.edu.vn/lien-he/chinh-sach-bao-mat",
-      termsHref: "https://eagles.edu.vn/lien-he/cac-dieu-khoan-va-dieu-kien",
-      acceptAll: "Accept",
-      rejectAll: "Reject",
-      manage: "Manage cookies",
-      saved: "Your privacy choices were saved.",
+      acknowledge: "OK",
+      manage: "Manage",
+      saved: "Privacy notice acknowledged.",
     };
   }
 
@@ -326,11 +345,10 @@
       <div class="sis-consent-panel__content">
         <span class="sis-consent-panel__info" aria-hidden="true">i</span>
         <div class="sis-consent-panel__message">
-          <p class="sis-consent-panel__links">${copy.legalLead} <a href="${copy.settingsHref}">${copy.settingsLabel}</a> ${locale === "vi" ? "để xem" : "to view our"} <a href="${copy.privacyHref}" target="_blank" rel="noreferrer">${copy.privacyLabel}</a> và <a href="${copy.termsHref}" target="_blank" rel="noreferrer">${copy.termsLabel}</a>.</p>
+          <p class="sis-consent-panel__links">${copy.legalLead} <a href="${copy.settingsHref}">${copy.settingsLabel}</a>. ${locale === "vi" ? "Xem" : "Read our"} <a href="${copy.privacyHref}" target="_blank" rel="noreferrer">${copy.privacyLabel}</a>.</p>
         </div>
         <div class="sis-consent-panel__actions">
-          <button type="button" class="portal-button portal-button-privacy-shaded" data-sis-consent-action="accept-all">${copy.acceptAll}</button>
-          <button type="button" class="portal-button portal-button-privacy-shaded" data-sis-consent-action="reject-all">${copy.rejectAll}</button>
+          <button type="button" class="portal-button portal-button-privacy-shaded" data-sis-consent-action="acknowledge">${copy.acknowledge}</button>
           <button type="button" class="portal-button portal-button-privacy-shaded" data-sis-consent-action="manage">${copy.manage}</button>
         </div>
         <p class="sis-consent-panel__status" role="status" aria-live="polite"></p>
@@ -343,13 +361,9 @@
         window.location.assign(copy.settingsHref)
         return
       }
-      const next = action === "accept-all"
-        ? { supportChat: "granted", analytics: "granted" }
-        : action === "reject-all"
-          ? { supportChat: "denied", analytics: "denied" }
-          : { supportChat: "denied", analytics: "denied" }
-      const savedPreferences = writeConsentPreferences(next.supportChat, next.analytics)
+      const savedPreferences = acknowledgePrivacyNotice()
       applyConsentPreferences(savedPreferences)
+      void globalThis.SIS_PORTAL_PREFERENCES?.save?.(CONSENT_STORAGE_KEY, savedPreferences)
       panel.hidden = true
       const status = panel.querySelector(".sis-consent-panel__status")
       if (status) status.textContent = copy.saved
@@ -397,12 +411,18 @@
       globalThis.__SIS_PRIVACY_CONSENT_PORTAL__ = normalizedPortal
       return readConsentPreferences()
     }
-    if (globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__) return readConsentPreferences()
+    if (globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__) {
+      const preferences = readConsentPreferences()
+      if (!preferences?.noticeAcknowledgedAt && !document.getElementById("sisConsentPanel")) {
+        renderConsentUi(normalizedLocale, preferences || defaultMemberPreferences(), true, normalizedPortal)
+      }
+      return preferences
+    }
     globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__ = true
-    const preferences = readConsentPreferences()
+    const preferences = readConsentPreferences() || defaultMemberPreferences()
     setConsentAttributes(preferences)
-    const panel = renderConsentUi(normalizedLocale, preferences, !preferences, normalizedPortal)
-    if (preferences) applyConsentPreferences(preferences)
+    const panel = renderConsentUi(normalizedLocale, preferences, !preferences.noticeAcknowledgedAt, normalizedPortal)
+    applyConsentPreferences(preferences)
     return preferences
   }
 
@@ -450,6 +470,7 @@
     CONSENT_VERSION,
     readConsentPreferences,
     writeConsentPreferences,
+    acknowledgePrivacyNotice,
     initPrivacyConsent,
     showPrivacyConsent,
     applyConsentPreferences,

@@ -36,6 +36,18 @@ function normalizeWord(row = {}) {
   }
 }
 
+function persistedWordFields(row = {}) {
+  const normalized = normalizeWord(row)
+  return ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => normalized[key])
+}
+
+function isUnchangedPersistedWord(row, existingRow) {
+  if (!existingRow) return false
+  const incomingFields = persistedWordFields(row)
+  const existingFields = persistedWordFields(existingRow)
+  return incomingFields.every((value, index) => value === existingFields[index])
+}
+
 function mapWord(row = {}) {
   return {
     id: text(row.id),
@@ -97,9 +109,30 @@ export async function listStudentNewWords(studentRefId) {
 export async function saveStudentNewWords(studentRefId, value) {
   const prisma = await getPrisma()
   const source = Array.isArray(value) ? value : []
-  const invalid = source.map((row, index) => ({ index, message: vocabularyEntryError(row) })).find((entry) => entry.message)
+  const existing = await prisma.studentNewWord.findMany({
+    where: { studentRefId },
+    select: { id: true, englishKey: true, partOfSpeech: true, english: true, vietnamese: true, syllabication: true, definition: true },
+  })
+  const existingById = new Map(existing.map((row) => [text(row.id), row]))
+  const invalid = source.map((row, index) => {
+    const existingRow = existingById.get(text(row?.id))
+    if (isUnchangedPersistedWord(row, existingRow)) return null
+    return { index, message: vocabularyEntryError(row) }
+  }).find((entry) => entry?.message)
   if (invalid) {
     const error = new Error(`Word ${invalid.index + 1}: ${invalid.message}`)
+    error.statusCode = 400
+    throw error
+  }
+  const existingByEnglishKey = new Map(existing.map((row) => [text(row.englishKey), row]))
+  const duplicate = source.slice(0, MAX_WORDS).map((row, index) => {
+    const englishKey = wordKey(row?.english).slice(0, 240)
+    const existingRow = existingByEnglishKey.get(englishKey)
+    if (!englishKey || !existingRow || text(existingRow.id) === text(row?.id)) return null
+    return { index, message: "This English word already exists in your New Words list." }
+  }).find((entry) => entry)
+  if (duplicate) {
+    const error = new Error(`Word ${duplicate.index + 1}: ${duplicate.message}`)
     error.statusCode = 400
     throw error
   }
@@ -109,21 +142,29 @@ export async function saveStudentNewWords(studentRefId, value) {
     if (word.englishKey) deduped.set(word.englishKey, word)
   })
   const words = Array.from(deduped.values())
-  const existing = await prisma.studentNewWord.findMany({ where: { studentRefId }, select: { id: true } })
   const incomingIds = new Set(source.slice(0, MAX_WORDS).map((row) => text(row?.id)).filter(Boolean))
-  await prisma.$transaction(async (tx) => {
-    await tx.studentNewWord.deleteMany({
-      where: { studentRefId, id: { notIn: Array.from(incomingIds) } },
-    })
-    for (const word of words) {
-      const sourceRow = source.find((row) => wordKey(row?.english) === word.englishKey)
-      const id = text(sourceRow?.id)
-      if (id && existing.some((row) => row.id === id)) {
-        await tx.studentNewWord.update({ where: { id }, data: word })
-      } else {
-        await tx.studentNewWord.create({ data: { ...word, studentRefId } })
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.studentNewWord.deleteMany({
+        where: { studentRefId, id: { notIn: Array.from(incomingIds) } },
+      })
+      for (const word of words) {
+        const sourceRow = source.find((row) => wordKey(row?.english) === word.englishKey)
+        const id = text(sourceRow?.id)
+        if (id && existing.some((row) => row.id === id)) {
+          await tx.studentNewWord.update({ where: { id }, data: word })
+        } else {
+          await tx.studentNewWord.create({ data: { ...word, studentRefId } })
+        }
       }
+    })
+  } catch (error) {
+    if (error?.code === "P2002" || /Unique constraint failed.*englishKey/u.test(String(error?.message || ""))) {
+      const duplicateError = new Error("New Words contains a duplicate English word.")
+      duplicateError.statusCode = 400
+      throw duplicateError
     }
-  })
+    throw error
+  }
   return listStudentNewWords(studentRefId)
 }

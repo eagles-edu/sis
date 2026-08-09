@@ -1600,6 +1600,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
           controlType === "textarea" ? "textarea" : "input",
         )
         control.id = inputId
+        control.name = normalizeText(fieldMeta.key) || inputId
         control.setAttribute("data-field-key", fieldMeta.key)
         control.disabled = locked
         control.required = fieldMeta.required === true
@@ -6857,6 +6858,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         setActivePortalView("child")
       }
       async function logout() {
+        setSideNavOpen(false)
         await api(`${PARENT_AUTH_PREFIX}/logout`, {
           method: "POST",
           body: {},

@@ -379,7 +379,7 @@
   --portal-neutral-content-light: #fbffff;
   --portal-neutral-message-dark: var(--portal-neutral-support-dark);
   --portal-neutral-page-dark: #000000;
-  --portal-neutral-page-light: #e8eef4;
+  --portal-neutral-page-light: #869ab3;
   --portal-neutral-panel-dark: #3b3c3e;
   --portal-neutral-panel-light: #e3e9f0;
   --portal-neutral-support-dark: var(--portal-dark-surface-soft);
@@ -539,9 +539,15 @@
 }
 
 .sis-action-feedback[data-state="error"] {
-  background: var(--portal-status-bad-bg, #fdebec);
-  border-color: var(--portal-status-bad-border, #f2b1b7);
-  color: var(--portal-status-bad-text, #9e1d1d);
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--secondary-color);
+}
+
+html[data-theme="dark"] .sis-action-feedback[data-state="error"] {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--secondary-color);
 }
 
 [data-action-feedback-state="pending"] {
@@ -1548,6 +1554,14 @@ body.student-portal-page #loginPanel .login-link:focus-visible,
 body.parent-portal-page #loginCard .login-link:focus-visible,
 body.admin-portal-page #authPanel .login-link:focus-visible {
   text-decoration: underline;
+}
+html[data-student-auth-state="booting"] body.student-portal-page .floating-menu-btn,
+html[data-parent-auth-state="booting"] body.parent-portal-page .floating-menu-btn,
+html[data-admin-auth-state="booting"] body.admin-portal-page .floating-menu-btn,
+html[data-admin-auth-state="booting"] body.admin-portal-page .menu-toggle-btn,
+html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .floating-menu-btn,
+html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .menu-toggle-btn {
+  display: none !important;
 }
 html[data-student-auth-state="unauthenticated"] .portal-login-header,
 html[data-parent-auth-state="unauthenticated"] .portal-login-header,
@@ -2984,8 +2998,8 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
   margin-inline-start: auto;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition {
-  font-family: ui-monospace, Courier, monospace;
-  font-size: 1.08rem;
+  font-family: inherit;
+  font-size: 1.18rem;
   line-height: 1.35;
   margin: 0;
   overflow-wrap: anywhere;
@@ -4507,12 +4521,12 @@ html[data-theme="dark"] body.admin-portal-page .sidebar-actions {
   border-top-color: var(--portal-dark-border);
 }
 body.admin-portal-page .menu-backdrop {
-  background: rgba(12, 22, 39, 0.44);
+  background: transparent;
   inset: 0;
   opacity: 0;
   pointer-events: none;
   position: fixed;
-  transition: opacity 180ms ease;
+  transition: none;
   z-index: 81;
 }
 body.menu-open.admin-portal-page .menu-backdrop {
@@ -4526,8 +4540,8 @@ body.menu-open.admin-portal-page .menu-backdrop {
 }
 .nav-scrim,
 .nav-overlay {
-  backdrop-filter: blur(1px);
-  background: rgba(12, 22, 39, 0.4);
+  backdrop-filter: none;
+  background: transparent;
   border: none;
   cursor: pointer;
   inline-size: auto;
@@ -4539,13 +4553,28 @@ body.menu-open.admin-portal-page .menu-backdrop {
   padding: 0;
   pointer-events: none;
   position: fixed;
-  transition: opacity 180ms ease;
+  transition: none;
   z-index: 81;
 }
 body.menu-open .nav-scrim,
 body.menu-open .nav-overlay {
   opacity: 1;
   pointer-events: auto;
+}
+/* The click-away layer is a full-viewport button. Keep button states from
+   painting the page when the pointer crosses it. */
+.nav-scrim:hover,
+.nav-scrim:focus,
+.nav-scrim:active,
+.nav-overlay:hover,
+.nav-overlay:focus,
+.nav-overlay:active {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  outline: none !important;
+  transform: none !important;
 }
 body.menu-open,
 body.modal-open {
@@ -4930,8 +4959,9 @@ html[data-theme="dark"] .field-hint {
   .floating-menu-btn {
     inset-inline-end: auto;
 
-inset-inline-start: calc(
+    inset-inline-start: calc(
       50% + var(--portal-floating-menu-content-max-inline-size) / 2
+      - 44px
       - var(--portal-floating-menu-content-edge-gap)
     );
   }
@@ -6642,6 +6672,7 @@ html[data-theme="dark"] .sis-consent-panel {
   align-items: center;
   border: 1px solid currentColor;
   border-radius: 50%;
+  box-sizing: border-box;
   display: inline-flex;
   font-size: 0.85rem;
   font-weight: 800;

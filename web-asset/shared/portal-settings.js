@@ -183,10 +183,13 @@
     ? remotePreferences
     : theme.readConsentPreferences?.() || {
     supportChat: "denied",
-    analytics: "denied",
+    analytics: "granted",
   }
   if (remotePreferences?.version === theme.CONSENT_VERSION) {
-    const localPreferences = theme.writeConsentPreferences(preferences.supportChat, preferences.analytics)
+    const localPreferences = theme.writeConsentPreferences(preferences.supportChat, preferences.analytics, {
+      noticeAcknowledgedAt: preferences.noticeAcknowledgedAt,
+      preserveNoticeAcknowledgement: false,
+    })
     theme.applyConsentPreferences(localPreferences)
   }
   const supportChat = document.querySelector('[data-settings-consent="supportChat"]')
@@ -205,9 +208,13 @@
   analytics?.addEventListener("change", syncConsentSwitches)
 
   async function saveSettings(supportChatValue, analyticsValue) {
-    const saved = theme.writeConsentPreferences(supportChatValue, analyticsValue)
+    const saved = theme.writeConsentPreferences(supportChatValue, analyticsValue, {
+      noticeAcknowledgedAt: new Date().toISOString(),
+    })
     theme.applyConsentPreferences(saved)
-    const remoteSaved = await preferenceStore?.save?.(theme.CONSENT_STORAGE_KEY, saved)
+    const remoteSaved = await preferenceStore?.save?.(theme.CONSENT_STORAGE_KEY, saved, {
+      privacyPreferenceSource: "settings",
+    })
     if (status) status.textContent = remoteSaved === false ? copy.savedLocal : copy.saved
   }
 

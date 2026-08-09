@@ -552,7 +552,8 @@ Current posture:
   - assignment templates and schedule ownership live in the backend canonical
     store/API.
   - /api/admin/dashboard emits:
-      { levelCompletion, enrollmentOnlyLevels, currentAssignmentMeta }
+      { levelCompletion, enrollmentOnlyLevels, currentAssignmentMeta,
+        analyticsOptOutAlerts (admin only) }
   - the overview page renders API payloads and uses browser storage only for
     legacy import input and UX preferences.
 

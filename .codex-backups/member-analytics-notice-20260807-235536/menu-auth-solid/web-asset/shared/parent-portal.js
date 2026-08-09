@@ -1,0 +1,7367 @@
+const DEFAULT_PARENT_API_PREFIX = "/api/parent"
+      const PARENT_API_PREFIX = normalizePathPrefix(
+        window.__SIS_PARENT_API_PREFIX,
+        DEFAULT_PARENT_API_PREFIX,
+      )
+      const PARENT_AUTH_PREFIX = normalizePathPrefix(
+        window.__SIS_PARENT_AUTH_PREFIX,
+        `${PARENT_API_PREFIX}/auth`,
+      )
+      const PARENT_CHILDREN_PATH = normalizePathPrefix(
+        window.__SIS_PARENT_CHILDREN_PATH,
+        `${PARENT_API_PREFIX}/children`,
+      )
+      const PARENT_DASHBOARD_PATH = normalizePathPrefix(
+        window.__SIS_PARENT_DASHBOARD_PATH,
+        `${PARENT_API_PREFIX}/dashboard`,
+      )
+      const PORTAL_TIME_ZONE = "Asia/Ho_Chi_Minh"
+      const RUNTIME_ENV =
+        (window.__SIS_RUNTIME_ENV || "").toLowerCase() || "development"
+      const PARENT_API_ORIGIN = resolveParentApiOrigin()
+      const PROFILE_REFERENCE_SECTIONS = [
+        {
+          id: "student-info",
+          title: "Thông tin của người học",
+          hint: "Sắp xếp và nhãn theo mẫu tham gia thành viên Eagles.",
+          fields: [
+            {
+              key: "fullName",
+              label: "Họ tên của người học *",
+              control: "text",
+              required: true,
+              placeholder: "Họ tên",
+              autocomplete: "name",
+            },
+            {
+              key: "englishName",
+              label: "Tên tiếng Anh",
+              control: "text",
+              required: false,
+              placeholder: "Tên tiếng anh nếu bạn có",
+            },
+            {
+              key: "genderSelections",
+              label: "Giới tính *",
+              control: "radio",
+              required: true,
+              options: [
+                {
+                  value: "male",
+                  label: "nam",
+                },
+                {
+                  value: "female",
+                  label: "nữ",
+                },
+              ],
+            },
+            {
+              key: "studentPhone",
+              label: "Số điện thoại của học sinh",
+              control: "tel",
+              required: false,
+            },
+            {
+              key: "studentEmail",
+              label: "Email của học sinh",
+              control: "email",
+              required: false,
+              placeholder: "ten@vidu.com",
+              autocomplete: "email",
+            },
+            {
+              key: "hobbies",
+              label: "Sở thích, thú vui và nhạc cụ",
+              control: "textarea",
+              required: false,
+            },
+            {
+              key: "dobText",
+              label: "Ngày sinh *",
+              control: "date",
+              required: true,
+              placeholder: "ví dụ: 17/03/11",
+            },
+            {
+              key: "birthOrder",
+              label: "Thứ tự sinh *",
+              control: "number",
+              required: true,
+            },
+            {
+              key: "siblingBrothers",
+              label: "Người học có bao nhiêu anh em? *",
+              control: "number",
+              required: true,
+              placeholder: "Số anh em",
+            },
+            {
+              key: "siblingSisters",
+              label: "Người học có bao nhiêu chị em? *",
+              control: "number",
+              required: true,
+              placeholder: "Số chị em",
+            },
+            {
+              key: "ethnicity",
+              label: "Dân tộc *",
+              control: "select",
+              required: true,
+              options: [
+                {
+                  value: "",
+                  label: "Vui lòng chọn một",
+                },
+                {
+                  value: "Người Việt Nam",
+                  label: "Người Việt Nam",
+                },
+                {
+                  value: "Viet Hoa (Chinese-Vietnamese)",
+                  label: "Viet Hoa (Chinese-Vietnamese)",
+                },
+                {
+                  value: "Người dân tộc (Hmông, Tày, Khmer, v.v.)",
+                  label: "Người dân tộc (Hmông, Tày, Khmer, v.v.)",
+                },
+                {
+                  value: "Người Thái",
+                  label: "Người Thái",
+                },
+                {
+                  value: "Người Campuchia",
+                  label: "Người Campuchia",
+                },
+                {
+                  value: "Người Lào",
+                  label: "Người Lào",
+                },
+                {
+                  value: "Người Hàn Quốc",
+                  label: "Người Hàn Quốc",
+                },
+                {
+                  value: "Người Nhật",
+                  label: "Người Nhật",
+                },
+                {
+                  value: "Người Trung Quốc",
+                  label: "Người Trung Quốc",
+                },
+              ],
+            },
+            {
+              key: "languagesAtHome",
+              label: "Các ngôn ngữ được nói ở nhà *",
+              control: "checkbox",
+              required: true,
+              options: [
+                {
+                  value: "Tiếng Việt",
+                  label: "Tiếng Việt",
+                },
+                {
+                  value: "Tiếng Anh",
+                  label: "Tiếng Anh",
+                },
+                {
+                  value: "Tiếng Phổ thông Trung quốc",
+                  label: "Tiếng Phổ thông Trung quốc",
+                },
+                {
+                  value: "Tiếng Quảng Đông",
+                  label: "Tiếng Quảng Đông",
+                },
+                {
+                  value: "Tiếng dân tộc (H'mông, Tày, Khmer, v.v.)",
+                  label: "Tiếng dân tộc (H'mông, Tày, Khmer, v.v.)",
+                },
+                {
+                  value: "Tiếng Thái",
+                  label: "Tiếng Thái",
+                },
+                {
+                  value: "Tiếng Campuchia",
+                  label: "Tiếng Campuchia",
+                },
+                {
+                  value: "Tiếng Lào",
+                  label: "Tiếng Lào",
+                },
+                {
+                  value: "Tiếng Hàn Quốc",
+                  label: "Tiếng Hàn Quốc",
+                },
+                {
+                  value: "Tiếng Nhật",
+                  label: "Tiếng Nhật",
+                },
+                {
+                  value: "Tiếng Khác...",
+                  label: "Tiếng Khác...",
+                },
+              ],
+            },
+            {
+              key: "otherLanguage",
+              label: "Vui lòng cho biết ngôn ngữ khác",
+              control: "text",
+              required: false,
+              placeholder: "ngôn ngữ khác",
+            },
+            {
+              key: "schoolName",
+              label: "Hiện đang học tại trường nào *",
+              control: "text",
+              required: true,
+            },
+            {
+              key: "currentSchoolGrade",
+              label: "Hiện đang học lớp mấy *",
+              control: "text",
+              required: true,
+              placeholder: "Public school grade/class",
+            },
+          ],
+        },
+        {
+          id: "mother-contact",
+          title: "Liên hệ của mẹ hoặc học sinh trưởng thành",
+          hint: "Thông tin liên hệ chính.",
+          fields: [
+            {
+              key: "motherName",
+              label: "Họ tên của mẹ hoặc học sinh trưởng thành *",
+              control: "text",
+              required: true,
+              placeholder: "Họ tên của mẹ hoặc học sinh trưởng thành",
+              autocomplete: "name",
+            },
+            {
+              key: "motherEmail",
+              label: "Email của mẹ hoặc học sinh trưởng thành *",
+              control: "email",
+              required: true,
+              placeholder: "ten@vidu.com",
+              autocomplete: "email",
+            },
+            {
+              key: "motherPhone",
+              label: "Số điện thoại của mẹ hoặc học sinh trưởng thành *",
+              control: "tel",
+              required: true,
+            },
+            {
+              key: "motherEmergencyContact",
+              label: "Khi khẩn cấp, sẽ gọi mẹ trước *",
+              control: "radio",
+              required: false,
+              options: [
+                {
+                  value: "Y",
+                  label: "Có",
+                },
+                {
+                  value: "N",
+                  label: "Không",
+                },
+              ],
+            },
+            {
+              key: "motherMessenger",
+              label:
+                "Số Zalo hoặc cách khác để nhắn tin nhanh cho mẹ hoặc học sinh trưởng thành",
+              control: "text",
+              required: false,
+              placeholder: "Số Zalo hoặc cách khác để nhắn tin nhanh",
+            },
+          ],
+        },
+        {
+          id: "father-contact",
+          title: "Liên hệ của ba",
+          hint: "Thông tin liên hệ bổ sung.",
+          fields: [
+            {
+              key: "fatherName",
+              label: "Họ tên của ba",
+              control: "text",
+              required: false,
+              autocomplete: "name",
+            },
+            {
+              key: "fatherEmail",
+              label: "Email của ba",
+              control: "email",
+              required: false,
+              placeholder: "ten@vidu.com",
+              autocomplete: "email",
+            },
+            {
+              key: "fatherPhone",
+              label: "Số điện thoại của ba",
+              control: "tel",
+              required: false,
+            },
+            {
+              key: "fatherEmergencyContact",
+              label: "Khi khẩn cấp, sẽ gọi ba trước",
+              control: "radio",
+              required: false,
+              options: [
+                {
+                  value: "Y",
+                  label: "có",
+                },
+                {
+                  value: "N",
+                  label: "không",
+                },
+              ],
+            },
+            {
+              key: "fatherMessenger",
+              label: "Số Zalo hoặc cách khác để nhắn tin nhanh cho ba",
+              control: "text",
+              required: false,
+              placeholder: "Số Zalo hoặc cách khác để nhắn tin nhanh",
+            },
+          ],
+        },
+        {
+          id: "address",
+          title: "Địa chỉ",
+          hint: "Địa chỉ cư trú hiện tại.",
+          fields: [
+            {
+              key: "streetAddress",
+              label: "Số nhà và tên đường *",
+              control: "text",
+              required: true,
+            },
+            {
+              key: "newAddress",
+              label: "Địa chỉ mới 2026 *",
+              control: "text",
+              required: true,
+            },
+            {
+              key: "wardDistrict",
+              label: "Phường và Quận *",
+              control: "text",
+              required: true,
+            },
+            {
+              key: "city",
+              label: "Thành phố *",
+              control: "text",
+              required: true,
+            },
+          ],
+        },
+        {
+          id: "health",
+          title: "Thông tin sức khỏe của người học",
+          hint: "Thị giác, thuốc uống, khó khăn học tập, dị ứng và tiêm chủng.",
+          fields: [
+            {
+              key: "hasGlasses",
+              label: "Người học có dùng kính cận không? *",
+              control: "radio",
+              required: true,
+              options: [
+                {
+                  value: "Y",
+                  label: "có",
+                },
+                {
+                  value: "N",
+                  label: "không",
+                },
+              ],
+            },
+            {
+              key: "hadEyeExam",
+              label: "Người học đã bao giờ đi khám mắt chưa? *",
+              control: "radio",
+              required: true,
+              options: [
+                {
+                  value: "Y",
+                  label: "có",
+                },
+                {
+                  value: "N",
+                  label: "không",
+                },
+              ],
+            },
+            {
+              key: "lastEyeExamDateText",
+              label: "Ngày khám mắt gần đây nhất",
+              control: "date",
+              required: false,
+              placeholder: "ví dụ: 17/03/11",
+            },
+            {
+              key: "prescriptionMedicine",
+              label: "Người học có uống thuốc theo đơn không? *",
+              control: "radio",
+              required: true,
+              options: [
+                {
+                  value: "Y",
+                  label: "có",
+                },
+                {
+                  value: "N",
+                  label: "không",
+                },
+              ],
+            },
+            {
+              key: "prescriptionDetails",
+              label: "Vui lòng nêu tên thuốc theo toa và lý do dùng *",
+              control: "textarea",
+              required: true,
+              placeholder: "Thông tin này được bảo mật",
+            },
+            {
+              key: "learningDisorders",
+              label:
+                "Học sinh có bất kỳ rối loạn hoặc triệu chứng nào sau đây không? *",
+              control: "checkbox",
+              required: true,
+              options: [
+                {
+                  value: "Speech Disorders",
+                  label: "Rối loạn lời nói",
+                },
+                {
+                  value: "amblyopia",
+                  label: "Nhược thị (hội chứng mắt lười)",
+                },
+                {
+                  value: "ADHD",
+                  label: "Rối loạn tăng động giảm chú ý",
+                },
+                {
+                  value: "Asperger / Autism",
+                  label: "Hội chứng Asperger / phổ tự kỷ",
+                },
+                {
+                  value: "Learning disorders",
+                  label: "Rối loạn học tập (vui lòng giải thích bên dưới)",
+                },
+                {
+                  value: "Dyslexia",
+                  label: "Chứng khó đọc",
+                },
+                {
+                  value: "Behavioral disorders",
+                  label: "Rối loạn hành vi (vui lòng giải thích bên dưới)",
+                },
+                {
+                  value: "N",
+                  label: "Không có",
+                },
+                {
+                  value: "Other",
+                  label: "Khác (vui lòng giải thích bên dưới)",
+                },
+              ],
+            },
+            {
+              key: "learningDisorderDetails",
+              label:
+                "Giải thích tất cả rối loạn học tập, rối loạn hành vi, hoặc những thách thức khác đối với việc học",
+              control: "textarea",
+              required: false,
+              placeholder: "Thông tin này được bảo mật",
+            },
+            {
+              key: "drugAllergies",
+              label:
+                "Liệt kê tất cả các trường hợp dị ứng với các loại thuốc: *",
+              control: "textarea",
+              required: true,
+              placeholder: 'vui lòng nhập "không," nếu không có dị ứng',
+            },
+            {
+              key: "foodEnvironmentalAllergies",
+              label: "Liệt kê các dị ứng do thực phẩm và môi trường *",
+              control: "textarea",
+              required: true,
+              placeholder: 'vui lòng nhập "không," nếu không có',
+            },
+            {
+              key: "vaccinesChildhoodUpToDate",
+              label:
+                "Tất cả các loại vắc xin bắt buộc dành cho trẻ nhỏ có phải là loại mới nhất không? *",
+              control: "radio",
+              required: true,
+              options: [
+                {
+                  value: "Y",
+                  label: "Có",
+                },
+                {
+                  value: "N",
+                  label: "Không",
+                },
+              ],
+            },
+            {
+              key: "hadCovidPositive",
+              label:
+                "Người học đã từng có COVID-19 chưa hoặc kết quả dương tính với COVID-19? *",
+              control: "radio",
+              required: true,
+              options: [
+                {
+                  value: "Y",
+                  label: "có́",
+                },
+                {
+                  value: "N",
+                  label: "không",
+                },
+              ],
+            },
+            {
+              key: "covidNegativeDateText",
+              label:
+                'Bắt buộc: Nếu bạn đã xét nghiệm dương tính với COVID, thì vui lòng cung cấp ngày bạn xét nghiệm âm tính với COVID bên dưới. **Nếu bạn trả lời "không" ở trên, vui lòng nhập "không" vào đây. *',
+              control: "text",
+              required: true,
+              placeholder:
+                "ví dụ: 17/03/11 - ngày bạn xét nghiệm âm tính sau khi bị nhiễm bệnh",
+            },
+            {
+              key: "covidShotAlready",
+              label: "Người học đã được chủng ngừa COVID-19 chưa? *",
+              control: "radio",
+              required: true,
+              options: [
+                {
+                  value: "Y",
+                  label: "có́",
+                },
+                {
+                  value: "N",
+                  label: "không",
+                },
+              ],
+            },
+            {
+              key: "covidVaccinesUpToDate",
+              label: "Vắc xin COVID-19 có được cập nhật không? *",
+              control: "radio",
+              required: true,
+              options: [
+                {
+                  value: "Y",
+                  label: "có",
+                },
+                {
+                  value: "N",
+                  label: "không",
+                },
+              ],
+            },
+            {
+              key: "mostRecentCovidShotDate",
+              label: "Ngày tiêm phòng COVID gần đây nhất của học sinh",
+              control: "date",
+              required: false,
+              placeholder: "ví dụ: 2023-03-17",
+            },
+            {
+              key: "extraComments",
+              label: "Bình luận",
+              control: "textarea",
+              required: false,
+            },
+            {
+              key: "covidShotHistory",
+              label:
+                "Vui lòng cho biết các loại chủng ngừa COVID-19 mà người học đã được nhận: *",
+              control: "checkbox",
+              required: true,
+              options: [
+                {
+                  value: "not yet",
+                  label: "Chưa",
+                },
+                {
+                  value: "first COVID injection",
+                  label: "Tiêm chủng COVID lần đầu tiên",
+                },
+                {
+                  value: "second COVID injection",
+                  label: "Tiêm chủng COVID thứ hai",
+                },
+                {
+                  value: "third COVID injection",
+                  label: "Tiêm chủng COVID thứ ba",
+                },
+                {
+                  value: "fourth COVID injection",
+                  label: "Tiêm chủng COVID thứ tư",
+                },
+                {
+                  value: "fifth COVID injection",
+                  label: "Tiêm chủng COVID thứ năm",
+                },
+                {
+                  value: "sixth COVID injection",
+                  label: "Tiêm chủng COVID thứ sáu",
+                },
+              ],
+            },
+          ],
+        },
+        {
+          id: "class-care",
+          title: "Chăm sóc trong giờ học (nếu người học là trẻ em)",
+          hint: "Ủy quyền chăm sóc cơ bản khi cần thiết.",
+          fields: [
+            {
+              key: "feverMedicineAllowed",
+              label:
+                "Trẻ có thể dùng một liều thuốc uống bằng một trong các loại thuốc sau đây khi cần thiết để hạ sốt. *",
+              control: "checkbox",
+              required: true,
+              options: [
+                {
+                  value: "children's aspirin",
+                  label: "Axit salicylic trẻ em",
+                },
+                {
+                  value: "Ibuprofen trẻ em",
+                  label: "Ibuprofen trẻ em",
+                },
+                {
+                  value: "Paracetamol trẻ em",
+                  label: "Paracetamol trẻ em",
+                },
+                {
+                  value: "NO",
+                  label: "Không cho",
+                },
+                {
+                  value: "adult",
+                  label: "Tôi 18 tuổi trở lên",
+                },
+              ],
+            },
+            {
+              key: "whiteOilAllowed",
+              label: "Trẻ có thể dùng dầu trắng nếu muốn *",
+              control: "radio",
+              required: true,
+              options: [
+                {
+                  value: "Y",
+                  label: "Cho",
+                },
+                {
+                  value: "N",
+                  label: "Không cho",
+                },
+                {
+                  value: "adult",
+                  label: "Tôi 18 tuổi trở lên",
+                },
+              ],
+            },
+          ],
+        },
+        {
+          id: "confirmation",
+          title: "Xác nhận",
+          hint: "Thông tin xác nhận của người điền mẫu.",
+          fields: [
+            {
+              key: "signatureFullName",
+              label:
+                "Tôi xác nhận rằng tất cả thông tin tôi đã cung cấp; là sự thật được chứng minh; theo hiểu biết tốt nhất của tôi; chịu sự trừng phạt của pháp luật; tại nước Cộng hòa xã hội chủ nghĩa Việt Nam. *",
+              control: "text",
+              required: true,
+              placeholder: "họ tên của người điền đơn",
+            },
+            {
+              key: "signatureEmail",
+              label: "email của bạn *",
+              control: "email",
+              required: true,
+              placeholder: "ten@vidu.com",
+              autocomplete: "email",
+            },
+            {
+              key: "signatureAgreed",
+              label: "Tôi đã đọc, đồng ý và ký xác nhận thông tin trên. *",
+              control: "checkbox",
+              required: true,
+              options: [
+                {
+                  value: "yes",
+                  label: "Tôi đồng ý",
+                },
+              ],
+            },
+          ],
+        },
+      ]
+      const PROFILE_REFERENCE_FALLBACK_KEYS = new Map([
+        ["currentSchoolGrade", ["currentGrade"]],
+      ])
+      const PROFILE_SYSTEM_FIELDS = new Set([
+        "id",
+        "studentRefId",
+        "createdAt",
+        "updatedAt",
+        "memberSince",
+        "parentsId",
+        "requiredValidationOk",
+        "sourceFormId",
+        "sourceUrl",
+        "rawFormPayload",
+        "normalizedFormPayload",
+      ])
+      const PROFILE_READONLY_METADATA_FIELDS = [
+        {
+          key: "memberSince",
+          label: "Member Since",
+        },
+        {
+          key: "parentsId",
+          label: "Parents ID",
+        },
+        {
+          key: "updatedAt",
+          label: "Updated At",
+        },
+      ]
+      const TEXT_ZOOM_KEY = "sis.parentPortal.textZoomPct"
+      const TEXT_ZOOM_DEFAULT = 100
+      const TEXT_ZOOM_MIN = 80
+      const TEXT_ZOOM_MAX = 140
+      const TEXT_ZOOM_STEP = 5
+      const REPORT_ACK_STORAGE_KEY_PREFIX = "sis.parentPortal.reportAck"
+      const TRUTHY_OPTION_TOKENS = new Set([
+        "y",
+        "yes",
+        "true",
+        "co",
+        "có",
+        "cho",
+      ])
+      const FALSY_OPTION_TOKENS = new Set([
+        "n",
+        "no",
+        "false",
+        "khong",
+        "không",
+      ])
+      const NEWS_VIEWER_MODAL_FIELD_IDS = {
+        sourceLink: "newsViewerSourceLink",
+        articleTitle: "newsViewerArticleTitle",
+        byline: "newsViewerByline",
+        articleDateline: "newsViewerArticleDateline",
+        leadSynopsis: "newsViewerLeadSynopsis",
+        actionActor: "newsViewerActionActor",
+        actionAffected: "newsViewerActionAffected",
+        actionWhere: "newsViewerActionWhere",
+        actionWhat: "newsViewerActionWhat",
+        actionWhy: "newsViewerActionWhy",
+        biasAssessment: "newsViewerBiasAssessment",
+      }
+      const PROFILE_REFERENCE_FIELD_META_BY_KEY = new Map()
+      PROFILE_REFERENCE_SECTIONS.forEach((section, sectionOrder) => {
+        section.fields.forEach((field, fieldOrder) => {
+          PROFILE_REFERENCE_FIELD_META_BY_KEY.set(field.key, {
+            ...field,
+            key: field.key,
+            sectionId: section.id,
+            sectionOrder,
+            fieldOrder,
+            fallbackKeys: PROFILE_REFERENCE_FALLBACK_KEYS.get(field.key) || [],
+          })
+        })
+      })
+      const state = {
+        me: null,
+        children: [],
+        dashboard: null,
+        overdueHomeworkRows: [],
+        reportPastDueRows: [],
+        pastDueModalOpen: false,
+        performanceModalOpen: false,
+        reportAccessModalOpen: false,
+        newsWeekSetModalOpen: false,
+        reportArchiveRows: [],
+        activeReportIndex: 0,
+        reportAcknowledgements: {},
+        selectedEaglesId: "",
+        profile: {},
+        lockedFields: new Set(),
+        immutableFields: new Set(["eaglesId", "studentNumber"]),
+        patch: {},
+        activeView: "dashboard",
+        activeDashboardPage: "home",
+        detailCalendar: null,
+        newsItems: [],
+        newsWeekSets: [],
+        newsWeekSetViewerWeekSetId: "",
+        newsWeekSetViewerItems: [],
+        newsWeekSetViewerIndex: -1,
+        status: "",
+        invitationToken: "",
+        textZoomPct: TEXT_ZOOM_DEFAULT,
+        detailGradeTable: null,
+      }
+      const portalAssetPromises = new Map()
+      const portalAssetUrls = {
+        fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js",
+        tabulator: "/web-asset/vendor/tabulatorz/tabulator.min.js",
+        tabulatorCss: "/web-asset/vendor/tabulatorz/tabulator.min.css",
+      }
+      function loadPortalAsset(name) {
+        if (name === "fullcalendar" && window.FullCalendar?.Calendar) return Promise.resolve()
+        if (name === "tabulator" && typeof window.Tabulator === "function") return Promise.resolve()
+        if (name === "tabulatorCss" && document.querySelector('link[data-portal-asset="tabulatorCss"]')) return Promise.resolve()
+        if (portalAssetPromises.has(name)) return portalAssetPromises.get(name)
+        const promise = new Promise((resolve, reject) => {
+          if (name === "tabulatorCss") {
+            const link = document.createElement("link")
+            link.rel = "stylesheet"
+            link.href = portalAssetUrls[name]
+            link.dataset.portalAsset = name
+            link.onload = () => resolve()
+            link.onerror = () => reject(new Error("Quarter grade table styles could not be loaded."))
+            document.head.append(link)
+            return
+          }
+          const script = document.createElement("script")
+          script.src = portalAssetUrls[name]
+          script.async = false
+          script.dataset.portalAsset = name
+          script.onload = () => resolve()
+          script.onerror = () => reject(new Error(name === "tabulator" ? "Quarter grade table assets could not be loaded." : "FullCalendar could not be loaded."))
+          document.head.append(script)
+        })
+        portalAssetPromises.set(name, promise)
+        return promise
+      }
+      function loadTabulatorAssets() {
+        return Promise.all([loadPortalAsset("tabulator"), loadPortalAsset("tabulatorCss")])
+      }
+      const INITIAL_AUTH_STATE = window.__SIS_PARENT_INITIAL_AUTH__
+
+      function setBrevoParentIdentity(parentsId) {
+        window.SIS_PORTAL_THEME?.setBrevoIdentity({ parentId: parentsId });
+      }
+
+      function updateEnvBadgeParent() {
+        const badge = document.getElementById("envBadge")
+        if (!badge) return
+        const envLabel = RUNTIME_ENV === "development" ? "DEV" : "LIVE"
+        badge.dataset.env =
+          RUNTIME_ENV === "development" ? "development" : "production"
+        badge.textContent = `${envLabel} • ${PARENT_API_ORIGIN || "(missing apiOrigin)"}`
+      }
+      const PARENT_DASHBOARD_PAGES = new Set([
+        "home",
+        "news-reports",
+        "current-homework",
+        "past-due-homework",
+        "attendance-calendar",
+        "performance-reports",
+        "grades-ytd",
+        "recommendations",
+      ])
+
+      function normalizeText(value) {
+        if (value === undefined || value === null) return ""
+        return String(value).trim()
+      }
+
+      function gradeLabel(value) {
+        const raw = normalizeText(value)
+        if (!raw) return ""
+        const key = raw.toLowerCase().replace(/[^a-z0-9]/g, "")
+        if (key === "eggchicks") return "Eggs & Chicks"
+        return raw
+      }
+
+      function clampTextZoomPct(value) {
+        const rawValue = normalizeText(value)
+        if (!rawValue) return TEXT_ZOOM_DEFAULT
+        const parsed = Number(rawValue)
+        if (!Number.isFinite(parsed)) return TEXT_ZOOM_DEFAULT
+        return Math.min(
+          TEXT_ZOOM_MAX,
+          Math.max(TEXT_ZOOM_MIN, Math.round(parsed)),
+        )
+      }
+
+      function readStoredTextZoomPct() {
+        return clampTextZoomPct(window.SIS_PORTAL_PREFERENCES?.get(TEXT_ZOOM_KEY, TEXT_ZOOM_DEFAULT))
+      }
+
+      function applyPortalTextZoom(percent) {
+        const nextPercent = clampTextZoomPct(percent)
+        state.textZoomPct = nextPercent
+        document.documentElement.style.setProperty(
+          "--portal-text-zoom",
+          String(nextPercent / 100),
+        )
+        const label = document.getElementById("parentTextZoomLabel")
+        if (label) label.textContent = `${nextPercent}%`
+        void window.SIS_PORTAL_PREFERENCES?.save(TEXT_ZOOM_KEY, String(nextPercent))
+      }
+
+      function adjustPortalTextZoom(delta) {
+        applyPortalTextZoom(state.textZoomPct + delta)
+      }
+
+      function applyFieldLabelText(
+        labelNode,
+        rawLabelText,
+        isRequired = false,
+      ) {
+        const labelText = normalizeText(rawLabelText)
+        const trailingRequiredMarker = labelText.endsWith("*")
+        const baseLabelText =
+          trailingRequiredMarker ?
+            normalizeText(labelText.slice(0, -1))
+          : labelText
+        labelNode.textContent = baseLabelText
+        if (!baseLabelText) return
+        if (trailingRequiredMarker || isRequired) {
+          const marker = document.createElement("span")
+          marker.className = "required-marker"
+          marker.textContent = " *"
+          labelNode.appendChild(marker)
+        }
+      }
+
+      function normalizePathPrefix(value, fallback) {
+        const fallbackText =
+          normalizeText(fallback) || DEFAULT_PARENT_API_PREFIX
+        const raw = normalizeText(value) || fallbackText
+        const withLeadingSlash = raw.startsWith("/") ? raw : `/${raw}`
+        const normalized = withLeadingSlash
+          .replace(/\/{2,}/g, "/")
+          .replace(/\/+$/g, "")
+        return normalized || fallbackText
+      }
+
+      function isLoopbackHostname(hostname) {
+        const normalized = normalizeText(hostname).toLowerCase()
+        return (
+          normalized === "127.0.0.1" ||
+          normalized === "localhost" ||
+          normalized === "::1"
+        )
+      }
+
+      function inferLoopbackPreviewApiOrigin() {
+        const currentOriginUrl = new URL(window.location.origin)
+        // Keep 8786 (test mirror), 8787 (production/admin-live), and 8788 (dev) in both origin lists below.
+        const knownRuntimePorts = new Set(["8786", "8787", "8788"])
+        if (!isLoopbackHostname(currentOriginUrl.hostname)) return ""
+        if (knownRuntimePorts.has(currentOriginUrl.port)) return ""
+        return "http://127.0.0.1:8788"
+      }
+
+      function normalizePreviewApiOrigin(rawOrigin) {
+        const text = normalizeText(rawOrigin)
+        // This must match inferLoopbackPreviewApiOrigin: test refreshes use 8786.
+        if (!text) return ""
+        const knownRuntimePorts = new Set(["8786", "8787", "8788"])
+        let parsed
+        try {
+          parsed = new URL(text, window.location.origin)
+        } catch (error) {
+          void error
+          return inferLoopbackPreviewApiOrigin()
+        }
+        if (
+          isLoopbackHostname(parsed.hostname) &&
+          !knownRuntimePorts.has(parsed.port)
+        ) {
+          return "http://127.0.0.1:8788"
+        }
+        return parsed.origin
+      }
+
+      function isStaticParentPreviewPath(pathname) {
+        return normalizeText(pathname || window.location.pathname).endsWith(
+          "/web-asset/parent/parent-portal.html",
+        )
+      }
+
+      function resolveParentApiOrigin() {
+        const params = new URLSearchParams(window.location.search || "")
+        const queryOrigin = normalizeText(params.get("apiOrigin"))
+        const injectedOrigin = normalizeText(window.__SIS_PARENT_API_ORIGIN)
+        const selectedOrigin = queryOrigin || injectedOrigin
+        if (selectedOrigin) {
+          const origin = normalizePreviewApiOrigin(selectedOrigin)
+          return origin ? assertApiOriginSafe(origin) : ""
+        }
+        const currentPath = normalizeText(window.location.pathname)
+        if (
+          isStaticParentPreviewPath(currentPath) ||
+          currentPath === "/parent"
+        ) {
+          const inferredOrigin = inferLoopbackPreviewApiOrigin()
+          if (inferredOrigin) return assertApiOriginSafe(inferredOrigin)
+        }
+        if (!isStaticParentPreviewPath(currentPath)) {
+          try {
+            return assertApiOriginSafe(window.location.origin)
+          } catch (error) {
+            void error
+            return ""
+          }
+        }
+        return ""
+      }
+
+      function resolveApiUrl(pathname) {
+        const rawPath = normalizeText(pathname)
+        if (!rawPath) return rawPath
+        if (/^https?:\/\//i.test(rawPath)) return rawPath
+        const normalizedPath = rawPath.startsWith("/") ? rawPath : `/${rawPath}`
+        if (!PARENT_API_ORIGIN) return normalizedPath
+        try {
+          return new URL(normalizedPath, PARENT_API_ORIGIN).toString()
+        } catch (error) {
+          void error
+          return normalizedPath
+        }
+      }
+
+      function isStaticParentPreviewMode() {
+        return isStaticParentPreviewPath(window.location.pathname)
+      }
+
+      function staticPreviewHelpMessage() {
+        return "Static preview mode requires ?apiOrigin=http://127.0.0.1:<mailer-port> or opening /parent."
+      }
+
+      function assertApiOriginConfiguredForStaticPreview() {
+        if (!isStaticParentPreviewMode() || PARENT_API_ORIGIN) return
+        const error = new Error(staticPreviewHelpMessage())
+        error.status = 400
+        throw error
+      }
+
+      function assertApiOriginSafe(origin) {
+        const text = normalizeText(origin)
+        if (!text)
+          throw new Error(
+            "Missing API origin. Set ?apiOrigin or use runtime-served portal.",
+          )
+        let parsed
+        try {
+          parsed = new URL(text)
+        } catch (error) {
+          throw new Error(
+            "Invalid API origin. Use a full http(s)://host[:port] value.",
+          )
+        }
+        const hostname = parsed.hostname.toLowerCase()
+        const loopback = isLoopbackHostname(hostname)
+        if (RUNTIME_ENV === "development" && !loopback)
+          throw new Error(
+            "Dev portal requires a loopback apiOrigin (http://127.0.0.1:<port>).",
+          )
+        if (RUNTIME_ENV === "test") return parsed.origin
+        if (RUNTIME_ENV !== "development" && loopback)
+          throw new Error("Live portal cannot use loopback apiOrigin.")
+        return parsed.origin
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;")
+      }
+
+      function normalizeFieldToken(key) {
+        const raw = normalizeText(key).toLowerCase()
+        if (!raw) return ""
+        let safe = raw
+        try {
+          safe = safe.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        } catch (error) {
+          void error
+        }
+        return safe.replace(/[^a-z0-9]+/g, "")
+      }
+
+      function resolveProfileFieldMeta(key) {
+        const normalizedKey = normalizeText(key)
+        if (!normalizedKey) return null
+        return PROFILE_REFERENCE_FIELD_META_BY_KEY.get(normalizedKey) || null
+      }
+
+      function resolveSelectedChildImmutableGradeValue() {
+        const selectedId = normalizeText(state.selectedEaglesId)
+        if (!selectedId) return ""
+        const children = Array.isArray(state.children) ? state.children : []
+        const childMatch = children.find(
+          (entry) => normalizeText(entry?.eaglesId) === selectedId,
+        )
+        if (
+          childMatch &&
+          Object.prototype.hasOwnProperty.call(childMatch, "currentGrade")
+        ) {
+          return gradeLabel(childMatch.currentGrade)
+        }
+        const dashboardChildren =
+          Array.isArray(state.dashboard?.children) ?
+            state.dashboard.children
+          : []
+        const dashboardMatch = dashboardChildren.find(
+          (entry) => normalizeText(entry?.eaglesId) === selectedId,
+        )
+        return gradeLabel(dashboardMatch?.currentGrade)
+      }
+
+      function resolveProfileFieldValue(fieldMeta) {
+        if (!fieldMeta?.key) return ""
+        const source =
+          state.profile && typeof state.profile === "object" ?
+            state.profile
+          : {}
+        const keys = [
+          fieldMeta.key,
+          ...(Array.isArray(fieldMeta.fallbackKeys) ?
+            fieldMeta.fallbackKeys
+          : []),
+        ]
+        const immutableGradeToken =
+          fieldMeta.key === "currentSchoolGrade" ?
+            normalizeFieldToken(resolveSelectedChildImmutableGradeValue())
+          : ""
+        for (let i = 0; i < keys.length; i += 1) {
+          const key = normalizeText(keys[i])
+          if (!key || !Object.prototype.hasOwnProperty.call(source, key))
+            continue
+          const candidate = source[key]
+          if (Array.isArray(candidate)) return [...candidate]
+          if (candidate === undefined || candidate === null) continue
+          if (typeof candidate === "string" && !candidate.trim()) continue
+          if (
+            fieldMeta.key === "currentSchoolGrade" &&
+            key === "currentGrade" &&
+            immutableGradeToken
+          ) {
+            const candidateToken = normalizeFieldToken(candidate)
+            if (candidateToken && candidateToken === immutableGradeToken)
+              continue
+          }
+          if (normalizeText(fieldMeta.control).toLowerCase() === "date") {
+            return formatDateInputDisplayValue(candidate)
+          }
+          return fieldMeta.key === "currentSchoolGrade" ?
+              gradeLabel(candidate)
+            : candidate
+        }
+        return fieldMeta.control === "checkbox" ? [] : ""
+      }
+
+      function resolveReadOnlyMetadataValue(key) {
+        const source =
+          state.profile && typeof state.profile === "object" ?
+            state.profile
+          : {}
+        const value = source[key]
+        if (value === undefined || value === null) return ""
+        const text = normalizeText(value)
+        if (!text) return ""
+        if (key === "memberSince") {
+          const monthYearMatch = text.match(/^(\d{4})-(\d{2})(?:-\d{2})?/)
+          if (monthYearMatch) return `${monthYearMatch[2]}/${monthYearMatch[1]}`
+        }
+        return text
+      }
+
+      function normalizeArrayValue(value) {
+        if (Array.isArray(value))
+          return value.map((entry) => normalizeText(entry)).filter(Boolean)
+        const scalar = normalizeText(value)
+        if (!scalar) return []
+        return scalar
+          .split(",")
+          .map((entry) => normalizeText(entry))
+          .filter(Boolean)
+      }
+
+      function isTruthyOptionToken(token) {
+        return TRUTHY_OPTION_TOKENS.has(token)
+      }
+
+      function isFalsyOptionToken(token) {
+        return FALSY_OPTION_TOKENS.has(token)
+      }
+
+      function normalizeGenderSelectionToken(value) {
+        const token = normalizeFieldToken(value)
+        if (!token) return ""
+        if (
+          token === "m" ||
+          token === "male" ||
+          token === "nam" ||
+          token === "boy" ||
+          token === "man"
+        )
+          return "male"
+        if (
+          token === "f" ||
+          token === "female" ||
+          token === "nu" ||
+          token === "girl" ||
+          token === "woman"
+        )
+          return "female"
+        return ""
+      }
+
+      function resolveGenderOptionToken(option = {}) {
+        return (
+          normalizeGenderSelectionToken(option.value) ||
+          normalizeGenderSelectionToken(option.label)
+        )
+      }
+
+      function optionMatchesValue(rawValue, option = {}, fieldMeta = null) {
+        const fieldKey = normalizeText(fieldMeta?.key)
+        if (fieldKey === "genderSelections") {
+          const rawGenderToken = normalizeGenderSelectionToken(rawValue)
+          if (!rawGenderToken) return false
+          const optionGenderToken = resolveGenderOptionToken(option)
+          return rawGenderToken === optionGenderToken
+        }
+        const rawToken = normalizeFieldToken(rawValue)
+        if (!rawToken) return false
+        const optionValueToken = normalizeFieldToken(option.value)
+        const optionLabelToken = normalizeFieldToken(option.label)
+        if (rawToken === optionValueToken || rawToken === optionLabelToken)
+          return true
+        if (
+          rawToken &&
+          optionValueToken &&
+          (rawToken.includes(optionValueToken) ||
+            optionValueToken.includes(rawToken))
+        )
+          return true
+        if (
+          rawToken &&
+          optionLabelToken &&
+          (rawToken.includes(optionLabelToken) ||
+            optionLabelToken.includes(rawToken))
+        )
+          return true
+        if (isTruthyOptionToken(rawToken)) {
+          return (
+            isTruthyOptionToken(optionValueToken) ||
+            isTruthyOptionToken(optionLabelToken)
+          )
+        }
+        if (isFalsyOptionToken(rawToken)) {
+          return (
+            isFalsyOptionToken(optionValueToken) ||
+            isFalsyOptionToken(optionLabelToken)
+          )
+        }
+        return false
+      }
+
+      function resolveSelectedOptionValue(fieldMeta, rawValue) {
+        const options =
+          Array.isArray(fieldMeta?.options) ? fieldMeta.options : []
+        if (!options.length) return normalizeText(rawValue)
+        const match = options.find((option) =>
+          optionMatchesValue(rawValue, option, fieldMeta),
+        )
+        if (match) return normalizeText(match.value)
+        return normalizeText(rawValue)
+      }
+
+      function sanitizeFieldId(key) {
+        const safe = normalizeText(key).replace(/[^a-zA-Z0-9_-]/g, "_")
+        return safe || "field"
+      }
+
+      function valuesEqual(current, next) {
+        const leftIsArray = Array.isArray(current) || Array.isArray(next)
+        if (leftIsArray) {
+          const curr = normalizeArrayValue(current)
+          const incoming = normalizeArrayValue(next)
+          if (curr.length !== incoming.length) return false
+          return curr.every((entry, index) => entry === incoming[index])
+        }
+        const left = normalizeText(current)
+        const right = normalizeText(next)
+        return left === right
+      }
+
+      function normalizeFieldInput(rawValue, fieldMeta) {
+        const control = normalizeText(fieldMeta?.control).toLowerCase()
+        if (control === "checkbox") return normalizeArrayValue(rawValue)
+        if (control === "radio" || control === "select")
+          return resolveSelectedOptionValue(fieldMeta, rawValue)
+        if (control === "number")
+          return normalizeText(rawValue).replace(/[^\d]/g, "")
+        if (control === "date") return normalizeDateInputValue(rawValue)
+        return normalizeText(rawValue)
+      }
+
+      function normalizeDateInputValue(rawValue) {
+        const text = normalizeText(rawValue)
+        if (!text) return ""
+        if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text
+        const displayMatch = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+        if (displayMatch) {
+          return `${displayMatch[3]}-${displayMatch[2]}-${displayMatch[1]}`
+        }
+        const date = parsePortalDateTimeValue(text)
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) return text
+        const parts = new Intl.DateTimeFormat("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          timeZone: PORTAL_TIME_ZONE,
+        }).formatToParts(date)
+        const pick = (type) =>
+          parts.find((part) => part.type === type)?.value || ""
+        const day = pick("day")
+        const month = pick("month")
+        const year = pick("year")
+        if (!day || !month || !year) return text
+        return `${year}-${month}-${day}`
+      }
+
+      function formatDateInputDisplayValue(rawValue) {
+        const text = normalizeText(rawValue)
+        if (!text) return ""
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(text)) return text
+        const iso = normalizeDateInputValue(text)
+        if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+          const [year, month, day] = iso.split("-")
+          return `${day}/${month}/${year}`
+        }
+        const parsed = text ? parsePortalDateTimeValue(text) : null
+        if (!parsed || Number.isNaN(parsed.getTime())) return text
+        const parts = portalDateParts(parsed)
+        if (!parts) return text
+        return `${String(parts.day).padStart(2, "0")}/${String(parts.month).padStart(2, "0")}/${String(parts.year).padStart(4, "0")}`
+      }
+
+      function updateSessionBadge(text, signedIn) {
+        const badge = document.getElementById("sessionBadge")
+        if (!badge) return
+        badge.textContent = normalizeText(text) || "Chưa đăng nhập"
+        badge.className = `chip ${signedIn ? "chip-ok" : "chip-neutral"}`
+      }
+
+      function setSideNavOpen(open) {
+        const shouldOpen = Boolean(open)
+        document
+          .getElementById("parentSideNav")
+          ?.classList.toggle("open", shouldOpen)
+        document.body.classList.toggle("menu-open", shouldOpen)
+      }
+
+      function hoistPortalModalsToBody() {
+        const host = document.body
+        if (!host) return
+        ;[
+          "pastDueHomeworkModal",
+          "performanceReportModal",
+          "reportAccessErrorModal",
+          "newsWeekSetModal",
+        ].forEach((id) => {
+          const modal = document.getElementById(id)
+          if (!modal || modal.parentElement === host) return
+          host.appendChild(modal)
+        })
+      }
+
+      function setActivePortalView(view) {
+        const nextView =
+          normalizeText(view).toLowerCase() === "child" ? "child" : "dashboard"
+        state.activeView = nextView
+        setPastDueHomeworkModalOpen(false)
+        setPerformanceReportModalOpen(false)
+        closeNewsWeekSetModal()
+        syncDashboardPageVisibility()
+      }
+
+      function goToParentMain() {
+        setActivePortalView("dashboard")
+        setActiveDashboardPage("home")
+      }
+
+      function updateChildPageBadge() {
+        const badge = document.getElementById("childPageBadge")
+        if (!badge) return
+        const selectedId = normalizeText(state.selectedEaglesId)
+        const selectedChild = state.children.find(
+          (entry) => normalizeText(entry?.eaglesId) === selectedId,
+        )
+        if (!selectedChild) {
+          badge.textContent = "Chọn học sinh từ Dashboard để chỉnh sửa hồ sơ."
+          return
+        }
+        const childName = normalizeText(
+          selectedChild.fullName ||
+            selectedChild.englishName ||
+            selectedChild.eaglesId,
+        )
+        badge.textContent = `Đang chỉnh sửa: ${childName} (${selectedId})`
+      }
+
+      function setStatus(message, type = "") {
+        window.SIS_ACTION_FEEDBACK?.status(normalizeText(message), type === "err" || type === "bad")
+        const statusEl = document.getElementById("portalStatus")
+        const detailStatusEl = document.getElementById("portalDetailStatus")
+        const childStatusEl = document.getElementById("childPageStatus")
+        const loginStatusEl = document.getElementById("loginStatus")
+        const active =
+          (
+            !document
+              .getElementById("childPageCard")
+              .classList.contains("hidden")
+          ) ?
+            childStatusEl
+          : (
+            !document
+              .getElementById("portalDetailCard")
+              .classList.contains("hidden")
+          ) ?
+            detailStatusEl
+          : (
+            !document.getElementById("portalCard").classList.contains("hidden")
+          ) ?
+            statusEl
+          : loginStatusEl
+        if (!active) return
+        active.className = `status${type ? ` ${type}` : ""}`
+        active.textContent = normalizeText(message)
+      }
+
+      function updateDraftBadge() {
+        const draftCount = Object.keys(state.patch).length
+        const badge = document.getElementById("draftCountBadge")
+        if (badge) {
+          badge.textContent =
+            draftCount === 1 ? "1 mục chưa lưu" : `${draftCount} mục chưa lưu`
+          badge.className = `chip ${draftCount > 0 ? "chip-edited" : "chip-neutral"}`
+        }
+        const saveButton = document.getElementById("saveDraftBtn")
+        if (saveButton) saveButton.disabled = draftCount === 0
+      }
+      async function api(pathname, init = {}) {
+        assertApiOriginConfiguredForStaticPreview()
+        const headers = {
+          "content-type": "application/json",
+          ...(init.headers || {}),
+        }
+        const response = await fetch(resolveApiUrl(pathname), {
+          method: init.method || "GET",
+          credentials: "include",
+          headers,
+          body:
+            Object.prototype.hasOwnProperty.call(init, "body") ?
+              JSON.stringify(init.body || {})
+            : undefined,
+        })
+        const text = await response.text()
+        let json = {}
+        try {
+          json = text ? JSON.parse(text) : {}
+        } catch (error) {
+          void error
+        }
+        if (!response.ok) {
+          const message = normalizeText(
+            json.error || response.statusText || "Request failed",
+          )
+          const err = new Error(message)
+          err.status = response.status
+          throw err
+        }
+        return json
+      }
+
+      function createChoiceFieldControl(
+        fieldMeta,
+        currentValue,
+        locked,
+        inputIdBase,
+      ) {
+        const options =
+          Array.isArray(fieldMeta?.options) ? fieldMeta.options : []
+        const selectedValues = normalizeArrayValue(currentValue)
+        const wrapper = document.createElement("fieldset")
+        wrapper.className = "choice-group"
+        wrapper.disabled = locked
+        const controls = []
+        options.forEach((option, index) => {
+          const optionId =
+            index === 0 ? inputIdBase : `${inputIdBase}_${index + 1}`
+          const optionLabel = document.createElement("label")
+          optionLabel.className = "choice-option"
+          optionLabel.setAttribute("for", optionId)
+          const optionInput = document.createElement("input")
+          optionInput.id = optionId
+          optionInput.setAttribute("data-field-key", fieldMeta.key)
+          optionInput.type = fieldMeta.control
+          optionInput.name =
+            fieldMeta.control === "checkbox" ? `${inputIdBase}[]` : inputIdBase
+          optionInput.value = normalizeText(option?.value)
+          optionInput.disabled = locked
+          if (fieldMeta.required && fieldMeta.control === "radio")
+            optionInput.required = true
+          optionInput.checked = selectedValues.some((entry) =>
+            optionMatchesValue(entry, option, fieldMeta),
+          )
+          const optionText = document.createElement("span")
+          optionText.textContent = normalizeText(option?.label || option?.value)
+          optionLabel.appendChild(optionInput)
+          optionLabel.appendChild(optionText)
+          wrapper.appendChild(optionLabel)
+          controls.push(optionInput)
+        })
+        return {
+          node: wrapper,
+          controls,
+          readValue() {
+            if (fieldMeta.control === "checkbox") {
+              return controls
+                .filter((control) => control.checked)
+                .map((control) => normalizeText(control.value))
+            }
+            const selected = controls.find((control) => control.checked)
+            return selected ? normalizeText(selected.value) : ""
+          },
+        }
+      }
+
+      function createProfileInput(fieldMeta, value, locked) {
+        const inputId = `pf_${sanitizeFieldId(fieldMeta.key)}`
+        const controlType = normalizeText(fieldMeta?.control).toLowerCase()
+        if (controlType === "checkbox" || controlType === "radio") {
+          return createChoiceFieldControl(fieldMeta, value, locked, inputId)
+        }
+        if (controlType === "select") {
+          const control = document.createElement("select")
+          control.id = inputId
+          control.setAttribute("data-field-key", fieldMeta.key)
+          control.disabled = locked
+          control.required = fieldMeta.required === true
+          const options =
+            Array.isArray(fieldMeta?.options) ? fieldMeta.options : []
+          options.forEach((option) => {
+            const optionNode = document.createElement("option")
+            optionNode.value = normalizeText(option?.value)
+            optionNode.textContent = normalizeText(
+              option?.label || option?.value,
+            )
+            control.appendChild(optionNode)
+          })
+          const selected = resolveSelectedOptionValue(fieldMeta, value)
+          if (
+            selected ||
+            options.some((option) => normalizeText(option?.value) === "")
+          ) {
+            control.value = selected
+          }
+          return {
+            node: control,
+            controls: [control],
+            readValue() {
+              return normalizeText(control.value)
+            },
+          }
+        }
+        const control = document.createElement(
+          controlType === "textarea" ? "textarea" : "input",
+        )
+        control.id = inputId
+        control.setAttribute("data-field-key", fieldMeta.key)
+        control.disabled = locked
+        control.required = fieldMeta.required === true
+        if (fieldMeta.placeholder && controlType !== "date")
+          control.placeholder = normalizeText(fieldMeta.placeholder)
+        if (fieldMeta.autocomplete)
+          control.autocomplete = normalizeText(fieldMeta.autocomplete)
+        if (controlType === "number" && control instanceof HTMLInputElement) {
+          const initialValue = normalizeText(value)
+          control.type = "text"
+          control.inputMode = "numeric"
+          control.pattern = "^\\d*$"
+          control.autocomplete = "off"
+          control.value = normalizeFieldInput(initialValue, fieldMeta)
+        }
+        if (controlType === "date" && control instanceof HTMLInputElement) {
+          const dateShell = document.createElement("div")
+          dateShell.style.position = "relative"
+          dateShell.style.display = "grid"
+          dateShell.style.gap = "8px"
+
+          control.type = "text"
+          control.placeholder = "nn/tt/nnnn"
+          control.inputMode = "numeric"
+          control.autocomplete = fieldMeta.key === "dobText" ? "bday" : "off"
+          control.value = formatDateInputDisplayValue(value)
+
+          const picker = document.createElement("input")
+          picker.id = `${inputId}_picker`
+          picker.type = "date"
+          picker.disabled = locked
+          picker.required = fieldMeta.required === true
+          picker.value = normalizeDateInputValue(value)
+          picker.tabIndex = -1
+          picker.setAttribute("aria-hidden", "true")
+          picker.style.position = "absolute"
+          picker.style.inset = "0 auto auto 0"
+          picker.style.width = "1px"
+          picker.style.height = "1px"
+          picker.style.margin = "0"
+          picker.style.padding = "0"
+          picker.style.border = "0"
+          picker.style.opacity = "0"
+          picker.style.pointerEvents = "none"
+
+          const syncPickerFromText = () => {
+            picker.value = normalizeDateInputValue(control.value)
+          }
+          const syncTextFromPicker = () => {
+            control.value = formatDateInputDisplayValue(picker.value)
+          }
+
+          control.addEventListener("input", syncPickerFromText)
+          control.addEventListener("change", () => {
+            syncPickerFromText()
+            control.value = formatDateInputDisplayValue(control.value)
+          })
+          control.addEventListener("blur", () => {
+            syncPickerFromText()
+            control.value = formatDateInputDisplayValue(control.value)
+          })
+          control.addEventListener("click", () => {
+            if (typeof picker.showPicker === "function") {
+              try {
+                picker.showPicker()
+              } catch (error) {
+                void error
+              }
+            }
+          })
+          control.addEventListener("focus", () => {
+            if (typeof picker.showPicker === "function") {
+              try {
+                picker.showPicker()
+              } catch (error) {
+                void error
+              }
+            }
+          })
+          picker.addEventListener("input", syncTextFromPicker)
+          picker.addEventListener("change", syncTextFromPicker)
+          dateShell.appendChild(control)
+          dateShell.appendChild(picker)
+          return {
+            node: dateShell,
+            controls: [control, picker],
+            readValue() {
+              return normalizeDateInputValue(picker.value || control.value)
+            },
+          }
+        }
+        if (control instanceof HTMLInputElement) {
+          const initialValue = normalizeText(value)
+          const normalizedDateValue =
+            controlType === "date" ?
+              normalizeDateInputValue(initialValue)
+            : initialValue
+          if (
+            controlType === "date" &&
+            normalizedDateValue &&
+            !/^\d{4}-\d{2}-\d{2}$/.test(normalizedDateValue)
+          ) {
+            control.type = "text"
+            control.pattern = "^\\d{4}-\\d{2}-\\d{2}$"
+          } else {
+            control.type =
+              controlType === "date" ? "date"
+              : controlType === "number" ? "text"
+              : controlType === "email" ? "email"
+              : controlType === "tel" ? "text"
+              : "text"
+          }
+          if (controlType === "number") {
+            control.inputMode = "numeric"
+            control.pattern = "^\\d*$"
+            control.autocomplete = "off"
+          } else if (controlType === "tel") {
+            control.inputMode = "numeric"
+            control.pattern = "^[0-9+()\\-\\s]{7,20}$"
+            control.autocomplete = "tel"
+          }
+          control.value = normalizedDateValue
+        } else {
+          control.value = normalizeText(value)
+        }
+        return {
+          node: control,
+          controls: [control],
+          readValue() {
+            return normalizeText(control.value)
+          },
+        }
+      }
+
+      function setFieldEditedState(row, stateText, edited, locked) {
+        row.classList.toggle("edited", edited)
+        if (locked) {
+          stateText.textContent = "Đã khóa"
+          return
+        }
+        stateText.textContent = edited ? "Đã chỉnh sửa (chưa lưu)" : ""
+      }
+
+      function registerFieldInput(
+        binding,
+        row,
+        stateText,
+        fieldMeta,
+        originalValue,
+      ) {
+        const handler = () => {
+          const fieldKey = normalizeText(fieldMeta?.key)
+          if (
+            !fieldKey ||
+            state.lockedFields.has(fieldKey) ||
+            state.immutableFields.has(fieldKey)
+          )
+            return
+          const normalized = normalizeFieldInput(binding.readValue(), fieldMeta)
+          const changed = !valuesEqual(originalValue, normalized)
+          if (changed) {
+            state.patch[fieldKey] = normalized
+          } else {
+            delete state.patch[fieldKey]
+          }
+          setFieldEditedState(row, stateText, changed, false)
+          updateDraftBadge()
+        }
+        const controlType = normalizeText(fieldMeta?.control).toLowerCase()
+        const eventName =
+          (
+            controlType === "checkbox" ||
+            controlType === "radio" ||
+            controlType === "select"
+          ) ?
+            "change"
+          : "input"
+        const controls = Array.isArray(binding.controls) ? binding.controls : []
+        controls.forEach((control) => {
+          if (!control || typeof control.addEventListener !== "function") return
+          control.addEventListener(eventName, handler)
+          if (eventName !== "change")
+            control.addEventListener("change", handler)
+        })
+      }
+
+      function renderProfileFields() {
+        const root = document.getElementById("profileFields")
+        root.innerHTML = ""
+        if (!normalizeText(state.selectedEaglesId)) {
+          root.innerHTML =
+            '<p class="hint">Chưa có học sinh liên kết để cập nhật hồ sơ.</p>'
+          updateDraftBadge()
+          return
+        }
+        PROFILE_REFERENCE_SECTIONS.forEach((section) => {
+          const wrapper = document.createElement("section")
+          wrapper.className = "profile-group"
+          const heading = document.createElement("h4")
+          heading.textContent = normalizeText(section.title)
+          wrapper.appendChild(heading)
+          const sub = document.createElement("p")
+          sub.textContent = normalizeText(section.hint)
+          wrapper.appendChild(sub)
+          section.fields.forEach((field) => {
+            const fieldMeta = resolveProfileFieldMeta(field?.key)
+            if (!fieldMeta?.key) return
+            if (PROFILE_SYSTEM_FIELDS.has(fieldMeta.key)) return
+            const key = fieldMeta.key
+            const value = resolveProfileFieldValue(fieldMeta)
+            const locked =
+              state.lockedFields.has(key) || state.immutableFields.has(key)
+            const row = document.createElement("article")
+            row.className = "field-row"
+            if (locked) row.classList.add("locked")
+            if (key === "signatureFullName")
+              row.classList.add("signature-muted")
+            const header = document.createElement("div")
+            header.className = "field-header"
+            const labelBlock = document.createElement("div")
+            const label = document.createElement("label")
+            label.className = "field-label"
+            label.setAttribute("for", `pf_${sanitizeFieldId(key)}`)
+            applyFieldLabelText(
+              label,
+              fieldMeta.label,
+              fieldMeta.required === true,
+            )
+            labelBlock.appendChild(label)
+            const stateText = document.createElement("p")
+            stateText.className = "field-state"
+            header.appendChild(labelBlock)
+            header.appendChild(stateText)
+            const binding = createProfileInput(fieldMeta, value, locked)
+            const hasPatch = Object.prototype.hasOwnProperty.call(
+              state.patch,
+              key,
+            )
+            setFieldEditedState(row, stateText, hasPatch, locked)
+            if (!locked)
+              registerFieldInput(binding, row, stateText, fieldMeta, value)
+            row.appendChild(header)
+            row.appendChild(binding.node)
+            wrapper.appendChild(row)
+          })
+          root.appendChild(wrapper)
+        })
+        const metadataRows = PROFILE_READONLY_METADATA_FIELDS.map((meta) => ({
+          ...meta,
+          value: resolveReadOnlyMetadataValue(meta.key),
+        })).filter((meta) => Boolean(meta.value))
+        if (metadataRows.length) {
+          const wrapper = document.createElement("section")
+          wrapper.className = "profile-group"
+          const heading = document.createElement("h4")
+          heading.textContent = "Thông tin tài khoản (chỉ xem)"
+          wrapper.appendChild(heading)
+          const sub = document.createElement("p")
+          sub.textContent = "Tự động đồng bộ từ hồ sơ hệ thống."
+          wrapper.appendChild(sub)
+          metadataRows.forEach((meta) => {
+            const row = document.createElement("article")
+            row.className = "field-row locked"
+            const header = document.createElement("div")
+            header.className = "field-header"
+            const labelBlock = document.createElement("div")
+            const label = document.createElement("label")
+            label.className = "field-label"
+            label.setAttribute("for", `pf_meta_${sanitizeFieldId(meta.key)}`)
+            applyFieldLabelText(label, meta.label)
+            labelBlock.appendChild(label)
+            const stateText = document.createElement("p")
+            stateText.className = "field-state"
+            stateText.textContent = "Đã khóa"
+            header.appendChild(labelBlock)
+            header.appendChild(stateText)
+            const control = document.createElement("input")
+            control.id = `pf_meta_${sanitizeFieldId(meta.key)}`
+            control.type = "text"
+            control.value = meta.value
+            control.disabled = true
+            control.readOnly = true
+            control.setAttribute("data-field-key", meta.key)
+            row.appendChild(header)
+            row.appendChild(control)
+            wrapper.appendChild(row)
+          })
+          root.appendChild(wrapper)
+        }
+        updateDraftBadge()
+      }
+
+      function parseNumber(value) {
+        const num = Number(value)
+        return Number.isFinite(num) ? num : 0
+      }
+
+      function formatPercent(value) {
+        const rounded = Math.round(parseNumber(value) * 10) / 10
+        if (Number.isInteger(rounded)) return `${String(rounded)}%`
+        return `${rounded.toFixed(1)}%`
+      }
+
+      function formatScoreOutOfTen(value) {
+        return `${(parseNumber(value) / 10).toFixed(1)}/10`
+      }
+
+      function portalDateParts(value = "") {
+        const raw = value
+        const text = raw instanceof Date ? "" : normalizeText(raw)
+        if (!text && !(raw instanceof Date)) return null
+        const date =
+          raw instanceof Date ? new Date(raw.getTime())
+          : /^\d{4}-\d{2}-\d{2}$/.test(text) ?
+            new Date(`${text}T00:00:00+07:00`)
+          : parsePortalDateTimeValue(text)
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null
+        const parts = new Intl.DateTimeFormat("vi-VN", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          timeZone: PORTAL_TIME_ZONE,
+        }).formatToParts(date)
+        const pick = (type) =>
+          parts.find((part) => part.type === type)?.value || ""
+        const year = Number.parseInt(pick("year"), 10)
+        const month = Number.parseInt(pick("month"), 10)
+        const day = Number.parseInt(pick("day"), 10)
+        if (
+          !Number.isFinite(year) ||
+          !Number.isFinite(month) ||
+          !Number.isFinite(day)
+        ) {
+          return null
+        }
+        return { year, month, day }
+      }
+
+      function parsePortalDateTimeValue(value) {
+        if (value instanceof Date) return new Date(value.getTime())
+        const raw = normalizeText(value)
+        if (!raw) return null
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(`${raw}T00:00:00+07:00`)
+        const normalized = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(raw)
+          ? `${raw}+07:00`
+          : raw
+        const parsed = new Date(normalized)
+        return Number.isNaN(parsed.getTime()) ? null : parsed
+      }
+
+      function portalQuarterForMonth(month = 0) {
+        if (month >= 8 && month <= 10) return 1
+        if (month >= 11) return 2
+        if (month >= 2 && month <= 4) return 3
+        return 4
+      }
+
+      function quarterLabelFromParts(parts = null) {
+        if (!parts || typeof parts !== "object") return ""
+        const quarter = portalQuarterForMonth(Number(parts.month) || 0)
+        const schoolYearStart =
+          quarter === 1 || quarter === 2 ?
+            Number(parts.year)
+          : Number(parts.year) - 1
+        const schoolYearEnd = schoolYearStart + 1
+        return {
+          key: `${schoolYearStart}-${schoolYearEnd}|q${quarter}`,
+          schoolYearLabel: `${schoolYearStart}-${schoolYearEnd}`,
+          quarterLabel: `Q${quarter}`,
+          displayLabel: `Q${quarter} ${schoolYearStart}-${schoolYearEnd}`,
+          sequence: schoolYearStart * 4 + quarter,
+          quarter,
+          schoolYearStart,
+        }
+      }
+
+      function quarterLabelFromDate(value = "") {
+        return quarterLabelFromParts(portalDateParts(value))
+      }
+
+      function portalIsoDateKey(value = "") {
+        const parts = portalDateParts(value)
+        if (!parts) return ""
+        const year = String(parts.year).padStart(4, "0")
+        const month = String(parts.month).padStart(2, "0")
+        const day = String(parts.day).padStart(2, "0")
+        return `${year}-${month}-${day}`
+      }
+
+      function schoolSetupQuarterForIsoDate(value = "", setup = null) {
+        const isoDate = portalIsoDateKey(value)
+        if (!isoDate) return null
+        const quarters = Array.isArray(setup?.quarters) ? setup.quarters : []
+        for (let index = 0; index < quarters.length; index += 1) {
+          const entry = quarters[index]
+          const startDate = normalizeText(entry?.startDate).slice(0, 10)
+          const endDate = normalizeText(entry?.endDate).slice(0, 10)
+          if (!startDate || !endDate) continue
+          if (startDate <= isoDate && isoDate <= endDate) return entry
+        }
+        if (
+          normalizeText(setup?.startDate).slice(0, 10) &&
+          normalizeText(setup?.endDate).slice(0, 10) &&
+          normalizeText(setup?.startDate).slice(0, 10) <= isoDate &&
+          isoDate <= normalizeText(setup?.endDate).slice(0, 10)
+        ) {
+          return quarters[quarters.length - 1] || null
+        }
+        return null
+      }
+
+      function quarterLabelFromDateWithSetup(value = "", setup = null) {
+        const configured = schoolSetupQuarterForIsoDate(value, setup)
+        if (configured) {
+          const key =
+            normalizeText(configured.quarter) ||
+            normalizeText(configured.key) ||
+            ""
+          const quarterLabel = key ? key.toUpperCase() : ""
+          const startDate = normalizeText(configured.startDate).slice(0, 10)
+          const endDate = normalizeText(configured.endDate).slice(0, 10)
+          return {
+            key: `${normalizeText(setup?.schoolYear) || normalizeText(setup?.startDate).slice(0, 10) || "school"}|${key || startDate}`,
+            schoolYearLabel: normalizeText(setup?.schoolYear) || "",
+            quarterLabel: quarterLabel || "Q",
+            displayLabel:
+              quarterLabel ?
+                `${quarterLabel} ${startDate}-${endDate}`
+              : `${startDate}-${endDate}`,
+            sequence:
+              Number.parseInt((key || "q0").replace(/\D/g, ""), 10) || 0,
+            quarter: Number.parseInt((key || "").replace(/\D/g, ""), 10) || 0,
+            startDate,
+            endDate,
+          }
+        }
+        return null
+      }
+
+      function formatQuarterDateRange(startDate = "", endDate = "") {
+        const start = normalizeText(startDate)
+        const end = normalizeText(endDate)
+        if (!start && !end) return "Date unavailable"
+        if (start === end) return formatPortalDate(start)
+        return `${formatPortalDate(start)} - ${formatPortalDate(end)}`
+      }
+
+      function gradeQuarterSortKey(left = {}, right = {}, currentKey = "") {
+        const leftCurrent =
+          normalizeText(left.quarterCode || left.key) === currentKey
+        const rightCurrent =
+          normalizeText(right.quarterCode || right.key) === currentKey
+        if (leftCurrent !== rightCurrent) return leftCurrent ? -1 : 1
+        if (left.sequence !== right.sequence)
+          return right.sequence - left.sequence
+        return normalizeText(left.displayLabel).localeCompare(
+          normalizeText(right.displayLabel),
+        )
+      }
+
+      function truncateHeaderTitle(value, maxLength = 12) {
+        const text = normalizeText(value)
+        if (!text) return ""
+        const limit =
+          Number.isFinite(maxLength) ? Math.max(4, Math.trunc(maxLength)) : 12
+        if (text.length <= limit) return text
+        return `${text.slice(0, Math.max(1, limit - 1)).trimEnd()}…`
+      }
+
+      function buildHeaderActionButtons(label = "Column") {
+        const normalizedLabel = normalizeText(label) || "Column"
+        const safeLabel = escapeHtml(normalizedLabel)
+        return (
+          `<span class="header-action-row" role="group" aria-label="${safeLabel} column controls" data-header-label="${safeLabel}">` +
+          `<button class="header-action-btn portal-button portal-button-alt" type="button" data-header-action="hide" aria-label="Hide ${safeLabel} column">Hide</button>` +
+          `</span>`
+        )
+      }
+
+      function notifyQuarterMatrixAction(message, isError = false) {
+        const text = normalizeText(message)
+        if (typeof setStatus === "function") {
+          setStatus(text, isError ? "err" : "")
+          return
+        }
+        if (typeof console !== "undefined" && console.log) {
+          console.log(text)
+        }
+      }
+
+      function resolveHeaderActionLabel(column) {
+        const headerEl = column?.getElement?.()
+        if (headerEl instanceof HTMLElement) {
+          const actionRow = headerEl.querySelector(".header-action-row")
+          const dataLabel =
+            normalizeText(actionRow?.getAttribute("data-header-label")) ||
+            normalizeText(actionRow?.getAttribute("aria-label"))
+          if (dataLabel)
+            return dataLabel.replace(/\s*column controls$/i, "") || "Column"
+          const titleNode = headerEl.querySelector(".assignment-title-text")
+          const titleText = normalizeText(titleNode?.textContent)
+          if (titleText) return titleText
+        }
+        const definition = column?.getDefinition?.() || {}
+        const fallbackTitleHtml = normalizeText(definition?.title)
+        if (fallbackTitleHtml) {
+          const temp = document.createElement("div")
+          temp.innerHTML = fallbackTitleHtml
+          const titleText = normalizeText(temp.textContent || temp.innerText)
+          if (titleText) return titleText
+        }
+        const fallbackField = normalizeText(definition?.field)
+        return fallbackField || "Column"
+      }
+
+      function toggleColumnPinnedState(column) {
+        const safeLabel = resolveHeaderActionLabel(column)
+        const definition = column?.getDefinition?.() || {}
+        const nextFrozen = !Boolean(definition?.frozen)
+        const updateResult = column?.updateDefinition?.({
+          frozen: nextFrozen,
+        })
+        const commit = () => {
+          notifyQuarterMatrixAction(
+            `${safeLabel} column ${nextFrozen ? "pinned" : "unpinned"}.`,
+          )
+        }
+        if (updateResult && typeof updateResult.then === "function") {
+          updateResult.then(commit).catch(() => {})
+          return
+        }
+        commit()
+      }
+
+      function hideColumnFromHeaderAction(column) {
+        const safeLabel = resolveHeaderActionLabel(column)
+        if (typeof column?.hide === "function") {
+          column.hide()
+          notifyQuarterMatrixAction(`${safeLabel} column hidden.`)
+        }
+      }
+
+      function resetQuarterTableColumns(table) {
+        const columns =
+          Array.isArray(table?.getColumns?.()) ? table.getColumns() : []
+        columns.forEach((column) => {
+          column?.show?.()
+          column?.updateDefinition?.({ frozen: false })
+        })
+        notifyQuarterMatrixAction("All grade columns restored.")
+      }
+
+      function handleHeaderActionClick(event, column) {
+        const eventTarget = event?.target
+        if (!(eventTarget instanceof Element)) return
+        const actionButton = eventTarget.closest("[data-header-action]")
+        if (!(actionButton instanceof HTMLButtonElement)) return
+        const action = normalizeText(
+          actionButton.getAttribute("data-header-action"),
+        ).toLowerCase()
+        if (!action) return
+        event.preventDefault()
+        event.stopPropagation()
+        if (action === "pin") {
+          toggleColumnPinnedState(column)
+          return
+        }
+        if (action === "hide") {
+          hideColumnFromHeaderAction(column)
+        }
+      }
+
+      function wireQuarterHeaderActionButtons(table) {
+        const columns =
+          Array.isArray(table?.getColumns?.()) ? table.getColumns() : []
+        columns.forEach((column) => {
+          const headerEl = column?.getElement?.()
+          if (!(headerEl instanceof HTMLElement)) return
+          headerEl
+            .querySelectorAll("[data-header-action]")
+            .forEach((button) => {
+              if (!(button instanceof HTMLButtonElement)) return
+              if (button.dataset.quarterMatrixWired === "true") return
+              button.dataset.quarterMatrixWired = "true"
+              button.addEventListener("click", (event) =>
+                handleHeaderActionClick(event, column),
+              )
+            })
+        })
+      }
+
+      function resolveQuarterInfo(value = "", schoolSetup = null) {
+        return quarterLabelFromDateWithSetup(value, schoolSetup) || null
+      }
+
+      function parseQuarterEndTimestamp(endDate = "") {
+        const endDateText = normalizeText(endDate).slice(0, 10)
+        if (!endDateText) return null
+        const parsed = new Date(`${endDateText}T23:59:59.999+07:00`)
+        return Number.isNaN(parsed.valueOf()) ? null : parsed.valueOf()
+      }
+
+      function resolveQuarterExerciseState(
+        row = {},
+        quarterGroup = {},
+        asOfMs = Date.now(),
+      ) {
+        const dueText = normalizeText(row.dueAt || row.dueDate).slice(0, 10)
+        const submittedText = normalizeText(
+          row.submittedAt || row.submittedDate,
+        ).slice(0, 10)
+        const dueAt = dueText ? parsePortalDateTimeValue(dueText) : null
+        const submittedAt = submittedText ? parsePortalDateTimeValue(submittedText) : null
+        const dueAtMs =
+          dueAt instanceof Date && !Number.isNaN(dueAt.valueOf()) ?
+            dueAt.valueOf()
+          : null
+        const submittedAtMs =
+          submittedAt instanceof Date && !Number.isNaN(submittedAt.valueOf()) ?
+            submittedAt.valueOf()
+          : null
+        const quarterEndMs = parseQuarterEndTimestamp(quarterGroup?.endDate)
+        const completed =
+          submittedAtMs !== null ?
+            quarterEndMs === null || submittedAtMs <= quarterEndMs
+          : normalizeText(row?.status).toLowerCase() === "completed" ||
+            row?.homeworkCompleted === true
+        const lateCompleted = Boolean(
+          completed &&
+          dueAtMs !== null &&
+          submittedAtMs !== null &&
+          submittedAtMs > dueAtMs,
+        )
+        const missed = Boolean(
+          !completed && dueAtMs !== null && asOfMs > dueAtMs,
+        )
+        const open = Boolean(!completed && !missed)
+        return {
+          completed,
+          dueAt,
+          dueAtMs,
+          dueLabel: dueText ? formatPortalDate(dueText) : "",
+          lateCompleted,
+          missed,
+          open,
+          quarterEndMs,
+          submittedAt,
+          submittedAtMs,
+          submittedLabel: submittedText ? formatPortalDate(submittedText) : "",
+        }
+      }
+
+      function resolveQuarterMatrixCurrentCode(
+        groups = [],
+        schoolSetup = null,
+        fallbackCode = "",
+      ) {
+        const setupQuarter = resolveQuarterInfo(new Date(), schoolSetup)
+        const setupQuarterCode =
+          setupQuarter?.quarter ? `q${setupQuarter.quarter}` : ""
+        if (setupQuarterCode) {
+          return setupQuarterCode
+        }
+        const sourceGroups = Array.isArray(groups) ? groups : []
+        const normalizedFallback = normalizeText(fallbackCode)
+        if (
+          normalizedFallback &&
+          sourceGroups.some(
+            (group) => normalizeText(group.quarterCode) === normalizedFallback,
+          )
+        ) {
+          return normalizedFallback
+        }
+        for (let index = sourceGroups.length - 1; index >= 0; index -= 1) {
+          const group = sourceGroups[index]
+          if (Array.isArray(group?.rows) && group.rows.length) {
+            return (
+              normalizeText(group.quarterCode) ||
+              `q${Number(group.quarterNumber) || 1}`
+            )
+          }
+        }
+        return normalizeText(sourceGroups[0]?.quarterCode) || ""
+      }
+
+      function buildQuarterGradeGroups(rows = [], schoolSetup = null) {
+        const source = Array.isArray(rows) ? rows : []
+        const schoolSetupState = normalizeText(schoolSetup?.schoolSetupState)
+        if (schoolSetupState && schoolSetupState !== "ok") {
+          return {
+            currentQuarter: null,
+            currentQuarterCode: "",
+            groups: [],
+            quarterBoardState: "maintenance",
+            maintenance: {
+              title: "Quarter grades are temporarily unavailable",
+              lead: "Quarter setup is incomplete or invalid.",
+              note: "Open School Setup and save four explicit quarters before reloading the matrix.",
+            },
+          }
+        }
+        const groups = new Map()
+        let latestRowTimestamp = -Infinity
+        let latestQuarterCode = ""
+        let hasClassificationIssues = false
+        source.forEach((row) => {
+          const rowDateValue =
+            row?.submittedDate || row?.submittedAt || row?.dueDate || row?.dueAt
+          const rowDate =
+            rowDateValue instanceof Date ?
+              rowDateValue.toISOString()
+            : normalizeText(rowDateValue)
+          const resolvedQuarter = resolveQuarterInfo(rowDate, schoolSetup)
+          const explicitQuarter = normalizeText(
+            row?.quarter || row?.quarterCode || row?.quarterLabel,
+          ).toLowerCase()
+          const quarter =
+            resolvedQuarter ||
+            (/^q[1-4]$/.test(explicitQuarter) ?
+              {
+                quarter: Number.parseInt(explicitQuarter.slice(1), 10) || 0,
+                key: explicitQuarter,
+                quarterLabel: explicitQuarter.toUpperCase(),
+                displayLabel: explicitQuarter.toUpperCase(),
+                startDate: "",
+                endDate: "",
+              }
+            : null)
+          if (!quarter?.quarter) {
+            hasClassificationIssues = true
+            return
+          }
+          const quarterNumber = Number(quarter.quarter) || 0
+          if (!quarterNumber) {
+            hasClassificationIssues = true
+            return
+          }
+          const quarterCode = `q${quarterNumber}`
+          if (!groups.has(quarterCode)) {
+            groups.set(quarterCode, {
+              ...quarter,
+              quarterCode,
+              quarterNumber,
+              rows: [],
+            })
+          }
+          const scoreValue = Number(row?.scorePercent)
+          const rowState = resolveQuarterExerciseState(row, quarter, Date.now())
+          const normalizedRow = {
+            ...row,
+            quarterKey: quarter.key,
+            quarterCode,
+            quarterNumber,
+            quarterLabel: quarter.displayLabel,
+            scorePercent: Number.isFinite(scoreValue) ? scoreValue : 0,
+            scoreOutOfTen: Number.isFinite(scoreValue) ? scoreValue / 10 : 0,
+            completed: rowState.completed,
+            lateCompleted: rowState.lateCompleted,
+            missed: rowState.missed,
+            open: rowState.open,
+            rowDate,
+            dueLabel: rowState.dueLabel,
+            submittedLabel: rowState.submittedLabel,
+          }
+          const rowTimestamp = new Date(rowDate).getTime()
+          if (
+            Number.isFinite(rowTimestamp) &&
+            rowTimestamp >= latestRowTimestamp
+          ) {
+            latestRowTimestamp = rowTimestamp
+            latestQuarterCode = quarterCode
+          }
+          groups.get(quarterCode).rows.push(normalizedRow)
+        })
+        if (hasClassificationIssues) {
+          return {
+            currentQuarter: null,
+            currentQuarterCode: "",
+            groups: [],
+            quarterBoardState: "maintenance",
+            maintenance: {
+              title: "Quarter grades are temporarily unavailable",
+              lead: "One or more grade rows could not be classified into a school quarter.",
+              note: "Open School Setup and restore the missing quarter mapping before reloading this page.",
+            },
+          }
+        }
+        const currentQuarterCode = resolveQuarterMatrixCurrentCode(
+          Array.from(groups.values()),
+          schoolSetup,
+          latestQuarterCode,
+        )
+        const currentQuarter =
+          groups.get(currentQuarterCode) ||
+          Array.from(groups.values())[0] ||
+          null
+        const ordered = [1, 2, 3, 4].map((quarterNumber) => {
+          const quarterCode = `q${quarterNumber}`
+          const fallbackQuarter =
+            quarterNumber === Number(currentQuarter?.quarter) ? currentQuarter
+            : null
+          const group = groups.get(quarterCode) ||
+            fallbackQuarter || {
+              quarter: quarterNumber,
+              quarterCode,
+              quarterNumber,
+              quarterLabel: `Q${quarterNumber}`,
+              displayLabel: `Q${quarterNumber}`,
+              startDate: "",
+              endDate: "",
+              rows: [],
+            }
+          const rowsForGroup = Array.isArray(group.rows) ? group.rows : []
+          const total = rowsForGroup.length
+          const completedCount = rowsForGroup.filter(
+            (row) => row.completed,
+          ).length
+          const uncompletedCount = Math.max(0, total - completedCount)
+          const scoreTotal = rowsForGroup.reduce(
+            (sum, row) => sum + Number(row.scorePercent || 0),
+            0,
+          )
+          const meanPercent = total > 0 ? scoreTotal / total : 0
+          const completionRate = total > 0 ? (completedCount / total) * 100 : 0
+          return {
+            ...group,
+            quarter: quarterNumber,
+            quarterCode,
+            quarterNumber,
+            quarterLabel:
+              normalizeText(group.quarterLabel) || `Q${quarterNumber}`,
+            displayLabel:
+              normalizeText(group.displayLabel) || `Q${quarterNumber}`,
+            rows: rowsForGroup.slice().sort((left, right) => {
+              const leftDate = normalizeText(
+                left.rowDate || left.dueDate || left.submittedDate,
+              )
+              const rightDate = normalizeText(
+                right.rowDate || right.dueDate || right.submittedDate,
+              )
+              if (leftDate !== rightDate)
+                return rightDate.localeCompare(leftDate)
+              return normalizeText(left.assignmentName).localeCompare(
+                normalizeText(right.assignmentName),
+              )
+            }),
+            total,
+            completedCount,
+            uncompletedCount,
+            meanPercent,
+            meanScoreOutOfTen: meanPercent / 10,
+            completionRate,
+          }
+        })
+        const activeQuarter =
+          ordered.find(
+            (group) => normalizeText(group.quarterCode) === currentQuarterCode,
+          ) ||
+          ordered.find(
+            (group) => Array.isArray(group.rows) && group.rows.length,
+          ) ||
+          ordered[0] ||
+          null
+        return {
+          currentQuarter:
+            activeQuarter ?
+              {
+                ...activeQuarter,
+                quarterCode: currentQuarterCode,
+              }
+            : null,
+          currentQuarterCode,
+          groups: ordered,
+          quarterBoardState: "ok",
+        }
+      }
+
+      function buildQuarterExerciseTableRows(
+        quarterGroup = {},
+        currentQuarterCode = "",
+      ) {
+        const rows = Array.isArray(quarterGroup.rows) ? quarterGroup.rows : []
+        const activeQuarterCode = normalizeText(
+          quarterGroup.quarterCode || currentQuarterCode,
+        )
+        const nowMs = Date.now()
+        return rows.map((row, index) => {
+          const rowDate =
+            row.submittedAt || row.submittedDate || row.dueAt || row.dueDate
+          const scorePercent = Number(row.scorePercent)
+          const rowState = resolveQuarterExerciseState(row, quarterGroup, nowMs)
+          const exerciseStateLabel =
+            rowState.missed ? "Incomplete"
+            : rowState.lateCompleted ? "Completed"
+            : rowState.completed ? "Completed"
+            : "Open"
+          const originLabel =
+            normalizeText(row.sourceOriginLabel) ||
+            normalizeText(row.sourceSystem) ||
+            "Origin pending"
+          const originHost = normalizeText(row.sourceOriginHost)
+          return {
+            id: normalizeText(row.id) || `${activeQuarterCode}-${index}`,
+            rowOrder: index,
+            current: activeQuarterCode === currentQuarterCode,
+            completed: rowState.completed,
+            lateCompleted: rowState.lateCompleted,
+            missed: rowState.missed,
+            open: rowState.open,
+            exerciseLabel: normalizeText(row.assignmentName) || "Exercise",
+            exerciseMeta: [
+              exerciseStateLabel,
+              rowState.lateCompleted ? "Late submission" : (
+                formatPortalDate(rowDate)
+              ),
+            ]
+              .filter(Boolean)
+              .join(" | "),
+            originLabel,
+            originHost,
+            dateLabel: rowState.dueLabel || formatPortalDate(rowDate),
+            dueLabel: rowState.dueLabel,
+            submittedLabel: rowState.submittedLabel,
+            statusLabel:
+              rowState.open ? "Open"
+              : rowState.missed ? "Incomplete"
+              : "Completed",
+            statusTone:
+              rowState.open ? "warn"
+              : rowState.missed ? "bad"
+              : "good",
+            scorePercent: Number.isFinite(scorePercent) ? scorePercent : 0,
+            scoreOutOfTen:
+              Number.isFinite(scorePercent) ? scorePercent / 10 : 0,
+            commentLabel:
+              normalizeText(row.comments) || "No grading comment was recorded.",
+          }
+        })
+      }
+
+      function hasCompleteQuarterSetup(schoolSetup = null) {
+        const schoolSetupState = normalizeText(schoolSetup?.schoolSetupState)
+        if (schoolSetupState) return schoolSetupState === "ok"
+        const quarters =
+          Array.isArray(schoolSetup?.quarters) ? schoolSetup.quarters : []
+        if (quarters.length < 4) return false
+        return quarters.every(
+          (quarter) =>
+            quarter &&
+            normalizeText(quarter.quarter) &&
+            normalizeText(quarter.startDate).slice(0, 10) &&
+            normalizeText(quarter.endDate).slice(0, 10),
+        )
+      }
+
+      function renderQuarterBoardMaintenance(target, maintenance = {}) {
+        if (!target) return
+        target.innerHTML = ""
+        const board = document.createElement("div")
+        board.className = "quarter-board-shell"
+        const card = document.createElement("section")
+        card.className = "quarter-board-card quarter-board-maintenance-card"
+        const wrap = document.createElement("div")
+        wrap.className = "quarter-board-maintenance"
+        const copy = document.createElement("div")
+        copy.className = "quarter-board-maintenance-copy"
+        const title = document.createElement("h4")
+        title.className = "quarter-board-maintenance-title"
+        title.textContent =
+          maintenance.title || "Quarter grades are temporarily unavailable"
+        const figure = document.createElement("div")
+        figure.className = "quarter-board-maintenance-figure"
+        const image = document.createElement("img")
+        image.src = "/web-asset/shared/maintenance.svg"
+        image.loading = "lazy"
+        image.decoding = "async"
+        image.alt = ""
+        image.setAttribute("aria-hidden", "true")
+        figure.append(image)
+        const lead = document.createElement("p")
+        lead.className = "quarter-board-maintenance-lead"
+        lead.textContent = maintenance.lead || "Please check back soon."
+        const note = document.createElement("p")
+        note.className = "quarter-board-maintenance-note"
+        note.textContent =
+          maintenance.note ||
+          "Apologies for the inconvenience while quarter dates are restored."
+        copy.append(lead, note)
+        wrap.append(title, figure, copy)
+        card.append(wrap)
+        board.append(card)
+        target.append(board)
+      }
+
+      function buildQuarterHeaderCard(title, topSubline, bottomSubline) {
+        const normalizedTitle = normalizeText(title) || "Quarter"
+        const normalizedTopSubline = normalizeText(topSubline) || "-"
+        const normalizedBottomSubline = normalizeText(bottomSubline)
+        return (
+          `<span class="assignment-head core">` +
+          `${buildHeaderActionButtons(normalizedTitle)}` +
+          `<span class="assignment-title-text">${escapeHtml(truncateHeaderTitle(normalizedTitle))}</span>` +
+          `<span class="assignment-sub core-sub">${escapeHtml(normalizedTopSubline)}</span>` +
+          (normalizedBottomSubline ?
+            `<span class="assignment-sub core-sub">${escapeHtml(normalizedBottomSubline)}</span>`
+          : "") +
+          `</span>`
+        )
+      }
+
+      function buildQuarterStatBadge(label, value) {
+        const card = document.createElement("div")
+        card.className =
+          "metric portal-theme-card metric-blue grade-quarter-stat"
+        const key = document.createElement("span")
+        key.className = "k grade-quarter-stat-label"
+        key.textContent = normalizeText(label)
+        const metricValue = document.createElement("span")
+        metricValue.className = "v grade-quarter-stat-value"
+        metricValue.textContent = normalizeText(value)
+        card.append(key, metricValue)
+        return card
+      }
+
+      function renderQuarterGradeBoard(target, quarterState = {}) {
+        if (!target) return
+        if (normalizeText(quarterState.quarterBoardState) === "maintenance") {
+          state.detailGradeTable?.destroy?.()
+          state.detailGradeTable = null
+          renderQuarterBoardMaintenance(
+            target,
+            quarterState.maintenance || {
+              title: "Quarter grades are temporarily unavailable",
+              lead: "Quarter setup is incomplete or invalid.",
+              note: "Open School Setup and save four explicit quarters before reloading the matrix.",
+            },
+          )
+          return
+        }
+        const groups =
+          Array.isArray(quarterState.groups) ? quarterState.groups : []
+        target.innerHTML = ""
+        state.detailGradeTable?.destroy?.()
+        state.detailGradeTable = null
+        if (!groups.length) {
+          const empty = document.createElement("div")
+          empty.className = "detail-empty"
+          empty.textContent = "No grade records are available yet."
+          target.append(empty)
+          return
+        }
+        if (typeof window.Tabulator !== "function") {
+          target.innerHTML = "<div class='detail-empty'>Đang tải bảng điểm học kỳ...</div>"
+          loadTabulatorAssets().then(() => {
+            renderQuarterGradeBoard(target, quarterState)
+          }).catch((error) => {
+            target.innerHTML = `<div class='detail-empty'>${escapeHtml(error.message || "Quarter grade table assets could not be loaded.")}</div>`
+          })
+          return
+        }
+        const shell = document.createElement("div")
+        shell.className = "quarter-board-shell"
+        const card = document.createElement("section")
+        card.className = "quarter-board-card"
+        const head = document.createElement("div")
+        head.className = "quarter-board-head"
+        const copy = document.createElement("div")
+        copy.className = "quarter-board-copy"
+        const title = document.createElement("h4")
+        title.className = "quarter-board-title"
+        title.textContent = "Grades YTD"
+        const meta = document.createElement("p")
+        meta.className = "quarter-board-meta"
+        copy.append(title, meta)
+        const resetColumnsButton = document.createElement("button")
+        resetColumnsButton.type = "button"
+        resetColumnsButton.className =
+          "quarter-board-reset-columns portal-button portal-button-teal-refresh"
+        resetColumnsButton.textContent = "Reset columns"
+        resetColumnsButton.setAttribute("aria-label", "Show all grade columns")
+        resetColumnsButton.addEventListener("click", () =>
+          resetQuarterTableColumns(state.detailGradeTable),
+        )
+        const actions = document.createElement("div")
+        actions.className = "quarter-board-actions"
+        const picker = document.createElement("div")
+        picker.className = "grade-quarter-picker"
+        const summary = document.createElement("div")
+        summary.className = "grade-quarter-picked-summary grade-quarter-stats"
+        const tableHost = document.createElement("div")
+        tableHost.className = "grade-tabulator-shell"
+        const quarterButtons = new Map()
+        let activeQuarterCode =
+          normalizeText(quarterState.currentQuarter?.quarterCode) ||
+          normalizeText(quarterState.currentQuarterCode) ||
+          ""
+        if (!activeQuarterCode) {
+          activeQuarterCode = normalizeText(groups[0]?.quarterCode) || ""
+        }
+
+        function resolveGroup(code = activeQuarterCode) {
+          const normalizedCode = normalizeText(code) || activeQuarterCode
+          return (
+            groups.find(
+              (group) => normalizeText(group.quarterCode) === normalizedCode,
+            ) ||
+            groups[0] ||
+            null
+          )
+        }
+
+        function paintQuarter(code = activeQuarterCode) {
+          const group = resolveGroup(code)
+          if (!group) return
+          activeQuarterCode =
+            normalizeText(group.quarterCode) || activeQuarterCode
+          card.classList.toggle(
+            "is-current",
+            group.quarterCode === quarterState.currentQuarterCode,
+          )
+          quarterButtons.forEach((button, quarterCode) => {
+            const isActive = quarterCode === activeQuarterCode
+            button.classList.toggle("is-active", isActive)
+            button.classList.toggle(
+              "is-current",
+              quarterCode === quarterState.currentQuarterCode,
+            )
+            button.setAttribute("aria-pressed", isActive ? "true" : "false")
+          })
+          meta.replaceChildren()
+          const quarterChip = document.createElement("span")
+          quarterChip.className =
+            "quarter-board-meta-chip quarter-board-meta-quarter"
+          quarterChip.textContent = normalizeText(group.quarterLabel) || "Q"
+          const rangeChip = document.createElement("span")
+          rangeChip.className =
+            "quarter-board-meta-chip quarter-board-meta-range"
+          rangeChip.textContent = formatQuarterDateRange(
+            group.startDate,
+            group.endDate,
+          )
+          const countChip = document.createElement("span")
+          countChip.className =
+            "quarter-board-meta-chip quarter-board-meta-count"
+          countChip.textContent = `${group.total || 0} exercise record(s)`
+          meta.append(quarterChip, rangeChip, countChip)
+          summary.replaceChildren(
+            buildQuarterStatBadge("Exercises", String(group.total || 0)),
+            buildQuarterStatBadge(
+              "Mean /10",
+              formatScoreOutOfTen(group.meanPercent),
+            ),
+            buildQuarterStatBadge(
+              "Completion",
+              `${String(group.completedCount || 0)}/${String(group.total || 0)} (${formatPercent(group.completionRate)})`,
+            ),
+          )
+          state.detailGradeTable?.destroy?.()
+          state.detailGradeTable = null
+          tableHost.innerHTML = ""
+          const exerciseRows = buildQuarterExerciseTableRows(
+            group,
+            quarterState.currentQuarterCode,
+          )
+          if (!exerciseRows.length) {
+            const empty = document.createElement("div")
+            empty.className = "detail-empty"
+            empty.textContent = `No exercise records are available for ${normalizeText(group.quarterLabel) || "this quarter"} yet.`
+            tableHost.append(empty)
+            return
+          }
+          const table = document.createElement("div")
+          table.className = "grade-tabulator"
+          tableHost.append(table)
+          state.detailGradeTable = new window.Tabulator(table, {
+            data: exerciseRows,
+            layout: "fitColumns",
+            placeholder: "No exercise rows are available yet.",
+            headerSort: false,
+            reactiveData: false,
+            pagination: false,
+            height: "auto",
+            renderComplete: () =>
+              wireQuarterHeaderActionButtons(state.detailGradeTable),
+            columns: [
+              {
+                title: buildQuarterHeaderCard(
+                  "Exercise",
+                  "Name",
+                  "Quarter detail",
+                ),
+                field: "exerciseLabel",
+                cssClass: "grade-exercise-col",
+                minWidth: 186,
+                headerSort: false,
+                headerClick: handleHeaderActionClick,
+                formatter: (cell) => {
+                  const data = cell.getRow().getData() || {}
+                  const wrap = document.createElement("div")
+                  wrap.className = "grade-exercise-cell"
+                  const exerciseTitle = document.createElement("div")
+                  exerciseTitle.className = "grade-exercise-title"
+                  exerciseTitle.textContent =
+                    normalizeText(data.exerciseLabel) || "Exercise"
+                  const exerciseMeta = document.createElement("div")
+                  exerciseMeta.className = "grade-exercise-meta"
+                  exerciseMeta.textContent =
+                    normalizeText(data.exerciseMeta) ||
+                    "No exercise details were recorded."
+                  wrap.append(exerciseTitle, exerciseMeta)
+                  return wrap
+                },
+              },
+              {
+                title: buildQuarterHeaderCard(
+                  "Origin",
+                  "Exercise source",
+                  "Origin host",
+                ),
+                field: "originLabel",
+                cssClass: "grade-class-col",
+                minWidth: 128,
+                headerSort: false,
+                headerClick: handleHeaderActionClick,
+                formatter: (cell) => {
+                  const data = cell.getRow().getData() || {}
+                  const wrap = document.createElement("div")
+                  wrap.className = "grade-exercise-cell"
+                  const originLabel = document.createElement("div")
+                  originLabel.className = "grade-exercise-title"
+                  originLabel.textContent =
+                    normalizeText(data.originLabel) || "Origin pending"
+                  const originHost = document.createElement("div")
+                  originHost.className = "grade-exercise-meta"
+                  originHost.textContent =
+                    normalizeText(data.originHost) ||
+                    "Pass origin data from source"
+                  wrap.append(originLabel, originHost)
+                  return wrap
+                },
+              },
+              {
+                title: buildQuarterHeaderCard(
+                  "Date",
+                  "Due / Submitted",
+                  "Quarter timing",
+                ),
+                field: "dateLabel",
+                cssClass: "grade-date-col",
+                minWidth: 126,
+                headerSort: false,
+                headerClick: handleHeaderActionClick,
+                formatter: (cell) => {
+                  const data = cell.getRow().getData() || {}
+                  const wrap = document.createElement("div")
+                  wrap.className = "grade-exercise-cell"
+                  const dueValue = document.createElement("div")
+                  dueValue.className = "grade-exercise-title"
+                  dueValue.textContent = `Due ${normalizeText(data.dueLabel) || normalizeText(data.dateLabel) || "-"}`
+                  const submittedValue = document.createElement("div")
+                  submittedValue.className = "grade-exercise-meta"
+                  submittedValue.textContent =
+                    data.submittedLabel ?
+                      `Submitted ${normalizeText(data.submittedLabel)}`
+                    : "Submitted pending"
+                  wrap.append(dueValue, submittedValue)
+                  return wrap
+                },
+              },
+              {
+                title: buildQuarterHeaderCard(
+                  "Status",
+                  "Completion",
+                  "Current row",
+                ),
+                field: "statusLabel",
+                cssClass: "grade-status-col",
+                minWidth: 106,
+                headerSort: false,
+                headerClick: handleHeaderActionClick,
+                formatter: (cell) => {
+                  const data = cell.getRow().getData() || {}
+                  const stack = document.createElement("div")
+                  stack.className = "grade-status-stack"
+                  const pill = document.createElement("span")
+                  const tone = normalizeText(data.statusTone)
+                  pill.className = `grade-status-pill ${
+                    tone === "bad" ? "is-bad"
+                    : tone === "warn" ? "is-warn"
+                    : "is-good"
+                  }`
+                  pill.textContent = normalizeText(data.statusLabel) || "-"
+                  stack.append(pill)
+                  if (data.lateCompleted) {
+                    const latePill = document.createElement("span")
+                    latePill.className = "grade-status-pill is-late"
+                    latePill.textContent = "Late"
+                    stack.append(latePill)
+                  }
+                  return stack
+                },
+              },
+              {
+                title: buildQuarterHeaderCard("Score", "/10", "%"),
+                field: "scorePercent",
+                cssClass: "grade-score-col",
+                minWidth: 104,
+                headerSort: false,
+                headerClick: handleHeaderActionClick,
+                formatter: (cell) => {
+                  const data = cell.getRow().getData() || {}
+                  const wrap = document.createElement("div")
+                  wrap.className =
+                    `grade-exercise-score ${data.completed ? "" : "is-open"}`.trim()
+                  const scoreMain = document.createElement("span")
+                  scoreMain.className = "grade-exercise-score-main"
+                  scoreMain.textContent = formatScoreOutOfTen(
+                    data.scorePercent || 0,
+                  )
+                  const scoreSub = document.createElement("span")
+                  scoreSub.className = "grade-exercise-score-sub"
+                  scoreSub.textContent = formatPercent(data.scorePercent || 0)
+                  wrap.append(scoreMain, scoreSub)
+                  return wrap
+                },
+              },
+              {
+                title: buildQuarterHeaderCard(
+                  "Comment",
+                  "Teacher note",
+                  "Latest feedback",
+                ),
+                field: "commentLabel",
+                cssClass: "grade-comment-col",
+                minWidth: 152,
+                headerSort: false,
+                headerClick: handleHeaderActionClick,
+                formatter: (cell) => {
+                  const data = cell.getRow().getData() || {}
+                  const note = document.createElement("div")
+                  note.className = "grade-exercise-comment"
+                  note.textContent =
+                    normalizeText(data.commentLabel) ||
+                    "No grading comment was recorded."
+                  return note
+                },
+              },
+            ],
+            rowFormatter: (row) => {
+              const data = row.getData() || {}
+              const element = row.getElement()
+              if (!element) return
+              element.classList.toggle(
+                "is-current-quarter",
+                Boolean(data.current),
+              )
+              element.classList.toggle("is-open", Boolean(data.open))
+              element.classList.toggle(
+                "is-completed",
+                Boolean(data.completed && !data.lateCompleted && !data.missed),
+              )
+              element.classList.toggle("is-late", Boolean(data.lateCompleted))
+              element.classList.toggle("is-missed", Boolean(data.missed))
+            },
+          })
+          wireQuarterHeaderActionButtons(state.detailGradeTable)
+        }
+
+        groups.forEach((group) => {
+          const quarterCode =
+            normalizeText(group.quarterCode) || `q${group.quarterNumber || 1}`
+          const button = document.createElement("button")
+          button.type = "button"
+          button.className = "grade-quarter-picker-btn portal-button-info"
+          button.innerHTML =
+            `<span class="grade-quarter-picker-btn-label">${escapeHtml(normalizeText(group.quarterLabel) || quarterCode.toUpperCase())}</span>` +
+            `<span class="grade-quarter-picker-btn-sub">${escapeHtml(
+              quarterCode === quarterState.currentQuarterCode ?
+                "Current"
+              : `${group.total || 0} rows`,
+            )}</span>`
+          button.setAttribute(
+            "aria-pressed",
+            quarterCode === activeQuarterCode ? "true" : "false",
+          )
+          button.title = `${normalizeText(group.displayLabel) || normalizeText(group.quarterLabel) || quarterCode.toUpperCase()}${group.startDate || group.endDate ? ` | ${formatQuarterDateRange(group.startDate, group.endDate)}` : ""}`
+          button.addEventListener("click", () => paintQuarter(quarterCode))
+          quarterButtons.set(quarterCode, button)
+          picker.append(button)
+        })
+
+        actions.append(picker, resetColumnsButton)
+        head.append(copy, actions)
+        card.append(head, summary, tableHost)
+        shell.append(card)
+        target.append(shell)
+        paintQuarter(activeQuarterCode)
+      }
+
+      function setSquareValue(node, text, { percent = false } = {}) {
+        if (!node) return
+        const label = normalizeText(text)
+        node.classList.toggle("is-percent", Boolean(percent))
+        if (percent) {
+          const numeric = Number(label.replace(/%/g, ""))
+          node.classList.toggle(
+            "is-hundred",
+            Number.isFinite(numeric) && numeric >= 100,
+          )
+          if (/%$/.test(label)) {
+            const numberPart = label.slice(0, -1)
+            const numberNode = document.createElement("span")
+            numberNode.className = "square-number"
+            numberNode.textContent = numberPart
+            const symbolNode = document.createElement("sup")
+            symbolNode.className = "square-percent-symbol"
+            symbolNode.textContent = "%"
+            node.replaceChildren(numberNode, symbolNode)
+            return
+          }
+        } else {
+          node.classList.remove("is-hundred")
+        }
+        node.textContent = label
+      }
+
+      function metricCard(label, value, tone = "blue") {
+        const card = document.createElement("div")
+        card.className = "metric portal-theme-card"
+        if (tone) card.classList.add(`metric-${tone}`)
+        const keyNode = document.createElement("div")
+        keyNode.className = "k"
+        keyNode.textContent = normalizeText(label)
+        const valueNode = document.createElement("div")
+        valueNode.className = "v"
+        valueNode.textContent = normalizeText(value)
+        card.appendChild(keyNode)
+        card.appendChild(valueNode)
+        return card
+      }
+
+      function setSummary(id, message) {
+        const node = document.getElementById(id)
+        if (!node) return
+        node.textContent = normalizeText(message) || "Chưa có dữ liệu."
+      }
+
+      function normalizePortalLinkUrl(value) {
+        const raw = normalizeText(value)
+        if (!raw) return ""
+        if (/^\//.test(raw)) return raw
+        try {
+          const parsed = new URL(raw, window.location.origin)
+          if (parsed.protocol === "http:" || parsed.protocol === "https:")
+            return parsed.toString()
+          return ""
+        } catch (error) {
+          void error
+          return ""
+        }
+      }
+
+      function extractFirstHttpUrl(text) {
+        const match = normalizeText(text).match(/https?:\/\/[^\s<>"')]+/i)
+        return match ? match[0] : ""
+      }
+
+      function resolveHomeworkAnnouncementUrl(row = {}) {
+        const directCandidates = [
+          row?.assignmentAnnouncementUrl,
+          row?.announcementUrl,
+          row?.assignmentLink,
+          row?.exerciseUrl,
+          row?.url,
+          row?.link,
+          row?.href,
+        ]
+        for (const candidate of directCandidates) {
+          const normalized = normalizePortalLinkUrl(candidate)
+          if (normalized) return normalized
+        }
+        return normalizePortalLinkUrl(extractFirstHttpUrl(row?.comments))
+      }
+
+      function parseHomeworkDueMs(row = {}) {
+        const dueAtRaw = normalizeText(row?.dueAt)
+        if (dueAtRaw) {
+          const dueAt = parsePortalDateTimeValue(dueAtRaw)
+          if (!Number.isNaN(dueAt.getTime())) return dueAt.getTime()
+        }
+        const dueDateRaw = normalizeText(row?.dueDate)
+        if (dueDateRaw && /^\d{4}-\d{2}-\d{2}$/.test(dueDateRaw)) {
+          const dueDate = new Date(`${dueDateRaw}T00:00:00+07:00`)
+          if (!Number.isNaN(dueDate.getTime())) return dueDate.getTime()
+        }
+        return Number.MAX_SAFE_INTEGER
+      }
+
+      function sortedHomeworkRows(rows = []) {
+        return (Array.isArray(rows) ? rows : []).slice().sort((left, right) => {
+          const byDue = parseHomeworkDueMs(left) - parseHomeworkDueMs(right)
+          if (byDue !== 0) return byDue
+          return normalizeText(left?.assignmentName).localeCompare(
+            normalizeText(right?.assignmentName),
+          )
+        })
+      }
+
+      function renderOverdueHomeworkTableRows(rows = []) {
+        const target = document.getElementById("pastDueHomeworkTableBody")
+        if (!target) return
+        const list = Array.isArray(rows) ? rows : []
+        if (!list.length) {
+          target.innerHTML =
+            '<tr><td colspan="2">Không có bài tập quá hạn.</td></tr>'
+          return
+        }
+        target.innerHTML = list
+          .map((row) => {
+            const dueText = escapeHtml(
+              formatPortalDate(row?.dueAt || row?.dueDate),
+            )
+            const assignmentText = escapeHtml(
+              normalizeText(row?.assignmentName) || "Bài tập",
+            )
+            const announcementUrl = resolveHomeworkAnnouncementUrl(row)
+            const assignmentCell =
+              announcementUrl ?
+                `<a class=\"homework-link\" href=\"${escapeHtml(announcementUrl)}\" target=\"_blank\" rel=\"noopener noreferrer\">${assignmentText}</a>`
+              : `<span>${assignmentText}</span>`
+            return `<tr><td>${dueText}</td><td>${assignmentCell}</td></tr>`
+          })
+          .join("")
+      }
+
+      function syncPortalModalBodyState() {
+        const hasOpenModal =
+          state.pastDueModalOpen ||
+          state.performanceModalOpen ||
+          state.reportAccessModalOpen ||
+          state.newsWeekSetModalOpen
+        document.body.classList.toggle("modal-open", hasOpenModal)
+      }
+
+      function setPastDueHomeworkModalOpen(open) {
+        const shouldOpen = Boolean(open)
+        state.pastDueModalOpen = shouldOpen
+        const modal = document.getElementById("pastDueHomeworkModal")
+        if (!modal) return
+        modal.classList.toggle("hidden", !shouldOpen)
+        syncPortalModalBodyState()
+      }
+
+      function clearReportAccessErrorMarker() {
+        try {
+          const url = new URL(window.location.href)
+          if (!url.searchParams.has("reportAccessError")) return false
+          url.searchParams.delete("reportAccessError")
+          const nextSearch = url.searchParams.toString()
+          const nextUrl = `${url.pathname}${nextSearch ? `?${nextSearch}` : ""}${url.hash}`
+          window.history.replaceState({}, "", nextUrl)
+          return true
+        } catch (error) {
+          void error
+          return false
+        }
+      }
+
+      function resolvePortalNextTarget() {
+        const rawTarget = normalizeText(
+          new URLSearchParams(window.location.search).get("next"),
+        )
+        if (!rawTarget) return ""
+        try {
+          const resolved = new URL(rawTarget, window.location.origin)
+          if (resolved.origin !== window.location.origin) return ""
+          if (!resolved.pathname.startsWith("/parent")) return ""
+          return `${resolved.pathname}${resolved.search}${resolved.hash}`
+        } catch (error) {
+          void error
+          return ""
+        }
+      }
+
+      function setReportAccessErrorModalOpen(open) {
+        const shouldOpen = Boolean(open)
+        state.reportAccessModalOpen = shouldOpen
+        const modal = document.getElementById("reportAccessErrorModal")
+        if (!modal) return
+        modal.classList.toggle("hidden", !shouldOpen)
+        syncPortalModalBodyState()
+      }
+
+      function openReportAccessErrorModalIfNeeded() {
+        const errorCode = normalizeText(
+          new URLSearchParams(window.location.search).get("reportAccessError"),
+        )
+        if (errorCode !== "account-mismatch") return false
+        clearReportAccessErrorMarker()
+        setReportAccessErrorModalOpen(true)
+        return true
+      }
+
+      function normalizeReportSlugPart(value) {
+        const normalized = normalizeText(value).toLowerCase()
+        const slug = normalized
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "")
+        return slug || "report"
+      }
+
+      function buildReportSlugSegment(row = {}) {
+        const reportId = normalizeText(row?.id)
+        if (!reportId) return ""
+        const slug = normalizeReportSlugPart(
+          [
+            row?.fullName,
+            row?.englishName,
+            row?.studentName,
+            row?.className,
+            row?.schoolYear,
+            row?.quarter,
+          ]
+            .map((entry) => normalizeText(entry))
+            .filter(Boolean)
+            .join(" "),
+        )
+        return `${slug}-${reportId}`
+      }
+
+      function resolveReportAckStorageKey() {
+        const parentKey =
+          normalizeText(state?.me?.parentsId) ||
+          normalizeText(state?.me?.username) ||
+          "anon"
+        const childKey = normalizeText(state.selectedEaglesId) || "none"
+        return `${REPORT_ACK_STORAGE_KEY_PREFIX}:${parentKey}:${childKey}`
+      }
+
+      function readStoredReportAcknowledgements() {
+        const parsed = window.SIS_PORTAL_PREFERENCES?.get(resolveReportAckStorageKey(), {})
+        return parsed && typeof parsed === "object" ? parsed : {}
+      }
+
+      function persistReportAcknowledgements() {
+        void window.SIS_PORTAL_PREFERENCES?.save(resolveReportAckStorageKey(), state.reportAcknowledgements || {})
+      }
+
+      function resolveReportAcknowledgementEntry(reportId, role = "parent") {
+        const id = normalizeText(reportId)
+        if (!id) return null
+        const liveRow =
+          Array.isArray(state.reportArchiveRows) ?
+            state.reportArchiveRows.find(
+              (row) => normalizeText(row?.id) === id,
+            ) || null
+          : null
+        if (liveRow) {
+          const acknowledgedAt =
+            role === "student" ?
+              normalizeText(liveRow?.studentReviewedAt)
+            : normalizeText(liveRow?.parentReviewedAt)
+          const acknowledgedBy =
+            role === "student" ?
+              normalizeText(liveRow?.studentReviewedByUsername)
+            : normalizeText(liveRow?.parentReviewedByUsername)
+          if (acknowledgedAt || acknowledgedBy) {
+            return { acknowledgedAt, acknowledgedBy }
+          }
+        }
+        const entry = state.reportAcknowledgements?.[id]
+        if (!entry || typeof entry !== "object") return null
+        const scoped = entry[role]
+        if (!scoped || typeof scoped !== "object") return null
+        return {
+          acknowledgedAt: normalizeText(scoped.acknowledgedAt),
+          acknowledgedBy: normalizeText(scoped.acknowledgedBy),
+        }
+      }
+
+      function markReportAcknowledged(reportId, role = "parent") {
+        const id = normalizeText(reportId)
+        if (!id) return null
+        const acknowledgedAt = new Date().toISOString()
+        const acknowledgedBy =
+          normalizeText(state?.me?.parentsId) ||
+          normalizeText(state?.me?.username) ||
+          "Parent"
+        state.reportAcknowledgements = {
+          ...(state.reportAcknowledgements || {}),
+          [id]: {
+            ...(state.reportAcknowledgements?.[id] || {}),
+            [role]: {
+              acknowledgedAt,
+              acknowledgedBy,
+            },
+          },
+        }
+        persistReportAcknowledgements()
+        return state.reportAcknowledgements[id]
+      }
+
+      function isReportAcknowledged(row = {}, role = "parent") {
+        return Boolean(resolveReportAcknowledgementEntry(row?.id, role))
+      }
+
+      function buildParentReportViewerUrl(report = {}) {
+        const id = normalizeText(report?.id)
+        if (!id) return ""
+        const prefix = normalizeText(
+          window.__SIS_PARENT_REPORT_PAGE_PREFIX || "/parent/reports",
+        ).replace(/\/+$/, "")
+        const slugSegment = buildReportSlugSegment(report)
+        return `${prefix}/${encodeURIComponent(slugSegment || id)}`
+      }
+
+      function reportArchiveChipModel(row = {}, role = "parent") {
+        const entry = resolveReportAcknowledgementEntry(row?.id, role)
+        if (entry?.acknowledgedAt) {
+          return {
+            label: "Reviewed",
+            tone: "ok",
+            note: `Reviewed ${formatPortalWeekdayDateTime(entry.acknowledgedAt)}`,
+          }
+        }
+        return {
+          label: "New",
+          tone: "warn",
+          note: "New report. Review pending.",
+        }
+      }
+
+      function sortedReportArchiveRows(rows = []) {
+        return (Array.isArray(rows) ? rows : []).slice().sort((left, right) => {
+          const leftDate = parsePortalDateTimeValue(left?.generatedAt)
+          const rightDate = parsePortalDateTimeValue(right?.generatedAt)
+          const leftMs = leftDate instanceof Date ? leftDate.getTime() : Number.NaN
+          const rightMs = rightDate instanceof Date ? rightDate.getTime() : Number.NaN
+          const safeLeft = Number.isNaN(leftMs) ? 0 : leftMs
+          const safeRight = Number.isNaN(rightMs) ? 0 : rightMs
+          return safeRight - safeLeft
+        })
+      }
+
+      function renderAttendanceOverviewCard(child = {}) {
+        const attendance = child?.attendance || {}
+        const totalClasses = parseNumber(attendance.total)
+        const classesAttended = parseNumber(attendance.present)
+        const tardy10 =
+          parseNumber(attendance.tardy10) ||
+          parseNumber(attendance.late10) ||
+          parseNumber(attendance.lateUnder30) ||
+          parseNumber(attendance.tardyUnder30)
+        const tardy30 =
+          parseNumber(attendance.tardy30) ||
+          parseNumber(attendance.late30) ||
+          parseNumber(attendance.lateOver30) ||
+          parseNumber(attendance.tardyOver30)
+        const lateTotal = parseNumber(attendance.late) || tardy10 + tardy30
+        const attendanceRate =
+          totalClasses > 0 ? (classesAttended / totalClasses) * 100 : 0
+        const lateRate = totalClasses > 0 ? (lateTotal / totalClasses) * 100 : 0
+        renderAttendanceOverviewMetrics(child)
+        setSummary(
+          "attendanceCalendarSummary",
+          totalClasses > 0 ?
+            `Đã học ${classesAttended}/${totalClasses} lớp (${formatPercent(attendanceRate)}), trễ ${lateTotal} (${formatPercent(lateRate)}).`
+          : "Chưa có dữ liệu điểm danh.",
+        )
+      }
+
+      function renderAttendanceOverviewMetrics(child = {}) {
+        const root = document.getElementById("attendanceCalendarMetrics")
+        if (!(root instanceof HTMLElement)) return
+        const attendance = child?.attendance || {}
+        const totalClasses = parseNumber(attendance.total)
+        const classesAttended = parseNumber(attendance.present)
+        const tardy10 =
+          parseNumber(attendance.tardy10) ||
+          parseNumber(attendance.late10) ||
+          parseNumber(attendance.lateUnder30) ||
+          parseNumber(attendance.tardyUnder30)
+        const tardy30 =
+          parseNumber(attendance.tardy30) ||
+          parseNumber(attendance.late30) ||
+          parseNumber(attendance.lateOver30) ||
+          parseNumber(attendance.tardyOver30)
+        const lateTotal = parseNumber(attendance.late) || tardy10 + tardy30
+        const attendanceRate =
+          totalClasses > 0 ? (classesAttended / totalClasses) * 100 : 0
+        const lateRate = totalClasses > 0 ? (lateTotal / totalClasses) * 100 : 0
+        const attendanceTone =
+          attendanceRate >= 95 ? "is-good"
+          : attendanceRate >= 90 ? "is-warn"
+          : "is-risk"
+        const lateTone =
+          lateRate <= 5 ? "is-good"
+          : lateRate <= 10 ? "is-warn"
+          : "is-risk"
+        root.replaceChildren(
+          createAttendanceSquareMetric({
+            label: "Lớp đã học",
+            value: String(classesAttended),
+            toneClass: "is-good",
+          }),
+          createAttendanceSquareMetric({
+            label: "Tổng số lớp",
+            value: String(totalClasses),
+          }),
+          createAttendanceSquareMetric({
+            label: "Chuyên cần",
+            value: formatPercent(attendanceRate),
+            percent: true,
+            toneClass: attendanceTone,
+          }),
+          createAttendanceSquareMetric({
+            label: "Đi trễ 10'",
+            value: String(tardy10),
+          }),
+          createAttendanceSquareMetric({
+            label: "Đi trễ 30'",
+            value: String(tardy30),
+          }),
+          createAttendanceSquareMetric({
+            label: "% đi trễ",
+            value: formatPercent(lateRate),
+            percent: true,
+            toneClass: lateTone,
+          }),
+        )
+        const attendedNode = document.getElementById(
+          "attendanceClassesAttendedValue",
+        )
+        const totalNode = document.getElementById("attendanceClassesTotalValue")
+        const rateNode = document.getElementById("attendanceRateValue")
+        const tardy10Node = document.getElementById(
+          "attendanceLateTardy10Value",
+        )
+        const tardy30Node = document.getElementById(
+          "attendanceLateTardy30Value",
+        )
+        const lateRateNode = document.getElementById("attendanceLateRateValue")
+        if (attendedNode) attendedNode.textContent = String(classesAttended)
+        if (totalNode) totalNode.textContent = String(totalClasses)
+        if (rateNode) rateNode.textContent = formatPercent(attendanceRate)
+        if (tardy10Node) tardy10Node.textContent = String(tardy10)
+        if (tardy30Node) tardy30Node.textContent = String(tardy30)
+        if (lateRateNode) lateRateNode.textContent = formatPercent(lateRate)
+      }
+
+      function renderPerformanceReportsOverviewCard(child = {}) {
+        const root = document.getElementById("performanceReportsList")
+        if (!root) return
+        state.reportArchiveRows = sortedReportArchiveRows(
+          child?.details?.reportArchive || [],
+        )
+        if (!state.reportArchiveRows.length) {
+          root.innerHTML =
+            '<div class="detail-empty">Chưa có báo cáo kết quả học tập.</div>'
+          return
+        }
+        root.replaceChildren()
+        state.reportArchiveRows.forEach((row, index) => {
+          const reportLabel = `${normalizeText(row?.className) || "Lớp học"} | ${normalizeText(row?.quarter).toUpperCase() || "Kỳ học"}`
+          const statusChip = reportArchiveChipModel(row, "parent")
+          const article = document.createElement("article")
+          article.className =
+            statusChip.label === "Reviewed" ?
+              "report-archive-item"
+            : "report-archive-item is-outstanding"
+          article.setAttribute("data-report-id", normalizeText(row?.id))
+          const link = document.createElement("a")
+          link.className = "report-archive-link"
+          link.href = buildParentReportViewerUrl(row)
+          link.dataset.reportIndex = String(index)
+          link.textContent = reportLabel
+          link.addEventListener("click", (event) => {
+            event.preventDefault()
+            setPerformanceReportModalOpen(true, index)
+          })
+          const meta = document.createElement("span")
+          meta.className = "report-archive-meta"
+          meta.textContent = formatPortalDateTime(
+            row?.generatedAt || row?.generatedDate,
+          )
+          const status = document.createElement("span")
+          status.className = "report-archive-status"
+          status.textContent = statusChip.note
+          const chip = document.createElement("span")
+          chip.className = `chip ${chipClassForTone(statusChip.tone)}`
+          chip.textContent = statusChip.label
+          article.append(link, meta, chip, status)
+          root.appendChild(article)
+        })
+      }
+
+      function formatMetricPercent(value) {
+        const numeric = Number(value)
+        if (!Number.isFinite(numeric)) return null
+        return `${formatPercent(numeric)}`
+      }
+      const REPORT_RUBRIC_FIELD_LABELS = new Map([
+        [
+          "internationalNews",
+          "Leverages computer/phone daily to read international news (for Flyers and above only).",
+        ],
+        [
+          "readingEnglishEnjoyment",
+          "Leverages computer/phone to read for enjoyment in English (for Flyers and above only).",
+        ],
+        [
+          "vocabularyLookup",
+          "Leverages computer/phone to look up, translate, and hear new vocabulary (for Flyers and above only).",
+        ],
+        ["noteTaking", "Writes notes independently."],
+        ["questions", "Asks questions in real-time whenever needed."],
+        [
+          "studyOutsideClass",
+          "Consistently studies class notes outside of class.",
+        ],
+        ["reviewBeforeClass", "Reviews notes before attending class."],
+        [
+          "memoryRecall",
+          "Demonstrates age-appropriate memory recall by remembering to study lessons, complete homework, and ask questions well.",
+        ],
+        [
+          "notebookUsage",
+          "Knows and uses Eagles Club Notebook extensive grammar references, word lists, and speaking practice drills.",
+        ],
+        [
+          "phonics",
+          "Uses English phonics, vowel sound spelling patterns, and syllabication well.",
+        ],
+        [
+          "englishContentExposure",
+          "Reads, listens to, and watches English content regularly.",
+        ],
+        ["logic", "Demonstrates logical thinking abilities."],
+        [
+          "listening",
+          "Does not talk to others during lessons; listens while others speak.",
+        ],
+        ["emotion", "Has age-appropriate control of emotions."],
+        [
+          "cooperation",
+          "Always cheerfully follows in-class teacher instructions; cooperative.",
+        ],
+        ["maturity", "Displays age-appropriate maturity."],
+        [
+          "focus",
+          "Can easily concentrate, follow along, and stay on task during class.",
+        ],
+        [
+          "respect",
+          "Respects classroom, desks, computers, and TV in room; keeps area clean.",
+        ],
+        [
+          "materials",
+          "Always brings Eagles Club notebook and 2 pencils with an eraser attached every class.",
+        ],
+        ["learnsFromMistakes", "Learns from mistakes and successes."],
+        ["remembersLessons", "Shows effort to remember lessons well."],
+        ["help", "Asks for help when translation/explanation is needed."],
+        [
+          "coversMouthNose",
+          "Covers mouth and/or nose when yawning, coughing, or sneezing.",
+        ],
+        [
+          "handwashing",
+          "Regularly washes hands and understands self-protection from transmission.",
+        ],
+        [
+          "noFingerContact",
+          "Never sticks fingers in eyes, nose, or mouth; always uses tissue/handkerchief instead.",
+        ],
+      ])
+
+      function toCompactNumericText(value) {
+        const numeric = Number(value)
+        if (!Number.isFinite(numeric)) return null
+        const rounded = Math.round(numeric * 10) / 10
+        if (Number.isInteger(rounded)) return String(rounded)
+        return rounded.toFixed(1)
+      }
+
+      function normalizeScaleToPercent(value, { tenPointScale = false } = {}) {
+        const numeric = Number(value)
+        if (!Number.isFinite(numeric)) return Number.NaN
+        if (tenPointScale) {
+          if (numeric <= 5) return numeric * 20
+          if (numeric <= 10) return numeric * 10
+        }
+        return numeric
+      }
+
+      function formatReportTenPoint(value) {
+        const numeric = Number(value)
+        if (!Number.isFinite(numeric)) return "-"
+        if (numeric > 10) return formatPercent(numeric)
+        const text = toCompactNumericText(numeric)
+        if (!text) return "-"
+        if (numeric <= 5) return `${text}/5`
+        return `${text}/10`
+      }
+
+      function formatReportGeneratedMeta(value) {
+        const raw = normalizeText(value)
+        if (!raw) return "Ngày: - | Thứ: - | Giờ: -"
+        const date = parsePortalDateTimeValue(raw)
+        if (Number.isNaN(date.getTime())) return "Ngày: - | Thứ: - | Giờ: -"
+        const datePart = formatPortalDate(date)
+        const dayPart = new Intl.DateTimeFormat("vi-VN", {
+          weekday: "long",
+          timeZone: PORTAL_TIME_ZONE,
+        }).format(date)
+        const timePart = new Intl.DateTimeFormat("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+          timeZone: PORTAL_TIME_ZONE,
+        }).format(date)
+        return `Ngày: ${datePart} | Thứ: ${dayPart} | Giờ: ${timePart} +07`
+      }
+
+      function reportVisionStatusLabel(value = "") {
+        const normalized = normalizeText(value)
+        if (normalized === "no-issues") return "Không có vấn đề"
+        if (normalized === "needs-check") return "Cần kiểm tra mắt"
+        if (normalized === "monitor") return "Theo dõi trên lớp"
+        return ""
+      }
+
+      function buildReportGradeRows(active = {}) {
+        const hasAnyMetric = [
+          active?.homeworkCompletionRate,
+          active?.homeworkOnTimeRate,
+          active?.behaviorScore,
+          active?.participationScore,
+          active?.inClassScore,
+        ].some((value) => Number.isFinite(Number(value)))
+        if (!hasAnyMetric) return []
+        return [
+          {
+            className: normalizeText(active?.className) || "-",
+            quarter: normalizeText(active?.quarter).toUpperCase() || "-",
+            homeworkCompletionRate:
+              formatMetricPercent(active?.homeworkCompletionRate) || "-",
+            homeworkOnTimeRate:
+              formatMetricPercent(active?.homeworkOnTimeRate) || "-",
+            behaviorScore: formatReportTenPoint(active?.behaviorScore),
+            participationScore: formatReportTenPoint(
+              active?.participationScore,
+            ),
+            inClassScore: formatReportTenPoint(active?.inClassScore),
+          },
+        ]
+      }
+
+      function renderReportGradesFacsimile(root, rows = []) {
+        if (!(root instanceof HTMLElement)) return
+        const table = document.createElement("table")
+        table.className = "homework-modal-table"
+        const head = document.createElement("thead")
+        head.innerHTML =
+          "<tr><th>Lớp</th><th>Kỳ</th><th>BT %</th><th>Đúng hạn %</th><th>Hành vi</th><th>Kỹ năng</th><th>Trên lớp</th></tr>"
+        const body = document.createElement("tbody")
+        rows.forEach((row) => {
+          const tr = document.createElement("tr")
+          tr.innerHTML =
+            `<td>${escapeHtml(row.className)}</td>` +
+            `<td>${escapeHtml(row.quarter)}</td>` +
+            `<td>${escapeHtml(row.homeworkCompletionRate)}</td>` +
+            `<td>${escapeHtml(row.homeworkOnTimeRate)}</td>` +
+            `<td>${escapeHtml(row.behaviorScore)}</td>` +
+            `<td>${escapeHtml(row.participationScore)}</td>` +
+            `<td>${escapeHtml(row.inClassScore)}</td>`
+          body.appendChild(tr)
+        })
+        table.append(head, body)
+        root.replaceChildren(table)
+      }
+
+      function renderPerformanceReportGradesTable(active = {}) {
+        const root = document.getElementById("performanceReportGradesTable")
+        const hint = document.getElementById("performanceReportGradesHint")
+        if (!(root instanceof HTMLElement) || !(hint instanceof HTMLElement))
+          return
+        const rows = buildReportGradeRows(active)
+        if (!rows.length) {
+          root.replaceChildren()
+          hint.textContent = "Chưa có dữ liệu điểm để hiển thị."
+          hint.classList.remove("hidden")
+          return
+        }
+        hint.classList.add("hidden")
+        renderReportGradesFacsimile(root, rows)
+      }
+
+      function createAttendanceSquareMetric({
+        label = "",
+        value = "",
+        percent = false,
+        toneClass = "",
+      } = {}) {
+        const card = document.createElement("article")
+        card.className = `attendance-square ${toneClass}`.trim()
+        const key = document.createElement("span")
+        key.className = "attendance-square-k"
+        key.textContent = normalizeText(label)
+        const number = document.createElement("strong")
+        number.className = "attendance-square-v"
+        setSquareValue(number, normalizeText(value), {
+          percent,
+        })
+        card.append(key, number)
+        return card
+      }
+
+      function renderPerformanceReportHomeworkSnapshot(active = {}) {
+        const currentBadge = document.getElementById(
+          "reportCurrentHomeworkBadge",
+        )
+        const currentValue = document.getElementById(
+          "reportCurrentHomeworkBadgeValue",
+        )
+        const currentHeader = document.getElementById(
+          "reportCurrentHomeworkHeader",
+        )
+        const currentSummary = document.getElementById(
+          "reportCurrentHomeworkSummary",
+        )
+        const pastDueBadge = document.getElementById(
+          "reportPastDueHomeworkBadge",
+        )
+        const pastDueValue = document.getElementById(
+          "reportPastDueHomeworkBadgeValue",
+        )
+        const pastDueSummary = document.getElementById(
+          "reportPastDueHomeworkSummary",
+        )
+        const snapshotCurrentStatus =
+          normalizeText(active?.currentHomeworkStatus) || "Không có"
+        const snapshotCurrentHeader =
+          normalizeText(active?.currentHomeworkHeader) || "Bài tập hiện tại"
+        const snapshotCurrentSummary =
+          normalizeText(active?.currentHomeworkSummary) ||
+          normalizeText(active?.homeworkAnnouncement) ||
+          "Không có bài tập hiện tại."
+        const snapshotPastDueCount = parseNumber(
+          active?.pastDueHomeworkCount ?? active?.overdueHomeworkCount ?? 0,
+        )
+        const snapshotPastDueSummary =
+          normalizeText(active?.pastDueHomeworkSummary) ||
+          (snapshotPastDueCount > 0 ?
+            `${snapshotPastDueCount} bài tập quá hạn cần xử lý ngay.`
+          : "Không có bài tập quá hạn.")
+        if (currentBadge) currentBadge.className = "homework-square is-none"
+        if (currentValue) currentValue.textContent = snapshotCurrentStatus
+        if (currentHeader) currentHeader.textContent = snapshotCurrentHeader
+        if (currentSummary) currentSummary.textContent = snapshotCurrentSummary
+        if (pastDueBadge)
+          pastDueBadge.className =
+            snapshotPastDueCount > 0 ?
+              "homework-square is-arrears"
+            : "homework-square is-clear"
+        if (pastDueValue)
+          setSquareValue(pastDueValue, String(snapshotPastDueCount))
+        if (pastDueSummary) pastDueSummary.textContent = snapshotPastDueSummary
+      }
+
+      function performanceReportPastDueRows(active = {}, child = {}) {
+        const reportRows = (
+          Array.isArray(active?.outstandingAssignments) ?
+            active.outstandingAssignments
+          : [])
+          .map((row) => {
+            const assignmentName = normalizeText(row?.assignmentName)
+            const dueAt = normalizeText(row?.dueAt)
+            if (!assignmentName && !dueAt) return null
+            return {
+              assignmentName: assignmentName || "Bài tập",
+              dueAt,
+              dueDate: dueAt,
+              className:
+                normalizeText(row?.className) ||
+                normalizeText(active?.className),
+              quarter:
+                normalizeText(row?.quarter) || normalizeText(active?.quarter),
+              assignmentLink: normalizePortalLinkUrl(row?.deepLink),
+            }
+          })
+          .filter(Boolean)
+        if (reportRows.length) return sortedHomeworkRows(reportRows)
+        return sortedHomeworkRows(child?.details?.overdueHomework || [])
+      }
+
+      function renderPerformanceReportAttendanceMetrics(child = {}) {
+        const root = document.getElementById(
+          "performanceReportAttendanceMetrics",
+        )
+        if (!(root instanceof HTMLElement)) return
+        const attendance = child?.attendance || {}
+        const totalClasses = parseNumber(attendance.total)
+        const classesAttended = parseNumber(attendance.present)
+        const tardy10 =
+          parseNumber(attendance.tardy10) ||
+          parseNumber(attendance.late10) ||
+          parseNumber(attendance.lateUnder30) ||
+          parseNumber(attendance.tardyUnder30)
+        const tardy30 =
+          parseNumber(attendance.tardy30) ||
+          parseNumber(attendance.late30) ||
+          parseNumber(attendance.lateOver30) ||
+          parseNumber(attendance.tardyOver30)
+        const lateTotal = parseNumber(attendance.late) || tardy10 + tardy30
+        const attendanceRate =
+          totalClasses > 0 ? (classesAttended / totalClasses) * 100 : 0
+        const lateRate = totalClasses > 0 ? (lateTotal / totalClasses) * 100 : 0
+        const attendanceTone =
+          attendanceRate >= 95 ? "is-good"
+          : attendanceRate >= 90 ? "is-warn"
+          : "is-risk"
+        const lateTone =
+          lateRate <= 5 ? "is-good"
+          : lateRate <= 10 ? "is-warn"
+          : "is-risk"
+        root.replaceChildren(
+          createAttendanceSquareMetric({
+            label: "Lớp đã học",
+            value: String(classesAttended),
+            toneClass: "is-good",
+          }),
+          createAttendanceSquareMetric({
+            label: "Tổng số lớp",
+            value: String(totalClasses),
+          }),
+          createAttendanceSquareMetric({
+            label: "Chuyên cần",
+            value: formatPercent(attendanceRate),
+            percent: true,
+            toneClass: attendanceTone,
+          }),
+          createAttendanceSquareMetric({
+            label: "Đi trễ 10'",
+            value: String(tardy10),
+          }),
+          createAttendanceSquareMetric({
+            label: "Đi trễ 30'",
+            value: String(tardy30),
+          }),
+          createAttendanceSquareMetric({
+            label: "% đi trễ",
+            value: formatPercent(lateRate),
+            percent: true,
+            toneClass: lateTone,
+          }),
+        )
+      }
+
+      function classifyMetricTone(value, { ok = 85, watch = 70 } = {}) {
+        const numeric = Number(value)
+        if (!Number.isFinite(numeric)) return "is-watch"
+        if (numeric >= ok) return "is-ok"
+        if (numeric >= watch) return "is-watch"
+        return "is-alert"
+      }
+
+      function lookupReportRubricFieldLabel(rawKey) {
+        const key = normalizeText(rawKey)
+        if (!key) return "Nội dung"
+        const normalized =
+          key.startsWith("pt_skill_") ? key.slice("pt_skill_".length)
+          : key.startsWith("pt_conduct_") ? key.slice("pt_conduct_".length)
+          : key.startsWith("pt_rec_") ? key.slice("pt_rec_".length)
+          : key
+        const direct = REPORT_RUBRIC_FIELD_LABELS.get(normalized)
+        if (direct) return direct
+        const withSpaces = normalized
+          .replace(/([a-z])([A-Z])/g, "$1 $2")
+          .replace(/[_-]+/g, " ")
+        return withSpaces ?
+            withSpaces[0].toUpperCase() + withSpaces.slice(1)
+          : key
+      }
+
+      function buildRubricBandRows(
+        scoreMap = {},
+        recommendationMap = {},
+        prefix = "",
+      ) {
+        const rows = []
+        const entries = Object.entries(
+          scoreMap && typeof scoreMap === "object" ? scoreMap : {},
+        ).filter(([key]) => normalizeText(key).startsWith(prefix))
+        entries.sort((left, right) => left[0].localeCompare(right[0]))
+        entries.forEach(([scoreKey, rawScore]) => {
+          const suffix = normalizeText(scoreKey).slice(prefix.length)
+          const recKey = `pt_rec_${suffix}`
+          rows.push({
+            prose: lookupReportRubricFieldLabel(scoreKey),
+            score: formatReportTenPoint(rawScore),
+            comment: normalizeText(recommendationMap?.[recKey]) || "-",
+          })
+        })
+        return rows
+      }
+
+      function averageTenPointScore(scoreMap = {}, prefix = "") {
+        const values = Object.entries(
+          scoreMap && typeof scoreMap === "object" ? scoreMap : {},
+        )
+          .filter(([key]) => normalizeText(key).startsWith(prefix))
+          .map(([, rawScore]) => Number(rawScore))
+          .filter((value) => Number.isFinite(value))
+        if (!values.length) return Number.NaN
+        const total = values.reduce((sum, value) => sum + value, 0)
+        return total / values.length
+      }
+
+      function buildPerformanceSnapshotRows(active = {}) {
+        const participationPoints = Number.parseInt(
+          String(active?.participationPointsAward || ""),
+          10,
+        )
+        return [
+          {
+            prose: "Hành vi (0-5)",
+            score: formatReportTenPoint(active?.behaviorScore),
+            comment: "Tự động từ rubric.",
+          },
+          {
+            prose: "Kỹ năng (0-5)",
+            score: formatReportTenPoint(active?.participationScore),
+            comment: "Tự động từ rubric.",
+          },
+          {
+            prose: "Học thuật (0-5)",
+            score: formatReportTenPoint(active?.inClassScore),
+            comment: "Tự động từ dữ liệu.",
+          },
+          {
+            prose: "BTVN đúng hạn %",
+            score: formatMetricPercent(active?.homeworkOnTimeRate) || "-",
+            comment: "Tự động từ bài tập đã theo dõi (kỳ hiện tại).",
+          },
+          {
+            prose: "Hoàn thành bài tập %",
+            score: formatMetricPercent(active?.homeworkCompletionRate) || "-",
+            comment: "Tự động từ bài tập đã theo dõi (kỳ hiện tại).",
+          },
+          {
+            prose: "Điểm tham gia (0-32)",
+            score:
+              Number.isFinite(participationPoints) ?
+                String(participationPoints)
+              : "-",
+            comment: "Điểm do giáo viên nhập cho báo cáo này.",
+          },
+        ]
+      }
+
+      function createReportBand(title, rows, tone = "is-watch") {
+        const section = document.createElement("section")
+        section.className = `report-band ${tone}`
+        const heading = document.createElement("h5")
+        heading.textContent = title
+        const table = document.createElement("table")
+        table.className = "report-band-table"
+        table.innerHTML =
+          "<thead><tr><th>Nội dung</th><th>Điểm</th><th>Nhận xét</th></tr></thead>"
+        const body = document.createElement("tbody")
+        const normalizedRows =
+          Array.isArray(rows) && rows.length ?
+            rows
+          : [
+              {
+                prose: "-",
+                score: "-",
+                comment: "Chưa có dữ liệu.",
+              },
+            ]
+        normalizedRows.forEach((entry) => {
+          const item = document.createElement("tr")
+          item.innerHTML =
+            `<td>${escapeHtml(normalizeText(entry?.prose || entry?.parameter) || "-")}</td>` +
+            `<td>${escapeHtml(normalizeText(entry?.score) || "-")}</td>` +
+            `<td>${escapeHtml(normalizeText(entry?.comment) || "-")}</td>`
+          body.appendChild(item)
+        })
+        table.appendChild(body)
+        section.append(heading, table)
+        return section
+      }
+
+      function buildReportBandsForActiveRow(active = {}) {
+        const comments = normalizeText(active?.comments)
+        const lessonSummary = normalizeText(active?.lessonSummary)
+        const teacherName = normalizeText(active?.teacherName)
+        const classDate = normalizeText(active?.classDate)
+        const classDay = normalizeText(active?.classDay)
+        const visionStatus = normalizeText(active?.visionStatus)
+        const visionLabel = reportVisionStatusLabel(visionStatus)
+        const classFocusRows = [
+          {
+            prose: "Tóm tắt buổi học",
+            score: lessonSummary ? "Có" : "-",
+            comment: lessonSummary || "Chưa có nội dung bài học.",
+          },
+          {
+            prose: "Tình trạng mắt / khả năng nhìn bảng",
+            score: visionLabel || "-",
+            comment: teacherName ? `Giáo viên: ${teacherName}` : "Giáo viên: -",
+          },
+          {
+            prose: "Ngày học / Thứ",
+            score: classDate || "-",
+            comment:
+              [classDay, classDate].filter(Boolean).join(" | ") ||
+              "Chưa có ngày học.",
+          },
+        ]
+        const rubricPayload =
+          active?.rubricPayload && typeof active.rubricPayload === "object" ?
+            active.rubricPayload
+          : {}
+        const skillRows = buildRubricBandRows(
+          rubricPayload?.skillScores,
+          rubricPayload?.recommendations,
+          "pt_skill_",
+        )
+        const conductRows = buildRubricBandRows(
+          rubricPayload?.conductScores,
+          rubricPayload?.recommendations,
+          "pt_conduct_",
+        )
+        const snapshotRows = buildPerformanceSnapshotRows(active)
+        const snapshotToneValues = [
+          normalizeScaleToPercent(active?.behaviorScore, {
+            tenPointScale: true,
+          }),
+          normalizeScaleToPercent(active?.participationScore, {
+            tenPointScale: true,
+          }),
+          normalizeScaleToPercent(active?.inClassScore, {
+            tenPointScale: true,
+          }),
+          Number(active?.homeworkCompletionRate),
+          Number(active?.homeworkOnTimeRate),
+        ].filter((value) => Number.isFinite(value))
+        const snapshotTone = classifyMetricTone(
+          snapshotToneValues.length ?
+            Math.min(...snapshotToneValues)
+          : Number.NaN,
+          {
+            ok: 85,
+            watch: 75,
+          },
+        )
+        const skillTone = classifyMetricTone(
+          normalizeScaleToPercent(
+            averageTenPointScore(rubricPayload?.skillScores, "pt_skill_"),
+            {
+              tenPointScale: true,
+            },
+          ),
+          {
+            ok: 85,
+            watch: 75,
+          },
+        )
+        const conductTone = classifyMetricTone(
+          normalizeScaleToPercent(
+            averageTenPointScore(rubricPayload?.conductScores, "pt_conduct_"),
+            {
+              tenPointScale: true,
+            },
+          ),
+          {
+            ok: 85,
+            watch: 75,
+          },
+        )
+        const classFocusTone =
+          visionStatus === "no-issues" ? "is-ok"
+          : visionStatus === "needs-check" ? "is-watch"
+          : visionStatus === "monitor" ? "is-risk"
+          : "is-watch"
+        return [
+          createReportBand("Trọng tâm lớp học", classFocusRows, classFocusTone),
+          createReportBand(
+            "Tổng hợp kết quả (tự động)",
+            snapshotRows,
+            snapshotTone,
+          ),
+          createReportBand("Kỹ năng cơ bản của học sinh", skillRows, skillTone),
+          createReportBand("Tác phong trong lớp", conductRows, conductTone),
+          createReportBand(
+            "Nhận xét gửi phụ huynh",
+            [
+              {
+                prose: "Tóm tắt của giáo viên",
+                score: comments ? "Có" : "-",
+                comment: comments || "Chưa có nhận xét từ giáo viên.",
+              },
+            ],
+            comments ? "is-ok" : "is-watch",
+          ),
+        ]
+      }
+
+      function renderActivePerformanceReportModal() {
+        const rows = state.reportArchiveRows
+        const active = rows[state.activeReportIndex] || null
+        const child = selectedDashboardChild() || {}
+        const linkedChild =
+          Array.isArray(state.children) ?
+            state.children.find(
+              (entry) =>
+                normalizeText(entry?.eaglesId) ===
+                normalizeText(child?.eaglesId),
+            ) || null
+          : null
+        const titleNode = document.getElementById("performanceReportModalTitle")
+        const metaNode = document.getElementById("performanceReportModalMeta")
+        const identityNode = document.getElementById(
+          "performanceReportIdentity",
+        )
+        const sectionsNode = document.getElementById(
+          "performanceReportModalSections",
+        )
+        const ackButton = document.getElementById(
+          "acknowledgePerformanceReportBtn",
+        )
+        const ackStatus = document.getElementById("performanceReportAckStatus")
+        const prevButton = document.getElementById("performanceReportPrevBtn")
+        const nextButton = document.getElementById("performanceReportNextBtn")
+        if (!active) {
+          if (titleNode) titleNode.textContent = "Báo cáo kết quả học tập"
+          if (metaNode) metaNode.textContent = "-"
+          if (identityNode) identityNode.textContent = "-"
+          state.reportPastDueRows = []
+          renderPerformanceReportHomeworkSnapshot({})
+          renderPerformanceReportAttendanceMetrics({})
+          if (sectionsNode) sectionsNode.replaceChildren()
+          renderPerformanceReportGradesTable({})
+          if (ackStatus) ackStatus.textContent = "Chưa xác nhận."
+          if (ackButton) ackButton.disabled = true
+          if (prevButton) prevButton.disabled = true
+          if (nextButton) nextButton.disabled = true
+          return
+        }
+        const total = rows.length
+        const reportLabel = `${normalizeText(active?.className) || "Lớp học"} | ${normalizeText(active?.quarter).toUpperCase() || "Kỳ học"}`
+        if (titleNode)
+          titleNode.textContent = `Báo cáo ${String(state.activeReportIndex + 1)}/${String(total)} - ${reportLabel}`
+        if (metaNode)
+          metaNode.textContent = formatReportGeneratedMeta(
+            active?.generatedAt || active?.generatedDate,
+          )
+        if (identityNode) {
+          const reportClassName = normalizeText(
+            active?.className || gradeLabel(child?.currentGrade) || "-",
+          )
+          const reportStudentNumber =
+            (
+              (linkedChild?.studentNumber ?? child?.studentNumber) === null ||
+              (linkedChild?.studentNumber ?? child?.studentNumber) === undefined
+            ) ?
+              "-"
+            : String(linkedChild?.studentNumber ?? child.studentNumber)
+          const reportFullName = normalizeText(
+            linkedChild?.fullName || child?.fullName || "-",
+          )
+          const reportEaglesId = normalizeText(
+            linkedChild?.eaglesId || child?.eaglesId || "-",
+          )
+          identityNode.textContent = `${reportClassName} | ${reportStudentNumber} | ${reportFullName} | ${reportEaglesId}`
+        }
+        state.reportPastDueRows = performanceReportPastDueRows(active, child)
+        renderPerformanceReportHomeworkSnapshot(active)
+        renderPerformanceReportAttendanceMetrics(child)
+        if (sectionsNode) {
+          sectionsNode.replaceChildren(...buildReportBandsForActiveRow(active))
+        }
+        renderPerformanceReportGradesTable(active)
+        const parentName =
+          normalizeText(state?.me?.parentsId) ||
+          normalizeText(state?.me?.username) ||
+          "Phụ huynh"
+        const parentEntry = resolveReportAcknowledgementEntry(
+          active?.id,
+          "parent",
+        )
+        const studentEntry =
+          active?.studentReviewedAt && active?.studentReviewedBy ?
+            {
+              acknowledgedAt: normalizeText(active.studentReviewedAt),
+              acknowledgedBy: normalizeText(active.studentReviewedBy),
+            }
+          : resolveReportAcknowledgementEntry(active?.id, "student")
+        if (ackButton) {
+          ackButton.disabled = Boolean(parentEntry)
+          ackButton.textContent =
+            parentEntry ? "Đã xem" : `${parentName} đã xem`
+        }
+        if (ackStatus) {
+          ackStatus.textContent =
+            parentEntry ?
+              `Đã xác nhận lúc ${formatPortalWeekdayDateTime(parentEntry.acknowledgedAt)} bởi ${parentEntry.acknowledgedBy || parentName}`
+            : "Chờ phụ huynh xác nhận."
+          ackStatus.className =
+            "report-modal-ack-status" + (parentEntry ? " is-reviewed" : "")
+        }
+        const studentStatus = document.getElementById(
+          "performanceReportStudentReviewStatus",
+        )
+        if (studentStatus) {
+          studentStatus.textContent =
+            studentEntry && studentEntry.acknowledgedAt ?
+              `Đã xem bởi ${studentEntry.acknowledgedBy || "Học sinh"} lúc ${formatPortalWeekdayDateTime(studentEntry.acknowledgedAt)}`
+            : "Chờ học sinh xác nhận."
+          studentStatus.className =
+            "report-modal-ack-status" + (studentEntry ? " is-reviewed" : "")
+        }
+        if (prevButton) prevButton.disabled = state.activeReportIndex <= 0
+        if (nextButton)
+          nextButton.disabled = state.activeReportIndex >= total - 1
+      }
+
+      function setPerformanceReportModalOpen(
+        open,
+        index = state.activeReportIndex,
+      ) {
+        const shouldOpen = Boolean(open)
+        state.performanceModalOpen = shouldOpen
+        const rows = state.reportArchiveRows
+        const maxIndex = rows.length > 0 ? rows.length - 1 : 0
+        const requested = Number.parseInt(String(index), 10)
+        const safeIndex = Number.isFinite(requested) ? requested : 0
+        state.activeReportIndex = Math.min(maxIndex, Math.max(0, safeIndex))
+        const modal = document.getElementById("performanceReportModal")
+        if (!modal) return
+        modal.classList.toggle("hidden", !shouldOpen)
+        syncPortalModalBodyState()
+        if (shouldOpen) renderActivePerformanceReportModal()
+      }
+
+      function renderCurrentHomeworkOverviewCard(
+        child = {},
+        pendingHomework = 0,
+      ) {
+        const currentRows = sortedHomeworkRows(
+          child?.details?.currentHomework || [],
+        )
+        const assignmentsTotal = parseNumber(child?.assignments?.total)
+        const badge = document.getElementById("currentHomeworkBadge")
+        const badgeValue = document.getElementById("currentHomeworkBadgeValue")
+        const summary = document.getElementById("currentHomeworkSummary")
+        const assignmentLink = document.getElementById(
+          "currentHomeworkAssignmentLink",
+        )
+        const header = document.getElementById("currentHomeworkHeader")
+        if (badge) badge.className = "homework-square is-none"
+        if (badgeValue) badgeValue.textContent = "Không có"
+        if (header) header.textContent = "Bài tập hiện tại"
+        if (assignmentLink) {
+          assignmentLink.classList.add("hidden")
+          assignmentLink.removeAttribute("href")
+          assignmentLink.textContent = "Xem thông báo bài tập"
+        }
+        if (pendingHomework > 0) {
+          if (badge) badge.className = "homework-square is-pending"
+          if (badgeValue) badgeValue.textContent = "Chưa xong"
+          if (summary)
+            summary.textContent = `${pendingHomework} bài tập hiện tại chưa nộp.`
+        } else if (assignmentsTotal > 0) {
+          if (badge) badge.className = "homework-square is-complete"
+          if (badgeValue) badgeValue.textContent = "Hoan thanh"
+          if (summary)
+            summary.textContent = "Tất cả bài tập hiện tại đã hoàn thành."
+        } else if (summary) {
+          summary.textContent = "Không có bài tập hiện tại."
+        }
+        const currentTop = currentRows[0] || null
+        if (!currentTop) return
+        if (header)
+          header.textContent =
+            normalizeText(currentTop.assignmentName) || "Bài tập hiện tại"
+        if (assignmentLink) {
+          const url = resolveHomeworkAnnouncementUrl(currentTop)
+          if (url) {
+            assignmentLink.href = url
+            assignmentLink.textContent = `Thông báo: ${normalizeText(currentTop.assignmentName) || "Bài tập"}`
+            assignmentLink.classList.remove("hidden")
+          }
+        }
+      }
+
+      function renderPastDueHomeworkOverviewCard(
+        child = {},
+        overdueHomework = 0,
+      ) {
+        state.overdueHomeworkRows = sortedHomeworkRows(
+          child?.details?.overdueHomework || [],
+        )
+        const badge = document.getElementById("pastDueHomeworkBadge")
+        const badgeValue = document.getElementById("pastDueHomeworkBadgeValue")
+        const summary = document.getElementById("pastDueHomeworkSummary")
+        const openModalBtn = document.getElementById(
+          "openPastDueHomeworkModalBtn",
+        )
+        if (badgeValue)
+          badgeValue.textContent = String(Math.max(0, overdueHomework))
+        if (badge)
+          badge.className =
+            overdueHomework > 0 ?
+              "homework-square is-arrears"
+            : "homework-square is-clear"
+        if (summary) {
+          summary.textContent =
+            overdueHomework > 0 ?
+              `${overdueHomework} bài tập quá hạn cần xử lý ngay.`
+            : "Không có bài tập quá hạn."
+        }
+        if (openModalBtn)
+          openModalBtn.disabled = state.overdueHomeworkRows.length === 0
+        renderOverdueHomeworkTableRows(state.overdueHomeworkRows)
+      }
+
+      function formatPortalDate(value) {
+        const raw = value instanceof Date ? value : normalizeText(value)
+        if (!raw) return "Không có ngày"
+        const date =
+          raw instanceof Date ? new Date(raw.getTime())
+          : /^\d{4}-\d{2}-\d{2}$/.test(raw) ? new Date(`${raw}T00:00:00+07:00`)
+          : parsePortalDateTimeValue(raw)
+        if (Number.isNaN(date.getTime())) return "Không có ngày"
+        return new Intl.DateTimeFormat("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+          timeZone: PORTAL_TIME_ZONE,
+        }).format(date)
+      }
+
+      function formatPortalDateTime(value) {
+        const raw = value instanceof Date ? value : normalizeText(value)
+        if (!raw) return "Không có thời gian"
+        const date =
+          raw instanceof Date ? new Date(raw.getTime()) : parsePortalDateTimeValue(raw)
+        if (Number.isNaN(date.getTime())) return "Không có thời gian"
+        const parts = new Intl.DateTimeFormat("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+          timeZone: PORTAL_TIME_ZONE,
+        }).formatToParts(date)
+        const pick = (type) =>
+          parts.find((part) => part.type === type)?.value || ""
+        const day = pick("day")
+        const month = pick("month")
+        const year = pick("year")
+        const hour = pick("hour")
+        const minute = pick("minute")
+        const second = pick("second")
+        if (!day || !month || !year || !hour || !minute || !second)
+          return "Không có thời gian"
+        return `${day}/${month}/${year} ${hour}:${minute}:${second} +07`
+      }
+
+      function formatPortalWeekRange(startValue = "", endValue = "") {
+        const startRaw = normalizeText(startValue)
+        const endRaw = normalizeText(endValue)
+        const parse = (value) => {
+          if (!value) return null
+          const parsed =
+            /^\d{4}-\d{2}-\d{2}$/.test(value) ?
+              parsePortalDateTimeValue(value)
+            : parsePortalDateTimeValue(value)
+          return Number.isNaN(parsed.getTime()) ? null : parsed
+        }
+        const startDate = parse(startRaw)
+        const endDate = parse(endRaw)
+        if (!startDate || !endDate) {
+          return `${formatPortalDate(startRaw)} - ${formatPortalDate(endRaw)}`
+        }
+        return `${formatPortalDate(startDate)} - ${formatPortalDate(endDate)}`
+      }
+
+      function formatQueueDateTimeTz7(value) {
+        const raw = normalizeText(value)
+        const date =
+          /^\d{4}-\d{2}-\d{2}$/.test(raw) ? parsePortalDateTimeValue(raw)
+          : raw ? parsePortalDateTimeValue(raw)
+          : null
+        if (!date || Number.isNaN(date.getTime())) return null
+        const parts = new Intl.DateTimeFormat("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+          timeZone: PORTAL_TIME_ZONE,
+        }).formatToParts(date)
+        const pick = (type) =>
+          parts.find((part) => part.type === type)?.value || ""
+        const day = pick("day")
+        const month = pick("month")
+        const year = pick("year")
+        const hour = pick("hour")
+        const minute = pick("minute")
+        const second = pick("second")
+        if (!day || !month || !year || !hour || !minute || !second) return null
+        return {
+          dateLabel: `${day}/${month}/${year}`,
+          timeLabel: `${hour}:${minute}:${second} +07`,
+        }
+      }
+
+      function formatQueueLatestSubmissionHtml(submittedAt, reportDate) {
+        const compact = formatQueueDateTimeTz7(submittedAt || reportDate)
+        if (!compact) return "-"
+        return `<span class="queue-compact-datetime"><span class="queue-compact-datetime-date">${escapeHtml(compact.dateLabel)}</span><span class="queue-compact-datetime-time">${escapeHtml(compact.timeLabel)}</span></span>`
+      }
+
+      function formatPortalWeekdayDateTime(value) {
+        const raw = normalizeText(value)
+        if (!raw) return "Không có thời gian"
+        const date = parsePortalDateTimeValue(raw)
+        if (Number.isNaN(date.getTime())) return "Không có thời gian"
+        const dateLabel = formatPortalDate(date)
+        const weekdayLabel = new Intl.DateTimeFormat("vi-VN", {
+          weekday: "short",
+          timeZone: PORTAL_TIME_ZONE,
+        }).format(date)
+        const timeLabel = new Intl.DateTimeFormat("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          timeZone: PORTAL_TIME_ZONE,
+        }).format(date)
+        return `${weekdayLabel} ${dateLabel} ${timeLabel}`
+      }
+
+      function normalizeDashboardPage(page) {
+        const requested = normalizeText(page).toLowerCase()
+        return PARENT_DASHBOARD_PAGES.has(requested) ? requested : "home"
+      }
+
+      function selectedDashboardChild() {
+        return (
+          state.dashboard?.children?.find(
+            (entry) =>
+              normalizeText(entry?.eaglesId) === state.selectedEaglesId,
+          ) || null
+        )
+      }
+
+      function updateActiveDashboardNav() {
+        document.querySelectorAll(".side-link").forEach((link) => {
+          const viewTarget = normalizeText(link.getAttribute("data-view-target"))
+          const pageTarget = normalizeDashboardPage(
+            link.getAttribute("data-page-target"),
+          )
+          const shouldBeActive =
+            state.activeView === "child" ?
+              viewTarget === "child"
+            : viewTarget === "dashboard" && pageTarget === state.activeDashboardPage
+          link.classList.toggle("active", shouldBeActive)
+        })
+      }
+
+      function buildDetailItemMarkup(item = {}) {
+        const article = document.createElement("article")
+        article.className = "detail-item portal-theme-card"
+        if (normalizeText(item?.tone)) {
+          article.classList.add(item.tone)
+        }
+        const head = document.createElement("div")
+        head.className = "detail-item-head"
+        const titleWrap = document.createElement("span")
+        titleWrap.className = "detail-item-title"
+        const titleHref = normalizeText(item.href || item.url || "")
+        if (titleHref) {
+          const link = document.createElement("a")
+          link.href = titleHref
+          if (item.sameTab === true) {
+            link.removeAttribute("target")
+            link.removeAttribute("rel")
+          } else {
+            link.target = "_blank"
+            link.rel = "noopener noreferrer"
+          }
+          link.textContent = item.title || "Chi tiết"
+          titleWrap.append(link)
+        } else {
+          const title = document.createElement("strong")
+          title.textContent = item.title || "Chi tiết"
+          titleWrap.append(title)
+        }
+        const meta = document.createElement("span")
+        meta.className = "detail-meta"
+        meta.textContent = item.meta || ""
+        if (normalizeText(item.badgeLabel)) {
+          const badge = document.createElement("span")
+          badge.className = `chip ${chipClassForTone(item.badgeTone)}`
+          badge.textContent = item.badgeLabel
+          head.append(titleWrap, meta, badge)
+        } else {
+          head.append(titleWrap, meta)
+        }
+        const note = document.createElement("p")
+        note.className = "detail-note"
+        note.textContent = item.note || "Chưa có chi tiết."
+        article.append(head, note)
+        return article.outerHTML
+      }
+
+      function renderDetailList(
+        targetId,
+        items = [],
+        emptyMessage = "Chưa có dữ liệu.",
+      ) {
+        const target = document.getElementById(targetId)
+        if (!target) return
+        if (!Array.isArray(items) || !items.length) {
+          target.innerHTML = `<div class="detail-empty">${escapeHtml(emptyMessage)}</div>`
+          return
+        }
+        target.innerHTML = items
+          .map((item) => buildDetailItemMarkup(item))
+          .join("")
+      }
+
+      function resolveNewsCalendarStatus(row = {}) {
+        const status = normalizeText(row?.status).toLowerCase()
+        if (status === "completed" || status === "open" || status === "missed")
+          return status
+        if (
+          status === "approved" ||
+          status === "waiting" ||
+          status === "submitted" ||
+          status === "revise"
+        ) {
+          return "completed"
+        }
+        if (status === "none-submitted") return "missed"
+        const color = normalizeText(row?.color).toLowerCase()
+        if (color === "green") return "completed"
+        if (color === "purple") return "completed"
+        if (
+          ["amber", "yellow", "orange", "blue", "skyblue", "sky-blue"].includes(
+            color,
+          )
+        ) {
+          return "open"
+        }
+        if (color === "red") return "missed"
+        if (row?.canSubmit === true) return "open"
+        if (normalizeText(row?.submittedAt)) return "completed"
+        return "missed"
+      }
+
+      function normalizeNewsReviewStatusToken(reviewStatus = "") {
+        const token = normalizeText(reviewStatus).toLowerCase()
+        if (token === "approved") return "approved"
+        if (
+          token === "revision-requested" ||
+          token === "revision" ||
+          token === "request-revision"
+        )
+          return "revision-requested"
+        return "submitted"
+      }
+
+      function resolveNewsChipToken(
+        status = "",
+        reviewStatus = "",
+        awaitingReReview = false,
+      ) {
+        const normalizedStatus = normalizeText(status).toLowerCase()
+        const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus)
+        if (normalizedReview === "revision-requested") return "revise"
+        if (normalizedStatus === "open") return "open"
+        if (normalizedStatus === "missed") return "none-submitted"
+        if (awaitingReReview === true) return "waiting"
+        if (normalizedReview === "approved") return "approved"
+        if (
+          normalizedStatus === "completed" ||
+          normalizedReview === "submitted"
+        )
+          return "submitted"
+        return "none-submitted"
+      }
+
+      function newsStatusLabel(
+        status = "",
+        reviewStatus = "",
+        awaitingReReview = false,
+      ) {
+        const token = resolveNewsChipToken(
+          status,
+          reviewStatus,
+          awaitingReReview,
+        )
+        if (token === "approved") return "Đã duyệt"
+        if (token === "waiting") return "Chờ duyệt"
+        if (token === "revise") return "Cần sửa"
+        if (token === "submitted") return "Đã nộp"
+        if (token === "open") return "Đang mở"
+        return "Chưa nộp"
+      }
+
+      function newsStatusColorToken(
+        status = "",
+        reviewStatus = "",
+        awaitingReReview = false,
+      ) {
+        const token = resolveNewsChipToken(
+          status,
+          reviewStatus,
+          awaitingReReview,
+        )
+        if (token === "approved") return "green"
+        if (token === "revise") return "revise"
+        if (token === "submitted") return "amber"
+        if (token === "waiting") return "purple"
+        if (token === "open") return "blue"
+        return "red"
+      }
+
+      function newsStatusTone(
+        status = "",
+        reviewStatus = "",
+        awaitingReReview = false,
+      ) {
+        const token = newsStatusColorToken(
+          status,
+          reviewStatus,
+          awaitingReReview,
+        )
+        if (token === "revise") return "revise"
+        if (token === "purple") return "revise"
+        if (token === "blue") return "open"
+        if (token === "amber") return "warn"
+        if (token === "red") return "bad"
+        if (token === "turquoise") return "checked"
+        return "good"
+      }
+
+      function newsStatusColor(
+        status = "",
+        reviewStatus = "",
+        awaitingReReview = false,
+      ) {
+        const token = newsStatusColorToken(
+          status,
+          reviewStatus,
+          awaitingReReview,
+        )
+        if (token === "revise")
+          return portalThemeTokenValue("--portal-calendar-status-revise-bg")
+        if (token === "purple")
+          return portalThemeTokenValue("--portal-calendar-status-revise-bg")
+        if (token === "blue")
+          return portalThemeTokenValue("--portal-calendar-status-open-bg")
+        if (token === "amber")
+          return portalThemeTokenValue("--portal-calendar-status-submitted-bg")
+        if (token === "red")
+          return portalThemeTokenValue("--portal-calendar-status-bad-bg")
+        return portalThemeTokenValue("--portal-calendar-status-good-bg")
+      }
+
+      function portalThemeTokenValue(name = "") {
+        const token = normalizeText(name)
+        if (!token || !token.startsWith("--")) return ""
+        try {
+          const value = window
+            .getComputedStyle(document.documentElement)
+            .getPropertyValue(token)
+            .trim()
+          return value || ""
+        } catch {
+          return ""
+        }
+      }
+
+      function isoWeekStart(dateText = "") {
+        const raw = normalizeText(dateText)
+        if (!raw) return ""
+        const date =
+          /^\d{4}-\d{2}-\d{2}$/.test(raw) ?
+            new Date(`${raw}T00:00:00Z`)
+          : new Date(raw)
+        if (!date || Number.isNaN(date.getTime())) return ""
+        const day = date.getUTCDay()
+        const diff = day === 0 ? -6 : 1 - day
+        date.setUTCDate(date.getUTCDate() + diff)
+        return date.toISOString().slice(0, 10)
+      }
+
+      function isoWeekEndFromStart(weekStart = "") {
+        const raw = normalizeText(weekStart)
+        if (!raw) return ""
+        const date = new Date(`${raw}T00:00:00Z`)
+        if (!date || Number.isNaN(date.getTime())) return ""
+        date.setUTCDate(date.getUTCDate() + 6)
+        return date.toISOString().slice(0, 10)
+      }
+
+      function newsReviewLabel(
+        status = "",
+        reviewStatus = "",
+        awaitingReReview = false,
+      ) {
+        const normalizedStatus = normalizeText(status).toLowerCase()
+        const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus)
+        if (normalizedReview === "approved") return "Đã duyệt"
+        if (awaitingReReview === true) return "Chờ duyệt"
+        if (normalizedReview === "revision-requested") return "Cần sửa"
+        if (normalizedStatus === "completed") return "Đã nộp"
+        if (normalizedStatus === "open") return "Đang mở"
+        return "Chưa nộp"
+      }
+
+      function refreshChipTooltips(root = document) {
+        const scope =
+          root && typeof root.querySelectorAll === "function" ? root : document
+        const chips = Array.from(scope.querySelectorAll(".chip"))
+        chips.forEach((chip) => {
+          const label = normalizeText(chip.textContent)
+          if (!label || label === "-") {
+            chip.removeAttribute("title")
+            return
+          }
+          const isTruncated = chip.scrollWidth > chip.clientWidth + 1
+          if (isTruncated) chip.setAttribute("title", label)
+          else chip.removeAttribute("title")
+        })
+      }
+
+      function scheduleChipTooltipRefresh(root = document) {
+        window.requestAnimationFrame(() => refreshChipTooltips(root))
+      }
+
+      function chipClassForTone(tone = "") {
+        const normalized = normalizeText(tone).toLowerCase()
+        if (
+          normalized === "good" ||
+          normalized === "ok" ||
+          normalized === "positive"
+        )
+          return "chip-ok"
+        if (normalized === "checked") return "chip-checked"
+        if (normalized === "open") return "chip-open"
+        if (normalized === "revise") return "chip-revise"
+        if (normalized === "warn" || normalized === "warning")
+          return "chip-warn"
+        if (normalized === "bad" || normalized === "error") return "chip-bad"
+        return "chip-neutral"
+      }
+
+      function newsStatusChipHtml(
+        status = "",
+        reviewStatus = "",
+        awaitingReReview = false,
+      ) {
+        const label = newsStatusLabel(status, reviewStatus, awaitingReReview)
+        const cls = chipClassForTone(
+          newsStatusTone(status, reviewStatus, awaitingReReview),
+        )
+        const span = document.createElement("span")
+        span.className = "chip " + cls
+        span.textContent = label
+        return span.outerHTML
+      }
+
+      function newsReviewChipHtml(
+        status = "",
+        reviewStatus = "",
+        awaitingReReview = false,
+      ) {
+        const label = newsReviewLabel(status, reviewStatus, awaitingReReview)
+        const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus)
+        const tone =
+          normalizedReview === "approved" ? "good"
+          : awaitingReReview === true ? "revise"
+          : normalizedReview === "revision-requested" ? "revise"
+          : normalizeText(status).toLowerCase() === "completed" ? "warn"
+          : normalizeText(status).toLowerCase() === "open" ? "open"
+          : "bad"
+        const cls = chipClassForTone(tone)
+        const span = document.createElement("span")
+        span.className = "chip " + cls
+        span.textContent = label
+        return span.outerHTML
+      }
+
+      function normalizeNewsReportItem(entry = {}) {
+        const reportDate = normalizeText(
+          entry?.reportDate || entry?.date,
+        ).slice(0, 10)
+        if (!reportDate) return null
+        return {
+          id: normalizeText(entry?.id) || `news-report:${reportDate}`,
+          reportDate,
+          sourceLink: normalizeText(entry?.sourceLink),
+          articleTitle: normalizeText(entry?.articleTitle),
+          byline: normalizeText(entry?.byline),
+          articleDateline: normalizeText(entry?.articleDateline),
+          leadSynopsis: normalizeText(entry?.leadSynopsis),
+          actionActor: normalizeText(entry?.actionActor),
+          actionAffected: normalizeText(entry?.actionAffected),
+          actionWhere: normalizeText(entry?.actionWhere),
+          actionWhat: normalizeText(entry?.actionWhat),
+          actionWhy: normalizeText(entry?.actionWhy),
+          biasAssessment: normalizeText(entry?.biasAssessment),
+          submittedAt: normalizeText(entry?.submittedAt),
+          reviewStatus: normalizeNewsReviewStatusToken(entry?.reviewStatus),
+          awaitingReReview: entry?.awaitingReReview === true,
+        }
+      }
+
+      function newsWeekSetViewerSortValue(item = {}) {
+        return (
+          normalizeText(item?.submittedAt) || normalizeText(item?.reportDate)
+        )
+      }
+
+      function sortNewsWeekSetViewerItems(items = []) {
+        const source = Array.isArray(items) ? items : []
+        return [...source].sort((left, right) => {
+          const submittedCompare = newsWeekSetViewerSortValue(
+            right,
+          ).localeCompare(newsWeekSetViewerSortValue(left))
+          if (submittedCompare !== 0) return submittedCompare
+          const dateCompare = normalizeText(right?.reportDate).localeCompare(
+            normalizeText(left?.reportDate),
+          )
+          if (dateCompare !== 0) return dateCompare
+          return normalizeText(right?.id).localeCompare(normalizeText(left?.id))
+        })
+      }
+
+      function newsWeekSetId(weekStart = "") {
+        const child = selectedDashboardChild()
+        const studentToken =
+          normalizeText(child?.eaglesId) ||
+          normalizeText(child?.studentNumber) ||
+          "child"
+        const weekToken = normalizeText(weekStart) || "week"
+        return `news-week-set:${studentToken}:${weekToken}`
+      }
+
+      function buildNewsQueueItems(items = []) {
+        return sortNewsWeekSetViewerItems(
+          (Array.isArray(items) ? items : [])
+            .map((entry) => normalizeNewsReportItem(entry))
+            .filter(Boolean),
+        ).map((entry) => ({
+          title: formatPortalDate(entry.reportDate),
+          meta:
+            entry.submittedAt ?
+              formatPortalDateTime(entry.submittedAt)
+            : "Không có thời gian nộp",
+          note:
+            normalizeText(entry.reviewStatus) === "approved" ? "Đã duyệt."
+            : normalizeText(entry.reviewStatus) === "revision-requested" ?
+              "Được yêu cầu chỉnh sửa."
+            : "Đang chờ giáo viên duyệt.",
+          tone:
+            normalizeText(entry.reviewStatus) === "approved" ? "good"
+            : normalizeText(entry.reviewStatus) === "revision-requested" ?
+              "warn"
+            : "open",
+        }))
+      }
+
+      function buildNewsWeekSets(items = []) {
+        const grouped = new Map()
+        ;(Array.isArray(items) ? items : []).forEach((entry) => {
+          const report = normalizeNewsReportItem(entry)
+          if (!report) return
+          const weekStart = isoWeekStart(report.reportDate)
+          if (!weekStart) return
+          const existing = grouped.get(weekStart) || {
+            id: newsWeekSetId(weekStart),
+            weekStart,
+            weekEnd: isoWeekEndFromStart(weekStart),
+            reports: [],
+            approvedCount: 0,
+            submittedCount: 0,
+            awaitingReReviewCount: 0,
+            revisionRequestedCount: 0,
+            latestSubmittedAt: "",
+            latestReportDate: "",
+            latestReportId: "",
+            _reportDates: new Set(),
+          }
+          existing.reports.push(report)
+          existing._reportDates.add(report.reportDate)
+          if (report.reviewStatus === "approved") existing.approvedCount += 1
+          else if (report.reviewStatus === "revision-requested")
+            existing.revisionRequestedCount += 1
+          else if (report.awaitingReReview === true)
+            existing.awaitingReReviewCount += 1
+          else existing.submittedCount += 1
+          const candidateKey =
+            normalizeText(report.submittedAt) ||
+            normalizeText(report.reportDate)
+          const latestKey =
+            normalizeText(existing.latestSubmittedAt) ||
+            normalizeText(existing.latestReportDate)
+          if (!latestKey || candidateKey > latestKey) {
+            existing.latestSubmittedAt = normalizeText(report.submittedAt)
+            existing.latestReportDate = normalizeText(report.reportDate)
+            existing.latestReportId = normalizeText(report.id)
+          }
+          grouped.set(weekStart, existing)
+        })
+        return Array.from(grouped.values())
+          .map((entry) => {
+            const reports = sortNewsWeekSetViewerItems(entry.reports)
+            return {
+              id: entry.id,
+              weekStart: normalizeText(entry.weekStart),
+              weekEnd: normalizeText(entry.weekEnd),
+              reports,
+              reportCount: Math.max(
+                entry._reportDates?.size || 0,
+                reports.length,
+              ),
+              approvedCount: entry.approvedCount,
+              submittedCount: entry.submittedCount,
+              awaitingReReviewCount: entry.awaitingReReviewCount,
+              revisionRequestedCount: entry.revisionRequestedCount,
+              latestSubmittedAt:
+                normalizeText(entry.latestSubmittedAt) ||
+                normalizeText(reports[0]?.submittedAt),
+              latestReportDate:
+                normalizeText(entry.latestReportDate) ||
+                normalizeText(reports[0]?.reportDate),
+              latestReportId:
+                normalizeText(entry.latestReportId) ||
+                normalizeText(reports[0]?.id),
+            }
+          })
+          .sort((left, right) => {
+            const weekCompare = normalizeText(right?.weekStart).localeCompare(
+              normalizeText(left?.weekStart),
+            )
+            if (weekCompare !== 0) return weekCompare
+            return normalizeText(right?.latestSubmittedAt).localeCompare(
+              normalizeText(left?.latestSubmittedAt),
+            )
+          })
+      }
+
+      function weeklyMinimumNewsReports() {
+        return Math.max(
+          1,
+          Number.parseInt(
+            String(state.dashboard?.newsReports?.weeklyMinimumReports || 5),
+            10,
+          ) || 5,
+        )
+      }
+
+      function newsWeekSetStatusToken(weekSet = {}) {
+        const approvedCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.approvedCount || 0), 10) || 0,
+        )
+        const submittedCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.submittedCount || 0), 10) || 0,
+        )
+        const awaitingReReviewCount = Math.max(
+          0,
+          Number.parseInt(
+            String(
+              weekSet?.awaitingReReviewCount || weekSet?.waitingCount || 0,
+            ),
+            10,
+          ) || 0,
+        )
+        const revisionRequestedCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.revisionRequestedCount || 0), 10) ||
+            0,
+        )
+        const reportCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.reportCount || 0), 10) || 0,
+        )
+        const requiredReports = weeklyMinimumNewsReports()
+        if (reportCount >= requiredReports && approvedCount >= requiredReports)
+          return "approved"
+        if (revisionRequestedCount > 0) return "revise"
+        if (awaitingReReviewCount > 0) return "waiting"
+        if (submittedCount > 0) return "submitted"
+        return "submitted"
+      }
+
+      function newsWeekSetStatusLabel(token = "") {
+        const normalized = normalizeText(token).toLowerCase()
+        if (normalized === "approved") return "Đã duyệt"
+        if (normalized === "revise") return "Cần sửa"
+        if (normalized === "waiting") return "Chờ duyệt"
+        if (normalized === "submitted") return "Đã nộp"
+        return "Đã nộp"
+      }
+
+      function newsWeekSetStatusChipHtml(token = "") {
+        const normalized = normalizeText(token).toLowerCase()
+        const tone =
+          normalized === "approved" ? "good"
+          : normalized === "revise" || normalized === "waiting" ? "revise"
+          : "warn"
+        const span = document.createElement("span")
+        span.className = "chip " + chipClassForTone(tone)
+        span.textContent = newsWeekSetStatusLabel(normalized)
+        return span.outerHTML
+      }
+
+      function newsQueueSummaryChipHtml(label = "", count = 0, tone = "") {
+        const span = document.createElement("span")
+        span.className = `chip ${chipClassForTone(tone)} queue-summary-chip`
+        const labelSpan = document.createElement("span")
+        labelSpan.className = "queue-summary-chip-label"
+        labelSpan.textContent = normalizeText(label)
+        const countSpan = document.createElement("strong")
+        countSpan.className = "queue-summary-chip-count"
+        countSpan.textContent = String(
+          Math.max(0, Number.parseInt(String(count), 10) || 0),
+        )
+        span.append(labelSpan, countSpan)
+        return span.outerHTML
+      }
+
+      function renderNewsQueueSummaryChips(summaryEl, summary = {}) {
+        if (!summaryEl) return
+        const counts = {
+          submitted: Math.max(
+            0,
+            Number.parseInt(String(summary?.submitted || 0), 10) || 0,
+          ),
+          revise: Math.max(
+            0,
+            Number.parseInt(String(summary?.revise || 0), 10) || 0,
+          ),
+          waiting: Math.max(
+            0,
+            Number.parseInt(String(summary?.waiting || 0), 10) || 0,
+          ),
+          approved: Math.max(
+            0,
+            Number.parseInt(String(summary?.approved || 0), 10) || 0,
+          ),
+        }
+        summaryEl.innerHTML = [
+          newsQueueSummaryChipHtml("Đã nộp", counts.submitted, "warn"),
+          newsQueueSummaryChipHtml("Cần chỉnh sửa", counts.revise, "bad"),
+          newsQueueSummaryChipHtml("Chờ duyệt", counts.waiting, "revise"),
+          newsQueueSummaryChipHtml("Đã duyệt", counts.approved, "good"),
+        ].join("")
+        summaryEl.setAttribute(
+          "aria-label",
+          `Đã nộp ${counts.submitted}; Cần chỉnh sửa ${counts.revise}; Chờ duyệt ${counts.waiting}; Đã duyệt ${counts.approved}`,
+        )
+      }
+
+      function summarizeNewsWeekSetStatuses(weekSets = []) {
+        const summary = {
+          approved: 0,
+          submitted: 0,
+          waiting: 0,
+          revise: 0,
+        }
+        ;(Array.isArray(weekSets) ? weekSets : []).forEach((entry) => {
+          const token = newsWeekSetStatusToken(entry)
+          if (token === "approved") summary.approved += 1
+          else if (token === "revise") summary.revise += 1
+          else if (token === "waiting") summary.waiting += 1
+          else summary.submitted += 1
+        })
+        return summary
+      }
+
+      function newsWeekSetById(weekSetId = "", weekSets = null) {
+        const id = normalizeText(weekSetId)
+        if (!id) return null
+        const source =
+          Array.isArray(weekSets) ? weekSets
+          : Array.isArray(state.newsWeekSets) ? state.newsWeekSets
+          : []
+        return source.find((entry) => normalizeText(entry?.id) === id) || null
+      }
+
+      function newsWeekSetContainingReportDate(
+        reportDate = "",
+        weekSets = null,
+      ) {
+        const dateKey = normalizeText(reportDate).slice(0, 10)
+        if (!dateKey) return null
+        const source =
+          Array.isArray(weekSets) ? weekSets
+          : Array.isArray(state.newsWeekSets) ? state.newsWeekSets
+          : []
+        return (
+          source.find((entry) =>
+            (Array.isArray(entry?.reports) ? entry.reports : []).some(
+              (report) => normalizeText(report?.reportDate) === dateKey,
+            ),
+          ) || null
+        )
+      }
+
+      function newsViewerItemStatusChipModel(item = {}) {
+        const hasStatus =
+          Boolean(normalizeText(item?.reviewStatus)) ||
+          item?.awaitingReReview === true
+        if (!hasStatus)
+          return {
+            label: "-",
+            tone: "neutral",
+          }
+        const status = normalizeNewsReviewStatusToken(item?.reviewStatus)
+        if (status === "approved")
+          return {
+            label: "Đã duyệt",
+            tone: "good",
+          }
+        if (status === "revision-requested")
+          return {
+            label: "Cần sửa",
+            tone: "revise",
+          }
+        if (status === "submitted" && item?.awaitingReReview === true)
+          return {
+            label: "Chờ duyệt",
+            tone: "revise",
+          }
+        if (status === "submitted")
+          return {
+            label: "Đã nộp",
+            tone: "warn",
+          }
+        return {
+          label: "-",
+          tone: "neutral",
+        }
+      }
+
+      function setNewsViewerStatusChip(item = {}) {
+        const chip = document.getElementById("newsViewerReviewStatusChip")
+        if (!chip) return
+        const model = newsViewerItemStatusChipModel(item)
+        chip.className = `chip ${chipClassForTone(model.tone)}`
+        chip.textContent = model.label
+      }
+
+      function newsViewerFieldElement(fieldKey = "") {
+        const id = NEWS_VIEWER_MODAL_FIELD_IDS[normalizeText(fieldKey)]
+        return id ? document.getElementById(id) : null
+      }
+
+      function setNewsViewerFieldValue(fieldKey = "", value = "") {
+        const input = newsViewerFieldElement(fieldKey)
+        if (!input) return
+        input.value = normalizeText(value)
+      }
+
+      function setNewsWeekSetModalStatus(message = "") {
+        const statusEl = document.getElementById("newsWeekSetModalStatus")
+        if (!statusEl) return
+        statusEl.textContent =
+          normalizeText(message) || "Trình xem đã sẵn sàng."
+      }
+
+      function newsWeekSetViewerCurrentItem() {
+        const items =
+          Array.isArray(state.newsWeekSetViewerItems) ?
+            state.newsWeekSetViewerItems
+          : []
+        const index = Number.parseInt(String(state.newsWeekSetViewerIndex), 10)
+        if (!items.length || !Number.isFinite(index) || index < 0) return null
+        return items[index] || null
+      }
+
+      function syncNewsWeekSetViewerControls() {
+        const items =
+          Array.isArray(state.newsWeekSetViewerItems) ?
+            state.newsWeekSetViewerItems
+          : []
+        const index = Number.parseInt(String(state.newsWeekSetViewerIndex), 10)
+        const total = items.length
+        const indexEl = document.getElementById("newsWeekSetModalIndex")
+        if (indexEl) {
+          indexEl.textContent =
+            total > 0 && index >= 0 ? `${index + 1} / ${total}` : "0 / 0"
+        }
+        const prevBtn = document.getElementById("newsWeekSetModalPrevBtn")
+        if (prevBtn instanceof HTMLButtonElement) {
+          prevBtn.disabled = total === 0 || index <= 0
+        }
+        const nextBtn = document.getElementById("newsWeekSetModalNextBtn")
+        if (nextBtn instanceof HTMLButtonElement) {
+          nextBtn.disabled = total === 0 || index >= total - 1
+        }
+      }
+
+      function renderNewsWeekSetViewer() {
+        const weekSet = newsWeekSetById(state.newsWeekSetViewerWeekSetId)
+        const active = newsWeekSetViewerCurrentItem()
+        const metaEl = document.getElementById("newsWeekSetModalMeta")
+        if (metaEl) {
+          if (!weekSet) {
+            metaEl.textContent = "Mở một tuần báo cáo để xem các bài đã nộp."
+          } else {
+            const child = selectedDashboardChild() || {}
+            const studentLabel =
+              normalizeText(
+                child?.fullName || child?.englishName || child?.eaglesId,
+              ) || "Học sinh"
+            const level = gradeLabel(child?.currentGrade) || "-"
+            metaEl.textContent = `${formatPortalDate(weekSet.weekStart)} - ${formatPortalDate(weekSet.weekEnd)} | ${studentLabel} | ${level}`
+          }
+        }
+        const reportDateInput = document.getElementById("newsViewerReportDate")
+        if (reportDateInput)
+          reportDateInput.value = normalizeText(active?.reportDate)
+        setNewsViewerStatusChip(active || {})
+        const submittedAtInput = document.getElementById(
+          "newsViewerSubmittedAt",
+        )
+        if (submittedAtInput) {
+          submittedAtInput.value =
+            normalizeText(active?.submittedAt) ?
+              formatPortalDateTime(active?.submittedAt)
+            : "-"
+        }
+        Object.keys(NEWS_VIEWER_MODAL_FIELD_IDS).forEach((fieldKey) => {
+          setNewsViewerFieldValue(fieldKey, active?.[fieldKey] || "")
+        })
+        const vocabularyRows = document.getElementById(
+          "newsWeekSetModalVocabularyRows",
+        )
+        if (vocabularyRows) {
+          const vocabulary =
+            Array.isArray(active?.vocabulary) ? active.vocabulary : []
+          vocabularyRows.innerHTML =
+            vocabulary.length ?
+              vocabulary
+                .map(
+                  (row) => `
+          <article class="new-word-entry">
+            <div class="new-word-entry-head">
+              <strong>${escapeHtml(normalizeText(row?.english) || "New word")}</strong>
+              <span class="new-word-entry-pronunciation">/${escapeHtml(normalizeText(row?.syllabication))}/</span>
+              <strong class="new-word-entry-part-of-speech">${escapeHtml(normalizeText(row?.partOfSpeech))}</strong>
+              <span class="new-word-entry-vietnamese">vi: ${escapeHtml(normalizeText(row?.vietnamese))}</span>
+            </div>
+            <p class="new-word-entry-definition news-review-vocabulary-definition">${escapeHtml(normalizeText(row?.definition))}</p>
+          </article>`,
+                )
+                .join("")
+            : '<p class="small">No vocabulary saved.</p>'
+        }
+        syncNewsWeekSetViewerControls()
+        scheduleChipTooltipRefresh(
+          document.getElementById("newsWeekSetModal") || document,
+        )
+      }
+
+      function setNewsWeekSetModalOpen(open) {
+        const shouldOpen = Boolean(open)
+        state.newsWeekSetModalOpen = shouldOpen
+        const modal = document.getElementById("newsWeekSetModal")
+        if (!modal) return
+        modal.classList.toggle("hidden", !shouldOpen)
+        syncPortalModalBodyState()
+      }
+
+      function closeNewsWeekSetModal() {
+        setNewsWeekSetModalOpen(false)
+        state.newsWeekSetViewerWeekSetId = ""
+        state.newsWeekSetViewerItems = []
+        state.newsWeekSetViewerIndex = -1
+        renderNewsWeekSetViewer()
+        setNewsWeekSetModalStatus("")
+      }
+
+      function shiftNewsWeekSetViewer(offset = 0) {
+        const items =
+          Array.isArray(state.newsWeekSetViewerItems) ?
+            state.newsWeekSetViewerItems
+          : []
+        if (!items.length) return
+        const parsedOffset = Number.parseInt(String(offset), 10)
+        if (!Number.isFinite(parsedOffset) || parsedOffset === 0) return
+        const currentIndex = Number.parseInt(
+          String(state.newsWeekSetViewerIndex),
+          10,
+        )
+        const baseIndex = Number.isFinite(currentIndex) ? currentIndex : 0
+        const nextIndex = Math.max(
+          0,
+          Math.min(items.length - 1, baseIndex + parsedOffset),
+        )
+        if (nextIndex === baseIndex) return
+        state.newsWeekSetViewerIndex = nextIndex
+        renderNewsWeekSetViewer()
+        setNewsWeekSetModalStatus(
+          `Đang xem ${nextIndex + 1} / ${items.length} trong tuần đã chọn.`,
+        )
+      }
+
+      function openNewsWeekSetModalByWeekSetId(weekSetId = "", options = {}) {
+        const id = normalizeText(weekSetId)
+        if (!id) return false
+        const weekSet = newsWeekSetById(id, ensureParentNewsWeekSets())
+        if (!weekSet) return false
+        const items = sortNewsWeekSetViewerItems(weekSet.reports)
+        const preferredDate = normalizeText(options?.reportDate).slice(0, 10)
+        const preferredIndex =
+          preferredDate ?
+            items.findIndex(
+              (entry) => normalizeText(entry?.reportDate) === preferredDate,
+            )
+          : -1
+        state.newsWeekSetViewerWeekSetId = id
+        state.newsWeekSetViewerItems = items
+        state.newsWeekSetViewerIndex = preferredIndex >= 0 ? preferredIndex : 0
+        renderNewsWeekSetViewer()
+        setNewsWeekSetModalOpen(true)
+        if (!(options && options.silentStatus)) {
+          setNewsWeekSetModalStatus(
+            `Đã mở tuần ${normalizeText(weekSet?.weekStart)} đến ${normalizeText(weekSet?.weekEnd)}.`,
+          )
+        }
+        window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard")
+        return true
+      }
+
+      function openNewsWeekSetModalByReportDate(reportDate = "", options = {}) {
+        const dateKey = normalizeText(reportDate).slice(0, 10)
+        if (!dateKey) return false
+        const weekSet = newsWeekSetContainingReportDate(
+          dateKey,
+          ensureParentNewsWeekSets(),
+        )
+        if (!weekSet) return false
+        return openNewsWeekSetModalByWeekSetId(weekSet.id, {
+          ...options,
+          reportDate: dateKey,
+        })
+      }
+
+      function openParentNewsDate(dateKey = "", options = {}) {
+        const targetDate = normalizeText(dateKey).slice(0, 10)
+        setActivePortalView("dashboard")
+        setActiveDashboardPage("news-reports")
+        if (!targetDate) return false
+        return openNewsWeekSetModalByReportDate(targetDate, {
+          ...options,
+          silentStatus: options?.silentStatus === true,
+        })
+      }
+
+      function getParentNewsWindowDate(key = "reportDate") {
+        const news = selectedDashboardChild()?.newsReports?.window || {}
+        const preferred = normalizeText(news?.[key]).slice(0, 10)
+        if (preferred) return preferred
+        const fallback = normalizeText(
+          key === "todayDate" ? news?.reportDate : news?.todayDate,
+        ).slice(0, 10)
+        if (fallback) return fallback
+        return new Date().toISOString().slice(0, 10)
+      }
+
+      function renderNewsQueueTable(bodyId, items = []) {
+        const body = document.getElementById(bodyId)
+        if (!body) return
+        const source = Array.isArray(items) ? items : []
+        if (!source.length) {
+          body.innerHTML =
+            '<tr><td colspan="5">Chưa có báo cáo tin tức.</td></tr>'
+          return
+        }
+        body.innerHTML = source
+          .map((item) => {
+            const weekSetId = escapeHtml(normalizeText(item?.id))
+            const statusToken = newsWeekSetStatusToken(item)
+            const reportCount = Math.max(
+              0,
+              Number.parseInt(String(item?.reportCount || 0), 10) || 0,
+            )
+            const requiredReports = weeklyMinimumNewsReports()
+            const latestDate = normalizeText(
+              item?.latestReportDate || item?.reports?.[0]?.reportDate,
+            )
+            const latestHtml = formatQueueLatestSubmissionHtml(
+              item?.latestSubmittedAt,
+              latestDate,
+            )
+            return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/${requiredReports}`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn portal-button portal-button-info portal-button-open-week-set" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Mở tuần báo cáo</button></td>\n          </tr>`
+          })
+          .join("")
+        body.querySelectorAll(".queue-row-btn").forEach((button) => {
+          button.title = "Mở các báo cáo tin tức thuộc tuần này để xem chi tiết"
+          button.setAttribute("aria-label", button.title)
+        })
+        scheduleChipTooltipRefresh(body)
+      }
+
+      function newsCalendarEvents(calendar = []) {
+        return (Array.isArray(calendar) ? calendar : [])
+          .map((entry) => {
+            const dateKey = normalizeText(entry?.date || entry?.reportDate)
+            const status = resolveNewsCalendarStatus(entry)
+            if (!dateKey || !status) return null
+            const reviewStatus = normalizeText(entry?.reviewStatus)
+            const awaitingReReview = entry?.awaitingReReview === true
+            const colorToken = newsStatusColorToken(
+              status,
+              reviewStatus,
+              awaitingReReview,
+            )
+            const color = newsStatusColor(
+              status,
+              reviewStatus,
+              awaitingReReview,
+            )
+            const textColor =
+              ["blue", "green", "purple", "red"].includes(colorToken) ?
+                portalThemeTokenValue("--portal-calendar-status-text-strong")
+              : portalThemeTokenValue("--portal-calendar-status-text-soft")
+            return {
+              id: `news-${dateKey}`,
+              title: newsStatusLabel(status, reviewStatus, awaitingReReview),
+              start: dateKey,
+              allDay: true,
+              display: "block",
+              backgroundColor: color,
+              borderColor: color,
+              textColor,
+              classNames: [
+                "fc-event-news-status",
+                `fc-event-news-status-${colorToken}`,
+              ],
+            }
+          })
+          .filter(Boolean)
+      }
+
+      function buildHomeworkEvent(row, overdue = false) {
+        const start = normalizeText(row?.dueDate || row?.submittedDate)
+        if (!start) return null
+        return {
+          id: `detail-homework-${normalizeText(row?.id) || start}`,
+          title: normalizeText(row?.assignmentName) || "Bài tập",
+          start,
+          allDay: true,
+          classNames:
+            overdue ?
+              ["fc-event-homework-track", "fc-event-homework-overdue"]
+            : ["fc-event-homework-track"],
+        }
+      }
+
+      function attendanceStatusLabel(status = "") {
+        const normalized = normalizeText(status).toLowerCase()
+        if (normalized === "present") return "Có mặt"
+        if (normalized === "absent") return "Vắng"
+        if (normalized === "late" || normalized === "tardy") return "Đi trễ"
+        if (normalized === "excused") return "Có phép"
+        return normalizeText(status) || "Điểm danh"
+      }
+
+      function buildParentDetailModel(page) {
+        const child = selectedDashboardChild()
+        if (!child) {
+          return {
+            title: "Chi tiết học sinh",
+            lead: "Chưa có dữ liệu học sinh để hiển thị.",
+            metrics: [metricCard("Tổng quan", "Chưa có dữ liệu")],
+            calendarTitle: "Lịch",
+            calendarSummary: "Chưa có dữ liệu lịch.",
+            events: [],
+            primaryTitle: "Trọng tâm hiện tại",
+            primaryItems: [],
+            primaryEmpty: "Chưa có chi tiết.",
+            historyTitle: "Lịch sử gần đây",
+            historyItems: [],
+            historyEmpty: "Chưa có lịch sử.",
+          }
+        }
+        const details = child.details || {}
+        const attendanceHistory =
+          Array.isArray(details.attendanceHistory) ?
+            details.attendanceHistory
+          : []
+        const assignmentHistory =
+          Array.isArray(details.assignmentHistory) ?
+            details.assignmentHistory
+          : []
+        const currentHomework =
+          Array.isArray(details.currentHomework) ? details.currentHomework : []
+        const overdueHomework =
+          Array.isArray(details.overdueHomework) ? details.overdueHomework : []
+        const gradeHistory =
+          Array.isArray(details.gradeHistory) ? details.gradeHistory : []
+        const reportArchive =
+          Array.isArray(details.reportArchive) ? details.reportArchive : []
+        const unfinishedCurrentQuarterAssignments =
+          Array.isArray(details.unfinishedCurrentQuarterAssignments) ?
+            details.unfinishedCurrentQuarterAssignments
+          : []
+        const pastQuartersUnfinishedAssignments =
+          Array.isArray(details.pastQuartersUnfinishedAssignments) ?
+            details.pastQuartersUnfinishedAssignments
+          : []
+        const currentQuarterDeadline = normalizeText(
+          details.currentQuarterDeadline,
+        )
+        const schoolSetup = child.schoolSetup || {}
+        const quarterSetupReady = hasCompleteQuarterSetup(schoolSetup)
+        const attendance = child.attendance || {}
+        const assignments = child.assignments || {}
+        const grades = child.grades || {}
+        const totalAttendance = parseNumber(attendance.total)
+        const presentAttendance = parseNumber(attendance.present)
+        const absentAttendance = parseNumber(attendance.absent)
+        const lateAttendance = parseNumber(attendance.late)
+        const excusedAttendance = parseNumber(attendance.excused)
+        const attendancePercent =
+          totalAttendance > 0 ? (presentAttendance / totalAttendance) * 100 : 0
+        const averageScore =
+          (
+            grades.averageScorePercent === null ||
+            grades.averageScorePercent === undefined
+          ) ?
+            null
+          : Number(grades.averageScorePercent)
+        const recommendationItems = []
+        if (parseNumber(assignments.overdue) > 0) {
+          recommendationItems.push({
+            title: "Ưu tiên xử lý bài tập quá hạn",
+            meta: `${parseNumber(assignments.overdue)} mục quá hạn`,
+            note: "Hoàn thành các bài quá hạn cũ nhất trước khi nhận thêm nhiệm vụ ôn tập mới.",
+            tone: "bad",
+          })
+        }
+        if (parseNumber(assignments.pending) > 2) {
+          recommendationItems.push({
+            title: "Giữ khung giờ làm bài cố định",
+            meta: `${parseNumber(assignments.pending)} mục đang chờ`,
+            note: "Duy trì một khung giờ cố định mỗi ngày cho đến khi hàng chờ giảm.",
+            tone: "warn",
+          })
+        }
+        if (totalAttendance > 0 && attendancePercent < 90) {
+          recommendationItems.push({
+            title: "Cải thiện độ ổn định chuyên cần",
+            meta: `Chuyên cần ${formatPercent(attendancePercent)}`,
+            note: "Tỷ lệ chuyên cần giảm đang ảnh hưởng đáng kể đến tiến độ và kết quả học tập.",
+            tone: "warn",
+          })
+        }
+        if (Number.isFinite(averageScore) && averageScore < 75) {
+          recommendationItems.push({
+            title: "Ưu tiên ôn tập chủ đề điểm thấp",
+            meta: `Điểm TB ${formatPercent(averageScore)}`,
+            note: "Dùng lịch sử điểm gần đây bên dưới để chọn bộ chủ đề ôn tập tiếp theo.",
+            tone: "bad",
+          })
+        }
+        if (!recommendationItems.length) {
+          recommendationItems.push({
+            title: "Duy trì nhịp học hiện tại",
+            meta: "Không có điểm nghẽn khẩn cấp",
+            note: "Giữ nhịp bài tập, điểm danh và ôn tập như hiện tại trong tuần này.",
+            tone: "good",
+          })
+        }
+        if (page === "news-reports") {
+          const news = child.newsReports || {}
+          const newsSummary = news.statusSummary || {}
+          const calendar = Array.isArray(news.calendar) ? news.calendar : []
+          const newsItems = Array.isArray(news.items) ? news.items : []
+          const queueItems = buildNewsQueueItems(newsItems)
+          const weekItems = buildNewsWeekSets(newsItems)
+          const setSummary = summarizeNewsWeekSetStatuses(weekItems)
+          const approved = parseNumber(newsSummary.approved)
+          const submitted = parseNumber(newsSummary.submitted)
+          const revisionRequested = parseNumber(newsSummary.revisionRequested)
+          const total = approved + submitted + revisionRequested
+          return {
+            title: "Báo cáo tin tức",
+            lead:
+              total ?
+                `${total} báo cáo tin tức gần đây cho ${normalizeText(child.fullName || child.eaglesId)}.`
+              : "Chưa có báo cáo tin tức nào.",
+            metrics: [
+              metricCard(
+                "Đã duyệt",
+                String(setSummary.approved),
+                setSummary.approved ? "green" : "blue",
+              ),
+              metricCard(
+                "Chờ duyệt",
+                String(setSummary.waiting),
+                setSummary.waiting ? "blue" : "green",
+              ),
+              metricCard(
+                "Cần sửa",
+                String(setSummary.revise),
+                setSummary.revise ? "purple" : "green",
+              ),
+              metricCard("Số báo cáo", String(total)),
+            ],
+            calendarTitle: "Lịch báo cáo tin tức",
+            calendarSummary:
+              calendar.length ?
+                "Tình trạng báo cáo trong 60 ngày gần nhất."
+              : "Chưa có lịch báo cáo để hiển thị.",
+            events: newsCalendarEvents(calendar),
+            primaryTitle: "Hàng chờ gần nhất",
+            primaryItems: weekItems,
+            primaryEmpty: "Chưa có báo cáo tin tức.",
+            historyTitle: "Lịch sử báo cáo",
+            historyItems: queueItems.slice(6),
+            historyEmpty: "Chưa có lịch sử báo cáo.",
+          }
+        }
+        if (page === "current-homework") {
+          return {
+            title: "Bài tập về nhà hiện tại",
+            lead: `${currentHomework.length || 0} bài tập hiện tại vẫn đang mở cho ${normalizeText(child.fullName || child.eaglesId)}.`,
+            metrics: [
+              metricCard(
+                "Đang mở",
+                String(currentHomework.length),
+                currentHomework.length ? "blue" : "green",
+              ),
+              metricCard(
+                "Quá hạn",
+                String(parseNumber(assignments.overdue)),
+                parseNumber(assignments.overdue) ? "red" : "green",
+              ),
+              metricCard(
+                "Đã hoàn thành",
+                String(parseNumber(assignments.completed)),
+                "green",
+              ),
+              metricCard(
+                "Điểm TB",
+                Number.isFinite(averageScore) ?
+                  formatPercent(averageScore)
+                : "-",
+                Number.isFinite(averageScore) && averageScore < 75 ?
+                  "purple"
+                : "green",
+              ),
+            ],
+            calendarTitle: "Lịch bài tập hiện tại",
+            calendarSummary:
+              currentHomework.length ?
+                "Các bài tập đang mở được gắn vào từng ngày đến hạn."
+              : "Hiện chưa có bài tập đang mở.",
+            events: currentHomework
+              .map((row) => buildHomeworkEvent(row, false))
+              .filter(Boolean),
+            primaryTitle: "Bài tập đang mở",
+            primaryItems: currentHomework.map((row) => ({
+              title: normalizeText(row.assignmentName) || "Bài tập",
+              meta: `Hạn nộp ${formatPortalDate(row.dueAt || row.dueDate)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
+              note: normalizeText(row.comments) || "Đang chờ nộp bài.",
+              tone: "warn",
+            })),
+            primaryEmpty: "Chưa có bài tập hiện tại chờ nộp.",
+            historyTitle: "Lịch sử bài tập gần đây",
+            historyItems: assignmentHistory.slice(0, 10).map((row) => ({
+              title: normalizeText(row.assignmentName) || "Bài tập",
+              meta: `${normalizeText(row.status)} | ${formatPortalDate(row.dueAt || row.dueDate)}`,
+              note:
+                Number.isFinite(Number(row.scorePercent)) ?
+                  `Điểm ${formatPercent(row.scorePercent)}`
+                : normalizeText(row.comments) || "Chưa có điểm.",
+              tone:
+                row.status === "completed" ? "good"
+                : row.status === "overdue" ? "bad"
+                : "warn",
+            })),
+            historyEmpty: "Chưa có lịch sử bài tập.",
+          }
+        }
+        if (page === "past-due-homework") {
+          return {
+            title: "Bài tập về nhà quá hạn",
+            lead:
+              overdueHomework.length ?
+                `${overdueHomework.length} bài tập đã quá hạn.`
+              : "Hiện không có bài tập quá hạn.",
+            metrics: [
+              metricCard(
+                "Quá hạn",
+                String(overdueHomework.length),
+                overdueHomework.length ? "red" : "green",
+              ),
+              metricCard(
+                "Chờ nộp",
+                String(parseNumber(assignments.pending)),
+                parseNumber(assignments.pending) ? "blue" : "green",
+              ),
+              metricCard(
+                "Đã hoàn thành",
+                String(parseNumber(assignments.completed)),
+                "green",
+              ),
+              metricCard(
+                "Điểm TB",
+                Number.isFinite(averageScore) ?
+                  formatPercent(averageScore)
+                : "-",
+                Number.isFinite(averageScore) && averageScore < 75 ?
+                  "purple"
+                : "green",
+              ),
+            ],
+            calendarTitle: "Lịch bài tập quá hạn",
+            calendarSummary:
+              overdueHomework.length ?
+                "Bài tập quá hạn được tô nổi bật theo ngày đến hạn gốc."
+              : "Không có mốc quá hạn để xem.",
+            events: overdueHomework
+              .map((row) => buildHomeworkEvent(row, true))
+              .filter(Boolean),
+            primaryTitle: "Bài tập cần xử lý gấp",
+            primaryItems: overdueHomework.map((row) => ({
+              title: normalizeText(row.assignmentName) || "Bài tập quá hạn",
+              meta: `Hạn nộp ${formatPortalDate(row.dueAt || row.dueDate)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
+              note:
+                normalizeText(row.comments) || "Cần hoàn thành và nộp ngay.",
+              tone: "bad",
+            })),
+            primaryEmpty: "Hiện không có bài tập quá hạn cần xử lý.",
+            historyTitle: "Tiến trình bài tập gần đây",
+            historyItems: assignmentHistory.slice(0, 10).map((row) => ({
+              title: normalizeText(row.assignmentName) || "Bài tập",
+              meta: `${normalizeText(row.status)} | ${formatPortalDate(row.dueAt || row.dueDate)}`,
+              note:
+                row.homeworkOnTime === true ? "Hoàn thành đúng hạn."
+                : row.status === "completed" ? "Hoàn thành sau hạn."
+                : normalizeText(row.comments) || "Vẫn đang mở.",
+              tone:
+                row.status === "completed" ? "good"
+                : row.status === "overdue" ? "bad"
+                : "warn",
+            })),
+            historyEmpty: "Chưa có tiến trình bài tập.",
+          }
+        }
+        if (page === "attendance-calendar") {
+          const recentAlerts = attendanceHistory.filter(
+            (row) => row.status !== "present",
+          )
+          return {
+            title: "Điểm danh lớp học (SYTD)",
+            lead:
+              totalAttendance ?
+                `Lịch sử điểm danh bao gồm ${totalAttendance} buổi học đã ghi nhận trong năm học này.`
+              : "Chưa có dữ liệu điểm danh.",
+            metrics: [
+              metricCard("Có mặt", String(presentAttendance), "green"),
+              metricCard(
+                "Vắng",
+                String(absentAttendance),
+                absentAttendance ? "red" : "green",
+              ),
+              metricCard(
+                "Đi trễ",
+                String(lateAttendance),
+                lateAttendance ? "purple" : "green",
+              ),
+              metricCard(
+                "Có phép",
+                String(excusedAttendance),
+                excusedAttendance ? "blue" : "green",
+              ),
+            ],
+            calendarTitle: "Lịch điểm danh",
+            calendarSummary:
+              attendanceHistory.length ?
+                "Mỗi bản ghi điểm danh được gắn vào ngày học tương ứng."
+              : "Chưa có bản ghi điểm danh.",
+            events: attendanceHistory.map((row) => ({
+              id: `attendance-${normalizeText(row.id)}`,
+              title: `${attendanceStatusLabel(row.status)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
+              start: normalizeText(row.attendanceDate),
+              allDay: true,
+              classNames: [
+                `fc-event-attendance-${normalizeText(row.status).toLowerCase() || "present"}`,
+              ],
+            })),
+            primaryTitle: "Cảnh báo điểm danh",
+            primaryItems: recentAlerts.slice(0, 10).map((row) => ({
+              title: `${attendanceStatusLabel(row.status)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
+              meta: formatPortalDate(row.attendanceDate),
+              note:
+                normalizeText(row.comments) ||
+                "Được ghi nhận là Tình trạng không có mặt.",
+              tone: row.status === "absent" ? "bad" : "warn",
+            })),
+            primaryEmpty:
+              "Không có cảnh báo vắng, trễ hoặc có phép trong lịch sử gần đây.",
+            historyTitle: "Nhật ký điểm danh gần đây",
+            historyItems: attendanceHistory.slice(0, 12).map((row) => ({
+              title: `${normalizeText(row.className) || "Điểm danh lớp"} | ${attendanceStatusLabel(row.status)}`,
+              meta: formatPortalDate(row.attendanceDate),
+              note: normalizeText(row.comments) || "Không có ghi chú thêm.",
+              tone:
+                row.status === "present" ? "good"
+                : row.status === "absent" ? "bad"
+                : "warn",
+            })),
+            historyEmpty: "Chưa có nhật ký điểm danh.",
+          }
+        }
+        if (page === "performance-reports") {
+          return {
+            title: "Lưu trữ báo cáo kết quả học tập (SYTD)",
+            lead:
+              reportArchive.length ?
+                `${reportArchive.length} báo cáo kết quả học tập đang có trong kho lưu trữ để xem.`
+              : "Chưa có báo cáo kết quả học tập.",
+            metrics: [
+              metricCard(
+                "Báo cáo",
+                String(reportArchive.length),
+                reportArchive.length ? "green" : "blue",
+              ),
+              metricCard(
+                "Điểm TB",
+                Number.isFinite(averageScore) ?
+                  formatPercent(averageScore)
+                : "-",
+                Number.isFinite(averageScore) && averageScore < 75 ?
+                  "purple"
+                : "green",
+              ),
+              metricCard(
+                "Chờ nộp",
+                String(parseNumber(assignments.pending)),
+                parseNumber(assignments.pending) ? "blue" : "green",
+              ),
+              metricCard(
+                "Quá hạn",
+                String(parseNumber(assignments.overdue)),
+                parseNumber(assignments.overdue) ? "red" : "green",
+              ),
+            ],
+            calendarTitle: "Lịch báo cáo kết quả học tập",
+            calendarSummary:
+              reportArchive.length ?
+                "Ngày phát hành báo cáo được gắn trên lịch lưu trữ."
+              : "Chưa có ngày báo cáo để hiển thị.",
+            events: reportArchive.map((row) => ({
+              id: `report-${normalizeText(row.id)}`,
+              title: `Báo cáo${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
+              start: normalizeText(row.generatedDate),
+              allDay: true,
+              classNames: ["fc-event-report"],
+            })),
+            primaryTitle: "Báo cáo mới nhất",
+            primaryItems: reportArchive.slice(0, 8).map((row) => {
+              const chip = reportArchiveChipModel(row, "parent")
+              return {
+                title: `${normalizeText(row.className) || "Báo cáo"} | ${normalizeText(row.quarter || "").toUpperCase() || "Kỳ"}`,
+                meta: formatPortalWeekdayDateTime(
+                  row.generatedAt || row.generatedDate,
+                ),
+                note: chip.note,
+                tone: chip.label === "Reviewed" ? "good" : "warn",
+                href: buildParentReportViewerUrl(row),
+                sameTab: true,
+                badgeLabel: chip.label,
+                badgeTone: chip.tone,
+              }
+            }),
+            primaryEmpty: "Chưa có báo cáo trong kho lưu trữ.",
+            historyTitle: "Ngữ cảnh báo cáo",
+            historyItems: gradeHistory.slice(0, 10).map((row) => ({
+              title: normalizeText(row.assignmentName) || "Bài tập",
+              meta:
+                Number.isFinite(Number(row.scorePercent)) ?
+                  `Điểm ${formatPercent(row.scorePercent)}`
+                : normalizeText(row.status),
+              note:
+                normalizeText(row.comments) ||
+                "Dùng làm dữ liệu tham chiếu cho chu kỳ báo cáo.",
+              tone:
+                (
+                  Number.isFinite(Number(row.scorePercent)) &&
+                  Number(row.scorePercent) < 75
+                ) ?
+                  "warn"
+                : "good",
+            })),
+            historyEmpty: "Chưa có dữ liệu điểm tham chiếu.",
+          }
+        }
+        if (page === "grades-ytd") {
+          const quarterBoardRows = [...assignmentHistory, ...gradeHistory]
+            .filter(Boolean)
+            .filter((row, index, rows) => {
+              const rowId = [
+                normalizeText(row?.assignmentName),
+                normalizeText(row?.className),
+                normalizeText(
+                  row?.dueDate ||
+                    row?.dueAt ||
+                    row?.submittedDate ||
+                    row?.submittedAt,
+                ),
+              ].join("|")
+              return (
+                rows.findIndex((candidate) => {
+                  const candidateId = [
+                    normalizeText(candidate?.assignmentName),
+                    normalizeText(candidate?.className),
+                    normalizeText(
+                      candidate?.dueDate ||
+                        candidate?.dueAt ||
+                        candidate?.submittedDate ||
+                        candidate?.submittedAt,
+                    ),
+                  ].join("|")
+                  return candidateId === rowId
+                }) === index
+              )
+            })
+          const quarterBoard = buildQuarterGradeGroups(
+            quarterBoardRows,
+            schoolSetup,
+          )
+          return {
+            title: "Điểm số YTD",
+            lead:
+              gradeHistory.length ?
+                `${gradeHistory.length} bản ghi bài tập đã chấm/đã hoàn thành có trong năm học này.`
+              : "Chưa có lịch sử điểm.",
+            metrics: [
+              metricCard(
+                "Điểm TB",
+                Number.isFinite(averageScore) ?
+                  formatPercent(averageScore)
+                : "-",
+                Number.isFinite(averageScore) && averageScore < 75 ?
+                  "purple"
+                : "green",
+              ),
+              metricCard(
+                "Đã chấm",
+                String(gradeHistory.length),
+                gradeHistory.length ? "green" : "blue",
+              ),
+              metricCard(
+                "Chờ nộp",
+                String(parseNumber(assignments.pending)),
+                parseNumber(assignments.pending) ? "blue" : "green",
+              ),
+              metricCard(
+                "Đã hoàn thành",
+                String(parseNumber(assignments.completed)),
+                "green",
+              ),
+            ],
+            calendarTitle: "Quarter Exercise Matrix",
+            calendarSummary:
+              !quarterSetupReady ?
+                "Quarter setup is temporarily unavailable while school dates are being restored."
+              : quarterBoardRows.length ?
+                "Use Q1-Q4 to filter the exercise detail rows for the active quarter."
+              : "Chưa có hàng theo quý để hiển thị.",
+            quarterBoard:
+              quarterBoard.quarterBoardState === "ok" ? quarterBoard : null,
+            quarterBoardMaintenance:
+              quarterBoard.quarterBoardState === "ok" ?
+                null
+              : quarterBoard.maintenance,
+            primaryTitle: "Bài tập chưa hoàn thành: Quý hiện tại",
+            primarySummary:
+              currentQuarterDeadline ?
+                `Hoàn thành trước ${formatPortalDate(currentQuarterDeadline)} để bài vẫn được tính trong quý này.`
+              : "Hoàn thành trước khi quý kết thúc để bài vẫn được tính trong quý này.",
+            primaryItems: unfinishedCurrentQuarterAssignments
+              .slice(0, 10)
+              .map((row) => ({
+                title: normalizeText(row.assignmentTitle) || "Bài tập",
+                meta: normalizeText(row.meta) || "",
+                note:
+                  normalizeText(row.note) ||
+                  `Hoàn thành trước ${currentQuarterDeadline ? formatPortalDate(currentQuarterDeadline) : "khi quý kết thúc"} để bài vẫn được tính trong quý này.`,
+                tone: row.completed ? "good" : row.tone || "warn",
+                href: normalizeText(row.href),
+                links: Array.isArray(row.itemLinks) ? row.itemLinks : [],
+              })),
+            primaryEmpty: "Chưa có bài chưa hoàn thành trong quý hiện tại.",
+            historyTitle: "Bài tập các quý trước",
+            historySummary:
+              "Những bài này vẫn cần hoàn thành. Điểm nếu có chỉ hiển thị để theo dõi tiến độ và không quay lại tính điểm cho quý cũ.",
+            historyItems: pastQuartersUnfinishedAssignments
+              .slice(0, 12)
+              .map((row) => ({
+                title: normalizeText(row.assignmentTitle) || "Bài tập",
+                meta: normalizeText(row.meta) || "",
+                note:
+                  normalizeText(row.note) ||
+                  "Điểm ở đây chỉ dùng để theo dõi tiến độ và không còn tính vào điểm quý trước.",
+                tone: row.completed ? "good" : row.tone || "warn",
+                href: normalizeText(row.href),
+                links: Array.isArray(row.itemLinks) ? row.itemLinks : [],
+              })),
+            historyEmpty: "Chưa có bài từ các quý trước.",
+          }
+        }
+        const focusEvents = [
+          ...overdueHomework.map((row) => buildHomeworkEvent(row, true)),
+          ...currentHomework.map((row) => buildHomeworkEvent(row, false)),
+          ...reportArchive.slice(0, 10).map((row) => ({
+            id: `focus-report-${normalizeText(row.id)}`,
+            title: `Báo cáo | ${normalizeText(row.className) || "Lớp"}`,
+            start: normalizeText(row.generatedDate),
+            allDay: true,
+            classNames: ["fc-event-report"],
+          })),
+        ].filter(Boolean)
+        return {
+          title: "Khuyến nghị để đạt kết quả học tập tốt",
+          lead: recommendationItems.map((item) => item.title).join(". "),
+          metrics: [
+            metricCard(
+              "Chuyên cần",
+              formatPercent(attendancePercent),
+              attendancePercent < 90 ? "purple" : "green",
+            ),
+            metricCard(
+              "Điểm TB",
+              Number.isFinite(averageScore) ? formatPercent(averageScore) : "-",
+              Number.isFinite(averageScore) && averageScore < 75 ?
+                "purple"
+              : "green",
+            ),
+            metricCard(
+              "Chờ nộp",
+              String(parseNumber(assignments.pending)),
+              parseNumber(assignments.pending) ? "blue" : "green",
+            ),
+            metricCard(
+              "Quá hạn",
+              String(parseNumber(assignments.overdue)),
+              parseNumber(assignments.overdue) ? "red" : "green",
+            ),
+          ],
+          calendarTitle: "Lịch ưu tiên",
+          calendarSummary:
+            focusEvents.length ?
+              "Lịch tổng hợp bài tập cấp bách và các mốc báo cáo gần đây."
+            : "Hiện chưa có ưu tiên khẩn cấp trên lịch.",
+          events: focusEvents,
+          primaryTitle: "Hành động ưu tiên",
+          primaryItems: recommendationItems,
+          primaryEmpty: "Chưa có khuyến nghị cần làm ngay.",
+          historyTitle: "Dữ liệu tham chiếu",
+          historyItems: [...overdueHomework, ...gradeHistory.slice(0, 6)]
+            .slice(0, 10)
+            .map((row) => ({
+              title: normalizeText(
+                row.assignmentName || row.className || "Chi tiết tham chiếu",
+              ),
+              meta:
+                normalizeText(row.generatedAt) ?
+                  formatPortalDateTime(row.generatedAt)
+                : formatPortalDate(
+                    row.dueAt ||
+                      row.dueDate ||
+                      row.submittedAt ||
+                      row.submittedDate,
+                  ),
+              note:
+                normalizeText(row.comments) ||
+                "Dùng để hỗ trợ bộ khuyến nghị hiện tại.",
+              tone: normalizeText(row.status) === "overdue" ? "bad" : "warn",
+            })),
+          historyEmpty: "Chưa có dữ liệu tham chiếu.",
+        }
+      }
+
+      function ensurePortalDetailCalendar() {
+        const grid = document.getElementById("portalDetailCalendarGrid")
+        if (!grid) return null
+        if (!window.FullCalendar || !window.FullCalendar.Calendar) {
+          grid.innerHTML =
+            "<div class='detail-empty'>Không tải được FullCalendar.</div>"
+          return null
+        }
+        if (!state.detailCalendar) {
+          state.detailCalendar = new window.FullCalendar.Calendar(grid, {
+            initialView: "dayGridMonth",
+            height: "auto",
+            headerToolbar: {
+              left: "prev,next today",
+              center: "title",
+              right: "",
+            },
+            buttonText: {
+              today: "Hôm nay",
+            },
+            eventClick(info) {
+              const dateKey = normalizeText(
+                info?.event?.startStr || info?.event?.start,
+              )
+              if (!dateKey) return
+              setActiveDashboardPage("news-reports")
+              setActivePortalView("dashboard")
+              if (
+                openNewsWeekSetModalByReportDate(dateKey, {
+                  silentStatus: true,
+                })
+              ) {
+                setStatus(`Đã mở tuần báo cáo chứa ngày ${dateKey}.`, "ok")
+                return
+              }
+              requestAnimationFrame(() => {
+                state.detailCalendar?.gotoDate?.(dateKey)
+                state.detailCalendar?.updateSize?.()
+              })
+              setStatus(`Đã mở báo cáo tin tức cho ngày ${dateKey}.`, "ok")
+            },
+            events: [],
+          })
+        }
+        return state.detailCalendar
+      }
+
+      function renderPortalDetailPage() {
+        if (
+          state.activeView !== "dashboard" ||
+          state.activeDashboardPage === "home"
+        )
+          return
+        const model = buildParentDetailModel(state.activeDashboardPage)
+        document.getElementById("portalDetailTitle").textContent = model.title
+        document.getElementById("portalDetailLead").textContent = model.lead
+        document.getElementById("portalDetailCalendarTitle").textContent =
+          model.calendarTitle
+        document.getElementById("portalDetailCalendarSummary").textContent =
+          model.calendarSummary
+        document.getElementById("portalDetailPrimaryTitle").textContent =
+          model.primaryTitle
+        document.getElementById("portalDetailHistoryTitle").textContent =
+          model.historyTitle
+        const primaryList = document.getElementById("portalDetailPrimaryList")
+        const primaryTable = document.getElementById("portalDetailPrimaryTable")
+        document
+          .getElementById("portalDetailMetrics")
+          .replaceChildren(...model.metrics)
+        const isNewsPage = state.activeDashboardPage === "news-reports"
+        if (isNewsPage) {
+          primaryList?.classList.add("hidden")
+          primaryTable?.classList.remove("hidden")
+          renderNewsQueueTable("portalDetailQueueBody", model.primaryItems)
+        } else {
+          primaryList?.classList.remove("hidden")
+          primaryTable?.classList.add("hidden")
+          renderDetailList(
+            "portalDetailPrimaryList",
+            model.primaryItems,
+            model.primaryEmpty,
+          )
+        }
+        renderDetailList(
+          "portalDetailHistoryList",
+          model.historyItems,
+          model.historyEmpty,
+        )
+        const grid = document.getElementById("portalDetailCalendarGrid")
+        if (!grid) return
+        if (
+          state.activeDashboardPage === "grades-ytd" &&
+          model.quarterBoardMaintenance
+        ) {
+          state.detailCalendar?.destroy?.()
+          state.detailCalendar = null
+          renderQuarterBoardMaintenance(grid, model.quarterBoardMaintenance)
+          state.detailGradeTable?.destroy?.()
+          state.detailGradeTable = null
+          scheduleChipTooltipRefresh(
+            document.getElementById("portalDetailCard") || document,
+          )
+          return
+        }
+        if (state.activeDashboardPage === "grades-ytd" && model.quarterBoard) {
+          state.detailCalendar?.destroy?.()
+          state.detailCalendar = null
+          state.detailGradeTable?.destroy?.()
+          state.detailGradeTable = null
+          renderQuarterGradeBoard(grid, model.quarterBoard)
+          return
+        } else {
+          if (!window.FullCalendar?.Calendar) {
+            grid.innerHTML = "<div class='detail-empty'>Đang tải lịch...</div>"
+            loadPortalAsset("fullcalendar").then(() => {
+              renderPortalDetailPage()
+            }).catch((error) => {
+              grid.innerHTML = `<div class='detail-empty'>${escapeHtml(error.message || "Không tải được FullCalendar.")}</div>`
+            })
+            return
+          }
+          state.detailGradeTable?.destroy?.()
+          state.detailGradeTable = null
+          const calendar = ensurePortalDetailCalendar()
+          if (!calendar) return
+          calendar.removeAllEvents()
+          if (Array.isArray(model.events) && model.events.length) {
+            calendar.addEventSource(model.events)
+          }
+          const anchorDate = normalizeText(model.events?.[0]?.start)
+          if (anchorDate) {
+            calendar.gotoDate(anchorDate)
+          }
+          calendar.render()
+        }
+        scheduleChipTooltipRefresh(
+          document.getElementById("portalDetailCard") || document,
+        )
+      }
+
+      function syncDashboardPageVisibility() {
+        const passwordSetupRequired = Boolean(state.me?.mustChangePassword)
+        const authenticated = document
+          .getElementById("loginCard")
+          ?.classList.contains("hidden")
+        document
+          .getElementById("passwordSetupCard")
+          ?.classList.toggle("hidden", !passwordSetupRequired)
+        if (passwordSetupRequired) {
+          document.getElementById("loginCard")?.classList.add("hidden")
+          document.getElementById("passwordSetupParentsId").textContent =
+            normalizeText(state.me?.parentsId) || "-"
+          document.getElementById("portalCard")?.classList.add("hidden")
+          document.getElementById("portalDetailCard")?.classList.add("hidden")
+          document.getElementById("childPageCard")?.classList.add("hidden")
+          return
+        }
+        if (!authenticated) {
+          document.getElementById("portalCard")?.classList.add("hidden")
+          document.getElementById("portalDetailCard")?.classList.add("hidden")
+          document.getElementById("childPageCard")?.classList.add("hidden")
+          updateActiveDashboardNav()
+          return
+        }
+        const showDashboardHome =
+          state.activeView === "dashboard" &&
+          state.activeDashboardPage === "home"
+        const showDashboardDetail =
+          state.activeView === "dashboard" &&
+          state.activeDashboardPage !== "home"
+        const showChild = state.activeView === "child"
+        document
+          .getElementById("portalCard")
+          ?.classList.toggle("hidden", !showDashboardHome)
+        document
+          .getElementById("portalDetailCard")
+          ?.classList.toggle("hidden", !showDashboardDetail)
+        document
+          .getElementById("childPageCard")
+          ?.classList.toggle("hidden", !showChild)
+        updateActiveDashboardNav()
+        if (showDashboardDetail) {
+          requestAnimationFrame(() => {
+            renderPortalDetailPage()
+            state.detailCalendar?.updateSize?.()
+            window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard")
+          })
+        } else if (showChild) {
+          requestAnimationFrame(() => {
+            window.SISPortalNav?.scrollElementIntoView?.("#childPageCard")
+          })
+        }
+      }
+
+      function setActiveDashboardPage(page) {
+        state.activeDashboardPage = normalizeDashboardPage(page)
+        state.activeView = "dashboard"
+        setPastDueHomeworkModalOpen(false)
+        setPerformanceReportModalOpen(false)
+        closeNewsWeekSetModal()
+        syncDashboardPageVisibility()
+      }
+
+      function renderDashboard() {
+        const root = document.getElementById("dashboardMetrics")
+        const identity = document.getElementById("studentIdentity")
+        const snapshotBadge = document.getElementById("snapshotBadge")
+        const overview = document.getElementById("parentOverviewSummary")
+        const child = selectedDashboardChild()
+        if (!child) {
+          if (identity)
+            identity.textContent = "Thông tin học sinh chưa sẵn sàng."
+          root.replaceChildren(metricCard("Tổng quan", "Chưa có dữ liệu"))
+          renderCurrentHomeworkOverviewCard({}, 0)
+          renderPastDueHomeworkOverviewCard({}, 0)
+          renderAttendanceOverviewCard({})
+          renderAttendanceOverviewMetrics({})
+          state.reportAcknowledgements = readStoredReportAcknowledgements()
+          renderPerformanceReportsOverviewCard({})
+          setSummary("attendanceCalendarSummary", "Chưa có dữ liệu.")
+          setSummary("performanceReportsSummary", "Chưa có dữ liệu.")
+          setSummary("gradesYtdSummary", "Chưa có dữ liệu.")
+          setSummary("recommendationsSummary", "Chưa có dữ liệu.")
+          if (snapshotBadge) {
+            snapshotBadge.textContent = "Chưa có dữ liệu"
+            snapshotBadge.className = "chip chip-neutral"
+          }
+          if (overview)
+            overview.textContent = "Bảng điều khiển học sinh chưa sẵn sàng."
+          renderNewsQueueHome()
+          return
+        }
+        const attendance = child.attendance || {}
+        const assignments = child.assignments || {}
+        const grades = child.grades || {}
+        const performance = child.performance || {}
+        const news = child.newsReports || {}
+        const newsSummary = news.statusSummary || {}
+        const totalAttendance = parseNumber(attendance.total)
+        const presentAttendance = parseNumber(attendance.present)
+        const absentAttendance = parseNumber(attendance.absent)
+        const attendancePercent =
+          totalAttendance > 0 ? (presentAttendance / totalAttendance) * 100 : 0
+        const absencePercent =
+          totalAttendance > 0 ? (absentAttendance / totalAttendance) * 100 : 0
+        const pendingHomework = parseNumber(assignments.pending)
+        const overdueHomework = parseNumber(assignments.overdue)
+        const averageScore =
+          (
+            grades.averageScorePercent === null ||
+            grades.averageScorePercent === undefined
+          ) ?
+            null
+          : Number(grades.averageScorePercent)
+        const reportCount = parseNumber(performance.reportCount)
+        const approvedNews = parseNumber(newsSummary.approved)
+        const submittedNews = parseNumber(newsSummary.submitted)
+        const revisionNews = parseNumber(newsSummary.revisionRequested)
+        const totalNews = approvedNews + submittedNews + revisionNews
+        const linkedChild =
+          Array.isArray(state.children) ?
+            state.children.find(
+              (entry) =>
+                normalizeText(entry?.eaglesId) ===
+                normalizeText(child.eaglesId),
+            )
+          : null
+        const displayEaglesId = normalizeText(child.eaglesId)
+        const displayName = normalizeText(
+          child.englishName ||
+            linkedChild?.englishName ||
+            child.fullName ||
+            linkedChild?.fullName ||
+            child.eaglesId ||
+            linkedChild?.eaglesId,
+        )
+        const absenceTone =
+          absencePercent > 10 ? "red"
+          : absencePercent > 5 ? "purple"
+          : "green"
+        const pendingTone = pendingHomework > 0 ? "amber" : "green"
+        const overdueTone = overdueHomework > 0 ? "red" : "green"
+        const averageTone =
+          Number.isFinite(averageScore) && averageScore < 75 ? "purple"
+          : Number.isFinite(averageScore) ? "green"
+          : ""
+        const reportTone = reportCount > 0 ? "green" : "blue"
+        const approvedNewsTone = approvedNews > 0 ? "green" : "blue"
+        const submittedNewsTone = submittedNews > 0 ? "blue" : "green"
+        const revisionNewsTone = revisionNews > 0 ? "purple" : "green"
+        if (identity) {
+          identity.textContent = `${displayName} | ${displayEaglesId || "-"} | ${gradeLabel(child.currentGrade || "Chưa có lớp")}`
+        }
+        root.replaceChildren(
+          metricCard(
+            "Chuyên cần SYTD",
+            formatPercent(attendancePercent),
+            "green",
+          ),
+          metricCard("Vắng SYTD", formatPercent(absencePercent), absenceTone),
+          metricCard("BTVN chưa nộp", String(pendingHomework), pendingTone),
+          metricCard("BTVN quá hạn", String(overdueHomework), overdueTone),
+          metricCard(
+            "Điểm TB",
+            Number.isFinite(averageScore) ? formatPercent(averageScore) : "-",
+            averageTone,
+          ),
+          metricCard("Báo cáo", String(reportCount), reportTone),
+          metricCard(
+            "Tin tức đã duyệt",
+            String(approvedNews),
+            approvedNewsTone,
+          ),
+          metricCard(
+            "Tin tức đã nộp",
+            String(submittedNews),
+            submittedNewsTone,
+          ),
+          metricCard("Tin tức cần sửa", String(revisionNews), revisionNewsTone),
+        )
+        if (overview) {
+          overview.textContent =
+            displayEaglesId ?
+              `${displayName} (${displayEaglesId})`
+            : displayName
+        }
+        renderCurrentHomeworkOverviewCard(child, pendingHomework)
+        renderPastDueHomeworkOverviewCard(child, overdueHomework)
+        renderAttendanceOverviewCard(child)
+        state.reportAcknowledgements = readStoredReportAcknowledgements()
+        renderPerformanceReportsOverviewCard(child)
+        const outstandingReportCount = state.reportArchiveRows.filter(
+          (row) => !isReportAcknowledged(row),
+        ).length
+        setSummary(
+          "attendanceCalendarSummary",
+          totalAttendance > 0 ?
+            `Đã học ${presentAttendance}/${totalAttendance} lớp (${formatPercent(attendancePercent)}), trễ ${parseNumber(attendance.late)} (${formatPercent(totalAttendance > 0 ? (parseNumber(attendance.late) / totalAttendance) * 100 : 0)}).`
+          : "Chưa có dữ liệu điểm danh.",
+        )
+        setSummary(
+          "performanceReportsSummary",
+          reportCount > 0 ?
+            `${reportCount} báo cáo trong kho lưu trữ. ${outstandingReportCount} báo cáo đang chờ xác nhận xem.`
+          : "Chưa có báo cáo kết quả học tập.",
+        )
+        setSummary(
+          "gradesYtdSummary",
+          Number.isFinite(averageScore) ?
+            `Điểm trung bình YTD: ${formatPercent(averageScore)}.`
+          : "Chưa có điểm trung bình YTD.",
+        )
+        const recommendations = []
+        if (overdueHomework > 0)
+          recommendations.push("Ưu tiên xử lý bài tập quá hạn trước.")
+        if (pendingHomework > 2)
+          recommendations.push("Duy trì khung giờ làm bài cố định mỗi ngày.")
+        if (totalAttendance > 0 && attendancePercent < 90)
+          recommendations.push(
+            "Cải thiện chuyên cần để bảo toàn kết quả học tập.",
+          )
+        if (Number.isFinite(averageScore) && averageScore < 75)
+          recommendations.push(
+            "Ưu tiên ôn lại các chủ đề có điểm thấp trong tuần này.",
+          )
+        if (totalNews === 0)
+          recommendations.push(
+            "Khuyến khích học sinh gửi báo cáo tin tức hôm nay.",
+          )
+        if (!recommendations.length)
+          recommendations.push(
+            "Duy trì nhịp học hiện tại và thực hiện một lần rà soát tiến độ mỗi tuần.",
+          )
+        setSummary("recommendationsSummary", recommendations.join(" "))
+        if (snapshotBadge) {
+          snapshotBadge.textContent = `HS ${normalizeText(child.eaglesId)}`
+          snapshotBadge.className = "chip chip-ok"
+        }
+        renderPortalDetailPage()
+        renderNewsQueueHome()
+        scheduleChipTooltipRefresh(
+          document.getElementById("portalCard") || document,
+        )
+      }
+
+      function buildParentNewsWeekSetsFromState() {
+        const child = selectedDashboardChild()
+        const news = child?.newsReports || {}
+        const items = Array.isArray(news.items) ? news.items : []
+        return buildNewsWeekSets(items)
+      }
+      async function refreshParentNewsCalendarForSelectedChild(days = 60) {
+        const child = selectedDashboardChild()
+        const eaglesId = normalizeText(child?.eaglesId)
+        if (!child || !eaglesId) return null
+        const payload = await api(
+          `${PARENT_CHILDREN_PATH}/${encodeURIComponent(eaglesId)}/news-reports/calendar?days=${encodeURIComponent(String(days))}`,
+        )
+        const statusSummary = payload?.statusSummary || {
+          submitted: 0,
+          approved: 0,
+          revisionRequested: 0,
+        }
+        const calendar =
+          Array.isArray(payload?.calendar) ? payload.calendar : []
+        const latestSubmittedAt =
+          Array.isArray(payload?.items) ?
+            normalizeText(
+              payload.items
+                .map((entry) => entry?.submittedAt)
+                .filter(Boolean)
+                .sort()
+                .reverse()[0],
+            )
+          : ""
+        child.newsReports = {
+          ...(child?.newsReports || {}),
+          submittedCount:
+            parseNumber(statusSummary.approved) +
+            parseNumber(statusSummary.submitted) +
+            parseNumber(statusSummary.revisionRequested),
+          statusSummary,
+          latestSubmittedAt,
+          window: payload?.window || null,
+          openReport: payload?.openReport || null,
+          items: Array.isArray(payload?.items) ? payload.items : [],
+          calendar,
+        }
+        state.newsItems = Array.isArray(payload?.items) ? payload.items : []
+        state.newsWeekSets = buildParentNewsWeekSetsFromState()
+        return payload
+      }
+
+      function ensureParentNewsWeekSets() {
+        if (!Array.isArray(state.newsWeekSets) || !state.newsWeekSets.length) {
+          try {
+            state.newsWeekSets = buildParentNewsWeekSetsFromState()
+          } catch (error) {
+            console.error(
+              "ensureParentNewsWeekSets: failed to build week sets",
+              error,
+            )
+            state.newsWeekSets = []
+          }
+        }
+        return state.newsWeekSets
+      }
+
+      function renderNewsQueueHome() {
+        const summaryEl = document.getElementById("newsQueueSummary")
+        if (!summaryEl) return
+        const child = selectedDashboardChild()
+        const emptySummary = {
+          approved: 0,
+          submitted: 0,
+          waiting: 0,
+          revise: 0,
+        }
+        if (!child) {
+          renderNewsQueueSummaryChips(summaryEl, emptySummary)
+          renderNewsQueueTable("newsQueueBody", [])
+          return
+        }
+        const items = buildParentNewsWeekSetsFromState()
+        state.newsWeekSets = items
+        const summary = summarizeNewsWeekSetStatuses(items)
+        renderNewsQueueSummaryChips(summaryEl, summary)
+        renderNewsQueueTable("newsQueueBody", items)
+        scheduleChipTooltipRefresh(
+          document.getElementById("newsQueueCard") || document,
+        )
+      }
+
+      function applyPatchToProfileState() {
+        for (const [key, value] of Object.entries(state.patch)) {
+          state.profile[key] = Array.isArray(value) ? [...value] : value
+        }
+      }
+      async function loadChildProfile(eaglesId) {
+        state.patch = {}
+        const id = normalizeText(eaglesId)
+        if (!id) {
+          renderDashboard()
+          renderProfileFields()
+          updateChildPageBadge()
+          return
+        }
+        const payload = await api(
+          `${PARENT_CHILDREN_PATH}/${encodeURIComponent(id)}/profile`,
+        )
+        const child = payload.child || {}
+        state.selectedEaglesId = normalizeText(child.eaglesId)
+        state.profile =
+          payload.profile && typeof payload.profile === "object" ?
+            payload.profile
+          : {}
+        state.lockedFields = new Set(
+          Array.isArray(payload.lockedFields) ?
+            payload.lockedFields.map((entry) => normalizeText(entry))
+          : [],
+        )
+        state.immutableFields = new Set(
+          Array.isArray(payload.immutableFields) ?
+            payload.immutableFields.map((entry) => normalizeText(entry))
+          : ["eaglesId", "studentNumber"],
+        )
+        document.getElementById("studentEaglesIdValue").textContent =
+          normalizeText(child.eaglesId) || "-"
+        document.getElementById("studentNumberValue").textContent =
+          child.studentNumber === null || child.studentNumber === undefined ?
+            "-"
+          : String(child.studentNumber)
+        document.getElementById("studentNameValue").textContent =
+          normalizeText(child.fullName) || "-"
+        document.getElementById("studentGradeValue").textContent =
+          gradeLabel(child.currentGrade) || "-"
+        const immutableGradeNode = document.getElementById("immutableGrade")
+        if (immutableGradeNode) {
+          immutableGradeNode.textContent = gradeLabel(child.currentGrade) || "-"
+        }
+        const selectedChild = selectedDashboardChild()
+        state.newsItems =
+          Array.isArray(selectedChild?.newsReports?.items) ?
+            selectedChild.newsReports.items
+          : []
+        state.newsWeekSets = []
+        renderProfileFields()
+        renderDashboard()
+        updateChildPageBadge()
+      }
+
+      function renderChildrenSelect() {
+        const select = document.getElementById("childSelect")
+        select.innerHTML = ""
+        if (!state.children.length) {
+          select.innerHTML =
+            '<option value="">Chưa có học sinh liên kết</option>'
+          return
+        }
+        state.children.forEach((child) => {
+          const option = document.createElement("option")
+          option.value = normalizeText(child.eaglesId)
+          option.textContent = `${normalizeText(child.englishName || child.fullName || child.eaglesId)} | ${normalizeText(child.eaglesId)}`
+          if (option.value === state.selectedEaglesId) option.selected = true
+          select.appendChild(option)
+        })
+      }
+      async function hydratePortal(options = {}) {
+        const initialUser =
+          options && typeof options === "object" ?
+            options.initialUser || null
+          : null
+        const revealAuthState =
+          !options ||
+          typeof options !== "object" ||
+          options.revealAuthState !== false
+        if (initialUser) {
+          state.me = initialUser
+          setBrevoParentIdentity(state.me?.parentsId)
+          if (revealAuthState) {
+            document.documentElement.dataset.parentAuthState = "authenticated"
+          }
+          updateSessionBadge(
+            state.me?.parentsId ?
+              `Đã đăng nhập: ${state.me.parentsId}`
+            : "Chưa đăng nhập",
+            Boolean(state.me?.parentsId),
+          )
+        } else {
+          const me = await api(`${PARENT_AUTH_PREFIX}/me`)
+          state.me = me.user || null
+          setBrevoParentIdentity(state.me?.parentsId)
+          if (revealAuthState) {
+            document.documentElement.dataset.parentAuthState =
+              state.me?.parentsId ? "authenticated" : "unauthenticated"
+          }
+          updateSessionBadge(
+            state.me?.parentsId ?
+              `Đã đăng nhập: ${state.me.parentsId}`
+            : "Chưa đăng nhập",
+            Boolean(state.me?.parentsId),
+          )
+        }
+        syncDashboardPageVisibility()
+        if (state.me?.mustChangePassword) return
+        const childrenPayload = await api(PARENT_CHILDREN_PATH)
+        state.children =
+          Array.isArray(childrenPayload.items) ? childrenPayload.items : []
+        state.dashboard = await api(PARENT_DASHBOARD_PATH)
+        const selected = normalizeText(
+          document.getElementById("childSelect").value,
+        )
+        const requestedCompletionId = normalizeText(
+          new URLSearchParams(window.location.search || "").get("complete"),
+        )
+        const requestedChild = state.children.find(
+          (child) => normalizeText(child?.eaglesId) === requestedCompletionId,
+        )
+        const defaultEaglesId =
+          (requestedChild && requestedCompletionId) ||
+          selected ||
+          normalizeText(state.children[0]?.eaglesId)
+        state.selectedEaglesId = defaultEaglesId
+        const selectedChild = selectedDashboardChild()
+        state.newsItems =
+          Array.isArray(selectedChild?.newsReports?.items) ?
+            selectedChild.newsReports.items
+          : []
+        state.newsWeekSets = []
+        renderChildrenSelect()
+        if (defaultEaglesId) {
+          await loadChildProfile(defaultEaglesId)
+        } else {
+          state.profile = {}
+          state.patch = {}
+          renderDashboard()
+          renderProfileFields()
+          updateChildPageBadge()
+        }
+        setActivePortalView(state.activeView)
+        if (requestedChild) {
+          setActivePortalView("child")
+          window.SISPortalNav?.scrollElementIntoView?.("#childPageCard")
+        }
+      }
+      async function login() {
+        const parentsId = normalizeText(
+          document.getElementById("parentsId").value,
+        )
+        const password = normalizeText(
+          document.getElementById("parentPassword").value,
+        )
+        if (!parentsId || !password) {
+          setStatus("Vui lòng nhập đầy đủ parentsId và mật khẩu.", "err")
+          return
+        }
+        const result = await api(`${PARENT_AUTH_PREFIX}/login`, {
+          method: "POST",
+          body: {
+            parentsId,
+            password,
+          },
+        })
+        state.me = result?.user || {
+          parentsId,
+          role: "parent",
+        }
+        setBrevoParentIdentity(state.me?.parentsId || parentsId)
+        document.documentElement.dataset.parentAuthState = "authenticated"
+        document.getElementById("loginCard").classList.add("hidden")
+        await window.SIS_PORTAL_PREFERENCES?.migrate?.()
+        window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "parent" })
+        syncDashboardPageVisibility()
+        setActivePortalView("dashboard")
+        await hydratePortal({ initialUser: state.me })
+        if (handlePortalPostAuthRouteState()) return
+        openReportAccessErrorModalIfNeeded()
+        setStatus("Đăng nhập thành công.", "ok")
+      }
+      function activationTokenFromLocation() {
+        return normalizeText(new URL(window.location.href).searchParams.get("activate"))
+      }
+      function clearActivationTokenFromLocation() {
+        const url = new URL(window.location.href)
+        if (!url.searchParams.has("activate")) return
+        url.searchParams.delete("activate")
+        window.history.replaceState({}, "", `${url.pathname}${url.search}`)
+      }
+      function hidePortalForInvitation() {
+        document.getElementById("loginCard")?.classList.add("hidden")
+        document.getElementById("passwordSetupCard")?.classList.add("hidden")
+        document.getElementById("portalCard")?.classList.add("hidden")
+        document.getElementById("portalDetailCard")?.classList.add("hidden")
+        document.getElementById("childPageCard")?.classList.add("hidden")
+      }
+      function showInvitationRecovery({ token = "" } = {}) {
+        state.invitationToken = normalizeText(token)
+        hidePortalForInvitation()
+        document.getElementById("invitationRecoveryCard")?.classList.remove("hidden")
+        const status = document.getElementById("invitationRecoveryStatus")
+        if (status) {
+          status.textContent = ""
+          status.className = "status"
+        }
+      }
+      function hideInvitationRecovery() {
+        document.getElementById("invitationRecoveryCard")?.classList.add("hidden")
+      }
+      async function activateParentInvitation(token) {
+        state.invitationToken = normalizeText(token)
+        hidePortalForInvitation()
+        const result = await api(`${PARENT_AUTH_PREFIX}/activation/exchange`, {
+          method: "POST",
+          body: { token: state.invitationToken },
+        })
+        state.me = result?.user || null
+        clearActivationTokenFromLocation()
+        hideInvitationRecovery()
+        document.documentElement.dataset.parentAuthState = "authenticated"
+        syncDashboardPageVisibility()
+        if (Boolean(state.me?.mustChangePassword)) return
+        setActivePortalView("dashboard")
+        await hydratePortal({ initialUser: state.me })
+      }
+      async function requestReplacementInvitation() {
+        const status = document.getElementById("invitationRecoveryStatus")
+        if (!state.invitationToken) return
+        if (status) {
+          status.textContent = "Sending a new link..."
+          status.className = "status"
+        }
+        await api(`${PARENT_AUTH_PREFIX}/activation/recover`, {
+          method: "POST",
+          body: { token: state.invitationToken },
+        })
+        clearActivationTokenFromLocation()
+        if (status) {
+          status.textContent = "A new link was sent to your email address."
+          status.className = "status ok"
+        }
+        document.getElementById("requestParentInvitationBtn").disabled = true
+      }
+      async function setParentPassword() {
+        const password = normalizeText(document.getElementById("newParentPassword")?.value)
+        const confirmation = normalizeText(document.getElementById("confirmParentPassword")?.value)
+        const status = document.getElementById("passwordSetupStatus")
+        if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[^A-Za-z0-9\s]/.test(password) || /[\s<>"'`\\]/.test(password)) {
+          status.textContent = "Use 8+ characters with uppercase, lowercase, and a symbol. Spaces and < > \" ' ` \\ are prohibited."
+          status.className = "status err"
+          return
+        }
+        if (password !== confirmation) {
+          status.textContent = "The passwords do not match."
+          status.className = "status err"
+          return
+        }
+        const result = await api(`${PARENT_AUTH_PREFIX}/set-password`, {
+          method: "POST",
+          body: { password, confirmation },
+        })
+        state.me = result?.user || { ...state.me, mustChangePassword: false }
+        status.textContent = "Password saved. Your browser may offer to save it."
+        status.className = "status ok"
+        syncDashboardPageVisibility()
+        await hydratePortal({ initialUser: state.me })
+        if (handlePortalPostAuthRouteState()) return
+        setActivePortalView("child")
+      }
+      async function logout() {
+        await api(`${PARENT_AUTH_PREFIX}/logout`, {
+          method: "POST",
+          body: {},
+        })
+        setBrevoParentIdentity(null)
+        document.documentElement.dataset.parentAuthState = "unauthenticated"
+        document.getElementById("portalCard").classList.add("hidden")
+        document.getElementById("portalDetailCard").classList.add("hidden")
+        document.getElementById("childPageCard").classList.add("hidden")
+        document.getElementById("loginCard").classList.remove("hidden")
+        closeNewsWeekSetModal()
+        updateSessionBadge("Chưa đăng nhập", false)
+        state.me = null
+        state.children = []
+        state.dashboard = null
+        state.profile = {}
+        state.patch = {}
+        state.newsItems = []
+        state.newsWeekSets = []
+        state.reportArchiveRows = []
+        state.reportAcknowledgements = {}
+        state.activeReportIndex = 0
+        state.performanceModalOpen = false
+        state.pastDueModalOpen = false
+        state.newsWeekSetModalOpen = false
+        state.newsWeekSetViewerWeekSetId = ""
+        state.newsWeekSetViewerItems = []
+        state.newsWeekSetViewerIndex = -1
+        state.activeView = "dashboard"
+        state.activeDashboardPage = "home"
+        state.reportAccessModalOpen = false
+        syncPortalModalBodyState()
+        updateDraftBadge()
+        setStatus("Đã đăng xuất.", "ok")
+      }
+      async function saveDraft(options = {}) {
+        if (!state.selectedEaglesId) {
+          setStatus("Vui lòng chọn học sinh trước.", "warn")
+          return null
+        }
+        if (!Object.keys(state.patch).length) {
+          if (!options.silentNoChanges)
+            setStatus("Chưa có thay đổi để lưu.", "warn")
+          return null
+        }
+        const result = await api(
+          `${PARENT_CHILDREN_PATH}/${encodeURIComponent(state.selectedEaglesId)}/profile-draft`,
+          {
+            method: "PUT",
+            body: {
+              patch: state.patch,
+            },
+          },
+        )
+        applyPatchToProfileState()
+        state.patch = {}
+        renderProfileFields()
+        if (!options.silentSuccess) {
+          setStatus(
+            `Đã lưu nháp (mã: ${normalizeText(result.submissionId)}).`,
+            "ok",
+          )
+        }
+        return result
+      }
+      async function submitForReview() {
+        if (!state.selectedEaglesId) {
+          setStatus("Vui lòng chọn học sinh trước.", "warn")
+          return
+        }
+        if (Object.keys(state.patch).length) {
+          await saveDraft({
+            silentSuccess: true,
+            silentNoChanges: true,
+          })
+        }
+        const signatureFullName = normalizeText(state.profile?.signatureFullName)
+        const signatureEmail = normalizeText(state.profile?.signatureEmail)
+        const signatureAgreed = Array.isArray(state.profile?.signatureAgreed)
+          ? state.profile.signatureAgreed.some((value) => normalizeText(value).toLowerCase() === "yes")
+          : state.profile?.signatureAgreed === true
+        if (!signatureFullName || !signatureEmail || !signatureAgreed) {
+          setStatus("Vui lòng ký, đồng ý và lưu biểu mẫu thành công trước khi gửi duyệt.", "err")
+          return
+        }
+        const result = await api(
+          `${PARENT_CHILDREN_PATH}/${encodeURIComponent(state.selectedEaglesId)}/profile-submit`,
+          {
+            method: "POST",
+            body: {},
+          },
+        )
+        setStatus(
+          `Đã gửi duyệt (mã: ${normalizeText(result.submissionId)}).`,
+          "ok",
+        )
+      }
+      function handlePortalPostAuthRouteState() {
+        const nextTarget = resolvePortalNextTarget()
+        if (nextTarget) {
+          window.location.assign(nextTarget)
+          return true
+        }
+        return false
+      }
+      async function bootstrap() {
+        try {
+          assertApiOriginConfiguredForStaticPreview()
+          updateEnvBadgeParent()
+          if (INITIAL_AUTH_STATE && typeof INITIAL_AUTH_STATE === "object") {
+            if (INITIAL_AUTH_STATE.authenticated) {
+              state.me = INITIAL_AUTH_STATE.user || null
+              if (handlePortalPostAuthRouteState()) return
+              await hydratePortal({
+                initialUser: state.me,
+                revealAuthState: false,
+              })
+              document.documentElement.dataset.parentAuthState = "authenticated"
+              document.getElementById("loginCard").classList.add("hidden")
+              setActivePortalView("dashboard")
+              openReportAccessErrorModalIfNeeded()
+              scheduleChipTooltipRefresh(document)
+            } else {
+              document.documentElement.dataset.parentAuthState =
+                "unauthenticated"
+              updateSessionBadge("Chưa đăng nhập", false)
+              document.getElementById("portalCard").classList.add("hidden")
+              document
+                .getElementById("portalDetailCard")
+                .classList.add("hidden")
+              document.getElementById("childPageCard").classList.add("hidden")
+              const activationToken = activationTokenFromLocation()
+              if (activationToken) {
+                try {
+                  await activateParentInvitation(activationToken)
+                } catch (error) {
+                  clearActivationTokenFromLocation()
+                  showInvitationRecovery({ token: activationToken })
+                }
+              }
+              else {
+                document.getElementById("loginCard").classList.remove("hidden")
+                setStatus("Vui lòng đăng nhập.", "")
+              }
+            }
+            updateDraftBadge()
+            return
+          }
+          const activationToken = activationTokenFromLocation()
+          if (activationToken) {
+            document.documentElement.dataset.parentAuthState = "unauthenticated"
+            updateSessionBadge("Chưa đăng nhập", false)
+            try {
+              await activateParentInvitation(activationToken)
+            } catch (error) {
+              clearActivationTokenFromLocation()
+              showInvitationRecovery({ token: activationToken })
+            }
+            updateDraftBadge()
+            return
+          }
+          await hydratePortal()
+          document.getElementById("loginCard").classList.add("hidden")
+          setActivePortalView("dashboard")
+          openReportAccessErrorModalIfNeeded()
+          scheduleChipTooltipRefresh(document)
+        } catch (error) {
+          setStatus(
+            error?.message || "Không thể khởi tạo cổng phụ huynh.",
+            "err",
+          )
+          updateSessionBadge("Chưa đăng nhập", false)
+          document.documentElement.dataset.parentAuthState = "unauthenticated"
+          document.getElementById("portalCard").classList.add("hidden")
+          document.getElementById("portalDetailCard").classList.add("hidden")
+          document.getElementById("childPageCard").classList.add("hidden")
+          document.getElementById("loginCard").classList.remove("hidden")
+        }
+        updateDraftBadge()
+      }
+      document
+        .getElementById("parentMenuBtn")
+        ?.addEventListener("click", () => {
+          const nav = document.getElementById("parentSideNav")
+          const isOpen = nav?.classList.contains("open")
+          setSideNavOpen(!isOpen)
+        })
+      document
+        .getElementById("parentNavScrim")
+        ?.addEventListener("click", () => {
+          setSideNavOpen(false)
+        })
+      window.SISPortalNav?.bindAnchoredNavLinks({
+        onActivate({ link }) {
+          const targetView = normalizeText(
+            link.getAttribute("data-view-target"),
+          )
+          const pageTarget = normalizeDashboardPage(
+            link.getAttribute("data-page-target"),
+          )
+          if (targetView === "child") {
+            setActivePortalView("child")
+          } else {
+            setActiveDashboardPage(pageTarget)
+          }
+        },
+        onClose() {
+          setSideNavOpen(false)
+        },
+      })
+      document
+        .getElementById("studentTextZoomDownBtn")
+        ?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP))
+      document
+        .getElementById("studentTextZoomUpBtn")
+        ?.addEventListener("click", () => adjustPortalTextZoom(TEXT_ZOOM_STEP))
+      document
+        .getElementById("studentTextZoomResetBtn")
+        ?.addEventListener("click", () =>
+          applyPortalTextZoom(TEXT_ZOOM_DEFAULT),
+        )
+      hoistPortalModalsToBody()
+      applyPortalTextZoom(readStoredTextZoomPct())
+      document
+        .getElementById("loginForm")
+        ?.addEventListener("submit", (event) => {
+          event.preventDefault()
+          login().catch((error) => setStatus(error.message, "err"))
+        })
+      document.getElementById("requestParentInvitationBtn")?.addEventListener("click", () => {
+        requestReplacementInvitation().catch((error) => {
+          const status = document.getElementById("invitationRecoveryStatus")
+          if (status) {
+            status.textContent = error?.message || "Unable to send a replacement link."
+            status.className = "status err"
+          }
+        })
+      })
+      document
+        .getElementById("passwordSetupForm")
+        ?.addEventListener("submit", (event) => {
+          event.preventDefault()
+          setParentPassword().catch((error) => {
+            const status = document.getElementById("passwordSetupStatus")
+            status.textContent = error.message
+            status.className = "status err"
+          })
+        })
+      document.getElementById("loginForm")?.addEventListener("reset", () => {
+        setStatus("", "")
+        requestAnimationFrame(() =>
+          document.getElementById("parentsId")?.focus(),
+        )
+      })
+      document.getElementById("logoutBtn")?.addEventListener("click", () => {
+        logout().catch((error) => setStatus(error.message, "err"))
+      })
+      document
+        .getElementById("logoutBtnChild")
+        ?.addEventListener("click", () => {
+          logout().catch((error) => setStatus(error.message, "err"))
+        })
+      document
+        .getElementById("parentNavLogoutBtn")
+        ?.addEventListener("click", () => {
+          logout().catch((error) => setStatus(error.message, "err"))
+        })
+      document.getElementById("reloadBtn")?.addEventListener("click", () => {
+        hydratePortal()
+          .then(() => setStatus("Đã tải lại dữ liệu.", "ok"))
+          .catch((error) => setStatus(error.message, "err"))
+      })
+      document
+        .getElementById("childSelect")
+        ?.addEventListener("change", (event) => {
+          const target = event.target
+          if (!(target instanceof HTMLSelectElement)) return
+          loadChildProfile(target.value).catch((error) =>
+            setStatus(error.message, "err"),
+          )
+        })
+      document
+        .getElementById("openChildPageBtn")
+        ?.addEventListener("click", () => {
+          setActivePortalView("child")
+          window.SISPortalNav?.scrollElementIntoView?.("#childPageCard")
+        })
+      document
+        .getElementById("openNewsQueueDetailBtn")
+        ?.addEventListener("click", () => {
+          openParentNewsDate(getParentNewsWindowDate("reportDate"))
+          window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard")
+        })
+      document
+        .getElementById("refreshNewsQueueBtn")
+        ?.addEventListener("click", () => {
+          hydratePortal()
+            .then(() => setStatus("Đã tải lại hàng chờ báo cáo tin tức.", "ok"))
+            .catch((error) => setStatus(error.message, "err"))
+        })
+      document
+        .getElementById("portalDetailBackToMainBtn")
+        ?.addEventListener("click", () => {
+          goToParentMain()
+        })
+      document
+        .getElementById("backToDashboardBtn")
+        ?.addEventListener("click", () => {
+          goToParentMain()
+        })
+      document
+        .getElementById("openPastDueHomeworkModalBtn")
+        ?.addEventListener("click", () => {
+          renderOverdueHomeworkTableRows(state.overdueHomeworkRows)
+          setPastDueHomeworkModalOpen(true)
+        })
+      document
+        .getElementById("reportPastDueHomeworkPreviewBtn")
+        ?.addEventListener("click", () => {
+          const rows =
+            state.reportPastDueRows.length > 0 ?
+              state.reportPastDueRows
+            : state.overdueHomeworkRows
+          renderOverdueHomeworkTableRows(rows)
+          setPastDueHomeworkModalOpen(true)
+        })
+      document
+        .getElementById("closePastDueHomeworkModalBtn")
+        ?.addEventListener("click", () => {
+          setPastDueHomeworkModalOpen(false)
+        })
+      document
+        .getElementById("pastDueHomeworkModalBackdrop")
+        ?.addEventListener("click", () => {
+          setPastDueHomeworkModalOpen(false)
+        })
+      document.addEventListener("click", (event) => {
+        const openBtn = event.target?.closest?.(
+          "button[data-open-news-week-set]",
+        )
+        if (openBtn) {
+          event.preventDefault()
+          const weekSetId = normalizeText(
+            openBtn.getAttribute("data-open-news-week-set"),
+          )
+          const reportDate = normalizeText(
+            openBtn.getAttribute("data-open-news-report-date"),
+          )
+          if (!weekSetId) return
+          setActivePortalView("dashboard")
+          setActiveDashboardPage("news-reports")
+          openNewsWeekSetModalByWeekSetId(weekSetId, {
+            reportDate,
+          })
+          window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard")
+          return
+        }
+        const rowTarget = event.target?.closest?.("tr[data-news-week-set-id]")
+        if (
+          rowTarget &&
+          !event.target?.closest?.("button, a, input, textarea, select")
+        ) {
+          event.preventDefault()
+          const weekSetId = normalizeText(
+            rowTarget.getAttribute("data-news-week-set-id"),
+          )
+          if (!weekSetId) return
+          setActivePortalView("dashboard")
+          setActiveDashboardPage("news-reports")
+          openNewsWeekSetModalByWeekSetId(weekSetId)
+          window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard")
+        }
+      })
+      document
+        .getElementById("performanceReportsList")
+        ?.addEventListener("click", (event) => {
+          const target = event.target
+          if (!(target instanceof HTMLElement)) return
+          const trigger = target.closest("button[data-report-index]")
+          if (!(trigger instanceof HTMLButtonElement)) return
+          const index = Number.parseInt(
+            trigger.getAttribute("data-report-index") || "0",
+            10,
+          )
+          setPerformanceReportModalOpen(true, index)
+        })
+      document
+        .getElementById("closePerformanceReportModalBtn")
+        ?.addEventListener("click", () => {
+          setPerformanceReportModalOpen(false)
+        })
+      document
+        .getElementById("performanceReportModalBackdrop")
+        ?.addEventListener("click", () => {
+          setPerformanceReportModalOpen(false)
+        })
+      document
+        .getElementById("performanceReportPrevBtn")
+        ?.addEventListener("click", () => {
+          setPerformanceReportModalOpen(true, state.activeReportIndex - 1)
+        })
+      document
+        .getElementById("performanceReportNextBtn")
+        ?.addEventListener("click", () => {
+          setPerformanceReportModalOpen(true, state.activeReportIndex + 1)
+        })
+      document
+        .getElementById("reportAccessErrorModalBackdrop")
+        ?.addEventListener("click", () => {
+          setReportAccessErrorModalOpen(false)
+          clearReportAccessErrorMarker()
+        })
+      document
+        .getElementById("closeReportAccessErrorModalBtn")
+        ?.addEventListener("click", () => {
+          setReportAccessErrorModalOpen(false)
+          clearReportAccessErrorMarker()
+        })
+      document
+        .getElementById("acknowledgePerformanceReportBtn")
+        ?.addEventListener("click", async () => {
+          const active = state.reportArchiveRows[state.activeReportIndex]
+          if (!active) return
+          const acknowledgedAt = new Date().toISOString()
+          const acknowledgedBy =
+            normalizeText(state?.me?.parentsId) ||
+            normalizeText(state?.me?.username) ||
+            "Parent"
+          active.parentReviewedAt = acknowledgedAt
+          active.parentReviewedByUsername = acknowledgedBy
+          markReportAcknowledged(active.id)
+          renderPerformanceReportsOverviewCard(selectedDashboardChild())
+          renderActivePerformanceReportModal()
+          try {
+            await api(
+              `/api/parent/reports/${encodeURIComponent(normalizeText(active.id))}/acknowledge`,
+              {
+                method: "POST",
+              },
+            )
+          } catch (error) {
+            setStatus(error?.message || "Không thể xác nhận báo cáo.", "err")
+            return
+          }
+          const reportCount = state.reportArchiveRows.length
+          const outstandingCount = state.reportArchiveRows.filter(
+            (row) => !isReportAcknowledged(row),
+          ).length
+          setSummary(
+            "performanceReportsSummary",
+            reportCount > 0 ?
+              `${reportCount} báo cáo trong kho lưu trữ. ${outstandingCount} báo cáo đang chờ xác nhận xem.`
+            : "Chưa có báo cáo kết quả học tập.",
+          )
+        })
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return
+        if (state.reportAccessModalOpen) {
+          setReportAccessErrorModalOpen(false)
+          clearReportAccessErrorMarker()
+          return
+        }
+        if (state.performanceModalOpen) {
+          setPerformanceReportModalOpen(false)
+          return
+        }
+        if (state.newsWeekSetModalOpen) {
+          closeNewsWeekSetModal()
+          return
+        }
+        if (state.pastDueModalOpen) {
+          setPastDueHomeworkModalOpen(false)
+        }
+      })
+      document
+        .getElementById("newsWeekSetModalBackdrop")
+        ?.addEventListener("click", () => {
+          closeNewsWeekSetModal()
+        })
+      document
+        .getElementById("closeNewsWeekSetModalBtn")
+        ?.addEventListener("click", () => {
+          closeNewsWeekSetModal()
+        })
+      document
+        .getElementById("newsWeekSetModalCloseActionBtn")
+        ?.addEventListener("click", () => {
+          closeNewsWeekSetModal()
+        })
+      document
+        .getElementById("newsWeekSetModalPrevBtn")
+        ?.addEventListener("click", () => {
+          shiftNewsWeekSetViewer(-1)
+        })
+      document
+        .getElementById("newsWeekSetModalNextBtn")
+        ?.addEventListener("click", () => {
+          shiftNewsWeekSetViewer(1)
+        })
+      document.getElementById("saveDraftBtn")?.addEventListener("click", () => {
+        saveDraft().catch((error) => setStatus(error.message, "err"))
+      })
+      document
+        .getElementById("submitReviewBtn")
+        ?.addEventListener("click", () => {
+          submitForReview().catch((error) => setStatus(error.message, "err"))
+        })
+      bootstrap().catch((error) => setStatus(error.message, "err"))

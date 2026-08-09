@@ -169,7 +169,10 @@
       Promise.resolve(request).then((response) => {
         action.settledRequestCount += 1
         if (!response.ok) {
-          finish(action, "error", `Request failed (${response.status}).`)
+          response.clone().json().catch(() => null).then((payload) => {
+            const detail = text(payload?.error) || text(payload?.message) || `Request failed (${response.status}).`
+            finish(action, "error", detail)
+          })
         } else if (action.state === "pending" && action.settledRequestCount >= action.requestCount) {
           window.setTimeout(() => finish(action, "ok"), 120)
         }

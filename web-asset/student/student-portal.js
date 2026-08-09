@@ -13,6 +13,7 @@
       const TEXT_ZOOM_MIN = 80;
       const TEXT_ZOOM_MAX = 140;
       const TEXT_ZOOM_STEP = 5;
+      const NEWS_LOCAL_DRAFT_PREFIX = "sis.student.newsDraft.v1:";
       const state = {
         window: null,
         dashboard: null,
@@ -64,6 +65,7 @@
         submitSuccessModalOpen: false,
         submitSuccessConfettiBuilt: false,
         detailGradeTable: null,
+        studentEaglesId: "",
       };
       const portalAssetPromises = new Map();
       const portalAssetUrls = {
@@ -104,6 +106,7 @@
       const INITIAL_AUTH_STATE = window.__SIS_STUDENT_INITIAL_AUTH__;
 
       function setBrevoStudentIdentity(eaglesId) {
+        state.studentEaglesId = t(eaglesId);
         window.SIS_PORTAL_THEME?.setBrevoIdentity({ eaglesId });
       }
 
@@ -4010,6 +4013,7 @@
         field("loginPanel")?.classList.toggle("hidden", authenticated);
         field("appPanel")?.classList.toggle("hidden", !authenticated);
         if (!authenticated) {
+          setMenuOpen(false);
           state.activeView = "home";
           state.activePage = "home";
           setPastDueHomeworkModalOpen(false);
@@ -4093,9 +4097,22 @@
       }
 
       function normalizeSyllabication(value) {
-        return t(value).split(/(\s+|-)/u).map((token) =>
-          /[áéíóúýàèìòùâêîôûãẽĩõũÁÉÍÓÚÝÀÈÌÒÙÂÊÎÔÛÃẼĨÕŨ]/u.test(token) ? token.toLocaleUpperCase("en-US") : token,
-        ).join("");
+        const vowels = { a: "á", e: "é", i: "í", o: "ó", u: "ú", y: "ý" };
+        return t(value)
+          .normalize("NFC")
+          .replace(/[\p{Pd}\u00AD\u2027\u00B7\u22C5\u2212]/gu, "-")
+          .replace(/\p{Z}+/gu, " ")
+          .split(/(\s+|-)/u)
+          .map((token) => {
+            if (!token || /^\s+$/u.test(token) || token === "-") return token;
+            if (/[aeiouy]\p{M}+/iu.test(token.normalize("NFD"))) return token.toLocaleLowerCase("en-US");
+            if (!/[A-Z]/u.test(token)) return token;
+            const chars = Array.from(token.toLocaleLowerCase("en-US"));
+            const vowelIndex = chars.findIndex((char) => vowels[char]);
+            if (vowelIndex >= 0) chars[vowelIndex] = vowels[chars[vowelIndex]];
+            return chars.join("");
+          })
+          .join("");
       }
 
       function vocabularyEntryError(row = {}) {
@@ -4108,10 +4125,10 @@
           if (!syllables.length || syllables.some((syllable) => !/^\p{L}+$/u.test(syllable))) return "Use letters, spaces, and hyphens only in syllabication.";
           const partial = syllables.find((syllable) => /[A-Z]/u.test(syllable) && Array.from(syllable).length > 1 && syllable !== syllable.toLocaleUpperCase("en-US"));
           if (partial) return `Capitalize the complete stressed syllable "${partial}", not only one character.`;
-          const stress = syllables.map((syllable, index) => /[A-Z]/u.test(syllable) ? index : -1).filter((index) => index >= 0);
+          const stress = syllables.map((syllable, index) => /[A-ZáéíóúýàèìòùâêîôûãẽĩõũÁÉÍÓÚÝÀÈÌÒÙÂÊÎÔÛÃẼĨÕŨ]/u.test(syllable) ? index : -1).filter((index) => index >= 0);
           if (stress.some((index) => Array.from(syllables[index]).length === 1 && index !== 0)) return "A single-character stressed syllable is allowed only as the first syllable.";
           const exactCompound = english.toLocaleLowerCase("en-US").split(/\s+/u).includes(word.toLocaleLowerCase("en-US"));
-          if (syllables.length > 1 && !exactCompound && stress.length !== 1) return "Every split word needs exactly one fully capitalized stressed syllable, for example com-MEND-ed.";
+          if (syllables.length > 1 && !exactCompound && stress.length !== 1) return "Every split word needs exactly one stressed syllable. Research it using the provided dictionary links.";
           if (syllables.length === 1 && stress.length) return "Do not capitalize an unsplit syllabication word.";
           if (stress.length > 1) return "Use exactly one stressed syllable per word.";
         }
@@ -4126,17 +4143,53 @@
             if (element.classList.contains("field-validation-message")) element.remove();
           });
           const row = Object.fromEntries(["english", "syllabication"].map((key) => [key, t(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value)]));
+          // Blank minimum-row placeholders are not entries. The server keeps
+          // ownership of required-row and completeness validation.
+          if (!row.english && !row.syllabication) return;
           const message = vocabularyEntryError(row);
-          if (!message) return;
-          firstMessage ||= message;
-          rowEl.querySelector('[data-vocabulary-field="english"]')?.classList.add("is-invalid");
-          rowEl.querySelector('[data-vocabulary-field="syllabication"]')?.classList.add("is-invalid");
-          const help = document.createElement("p");
-          help.className = "field-validation-message news-vocabulary-row-validation-message";
-          help.textContent = message;
-          rowEl.appendChild(help);
+          if (message) {
+            firstMessage ||= message;
+            rowEl.querySelector('[data-vocabulary-field="english"]')?.classList.add("is-invalid");
+            rowEl.querySelector('[data-vocabulary-field="syllabication"]')?.classList.add("is-invalid");
+            const help = document.createElement("p");
+            help.className = "field-validation-message news-vocabulary-row-validation-message";
+            help.textContent = message;
+            rowEl.appendChild(help);
+          }
+          if (container !== field("newWordsRows") && state.newWordsLoaded) {
+            const partOfSpeech = t(rowEl.querySelector('[data-vocabulary-field="partOfSpeech"]')?.value).toLowerCase();
+            const englishKey = t(row.english).normalize("NFC").toLocaleLowerCase("en-US");
+            const match = state.newWords.find((word) =>
+              t(word?.partOfSpeech).toLowerCase() === partOfSpeech &&
+              t(word?.english).normalize("NFC").toLocaleLowerCase("en-US") === englishKey,
+            );
+            if (match) {
+              const warning = document.createElement("p");
+              warning.className = "field-validation-message news-vocabulary-row-library-warning";
+              warning.textContent = `Warning: ${row.english} is already in your New Words library.`;
+              rowEl.appendChild(warning);
+            }
+          }
         });
         return firstMessage;
+      }
+
+      function normalizeVocabularyEnglishEntry(event) {
+        const input = event?.target;
+        if (input?.matches?.('[data-vocabulary-field="english"]')) {
+          input.value = input.value.toLocaleLowerCase("en-US");
+          return;
+        }
+        if (input?.matches?.('[data-vocabulary-field="syllabication"]')) {
+          input.value = normalizeSyllabication(input.value);
+        }
+      }
+
+      function validateVocabularyEntrySurface(container, onInvalid) {
+        const message = showVocabularyEntryErrors(container);
+        if (!message) return true;
+        onInvalid?.(message);
+        return false;
       }
 
       function vocabularyLookupUrl(label, english) {
@@ -4262,8 +4315,7 @@
       }
 
       function dictionaryDefinition(definition) {
-        const value = t(definition) || "No definition yet.";
-        return /^\d+\.\s/u.test(value) ? value : `1. ${value}`;
+        return t(definition) || "No definition yet.";
       }
 
       function renderNewWordsRows() {
@@ -4333,8 +4385,10 @@
 
       async function saveNewWords() {
         const words = sortedNewWords();
-        const entryError = showVocabularyEntryErrors(field("newWordsRows"));
-        if (entryError) throw new Error(`New words were not saved: ${entryError}`);
+        let entryError = "";
+        if (!validateVocabularyEntrySurface(field("newWordsRows"), (message) => { entryError = message; })) {
+          throw new Error(`New words were not saved: ${entryError}`);
+        }
         Array.from(field("newWordsRows")?.querySelectorAll("[data-news-vocabulary-row]") || []).forEach((rowEl, index) => {
           const sourceIndex = Number.parseInt(rowEl.getAttribute("data-new-word-index"), 10);
           const word = words[sourceIndex];
@@ -4889,7 +4943,49 @@
       function markNewsDraftDirty() {
         state.newsFormDirty = true;
         state.newsCurrentMmrPassed = false;
+        persistNewsDraftLocally();
         updateSubmitAvailability();
+      }
+
+      function newsLocalDraftKey() {
+        const identity = t(state.studentEaglesId || field("loginEaglesId")?.value).toLocaleLowerCase("en-US");
+        return identity ? `${NEWS_LOCAL_DRAFT_PREFIX}${identity}` : "";
+      }
+
+      function persistNewsDraftLocally() {
+        const key = newsLocalDraftKey();
+        if (!key) return;
+        try {
+          localStorage.setItem(key, JSON.stringify({ savedAt: new Date().toISOString(), payload: reportPayload() }));
+        } catch {
+          // Browser storage may be unavailable; keep the server draft path intact.
+        }
+      }
+
+      function clearNewsDraftLocally() {
+        const key = newsLocalDraftKey();
+        if (!key) return;
+        try { localStorage.removeItem(key); } catch { /* storage unavailable */ }
+      }
+
+      function restoreNewsDraftLocally(report = null) {
+        const key = newsLocalDraftKey();
+        if (!key || state.newsFormDirty) return false;
+        try {
+          const stored = JSON.parse(localStorage.getItem(key) || "null");
+          const payload = stored?.payload;
+          if (!payload || t(payload.reportDate) !== t(state.window?.reportDate)) return false;
+          const serverUpdated = Date.parse(report?.updatedAt || "") || 0;
+          const localSaved = Date.parse(stored.savedAt || "") || 0;
+          if (serverUpdated && localSaved <= serverUpdated) return false;
+          applyOpenReport(payload, { preserveExistingValidation: false });
+          state.newsFormDirty = true;
+          state.newsCurrentMmrPassed = false;
+          setFormStatus("Recovered local work in progress. Save when online; Check runs MMR before Submit.", true);
+          return true;
+        } catch {
+          return false;
+        }
       }
 
       function clearNewsReportForm() {
@@ -4965,12 +5061,14 @@
           applyOpenReport(currentReport, {
             preserveExistingValidation: options?.preserveValidation === true,
           });
+          restoreNewsDraftLocally(currentReport);
         }
         const openDate = t(data?.window?.reportDate);
         const closesAt = t(data?.window?.closesAt);
         field("windowSummary").textContent = openDate ?
           `Open entry date: ${formatPortalDate(openDate)} (window closes at ${closesAt ? formatPortalDateTime(closesAt) : "today 23:59 +07"}).` :
           "No open date currently.";
+        if (!state.newWordsLoaded) await loadNewWords();
         updateSubmitAvailability();
       }
 
@@ -5069,6 +5167,7 @@
             body: payload,
           });
           await handleNewsCheckResult(saved, options);
+          if (saved?.mmrPassed === true && saved?.complianceFailed !== true) clearNewsDraftLocally();
         } finally {
           const remainingDisplayMs = NEWS_GRAMMAR_CHECK_MIN_DISPLAY_MS - (Date.now() - grammarCheckStartedAt);
           if (remainingDisplayMs > 0) {
@@ -5082,6 +5181,7 @@
         if (auto && !state.newsFormDirty) return;
         const payload = reportPayload();
         if (!t(payload?.reportDate)) throw new Error("Report date is locked.");
+        const mmrWasPassed = state.newsCurrentMmrPassed === true && state.newsFormDirty !== true;
         state.newsAutoSaveBusy = true;
         updateSubmitAvailability();
         try {
@@ -5090,14 +5190,14 @@
             body: payload,
           });
           if (saved?.item) applyOpenReport(saved.item, { preserveExistingValidation: false });
-          // Save is a draft-only operation. Clear stale Check/MMR markers so
-          // incomplete saved work is not presented as a new validation result.
+          // Save is draft-only: it never runs MMR and preserves a prior passing
+          // check when the saved content has not changed.
           applyNewsFieldValidationUi({}, [], {}, []);
           state.newsComplianceSummary = "";
           setNewsComplianceModalOpen(false);
-          // Save never runs MMR. Any changed content must be checked again.
-          state.newsCurrentMmrPassed = false;
+          state.newsCurrentMmrPassed = mmrWasPassed;
           state.newsFormDirty = false;
+          clearNewsDraftLocally();
           setFormStatus(auto ? "Draft autosaved." : "Draft saved. Check when you are ready to run MMR.");
         } finally {
           state.newsAutoSaveBusy = false;
@@ -5114,6 +5214,7 @@
             method: "POST",
             body: payload,
           });
+          clearNewsDraftLocally();
           if (saved?.complianceFailed === true) {
             await handleNewsCheckResult(saved, {
               reopenReportDate,
@@ -5179,18 +5280,18 @@
         }
       }
       async function submitReport() {
-        const entryError = showVocabularyEntryErrors(field("newsVocabularyRows"));
-        if (entryError) {
-          setFormStatus(`Vocabulary needs correction: ${entryError}`, true);
+        if (!validateVocabularyEntrySurface(field("newsVocabularyRows"), (message) => {
+          setFormStatus(`Vocabulary needs correction: ${message}`, true);
+        })) {
           return;
         }
         await submitNewsPayload(reportPayload());
       }
 
       async function checkReport() {
-        const entryError = showVocabularyEntryErrors(field("newsVocabularyRows"));
-        if (entryError) {
-          setFormStatus(`Vocabulary needs correction: ${entryError}`, true);
+        if (!validateVocabularyEntrySurface(field("newsVocabularyRows"), (message) => {
+          setFormStatus(`Vocabulary needs correction: ${message}`, true);
+        })) {
           return;
         }
         await checkNewsPayload(reportPayload());
@@ -5200,9 +5301,9 @@
         const active = newsWeekSetViewerCurrentItem();
         if (!active) throw new Error("Select a report in the week set viewer.");
         if (!canEditNewsWeekSetViewerItem(active)) throw new Error("This report is locked.");
-        const entryError = showVocabularyEntryErrors(field("newsWeekSetModalVocabularyRows"));
-        if (entryError) {
-          setNewsWeekSetModalStatus(`Vocabulary needs correction: ${entryError}`);
+        if (!validateVocabularyEntrySurface(field("newsWeekSetModalVocabularyRows"), (message) => {
+          setNewsWeekSetModalStatus(`Vocabulary needs correction: ${message}`);
+        })) {
           return;
         }
         state.newsWeekSetViewerPending = true;
@@ -5226,9 +5327,9 @@
         const active = newsWeekSetViewerCurrentItem();
         if (!active) throw new Error("Select a report in the week set viewer.");
         if (!canEditNewsWeekSetViewerItem(active)) throw new Error("This report is locked.");
-        const entryError = showVocabularyEntryErrors(field("newsWeekSetModalVocabularyRows"));
-        if (entryError) {
-          setNewsWeekSetModalStatus(`Vocabulary needs correction: ${entryError}`);
+        if (!validateVocabularyEntrySurface(field("newsWeekSetModalVocabularyRows"), (message) => {
+          setNewsWeekSetModalStatus(`Vocabulary needs correction: ${message}`);
+        })) {
           return;
         }
         state.newsWeekSetViewerPending = true;
@@ -5260,6 +5361,7 @@
         });
       }
       async function logout() {
+        setMenuOpen(false);
         await api(`${STUDENT_AUTH_PREFIX}/logout`, {
           method: "POST"
         });
@@ -5287,6 +5389,7 @@
             if (handlePortalPostAuthRouteState()) return;
             await Promise.all([loadDashboard(), loadCalendar()]);
             setAuthenticatedView(true);
+            window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "student" });
             openReportAccessErrorModalIfNeeded();
             setFormStatus("Use Save to keep a draft. Check runs MMR; Submit unlocks only after Check passes.");
           } else {
@@ -5302,6 +5405,7 @@
           if (handlePortalPostAuthRouteState()) return;
           await Promise.all([loadDashboard(), loadCalendar()]);
           setAuthenticatedView(true);
+          window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "student" });
           openReportAccessErrorModalIfNeeded();
           setFormStatus("Use Save to keep a draft. Check runs MMR; Submit unlocks only after Check passes.");
         } catch (error) {
@@ -5536,9 +5640,7 @@
         });
       });
       field("newsWeekSetModal")?.addEventListener("input", (event) => {
-        if (event.target?.matches?.('[data-vocabulary-field="english"]')) {
-          event.target.value = event.target.value.toLocaleLowerCase("en-US");
-        }
+        normalizeVocabularyEnglishEntry(event);
         if (!event.target?.matches?.("input, select, textarea")) return;
         const active = newsWeekSetViewerCurrentItem();
         if (!active) return;
@@ -5549,13 +5651,14 @@
             addVocabularyRow(field("newsVocabularyRows"));
             markNewsDraftDirty();
           });
-          field("newsVocabularyRows")?.addEventListener("input", () => {
-            const active = document.activeElement;
-            if (active?.matches?.('[data-vocabulary-field="english"]')) active.value = active.value.toLocaleLowerCase("en-US");
+          field("newsVocabularyRows")?.addEventListener("input", (event) => {
+            normalizeVocabularyEnglishEntry(event);
             markNewsDraftDirty();
+            const message = showVocabularyEntryErrors(field("newsVocabularyRows"));
+            if (message) setFormStatus(`Critical entry issue: ${message}`, true);
           });
           field("newWordsRows")?.addEventListener("input", (event) => {
-            if (event.target?.matches?.('[data-vocabulary-field="english"]')) event.target.value = event.target.value.toLocaleLowerCase("en-US");
+            normalizeVocabularyEnglishEntry(event);
           });
           field("newsVocabularyRows")?.addEventListener("change", () => {
             markNewsDraftDirty();
