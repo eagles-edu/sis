@@ -139,6 +139,7 @@
     "archiver": "^8.0.0",
     "argparse": "^2.0.1",
     "cheerio": "^1.2.0",
+    "cmu-pronouncing-dictionary": "^3.0.0",
     "css-declaration-sorter": "^7.4.0",
     "cssnano": "^7.1.9",
     "dom-serializer": "^2.0.0",

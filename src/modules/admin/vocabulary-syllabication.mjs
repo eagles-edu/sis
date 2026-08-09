@@ -1,3 +1,10 @@
+import { dictionary as cmuDictionary } from "cmu-pronouncing-dictionary"
+
+const MERRIAM_WEBSTER_API_BASE = "https://www.dictionaryapi.com/api/v3/references"
+const MERRIAM_WEBSTER_CACHE_LIMIT = 2000
+const MERRIAM_WEBSTER_TIMEOUT_MS = 5000
+const merriamWebsterCache = new Map()
+
 function text(value) {
   return String(value == null ? "" : value).trim()
 }
@@ -57,4 +64,150 @@ export function vocabularyEntryError(row = {}) {
   const english = text(row?.english)
   if (/[A-Z]/u.test(english)) return "English word/phrase must be lowercase."
   return vocabularySyllabicationError(english, row?.syllabication)
+}
+
+function lettersOnly(value) {
+  return text(value)
+    .normalize("NFD")
+    .replace(/\p{M}+/gu, "")
+    .replace(/[^\p{L}]/gu, "")
+    .toLocaleLowerCase("en-US")
+}
+
+function normalizedSyllableWord(value) {
+  return normalizeVocabularySyllabication(value)
+    .split("-")
+    .filter(Boolean)
+}
+
+function stressedSyllableIndex(syllables = []) {
+  return syllables.findIndex((syllable) => hasAccentStress(syllable) || hasUppercase(syllable))
+}
+
+function cmuSyllableProfile(word) {
+  const pronunciation = text(cmuDictionary[text(word).toLocaleLowerCase("en-US")])
+  if (!pronunciation) return null
+  const stresses = pronunciation
+    .split(/\s+/u)
+    .map((phoneme) => /[012]$/u.exec(phoneme)?.[0] || "")
+    .filter(Boolean)
+  const primaryStressIndex = stresses.indexOf("1")
+  if (primaryStressIndex < 0) return null
+  return { syllableCount: stresses.length, primaryStressIndex }
+}
+
+function isExactUnsplitCompound(english, syllabication) {
+  const normalizedEnglish = text(english).toLocaleLowerCase("en-US")
+  const normalizedSyllabication = normalizeSyllabicationText(syllabication).toLocaleLowerCase("en-US")
+  return normalizedEnglish.includes("-") && normalizedEnglish === normalizedSyllabication
+}
+
+function cacheMerriamWebsterResult(key, value) {
+  if (merriamWebsterCache.size >= MERRIAM_WEBSTER_CACHE_LIMIT) {
+    merriamWebsterCache.delete(merriamWebsterCache.keys().next().value)
+  }
+  merriamWebsterCache.set(key, value)
+  return value
+}
+
+function merriamWebsterApiKey(source) {
+  return source === "collegiate"
+    ? text(process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY)
+    : text(process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY)
+}
+
+function extractMerriamWebsterDivision(payload, word) {
+  const expectedWord = lettersOnly(word)
+  const entries = Array.isArray(payload) ? payload : []
+  for (const entry of entries) {
+    if (!entry || typeof entry !== "object") continue
+    const headword = text(entry?.hwi?.hw)
+    const inflections = Array.isArray(entry?.ins) ? entry.ins.map((item) => text(item?.if)) : []
+    const variants = [headword, ...inflections].filter(Boolean)
+    const matched = variants.find((candidate) => lettersOnly(candidate) === expectedWord)
+    if (matched) return matched
+  }
+  return ""
+}
+
+async function lookupMerriamWebster(source, word, fetchImpl = globalThis.fetch) {
+  const key = `${source}:${text(word).toLocaleLowerCase("en-US")}`
+  if (merriamWebsterCache.has(key)) return merriamWebsterCache.get(key)
+  const apiKey = merriamWebsterApiKey(source)
+  if (!apiKey || typeof fetchImpl !== "function") return { status: "unavailable" }
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), MERRIAM_WEBSTER_TIMEOUT_MS)
+  try {
+    const response = await fetchImpl(
+      `${MERRIAM_WEBSTER_API_BASE}/${source}/json/${encodeURIComponent(text(word))}?key=${encodeURIComponent(apiKey)}`,
+      { signal: controller.signal },
+    )
+    if (!response?.ok) return { status: "unavailable" }
+    const division = extractMerriamWebsterDivision(await response.json(), word)
+    return cacheMerriamWebsterResult(key, division ? { status: "found", division } : { status: "missing" })
+  } catch {
+    return { status: "unavailable" }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+function authoritativeDivisionMatches(entered, authoritative) {
+  const enteredNormalized = normalizeSyllabicationText(entered)
+    .normalize("NFD")
+    .replace(/\p{M}+/gu, "")
+    .toLocaleLowerCase("en-US")
+  const authoritativeNormalized = text(authoritative)
+    .replace(/\*/gu, "-")
+    .normalize("NFD")
+    .replace(/\p{M}+/gu, "")
+    .toLocaleLowerCase("en-US")
+  return enteredNormalized === authoritativeNormalized
+}
+
+/**
+ * Verifies a vocabulary entry without exposing an authoritative correction.
+ * @param {{ english?: unknown, syllabication?: unknown }} row
+ * @param {{ fetchImpl?: typeof fetch }} [options]
+ */
+export async function validateVocabularyEntry(row = {}, options = {}) {
+  const formatError = vocabularyEntryError(row)
+  if (formatError) return { message: formatError, warning: "" }
+  const english = text(row.english).toLocaleLowerCase("en-US")
+  const enteredWords = normalizeSyllabicationText(row.syllabication).split(/\s+/u).filter(Boolean)
+  const englishWords = english.split(/\s+/u).filter(Boolean)
+  if (enteredWords.length !== englishWords.length) {
+    return { message: "Syllabication is incorrect. Research it using the provided dictionary links.", warning: "" }
+  }
+  for (let index = 0; index < englishWords.length; index += 1) {
+    const word = englishWords[index]
+    const entered = enteredWords[index]
+    if (isExactUnsplitCompound(word, entered)) continue
+    const profile = cmuSyllableProfile(word)
+    const syllables = normalizedSyllableWord(entered)
+    if (!profile) {
+      return { message: "Syllabication requires manual dictionary research. Use the provided dictionary links.", warning: "" }
+    }
+    if (syllables.length !== profile.syllableCount || stressedSyllableIndex(syllables) !== profile.primaryStressIndex) {
+      return { message: "Syllabication or primary stress is incorrect. Research it using the provided dictionary links.", warning: "" }
+    }
+    const collegiate = await lookupMerriamWebster("collegiate", word, options.fetchImpl)
+    const dictionaryResult = collegiate.status === "missing"
+      ? await lookupMerriamWebster("learners", word, options.fetchImpl)
+      : collegiate
+    if (dictionaryResult.status === "unavailable") {
+      return { message: "", warning: "Syllabication could not be verified right now. Research it using the provided dictionary links." }
+    }
+    if (dictionaryResult.status !== "found") {
+      return { message: "Syllabication requires manual dictionary research. Use the provided dictionary links.", warning: "" }
+    }
+    if (!authoritativeDivisionMatches(entered, dictionaryResult.division)) {
+      return { message: "Syllabication or primary stress is incorrect. Research it using the provided dictionary links.", warning: "" }
+    }
+  }
+  return { message: "", warning: "" }
+}
+
+export function resetVocabularyDictionaryCacheForTest() {
+  merriamWebsterCache.clear()
 }

@@ -20,6 +20,7 @@ import {
   stripAwaitingReReviewMarker,
   updateStudentNewsValidationIssues,
 } from "./student-news-compliance.mjs"
+import { validateVocabularyEntry } from "./vocabulary-syllabication.mjs"
 import {
   isStudentNewsReportSchemaUnavailableError,
   isStudentNewsReviewSchemaUnavailableError,
@@ -1113,15 +1114,52 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     biasAssessment,
     vocabulary,
   }
+  const draftVocabularyWarnings = []
+  if (mode === "draft") {
+    for (const [index, row] of vocabulary.entries()) {
+      // Drafts may contain incomplete work, but a row with both fields entered
+      // must not bypass authoritative syllabication and stress validation.
+      if (!normalizeText(row?.english) || !normalizeText(row?.syllabication)) continue
+      const result = await validateVocabularyEntry(row)
+      if (result.message) {
+        const error = new Error(`Entry ${index + 1} has invalid syllabication: ${result.message}`)
+        error.statusCode = 400
+        throw error
+      }
+      if (result.warning) draftVocabularyWarnings.push({ index, english: normalizeText(row?.english), message: result.warning, fields: ["syllabication"] })
+    }
+  }
   const minimumRequirements = mode === "draft"
-    ? { passed: false, failedFields: {}, requiredTasks: [] }
+    ? { passed: false, failedFields: {}, requiredTasks: [], warningFields: {} }
     : await evaluateStudentNewsMinimumRequirements(validationPayload, { validationConfig })
-  const compliance = mode === "draft"
-    ? { warningFields: {}, warningTasks: [], details: {}, config: {} }
+  let compliance = mode === "draft"
+    ? {
+        warningFields: draftVocabularyWarnings.length ? {
+          vocabulary: {
+            message: "Some vocabulary entries could not be verified right now.",
+            rowWarnings: draftVocabularyWarnings,
+          },
+        } : {},
+        warningTasks: [],
+        details: {},
+        config: {},
+      }
     : await evaluateStudentNewsCompliance(validationPayload, {
         validationConfig,
         sentenceReports: minimumRequirements.sentenceReports,
       })
+  if (minimumRequirements.warningFields?.vocabulary) {
+    compliance = {
+      ...compliance,
+      warningFields: {
+        ...(compliance.warningFields || {}),
+        vocabulary: {
+          ...(compliance.warningFields?.vocabulary || {}),
+          ...minimumRequirements.warningFields.vocabulary,
+        },
+      },
+    }
+  }
   const previousIssues = normalizeValidationIssueMap(
     /** @type {Record<string, unknown> | null | undefined} */ (existing?.validationIssuesJson)
   )

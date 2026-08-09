@@ -3,7 +3,7 @@
 
 import { checkTextWithLanguageTool } from "./student-news-language-tool.mjs"
 import { parseStudentNewsSentence } from "./student-news-parser.mjs"
-import { vocabularyEntryError } from "./vocabulary-syllabication.mjs"
+import { validateVocabularyEntry, vocabularyEntryError } from "./vocabulary-syllabication.mjs"
 
 /**
  * @param {unknown} value
@@ -189,7 +189,7 @@ function isValidStudentNewsSyllabication(value, english = "") {
   return !vocabularyEntryError({ english, syllabication: value })
 }
 
-function studentNewsVocabularyRowError(row, index) {
+async function studentNewsVocabularyRowError(row, index, dictionaryValidation = null) {
   const missing = []
   if (!STUDENT_NEWS_VOCABULARY_PARTS_OF_SPEECH.includes(row.partOfSpeech)) missing.push("part of speech")
   if (!row.english) missing.push("English")
@@ -205,6 +205,16 @@ function studentNewsVocabularyRowError(row, index) {
       english: row.english,
       fields: ["syllabication"],
       message: `Entry ${index + 1} (${entryLabel}) has invalid syllabication: ${vocabularyEntryError(row)}`,
+    }
+  }
+  const resolvedDictionaryValidation = dictionaryValidation || await validateVocabularyEntry(row)
+  if (resolvedDictionaryValidation.message) {
+    const entryLabel = row.english ? `\"${row.english}\"` : "this entry"
+    return {
+      index,
+      english: row.english,
+      fields: ["syllabication"],
+      message: `Entry ${index + 1} (${entryLabel}) has invalid syllabication: ${resolvedDictionaryValidation.message}`,
     }
   }
   if (!row.definition) missing.push("definition")
@@ -240,15 +250,25 @@ function findStudentNewsVocabularyExtraPointWarnings(value) {
     .filter(Boolean)
 }
 
-function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM } = {}) {
+async function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM } = {}) {
   if (value === undefined || value === null) return { passed: true, message: "", count: 0 }
   const rows = normalizeStudentNewsVocabulary(value)
   const populated = rows
     .map((row, index) => ({ row, index }))
     .filter(({ row }) => Object.values(row).some(Boolean))
-  const rowErrors = populated
-    .map(({ row, index }) => studentNewsVocabularyRowError(row, index))
-    .filter(Boolean)
+  const validatedRows = await Promise.all(populated.map(async ({ row, index }) => {
+    const dictionaryValidation = await validateVocabularyEntry(row)
+    return {
+      row,
+      index,
+      dictionaryValidation,
+      error: await studentNewsVocabularyRowError(row, index, dictionaryValidation),
+    }
+  }))
+  const rowErrors = validatedRows.map((entry) => entry.error).filter(Boolean)
+  const rowWarnings = validatedRows
+    .filter((entry) => !entry.error && entry.dictionaryValidation.warning)
+    .map((entry) => ({ index: entry.index, english: entry.row.english, message: entry.dictionaryValidation.warning, fields: ["syllabication"] }))
   const minimum = Math.max(1, Math.min(100, Math.trunc(Number(minimumWords)) || STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM))
   if (rowErrors.length || populated.length < minimum) {
     return {
@@ -258,9 +278,10 @@ function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEWS_DEFA
         : `At least ${minimum} complete vocabulary rows are required.`,
       count: populated.length,
       rowErrors,
+      rowWarnings,
     }
   }
-  return { passed: true, message: "", count: populated.length, rowErrors: [] }
+  return { passed: true, message: "", count: populated.length, rowErrors: [], rowWarnings }
 }
 
 /**
@@ -2087,7 +2108,7 @@ export async function evaluateStudentNewsMinimumRequirements(payload = {}, optio
       sentenceType: sentenceReports.biasAssessment.sentenceType,
     }
   }
-  const vocabularyValidation = evaluateStudentNewsVocabulary(payload?.vocabulary, {
+  const vocabularyValidation = await evaluateStudentNewsVocabulary(payload?.vocabulary, {
     minimumWords: config.vocabularyMinimumWords,
   })
   if (!vocabularyValidation.passed) {
@@ -2098,6 +2119,7 @@ export async function evaluateStudentNewsMinimumRequirements(payload = {}, optio
       rowErrors: vocabularyValidation.rowErrors || [],
     }
   }
+  const vocabularyWarnings = vocabularyValidation.rowWarnings || []
 
   return {
     status: Object.keys(failedFields).length ? "fail" : "pass",
@@ -2106,6 +2128,12 @@ export async function evaluateStudentNewsMinimumRequirements(payload = {}, optio
     requiredTasks: buildTasksFromFailedFields(failedFields, config.allowedDomains),
     sentenceReports,
     config,
+    warningFields: vocabularyWarnings.length ? {
+      vocabulary: {
+        message: "Some vocabulary entries could not be verified right now.",
+        rowWarnings: vocabularyWarnings,
+      },
+    } : {},
   }
 }
 

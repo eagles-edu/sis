@@ -1,5 +1,5 @@
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
-import { normalizeVocabularySyllabication, vocabularyEntryError } from "./vocabulary-syllabication.mjs"
+import { normalizeVocabularySyllabication, validateVocabularyEntry } from "./vocabulary-syllabication.mjs"
 
 const MAX_WORDS = 500
 const FIXED_TIME_ZONE_OFFSET_MS = 7 * 60 * 60 * 1000
@@ -34,18 +34,6 @@ function normalizeWord(row = {}) {
     definition: text(row.definition),
     syllableCount: syllableCount(row.syllabication),
   }
-}
-
-function persistedWordFields(row = {}) {
-  const normalized = normalizeWord(row)
-  return ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => normalized[key])
-}
-
-function isUnchangedPersistedWord(row, existingRow) {
-  if (!existingRow) return false
-  const incomingFields = persistedWordFields(row)
-  const existingFields = persistedWordFields(existingRow)
-  return incomingFields.every((value, index) => value === existingFields[index])
 }
 
 function mapWord(row = {}) {
@@ -113,12 +101,11 @@ export async function saveStudentNewWords(studentRefId, value) {
     where: { studentRefId },
     select: { id: true, englishKey: true, partOfSpeech: true, english: true, vietnamese: true, syllabication: true, definition: true },
   })
-  const existingById = new Map(existing.map((row) => [text(row.id), row]))
-  const invalid = source.map((row, index) => {
-    const existingRow = existingById.get(text(row?.id))
-    if (isUnchangedPersistedWord(row, existingRow)) return null
-    return { index, message: vocabularyEntryError(row) }
-  }).find((entry) => entry?.message)
+  const validationResults = await Promise.all(source.map(async (row, index) => {
+    const result = await validateVocabularyEntry(row)
+    return { index, ...result }
+  }))
+  const invalid = validationResults.find((entry) => entry?.message)
   if (invalid) {
     const error = new Error(`Word ${invalid.index + 1}: ${invalid.message}`)
     error.statusCode = 400
@@ -166,5 +153,11 @@ export async function saveStudentNewWords(studentRefId, value) {
     }
     throw error
   }
-  return listStudentNewWords(studentRefId)
+  const result = await listStudentNewWords(studentRefId)
+  return {
+    ...result,
+    warnings: validationResults
+      .filter((entry) => entry?.warning)
+      .map((entry) => ({ index: entry.index, message: entry.warning })),
+  }
 }

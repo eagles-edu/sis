@@ -8,6 +8,8 @@ import {
 } from "../src/modules/admin/student-news-compliance.mjs"
 import {
   normalizeVocabularySyllabication,
+  resetVocabularyDictionaryCacheForTest,
+  validateVocabularyEntry,
   vocabularyEntryError,
 } from "../src/modules/admin/vocabulary-syllabication.mjs"
 
@@ -22,20 +24,37 @@ const SERVER_ROUTES = fs.readFileSync(new URL("../server/student-admin-routes.mj
 const NEW_WORDS_MODULE = fs.readFileSync(new URL("../src/modules/admin/student-new-words.mjs", import.meta.url), "utf8")
 const NEWS_SUBMISSIONS_MODULE = fs.readFileSync(new URL("../src/modules/admin/student-news-submissions.mjs", import.meta.url), "utf8")
 
+const savedCollegiateKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+const savedLearnersKey = process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY
+delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+delete process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY
+test.after(() => {
+  if (savedCollegiateKey) process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedCollegiateKey
+  if (savedLearnersKey) process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY = savedLearnersKey
+})
+
 function completeVocabularyRows(count) {
+  const rows = [
+    ["apple", "AP-ple"],
+    ["banana", "ba-NA-na"],
+    ["computer", "com-PU-ter"],
+    ["elephant", "EL-e-phant"],
+    ["important", "im-POR-tant"],
+    ["together", "to-GETH-er"],
+  ]
   return Array.from({ length: count }, (_, index) => ({
     partOfSpeech: "noun",
-    english: `word${index + 1}`,
+    english: rows[index]?.[0] || "apple",
     vietnamese: `từ ${index + 1}`,
-    syllabication: `wo-RD`,
+    syllabication: rows[index]?.[1] || "AP-ple",
     definition: `A complete definition for word ${index + 1}.`,
   }))
 }
 
-test("student news vocabulary requires five complete rows", () => {
-  assert.equal(evaluateStudentNewsVocabulary(completeVocabularyRows(4)).passed, false)
-  assert.equal(evaluateStudentNewsVocabulary(completeVocabularyRows(5)).passed, true)
-  assert.equal(evaluateStudentNewsVocabulary(completeVocabularyRows(5)).count, 5)
+test("student news vocabulary requires five complete rows", async () => {
+  assert.equal((await evaluateStudentNewsVocabulary(completeVocabularyRows(4))).passed, false)
+  assert.equal((await evaluateStudentNewsVocabulary(completeVocabularyRows(5))).passed, true)
+  assert.equal((await evaluateStudentNewsVocabulary(completeVocabularyRows(5))).count, 5)
 })
 
 test("student test runtime accepts its same-origin HTTPS API origin", () => {
@@ -53,13 +72,13 @@ test("student New Words keeps server validation details visible in dark mode", (
   assert.match(vocabularyEntryError({ english: "word", syllabication: "word-word" }), /exactly one stressed syllable/)
 })
 
-test("student news vocabulary minimum is configurable", () => {
-  assert.equal(evaluateStudentNewsVocabulary(completeVocabularyRows(5), { minimumWords: 6 }).passed, false)
-  assert.equal(evaluateStudentNewsVocabulary(completeVocabularyRows(6), { minimumWords: 6 }).passed, true)
+test("student news vocabulary minimum is configurable", async () => {
+  assert.equal((await evaluateStudentNewsVocabulary(completeVocabularyRows(5), { minimumWords: 6 })).passed, false)
+  assert.equal((await evaluateStudentNewsVocabulary(completeVocabularyRows(6), { minimumWords: 6 })).passed, true)
 })
 
-test("student news vocabulary reports the offending entry", () => {
-  const result = evaluateStudentNewsVocabulary([
+test("student news vocabulary reports the offending entry", async () => {
+  const result = await evaluateStudentNewsVocabulary([
     {
       partOfSpeech: "phrase",
       english: "in the morning",
@@ -178,12 +197,66 @@ test("New Words persistence keeps canonical accented stress without drift", () =
   )
   assert.match(STUDENT_JS, /function normalizeSyllabication\(value\) \{[\s\S]*\.normalize\("NFC"\)[\s\S]*replace\(\/\[\\p\{Pd\}\\u00AD\\u2027\\u00B7\\u22C5\\u2212\]\/gu, "-"\)/)
   assert.match(STUDENT_JS, /token\.toLocaleLowerCase\("en-US"\)[\s\S]*vowels\[char\]/)
-  assert.match(NEW_WORDS_MODULE, /isUnchangedPersistedWord\(row, existingRow\)/)
-  assert.match(NEW_WORDS_MODULE, /existingById = new Map\(existing\.map\(/)
   assert.match(NEW_WORDS_MODULE, /existingByEnglishKey = new Map\(existing\.map\(/)
   assert.match(NEW_WORDS_MODULE, /This English word already exists in your New Words list\./)
   assert.match(NEW_WORDS_MODULE, /Unique constraint failed\.\*englishKey/)
   assert.match(NEW_WORDS_MODULE, /New Words contains a duplicate English word\./)
+})
+
+test("authoritative validator accepts CMU stress and Collegiate written division without revealing a correction", async () => {
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  resetVocabularyDictionaryCacheForTest()
+  const calls = []
+  const result = await validateVocabularyEntry(
+    { english: "commended", syllabication: "com-MEND-ed" },
+    {
+      fetchImpl: async (url) => {
+        calls.push(String(url))
+        return {
+          ok: true,
+          json: async () => [{ hwi: { hw: "com*mend" }, ins: [{ if: "com*mend*ed" }] }],
+        }
+      },
+    },
+  )
+  assert.deepEqual(result, { message: "", warning: "" })
+  assert.equal(calls.length, 1)
+  assert.doesNotMatch(JSON.stringify(result), /MEND|com-mend-ed/)
+  delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  resetVocabularyDictionaryCacheForTest()
+})
+
+test("authoritative validator rejects wrong stress and uses Learner's only after a Collegiate miss", async () => {
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY = "test-learners"
+  resetVocabularyDictionaryCacheForTest()
+  const wrongStress = await validateVocabularyEntry({ english: "commended", syllabication: "COM-mend-ed" })
+  assert.match(wrongStress.message, /incorrect/)
+  assert.doesNotMatch(wrongStress.message, /MEND/)
+  const calls = []
+  const fallback = await validateVocabularyEntry(
+    { english: "apple", syllabication: "AP-ple" },
+    {
+      fetchImpl: async (url) => {
+        calls.push(String(url))
+        return { ok: true, json: async () => String(url).includes("/collegiate/") ? [] : [{ hwi: { hw: "ap*ple" } }] }
+      },
+    },
+  )
+  assert.deepEqual(fallback, { message: "", warning: "" })
+  assert.equal(calls.length, 2)
+  assert.match(calls[0], /\/collegiate\//)
+  assert.match(calls[1], /\/learners\//)
+  delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  delete process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY
+  resetVocabularyDictionaryCacheForTest()
+})
+
+test("authoritative validator allows a warning only when Merriam-Webster is unavailable", async () => {
+  resetVocabularyDictionaryCacheForTest()
+  const result = await validateVocabularyEntry({ english: "apple", syllabication: "AP-ple" })
+  assert.equal(result.message, "")
+  assert.match(result.warning, /could not be verified/)
 })
 
 test("all student vocabulary save and check surfaces run the same client guard", () => {

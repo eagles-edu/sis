@@ -4410,7 +4410,8 @@
         state.newWords = Array.isArray(data?.items) ? data.items : [];
         state.newWordsLoaded = true;
         renderNewWordsRows();
-        setGlobalStatus("New words saved.");
+        const verificationWarnings = Array.isArray(data?.warnings) ? data.warnings : [];
+        setGlobalStatus(verificationWarnings.length ? verificationWarnings[0]?.message || "New words saved with an unverified syllabication warning." : "New words saved.", verificationWarnings.length > 0);
       }
 
       function addNewWords(count = 1) {
