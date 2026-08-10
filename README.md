@@ -35,14 +35,18 @@ Recent improvements now reflected in the system:
 - Expanded School Setup and Settings controls for school dates, news-report rules, and session TTLs
 - Richer parent/student portal detail views for homework, news reports, attendance, and performance reports
 - Async side-effect worker support for invitation and notification background work
+- Authoritative vocabulary checking: local CMUdict for pronunciation/primary stress and Merriam-Webster Collegiate/Learner's written-division verification, with canonical accented storage and warning-only temporary service failures
+- Protected Library pages: `/student/library.html` (student chat) and `/admin/library-admin.html` (no admin chat), both using shared portal chrome and theme controls
 
 ## Canonical paths
 
 - Project root: `/home/eagles/dockerz/sis`
 - Primary service entrypoint: `server/exercise-mailer.mjs`
 - Admin shell: `web-asset/admin/student-admin.html`
+- Admin Library page: `web-asset/admin/library-admin.html`
 - Parent portal: `web-asset/parent/parent-portal.html`
 - Student portal: `web-asset/student/student-portal.html`
+- Student Library page: `web-asset/student/library.html`
 
 ## Stack
 
@@ -134,6 +138,7 @@ Use these when validating the local dev runtime on port `8788`:
 - Dashboard
 - Daily news report writing and resubmission workflow
 - New Words vocabulary workspace
+- Library page with student chat
 - Homework, attendance, grades, recommendations, and report archive
 
 ## Auth model
