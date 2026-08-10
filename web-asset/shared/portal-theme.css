@@ -5004,8 +5004,9 @@ body.student-portal-page .field label,
 body.parent-portal-page .field label {
   color: var(--ink-soft);
   display: block;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 8px 0;
   letter-spacing: 0.02em;
   text-transform: none;
 }
@@ -5706,9 +5707,30 @@ body.student-portal-page .vocabulary-edit-surface {
 }
 body.student-portal-page .news-vocabulary-row {
   align-items: start;
+  box-sizing: border-box;
   display: grid;
   gap: 8px;
-  grid-template-columns: max-content 1.25fr 1.25fr 1.5fr;
+  grid-template-columns: max-content minmax(160px, 1.25fr) minmax(160px, 1.25fr) minmax(180px, 1.5fr);
+  min-width: 0;
+  width: 100%;
+}
+body.student-portal-page .news-vocabulary-row > :is(input, select, textarea) {
+  min-width: 0;
+}
+body.student-portal-page .news-vocabulary-row > [data-vocabulary-field="partOfSpeech"] {
+  grid-column: 1;
+}
+body.student-portal-page .news-vocabulary-row > [data-vocabulary-field="english"] {
+  grid-column: 2;
+}
+body.student-portal-page .news-vocabulary-row > [data-vocabulary-field="vietnamese"] {
+  grid-column: 3;
+}
+body.student-portal-page .news-vocabulary-row > [data-vocabulary-field="syllabication"] {
+  grid-column: 4;
+}
+body.student-portal-page .news-vocabulary-row > .field-validation-message {
+  grid-column: 1 / -1;
 }
 body.student-portal-page .news-vocabulary-row select[data-vocabulary-field="partOfSpeech"] {
   field-sizing: initial;
@@ -5836,6 +5858,9 @@ body.student-portal-page #newsWeekSetModal .news-review-vocabulary > .portal-but
 @media (max-width: 640px) {
   body.student-portal-page .news-vocabulary-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body.student-portal-page .news-vocabulary-row > [data-vocabulary-field] {
+    grid-column: auto;
   }
   body.student-portal-page .new-words-intro-body {
     grid-template-columns: minmax(0, 1fr) minmax(80px, 100px);

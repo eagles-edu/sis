@@ -208,6 +208,8 @@ const PARENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_PARENT_P
 const STUDENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_STUDENT_PORTAL_PAGE_PATH, "/student")
 const PARENT_SETTINGS_PAGE_PATH = `${PARENT_PORTAL_PAGE_PATH}/settings`
 const STUDENT_SETTINGS_PAGE_PATH = `${STUDENT_PORTAL_PAGE_PATH}/settings`
+const STUDENT_LIBRARY_PAGE_PATH = `${STUDENT_PORTAL_PAGE_PATH}/library.html`
+const ADMIN_LIBRARY_PAGE_PATH = `${ADMIN_PAGE_PATH}/library-admin.html`
 const LEGACY_ADMIN_PAGE_PATH = "/admin/students"
 const LEGACY_PARENT_PORTAL_PAGE_PATH = "/parent/portal"
 const LEGACY_STUDENT_PORTAL_PAGE_PATH = "/student/portal"
@@ -352,6 +354,8 @@ const REPORT_CARD_PREVIEW_HTML_PATH = path.resolve(process.cwd(), "web-asset/adm
 const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
 const PARENT_LLMS_PATH = path.resolve(process.cwd(), "web-asset/parent/llms.txt")
 const STUDENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/student/student-portal.html")
+const STUDENT_LIBRARY_HTML_PATH = path.resolve(process.cwd(), "web-asset/student/library.html")
+const ADMIN_LIBRARY_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/library-admin.html")
 const STUDENT_LLMS_PATH = path.resolve(process.cwd(), "web-asset/student/llms.txt")
 const PORTAL_SETTINGS_HTML_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-settings.html")
 const ADMIN_IMPORT_TEMPLATE_PATH = path.resolve(process.cwd(), "schemas/student-import-template.xlsx")
@@ -9275,6 +9279,21 @@ export async function handleStudentAdminRequest(request, response) {
   const pageSlugFromQuery =
     pathname === ADMIN_PAGE_PATH ? resolveAdminPageSlugFromQuery(url.searchParams) : ""
   const pageSlug = pageSlugFromQuery || pageSlugFromPath
+  if (method === "GET" && pathname === ADMIN_LIBRARY_PAGE_PATH) {
+    const session = await peekAdminSession(request)
+    if (!session) {
+      const next = new URL(ADMIN_PAGE_PATH, requestOrigin)
+      next.searchParams.set("next", ADMIN_LIBRARY_PAGE_PATH)
+      sendRedirect(response, 302, `${next.pathname}${next.search}`)
+      return true
+    }
+    if (!fs.existsSync(ADMIN_LIBRARY_HTML_PATH)) {
+      sendJson(response, 404, { error: "Admin library page not found" })
+      return true
+    }
+    sendHtml(response, 200, fs.readFileSync(ADMIN_LIBRARY_HTML_PATH, "utf8"), PORTAL_NO_CACHE_HEADERS)
+    return true
+  }
   if (method === "GET" && pageSlugFromPath && pageSlug !== "enrollment") {
     const initialAuthState = buildAdminInitialAuthState(await peekAdminSession(request))
     if (pageSlug === "grades-tabulator") {
@@ -9385,6 +9404,28 @@ export async function handleStudentAdminRequest(request, response) {
     const initialAuthState = buildStudentInitialAuthState(await peekStudentSession(request))
     const html = injectStudentPortalRuntimeConfig(
       fs.readFileSync(STUDENT_PORTAL_HTML_PATH, "utf8"),
+      requestOrigin,
+      initialAuthState,
+    )
+    sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
+    return true
+  }
+
+  if (method === "GET" && pathname === STUDENT_LIBRARY_PAGE_PATH) {
+    const session = await peekStudentSession(request)
+    if (!session) {
+      const next = new URL(STUDENT_PORTAL_PAGE_PATH, requestOrigin)
+      next.searchParams.set("next", STUDENT_LIBRARY_PAGE_PATH)
+      sendRedirect(response, 302, `${next.pathname}${next.search}`)
+      return true
+    }
+    if (!fs.existsSync(STUDENT_LIBRARY_HTML_PATH)) {
+      sendJson(response, 404, { error: "Student library page not found" })
+      return true
+    }
+    const initialAuthState = buildStudentInitialAuthState(session)
+    const html = injectStudentPortalRuntimeConfig(
+      fs.readFileSync(STUDENT_LIBRARY_HTML_PATH, "utf8"),
       requestOrigin,
       initialAuthState,
     )

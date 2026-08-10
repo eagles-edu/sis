@@ -12,6 +12,7 @@ import {
   validateVocabularyEntry,
   vocabularyEntryError,
 } from "../src/modules/admin/vocabulary-syllabication.mjs"
+import { isCheckedNewsReport } from "../src/modules/admin/student-new-words.mjs"
 
 const STUDENT_HTML = fs.readFileSync(new URL("../web-asset/student/student-portal.html", import.meta.url), "utf8")
 const STUDENT_JS = fs.readFileSync(new URL("../web-asset/student/student-portal.js", import.meta.url), "utf8")
@@ -201,6 +202,16 @@ test("New Words persistence keeps canonical accented stress without drift", () =
   assert.match(NEW_WORDS_MODULE, /This English word already exists in your New Words list\./)
   assert.match(NEW_WORDS_MODULE, /Unique constraint failed\.\*englishKey/)
   assert.match(NEW_WORDS_MODULE, /New Words contains a duplicate English word\./)
+  assert.match(NEW_WORDS_MODULE, /function isCheckedNewsReport\(report = \{\}\)/)
+  assert.match(NEW_WORDS_MODULE, /ineligibleReportIds[\s\S]*studentNewWord\.deleteMany/)
+  assert.match(NEW_WORDS_MODULE, /const eligibleReports = reports\.filter\(isCheckedNewsReport\)/)
+})
+
+test("New Words promotion accepts only reports that passed Check", () => {
+  assert.equal(isCheckedNewsReport({ submissionState: "draft" }), false)
+  assert.equal(isCheckedNewsReport({ submissionState: "draft", draftCheckedAt: "2026-08-10T01:00:00Z" }), false)
+  assert.equal(isCheckedNewsReport({ submissionState: "ready", mmrPassedAt: "2026-08-10T01:00:00Z" }), true)
+  assert.equal(isCheckedNewsReport({ submissionState: "submitted", firstSubmittedAt: "2026-08-10T01:00:00Z" }), true)
 })
 
 test("authoritative validator accepts CMU stress and Collegiate written division without revealing a correction", async () => {
@@ -261,12 +272,14 @@ test("authoritative validator allows a warning only when Merriam-Webster is unav
 
 test("all student vocabulary save and check surfaces run the same client guard", () => {
   assert.match(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\)/)
-  assert.match(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\) \{[\s\S]*data-vocabulary-field="syllabication"[\s\S]*normalizeSyllabication\(input\.value\)/)
+  assert.doesNotMatch(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\) \{[\s\S]*data-vocabulary-field="syllabication"[\s\S]*input\.value\s*=\s*normalizeSyllabication\(input\.value\)/)
   assert.match(STUDENT_JS, /function validateVocabularyEntrySurface\(container, onInvalid\)/)
   assert.match(STUDENT_JS, /if \(!row\.english && !row\.syllabication\) return;/)
   assert.equal((STUDENT_JS.match(/validateVocabularyEntrySurface\(field\("newsVocabularyRows"\)/g) || []).length, 2)
   assert.equal((STUDENT_JS.match(/validateVocabularyEntrySurface\(field\("newsWeekSetModalVocabularyRows"\)/g) || []).length, 2)
   assert.match(STUDENT_JS, /validateVocabularyEntrySurface\(field\("newWordsRows"\)/)
+  assert.match(STUDENT_JS, /function invalidateNewWordsCache\(\)/)
+  assert.match(STUDENT_JS, /invalidateNewWordsCache\(\);[\s\S]*loadDashboard\(\)/)
   // Declaration plus one input listener for News, Week Set, and New Words.
   assert.equal((STUDENT_JS.match(/normalizeVocabularyEnglishEntry\(event\)/g) || []).length, 4)
   assert.match(NEWS_SUBMISSIONS_MODULE, /definition: normalizeText\(row\?\.definition\)/)
@@ -295,6 +308,8 @@ test("student vocabulary rows provide lookup controls for initial and added rows
   assert.match(STUDENT_HTML, /if \(t\(fieldId\) === "vocabulary"\) return document\.getElementById\("newsVocabularyField"\)/)
   assert.match(STUDENT_HTML, /news-vocabulary-row-dots.*>⋮</)
   assert.match(SHARED_THEME, /news-vocabulary-definition-row textarea \{[\s\S]*block-size: 48px/)
+  assert.match(SHARED_THEME, /news-vocabulary-row \{[\s\S]*grid-template-columns:\s*max-content minmax\(160px, 1\.25fr\) minmax\(160px, 1\.25fr\) minmax\(180px, 1\.5fr\)/)
+  assert.match(SHARED_THEME, /news-vocabulary-row > :is\(input, select, textarea\) \{[\s\S]*min-width: 0/)
   assert.match(STUDENT_HTML, /autoResizeVocabularyDefinition\(textarea\)/)
   assert.match(STUDENT_HTML, /bindVocabularyDefinitionAutosize\(rowEl\)/)
   assert.match(STUDENT_HTML, /portal-button-danger news-vocabulary-remove/)

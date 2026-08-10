@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="vi-VN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Student Library">
+  <title>Student Library</title>
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script src="/web-asset/shared/portal-navigation.js"></script>
+  <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+  <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+  <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
+    if (!customElements.get("svg-icon")) svgIcon({ defaultSize: 28, path: "/web-asset/icons/web-component/svgs/" });
+  </script>
+  <script>window.SIS_PORTAL_THEME?.initTheme("light")</script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <link rel="stylesheet" href="/web-asset/student/student-portal.min.css">
+  <style>
+    body.student-portal-page main.portal-main { box-sizing:border-box; display:grid; gap:var(--portal-shell-gap); grid-template-columns:minmax(0,1fr); margin:0 auto; max-width:1440px; padding:16px; width:100%; }
+    .library-placeholder { min-height:320px; }
+  </style>
+</head>
+<body class="student-portal-page" id="top">
+  <div class="portal-shell">
+    <aside id="sideNav" class="side-nav" aria-label="Student navigation">
+      <div class="side-brand"><strong>Student Dashboard</strong><span>English learning and daily media reports</span></div>
+      <nav class="side-links">
+        <a class="side-link" href="/student">Home</a>
+        <a class="side-link" href="/student#newsPageCard">News Reports</a>
+        <a class="side-link" href="/student#newWordsPageCard">New Words</a>
+        <a class="side-link active" href="/student/library.html" aria-current="page">Library</a>
+        <a class="side-link" href="/student#studentDetailPageCard">Current Homework</a>
+        <a class="side-link" href="/student#studentDetailPageCard">Past Due Homework</a>
+        <a class="side-link" href="/student#studentDetailPageCard">Attendance Calendar SYTD</a>
+        <a class="side-link" href="/student#studentDetailPageCard">Performance Reports SYTD Archive</a>
+        <a class="side-link" href="/student#studentDetailPageCard">Grades YTD</a>
+        <a class="side-link" href="/student#studentDetailPageCard">Recommendations for Success</a>
+        <a class="side-link" href="/student/settings">Settings</a>
+      </nav>
+      <div class="side-actions"><button id="studentLibraryLogoutBtn" type="button" class="portal-button portal-button-danger">Log Out</button></div>
+    </aside>
+    <button id="navOverlay" class="nav-overlay portal-button portal-button-immutable-chrome" type="button" aria-label="Close navigation"></button>
+    <main class="portal-main">
+      <div class="header-bar portal-login-header"><a href="tel:0937667818">0937&#8209;667&#8209;818</a><a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a></div>
+      <button id="menuBtn" class="floating-menu-btn portal-button portal-button-immutable-chrome" type="button" aria-label="Open navigation"><span class="floating-menu-icon" aria-hidden="true"></span></button>
+      <section class="content topbar" data-surface-role="content">
+        <div class="topbar-head">
+          <div class="brand-head"><a class="brand-logo-wrap brand-logo-wrap--sm" href="/student" aria-label="Go to student home"><img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo"></a><h1>THE EAGLES CLUB</h1></div>
+          <div class="header-actions"><button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme"><span class="portal-theme-toggle__icon" aria-hidden="true"><svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon></span></button><div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls"><button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt">A-</button><button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt">A+</button><button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning">Reset</button></div></div>
+        </div>
+      </section>
+      <section class="content library-placeholder" data-surface-role="content" aria-labelledby="libraryTitle">
+        <div class="section-head"><h1 id="libraryTitle">Library</h1><p class="small">Library content will be added here.</p></div>
+      </section>
+      <section class="content status-strip portal-prefooter" aria-label="Runtime environment"><span class="env-badge" data-environment-prefooter>Student Library</span></section>
+      <footer class="hub-footer portal-login-footer" aria-label="Site footer"><p class="hub-footer__copy">© <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.</p><p class="hub-footer__action"><a href="#top">Về đầu trang</a></p></footer>
+    </main>
+  </div>
+  <script src="/web-asset/shared/portal-preferences.js"></script>
+  <script>window.SIS_PORTAL_THEME?.initPrivacyConsent?.({ locale: "vi", portal: "student" }); window.SIS_PORTAL_THEME?.installBrevoConversationA11y?.();</script>
+  <script>
+    (() => {
+      const nav = document.getElementById("sideNav"); const overlay = document.getElementById("navOverlay"); const open = (value) => { nav?.classList.toggle("open", value); overlay?.classList.toggle("open", value); };
+      document.getElementById("menuBtn")?.addEventListener("click", () => open(!nav?.classList.contains("open"))); overlay?.addEventListener("click", () => open(false));
+      document.getElementById("studentLibraryLogoutBtn")?.addEventListener("click", async () => { await fetch("/api/student/auth/logout", { method: "POST", credentials: "include" }); window.location.assign("/student"); });
+      const themeButton = document.getElementById("studentThemeToggle"); const themeIcon = document.getElementById("studentThemeToggleIcon"); const themeState = window.SIS_PORTAL_THEME;
+      const syncTheme = (theme) => { if (!themeButton || !themeIcon) return; const isDark = theme === "dark"; themeButton.setAttribute("aria-pressed", String(isDark)); themeButton.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme"); themeIcon.setAttribute("name", isDark ? "theme-sun" : "theme-moon"); };
+      window.addEventListener("sis-theme-change", (event) => syncTheme(event.detail?.theme || document.documentElement.dataset.theme));
+      themeButton?.addEventListener("click", () => syncTheme(themeState?.toggleTheme ? themeState.toggleTheme("light") : (document.documentElement.dataset.theme === "dark" ? "light" : "dark")));
+      syncTheme(themeState?.getTheme ? themeState.getTheme("light") : document.documentElement.dataset.theme);
+      document.querySelectorAll("[data-copyright-year]").forEach((element) => { element.textContent = String(new Date().getFullYear()); });
+      const zoom = (delta) => { const current = Number.parseInt(document.documentElement.dataset.portalTextZoom || "100", 10) || 100; document.documentElement.dataset.portalTextZoom = String(Math.max(85, Math.min(130, current + delta))); document.documentElement.style.fontSize = `${document.documentElement.dataset.portalTextZoom}%`; };
+      document.getElementById("studentTextZoomDownBtn")?.addEventListener("click", () => zoom(-5)); document.getElementById("studentTextZoomUpBtn")?.addEventListener("click", () => zoom(5)); document.getElementById("studentTextZoomResetBtn")?.addEventListener("click", () => { document.documentElement.dataset.portalTextZoom = "100"; document.documentElement.style.fontSize = ""; });
+    })();
+  </script>
+</body>
+</html>

@@ -23,6 +23,16 @@ function localDateKey(value) {
   return new Date(date.getTime() + FIXED_TIME_ZONE_OFFSET_MS).toISOString().slice(0, 10)
 }
 
+function isCheckedNewsReport(report = {}) {
+  const state = text(report.submissionState).toLowerCase()
+  return Boolean(
+    text(report.mmrPassedAt)
+    || text(report.dateSatisfiedAt)
+    || state === "ready"
+    || (state === "submitted" && text(report.firstSubmittedAt)),
+  )
+}
+
 function normalizeWord(row = {}) {
   const english = text(row.english).normalize("NFC")
   return {
@@ -59,13 +69,31 @@ async function getPrisma() {
 async function seedFromNewsReports(prisma, studentRefId) {
   const reports = await prisma.studentNewsReport.findMany({
     where: { studentRefId },
-    select: { id: true, reportDate: true, vocabularyJson: true },
+    select: {
+      id: true,
+      reportDate: true,
+      vocabularyJson: true,
+      submissionState: true,
+      mmrPassedAt: true,
+      dateSatisfiedAt: true,
+      firstSubmittedAt: true,
+    },
     orderBy: { reportDate: "asc" },
   })
+  const ineligibleReportIds = reports
+    .filter((report) => !isCheckedNewsReport(report))
+    .map((report) => text(report.id))
+    .filter(Boolean)
+  if (ineligibleReportIds.length) {
+    await prisma.studentNewWord.deleteMany({
+      where: { studentRefId, sourceReportId: { in: ineligibleReportIds } },
+    })
+  }
+  const eligibleReports = reports.filter(isCheckedNewsReport)
   const existing = await prisma.studentNewWord.findMany({ where: { studentRefId } })
   const keys = new Set(existing.map((row) => row.englishKey))
   const seededReports = new Set(existing.map((row) => text(row.sourceReportId)).filter(Boolean))
-  for (const report of reports) {
+  for (const report of eligibleReports) {
     if (seededReports.has(text(report.id))) continue
     const rows = Array.isArray(report.vocabularyJson) ? report.vocabularyJson : []
     for (const raw of rows) {
@@ -83,6 +111,8 @@ async function seedFromNewsReports(prisma, studentRefId) {
     }
   }
 }
+
+export { isCheckedNewsReport }
 
 export async function listStudentNewWords(studentRefId) {
   const prisma = await getPrisma()

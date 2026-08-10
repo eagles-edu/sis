@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Library Administration</title>
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
+    if (!customElements.get("svg-icon")) svgIcon({ defaultSize: 28, path: "/web-asset/icons/web-component/svgs/" });
+  </script>
+  <script>window.SIS_PORTAL_THEME?.initTheme("light")</script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <link rel="stylesheet" href="/web-asset/admin/admin-portal-theme.min.css">
+  <style>
+    body.admin-portal-page main.library-admin-main { box-sizing:border-box; display:grid; gap:var(--portal-shell-gap); margin:0 auto; max-width:1440px; padding:16px; width:100%; }
+    .library-placeholder { min-height:320px; }
+  </style>
+</head>
+<body class="admin-portal-page page" id="top">
+  <div class="wrap">
+    <header class="header-bar portal-login-header" data-surface-role="content"><a href="tel:0937667818">0937&#8209;667&#8209;818</a><a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a></header>
+    <button id="floatingMenuBtn" type="button" class="floating-menu-btn portal-button portal-button-immutable-chrome" aria-label="Open navigation menu"><span class="floating-menu-icon" aria-hidden="true"></span></button>
+    <div class="app-shell">
+      <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation">
+        <h2>Navigation</h2><div class="sidebar-logo-wrap"><img src="/web-asset/images/logo.svg" alt="The Eagles Club logo"></div>
+        <nav class="menu-groups" id="navMenu">
+          <a href="/admin" class="menu-link menu-link-top">DASHBOARD</a><a href="/admin/queue-hub" class="menu-link menu-link-top">QUEUE HUB</a>
+          <div class="menu-group" data-menu-group="admin"><button type="button" class="menu-group-btn" data-menu-toggle="admin" aria-expanded="true">Administration</button><div class="menu-group-links"><a href="/admin/enrollment" class="menu-link menu-sublink">Enrollment</a><a href="/admin/student-admin" class="menu-link menu-sublink">Student Admin</a><a href="/admin/school-setup" class="menu-link menu-sublink">School Setup</a><a href="/admin/users" class="menu-link menu-sublink">Users</a><a href="/admin/permissions" class="menu-link menu-sublink">Permissions</a><a href="/admin/settings" class="menu-link menu-sublink">Settings</a><a href="/admin/library-admin.html" class="menu-link menu-sublink active" aria-current="page">Library</a></div></div>
+        </nav>
+        <div class="sidebar-actions"><button id="libraryAdminLogoutBtn" type="button" class="portal-button portal-button-danger">Logout</button></div>
+      </aside>
+      <main id="appMain" class="section-stack library-admin-main" data-surface-role="content">
+        <section class="content topbar" data-surface-role="content"><div class="topbar-head"><div class="brand-head"><a class="brand-logo-wrap brand-logo-wrap--sm" href="/admin" aria-label="Go to admin dashboard"><img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo"></a><h1>THE EAGLES CLUB</h1></div><div class="header-actions"><button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme"><span class="portal-theme-toggle__icon" aria-hidden="true"><svg-icon name="theme-moon" size="110%" id="adminThemeToggleIcon"></svg-icon></span></button><div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls"><button id="adminTextZoomDownBtn" type="button" class="portal-button portal-button-alt">A-</button><button id="adminTextZoomUpBtn" type="button" class="portal-button portal-button-alt">A+</button><button id="adminTextZoomResetBtn" type="button" class="portal-button portal-button-warning">Reset</button></div></div></div></section>
+        <section class="content library-placeholder" data-surface-role="content" aria-labelledby="libraryAdminTitle"><div class="section-head"><h1 id="libraryAdminTitle">Library Administration</h1><p class="small">Library administration content will be added here.</p></div></section>
+        <section class="content portal-prefooter" aria-label="Runtime environment"><span class="env-badge" data-environment-prefooter>Admin Library</span></section>
+        <footer class="hub-footer" aria-label="Site footer"><p class="hub-footer__copy">© <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.</p><p class="hub-footer__action"><a href="#top">Về đầu trang</a></p></footer>
+      </main>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const sidebar = document.getElementById("appSidebarNav"); const menu = document.getElementById("floatingMenuBtn"); menu?.addEventListener("click", () => sidebar?.classList.toggle("open")); document.querySelectorAll("[data-menu-toggle]").forEach((button) => button.addEventListener("click", () => { const expanded = button.getAttribute("aria-expanded") !== "true"; button.setAttribute("aria-expanded", String(expanded)); button.parentElement?.classList.toggle("open", expanded); }));
+      document.getElementById("libraryAdminLogoutBtn")?.addEventListener("click", async () => { await fetch("/api/admin/auth/logout", { method: "POST", credentials: "include" }); window.location.assign("/admin"); }); const themeButton = document.getElementById("adminThemeToggle"); const themeIcon = document.getElementById("adminThemeToggleIcon"); const themeState = window.SIS_PORTAL_THEME; const syncTheme = (theme) => { if (!themeButton || !themeIcon) return; const isDark = theme === "dark"; themeButton.setAttribute("aria-pressed", String(isDark)); themeButton.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme"); themeIcon.setAttribute("name", isDark ? "theme-sun" : "theme-moon"); }; window.addEventListener("sis-theme-change", (event) => syncTheme(event.detail?.theme || document.documentElement.dataset.theme)); themeButton?.addEventListener("click", () => syncTheme(themeState?.toggleTheme ? themeState.toggleTheme("light") : (document.documentElement.dataset.theme === "dark" ? "light" : "dark"))); syncTheme(themeState?.getTheme ? themeState.getTheme("light") : document.documentElement.dataset.theme); document.querySelectorAll("[data-copyright-year]").forEach((element) => { element.textContent = String(new Date().getFullYear()); }); const zoom = (delta) => { const current = Number.parseInt(document.documentElement.dataset.portalTextZoom || "100", 10) || 100; document.documentElement.dataset.portalTextZoom = String(Math.max(85, Math.min(130, current + delta))); document.documentElement.style.fontSize = `${document.documentElement.dataset.portalTextZoom}%`; }; document.getElementById("adminTextZoomDownBtn")?.addEventListener("click", () => zoom(-5)); document.getElementById("adminTextZoomUpBtn")?.addEventListener("click", () => zoom(5)); document.getElementById("adminTextZoomResetBtn")?.addEventListener("click", () => { document.documentElement.dataset.portalTextZoom = "100"; document.documentElement.style.fontSize = ""; });
+    })();
+  </script>
+</body>
+</html>

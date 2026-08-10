@@ -4180,9 +4180,11 @@
           input.value = input.value.toLocaleLowerCase("en-US");
           return;
         }
-        if (input?.matches?.('[data-vocabulary-field="syllabication"]')) {
-          input.value = normalizeSyllabication(input.value);
-        }
+        // Keep syllabication exactly as typed while editing. In particular,
+        // do not convert an uppercase stress marker to an accent on every
+        // keystroke; students must be able to replace a rejected stress or
+        // division. Canonical accented storage is applied when the row is
+        // read for save and by the server validator.
       }
 
       function validateVocabularyEntrySurface(container, onInvalid) {
@@ -4381,6 +4383,10 @@
         state.newWords = Array.isArray(data?.items) ? data.items : [];
         state.newWordsLoaded = true;
         renderNewWordsRows();
+      }
+
+      function invalidateNewWordsCache() {
+        state.newWordsLoaded = false;
       }
 
       async function saveNewWords() {
@@ -5125,6 +5131,7 @@
         );
         state.newsComplianceSummary = displaySummaryMessage;
         if (options?.viewerItem !== true) renderNewsComplianceModalFromState(displaySummaryMessage);
+        invalidateNewWordsCache();
         await Promise.all([
           loadDashboard(),
           loadCalendar({
@@ -5198,6 +5205,7 @@
           setNewsComplianceModalOpen(false);
           state.newsCurrentMmrPassed = mmrWasPassed;
           state.newsFormDirty = false;
+          invalidateNewWordsCache();
           clearNewsDraftLocally();
           setFormStatus(auto ? "Draft autosaved." : "Draft saved. Check when you are ready to run MMR.");
         } finally {
@@ -5233,6 +5241,7 @@
             renderNewsWeekSetViewer();
             setNewsWeekSetModalStatus(t(saved?.message) || "Report submitted.");
             setFormStatus(t(saved?.message) || "Report saved.", false, true);
+            invalidateNewWordsCache();
             await Promise.all([
               loadDashboard(),
               loadCalendar({ preserveForm: true, preserveValidation: true }),
@@ -5256,6 +5265,7 @@
             clearNewsReportForm();
             setFormStatus(t(saved?.message) || "Report submitted successfully. A new blank form is ready.", false, true);
           }
+          invalidateNewWordsCache();
           await Promise.all([loadDashboard(), loadCalendar()]);
           if (reopenReportDate) {
             openNewsWeekSetModalByReportDate(reopenReportDate, {
