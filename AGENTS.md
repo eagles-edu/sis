@@ -73,6 +73,8 @@ The following words are hard constraints, not emphasis: `all`, `every`, `everyth
 
 ## UI Guardrails
 
+- Button labels must be compact: use one or two words whenever possible. Put longer explanations, consequences, and workflow detail in the control's `title` tooltip and accessible name/description; never pack instructional sentences into a button label.
+
 - Do not recolor buttons unless the user explicitly asks for button recoloring.
 - Do not recolor chips or button-like controls in dark mode unless the user explicitly asks for recoloring.
 - Do not recolor buttons in dark mode.
@@ -117,3 +119,12 @@ Admin API auth is cookie-session based, not bearer-token based.
 - Role gate:
   - `admin`: full access
   - `teacher`: read-only; `GET` is allowed, mutating methods are forbidden
+
+## Implemented Vocabulary and Library Contracts
+
+- Vocabulary syllabication and stress verification is shared server behavior for New Words and student-news vocabulary draft/check/submit/save flows. The client guard remains structural feedback only; the server is authoritative.
+- Local CMUdict is the offline authority for pronunciation syllable count and primary-stress position. Merriam-Webster Collegiate is the written-division authority queried first; Learner's is queried only after a confirmed Collegiate miss.
+- Merriam-Webster credentials are server-only and independently configured as `MERRIAM_WEBSTER_COLLEGIATE_API_KEY` and `MERRIAM_WEBSTER_LEARNERS_API_KEY` in the environment-specific `.env.dev`, `.env.test`, and `.env` files. Keys and provider responses must not reach browser payloads or logs.
+- Successful and not-found Merriam-Webster results use a bounded normalized-word/source cache. Temporary timeout, rate-limit, unavailable-service, or missing-key conditions produce an unverified warning and may allow the action; authoritative mismatches, unknown CMUdict words, incorrect syllable division, or incorrect primary stress block without exposing a correction.
+- Stress editing must remain reversible: accept complete uppercase stressed syllables such as `com-MEND-ed`, preserve already accented input such as `com-ménd-ed`, and store canonical accented output. Do not normalize an invalid submission in a way that prevents the student from correcting uppercase stress in the edit form.
+- The protected physical student Library page is `/student/library.html`, linked below New Words, and includes student chat. The protected physical admin Library page is `/admin/library-admin.html`, linked under Administration, and must not include student chat. Both use the canonical shared header/footer and SVG theme-toggle component.

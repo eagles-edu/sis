@@ -219,6 +219,11 @@ export async function processBrevoWebhookEvent(payload = {}) {
       where: { id: storedEvent.id },
       data: { deliveryId: delivery.id, processedAt: new Date() },
     })
+    const libraryToken = delivery.metadataJson && typeof delivery.metadataJson === "object" ? normalizeText(delivery.metadataJson.libraryAssignmentToken) : ""
+    if (libraryToken && prisma.libraryAssignmentEngagement?.updateMany) {
+      const field = ["opened", "first_opened", "unique_opened", "proxy_loaded"].includes(status) ? "openedAt" : status === "clicked" ? "clickedAt" : null
+      if (field) await prisma.libraryAssignmentEngagement.updateMany({ where: { trackingToken: libraryToken, [field]: null }, data: { [field]: occurredAt } })
+    }
     if (delivery.reportId) {
       await recordParentClassReportEvent({
         reportId: delivery.reportId,

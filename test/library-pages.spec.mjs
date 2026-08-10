@@ -7,6 +7,7 @@ const admin = fs.readFileSync(new URL("../web-asset/admin/library-admin.html", i
 const studentPortal = fs.readFileSync(new URL("../web-asset/student/student-portal.html", import.meta.url), "utf8")
 const adminPortal = fs.readFileSync(new URL("../web-asset/admin/student-admin.html", import.meta.url), "utf8")
 const routes = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
+const portalScript = fs.readFileSync(new URL("../web-asset/student/student-portal.js", import.meta.url), "utf8")
 
 test("student Library is a protected physical page with shared chrome and student chat", () => {
   assert.match(student, /body class="student-portal-page"/)
@@ -20,6 +21,17 @@ test("student Library is a protected physical page with shared chrome and studen
   assert.match(student, /initPrivacyConsent\?\.\(\{ locale: "vi", portal: "student" \}\)/)
   assert.match(studentPortal, /href="\/student\/library\.html"[^>]*>Library/)
   assert.match(routes, /const STUDENT_LIBRARY_PAGE_PATH = `\$\{STUDENT_PORTAL_PAGE_PATH\}\/library\.html`/)
+  assert.match(student, /id="libraryFilters"/)
+  assert.match(student, /class="library-entry"/)
+  assert.match(student, /height:48px/)
+  assert.match(student, /createdByName/)
+  assert.match(student, /__SIS_STUDENT_API_PREFIX/)
+  assert.match(routes, /const STUDENT_LIBRARY_API_PATH = `\$\{STUDENT_API_PREFIX\}\/library`/)
+})
+
+test("New Words and News vocabulary use the same full ESL row payload", () => {
+  for (const token of ["VOCABULARY_ESL_FIELDS", "vocabulary-esl-details", "verbInfinitive", "verbV5", "awlQualifyingMember", "readVocabularyRows", "syncVocabularyEslRow", "data-vocabulary-mw-preview", "library/mw-preview"]) assert.match(portalScript, new RegExp(token))
+  assert.match(routes, /STUDENT_LIBRARY_API_PATH\}\/mw-preview/)
 })
 
 test("admin Library is a protected physical page under Administration without chat", () => {
@@ -30,7 +42,17 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(admin, /themeIcon\.setAttribute\("name", isDark \? "theme-sun" : "theme-moon"\)/)
   assert.match(admin, /class="content topbar"/)
   assert.match(admin, /<footer class="hub-footer"/)
-  assert.doesNotMatch(admin, /initPrivacyConsent|Brevo|conversation-widget/i)
+  assert.doesNotMatch(admin, /initPrivacyConsent|conversation-widget/i)
+  assert.match(admin, /Library assignment engagement|Brevo queue/)
+  assert.match(admin, /data-library-section="library"/)
+  assert.match(admin, /href="\/admin\/library-manage\.html"/)
+  assert.match(admin, /href="\/admin\/library-engagement\.html"/)
+  assert.match(admin, />Preflight<|>Cutover<|>Assign<|>Email</)
   assert.match(adminPortal, /href="\/admin\/library-admin\.html"[^>]*>\s*Library/)
   assert.match(routes, /const ADMIN_LIBRARY_PAGE_PATH = `\$\{ADMIN_PAGE_PATH\}\/library-admin\.html`/)
+  assert.match(admin, /id="libraryAdminFilters"/)
+  assert.match(admin, /Run legacy preflight/)
+  assert.doesNotMatch(admin, /Open duplicate cases/)
+  assert.match(admin, /data-mw-preview/)
+  assert.match(routes, /const ADMIN_LIBRARY_API_PATH = `\$\{ADMIN_API_PREFIX\}\/library`/)
 })

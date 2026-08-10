@@ -1,7 +1,11 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
+  <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+  <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+  <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Library Administration</title>
   <script src="/web-asset/shared/portal-theme-state.js"></script>
@@ -13,36 +17,285 @@
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <link rel="stylesheet" href="/web-asset/admin/admin-portal-theme.min.css">
   <style>
-    body.admin-portal-page main.library-admin-main { box-sizing:border-box; display:grid; gap:var(--portal-shell-gap); margin:0 auto; max-width:1440px; padding:16px; width:100%; }
-    .library-placeholder { min-height:320px; }
+    body.admin-portal-page main.library-admin-main {
+      box-sizing: border-box;
+      display: grid;
+      gap: var(--portal-shell-gap);
+      margin: 0 auto;
+      max-width: 1440px;
+      padding: 16px;
+      width: 100%;
+    }
+
+    .library-admin-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 8px 0;
+    }
+
+    .library-admin-tabs a {
+      font-weight: 700;
+    }
+
+    .library-admin-tabs a[aria-current="true"] {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    .library-admin-toolbar {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 2fr repeat(3, minmax(140px, 1fr));
+    }
+
+    .library-admin-toolbar label {
+      display: grid;
+      gap: 4px;
+      font-size: .86rem;
+      font-weight: 700;
+    }
+
+    .library-admin-toolbar input,
+    .library-admin-toolbar select {
+      min-height: 38px;
+    }
+
+    .library-admin-results {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .library-admin-entry {
+      border: 1px solid var(--portal-border-color, #ccd5db);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .library-admin-entry summary {
+      align-items: center;
+      box-sizing: border-box;
+      cursor: pointer;
+      display: flex;
+      gap: 7px;
+      height: 48px;
+      padding: 0 12px;
+    }
+
+    .library-admin-entry summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .library-admin-entry summary::before {
+      content: "+";
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .library-admin-entry[open] summary::before {
+      content: "−";
+    }
+
+    .library-admin-body {
+      border-top: 1px solid var(--portal-border-color, #ccd5db);
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .library-admin-meta {
+      color: var(--portal-muted, #52616b);
+      font-size: .9rem;
+    }
+
+    .library-admin-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .library-duplicates {
+      margin-top: 18px;
+    }
+
+    .library-duplicates li {
+      margin: 6px 0;
+    }
+
+    @media (max-width:800px) {
+      .library-admin-toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .library-admin-toolbar label:first-child {
+        grid-column: 1/-1;
+      }
+    }
   </style>
 </head>
+
 <body class="admin-portal-page page" id="top">
   <div class="wrap">
-    <header class="header-bar portal-login-header" data-surface-role="content"><a href="tel:0937667818">0937&#8209;667&#8209;818</a><a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a></header>
-    <button id="floatingMenuBtn" type="button" class="floating-menu-btn portal-button portal-button-immutable-chrome" aria-label="Open navigation menu"><span class="floating-menu-icon" aria-hidden="true"></span></button>
+    <header class="header-bar portal-login-header" data-surface-role="content"><a
+        href="tel:0937667818">0937&#8209;667&#8209;818</a><a href="https://eagles.edu.vn" target="_blank"
+        rel="noreferrer">eagles.edu.vn</a></header>
+    <button id="floatingMenuBtn" type="button" class="floating-menu-btn portal-button portal-button-immutable-chrome"
+      aria-label="Open navigation menu"><span class="floating-menu-icon" aria-hidden="true"></span></button>
     <div class="app-shell">
       <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation">
-        <h2>Navigation</h2><div class="sidebar-logo-wrap"><img src="/web-asset/images/logo.svg" alt="The Eagles Club logo"></div>
-        <nav class="menu-groups" id="navMenu">
-          <a href="/admin" class="menu-link menu-link-top">DASHBOARD</a><a href="/admin/queue-hub" class="menu-link menu-link-top">QUEUE HUB</a>
-          <div class="menu-group" data-menu-group="admin"><button type="button" class="menu-group-btn" data-menu-toggle="admin" aria-expanded="true">Administration</button><div class="menu-group-links"><a href="/admin/enrollment" class="menu-link menu-sublink">Enrollment</a><a href="/admin/student-admin" class="menu-link menu-sublink">Student Admin</a><a href="/admin/school-setup" class="menu-link menu-sublink">School Setup</a><a href="/admin/users" class="menu-link menu-sublink">Users</a><a href="/admin/permissions" class="menu-link menu-sublink">Permissions</a><a href="/admin/settings" class="menu-link menu-sublink">Settings</a><a href="/admin/library-admin.html" class="menu-link menu-sublink active" aria-current="page">Library</a></div></div>
+        <h2>Navigation</h2>
+        <div class="sidebar-logo-wrap"><img src="/web-asset/images/logo.svg" alt="The Eagles Club logo"></div>
+        <nav class="menu-groups" id="navMenu" aria-label="MENU">
+          <a href="/admin" class="menu-link menu-link-top">DASHBOARD</a><a href="/admin/queue-hub"
+            class="menu-link menu-link-top">QUEUE HUB</a>
+          <div class="menu-group" data-menu-group="admin"><button type="button" class="menu-group-btn"
+              data-menu-toggle="admin" aria-expanded="true">Administration</button>
+            <div class="menu-group-links"><a href="/admin/enrollment" class="menu-link menu-sublink">Enrollment</a><a
+                href="/admin/student-admin" class="menu-link menu-sublink">Student Admin</a><a
+                href="/admin/school-setup" class="menu-link menu-sublink">School Setup</a><a href="/admin/users"
+                class="menu-link menu-sublink">Users</a><a href="/admin/permissions"
+                class="menu-link menu-sublink">Permissions</a><a href="/admin/settings"
+                class="menu-link menu-sublink">Settings</a><a href="/admin/library-admin.html"
+                class="menu-link menu-sublink active" aria-current="page">Library</a></div>
+          </div>
         </nav>
-        <div class="sidebar-actions"><button id="libraryAdminLogoutBtn" type="button" class="portal-button portal-button-danger">Logout</button></div>
+        <div class="sidebar-actions"><button id="libraryAdminLogoutBtn" type="button"
+            class="portal-button portal-button-danger">Logout</button></div>
       </aside>
       <main id="appMain" class="section-stack library-admin-main" data-surface-role="content">
-        <section class="content topbar" data-surface-role="content"><div class="topbar-head"><div class="brand-head"><a class="brand-logo-wrap brand-logo-wrap--sm" href="/admin" aria-label="Go to admin dashboard"><img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo"></a><h1>THE EAGLES CLUB</h1></div><div class="header-actions"><button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme"><span class="portal-theme-toggle__icon" aria-hidden="true"><svg-icon name="theme-moon" size="110%" id="adminThemeToggleIcon"></svg-icon></span></button><div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls"><button id="adminTextZoomDownBtn" type="button" class="portal-button portal-button-alt">A-</button><button id="adminTextZoomUpBtn" type="button" class="portal-button portal-button-alt">A+</button><button id="adminTextZoomResetBtn" type="button" class="portal-button portal-button-warning">Reset</button></div></div></div></section>
-        <section class="content library-placeholder" data-surface-role="content" aria-labelledby="libraryAdminTitle"><div class="section-head"><h1 id="libraryAdminTitle">Library Administration</h1><p class="small">Library administration content will be added here.</p></div></section>
-        <section class="content portal-prefooter" aria-label="Runtime environment"><span class="env-badge" data-environment-prefooter>Admin Library</span></section>
-        <footer class="hub-footer" aria-label="Site footer"><p class="hub-footer__copy">© <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.</p><p class="hub-footer__action"><a href="#top">Về đầu trang</a></p></footer>
+        <section class="content topbar" data-surface-role="content">
+          <div class="topbar-head">
+            <div class="brand-head"><a class="brand-logo-wrap brand-logo-wrap--sm" href="/admin"
+                aria-label="Go to admin dashboard"><img class="brand-logo" src="/web-asset/images/logo.svg"
+                  alt="The Eagles Club logo"></a>
+              <h1>THE EAGLES CLUB</h1>
+            </div>
+            <div class="header-actions"><button class="portal-theme-toggle portal-button portal-button-immutable-chrome"
+                id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme"><span
+                  class="portal-theme-toggle__icon" aria-hidden="true"><svg-icon name="theme-moon" size="110%"
+                    id="adminThemeToggleIcon"></svg-icon></span></button>
+              <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls"><button
+                  id="adminTextZoomDownBtn" type="button" class="portal-button portal-button-alt">A-</button><button
+                  id="adminTextZoomUpBtn" type="button" class="portal-button portal-button-alt">A+</button><button
+                  id="adminTextZoomResetBtn" type="button" class="portal-button portal-button-warning">Reset</button>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="content" data-surface-role="content" aria-labelledby="libraryAdminTitle">
+          <div class="section-head">
+            <h1 id="libraryAdminTitle">Library</h1>
+            <nav class="library-admin-tabs" aria-label="Library administration"><a href="/admin/library-admin.html"
+                data-library-section="library"
+                title="Browse and search the complete shared vocabulary corpus.">Library</a><a
+                href="/admin/library-manage.html" data-library-section="manage"
+                title="Assign Library vocabulary work and review new entries, edits, and potential duplicates.">Manage</a><a
+                href="/admin/library-engagement.html" data-library-section="engagement"
+                title="Track Brevo Library assignment delivery, opens, clicks, and completion.">Engagement</a></nav>
+            <p class="small">Full shared vocabulary corpus.</p>
+          </div>
+          <form id="libraryAdminFilters" class="library-admin-toolbar"><label>Search<input id="libraryAdminSearch"
+                type="search" placeholder="English, Vietnamese, definition, or family"></label><label>POS<select
+                id="libraryAdminPos">
+                <option value="">All</option>
+                <option>noun</option>
+                <option>verb</option>
+                <option>adjective</option>
+                <option>adverb</option>
+                <option>pronoun</option>
+                <option>conjunction</option>
+                <option>preposition</option>
+              </select></label><label>Sort<select id="libraryAdminSort">
+                <option value="updatedAt">Last edited</option>
+                <option value="createdAt">Created date</option>
+                <option value="english">Alphabetically</option>
+                <option value="syllableCount">Number of syllables</option>
+                <option value="partOfSpeech">POS</option>
+              </select></label><label>Direction<select id="libraryAdminDirection">
+                <option value="desc">Newest first</option>
+                <option value="asc">Oldest/A-Z</option>
+              </select></label><button type="submit" class="portal-button portal-button-alt"
+              title="Apply the selected Library filters." aria-label="Apply Library filters">Apply</button></form>
+          <div class="library-admin-actions"><button id="libraryPreflightBtn" type="button"
+              class="portal-button portal-button-alt"
+              title="Build the immutable legacy report grouped by normalized English and POS."
+              aria-label="Run legacy preflight">Preflight</button><button id="libraryCutoverBtn" type="button"
+              class="portal-button portal-button-warning"
+              title="Create canonical Library entries, preserve provenance, and archive migrated New Words."
+              aria-label="Run legacy cutover">Cutover</button></div>
+          <p id="libraryAdminStatus" class="small" aria-live="polite">Loading Library…</p>
+          <div id="libraryAdminResults" class="library-admin-results"></div>
+        </section>
+        <section class="content portal-prefooter" aria-label="Runtime environment"><span class="env-badge"
+            data-environment-prefooter>Admin Library</span></section>
+        <footer class="hub-footer" aria-label="Site footer">
+          <p class="hub-footer__copy">© <span data-copyright-year="" data-start="2012"></span> The Eagles American
+            English Club Ltd. All rights reserved.</p>
+          <p class="hub-footer__action"><a href="#top">Về đầu trang</a></p>
+        </footer>
+        <section class="content library-admin-workbench" data-surface-role="content"
+          aria-labelledby="libraryQueueTitle">
+          <div class="section-head">
+            <h2 id="libraryQueueTitle">Manage</h2>
+            <p class="small">Library assignments and review queue: new entries, edits, and derived potential duplicates.
+            </p>
+          </div>
+          <div class="library-admin-toolbar"><label>Queue status<select id="libraryQueueStatus">
+                <option value="pending_review">Pending review</option>
+                <option value="rejected">Rejected</option>
+                <option value="approved">Approved</option>
+              </select></label><label>Assign to student<select id="libraryAssignStudent">
+                <option value="">Choose student</option>
+              </select></label><label>Instructions<input id="libraryAssignInstructions" type="text"
+                placeholder="What should the student check?"></label><label>Due date<input id="libraryAssignDueAt"
+                type="datetime-local"></label></div>
+          <p id="libraryQueueStatusText" class="small" aria-live="polite">Loading Library queue…</p>
+          <div id="libraryQueueRows" class="library-admin-results"></div>
+        </section>
+        <section class="content library-admin-workbench" data-surface-role="content"
+          aria-labelledby="libraryEngagementTitle">
+          <div class="section-head">
+            <h2 id="libraryEngagementTitle">Library assignment engagement</h2>
+            <p class="small">Brevo queue, delivery, open, click, and completion tracking for Library assignments.</p>
+          </div>
+          <button id="libraryEngagementReloadBtn" type="button" class="portal-button portal-button-alt"
+            title="Reload Library assignment delivery and engagement events.">Refresh</button>
+          <p id="libraryEngagementSummary" class="small" aria-live="polite">Loading engagement…</p>
+          <div id="libraryEngagementRows" class="table-scroll-wrap"></div>
+        </section>
       </main>
     </div>
   </div>
   <script>
+      (() => {
+        const sidebar = document.getElementById("appSidebarNav"); const menu = document.getElementById("floatingMenuBtn"); menu?.addEventListener("click", () => sidebar?.classList.toggle("open")); document.querySelectorAll("[data-menu-toggle]").forEach((button) => button.addEventListener("click", () => { const expanded = button.getAttribute("aria-expanded") !== "true"; button.setAttribute("aria-expanded", String(expanded)); button.parentElement?.classList.toggle("open", expanded); }));
+        document.getElementById("libraryAdminLogoutBtn")?.addEventListener("click", async () => { await fetch("/api/admin/auth/logout", { method: "POST", credentials: "include" }); window.location.assign("/admin"); }); const themeButton = document.getElementById("adminThemeToggle"); const themeIcon = document.getElementById("adminThemeToggleIcon"); const themeState = window.SIS_PORTAL_THEME; const syncTheme = (theme) => { if (!themeButton || !themeIcon) return; const isDark = theme === "dark"; themeButton.setAttribute("aria-pressed", String(isDark)); themeButton.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme"); themeIcon.setAttribute("name", isDark ? "theme-sun" : "theme-moon"); }; window.addEventListener("sis-theme-change", (event) => syncTheme(event.detail?.theme || document.documentElement.dataset.theme)); themeButton?.addEventListener("click", () => syncTheme(themeState?.toggleTheme ? themeState.toggleTheme("light") : (document.documentElement.dataset.theme === "dark" ? "light" : "dark"))); syncTheme(themeState?.getTheme ? themeState.getTheme("light") : document.documentElement.dataset.theme); document.querySelectorAll("[data-copyright-year]").forEach((element) => { element.textContent = String(new Date().getFullYear()); }); const zoom = (delta) => { const current = Number.parseInt(document.documentElement.dataset.portalTextZoom || "100", 10) || 100; document.documentElement.dataset.portalTextZoom = String(Math.max(85, Math.min(130, current + delta))); document.documentElement.style.fontSize = `${document.documentElement.dataset.portalTextZoom}%`; }; document.getElementById("adminTextZoomDownBtn")?.addEventListener("click", () => zoom(-5)); document.getElementById("adminTextZoomUpBtn")?.addEventListener("click", () => zoom(5)); document.getElementById("adminTextZoomResetBtn")?.addEventListener("click", () => { document.documentElement.dataset.portalTextZoom = "100"; document.documentElement.style.fontSize = ""; }); const libraryApi = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library`; const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char])); async function loadLibraryAdmin() { const status = document.getElementById("libraryAdminStatus"); const query = new URLSearchParams({ pageSize: "100", search: document.getElementById("libraryAdminSearch").value, partOfSpeech: document.getElementById("libraryAdminPos").value, sortBy: document.getElementById("libraryAdminSort").value, direction: document.getElementById("libraryAdminDirection").value }); try { const response = await fetch(`${libraryApi}?${query}`, { credentials: "include" }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to load Library"); document.getElementById("libraryAdminResults").innerHTML = (data.items || []).map((entry) => `<details class="library-admin-entry"><summary><strong>${esc(entry.english)}</strong>&nbsp; /${esc(entry.syllabication)}/ &nbsp;${esc(entry.partOfSpeech)} | ${esc(entry.vietnamese)}</summary><div class="library-admin-body"><div>${esc(entry.definition)}</div><div class="library-admin-meta">Created by ${esc(entry.createdByName)} · last edited by ${esc(entry.lastEditedByName)} · ${new Date(entry.updatedAt).toLocaleString()}</div><div class="library-admin-meta">AWL: ${esc(entry.awlFamilyHeadword || "Not tagged")}${entry.awlSublist ? `, sublist ${esc(entry.awlSublist)}` : ""}</div><div class="library-admin-actions"><button type="button" class="portal-button portal-button-alt" data-mw-preview="${esc(entry.id)}" title="Preview only the Merriam-Webster fields that can be authoritative." aria-label="Preview MW data">MW preview</button></div></div></details>`).join("") || "<p class=\"small\">No entries match.</p>"; status.textContent = `${data.total || 0} entries`; } catch (error) { status.textContent = error.message; } } document.getElementById("libraryAdminFilters")?.addEventListener("input", loadLibraryAdmin); document.getElementById("libraryAdminResults")?.addEventListener("click", async (event) => { const id = event.target?.dataset?.mwPreview; if (!id) return; const response = await fetch(`${libraryApi}/entries/${encodeURIComponent(id)}/mw-preview`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" }); const data = await response.json(); window.alert(data.ok ? `MW preview:\n${JSON.stringify(data.fields, null, 2)}` : data.message || "MW data unavailable"); }); document.getElementById("libraryPreflightBtn")?.addEventListener("click", async () => { const response = await fetch(`${libraryApi}/legacy/preflight`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" }); const data = await response.json(); document.getElementById("libraryAdminStatus").textContent = data.ok ? `Preflight: ${data.sourceRows} sources in ${data.groups} groups.` : (data.error || "Preflight failed"); }); document.getElementById("libraryCutoverBtn")?.addEventListener("click", async () => { if (!window.confirm("Create canonical Library entries and archive migrated New Words?")) return; const response = await fetch(`${libraryApi}/legacy/cutover`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" }); const data = await response.json(); document.getElementById("libraryAdminStatus").textContent = data.ok ? `Cutover completed: ${data.migrated} Library entries.` : (data.error || "Cutover failed"); if (data.ok) loadLibraryAdmin(); }); loadLibraryAdmin();
+      })();
+  </script>
+  <script>
     (() => {
-      const sidebar = document.getElementById("appSidebarNav"); const menu = document.getElementById("floatingMenuBtn"); menu?.addEventListener("click", () => sidebar?.classList.toggle("open")); document.querySelectorAll("[data-menu-toggle]").forEach((button) => button.addEventListener("click", () => { const expanded = button.getAttribute("aria-expanded") !== "true"; button.setAttribute("aria-expanded", String(expanded)); button.parentElement?.classList.toggle("open", expanded); }));
-      document.getElementById("libraryAdminLogoutBtn")?.addEventListener("click", async () => { await fetch("/api/admin/auth/logout", { method: "POST", credentials: "include" }); window.location.assign("/admin"); }); const themeButton = document.getElementById("adminThemeToggle"); const themeIcon = document.getElementById("adminThemeToggleIcon"); const themeState = window.SIS_PORTAL_THEME; const syncTheme = (theme) => { if (!themeButton || !themeIcon) return; const isDark = theme === "dark"; themeButton.setAttribute("aria-pressed", String(isDark)); themeButton.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme"); themeIcon.setAttribute("name", isDark ? "theme-sun" : "theme-moon"); }; window.addEventListener("sis-theme-change", (event) => syncTheme(event.detail?.theme || document.documentElement.dataset.theme)); themeButton?.addEventListener("click", () => syncTheme(themeState?.toggleTheme ? themeState.toggleTheme("light") : (document.documentElement.dataset.theme === "dark" ? "light" : "dark"))); syncTheme(themeState?.getTheme ? themeState.getTheme("light") : document.documentElement.dataset.theme); document.querySelectorAll("[data-copyright-year]").forEach((element) => { element.textContent = String(new Date().getFullYear()); }); const zoom = (delta) => { const current = Number.parseInt(document.documentElement.dataset.portalTextZoom || "100", 10) || 100; document.documentElement.dataset.portalTextZoom = String(Math.max(85, Math.min(130, current + delta))); document.documentElement.style.fontSize = `${document.documentElement.dataset.portalTextZoom}%`; }; document.getElementById("adminTextZoomDownBtn")?.addEventListener("click", () => zoom(-5)); document.getElementById("adminTextZoomUpBtn")?.addEventListener("click", () => zoom(5)); document.getElementById("adminTextZoomResetBtn")?.addEventListener("click", () => { document.documentElement.dataset.portalTextZoom = "100"; document.documentElement.style.fontSize = ""; });
+      const apiRoot = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library`;
+      const librarySection = location.pathname.endsWith("library-manage.html") ? "manage" : location.pathname.endsWith("library-engagement.html") ? "engagement" : "library";
+      document.querySelectorAll("[data-library-section]").forEach((link) => link.toggleAttribute("aria-current", link.dataset.librarySection === librarySection));
+      const fullLibraryPanel = document.getElementById("libraryAdminFilters")?.closest("section");
+      const managePanel = document.getElementById("libraryQueueTitle")?.closest("section");
+      const engagementPanel = document.getElementById("libraryEngagementTitle")?.closest("section");
+      if (librarySection === "manage") { fullLibraryPanel?.classList.add("hidden"); engagementPanel?.classList.add("hidden"); }
+      if (librarySection === "engagement") { fullLibraryPanel?.classList.add("hidden"); managePanel?.classList.add("hidden"); }
+      if (librarySection === "library") { managePanel?.classList.add("hidden"); engagementPanel?.classList.add("hidden"); }
+      const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+      const json = async (path, options = {}) => { const response = await fetch(`${apiRoot}${path}`, { credentials: "include", ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Library request failed"); return data; };
+      let selectedQueueItem = null;
+      async function loadStudents() { const data = await json("/students"); const select = document.getElementById("libraryAssignStudent"); select.innerHTML = `<option value="">Choose student</option>${(data.items || []).map((student) => `<option value="${esc(student.id)}">${esc(student.name)}${student.email ? ` — ${esc(student.email)}` : ""}</option>`).join("")}`; }
+      async function loadQueue() { const data = await json(`/queue?status=${encodeURIComponent(document.getElementById("libraryQueueStatus").value)}`); document.getElementById("libraryQueueStatusText").textContent = `${data.total || 0} queue item(s)`; const submitted = (data.items || []).map((item) => { const payload = item.payloadJson || {}; return `<article class="library-admin-entry"><div class="library-admin-body"><strong>${esc(payload.english || "Untitled")}</strong> <span class="chip">${esc(item.queueType)}</span>${item.potentialDuplicate ? ` <span class="chip chip-warn">potential duplicate</span>` : ""}<div class="library-admin-meta">${esc(payload.partOfSpeech || "-")} · submitted ${esc(new Date(item.submittedAt).toLocaleString())} · by ${esc(item.contributorName)}</div><div class="library-admin-meta">${esc(payload.definition || "No definition")}</div><div class="library-admin-actions"><button type="button" class="portal-button portal-button-affirm" data-library-review="${esc(item.id)}" data-approved="true">Approve</button><button type="button" class="portal-button portal-button-warning" data-library-review="${esc(item.id)}" data-approved="false">Reject</button><button type="button" class="portal-button portal-button-alt" data-library-assign="${esc(item.id)}" data-entry-id="${esc(item.entryId || "")}" title="Assign this edit or new entry to a selected student.">Assign</button></div></div></article>`; }); const assigned = (data.assignments || []).map((item) => `<article class="library-admin-entry"><div class="library-admin-body"><strong>${esc(item.entry?.english || "New Library entry")}</strong> <span class="chip">assigned ${esc(item.taskType)}</span><div class="library-admin-meta">Subject: ${esc(item.subject || "-")} · Route: ${esc(item.route || "-")} · due ${esc(item.dueAt || "-")}</div><div class="library-admin-actions"><button type="button" class="portal-button portal-button-alt" data-library-notify="${esc(item.id)}" title="Queue the assignment email and create its engagement tracking record.">Email</button></div></div></article>`); document.getElementById("libraryQueueRows").innerHTML = submitted.concat(assigned).join("") || "<p class=\"small\">No Library work is waiting.</p>"; }
+      async function loadEngagement() { const data = await json("/engagement"); document.getElementById("libraryEngagementSummary").textContent = `${data.total || 0} assignment engagement record(s)`; document.getElementById("libraryEngagementRows").innerHTML = `<table class="admin-data-table"><thead><tr><th>Student</th><th>Library task</th><th>Email</th><th>Queued</th><th>Sent</th><th>Opened</th><th>Clicked</th><th>Completed</th></tr></thead><tbody>${(data.items || []).map((row) => `<tr><td>${esc(row.studentName)}</td><td>${esc(row.assignmentTitle)}</td><td>${esc(row.recipientEmail)}</td><td>${esc(row.queuedAt || "-")}</td><td>${esc(row.sentAt || "-")}</td><td>${esc(row.openedAt || "-")}</td><td>${esc(row.clickedAt || "-")}</td><td>${esc(row.completedAt || "-")}</td></tr>`).join("") || `<tr><td colspan="8">No Library assignment emails have been queued.</td></tr>`}</tbody></table>`; }
+      ["libraryQueueStatus"].forEach((id) => document.getElementById(id)?.addEventListener("input", () => loadQueue().catch((error) => { document.getElementById("libraryQueueStatusText").textContent = error.message; })));
+      document.getElementById("libraryEngagementReloadBtn")?.addEventListener("click", () => loadEngagement().catch((error) => { document.getElementById("libraryEngagementSummary").textContent = error.message; }));
+      document.getElementById("libraryQueueRows")?.addEventListener("click", async (event) => { const notify = event.target.closest("[data-library-notify]"); if (notify) { await json(`/assignments/${encodeURIComponent(notify.dataset.libraryNotify)}/notify`, { method: "POST", body: "{}" }); await loadEngagement(); return; } const review = event.target.closest("[data-library-review]"); if (review) { await json(`/contributions/${encodeURIComponent(review.dataset.libraryReview)}/review`, { method: "POST", body: JSON.stringify({ approved: review.dataset.approved === "true" }) }); await loadQueue(); return; } const assign = event.target.closest("[data-library-assign]"); if (!assign) return; const studentRefId = document.getElementById("libraryAssignStudent").value; if (!studentRefId) { window.alert("Choose a student first."); return; } await json("/assignments", { method: "POST", body: JSON.stringify({ studentRefIds: [studentRefId], entryId: assign.dataset.entryId || null, taskType: assign.dataset.entryId ? "edit" : "new_entry", instructions: document.getElementById("libraryAssignInstructions").value, dueAt: document.getElementById("libraryAssignDueAt").value || null }) }); window.alert("Library assignment created."); await loadQueue(); });
+      Promise.all([loadStudents(), loadQueue(), loadEngagement()]).catch((error) => { document.getElementById("libraryQueueStatusText").textContent = error.message; });
     })();
   </script>
 </body>
+
 </html>

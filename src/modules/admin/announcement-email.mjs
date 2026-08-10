@@ -318,8 +318,9 @@ function buildAnnouncementEmailContent(payload = {}) {
   const sender = normalizeText(payload.senderName) || "Eagles Student Admin"
   const trackingOrigin = normalizeOrigin(payload.requestOrigin)
   const reminderToken = normalizeText(payload.reminderEngagementToken)
-  const openPixelUrl = trackingOrigin && reminderToken
-    ? `${trackingOrigin}/api/assignment-reminders/track/open/${encodeURIComponent(reminderToken)}`
+  const libraryToken = normalizeText(payload.libraryAssignmentToken)
+  const openPixelUrl = trackingOrigin && (reminderToken || libraryToken)
+    ? `${trackingOrigin}${libraryToken ? "/api/library-assignments/track/open/" : "/api/assignment-reminders/track/open/"}${encodeURIComponent(libraryToken || reminderToken)}`
     : ""
 
   const subjectParts = [assignmentTitle]
@@ -381,6 +382,7 @@ function normalizeAnnouncementPayload(payload = {}, options = {}) {
     level: normalizeText(payload.level),
     message: normalizeText(payload.message),
     senderName: normalizeText(payload.senderName) || "Eagles Student Admin",
+    libraryAssignmentToken: normalizeText(payload.libraryAssignmentToken),
   }
 }
 
@@ -423,7 +425,7 @@ export async function sendAnnouncementEmail(payload = {}) {
           reportId: payload.reportId,
           queueType,
           subject: emailContent.subject,
-          metadata: { provider: sentResult.provider },
+          metadata: { provider: sentResult.provider, libraryAssignmentToken: normalizedPayload.libraryAssignmentToken || "" },
         })
         sent += 1
       }
@@ -451,7 +453,7 @@ export async function sendAnnouncementEmail(payload = {}) {
       reportId: payload.reportId,
       queueType,
       subject: emailContent.subject,
-      metadata: { provider: sentResult.provider, deliveryMode: "bcc" },
+      metadata: { provider: sentResult.provider, deliveryMode: "bcc", libraryAssignmentToken: normalizedPayload.libraryAssignmentToken || "" },
     })))
     return {
       ok: true,

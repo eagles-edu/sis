@@ -5,6 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["public", "library"]
 }
 
 model Student {
@@ -31,6 +32,7 @@ model Student {
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
 
+  @@schema("public")
 }
 
 model Exercise {
@@ -40,6 +42,7 @@ model Exercise {
   submissions ExerciseSubmission[]
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
+  @@schema("public")
 }
 
 model ExerciseSubmission {
@@ -68,6 +71,7 @@ model ExerciseSubmission {
   @@index([studentRefId, completedAt])
   @@index([exerciseRefId, completedAt])
   @@index([submittedEaglesId, completedAt])
+  @@schema("public")
 }
 
 model IncomingExerciseResult {
@@ -102,6 +106,7 @@ model IncomingExerciseResult {
   @@index([submittedEaglesId, createdAt])
   @@index([submittedEmail, createdAt])
   @@index([matchedStudentRefId, createdAt])
+  @@schema("public")
 }
 
 model AssignmentTemplate {
@@ -124,6 +129,7 @@ model AssignmentTemplate {
   @@index([level, dueAt])
   @@index([assignedAt, dueAt])
   @@index([updatedAt])
+  @@schema("public")
 }
 
 model SisConfigMirror {
@@ -132,6 +138,7 @@ model SisConfigMirror {
   updatedBy  String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  @@schema("public")
 }
 
 model PortalPreference {
@@ -145,6 +152,7 @@ model PortalPreference {
 
   @@unique([principalType, principalId])
   @@index([principalType, updatedAt])
+  @@schema("public")
 }
 
 model PortalAsset {
@@ -166,6 +174,7 @@ model PortalAsset {
 
   @@index([ownerType, ownerId])
   @@index([kind, updatedAt])
+  @@schema("public")
 }
 
 enum IntakeControlType {
@@ -179,6 +188,7 @@ enum IntakeControlType {
   date
   unknown
   meta
+  @@schema("public")
 }
 
 enum SchoolQuarter {
@@ -186,6 +196,7 @@ enum SchoolQuarter {
   q2
   q3
   q4
+  @@schema("public")
 }
 
 enum AttendanceStatus {
@@ -193,16 +204,19 @@ enum AttendanceStatus {
   absent
   late
   excused
+  @@schema("public")
 }
 
 enum AdminUserRole {
   admin
   teacher
+  @@schema("public")
 }
 
 enum StudentEnrollmentStatus {
   active
   unenrolled
+  @@schema("public")
 }
 
 enum StudentUnenrollmentReason {
@@ -216,6 +230,7 @@ enum StudentUnenrollmentReason {
   pre_high_school_exam_tutoring
   pre_college_exam_tutoring
   unknown
+  @@schema("public")
 }
 
 model IntakeFieldDefinition {
@@ -234,6 +249,7 @@ model IntakeFieldDefinition {
 
   @@unique([formId, fieldKey])
   @@index([formId, dataName])
+  @@schema("public")
 }
 
 model StudentProfile {
@@ -308,6 +324,7 @@ model StudentProfile {
   updatedAt                  DateTime @updatedAt
 
   @@index([sourceFormId, createdAt])
+  @@schema("public")
 }
 
 model Family {
@@ -316,6 +333,7 @@ model Family {
   sequence  Int      @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@schema("public")
 }
 
 model StudentIntakeSubmission {
@@ -332,6 +350,7 @@ model StudentIntakeSubmission {
 
   @@index([studentRefId, submittedAt])
   @@index([sourceFormId, submittedAt])
+  @@schema("public")
 }
 
 model StudentAttendance {
@@ -355,6 +374,7 @@ model StudentAttendance {
   @@index([studentRefId, attendanceDate])
   @@index([enrollmentPeriodId])
   @@index([level, schoolYear, quarter, attendanceDate])
+  @@schema("public")
 }
 
 model StudentGradeRecord {
@@ -392,6 +412,7 @@ model StudentGradeRecord {
   @@index([enrollmentPeriodId])
   @@index([className, schoolYear, quarter])
   @@index([dueAt])
+  @@schema("public")
 }
 
 model ParentClassReport {
@@ -439,6 +460,7 @@ model ParentClassReport {
   @@index([level, schoolYear, quarter])
   @@index([workflowState, schoolYear, quarter, generatedAt])
   @@index([approvedAt])
+  @@schema("public")
 }
 
 model BrevoEmailDelivery {
@@ -479,6 +501,7 @@ model BrevoEmailDelivery {
   @@index([batchId, recipientEmail, sentAt])
   @@index([recipientEmail, status, lastEventAt])
   @@index([reportId, status, updatedAt])
+  @@schema("public")
 }
 
 model BrevoEmailWebhookEvent {
@@ -498,6 +521,7 @@ model BrevoEmailWebhookEvent {
   @@index([providerMessageId, recipientEmail, eventAt])
   @@index([eventType, eventAt])
   @@index([deliveryId, eventAt])
+  @@schema("public")
 }
 
 model ParentClassReportEvent {
@@ -517,6 +541,7 @@ model ParentClassReportEvent {
   @@index([reportId, eventAt])
   @@index([eventType, eventAt])
   @@index([recipientEmail, eventAt])
+  @@schema("public")
 }
 
 model StudentPointsAdjustment {
@@ -531,6 +556,7 @@ model StudentPointsAdjustment {
   updatedAt        DateTime @updatedAt
 
   @@index([studentRefId, appliedAt])
+  @@schema("public")
 }
 
 model StudentNewsReport {
@@ -577,6 +603,7 @@ model StudentNewsReport {
   @@index([reviewStatus, reportDate, submittedAt])
   @@index([submissionState, reportDate, submittedAt])
   @@index([reviewedAt])
+  @@schema("public")
 }
 
 model StudentNewWord {
@@ -588,6 +615,9 @@ model StudentNewWord {
   vietnamese        String
   syllabication     String
   definition        String
+  eslJson           Json?
+  archivedAt        DateTime?
+  archivedLibraryEntryId String?
   syllableCount     Int      @default(0)
   sourceReportDate  DateTime?
   sourceReportId    String?
@@ -597,6 +627,165 @@ model StudentNewWord {
   @@unique([studentRefId, englishKey])
   @@index([studentRefId, sourceReportDate])
   @@index([studentRefId, partOfSpeech])
+  @@index([studentRefId, archivedAt])
+  @@schema("public")
+}
+
+model LibraryEntry {
+  id                   String   @id @default(cuid())
+  normalizedKey        String
+  english              String
+  americanEnglish      String?
+  britishEnglish       String?
+  partOfSpeech         String
+  entryKind            String   @default("word")
+  phraseType           String?
+  posSubtype           String?
+  vietnamese           String
+  syllabication        String
+  syllableCount        Int      @default(0)
+  definition           String
+  countability         String?
+  verbRegularity       String?
+  verbTransitivity     String?
+  verbInfinitive       String?
+  verbV1               String?
+  verbV2               String?
+  verbV3               String?
+  verbV4               String?
+  verbV5               String?
+  displayVerbForm      String?
+  edAdjective          Boolean  @default(false)
+  ingAdjective         Boolean  @default(false)
+  awlFamilyHeadword    String?
+  awlQualifyingMember  String?
+  awlMemberForm        String?
+  awlSublist           Int?
+  reviewStatus         String   @default("approved")
+  createdByName        String
+  lastEditedByName     String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  revisions            LibraryEntryRevision[]
+  contributions        LibraryContribution[]
+  assignments          LibraryAssignment[]
+
+  @@index([normalizedKey, partOfSpeech])
+  @@index([english])
+  @@index([partOfSpeech, entryKind, phraseType])
+  @@index([awlSublist, awlFamilyHeadword])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@schema("library")
+}
+
+model LibraryEntryRevision {
+  id           String   @id @default(cuid())
+  entryId      String
+  entry        LibraryEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  action       String
+  actorName    String
+  actorRole    String
+  snapshotJson Json
+  createdAt    DateTime @default(now())
+
+  @@index([entryId, createdAt])
+  @@index([actorName, createdAt])
+  @@schema("library")
+}
+
+model LibraryContribution {
+  id              String   @id @default(cuid())
+  entryId         String?
+  entry           LibraryEntry? @relation(fields: [entryId], references: [id], onDelete: SetNull)
+  studentRefId    String?
+  contributorName String
+  sourceKind      String
+  sourceId        String?
+  payloadJson     Json
+  status          String   @default("pending_review")
+  submittedAt     DateTime @default(now())
+  reviewedAt      DateTime?
+  reviewedByName  String?
+
+  @@index([entryId, status])
+  @@index([studentRefId, status])
+  @@index([sourceKind, sourceId])
+  @@schema("library")
+}
+
+model LibraryAssignment {
+  id           String   @id @default(cuid())
+  entryId      String?
+  entry        LibraryEntry? @relation(fields: [entryId], references: [id], onDelete: SetNull)
+  studentRefId String
+  taskType     String
+  subject      String?
+  route        String?
+  weekNumber   Int?
+  instructions String?
+  dueAt        DateTime?
+  status       String   @default("assigned")
+  assignedByName String
+  createdAt    DateTime @default(now())
+  completedAt  DateTime?
+  engagements  LibraryAssignmentEngagement[]
+
+  @@index([studentRefId, status, dueAt])
+  @@index([entryId, status])
+  @@schema("library")
+}
+
+model LibraryAssignmentEngagement {
+  id             String   @id @default(cuid())
+  assignmentId   String
+  assignment     LibraryAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  recipientEmail String
+  trackingToken  String   @unique
+  queueId        String?
+  queuedAt       DateTime @default(now())
+  sentAt         DateTime?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+  completedAt    DateTime?
+  metadataJson   Json?
+
+  @@unique([assignmentId, recipientEmail])
+  @@index([queuedAt])
+  @@index([openedAt, clickedAt])
+  @@schema("library")
+}
+
+model LibraryMigrationPreflight {
+  id             String   @id @default(cuid())
+  runKey         String
+  normalizedKey  String
+  partOfSpeech   String
+  sourceRowsJson Json
+  conflictsJson  Json
+  createdAt      DateTime @default(now())
+
+  @@unique([runKey, normalizedKey, partOfSpeech])
+  @@index([runKey, createdAt])
+  @@schema("library")
+}
+
+model LibraryAwlFamily {
+  id                 String   @id @default(cuid())
+  familyHeadword     String
+  qualifyingMember   String
+  sublist            Int
+  americanHeadword   String?
+  britishHeadword    String?
+  membersJson        Json
+  sourceVersion      String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([familyHeadword, sublist])
+  @@index([sublist])
+  @@index([americanHeadword])
+  @@schema("library")
 }
 
 model StudentEnrollmentPeriod {
@@ -625,6 +814,7 @@ model StudentEnrollmentPeriod {
   @@index([studentRefId, schoolYear])
   @@index([status, schoolYear, level])
   @@index([promotedFromPeriodId])
+  @@schema("public")
 }
 
 model AdminUser {
@@ -636,6 +826,7 @@ model AdminUser {
   updatedAt    DateTime      @updatedAt
 
   @@index([role])
+  @@schema("public")
 }
 
 model AdminNotificationQueue {
@@ -666,6 +857,7 @@ model AdminNotificationQueue {
 
   @@index([queueType, status, createdAt])
   @@index([status, scheduledFor, createdAt])
+  @@schema("public")
 }
 
 model AssignmentReminderDispatch {
@@ -686,6 +878,7 @@ model AssignmentReminderDispatch {
   @@index([assignmentTemplateId, localDate, reminderKind])
   @@index([studentRefId, localDate, reminderKind])
   @@index([status, updatedAt])
+  @@schema("public")
 }
 
 model AssignmentReminderEngagement {
@@ -708,6 +901,7 @@ model AssignmentReminderEngagement {
   @@index([audience, queuedAt])
   @@index([openedAt, clickedAt])
   @@index([actionCompletedAt])
+  @@schema("public")
 }
 
 model AsyncSideEffectJob {
@@ -730,6 +924,7 @@ model AsyncSideEffectJob {
   @@index([status, availableAt, createdAt])
   @@index([jobType, status, availableAt, createdAt])
   @@index([lockedAt])
+  @@schema("public")
 }
 
 model ParentPortalAccount {
@@ -748,6 +943,7 @@ model ParentPortalAccount {
 
   @@index([status])
   @@index([email])
+  @@schema("public")
 }
 
 model ParentPortalStudentLink {
@@ -760,6 +956,7 @@ model ParentPortalStudentLink {
 
   @@unique([parentAccountId, studentRefId])
   @@index([studentRefId])
+  @@schema("public")
 }
 
 model ParentProfileSubmissionQueue {
@@ -784,6 +981,7 @@ model ParentProfileSubmissionQueue {
   @@index([status, submittedAt, createdAt])
   @@index([parentAccountId, status, createdAt])
   @@index([studentRefId, status, createdAt])
+  @@schema("public")
 }
 
 model ParentProfileInvitation {
@@ -812,6 +1010,7 @@ model ParentProfileInvitation {
   @@index([studentRefId, status, createdAt])
   @@index([recipientEmail, status, createdAt])
   @@index([expiresAt, status])
+  @@schema("public")
 }
 
 model ParentProfileFieldLock {
@@ -827,6 +1026,7 @@ model ParentProfileFieldLock {
 
   @@unique([studentRefId, fieldKey])
   @@index([studentRefId, locked])
+  @@schema("public")
 }
 
 model StudentPortalAccount {
@@ -842,4 +1042,5 @@ model StudentPortalAccount {
 
   @@index([status])
   @@index([studentRefId])
+  @@schema("public")
 }

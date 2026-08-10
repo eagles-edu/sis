@@ -156,6 +156,7 @@
         "adjective", "noun", "verb", "adverb", "conjunction", "preposition",
         "determiner", "pronoun", "interjection", "phrase", "idiom", "clause",
       ];
+      const VOCABULARY_ESL_FIELDS = ["entryKind", "phraseType", "posSubtype", "countability", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "edAdjective", "ingAdjective", "awlFamilyHeadword", "awlQualifyingMember", "awlMemberForm", "awlSublist"];
       const NEWS_GENERIC_COMPLIANCE_FIELD_ID = "__compliance";
       const NEWS_COMPLIANCE_NOTE_START = "[[SIS-COMPLIANCE-V1]]";
       const NEWS_COMPLIANCE_NOTE_END = "[[/SIS-COMPLIANCE-V1]]";
@@ -3385,6 +3386,7 @@
             vietnamese: t(row?.vietnamese),
             syllabication: normalizeSyllabication(row?.syllabication),
             definition: t(row?.definition),
+            esl: row?.esl && typeof row.esl === "object" ? row.esl : {},
           })) : [],
           submittedAt: t(entry?.submittedAt),
           reviewStatus: normalizeNewsReviewStatusToken(entry?.reviewStatus),
@@ -4252,7 +4254,30 @@
               </div>
             </details>` : '<span class="news-vocabulary-row-dots" aria-hidden="true">⋮</span>'}
           </div>
+          <details class="vocabulary-esl-details"><summary>ESL details</summary><div class="vocabulary-esl-grid">
+            <label>Kind<select data-vocabulary-esl-field="entryKind"><option value="word">word</option><option value="phrase">phrase</option><option value="idiom">idiom</option><option value="phrasal verb">phrasal verb</option></select></label>
+            <label data-vocabulary-esl-phrase hidden>Phrase type<select data-vocabulary-esl-field="phraseType"><option value="">Select</option><option>verb</option><option>noun</option><option>adjective</option><option>adverbial</option><option>prepositional</option><option>idiom</option></select></label>
+            <label>POS subtype<select data-vocabulary-esl-field="posSubtype"><option value="">None</option><option>personal</option><option>possessive</option><option>reflexive</option><option>reciprocal</option><option>demonstrative</option><option>interrogative</option><option>relative</option><option>indefinite</option><option>coordinating</option><option>subordinating</option><option>correlative</option></select></label>
+            <label data-vocabulary-esl-noun hidden>Countability<select data-vocabulary-esl-field="countability"><option value="">Select</option><option>countable</option><option>uncountable</option></select></label>
+            <fieldset data-vocabulary-esl-verb hidden><legend>Verb</legend><label><input type="radio" data-vocabulary-esl-field="verbRegularity" value="regular"> Regular</label><label><input type="radio" data-vocabulary-esl-field="verbRegularity" value="irregular"> Irregular</label><label><input type="radio" data-vocabulary-esl-field="verbTransitivity" value="transitive"> Transitive</label><label><input type="radio" data-vocabulary-esl-field="verbTransitivity" value="intransitive"> Intransitive</label><label>Infinitive<input data-vocabulary-esl-field="verbInfinitive"></label><label>V1<input data-vocabulary-esl-field="verbV1"></label><label>V2<input data-vocabulary-esl-field="verbV2"></label><label>V3<input data-vocabulary-esl-field="verbV3"></label><label>V4<input data-vocabulary-esl-field="verbV4"></label><label>V5<input data-vocabulary-esl-field="verbV5"></label><label>Display form<select data-vocabulary-esl-field="displayVerbForm"><option value="">Select</option><option>infinitive</option><option>v1</option><option>v2</option><option>v3</option><option>v4</option><option>v5</option></select></label><label><input type="checkbox" data-vocabulary-esl-field="edAdjective"> -ed adjective</label><label><input type="checkbox" data-vocabulary-esl-field="ingAdjective"> -ing adjective</label></fieldset>
+            <fieldset><legend>Academic Word List</legend><label>Family headword<input data-vocabulary-esl-field="awlFamilyHeadword"></label><label>Italic qualifying member<input data-vocabulary-esl-field="awlQualifyingMember"></label><label>Member form<input data-vocabulary-esl-field="awlMemberForm"></label><label>Sublist<input type="number" min="1" max="10" data-vocabulary-esl-field="awlSublist"></label></fieldset>
+            <button type="button" class="portal-button portal-button-alt" data-vocabulary-mw-preview title="Preview only the Merriam-Webster fields that can be authoritative: headword, POS, pronunciation, definition, and inflections." aria-label="Check Merriam-Webster fields">MW check</button>
+          </div></details>
         </div>`;
+      }
+
+      function syncVocabularyEslRow(row) {
+        const pos = t(row?.querySelector('[data-vocabulary-field="partOfSpeech"]')?.value).toLowerCase();
+        const kind = t(row?.querySelector('[data-vocabulary-esl-field="entryKind"]')?.value).toLowerCase();
+        const verb = row?.querySelector('[data-vocabulary-esl-verb]'); const noun = row?.querySelector('[data-vocabulary-esl-noun]'); const phrase = row?.querySelector('[data-vocabulary-esl-phrase]');
+        if (verb) verb.hidden = pos !== "verb"; if (noun) noun.hidden = pos !== "noun"; if (phrase) phrase.hidden = !["phrase", "idiom", "phrasal verb"].includes(kind);
+      }
+
+      async function previewVocabularyMerriamWebster(row) {
+        const entry = readVocabularyRows({ querySelectorAll: () => [row] })[0];
+        if (!entry?.english) throw new Error("Enter the English word or phrase before checking Merriam-Webster.");
+        const data = await api(`${STUDENT_API_PREFIX}/library/mw-preview`, { method: "POST", body: { entry } });
+        window.alert(data.ok ? `Merriam-Webster preview (only supported fields):\n${JSON.stringify(data.fields, null, 2)}` : (data.message || "Merriam-Webster data is unavailable."));
       }
 
       function renderVocabularyRows(container, rows = []) {
@@ -4268,6 +4293,13 @@
             if (input) input.value = key === "syllabication" ? normalizeSyllabication(row?.[key]) : t(row?.[key]);
           });
           bindVocabularyDefinitionAutosize(rowEl);
+          rowEl.addEventListener("change", (event) => {
+            if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="entryKind"]')) syncVocabularyEslRow(rowEl);
+          });
+          rowEl.querySelector("[data-vocabulary-mw-preview]")?.addEventListener("click", () => previewVocabularyMerriamWebster(rowEl).catch(handleError));
+          const esl = row?.esl && typeof row.esl === "object" ? row.esl : {};
+          VOCABULARY_ESL_FIELDS.forEach((key) => { const input = rowEl.querySelector(`[data-vocabulary-esl-field="${key}"]`); if (!input) return; if (input.type === "checkbox" || input.type === "radio") input.checked = input.value ? t(esl[key]) === input.value : Boolean(esl[key]); else input.value = t(esl[key]); });
+          syncVocabularyEslRow(rowEl);
           rowEl.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
             rowEl.remove();
             renumberVocabularyRows(container);
@@ -4291,6 +4323,11 @@
         const row = container.lastElementChild;
         bindVocabularyLookupButtons(row);
         bindVocabularyDefinitionAutosize(row);
+        row?.addEventListener("change", (event) => {
+          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="entryKind"]')) syncVocabularyEslRow(row);
+        });
+        row?.querySelector("[data-vocabulary-mw-preview]")?.addEventListener("click", () => previewVocabularyMerriamWebster(row).catch(handleError));
+        syncVocabularyEslRow(row);
         row?.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
           row.remove();
           renumberVocabularyRows(container);
@@ -4299,7 +4336,7 @@
 
       function readVocabularyRows(container) {
         return Array.from(container?.querySelectorAll("[data-news-vocabulary-row]") || [])
-          .map((row) => Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, key === "syllabication" ? normalizeSyllabication(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : t(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value)])))
+          .map((row) => { const value = Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, key === "syllabication" ? normalizeSyllabication(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : t(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value)])); value.esl = Object.fromEntries(VOCABULARY_ESL_FIELDS.map((key) => { const input = row.querySelector(`[data-vocabulary-esl-field="${key}"]`); return [key, input?.type === "checkbox" ? Boolean(input.checked) : input?.type === "radio" ? (input.checked ? input.value : "") : t(input?.value)]; }).filter(([, value]) => value !== "" && value !== false)); return value; })
           .filter((row) => Object.values(row).some(Boolean));
       }
 
@@ -4402,6 +4439,7 @@
           ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((key) => {
             word[key] = key === "syllabication" ? normalizeSyllabication(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : t(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value);
           });
+          word.esl = Object.fromEntries(VOCABULARY_ESL_FIELDS.map((key) => { const input = rowEl.querySelector(`[data-vocabulary-esl-field="${key}"]`); return [key, input?.type === "checkbox" ? Boolean(input.checked) : input?.type === "radio" ? (input.checked ? input.value : "") : t(input?.value)]; }).filter(([, value]) => value !== "" && value !== false));
           delete word.__editing;
         });
         const rows = state.newWords.map((word) => ({
@@ -4411,6 +4449,7 @@
           vietnamese: t(word.vietnamese),
           syllabication: t(word.syllabication),
           definition: t(word.definition),
+          esl: word.esl && typeof word.esl === "object" ? word.esl : {},
         })).filter((word) => Object.values(word).some(Boolean));
         const data = await api(STUDENT_NEW_WORDS_PATH, { method: "PUT", body: { items: rows } });
         state.newWords = Array.isArray(data?.items) ? data.items : [];
@@ -4418,6 +4457,17 @@
         renderNewWordsRows();
         const verificationWarnings = Array.isArray(data?.warnings) ? data.warnings : [];
         setGlobalStatus(verificationWarnings.length ? verificationWarnings[0]?.message || "New words saved with an unverified syllabication warning." : "New words saved.", verificationWarnings.length > 0);
+      }
+
+      async function submitNewWordsToLibrary() {
+        await saveNewWords();
+        const submitted = [];
+        for (const word of state.newWords) {
+          if (!t(word.english) || !t(word.partOfSpeech)) continue;
+          await api(`${STUDENT_API_PREFIX}/library/submissions`, { method: "POST", body: { sourceId: t(word.id), entry: word } });
+          submitted.push(word.english);
+        }
+        setGlobalStatus(submitted.length ? `${submitted.length} New Word${submitted.length === 1 ? "" : "s"} submitted to Library for review.` : "No completed New Words are available to submit.");
       }
 
       function addNewWords(count = 1) {
@@ -5679,6 +5729,9 @@
           });
           field("newWordsSaveBtn")?.addEventListener("click", () => {
             saveNewWords().catch(handleError);
+          });
+          field("newWordsSubmitLibraryBtn")?.addEventListener("click", () => {
+            submitNewWordsToLibrary().catch(handleError);
           });
           field("newWordsAddOneBtn")?.addEventListener("click", () => addNewWords(1));
           field("newWordsAddFiveBtn")?.addEventListener("click", () => addNewWords(5));

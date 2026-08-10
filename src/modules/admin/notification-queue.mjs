@@ -1075,6 +1075,7 @@ export async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUse
           senderName: item.senderName,
           requestOrigin: normalizeText(item?.payloadJson?.requestOrigin),
           reminderEngagementToken: normalizeText(item?.payloadJson?.reminderEngagementToken),
+          libraryAssignmentToken: normalizeText(item?.payloadJson?.libraryAssignmentToken),
         },
       },
       { dedupeKey: item.id }

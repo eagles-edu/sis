@@ -27,6 +27,23 @@ import {
   saveStudentNewWords,
 } from "../src/modules/admin/student-new-words.mjs"
 import {
+  applyMerriamWebsterLibraryEntry,
+  assignLibraryWork,
+  createLibraryLegacyPreflight,
+  cutoverLegacyLibrary,
+  getStudentLibraryAssignments,
+  listLibraryEntries,
+  listLibraryReviewQueue,
+  listLibraryStudents,
+  listLibraryAssignmentEngagement,
+  sendLibraryAssignmentEmail,
+  trackLibraryAssignment,
+  previewMerriamWebsterLibraryEntry,
+  reviewLibraryContribution,
+  submitLibraryContribution,
+  updateLibraryEntry,
+} from "../src/modules/admin/library-corpus.mjs"
+import {
   deleteStudent,
   importStudentsFromRows,
   saveStudent,
@@ -210,6 +227,8 @@ const PARENT_SETTINGS_PAGE_PATH = `${PARENT_PORTAL_PAGE_PATH}/settings`
 const STUDENT_SETTINGS_PAGE_PATH = `${STUDENT_PORTAL_PAGE_PATH}/settings`
 const STUDENT_LIBRARY_PAGE_PATH = `${STUDENT_PORTAL_PAGE_PATH}/library.html`
 const ADMIN_LIBRARY_PAGE_PATH = `${ADMIN_PAGE_PATH}/library-admin.html`
+const ADMIN_LIBRARY_MANAGE_PAGE_PATH = `${ADMIN_PAGE_PATH}/library-manage.html`
+const ADMIN_LIBRARY_ENGAGEMENT_PAGE_PATH = `${ADMIN_PAGE_PATH}/library-engagement.html`
 const LEGACY_ADMIN_PAGE_PATH = "/admin/students"
 const LEGACY_PARENT_PORTAL_PAGE_PATH = "/parent/portal"
 const LEGACY_STUDENT_PORTAL_PAGE_PATH = "/student/portal"
@@ -291,6 +310,16 @@ const STUDENT_NEWS_REPORTS_PATH = `${STUDENT_API_PREFIX}/news-reports`
 const STUDENT_NEWS_REPORTS_CHECK_PATH = `${STUDENT_API_PREFIX}/news-reports/check`
 const STUDENT_NEWS_CALENDAR_PATH = `${STUDENT_API_PREFIX}/news-reports/calendar`
 const STUDENT_NEW_WORDS_PATH = `${STUDENT_API_PREFIX}/new-words`
+const STUDENT_LIBRARY_API_PATH = `${STUDENT_API_PREFIX}/library`
+const STUDENT_LIBRARY_ASSIGNMENTS_PATH = `${STUDENT_LIBRARY_API_PATH}/assignments`
+const STUDENT_LIBRARY_SUBMISSIONS_PATH = `${STUDENT_LIBRARY_API_PATH}/submissions`
+const ADMIN_LIBRARY_API_PATH = `${ADMIN_API_PREFIX}/library`
+const ADMIN_LIBRARY_ENTRIES_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)$`)
+const ADMIN_LIBRARY_CONTRIBUTIONS_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/contributions/([^/]+)/review$`)
+const ADMIN_LIBRARY_MW_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/mw-preview$`)
+const ADMIN_LIBRARY_MW_APPLY_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/mw-apply$`)
+const LIBRARY_ASSIGNMENT_CLICK_PATH_RE = /^\/api\/library-assignments\/track\/click\/([^/]+)$/u
+const LIBRARY_ASSIGNMENT_OPEN_PATH_RE = /^\/api\/library-assignments\/track\/open\/([^/]+)$/u
 const STUDENT_REPORT_PAGE_PREFIX = `${STUDENT_PORTAL_PAGE_PATH}/reports`
 const GENERIC_REPORT_ACCESS_PAGE_PREFIX = "/reports/access"
 const REPORT_EVENT_EMAIL_OPEN_PATH = "/api/report-events/email-open.gif"
@@ -2625,6 +2654,7 @@ function canTeacherWriteDataEntryPath(pathname, method) {
   if (pathname === ADMIN_PREFERENCES_PATH && (method === "POST" || method === "PUT")) return true
   if (method !== "POST") return false
   if (pathname === ADMIN_NOTIFY_EMAIL_PATH) return true
+  if (method === "POST" && pathname === `${ADMIN_LIBRARY_API_PATH}/contributions`) return true
   if (ADMIN_ATTENDANCE_PATH_RE.test(pathname)) return true
   if (ADMIN_GRADES_PATH_RE.test(pathname)) return true
   if (ADMIN_REPORTS_PATH_RE.test(pathname)) return true
@@ -6512,6 +6542,23 @@ async function handleApiRequest(request, response, pathname, url) {
   const logoutPath = `${ADMIN_AUTH_PREFIX}/logout`
   const mePath = `${ADMIN_AUTH_PREFIX}/me`
 
+  const libraryClick = pathname.match(LIBRARY_ASSIGNMENT_CLICK_PATH_RE)
+  if (method === "GET" && libraryClick) {
+    const engagement = await trackLibraryAssignment(decodeURIComponent(libraryClick[1]), "click")
+    if (!engagement) { sendJson(response, 404, { error: "Library assignment link not found" }); return true }
+    const target = `${STUDENT_PORTAL_PAGE_PATH}/library.html`
+    sendRedirect(response, 302, target)
+    return true
+  }
+  const libraryOpen = pathname.match(LIBRARY_ASSIGNMENT_OPEN_PATH_RE)
+  if (method === "GET" && libraryOpen) {
+    await trackLibraryAssignment(decodeURIComponent(libraryOpen[1]), "open")
+    const pixel = Buffer.from("R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=", "base64")
+    response.writeHead(200, { "Content-Type": "image/gif", "Cache-Control": "no-store", "Content-Length": String(pixel.length) })
+    response.end(pixel)
+    return true
+  }
+
   if (method === "POST" && (pathname === loginPath || pathname === legacyLoginPath)) {
     await assertCredentialsConfigured()
     await handleLogin(request, response)
@@ -6553,6 +6600,72 @@ async function handleApiRequest(request, response, pathname, url) {
       sendJson(response, 200, { ok: true, ...result })
       return true
     }
+  }
+
+  if (method === "GET" && pathname === ADMIN_LIBRARY_API_PATH) {
+    sendJson(response, 200, await listLibraryEntries(Object.fromEntries(url.searchParams.entries())))
+    return true
+  }
+  if (method === "GET" && pathname === `${ADMIN_LIBRARY_API_PATH}/queue`) {
+    sendJson(response, 200, await listLibraryReviewQueue(Object.fromEntries(url.searchParams.entries())))
+    return true
+  }
+  if (method === "GET" && pathname === `${ADMIN_LIBRARY_API_PATH}/students`) {
+    sendJson(response, 200, await listLibraryStudents())
+    return true
+  }
+  if (method === "GET" && pathname === `${ADMIN_LIBRARY_API_PATH}/engagement`) {
+    sendJson(response, 200, await listLibraryAssignmentEngagement(Object.fromEntries(url.searchParams.entries())))
+    return true
+  }
+  if (method === "POST" && pathname === `${ADMIN_LIBRARY_API_PATH}/contributions`) {
+    const payload = await parseBody(request)
+    sendJson(response, 201, await submitLibraryContribution(normalizeText(session?.studentRefId || session?.username), normalizeText(session?.username), payload))
+    return true
+  }
+  if (method === "POST" && pathname === `${ADMIN_LIBRARY_API_PATH}/legacy/preflight`) {
+    const payload = await parseBody(request)
+    sendJson(response, 200, await createLibraryLegacyPreflight(normalizeText(payload?.runKey) || "legacy-cutover-v1"))
+    return true
+  }
+  if (method === "POST" && pathname === `${ADMIN_LIBRARY_API_PATH}/legacy/cutover`) {
+    const payload = await parseBody(request)
+    sendJson(response, 200, await cutoverLegacyLibrary({ name: session.username, role: session.role }, normalizeText(payload?.runKey) || "legacy-cutover-v1"))
+    return true
+  }
+  if (method === "POST" && pathname === `${ADMIN_LIBRARY_API_PATH}/assignments`) {
+    const payload = await parseBody(request)
+    sendJson(response, 201, await assignLibraryWork({ name: session.username, role: session.role }, payload))
+    return true
+  }
+  const assignmentNotifyMatch = pathname.match(new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/assignments/([^/]+)/notify$`))
+  if (assignmentNotifyMatch && method === "POST") {
+    sendJson(response, 200, await sendLibraryAssignmentEmail(decodeURIComponent(assignmentNotifyMatch[1]), { name: session.username, role: session.role }))
+    return true
+  }
+  const entryMatch = pathname.match(ADMIN_LIBRARY_ENTRIES_PATH_RE)
+  if (entryMatch && method === "PUT") {
+    const payload = await parseBody(request)
+    sendJson(response, 200, await updateLibraryEntry(decodeURIComponent(entryMatch[1]), { name: session.username, role: session.role }, payload))
+    return true
+  }
+  const contributionMatch = pathname.match(ADMIN_LIBRARY_CONTRIBUTIONS_PATH_RE)
+  if (contributionMatch && method === "POST") {
+    const payload = await parseBody(request)
+    sendJson(response, 200, await reviewLibraryContribution(decodeURIComponent(contributionMatch[1]), { name: session.username, role: session.role }, payload))
+    return true
+  }
+  const mwPreviewMatch = pathname.match(ADMIN_LIBRARY_MW_PREVIEW_PATH_RE)
+  if (mwPreviewMatch && method === "POST") {
+    const payload = await parseBody(request)
+    sendJson(response, 200, await previewMerriamWebsterLibraryEntry(payload?.entry || payload))
+    return true
+  }
+  const mwApplyMatch = pathname.match(ADMIN_LIBRARY_MW_APPLY_PATH_RE)
+  if (mwApplyMatch && method === "POST") {
+    const payload = await parseBody(request)
+    sendJson(response, 200, await applyMerriamWebsterLibraryEntry(decodeURIComponent(mwApplyMatch[1]), { name: session.username, role: session.role }, payload))
+    return true
   }
 
   const assetMatch = pathname.match(ADMIN_ASSET_PATH_RE)
@@ -8609,6 +8722,35 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     return true
   }
 
+  if (method === "GET" && pathname === STUDENT_LIBRARY_API_PATH) {
+    sendJson(response, 200, await listLibraryEntries(Object.fromEntries(url.searchParams.entries())))
+    return true
+  }
+
+  if (method === "GET" && pathname === STUDENT_LIBRARY_ASSIGNMENTS_PATH) {
+    sendJson(response, 200, await getStudentLibraryAssignments(studentRefId))
+    return true
+  }
+
+  if (method === "POST" && pathname === `${STUDENT_LIBRARY_API_PATH}/mw-preview`) {
+    const payload = await parseBody(request)
+    sendJson(response, 200, await previewMerriamWebsterLibraryEntry(payload?.entry || payload))
+    return true
+  }
+
+  if (method === "POST" && pathname === STUDENT_LIBRARY_SUBMISSIONS_PATH) {
+    const payload = await parseBody(request)
+    sendJson(response, 201, await submitLibraryContribution(studentRefId, normalizeText(session?.eaglesId || session?.username), payload))
+    return true
+  }
+
+  const libraryEditMatch = pathname.match(new RegExp(`^${STUDENT_LIBRARY_API_PATH.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}/entries/([^/]+)/edit$`))
+  if (method === "POST" && libraryEditMatch) {
+    const payload = await parseBody(request)
+    sendJson(response, 201, await submitLibraryContribution(studentRefId, normalizeText(session?.eaglesId || session?.username), { ...payload, entryId: decodeURIComponent(libraryEditMatch[1]) }))
+    return true
+  }
+
   const studentReportAckMatch = pathname.match(STUDENT_REPORT_ACK_PATH_RE)
   if (studentReportAckMatch && method === "POST") {
     const reportId = decodeURIComponent(studentReportAckMatch[1])
@@ -9279,11 +9421,11 @@ export async function handleStudentAdminRequest(request, response) {
   const pageSlugFromQuery =
     pathname === ADMIN_PAGE_PATH ? resolveAdminPageSlugFromQuery(url.searchParams) : ""
   const pageSlug = pageSlugFromQuery || pageSlugFromPath
-  if (method === "GET" && pathname === ADMIN_LIBRARY_PAGE_PATH) {
+  if (method === "GET" && [ADMIN_LIBRARY_PAGE_PATH, ADMIN_LIBRARY_MANAGE_PAGE_PATH, ADMIN_LIBRARY_ENGAGEMENT_PAGE_PATH].includes(pathname)) {
     const session = await peekAdminSession(request)
     if (!session) {
       const next = new URL(ADMIN_PAGE_PATH, requestOrigin)
-      next.searchParams.set("next", ADMIN_LIBRARY_PAGE_PATH)
+      next.searchParams.set("next", pathname)
       sendRedirect(response, 302, `${next.pathname}${next.search}`)
       return true
     }

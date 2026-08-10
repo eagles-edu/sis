@@ -42,6 +42,7 @@ function normalizeWord(row = {}) {
     vietnamese: text(row.vietnamese).slice(0, 240),
     syllabication: normalizeVocabularySyllabication(row.syllabication).slice(0, 240),
     definition: text(row.definition),
+    eslJson: row.esl && typeof row.esl === "object" ? row.esl : (row.eslJson && typeof row.eslJson === "object" ? row.eslJson : null),
     syllableCount: syllableCount(row.syllabication),
   }
 }
@@ -55,6 +56,7 @@ function mapWord(row = {}) {
     vietnamese: text(row.vietnamese),
     syllabication: normalizeVocabularySyllabication(row.syllabication),
     definition: text(row.definition),
+    esl: row.eslJson && typeof row.eslJson === "object" ? row.eslJson : {},
     syllableCount: Number(row.syllableCount) || syllableCount(row.syllabication),
     sourceReportDate: localDateKey(row.sourceReportDate),
     createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : "",
@@ -86,11 +88,11 @@ async function seedFromNewsReports(prisma, studentRefId) {
     .filter(Boolean)
   if (ineligibleReportIds.length) {
     await prisma.studentNewWord.deleteMany({
-      where: { studentRefId, sourceReportId: { in: ineligibleReportIds } },
+      where: { studentRefId, archivedAt: null, sourceReportId: { in: ineligibleReportIds } },
     })
   }
   const eligibleReports = reports.filter(isCheckedNewsReport)
-  const existing = await prisma.studentNewWord.findMany({ where: { studentRefId } })
+  const existing = await prisma.studentNewWord.findMany({ where: { studentRefId, archivedAt: null } })
   const keys = new Set(existing.map((row) => row.englishKey))
   const seededReports = new Set(existing.map((row) => text(row.sourceReportId)).filter(Boolean))
   for (const report of eligibleReports) {
@@ -118,7 +120,7 @@ export async function listStudentNewWords(studentRefId) {
   const prisma = await getPrisma()
   await seedFromNewsReports(prisma, studentRefId)
   const rows = await prisma.studentNewWord.findMany({
-    where: { studentRefId },
+    where: { studentRefId, archivedAt: null },
     orderBy: [{ sourceReportDate: "asc" }, { english: "asc" }],
   })
   return { ok: true, items: rows.map(mapWord) }
@@ -128,8 +130,8 @@ export async function saveStudentNewWords(studentRefId, value) {
   const prisma = await getPrisma()
   const source = Array.isArray(value) ? value : []
   const existing = await prisma.studentNewWord.findMany({
-    where: { studentRefId },
-    select: { id: true, englishKey: true, partOfSpeech: true, english: true, vietnamese: true, syllabication: true, definition: true },
+    where: { studentRefId, archivedAt: null },
+    select: { id: true, englishKey: true, partOfSpeech: true, english: true, vietnamese: true, syllabication: true, definition: true, eslJson: true },
   })
   const validationResults = await Promise.all(source.map(async (row, index) => {
     const result = await validateVocabularyEntry(row)
@@ -163,7 +165,7 @@ export async function saveStudentNewWords(studentRefId, value) {
   try {
     await prisma.$transaction(async (tx) => {
       await tx.studentNewWord.deleteMany({
-        where: { studentRefId, id: { notIn: Array.from(incomingIds) } },
+        where: { studentRefId, archivedAt: null, id: { notIn: Array.from(incomingIds) } },
       })
       for (const word of words) {
         const sourceRow = source.find((row) => wordKey(row?.english) === word.englishKey)
