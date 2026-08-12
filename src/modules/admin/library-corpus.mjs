@@ -4,14 +4,23 @@ import { queueAnnouncementEmail } from "./notification-queue.mjs"
 
 const MW_BASE = "https://www.dictionaryapi.com/api/v3/references/collegiate/json"
 const MAX_PAGE_SIZE = 100
-const POS = new Set(["noun", "verb", "adjective", "adverb", "pronoun", "determiner", "conjunction", "preposition", "interjection", "numeral", "proper noun"])
+const POS = new Set(["noun", "verb", "adjective", "adverb", "pronoun", "determiner", "conjunction", "preposition", "interjection", "numeral", "proper noun", "phrase", "idiom", "clause"])
 const ENTRY_KINDS = new Set(["word", "phrase", "idiom", "phrasal verb"])
 const PHRASE_TYPES = new Set(["verb", "noun", "adjective", "adverbial", "prepositional", "idiom"])
 const POS_SUBTYPES = new Set(["personal", "possessive", "reflexive", "reciprocal", "demonstrative", "interrogative", "relative", "indefinite", "coordinating", "subordinating", "correlative"])
+const VERB_TRANSITIVITY = new Set(["intransitive", "monotransitive", "ditransitive", "ambitransitive", "transitive"])
+const NOUN_TYPES = new Set(["common", "proper", "concrete", "abstract", "material", "collective", "compound", "possessive"])
+const NOUN_NUMBERS = new Set(["singular", "plural", "singular and plural"])
 
 function text(value) { return String(value == null ? "" : value).trim() }
 function lower(value) { return text(value).normalize("NFC").toLocaleLowerCase("en-US") }
 function clamp(value, maximum = 240) { return text(value).slice(0, maximum) }
+function grammarClassification(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null
+  const allowed = ["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber"]
+  const normalized = Object.fromEntries(allowed.map((key) => [key, clamp(value[key], 120)]).filter(([, item]) => item))
+  return Object.keys(normalized).length ? normalized : null
+}
 function normalizeKey(value) { return lower(value).replace(/[’']/gu, "'").replace(/[^\p{L}\p{N}]+/gu, " ").trim() }
 function syllableCount(value) { const words = text(value).split(/\s+/u).filter(Boolean); return words.reduce((total, word) => total + Math.max(1, word.split("-").filter(Boolean).length), 0) }
 function statusError(message, statusCode = 400) { const error = new Error(message); error.statusCode = statusCode; return error }
@@ -23,16 +32,21 @@ function normalizeEntry(value = {}) {
   const entryKind = lower(value.entryKind || "word")
   const phraseType = lower(value.phraseType)
   const posSubtype = lower(value.posSubtype)
+  const nounType = lower(value.nounType)
+  const nounNumber = lower(value.nounNumber)
   if (!english) throw statusError("English word or phrase is required")
   if (!POS.has(partOfSpeech)) throw statusError("A supported part of speech is required")
   if (!ENTRY_KINDS.has(entryKind)) throw statusError("A supported entry kind is required")
   if (phraseType && !PHRASE_TYPES.has(phraseType)) throw statusError("Unsupported phrase type")
   if (posSubtype && !POS_SUBTYPES.has(posSubtype)) throw statusError("Unsupported POS subtype")
+  if (nounType && !NOUN_TYPES.has(nounType)) throw statusError("Unsupported noun type")
+  if (nounNumber && !NOUN_NUMBERS.has(nounNumber)) throw statusError("Unsupported noun number")
   const data = {
     normalizedKey: normalizeKey(english), english, americanEnglish: clamp(value.americanEnglish) || null,
     britishEnglish: clamp(value.britishEnglish) || null, partOfSpeech, entryKind, phraseType: phraseType || null,
-    posSubtype: posSubtype || null, vietnamese: clamp(value.vietnamese), syllabication: clamp(value.syllabication),
+    posSubtype: posSubtype || null, grammarClassification: grammarClassification(value.grammarClassification), vietnamese: clamp(value.vietnamese), syllabication: clamp(value.syllabication),
     syllableCount: syllableCount(value.syllabication), definition: clamp(value.definition, 4000), countability: lower(value.countability) || null,
+    nounType: partOfSpeech === "noun" ? nounType || null : null, nounNumber: partOfSpeech === "noun" ? nounNumber || null : null,
     verbRegularity: lower(value.verbRegularity) || null, verbTransitivity: lower(value.verbTransitivity) || null,
     verbInfinitive: clamp(value.verbInfinitive) || null, verbV1: clamp(value.verbV1) || null,
     verbV2: clamp(value.verbV2) || null, verbV3: clamp(value.verbV3) || null,
@@ -41,11 +55,11 @@ function normalizeEntry(value = {}) {
     awlFamilyHeadword: clamp(value.awlFamilyHeadword) || null, awlQualifyingMember: clamp(value.awlQualifyingMember) || null,
     awlMemberForm: clamp(value.awlMemberForm) || null, awlSublist: Number.isInteger(Number(value.awlSublist)) ? Number(value.awlSublist) : null,
   }
-  if (partOfSpeech === "noun" && !["countable", "uncountable"].includes(data.countability || "")) throw statusError("Nouns require countable or uncountable")
+  if (partOfSpeech === "noun" && !["countable", "uncountable", "both s & p"].includes(data.countability || "")) throw statusError("Nouns require countable, uncountable, or both S & P")
   if (partOfSpeech === "verb") {
     if (!data.verbInfinitive || !data.verbV1 || !data.verbV2 || !data.verbV3 || !data.verbV4 || !data.verbV5) throw statusError("Verbs require infinitive and V1-V5 forms")
     if (!["regular", "irregular"].includes(data.verbRegularity || "")) throw statusError("Verbs require regular or irregular")
-    if (!["transitive", "intransitive"].includes(data.verbTransitivity || "")) throw statusError("Verbs require transitive or intransitive")
+    if (!VERB_TRANSITIVITY.has(data.verbTransitivity || "")) throw statusError("Verbs require intransitive, monotransitive, ditransitive, or ambitransitive")
   }
   return data
 }
@@ -62,10 +76,16 @@ export async function listLibraryEntries(query = {}) {
   const page = Math.max(1, Number.parseInt(text(query.page), 10) || 1)
   const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Number.parseInt(text(query.pageSize), 10) || 25))
   const search = lower(query.search)
+  const studentRefId = text(query.studentRefId)
+  const myWords = ["1", "true", "yes"].includes(lower(query.myWords))
   const filters = ["partOfSpeech", "entryKind", "phraseType", "countability", "verbRegularity", "verbTransitivity", "awlSublist", "createdByName"].reduce((result, key) => {
     const value = text(query[key]); if (value) result[key] = key === "awlSublist" ? Number(value) : lower(value); return result
   }, {})
-  const where = { ...filters, ...(search ? { OR: [{ english: { contains: search, mode: "insensitive" } }, { vietnamese: { contains: search, mode: "insensitive" } }, { definition: { contains: search, mode: "insensitive" } }, { awlFamilyHeadword: { contains: search, mode: "insensitive" } }] } : {}) }
+  const where = {
+    ...filters,
+    ...(myWords && studentRefId ? { contributions: { some: { studentRefId, status: { in: ["approved", "migrated"] } } } } : {}),
+    ...(search ? { OR: [{ english: { contains: search, mode: "insensitive" } }, { vietnamese: { contains: search, mode: "insensitive" } }, { definition: { contains: search, mode: "insensitive" } }, { awlFamilyHeadword: { contains: search, mode: "insensitive" } }] } : {})
+  }
   const sortBy = ["english", "createdAt", "updatedAt", "partOfSpeech", "awlSublist", "syllableCount"].includes(text(query.sortBy)) ? text(query.sortBy) : "english"
   const direction = lower(query.direction) === "desc" ? "desc" : "asc"
   const [total, entries] = await client.$transaction([
@@ -73,6 +93,15 @@ export async function listLibraryEntries(query = {}) {
     client.libraryEntry.findMany({ where, orderBy: [{ [sortBy]: direction }, { english: "asc" }], skip: (page - 1) * pageSize, take: pageSize, include: { revisions: { orderBy: { createdAt: "asc" } } } }),
   ])
   return { ok: true, page, pageSize, total, items: entries.map(mapEntry) }
+}
+
+export async function getLibraryEntry(id) {
+  const entryId = text(id)
+  if (!entryId) throw statusError("Library entry id is required")
+  const client = await prisma()
+  const entry = await client.libraryEntry.findUnique({ where: { id: entryId }, include: { revisions: { orderBy: { createdAt: "asc" } } } })
+  if (!entry) throw statusError("Library entry was not found", 404)
+  return mapEntry(entry)
 }
 
 export async function getStudentLibraryAssignments(studentRefId) {
@@ -86,7 +115,7 @@ export async function submitLibraryContribution(studentRefId, contributorName, p
   const entry = {
     english: clamp(rawEntry.english), partOfSpeech: lower(rawEntry.partOfSpeech), vietnamese: clamp(rawEntry.vietnamese),
     syllabication: clamp(rawEntry.syllabication), definition: clamp(rawEntry.definition, 4000),
-    ...Object.fromEntries(Object.entries({ ...rawEntry, ...esl }).filter(([key]) => key.startsWith("verb") || ["entryKind", "phraseType", "posSubtype", "countability", "edAdjective", "ingAdjective", "displayVerbForm", "awlFamilyHeadword", "awlQualifyingMember", "awlMemberForm", "awlSublist"].includes(key))),
+    ...Object.fromEntries(Object.entries({ ...rawEntry, ...esl }).filter(([key]) => key.startsWith("verb") || ["entryKind", "phraseType", "posSubtype", "grammarClassification", "countability", "nounType", "nounNumber", "edAdjective", "ingAdjective", "displayVerbForm", "awlFamilyHeadword", "awlQualifyingMember", "awlMemberForm", "awlSublist"].includes(key))),
   }
   if (!entry.english || !POS.has(entry.partOfSpeech)) throw statusError("New Words submissions require English and a supported part of speech")
   const client = await prisma()
@@ -107,10 +136,18 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
     await client.libraryContribution.update({ where: { id }, data: { status: "rejected", reviewedAt: new Date(), reviewedByName: clamp(actor.name) } })
     return { ok: true, status: "rejected" }
   }
-  const submitted = normalizeEntry(payload.entry || contribution.payloadJson)
+  const canonicalContributionId = clamp(payload.canonicalContributionId) || id
+  const canonicalContribution = canonicalContributionId === id
+    ? contribution
+    : await client.libraryContribution.findUnique({ where: { id: canonicalContributionId } })
+  if (!canonicalContribution) throw statusError("The selected canonical Library contribution was not found", 404)
+  const submitted = normalizeEntry(payload.entry || canonicalContribution.payloadJson)
   const result = await client.$transaction(async (tx) => {
-    const entry = await tx.libraryEntry.create({ data: { ...submitted, reviewStatus: "approved", createdByName: contribution.contributorName, lastEditedByName: clamp(actor.name) } })
-    await writeRevision(tx, entry, "approved_submission", actor.name, actor.role || "admin")
+    const existing = contribution.entryId ? await tx.libraryEntry.findUnique({ where: { id: contribution.entryId } }) : null
+    const entry = existing
+      ? await tx.libraryEntry.update({ where: { id: existing.id }, data: { ...submitted, reviewStatus: "approved", lastEditedByName: clamp(actor.name) } })
+      : await tx.libraryEntry.create({ data: { ...submitted, reviewStatus: "approved", createdByName: canonicalContribution.contributorName, lastEditedByName: clamp(actor.name) } })
+    await writeRevision(tx, entry, existing ? "approved_edit" : "approved_submission", actor.name, actor.role || "admin")
     await tx.libraryContribution.update({ where: { id }, data: { entryId: entry.id, status: "approved", reviewedAt: new Date(), reviewedByName: clamp(actor.name) } })
     return entry
   })
@@ -150,7 +187,26 @@ export async function listLibraryReviewQueue(query = {}) {
     siblings.push(contribution)
     grouped.set(key, siblings)
   }
-  const items = contributions.map((contribution) => { const payload = contribution.payloadJson || {}; const key = `${normalizeKey(payload.english)}|${lower(payload.partOfSpeech)}`; return { ...contribution, payloadJson: payload, queueType: contribution.entryId ? "edit" : "new_entry", potentialDuplicate: (grouped.get(key)?.length || 0) > 1 } })
+  const items = contributions.map((contribution) => {
+    const payload = contribution.payloadJson || {}
+    const key = `${normalizeKey(payload.english)}|${lower(payload.partOfSpeech)}`
+    const siblings = grouped.get(key) || []
+    return {
+      ...contribution,
+      payloadJson: payload,
+      queueType: contribution.entryId ? "edit" : "new_entry",
+      duplicateGroupKey: key,
+      potentialDuplicate: siblings.length > 1,
+      duplicateGroup: siblings.length > 1 ? siblings.map((sibling) => ({
+        id: sibling.id,
+        entryId: sibling.entryId,
+        contributorName: sibling.contributorName,
+        submittedAt: sibling.submittedAt,
+        payloadJson: sibling.payloadJson || {},
+        queueType: sibling.entryId ? "edit" : "new_entry",
+      })) : [],
+    }
+  })
   const assignments = await client.libraryAssignment.findMany({ where: { status: "assigned", ...(subject ? { subject: { contains: subject, mode: "insensitive" } } : {}), ...(route ? { route: { contains: route, mode: "insensitive" } } : {}) }, include: { entry: true }, orderBy: { createdAt: "asc" }, take: MAX_PAGE_SIZE })
   return { ok: true, total: items.length + assignments.length, items, assignments }
 }
@@ -199,7 +255,7 @@ export async function listLibraryAssignmentEngagement(query = {}) {
 
 function legacyEntry(raw = {}) {
   const esl = raw.esl && typeof raw.esl === "object" ? raw.esl : {}
-  return { normalizedKey: normalizeKey(raw.english), english: clamp(raw.english), americanEnglish: null, britishEnglish: null, partOfSpeech: lower(raw.partOfSpeech), entryKind: lower(esl.entryKind || "word") || "word", phraseType: lower(esl.phraseType) || null, posSubtype: lower(esl.posSubtype) || null, vietnamese: clamp(raw.vietnamese), syllabication: clamp(raw.syllabication), syllableCount: syllableCount(raw.syllabication), definition: clamp(raw.definition, 4000), countability: lower(esl.countability) || null, verbRegularity: lower(esl.verbRegularity) || null, verbTransitivity: lower(esl.verbTransitivity) || null, verbInfinitive: clamp(esl.verbInfinitive) || null, verbV1: clamp(esl.verbV1) || null, verbV2: clamp(esl.verbV2) || null, verbV3: clamp(esl.verbV3) || null, verbV4: clamp(esl.verbV4) || null, verbV5: clamp(esl.verbV5) || null, displayVerbForm: lower(esl.displayVerbForm) || null, edAdjective: Boolean(esl.edAdjective), ingAdjective: Boolean(esl.ingAdjective), awlFamilyHeadword: clamp(esl.awlFamilyHeadword) || null, awlQualifyingMember: clamp(esl.awlQualifyingMember) || null, awlMemberForm: clamp(esl.awlMemberForm) || null, awlSublist: Number(esl.awlSublist) || null }
+  return { normalizedKey: normalizeKey(raw.english), english: clamp(raw.english), americanEnglish: null, britishEnglish: null, partOfSpeech: lower(raw.partOfSpeech), entryKind: lower(esl.entryKind || "word") || "word", phraseType: lower(esl.phraseType) || null, posSubtype: lower(esl.posSubtype) || null, vietnamese: clamp(raw.vietnamese), syllabication: clamp(raw.syllabication), syllableCount: syllableCount(raw.syllabication), definition: clamp(raw.definition, 4000), countability: lower(esl.countability) || null, nounType: lower(esl.nounType) || null, nounNumber: lower(esl.nounNumber) || null, verbRegularity: lower(esl.verbRegularity) || null, verbTransitivity: lower(esl.verbTransitivity) || null, verbInfinitive: clamp(esl.verbInfinitive) || null, verbV1: clamp(esl.verbV1) || null, verbV2: clamp(esl.verbV2) || null, verbV3: clamp(esl.verbV3) || null, verbV4: clamp(esl.verbV4) || null, verbV5: clamp(esl.verbV5) || null, displayVerbForm: lower(esl.displayVerbForm) || null, edAdjective: Boolean(esl.edAdjective), ingAdjective: Boolean(esl.ingAdjective), awlFamilyHeadword: clamp(esl.awlFamilyHeadword) || null, awlQualifyingMember: clamp(esl.awlQualifyingMember) || null, awlMemberForm: clamp(esl.awlMemberForm) || null, awlSublist: Number(esl.awlSublist) || null }
 }
 
 function conflicts(rows) {

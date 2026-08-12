@@ -10788,7 +10788,7 @@
 
         document.querySelectorAll("[data-menu-group]").forEach((groupEl) => {
           const visibleLinks = groupEl.querySelectorAll(
-            "[data-page-link]:not(.hidden)",
+            "[data-page-link]:not(.hidden), [data-library-nav]:not(.hidden)",
           );
           if (visibleLinks.length > 0) groupEl.classList.remove("hidden");
           else groupEl.classList.add("hidden");

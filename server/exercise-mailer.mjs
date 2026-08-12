@@ -70,16 +70,6 @@ function loadEnvironmentFile() {
 
 loadEnvironmentFile()
 
-// Preserve the established environment-file key names while exposing the
-// dictionary credentials through the canonical server-only names used by the
-// vocabulary validator. This happens only in process memory.
-if (!normalizeEnvText(process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY)) {
-  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = normalizeEnvText(process.env.MERRIAM_WEBSTERS_COLLEGIATE_KEY)
-}
-if (!normalizeEnvText(process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY)) {
-  process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY = normalizeEnvText(process.env.MERRIAM_WEBSTERS_LEARNERS_KEY)
-}
-
 /**
  * @typedef {import("node:http").IncomingMessage & {
  *   headers: Record<string, string | string[] | undefined>

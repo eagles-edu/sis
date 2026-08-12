@@ -101,14 +101,20 @@ async function seedFromNewsReports(prisma, studentRefId) {
     for (const raw of rows) {
       const word = normalizeWord(raw)
       if (!word.englishKey || keys.has(word.englishKey)) continue
-      await prisma.studentNewWord.create({
-        data: {
-          ...word,
-          studentRefId,
-          sourceReportId: text(report.id),
-          sourceReportDate: report.reportDate,
-        },
-      })
+      try {
+        await prisma.studentNewWord.create({
+          data: {
+            ...word,
+            studentRefId,
+            sourceReportId: text(report.id),
+            sourceReportDate: report.reportDate,
+          },
+        })
+      } catch (error) {
+        const message = String(error?.message || "")
+        const duplicateFromConcurrentSeed = error?.code === "P2002" && /englishKey/u.test(message)
+        if (!duplicateFromConcurrentSeed) throw error
+      }
       keys.add(word.englishKey)
     }
   }

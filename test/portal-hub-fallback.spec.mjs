@@ -10,6 +10,7 @@ const portalThemeCssPath = path.resolve(rootDir, "web-asset/shared/portal-theme.
 const portalThemeCss = fs.readFileSync(portalThemeCssPath, "utf8")
 const sharedThemeMinPath = path.resolve(rootDir, "web-asset/shared/portal-theme.min.css")
 const sharedThemeMin = fs.readFileSync(sharedThemeMinPath, "utf8")
+const portalNavigation = fs.readFileSync(path.resolve(rootDir, "web-asset/shared/portal-navigation.js"), "utf8")
 const parentPortalHtml = `${fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.html"), "utf8")}\n${fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.js"), "utf8")}`
 const studentPortalHtml = `${fs.readFileSync(path.resolve(rootDir, "web-asset/student/student-portal.html"), "utf8")}\n${fs.readFileSync(path.resolve(rootDir, "web-asset/student/student-portal.js"), "utf8")}`
 
@@ -31,6 +32,22 @@ test("portal hub still honors explicit apiOrigin when one is provided", () => {
   assert.match(hubHtml, /const rawApiOrigin = query\.get\("apiOrigin"\)/)
   assert.match(hubHtml, /if \(rawApiOrigin\)/)
   assert.match(hubHtml, /return parsed\.origin/)
+})
+
+test("shared portal navigation keeps dev entry URLs aligned", () => {
+  assert.match(portalNavigation, /queryOrigin = new URLSearchParams\(window\.location\.search \|\| ""\)\.get\("apiOrigin"\)/)
+  assert.match(portalNavigation, /runtimePorts = new Set\(\["8786", "8787", "8788"\]\)/)
+  assert.ok(portalNavigation.includes('if (isLoopbackHostname(parsedOrigin.hostname) && !runtimePorts.has(parsedOrigin.port))'))
+  assert.match(portalNavigation, /currentOrigin\.port === "8788"\) return currentOrigin\.origin/)
+  assert.match(portalNavigation, /return "http:\/\/127\.0\.0\.1:8788"/)
+  assert.ok(portalNavigation.includes('a[href^="/admin"], a[href^="/parent"], a[href^="/student"]'))
+  assert.match(portalNavigation, /target\.searchParams\.set\("apiOrigin", apiOrigin\)/)
+  assert.match(hubHtml, /<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>/)
+  assert.match(hubHtml, /href="\/admin" data-portal-target="admin"/)
+  assert.match(fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.html"), "utf8"), /<script src="\/web-asset\/shared\/portal-navigation\.js" defer><\/script>/)
+  assert.match(fs.readFileSync(path.resolve(rootDir, "web-asset/admin/library-admin.html"), "utf8"), /<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>/)
+  assert.match(parentPortalHtml, /<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>/)
+  assert.match(studentPortalHtml, /<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>/)
 })
 
 test("all portal origin resolvers preserve the test runtime port", () => {

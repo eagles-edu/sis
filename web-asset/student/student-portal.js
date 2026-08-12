@@ -125,7 +125,6 @@
         "performance-reports",
         "grades-ytd",
         "recommendations",
-        "new-words",
       ]);
 
       function t(v) {
@@ -156,7 +155,7 @@
         "adjective", "noun", "verb", "adverb", "conjunction", "preposition",
         "determiner", "pronoun", "interjection", "phrase", "idiom", "clause",
       ];
-      const VOCABULARY_ESL_FIELDS = ["entryKind", "phraseType", "posSubtype", "countability", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "edAdjective", "ingAdjective", "awlFamilyHeadword", "awlQualifyingMember", "awlMemberForm", "awlSublist"];
+      const VOCABULARY_ESL_FIELDS = ["entryKind", "phraseType", "posSubtype", "countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "edAdjective", "ingAdjective", "awlFamilyHeadword", "awlQualifyingMember", "awlMemberForm", "awlSublist", "grammarClassification"];
       const NEWS_GENERIC_COMPLIANCE_FIELD_ID = "__compliance";
       const NEWS_COMPLIANCE_NOTE_START = "[[SIS-COMPLIANCE-V1]]";
       const NEWS_COMPLIANCE_NOTE_END = "[[/SIS-COMPLIANCE-V1]]";
@@ -3058,18 +3057,15 @@
         if (!authenticated) {
           field("studentHomeCard")?.classList.add("hidden");
           field("studentDetailPageCard")?.classList.add("hidden");
-          field("newWordsPageCard")?.classList.add("hidden");
           field("newsPageCard")?.classList.add("hidden");
           updateActiveStudentNav();
           return;
         }
         const showNews = state.activeView === "news";
         const showHome = !showNews && state.activePage === "home";
-        const showNewWords = !showNews && state.activePage === "new-words";
-        const showDetail = !showNews && !showNewWords && state.activePage !== "home";
+        const showDetail = !showNews && state.activePage !== "home";
         field("studentHomeCard")?.classList.toggle("hidden", !showHome);
         field("studentDetailPageCard")?.classList.toggle("hidden", !showDetail);
-        field("newWordsPageCard")?.classList.toggle("hidden", !showNewWords);
         field("newsPageCard")?.classList.toggle("hidden", !showNews);
         updateActiveStudentNav();
         if (showNews) {
@@ -3089,13 +3085,6 @@
           requestAnimationFrame(() => {
             renderStudentDetailPage();
             state.detailCalendar?.updateSize?.();
-            window.SISPortalNav?.scrollPageTop?.();
-          });
-        }
-        if (showNewWords) {
-          requestAnimationFrame(() => {
-            if (!state.newWordsLoaded) loadNewWords().catch(handleError);
-            else renderNewWordsRows();
             window.SISPortalNav?.scrollPageTop?.();
           });
         }
@@ -4232,79 +4221,86 @@
 
       function vocabularyRowHtml(index, removable = false, menuActions = "remove") {
         const rowUid = `${index}-${++vocabularyRowUid}`;
-        const options = NEWS_VOCABULARY_PARTS_OF_SPEECH.map((part) => `<option value="${part}">${part}</option>`).join("");
+        const vocabularyEsl = window.SIS_VOCABULARY_ESL;
         const newWordMenuActions = menuActions === "new-word" ? `
                 <button type="button" class="portal-button portal-button-affirm new-word-save" title="Lưu mục từ vựng đang chỉnh sửa" aria-label="Lưu mục từ vựng đang chỉnh sửa">Save</button>
                 <button type="button" class="portal-button portal-button-warning new-word-close" title="Đóng trình chỉnh sửa từ vựng mà không lưu" aria-label="Đóng trình chỉnh sửa từ vựng mà không lưu">Close</button>` : "";
-        return `<div class="news-vocabulary-row" data-news-vocabulary-row="${index}">
-          <select name="vocabularyPartOfSpeech-${rowUid}" data-vocabulary-field="partOfSpeech" aria-label="Part of speech" required><option value="">POS</option>${options}</select>
-          <input name="vocabularyEnglish-${rowUid}" type="text" data-vocabulary-field="english" placeholder="Word/phrase EN" aria-label="Word or phrase in English" autocapitalize="off" required>
-          <input name="vocabularyVietnamese-${rowUid}" type="text" data-vocabulary-field="vietnamese" placeholder="Word/phrase VI" aria-label="Word or phrase in Vietnamese" required>
-          <input name="vocabularySyllabication-${rowUid}" type="text" data-vocabulary-field="syllabication" placeholder="Do: air-strike | Extra: air-con-di-tion-ing" aria-label="Syllabication: keep compounds exact; optionally split multi-syllable compound parts for extra points" required>
-          <div class="news-vocabulary-definition-row">
-            <div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">
-              ${NEWS_VOCABULARY_LOOKUPS.map(([label]) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup" data-vocabulary-lookup="${label}" title="Tra cứu trường ${label} để hoàn thiện mục từ vựng từ nguồn phù hợp" aria-label="Tra cứu trường ${label} để hoàn thiện mục từ vựng từ nguồn phù hợp">${label}</button>`).join("")}
-            </div>
-            <textarea name="vocabularyDefinition-${rowUid}" data-vocabulary-field="definition" rows="1" placeholder="Definition" aria-label="Definition" required></textarea>
-            ${removable ? `<details class="news-vocabulary-row-menu">
-              <summary class="news-vocabulary-row-dots" aria-label="Open vocabulary row actions">⋮</summary>
-              <div class="news-vocabulary-row-menu-panel">
-                ${newWordMenuActions}
-                <button type="button" class="portal-button portal-button-danger news-vocabulary-remove" title="Xóa mục từ vựng này khỏi báo cáo" aria-label="Xóa mục từ vựng này khỏi báo cáo">Remove</button>
-              </div>
-            </details>` : '<span class="news-vocabulary-row-dots" aria-hidden="true">⋮</span>'}
-          </div>
-          <details class="vocabulary-esl-details"><summary>ESL details</summary><div class="vocabulary-esl-grid">
-            <label>Kind<select data-vocabulary-esl-field="entryKind"><option value="word">word</option><option value="phrase">phrase</option><option value="idiom">idiom</option><option value="phrasal verb">phrasal verb</option></select></label>
-            <label data-vocabulary-esl-phrase hidden>Phrase type<select data-vocabulary-esl-field="phraseType"><option value="">Select</option><option>verb</option><option>noun</option><option>adjective</option><option>adverbial</option><option>prepositional</option><option>idiom</option></select></label>
-            <label>POS subtype<select data-vocabulary-esl-field="posSubtype"><option value="">None</option><option>personal</option><option>possessive</option><option>reflexive</option><option>reciprocal</option><option>demonstrative</option><option>interrogative</option><option>relative</option><option>indefinite</option><option>coordinating</option><option>subordinating</option><option>correlative</option></select></label>
-            <label data-vocabulary-esl-noun hidden>Countability<select data-vocabulary-esl-field="countability"><option value="">Select</option><option>countable</option><option>uncountable</option></select></label>
-            <fieldset data-vocabulary-esl-verb hidden><legend>Verb</legend><label><input type="radio" data-vocabulary-esl-field="verbRegularity" value="regular"> Regular</label><label><input type="radio" data-vocabulary-esl-field="verbRegularity" value="irregular"> Irregular</label><label><input type="radio" data-vocabulary-esl-field="verbTransitivity" value="transitive"> Transitive</label><label><input type="radio" data-vocabulary-esl-field="verbTransitivity" value="intransitive"> Intransitive</label><label>Infinitive<input data-vocabulary-esl-field="verbInfinitive"></label><label>V1<input data-vocabulary-esl-field="verbV1"></label><label>V2<input data-vocabulary-esl-field="verbV2"></label><label>V3<input data-vocabulary-esl-field="verbV3"></label><label>V4<input data-vocabulary-esl-field="verbV4"></label><label>V5<input data-vocabulary-esl-field="verbV5"></label><label>Display form<select data-vocabulary-esl-field="displayVerbForm"><option value="">Select</option><option>infinitive</option><option>v1</option><option>v2</option><option>v3</option><option>v4</option><option>v5</option></select></label><label><input type="checkbox" data-vocabulary-esl-field="edAdjective"> -ed adjective</label><label><input type="checkbox" data-vocabulary-esl-field="ingAdjective"> -ing adjective</label></fieldset>
-            <fieldset><legend>Academic Word List</legend><label>Family headword<input data-vocabulary-esl-field="awlFamilyHeadword"></label><label>Italic qualifying member<input data-vocabulary-esl-field="awlQualifyingMember"></label><label>Member form<input data-vocabulary-esl-field="awlMemberForm"></label><label>Sublist<input type="number" min="1" max="10" data-vocabulary-esl-field="awlSublist"></label></fieldset>
-            <button type="button" class="portal-button portal-button-alt" data-vocabulary-mw-preview title="Preview only the Merriam-Webster fields that can be authoritative: headword, POS, pronunciation, definition, and inflections." aria-label="Check Merriam-Webster fields">MW check</button>
-          </div></details>
-        </div>`;
+        return vocabularyEsl?.editorRowHtml(rowUid, {
+          index,
+          removable,
+          actionsHtml: newWordMenuActions,
+        }) || "";
       }
 
       function syncVocabularyEslRow(row) {
-        const pos = t(row?.querySelector('[data-vocabulary-field="partOfSpeech"]')?.value).toLowerCase();
-        const kind = t(row?.querySelector('[data-vocabulary-esl-field="entryKind"]')?.value).toLowerCase();
-        const verb = row?.querySelector('[data-vocabulary-esl-verb]'); const noun = row?.querySelector('[data-vocabulary-esl-noun]'); const phrase = row?.querySelector('[data-vocabulary-esl-phrase]');
-        if (verb) verb.hidden = pos !== "verb"; if (noun) noun.hidden = pos !== "noun"; if (phrase) phrase.hidden = !["phrase", "idiom", "phrasal verb"].includes(kind);
+        window.SIS_VOCABULARY_ESL?.sync(row);
       }
 
-      async function previewVocabularyMerriamWebster(row) {
-        const entry = readVocabularyRows({ querySelectorAll: () => [row] })[0];
-        if (!entry?.english) throw new Error("Enter the English word or phrase before checking Merriam-Webster.");
-        const data = await api(`${STUDENT_API_PREFIX}/library/mw-preview`, { method: "POST", body: { entry } });
-        window.alert(data.ok ? `Merriam-Webster preview (only supported fields):\n${JSON.stringify(data.fields, null, 2)}` : (data.message || "Merriam-Webster data is unavailable."));
+      function readVocabularyEsl(row) {
+        const value = Object.fromEntries(VOCABULARY_ESL_FIELDS.filter((key) => key !== "grammarClassification").map((key) => {
+          const input = row.querySelector(`[data-vocabulary-esl-field="${key}"]`);
+          return [key, input?.type === "checkbox" ? Boolean(input.checked) : input?.type === "radio" ? (input.checked ? input.value : "") : t(input?.value)];
+        }).filter(([, entry]) => entry !== "" && entry !== false));
+        const grammarClassification = window.SIS_VOCABULARY_ESL?.classification(row) || {};
+        if (Object.keys(grammarClassification).length) value.grammarClassification = grammarClassification;
+        return value;
       }
 
       function renderVocabularyRows(container, rows = []) {
         if (!container) return;
         const source = Array.isArray(rows) ? rows : [];
         const minimum = vocabularyMinimumWords();
-        const count = Math.max(minimum, source.length);
-        container.innerHTML = Array.from({ length: count }, (_, index) => vocabularyRowHtml(index, index >= minimum)).join("");
-        Array.from(container.querySelectorAll("[data-news-vocabulary-row]")).forEach((rowEl, index) => {
-          const row = source[index] || {};
+        const blankCount = Math.max(0, minimum - source.length);
+        const flatRows = source.map((row, index) => window.SIS_VOCABULARY_ESL?.flatEntryHtml(row, {
+          index,
+          editClass: "vocabulary-flat-edit",
+          editAttributes: `data-vocabulary-edit-index="${index}"`,
+        }) || "").join("");
+        const editorRows = Array.from({ length: blankCount }, (_, index) => vocabularyRowHtml(source.length + index, true)).join("");
+        container.innerHTML = flatRows + editorRows;
+        Array.from(container.querySelectorAll("[data-news-vocabulary-row]")).forEach((rowEl) => {
+          const row = {};
           ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((key) => {
             const input = rowEl.querySelector(`[data-vocabulary-field="${key}"]`);
             if (input) input.value = key === "syllabication" ? normalizeSyllabication(row?.[key]) : t(row?.[key]);
           });
           bindVocabularyDefinitionAutosize(rowEl);
           rowEl.addEventListener("change", (event) => {
-            if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="entryKind"]')) syncVocabularyEslRow(rowEl);
+            if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="grammarFamily"], [data-vocabulary-esl-field="grammarSubtype"]')) syncVocabularyEslRow(rowEl);
           });
-          rowEl.querySelector("[data-vocabulary-mw-preview]")?.addEventListener("click", () => previewVocabularyMerriamWebster(rowEl).catch(handleError));
           const esl = row?.esl && typeof row.esl === "object" ? row.esl : {};
-          VOCABULARY_ESL_FIELDS.forEach((key) => { const input = rowEl.querySelector(`[data-vocabulary-esl-field="${key}"]`); if (!input) return; if (input.type === "checkbox" || input.type === "radio") input.checked = input.value ? t(esl[key]) === input.value : Boolean(esl[key]); else input.value = t(esl[key]); });
-          syncVocabularyEslRow(rowEl);
+          VOCABULARY_ESL_FIELDS.filter((key) => key !== "grammarClassification").forEach((key) => { const input = rowEl.querySelector(`[data-vocabulary-esl-field="${key}"]`); if (!input) return; if (input.type === "checkbox" || input.type === "radio") input.checked = input.value ? t(esl[key]) === input.value : Boolean(esl[key]); else input.value = t(esl[key]); });
+          window.SIS_VOCABULARY_ESL?.hydrate(rowEl, esl);
           rowEl.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
             rowEl.remove();
             renumberVocabularyRows(container);
           });
           bindVocabularyLookupButtons(rowEl);
+        });
+        Array.from(container.querySelectorAll(".vocabulary-flat-edit")).forEach((button) => {
+          button.addEventListener("click", () => {
+            const article = button.closest("[data-vocabulary-flat-entry]");
+            const index = Number.parseInt(article?.getAttribute("data-vocabulary-entry-index"), 10);
+            const row = Number.isInteger(index) ? source[index] : null;
+            if (!article || !row) return;
+            article.outerHTML = vocabularyRowHtml(index, true);
+            const rowEl = container.querySelector(`[data-news-vocabulary-row="${index}"]`);
+            if (!rowEl) return;
+            ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((key) => {
+              const input = rowEl.querySelector(`[data-vocabulary-field="${key}"]`);
+              if (input) input.value = key === "syllabication" ? normalizeSyllabication(row[key]) : t(row[key]);
+            });
+            bindVocabularyDefinitionAutosize(rowEl);
+            bindVocabularyLookupButtons(rowEl);
+            window.SIS_VOCABULARY_ESL?.hydrate(rowEl, row.esl && typeof row.esl === "object" ? row.esl : {});
+            rowEl.addEventListener("change", (event) => {
+              if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="grammarFamily"], [data-vocabulary-esl-field="grammarSubtype"]')) syncVocabularyEslRow(rowEl);
+            });
+            rowEl.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
+              rowEl.remove();
+              renumberVocabularyRows(container);
+            });
+          });
         });
       }
 
@@ -4324,9 +4320,8 @@
         bindVocabularyLookupButtons(row);
         bindVocabularyDefinitionAutosize(row);
         row?.addEventListener("change", (event) => {
-          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="entryKind"]')) syncVocabularyEslRow(row);
+          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="grammarFamily"], [data-vocabulary-esl-field="grammarSubtype"]')) syncVocabularyEslRow(row);
         });
-        row?.querySelector("[data-vocabulary-mw-preview]")?.addEventListener("click", () => previewVocabularyMerriamWebster(row).catch(handleError));
         syncVocabularyEslRow(row);
         row?.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
           row.remove();
@@ -4335,8 +4330,14 @@
       }
 
       function readVocabularyRows(container) {
-        return Array.from(container?.querySelectorAll("[data-news-vocabulary-row]") || [])
-          .map((row) => { const value = Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, key === "syllabication" ? normalizeSyllabication(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : t(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value)])); value.esl = Object.fromEntries(VOCABULARY_ESL_FIELDS.map((key) => { const input = row.querySelector(`[data-vocabulary-esl-field="${key}"]`); return [key, input?.type === "checkbox" ? Boolean(input.checked) : input?.type === "radio" ? (input.checked ? input.value : "") : t(input?.value)]; }).filter(([, value]) => value !== "" && value !== false)); return value; })
+        return Array.from(container?.children || [])
+          .map((row) => {
+            if (row.matches("[data-vocabulary-flat-entry]")) {
+              try { return JSON.parse(row.dataset.vocabularyEntryJson || "{}"); } catch { return {}; }
+            }
+            if (!row.matches("[data-news-vocabulary-row]")) return {};
+            const value = Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, key === "syllabication" ? normalizeSyllabication(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : t(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value)])); value.esl = readVocabularyEsl(row); return value;
+          })
           .filter((row) => Object.values(row).some(Boolean));
       }
 
@@ -4365,22 +4366,17 @@
         const totalPages = Math.max(1, Math.ceil(words.length / pageSize));
         state.newWordsPage = Math.min(Math.max(1, state.newWordsPage), totalPages);
         const start = (state.newWordsPage - 1) * pageSize;
-        container.innerHTML = words.length ? words.map((word, index) => word.__editing === true ? vocabularyRowHtml(index, true, "new-word") : `
-          <article class="new-word-entry" data-new-word-index="${index}">
-            <div class="new-word-entry-head">
-              <strong>${escapeHtml(t(word.english) || "New word")}</strong>
-              <span class="new-word-entry-pronunciation">/${escapeHtml(normalizeSyllabication(word.syllabication))}/</span>
-              <strong class="new-word-entry-part-of-speech">${escapeHtml(t(word.partOfSpeech))}</strong>
-              <span class="new-word-entry-vietnamese">vi: ${escapeHtml(t(word.vietnamese))}</span>
-              <button type="button" class="portal-button portal-button-primary new-word-edit" title="Mở mục từ vựng này để chỉnh sửa" aria-label="Mở mục từ vựng này để chỉnh sửa">Edit</button>
-            </div>
-            <p class="new-word-entry-definition">${escapeHtml(dictionaryDefinition(word.definition))}</p>
-          </article>`).join("") : '<p class="hint new-words-empty">No new words yet. Add a word or complete a news report vocabulary row.</p>';
-        Array.from(container.querySelectorAll("[data-news-vocabulary-row]")).forEach((rowEl, index) => {
+        container.innerHTML = words.length ? words.map((word, index) => word.__editing === true ? vocabularyRowHtml(index, true, "new-word") : window.SIS_VOCABULARY_ESL?.flatEntryHtml(word, {
+          index,
+          editClass: "new-word-edit",
+          editAttributes: `data-new-word-index="${index}"`,
+          entryAttributes: `data-new-word-index="${index}"`,
+        }) || "").join("") : '<p class="hint new-words-empty">No new words yet. Add a word or complete a news report vocabulary row.</p>';
+        Array.from(container.children).forEach((rowEl, index) => {
           rowEl.setAttribute("data-new-word-index", String(index));
         });
         if (words.length) {
-          Array.from(container.querySelectorAll("[data-new-word-index]")).forEach((rowEl, index) => {
+          Array.from(container.children).forEach((rowEl, index) => {
             const word = words[index] || {};
             const editing = word.__editing === true;
             if (editing) {
@@ -4390,6 +4386,10 @@
               });
               bindVocabularyLookupButtons(rowEl);
               bindVocabularyDefinitionAutosize(rowEl);
+              window.SIS_VOCABULARY_ESL?.hydrate(rowEl, word.esl && typeof word.esl === "object" ? word.esl : {});
+              rowEl.addEventListener("change", (event) => {
+                if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="grammarFamily"], [data-vocabulary-esl-field="grammarSubtype"]')) syncVocabularyEslRow(rowEl);
+              });
             }
             rowEl.hidden = state.newWordsPageSize !== "all" && (index < start || index >= start + pageSize);
             rowEl.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
@@ -4422,6 +4422,24 @@
         renderNewWordsRows();
       }
 
+      async function refreshNewWords() {
+        const button = field("newWordsRefreshBtn");
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Refreshing...";
+        }
+        invalidateNewWordsCache();
+        try {
+          await loadNewWords();
+          setGlobalStatus("New Words refreshed.");
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Refresh";
+          }
+        }
+      }
+
       function invalidateNewWordsCache() {
         state.newWordsLoaded = false;
       }
@@ -4439,7 +4457,7 @@
           ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((key) => {
             word[key] = key === "syllabication" ? normalizeSyllabication(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : t(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value);
           });
-          word.esl = Object.fromEntries(VOCABULARY_ESL_FIELDS.map((key) => { const input = rowEl.querySelector(`[data-vocabulary-esl-field="${key}"]`); return [key, input?.type === "checkbox" ? Boolean(input.checked) : input?.type === "radio" ? (input.checked ? input.value : "") : t(input?.value)]; }).filter(([, value]) => value !== "" && value !== false));
+          word.esl = readVocabularyEsl(rowEl);
           delete word.__editing;
         });
         const rows = state.newWords.map((word) => ({
@@ -5732,6 +5750,9 @@
           });
           field("newWordsSubmitLibraryBtn")?.addEventListener("click", () => {
             submitNewWordsToLibrary().catch(handleError);
+          });
+          field("newWordsRefreshBtn")?.addEventListener("click", () => {
+            refreshNewWords().catch(handleError);
           });
           field("newWordsAddOneBtn")?.addEventListener("click", () => addNewWords(1));
           field("newWordsAddFiveBtn")?.addEventListener("click", () => addNewWords(5));

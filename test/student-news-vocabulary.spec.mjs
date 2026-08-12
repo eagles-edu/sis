@@ -15,6 +15,7 @@ import {
 import { isCheckedNewsReport } from "../src/modules/admin/student-new-words.mjs"
 
 const STUDENT_HTML = fs.readFileSync(new URL("../web-asset/student/student-portal.html", import.meta.url), "utf8")
+const STUDENT_LIBRARY_HTML = fs.readFileSync(new URL("../web-asset/student/library.html", import.meta.url), "utf8")
 const STUDENT_JS = fs.readFileSync(new URL("../web-asset/student/student-portal.js", import.meta.url), "utf8")
 const SHARED_THEME = fs.readFileSync(new URL("../web-asset/shared/portal-theme.css", import.meta.url), "utf8")
 const ACTION_FEEDBACK_JS = fs.readFileSync(new URL("../web-asset/shared/portal-action-feedback.js", import.meta.url), "utf8")
@@ -318,8 +319,8 @@ test("student vocabulary rows provide lookup controls for initial and added rows
   assert.doesNotMatch(STUDENT_HTML, /function dictionaryPlural\(/)
 })
 
-test("student part-of-speech selectors use a fixed longest-option width", () => {
-  assert.match(STUDENT_HTML, /<option value="">POS<\/option>/)
+test("student part-of-speech selectors use Select and a fixed longest-option width", () => {
+  assert.match(STUDENT_HTML, /<option value="">Select<\/option>/)
   assert.match(SHARED_THEME, /select\[data-vocabulary-field="partOfSpeech"\][\s\S]*?field-sizing: initial;/)
   assert.match(SHARED_THEME, /select\[data-vocabulary-field="partOfSpeech"\][\s\S]*?inline-size: 12ch;/)
   assert.doesNotMatch(SHARED_THEME, /select\[data-vocabulary-field="partOfSpeech"\][\s\S]*?field-sizing: content;/)
@@ -412,9 +413,15 @@ test("admin settings expose the dynamic vocabulary minimum", () => {
   assert.match(ADMIN_JS, /schoolSetupNewsVocabularyMinimum/)
 })
 
-test("student New Words page exposes editable, sortable, paginated vocabulary", () => {
-  assert.match(STUDENT_HTML, /data-page-target="new-words">New Words<\/a>/)
-  assert.match(STUDENT_HTML, /id="newWordsPageCard"/)
+test("student Library replaces the standalone New Words page with My Words filtering", () => {
+  assert.doesNotMatch(STUDENT_HTML, /data-page-target="new-words">New Words<\/a>/)
+  assert.doesNotMatch(STUDENT_HTML, /id="newWordsPageCard"/)
+  assert.match(STUDENT_HTML, /<template id="deprecatedNewWordsPage" data-deprecated-page="new-words">/)
+  assert.match(STUDENT_LIBRARY_HTML, /id="libraryMyWords"[^>]*type="checkbox"/)
+  assert.match(STUDENT_LIBRARY_HTML, /myWords: document\.getElementById\("libraryMyWords"\)\.checked \? "true" : ""/)
+  assert.match(STUDENT_LIBRARY_HTML, /libraryFilters.*addEventListener\("submit"/s)
+  assert.match(SERVER_ROUTES, /studentRefId,\n\s*\}\)/)
+  assert.match(NEW_WORDS_MODULE, /studentNewWord\.findMany/)
   assert.match(STUDENT_HTML, /id="newWordsSort"/)
   assert.match(STUDENT_HTML, /value="random"/)
   assert.match(STUDENT_HTML, /id="newWordsPageSize"/)

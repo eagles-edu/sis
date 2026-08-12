@@ -31,6 +31,7 @@ import {
   assignLibraryWork,
   createLibraryLegacyPreflight,
   cutoverLegacyLibrary,
+  getLibraryEntry,
   getStudentLibraryAssignments,
   listLibraryEntries,
   listLibraryReviewQueue,
@@ -6658,7 +6659,11 @@ async function handleApiRequest(request, response, pathname, url) {
   const mwPreviewMatch = pathname.match(ADMIN_LIBRARY_MW_PREVIEW_PATH_RE)
   if (mwPreviewMatch && method === "POST") {
     const payload = await parseBody(request)
-    sendJson(response, 200, await previewMerriamWebsterLibraryEntry(payload?.entry || payload))
+    const providedEntry = payload?.entry || payload
+    const entry = normalizeText(providedEntry?.english)
+      ? providedEntry
+      : await getLibraryEntry(decodeURIComponent(mwPreviewMatch[1]))
+    sendJson(response, 200, await previewMerriamWebsterLibraryEntry(entry))
     return true
   }
   const mwApplyMatch = pathname.match(ADMIN_LIBRARY_MW_APPLY_PATH_RE)
@@ -8723,18 +8728,15 @@ async function handleStudentApiRequest(request, response, pathname, url) {
   }
 
   if (method === "GET" && pathname === STUDENT_LIBRARY_API_PATH) {
-    sendJson(response, 200, await listLibraryEntries(Object.fromEntries(url.searchParams.entries())))
+    sendJson(response, 200, await listLibraryEntries({
+      ...Object.fromEntries(url.searchParams.entries()),
+      studentRefId,
+    }))
     return true
   }
 
   if (method === "GET" && pathname === STUDENT_LIBRARY_ASSIGNMENTS_PATH) {
     sendJson(response, 200, await getStudentLibraryAssignments(studentRefId))
-    return true
-  }
-
-  if (method === "POST" && pathname === `${STUDENT_LIBRARY_API_PATH}/mw-preview`) {
-    const payload = await parseBody(request)
-    sendJson(response, 200, await previewMerriamWebsterLibraryEntry(payload?.entry || payload))
     return true
   }
 

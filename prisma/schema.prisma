@@ -641,11 +641,14 @@ model LibraryEntry {
   entryKind            String   @default("word")
   phraseType           String?
   posSubtype           String?
+  grammarClassification Json?
   vietnamese           String
   syllabication        String
   syllableCount        Int      @default(0)
   definition           String
   countability         String?
+  nounType             String?
+  nounNumber           String?
   verbRegularity       String?
   verbTransitivity     String?
   verbInfinitive       String?

@@ -79,7 +79,6 @@
       <nav class="side-links">
         <a class="side-link active" href="#studentHomeCard" data-view-target="home" data-page-target="home">Home</a>
         <a class="side-link" href="#newsPageCard" data-view-target="news" data-page-target="news">News Reports</a>
-        <a class="side-link" href="#newWordsPageCard" data-view-target="home" data-page-target="new-words">New Words</a>
         <a class="side-link" href="/student/library.html">Library</a>
         <a class="side-link" href="#studentDetailPageCard" data-view-target="home"
           data-page-target="current-homework">Current Homework</a>
@@ -701,7 +700,7 @@
           </div>
         </section>
 
-        <section id="newWordsPageCard" class="content hidden" data-surface-role="content">
+        <template id="deprecatedNewWordsPage" data-deprecated-page="new-words">
           <div class="section-head new-words-page-head bm015">
             <h2>New Words Section</h2>
           </div>
@@ -808,6 +807,9 @@
               <option value="all">All</option>
             </select>
             <span id="newWordsSummary" class="hint" aria-live="polite">No words loaded.</span>
+            <button id="newWordsRefreshBtn" type="button" class="portal-button portal-button-alt"
+              title="Reload your New Words from the server"
+              aria-label="Reload your New Words from the server">Refresh</button>
           </div>
           <div id="newWordsRows" class="news-vocabulary-rows new-words-rows vocabulary-edit-surface"></div>
           <div class="new-words-add-actions">
@@ -834,7 +836,7 @@
               title="Xem trang từ vựng liền sau" aria-label="Xem trang từ vựng liền sau">Next</button>
           </div>
           <a class="new-words-back-top" href="#top">Back to top</a>
-        </section>
+        </template>
 
         <section id="newsPageCard" class="content hidden" data-surface-role="content">
           <div class="section-head">
@@ -1165,7 +1167,7 @@
     if (t(fieldId) === "vocabulary") return document.getElementById("newsVocabularyField")
     news-vocabulary-row-dots>⋮</ news-vocabulary-row-dots autoResizeVocabularyDefinition(textarea) bindVocabularyDefinitionAutosize(rowEl)
     portal-button-danger news-vocabulary-remove
-    <option value="">POS</option>
+    <option value="">Select</option>
     if (saved?.item) applyOpenReport(saved.item, { preserveExistingValidation: false })
     applyNewsFieldValidationUi({}, [], {}, []) setNewsComplianceModalOpen(false)
     setFormStatus(auto ? "Draft autosaved." : "Draft saved. Check when you are ready to run MMR.")
@@ -1228,6 +1230,7 @@
         });
       })();
   </script>
+  <script src="/web-asset/shared/vocabulary-esl-editor.js"></script>
   <script src="/web-asset/student/student-portal.min.js"></script>
   <script>
     (() => {

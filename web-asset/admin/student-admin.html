@@ -1128,9 +1128,22 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
                 <a href="/admin/settings" class="menu-link" data-page-link="settings">
                   Settings
                 </a>
-                <a href="/admin/library-admin.html" class="menu-link menu-sublink">
-                  Library
-                </a>
+                <div class="menu-group menu-group-nested" data-menu-group="library">
+                  <button type="button" class="menu-group-btn" data-menu-toggle="library" aria-expanded="false">
+                    Library
+                  </button>
+                  <div class="menu-group-links">
+                    <a href="/admin/library-admin.html" class="menu-link menu-sublink" data-library-nav="library">
+                      Library
+                    </a>
+                    <a href="/admin/library-manage.html" class="menu-link menu-sublink" data-library-nav="manage">
+                      Manage
+                    </a>
+                    <a href="/admin/library-engagement.html" class="menu-link menu-sublink" data-library-nav="engagement">
+                      Engagement
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </nav>
@@ -5058,7 +5071,7 @@ No family lookup yet.</pre>
           if (adminAppLoaded) return
           adminAppLoaded = true
           const script = document.createElement("script")
-          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-fc2d7fae1e0c102b"
+          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-f6dfe5740ded2bec"
           script.defer = true
           if (replaySubmit || replayClick || replayPage) {
             script.addEventListener("load", () => {
