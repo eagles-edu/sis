@@ -17,7 +17,6 @@ import { LEVEL_DEFINITIONS, canonicalizeLevel } from "../src/modules/admin/level
 import { assertPortalPasswordPolicy } from "../src/modules/admin/users.mjs"
 
 const TEST_ADMIN_UI_SETTINGS_FILE = `/tmp/sis-admin-ui-settings-${process.pid}.json`
-const TEST_GENERATED_SIS_CONFIG_FILE = path.resolve(process.cwd(), "config/sis-config.test.json")
 const ADMIN_HTML_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.html", import.meta.url), "utf8")
 const ADMIN_CSS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.css", import.meta.url), "utf8")
 const ADMIN_JS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
@@ -2522,11 +2521,6 @@ test("admin can persist and reload school setup ui settings", async () => {
   const beforeBody = await getBefore.json()
   assert.equal(beforeBody.ok, true)
   persistedUiSettingsPath = String(beforeBody.filePath || "")
-  const testRuntime = {
-    databaseUrl: String(process.env.DATABASE_URL || ""),
-    redisUrl: String(process.env.REDIS_SESSION_URL || process.env.REDIS_URL || ""),
-    sessionDriver: "memory",
-  }
 
   const payload = {
     uiSettings: {
@@ -2557,7 +2551,9 @@ test("admin can persist and reload school setup ui settings", async () => {
     },
     sisConfig: {
       runtime: {
-        ...testRuntime,
+        databaseUrl: "postgresql://sis_app:secret@localhost:5432/sis-test",
+        redisUrl: "redis://:secret@localhost:6379/1",
+        sessionDriver: "redis",
         adminSessionTtlSeconds: 12345,
         parentSessionTtlSeconds: 23456,
         studentSessionTtlSeconds: 34567,
@@ -2585,7 +2581,7 @@ test("admin can persist and reload school setup ui settings", async () => {
   assert.equal(putBody.uiSettings.multiSchool, true)
   assert.equal(putBody.uiSettings.schoolProfile.schoolName, "Eagles Live")
   assert.equal(putBody.uiSettings.schoolProfile.logoDataUrl, "data:image/png;base64,AAAA")
-  assert.equal(putBody.sisConfig.runtime.sessionDriver, "memory")
+  assert.equal(putBody.sisConfig.runtime.sessionDriver, "redis")
   assert.equal(putBody.sisConfig.newsReports.weeklyMinimumReports, 5)
   assert.equal(putBody.sisConfig.newsReports.autoApproveEnabled, false)
   assert.equal(putBody.sisConfig.newsReports.autoApproveDelayHours, 20)
@@ -2604,7 +2600,7 @@ test("admin can persist and reload school setup ui settings", async () => {
   assert.equal(afterBody.uiSettings.schoolSetup.letterGradeRanges[0].minPercent, 92)
   assert.equal(afterBody.uiSettings.schoolProfile.schoolName, "Eagles Live")
   assert.equal(afterBody.uiSettings.schoolProfile.logoDataUrl, "data:image/png;base64,AAAA")
-  assert.equal(afterBody.sisConfig.runtime.redisUrl, testRuntime.redisUrl)
+  assert.equal(afterBody.sisConfig.runtime.redisUrl, "redis://:secret@localhost:6379/1")
   assert.equal(afterBody.sisConfig.newsReports.weeklyMinimumReports, 5)
   assert.equal(afterBody.sisConfig.newsReports.autoApproveEnabled, false)
   assert.equal(afterBody.sisConfig.newsReports.autoApproveDelayHours, 20)
@@ -3439,8 +3435,6 @@ test("shutdown admin route server", async () => {
 test("cleanup persisted ui settings test file", () => {
   fs.rmSync(TEST_ADMIN_UI_SETTINGS_FILE, { force: true })
   assert.equal(fs.existsSync(TEST_ADMIN_UI_SETTINGS_FILE), false)
-  fs.rmSync(TEST_GENERATED_SIS_CONFIG_FILE, { force: true })
-  assert.equal(fs.existsSync(TEST_GENERATED_SIS_CONFIG_FILE), false)
   const preservePersistedUiSettings = path.resolve(process.cwd(), "runtime-data/admin-ui-settings.json")
   if (persistedUiSettingsPath && path.resolve(persistedUiSettingsPath) !== preservePersistedUiSettings) {
     fs.rmSync(persistedUiSettingsPath, { force: true })

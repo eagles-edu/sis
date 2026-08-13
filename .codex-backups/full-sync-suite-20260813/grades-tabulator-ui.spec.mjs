@@ -772,8 +772,8 @@ test("tabulator authenticated bootstrap promotes server school setup year over s
         {
           id: "grade-current",
           assignmentName: "Current Year Quiz",
-          dueAt: "2026-08-12T00:00:00.000Z",
-          submittedAt: "2026-08-13T00:00:00.000Z",
+          dueAt: "2026-09-03T00:00:00.000Z",
+          submittedAt: "2026-09-04T00:00:00.000Z",
           score: 9,
           maxScore: 10,
           homeworkCompleted: true,

@@ -12,7 +12,6 @@ const SHARED_THEME = fs.readFileSync(SHARED_THEME_PATH, "utf8")
 const STUDENT_PORTAL_HTML_FOR_TEST = STUDENT_PORTAL_HTML
   .replace(/<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>\s*/i, "")
   .replace(/<script[^>]+src="\/web-asset\/shared\/portal-(?:action-feedback|preferences|password-visibility|navigation)\.js"[^>]*><\/script>\s*/gi, "")
-  .replace(/<script src="\/web-asset\/shared\/vocabulary-esl-editor\.js"><\/script>\s*/i, "")
   .replace(/<link rel="stylesheet" href="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.css">\s*/i, "")
   .replace(/<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css">\s*/i, "")
   .replace(/<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>\s*/i, "")

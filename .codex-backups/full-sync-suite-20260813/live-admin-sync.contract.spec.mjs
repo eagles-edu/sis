@@ -72,17 +72,6 @@ test("live admin sync wrapper is pinned to the live admin host and refreshes Pri
   assert.match(liveScript, /immutable restore mismatch: \.env/)
   assert.match(liveScript, /preserved immutable hash verified: \$\{rel_path\}/)
   assert.match(liveScript, /allowed_runtime_paths.*runtime-data/s)
-  assert.match(liveScript, /LIVE_RUNTIME_CODE_DIRS=\([\s\S]*"data"/)
-  assert.match(testScript, /TEST_RUNTIME_CODE_DIRS=\([\s\S]*"data"/)
-  for (const script of [testScript, liveScript]) {
-    assert.match(script, /web-asset\/admin\/library-admin\.html\|web-asset\/admin\/library-admin\.html/)
-    assert.match(script, /web-asset\/admin\/library-review-workbench\.js\|web-asset\/admin\/library-review-workbench\.js/)
-    assert.match(script, /web-asset\/student\/library\.html\|web-asset\/student\/library\.html/)
-    assert.match(script, /web-asset\/shared\/vocabulary-esl-editor\.js\|web-asset\/shared\/vocabulary-esl-editor\.js/)
-    assert.match(script, /web-asset\/admin\/library-admin\.html\|sis-admin\/library-admin\.html/)
-    assert.match(script, /web-asset\/student\/library\.html\|sis-student\/library\.html/)
-    assert.match(script, /web-asset\/shared\/vocabulary-esl-editor\.js\|web-asset\/shared\/vocabulary-esl-editor\.js/)
-  }
 })
 
 test("package scripts expose the live admin sync entrypoints", () => {
@@ -98,7 +87,7 @@ test("package scripts expose the live admin sync entrypoints", () => {
 test("live portal docs advertise the backup bundle and admin origin", () => {
   assert.match(liveLinksDoc, /\/home\/eagles\/dockerz\/backups\/live-admin\//)
   assert.match(liveLinksDoc, /https:\/\/admin\.eagles\.edu\.vn/)
-  assert.match(liveLinksDoc, /refreshes Prisma[\s\S]*db:generate[\s\S]*db:migrate:deploy/i)
+  assert.match(liveLinksDoc, /refreshes Prisma[\s\S]*`db:generate`[\s\S]*`db:migrate:deploy`/i)
 })
 
 test("live nginx config mirrors the test parent route shape", () => {

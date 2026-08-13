@@ -153,7 +153,7 @@ test(
             }
           }, entry)
 
-          const expectedBodyTop = entry.label === "admin" ? 24 : 12
+          const expectedBodyTop = entry.label === "admin" ? 24 : 0
           assert.equal(result.body.top, expectedBodyTop, `${theme}/${entry.label}: body should start at the expected viewport offset`)
           assert.ok(
             result.body.bottom >= result.viewportHeight,
@@ -161,7 +161,7 @@ test(
           )
           assert.ok(result.body.height >= result.viewportHeight, `${theme}/${entry.label}: body height should cover the viewport`)
           assert.ok(result.shell, `${theme}/${entry.label}: missing shell element`)
-          const expectedShellTop = entry.label === "admin" ? 48 : 36
+          const expectedShellTop = entry.label === "admin" ? 48 : 24
           approx(result.shell.top, expectedShellTop, 2, `${theme}/${entry.label}: shell top offset`)
         }
       }
@@ -276,3 +276,4 @@ test(
     }
   },
 )
+

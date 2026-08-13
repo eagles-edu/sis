@@ -128,7 +128,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -167,132 +167,132 @@
       "links": [
         {
           "text": "DASHBOARD",
-          "href": "/admin",
+          "href": "/admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "overview"
         },
         {
           "text": "QUEUE HUB",
-          "href": "/admin/queue-hub",
+          "href": "/admin/queue-hub?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "queue-hub"
         },
         {
           "text": "Student Profile",
-          "href": "/admin/profile",
+          "href": "/admin/profile?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "profile"
         },
         {
           "text": "Profile engagement",
-          "href": "/admin/profile-engagement",
+          "href": "/admin/profile-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "profile-engagement"
         },
         {
           "text": "Attendance",
-          "href": "/admin/attendance",
+          "href": "/admin/attendance?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "attendance"
         },
         {
           "text": "Attendance data",
-          "href": "/admin/attendance-admin",
+          "href": "/admin/attendance-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "attendance-admin"
         },
         {
           "text": "Assignments",
-          "href": "/admin/assignments",
+          "href": "/admin/assignments?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "assignments"
         },
         {
           "text": "Assignments data",
-          "href": "/admin/assignments-data",
+          "href": "/admin/assignments-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "assignments-data"
         },
         {
           "text": "Assignment engagement",
-          "href": "/admin/assignment-engagement",
+          "href": "/admin/assignment-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "assignment-engagement"
         },
         {
           "text": "Grades",
-          "href": "/admin/grades",
+          "href": "/admin/grades?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "grades"
         },
         {
           "text": "Grades data",
-          "href": "/admin/grades-data",
+          "href": "/admin/grades-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "grades-data"
         },
         {
           "text": "Grade table",
-          "href": "/admin/grades-tabulator",
+          "href": "/admin/grades-tabulator?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "grades-tabulator"
         },
         {
           "text": "Performance",
-          "href": "/admin/parent-tracking",
+          "href": "/admin/parent-tracking?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "parent-tracking"
         },
         {
           "text": "Performance data",
-          "href": "/admin/performance-data",
+          "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "performance-data"
         },
         {
           "text": "RC engagement",
-          "href": "/admin/performance-engagement",
+          "href": "/admin/performance-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "performance-engagement"
         },
         {
           "text": "News Reports",
-          "href": "/admin/news-reports",
+          "href": "/admin/news-reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "news-reports"
         },
         {
           "text": "All Reports",
-          "href": "/admin/reports",
+          "href": "/admin/reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "reports"
         },
         {
           "text": "Family Lookup",
-          "href": "/admin/family",
+          "href": "/admin/family?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "family"
         },
         {
           "text": "Enrollment",
-          "href": "/admin/enrollment",
+          "href": "/admin/enrollment?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "enrollment"
         },
         {
           "text": "Student Admin",
-          "href": "/admin/student-admin",
+          "href": "/admin/student-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "student-admin"
         },
         {
           "text": "School Setup",
-          "href": "/admin/school-setup",
+          "href": "/admin/school-setup?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "school-setup"
         },
         {
           "text": "Users",
-          "href": "/admin/users",
+          "href": "/admin/users?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "users"
         },
         {
           "text": "Permissions",
-          "href": "/admin/permissions",
+          "href": "/admin/permissions?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "permissions"
         },
         {
           "text": "Settings",
-          "href": "/admin/settings",
+          "href": "/admin/settings?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "settings"
         },
         {
           "text": "Grades Tabulator",
-          "href": "/admin/grades-tabulator",
+          "href": "/admin/grades-tabulator?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "grades-tabulator"
         },
         {
           "text": "Open performance data",
-          "href": "/admin/performance-data",
+          "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "performance-data"
         }
       ],
@@ -300,7 +300,7 @@
         {
           "link": {
             "text": "DASHBOARD",
-            "href": "/admin",
+            "href": "/admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "overview"
           },
           "state": {
@@ -440,7 +440,7 @@
         {
           "link": {
             "text": "QUEUE HUB",
-            "href": "/admin/queue-hub",
+            "href": "/admin/queue-hub?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "queue-hub"
           },
           "state": {
@@ -460,7 +460,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3918
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -472,7 +472,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3870
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -484,7 +484,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3786
+              "height": 475
             },
             ".panel": {
               "selector": ".panel",
@@ -580,7 +580,7 @@
         {
           "link": {
             "text": "Student Profile",
-            "href": "/admin/profile",
+            "href": "/admin/profile?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "profile"
           },
           "state": {
@@ -720,7 +720,7 @@
         {
           "link": {
             "text": "Profile engagement",
-            "href": "/admin/profile-engagement",
+            "href": "/admin/profile-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "profile-engagement"
           },
           "state": {
@@ -953,7 +953,7 @@
         {
           "link": {
             "text": "Attendance",
-            "href": "/admin/attendance",
+            "href": "/admin/attendance?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "attendance"
           },
           "state": {
@@ -1093,7 +1093,7 @@
         {
           "link": {
             "text": "Attendance data",
-            "href": "/admin/attendance-admin",
+            "href": "/admin/attendance-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "attendance-admin"
           },
           "state": {
@@ -1233,7 +1233,7 @@
         {
           "link": {
             "text": "Assignments",
-            "href": "/admin/assignments",
+            "href": "/admin/assignments?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "assignments"
           },
           "state": {
@@ -1373,7 +1373,7 @@
         {
           "link": {
             "text": "Assignments data",
-            "href": "/admin/assignments-data",
+            "href": "/admin/assignments-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "assignments-data"
           },
           "state": {
@@ -1513,7 +1513,7 @@
         {
           "link": {
             "text": "Assignment engagement",
-            "href": "/admin/assignment-engagement",
+            "href": "/admin/assignment-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "assignment-engagement"
           },
           "state": {
@@ -1746,7 +1746,7 @@
         {
           "link": {
             "text": "Grades",
-            "href": "/admin/grades",
+            "href": "/admin/grades?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "grades"
           },
           "state": {
@@ -1886,7 +1886,7 @@
         {
           "link": {
             "text": "Grades data",
-            "href": "/admin/grades-data",
+            "href": "/admin/grades-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "grades-data"
           },
           "state": {
@@ -2026,7 +2026,7 @@
         {
           "link": {
             "text": "Grade table",
-            "href": "/admin/grades-tabulator",
+            "href": "/admin/grades-tabulator?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "grades-tabulator"
           },
           "state": {
@@ -2112,7 +2112,7 @@
         {
           "link": {
             "text": "Performance",
-            "href": "/admin/parent-tracking",
+            "href": "/admin/parent-tracking?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "parent-tracking"
           },
           "state": {
@@ -2272,7 +2272,7 @@
         {
           "link": {
             "text": "Performance data",
-            "href": "/admin/performance-data",
+            "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "performance-data"
           },
           "state": {
@@ -2407,12 +2407,36 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": []
+          "axe": [
+            {
+              "id": "label",
+              "impact": "critical",
+              "help": "Form elements must have labels",
+              "nodes": [
+                {
+                  "target": "input[data-performance-queue-select=\"notify-msiw6cmn-aec20f93\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-msivpkke-0bd079d4\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-mrzd2aat-2eb906b2\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-mrzd0ywf-3d777c09\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                }
+              ]
+            }
+          ]
         },
         {
           "link": {
             "text": "RC engagement",
-            "href": "/admin/performance-engagement",
+            "href": "/admin/performance-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "performance-engagement"
           },
           "state": {
@@ -2432,7 +2456,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1534
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2444,7 +2468,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1486
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2456,7 +2480,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1402
+              "height": 638
             },
             ".panel": {
               "selector": ".panel",
@@ -2547,101 +2571,12 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "aria-allowed-attr",
-              "impact": "critical",
-              "help": "Elements must only use supported ARIA attributes",
-              "nodes": [
-                {
-                  "target": "div[aria-title=\"Recipient\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"Positive\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"Negative\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                }
-              ]
-            },
-            {
-              "id": "aria-required-children",
-              "impact": "critical",
-              "help": "Certain ARIA roles must contain particular children",
-              "nodes": [
-                {
-                  "target": ".engagement-matrix-table-host",
-                  "failureSummary": "Fix any of the following:\n  Element has children which are not allowed: div[tabindex]"
-                },
-                {
-                  "target": "#tabulator-table-body",
-                  "failureSummary": "Fix any of the following:\n  Element has children which are not allowed: [role=rowgroup]"
-                },
-                {
-                  "target": ".tabulator-group",
-                  "failureSummary": "Fix any of the following:\n  Required ARIA child role not present: row"
-                }
-              ]
-            },
-            {
-              "id": "aria-roles",
-              "impact": "critical",
-              "help": "ARIA roles used must conform to valid values",
-              "nodes": [
-                {
-                  "target": "div[aria-title=\"Recipient\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"Positive\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"Negative\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                }
-              ]
-            },
-            {
-              "id": "aria-valid-attr",
-              "impact": "critical",
-              "help": "ARIA attributes must conform to valid names",
-              "nodes": [
-                {
-                  "target": "div[aria-title=\"Recipient\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"Positive\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"Negative\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
             "text": "News Reports",
-            "href": "/admin/news-reports",
+            "href": "/admin/news-reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "news-reports"
           },
           "state": {
@@ -2661,7 +2596,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 8807
+              "height": 8915
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2673,7 +2608,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 8759
+              "height": 8867
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2685,7 +2620,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 8675
+              "height": 8783
             },
             ".panel": {
               "selector": ".panel",
@@ -2781,7 +2716,7 @@
         {
           "link": {
             "text": "All Reports",
-            "href": "/admin/reports",
+            "href": "/admin/reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "reports"
           },
           "state": {
@@ -2801,7 +2736,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1783
+              "height": 1604
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2813,7 +2748,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1735
+              "height": 1556
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2825,7 +2760,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1651
+              "height": 1472
             },
             ".panel": {
               "selector": ".panel",
@@ -2921,7 +2856,7 @@
         {
           "link": {
             "text": "Family Lookup",
-            "href": "/admin/family",
+            "href": "/admin/family?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "family"
           },
           "state": {
@@ -3061,7 +2996,7 @@
         {
           "link": {
             "text": "Enrollment",
-            "href": "/admin/enrollment",
+            "href": "/admin/enrollment?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "enrollment"
           },
           "state": {
@@ -3081,7 +3016,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "flex",
               "width": 1440,
-              "height": 20022
+              "height": 19776
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3093,7 +3028,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 19974
+              "height": 19728
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3105,7 +3040,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1280,
-              "height": 19784
+              "height": 19538
             },
             ".panel": {
               "selector": ".panel",
@@ -3137,7 +3072,7 @@
               "help": "Elements must only use supported ARIA attributes",
               "nodes": [
                 {
-                  "target": "button[data-level=\"Eggs & Chicks\"]",
+                  "target": "button[data-level=\"A2 KET\"]",
                   "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
                 },
                 {
@@ -3149,7 +3084,7 @@
                   "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
                 },
                 {
-                  "target": "button[data-level=\"A2 Flyers\"]",
+                  "target": "button[data-level=\"Eggs & Chicks\"]",
                   "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
                 }
               ]
@@ -3160,7 +3095,7 @@
               "help": "ARIA role should be appropriate for the element",
               "nodes": [
                 {
-                  "target": "button[data-level=\"Eggs & Chicks\"]",
+                  "target": "button[data-level=\"A2 KET\"]",
                   "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
                 },
                 {
@@ -3172,7 +3107,7 @@
                   "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
                 },
                 {
-                  "target": "button[data-level=\"A2 Flyers\"]",
+                  "target": "button[data-level=\"Eggs & Chicks\"]",
                   "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
                 }
               ]
@@ -3227,7 +3162,7 @@
         {
           "link": {
             "text": "Student Admin",
-            "href": "/admin/student-admin",
+            "href": "/admin/student-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "student-admin"
           },
           "state": {
@@ -3390,7 +3325,7 @@
         {
           "link": {
             "text": "School Setup",
-            "href": "/admin/school-setup",
+            "href": "/admin/school-setup?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "school-setup"
           },
           "state": {
@@ -3542,7 +3477,7 @@
         {
           "link": {
             "text": "Users",
-            "href": "/admin/users",
+            "href": "/admin/users?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "users"
           },
           "state": {
@@ -3682,7 +3617,7 @@
         {
           "link": {
             "text": "Permissions",
-            "href": "/admin/permissions",
+            "href": "/admin/permissions?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "permissions"
           },
           "state": {
@@ -3822,7 +3757,7 @@
         {
           "link": {
             "text": "Settings",
-            "href": "/admin/settings",
+            "href": "/admin/settings?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "settings"
           },
           "state": {
@@ -4020,7 +3955,7 @@
         {
           "link": {
             "text": "Grades Tabulator",
-            "href": "/admin/grades-tabulator",
+            "href": "/admin/grades-tabulator?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "grades-tabulator"
           },
           "state": {
@@ -4106,7 +4041,7 @@
         {
           "link": {
             "text": "Open performance data",
-            "href": "/admin/performance-data",
+            "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "performance-data"
           },
           "state": {
@@ -4241,7 +4176,31 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": []
+          "axe": [
+            {
+              "id": "label",
+              "impact": "critical",
+              "help": "Form elements must have labels",
+              "nodes": [
+                {
+                  "target": "input[data-performance-queue-select=\"notify-msiw6cmn-aec20f93\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-msivpkke-0bd079d4\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-mrzd2aat-2eb906b2\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-mrzd0ywf-3d777c09\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                }
+              ]
+            }
+          ]
         },
         {
           "link": {
@@ -4292,7 +4251,7 @@
           "viewerBlock": {
             "bg": "rgb(250, 252, 255)",
             "color": "rgb(0, 0, 0)",
-            "text": "Report IDcmsghypnh0002jfg04v2qwuce"
+            "text": "Report IDcmsmv7sl600027vg0199v8qtd"
           }
         },
         {
@@ -4483,12 +4442,6 @@
           "viewTarget": "news"
         },
         {
-          "text": "New Words",
-          "href": "#newWordsPageCard",
-          "pageTarget": "new-words",
-          "viewTarget": "home"
-        },
-        {
           "text": "Current Homework",
           "href": "#studentDetailPageCard",
           "pageTarget": "current-homework",
@@ -4532,7 +4485,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -4545,7 +4498,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1630
+              "height": 1675
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4583,7 +4536,18 @@
               "width": 96,
               "height": 99
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -4646,7 +4610,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -4659,7 +4623,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 4343
+              "height": 5588
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4697,7 +4661,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 1348,
+              "height": 32
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -4760,7 +4735,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -4773,31 +4748,31 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1292
+              "height": 1458
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell",
+              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
               "bg": "rgb(241, 244, 248)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
-              "width": 0,
-              "height": 0
+              "display": "flex",
+              "width": 1348,
+              "height": 743
             },
             ".detail-calendar-shell": {
               "selector": ".detail-calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell",
+              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
               "bg": "rgb(241, 244, 248)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
-              "width": 0,
-              "height": 0
+              "display": "flex",
+              "width": 1348,
+              "height": 743
             },
             ".homework-square": {
               "selector": ".homework-square",
@@ -4811,7 +4786,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -4874,7 +4860,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -4925,7 +4911,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -4988,7 +4985,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -5001,7 +4998,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1458
+              "height": 2699
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5039,7 +5036,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -5102,7 +5110,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -5115,7 +5123,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 2699
+              "height": 1522
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5153,7 +5161,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -5216,7 +5235,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -5229,31 +5248,31 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1522
+              "height": 1888
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
+              "className": "calendar-shell detail-calendar-shell",
               "bg": "rgb(241, 244, 248)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "flex",
+              "display": "block",
               "width": 1348,
-              "height": 743
+              "height": 480
             },
             ".detail-calendar-shell": {
               "selector": ".detail-calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
+              "className": "calendar-shell detail-calendar-shell",
               "bg": "rgb(241, 244, 248)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "flex",
+              "display": "block",
               "width": 1348,
-              "height": 743
+              "height": 480
             },
             ".homework-square": {
               "selector": ".homework-square",
@@ -5267,7 +5286,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -5330,121 +5360,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
-          },
-          "surfaces": {
-            "body": {
-              "selector": "body",
-              "id": "top",
-              "className": "student-portal-page",
-              "bg": "rgb(232, 238, 244)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgb(0, 0, 0)",
-              "display": "block",
-              "width": 1440,
-              "height": 1888
-            },
-            ".calendar-shell": {
-              "selector": ".calendar-shell",
-              "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell",
-              "bg": "rgb(241, 244, 248)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
-              "width": 1348,
-              "height": 480
-            },
-            ".detail-calendar-shell": {
-              "selector": ".detail-calendar-shell",
-              "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell",
-              "bg": "rgb(241, 244, 248)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
-              "width": 1348,
-              "height": 480
-            },
-            ".homework-square": {
-              "selector": ".homework-square",
-              "id": "pastDueHomeworkBadge",
-              "className": "homework-square is-clear",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "linear-gradient(color(srgb 0.878431 0.940549 0.913255) 0px, rgb(252, 253, 255) 100%)",
-              "color": "rgb(0, 0, 0)",
-              "border": "color(srgb 0.768627 0.888941 0.82651)",
-              "display": "grid",
-              "width": 0,
-              "height": 0
-            },
-            ".field-validation-message": null,
-            ".status.bad": null,
-            ".status.ok": null,
-            "#newsWeekSetModal .portal-modal-dialog": {
-              "selector": "#newsWeekSetModal .portal-modal-dialog",
-              "id": "",
-              "className": "portal-modal-dialog",
-              "bg": "rgb(251, 255, 255)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgb(202, 215, 234)",
-              "display": "grid",
-              "width": 0,
-              "height": 0
-            },
-            "#newsWeekSetModal .portal-modal-backdrop": {
-              "selector": "#newsWeekSetModal .portal-modal-backdrop",
-              "id": "newsWeekSetModalBackdrop",
-              "className": "portal-modal-backdrop",
-              "bg": "rgba(13, 22, 34, 0.58)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgb(0, 0, 0)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            "#newsViewerSourceLink": {
-              "selector": "#newsViewerSourceLink",
-              "id": "newsViewerSourceLink",
-              "className": "",
-              "bg": "rgb(241, 244, 248)",
-              "bgImage": "none",
-              "color": "rgb(43, 43, 43)",
-              "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            "#newsComplianceModal .portal-modal-dialog": {
-              "selector": "#newsComplianceModal .portal-modal-dialog",
-              "id": "",
-              "className": "portal-modal-dialog",
-              "bg": "rgb(251, 255, 255)",
-              "bgImage": "none",
-              "color": "rgb(0, 0, 0)",
-              "border": "rgb(202, 215, 234)",
-              "display": "grid",
-              "width": 0,
-              "height": 0
-            },
-            "#newsComplianceModal .field-validation-message": null,
-            "#newsComplianceModal .status.bad": null,
-            "#newsComplianceModal .status.ok": null
-          },
-          "axe": []
-        },
-        {
-          "index": 8,
-          "state": {
-            "bodyClass": "student-portal-page",
-            "title": "Student Portal",
-            "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -5495,7 +5411,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -5577,7 +5504,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "grid",
               "width": 726,
-              "height": 1556
+              "height": 1848
             },
             "#newsWeekSetModal .portal-modal-close": {
               "selector": "#newsWeekSetModal .portal-modal-close",
@@ -5595,10 +5522,10 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(241, 244, 248)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
-              "color": "rgb(43, 43, 43)",
-              "border": "rgba(115, 136, 163, 0.96)",
+              "color": "rgb(23, 32, 51)",
+              "border": "rgb(115, 136, 163)",
               "display": "block",
               "width": 726,
               "height": 44
@@ -5615,7 +5542,18 @@
               "width": 160,
               "height": 48
             },
-            ".field-validation-message": null
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 1348,
+              "height": 32
+            }
           },
           "modalAxe": [
             {
@@ -5631,12 +5569,15 @@
             }
           ],
           "sourceLink": {
-            "color": "rgb(43, 43, 43)",
-            "bg": "rgb(241, 244, 248)",
+            "color": "rgb(23, 32, 51)",
+            "bg": "rgb(251, 255, 255)",
             "bgImage": "none",
-            "value": "https://example.com/news/test-article"
+            "value": ""
           },
-          "validationMessage": null
+          "validationMessage": {
+            "color": "rgb(138, 31, 28)",
+            "text": "Source must contain data. | Score 0.00 < 1.00 | Step 1: Open the real article page from an approved source: cnn.com, bbc.com. | Step 2: Do not use only the site home page such as bbc.com or cnn.com. | Step 3: Copy the full web address for that article and paste it again."
+          }
         },
         {
           "complianceModal": true,
@@ -5651,7 +5592,7 @@
               "border": "rgb(202, 215, 234)",
               "display": "grid",
               "width": 760,
-              "height": 530
+              "height": 1064
             },
             "#newsComplianceModal .field-validation-message": null,
             "#newsComplianceModal .portal-modal-close": {
@@ -5875,51 +5816,51 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 728
+          "y": 773
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 718
+          "y": 763
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1024
+          "y": 1069
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 1024
+          "y": 1069
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1153
+          "y": 1198
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1272
+          "y": 1317
         }
       ],
       "frameProfile": {
         "role": "student",
         "main": {
           "x": 0,
-          "y": 24,
+          "y": 36,
           "w": 1440,
-          "h": 1582,
+          "h": 1627,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -5929,9 +5870,9 @@
         "topbar": null,
         "grid": {
           "x": 31,
-          "y": 177,
+          "y": 189,
           "w": 1378,
-          "h": 1292,
+          "h": 1337,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",
@@ -6068,7 +6009,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -6107,132 +6048,132 @@
       "links": [
         {
           "text": "DASHBOARD",
-          "href": "/admin",
+          "href": "/admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "overview"
         },
         {
           "text": "QUEUE HUB",
-          "href": "/admin/queue-hub",
+          "href": "/admin/queue-hub?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "queue-hub"
         },
         {
           "text": "Student Profile",
-          "href": "/admin/profile",
+          "href": "/admin/profile?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "profile"
         },
         {
           "text": "Profile engagement",
-          "href": "/admin/profile-engagement",
+          "href": "/admin/profile-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "profile-engagement"
         },
         {
           "text": "Attendance",
-          "href": "/admin/attendance",
+          "href": "/admin/attendance?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "attendance"
         },
         {
           "text": "Attendance data",
-          "href": "/admin/attendance-admin",
+          "href": "/admin/attendance-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "attendance-admin"
         },
         {
           "text": "Assignments",
-          "href": "/admin/assignments",
+          "href": "/admin/assignments?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "assignments"
         },
         {
           "text": "Assignments data",
-          "href": "/admin/assignments-data",
+          "href": "/admin/assignments-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "assignments-data"
         },
         {
           "text": "Assignment engagement",
-          "href": "/admin/assignment-engagement",
+          "href": "/admin/assignment-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "assignment-engagement"
         },
         {
           "text": "Grades",
-          "href": "/admin/grades",
+          "href": "/admin/grades?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "grades"
         },
         {
           "text": "Grades data",
-          "href": "/admin/grades-data",
+          "href": "/admin/grades-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "grades-data"
         },
         {
           "text": "Grade table",
-          "href": "/admin/grades-tabulator",
+          "href": "/admin/grades-tabulator?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "grades-tabulator"
         },
         {
           "text": "Performance",
-          "href": "/admin/parent-tracking",
+          "href": "/admin/parent-tracking?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "parent-tracking"
         },
         {
           "text": "Performance data",
-          "href": "/admin/performance-data",
+          "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "performance-data"
         },
         {
           "text": "RC engagement",
-          "href": "/admin/performance-engagement",
+          "href": "/admin/performance-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "performance-engagement"
         },
         {
           "text": "News Reports",
-          "href": "/admin/news-reports",
+          "href": "/admin/news-reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "news-reports"
         },
         {
           "text": "All Reports",
-          "href": "/admin/reports",
+          "href": "/admin/reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "reports"
         },
         {
           "text": "Family Lookup",
-          "href": "/admin/family",
+          "href": "/admin/family?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "family"
         },
         {
           "text": "Enrollment",
-          "href": "/admin/enrollment",
+          "href": "/admin/enrollment?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "enrollment"
         },
         {
           "text": "Student Admin",
-          "href": "/admin/student-admin",
+          "href": "/admin/student-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "student-admin"
         },
         {
           "text": "School Setup",
-          "href": "/admin/school-setup",
+          "href": "/admin/school-setup?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "school-setup"
         },
         {
           "text": "Users",
-          "href": "/admin/users",
+          "href": "/admin/users?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "users"
         },
         {
           "text": "Permissions",
-          "href": "/admin/permissions",
+          "href": "/admin/permissions?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "permissions"
         },
         {
           "text": "Settings",
-          "href": "/admin/settings",
+          "href": "/admin/settings?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "settings"
         },
         {
           "text": "Grades Tabulator",
-          "href": "/admin/grades-tabulator",
+          "href": "/admin/grades-tabulator?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "grades-tabulator"
         },
         {
           "text": "Open performance data",
-          "href": "/admin/performance-data",
+          "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "pageLink": "performance-data"
         }
       ],
@@ -6240,7 +6181,7 @@
         {
           "link": {
             "text": "DASHBOARD",
-            "href": "/admin",
+            "href": "/admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "overview"
           },
           "state": {
@@ -6380,7 +6321,7 @@
         {
           "link": {
             "text": "QUEUE HUB",
-            "href": "/admin/queue-hub",
+            "href": "/admin/queue-hub?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "queue-hub"
           },
           "state": {
@@ -6520,7 +6461,7 @@
         {
           "link": {
             "text": "Student Profile",
-            "href": "/admin/profile",
+            "href": "/admin/profile?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "profile"
           },
           "state": {
@@ -6660,7 +6601,7 @@
         {
           "link": {
             "text": "Profile engagement",
-            "href": "/admin/profile-engagement",
+            "href": "/admin/profile-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "profile-engagement"
           },
           "state": {
@@ -6893,7 +6834,7 @@
         {
           "link": {
             "text": "Attendance",
-            "href": "/admin/attendance",
+            "href": "/admin/attendance?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "attendance"
           },
           "state": {
@@ -7033,7 +6974,7 @@
         {
           "link": {
             "text": "Attendance data",
-            "href": "/admin/attendance-admin",
+            "href": "/admin/attendance-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "attendance-admin"
           },
           "state": {
@@ -7173,7 +7114,7 @@
         {
           "link": {
             "text": "Assignments",
-            "href": "/admin/assignments",
+            "href": "/admin/assignments?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "assignments"
           },
           "state": {
@@ -7313,7 +7254,7 @@
         {
           "link": {
             "text": "Assignments data",
-            "href": "/admin/assignments-data",
+            "href": "/admin/assignments-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "assignments-data"
           },
           "state": {
@@ -7477,7 +7418,7 @@
         {
           "link": {
             "text": "Assignment engagement",
-            "href": "/admin/assignment-engagement",
+            "href": "/admin/assignment-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "assignment-engagement"
           },
           "state": {
@@ -7710,7 +7651,7 @@
         {
           "link": {
             "text": "Grades",
-            "href": "/admin/grades",
+            "href": "/admin/grades?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "grades"
           },
           "state": {
@@ -7850,7 +7791,7 @@
         {
           "link": {
             "text": "Grades data",
-            "href": "/admin/grades-data",
+            "href": "/admin/grades-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "grades-data"
           },
           "state": {
@@ -7990,7 +7931,7 @@
         {
           "link": {
             "text": "Grade table",
-            "href": "/admin/grades-tabulator",
+            "href": "/admin/grades-tabulator?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "grades-tabulator"
           },
           "state": {
@@ -8076,7 +8017,7 @@
         {
           "link": {
             "text": "Performance",
-            "href": "/admin/parent-tracking",
+            "href": "/admin/parent-tracking?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "parent-tracking"
           },
           "state": {
@@ -8236,7 +8177,7 @@
         {
           "link": {
             "text": "Performance data",
-            "href": "/admin/performance-data",
+            "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "performance-data"
           },
           "state": {
@@ -8371,12 +8312,36 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": []
+          "axe": [
+            {
+              "id": "label",
+              "impact": "critical",
+              "help": "Form elements must have labels",
+              "nodes": [
+                {
+                  "target": "input[data-performance-queue-select=\"notify-msiw6cmn-aec20f93\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-msivpkke-0bd079d4\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-mrzd2aat-2eb906b2\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-mrzd0ywf-3d777c09\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                }
+              ]
+            }
+          ]
         },
         {
           "link": {
             "text": "RC engagement",
-            "href": "/admin/performance-engagement",
+            "href": "/admin/performance-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "performance-engagement"
           },
           "state": {
@@ -8396,7 +8361,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1534
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8408,7 +8373,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1486
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8420,7 +8385,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1402
+              "height": 638
             },
             ".panel": {
               "selector": ".panel",
@@ -8511,101 +8476,12 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "aria-allowed-attr",
-              "impact": "critical",
-              "help": "Elements must only use supported ARIA attributes",
-              "nodes": [
-                {
-                  "target": "div[aria-title=\"Recipient\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"Positive\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"Negative\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                }
-              ]
-            },
-            {
-              "id": "aria-required-children",
-              "impact": "critical",
-              "help": "Certain ARIA roles must contain particular children",
-              "nodes": [
-                {
-                  "target": ".engagement-matrix-table-host",
-                  "failureSummary": "Fix any of the following:\n  Element has children which are not allowed: div[tabindex]"
-                },
-                {
-                  "target": "#tabulator-table-body",
-                  "failureSummary": "Fix any of the following:\n  Element has children which are not allowed: [role=rowgroup]"
-                },
-                {
-                  "target": ".tabulator-group",
-                  "failureSummary": "Fix any of the following:\n  Required ARIA child role not present: row"
-                }
-              ]
-            },
-            {
-              "id": "aria-roles",
-              "impact": "critical",
-              "help": "ARIA roles used must conform to valid values",
-              "nodes": [
-                {
-                  "target": "div[aria-title=\"Recipient\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"Positive\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"Negative\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                }
-              ]
-            },
-            {
-              "id": "aria-valid-attr",
-              "impact": "critical",
-              "help": "ARIA attributes must conform to valid names",
-              "nodes": [
-                {
-                  "target": "div[aria-title=\"Recipient\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"Positive\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"Negative\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
             "text": "News Reports",
-            "href": "/admin/news-reports",
+            "href": "/admin/news-reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "news-reports"
           },
           "state": {
@@ -8625,7 +8501,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 8807
+              "height": 8915
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8637,7 +8513,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 8759
+              "height": 8867
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8649,7 +8525,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 8675
+              "height": 8783
             },
             ".panel": {
               "selector": ".panel",
@@ -8745,7 +8621,7 @@
         {
           "link": {
             "text": "All Reports",
-            "href": "/admin/reports",
+            "href": "/admin/reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "reports"
           },
           "state": {
@@ -8885,7 +8761,7 @@
         {
           "link": {
             "text": "Family Lookup",
-            "href": "/admin/family",
+            "href": "/admin/family?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "family"
           },
           "state": {
@@ -9025,7 +8901,7 @@
         {
           "link": {
             "text": "Enrollment",
-            "href": "/admin/enrollment",
+            "href": "/admin/enrollment?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "enrollment"
           },
           "state": {
@@ -9045,7 +8921,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "flex",
               "width": 1440,
-              "height": 20022
+              "height": 19776
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9057,7 +8933,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 19974
+              "height": 19728
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9069,7 +8945,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1280,
-              "height": 19784
+              "height": 19538
             },
             ".panel": {
               "selector": ".panel",
@@ -9101,7 +8977,7 @@
               "help": "Elements must only use supported ARIA attributes",
               "nodes": [
                 {
-                  "target": "button[data-level=\"Eggs & Chicks\"]",
+                  "target": "button[data-level=\"A2 KET\"]",
                   "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
                 },
                 {
@@ -9113,7 +8989,7 @@
                   "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
                 },
                 {
-                  "target": "button[data-level=\"A2 Flyers\"]",
+                  "target": "button[data-level=\"Eggs & Chicks\"]",
                   "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-pressed=\"false\""
                 }
               ]
@@ -9124,7 +9000,7 @@
               "help": "ARIA role should be appropriate for the element",
               "nodes": [
                 {
-                  "target": "button[data-level=\"Eggs & Chicks\"]",
+                  "target": "button[data-level=\"A2 KET\"]",
                   "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
                 },
                 {
@@ -9136,7 +9012,7 @@
                   "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
                 },
                 {
-                  "target": "button[data-level=\"A2 Flyers\"]",
+                  "target": "button[data-level=\"Eggs & Chicks\"]",
                   "failureSummary": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
                 }
               ]
@@ -9191,7 +9067,7 @@
         {
           "link": {
             "text": "Student Admin",
-            "href": "/admin/student-admin",
+            "href": "/admin/student-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "student-admin"
           },
           "state": {
@@ -9211,7 +9087,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1759
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9223,7 +9099,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1711
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9235,7 +9111,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1627
+              "height": 892
             },
             ".panel": {
               "selector": ".panel",
@@ -9354,7 +9230,7 @@
         {
           "link": {
             "text": "School Setup",
-            "href": "/admin/school-setup",
+            "href": "/admin/school-setup?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "school-setup"
           },
           "state": {
@@ -9506,7 +9382,7 @@
         {
           "link": {
             "text": "Users",
-            "href": "/admin/users",
+            "href": "/admin/users?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "users"
           },
           "state": {
@@ -9646,7 +9522,7 @@
         {
           "link": {
             "text": "Permissions",
-            "href": "/admin/permissions",
+            "href": "/admin/permissions?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "permissions"
           },
           "state": {
@@ -9786,7 +9662,7 @@
         {
           "link": {
             "text": "Settings",
-            "href": "/admin/settings",
+            "href": "/admin/settings?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "settings"
           },
           "state": {
@@ -9984,7 +9860,7 @@
         {
           "link": {
             "text": "Grades Tabulator",
-            "href": "/admin/grades-tabulator",
+            "href": "/admin/grades-tabulator?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "grades-tabulator"
           },
           "state": {
@@ -10070,7 +9946,7 @@
         {
           "link": {
             "text": "Open performance data",
-            "href": "/admin/performance-data",
+            "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "pageLink": "performance-data"
           },
           "state": {
@@ -10205,7 +10081,31 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": []
+          "axe": [
+            {
+              "id": "label",
+              "impact": "critical",
+              "help": "Form elements must have labels",
+              "nodes": [
+                {
+                  "target": "input[data-performance-queue-select=\"notify-msiw6cmn-aec20f93\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-msivpkke-0bd079d4\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-mrzd2aat-2eb906b2\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-mrzd0ywf-3d777c09\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                }
+              ]
+            }
+          ]
         },
         {
           "link": {
@@ -10256,7 +10156,7 @@
           "viewerBlock": {
             "bg": "rgb(76, 76, 76)",
             "color": "rgb(251, 255, 255)",
-            "text": "Report IDcmsghypnh0002jfg04v2qwuce"
+            "text": "Report IDcmsmv7sl600027vg0199v8qtd"
           }
         },
         {
@@ -10265,9 +10165,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "rgb(82, 82, 82)",
-            "bgImage": "none",
-            "color": "rgb(229, 245, 255)"
+            "bg": "",
+            "bgImage": "",
+            "color": ""
           }
         }
       ]
@@ -10447,12 +10347,6 @@
           "viewTarget": "news"
         },
         {
-          "text": "New Words",
-          "href": "#newWordsPageCard",
-          "pageTarget": "new-words",
-          "viewTarget": "home"
-        },
-        {
           "text": "Current Homework",
           "href": "#studentDetailPageCard",
           "pageTarget": "current-homework",
@@ -10496,7 +10390,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -10509,7 +10403,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1630
+              "height": 1675
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10547,7 +10441,18 @@
               "width": 96,
               "height": 99
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10610,7 +10515,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -10623,7 +10528,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 4344
+              "height": 5588
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10661,7 +10566,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 1348,
+              "height": 32
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10724,7 +10640,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -10737,31 +10653,31 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1292
+              "height": 1460
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell",
+              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
               "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
-              "width": 0,
-              "height": 0
+              "display": "flex",
+              "width": 1348,
+              "height": 745
             },
             ".detail-calendar-shell": {
               "selector": ".detail-calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell",
+              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
               "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
-              "width": 0,
-              "height": 0
+              "display": "flex",
+              "width": 1348,
+              "height": 745
             },
             ".homework-square": {
               "selector": ".homework-square",
@@ -10775,7 +10691,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10838,7 +10765,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -10889,7 +10816,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10952,7 +10890,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -10965,7 +10903,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1460
+              "height": 2701
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11003,7 +10941,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -11066,7 +11015,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -11079,7 +11028,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 2701
+              "height": 1524
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11117,7 +11066,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -11180,7 +11140,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -11193,31 +11153,31 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1524
+              "height": 1888
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
+              "className": "calendar-shell detail-calendar-shell",
               "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "flex",
+              "display": "block",
               "width": 1348,
-              "height": 745
+              "height": 480
             },
             ".detail-calendar-shell": {
               "selector": ".detail-calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
+              "className": "calendar-shell detail-calendar-shell",
               "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "flex",
+              "display": "block",
               "width": 1348,
-              "height": 745
+              "height": 480
             },
             ".homework-square": {
               "selector": ".homework-square",
@@ -11231,7 +11191,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -11294,121 +11265,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
-          },
-          "surfaces": {
-            "body": {
-              "selector": "body",
-              "id": "top",
-              "className": "student-portal-page",
-              "bg": "rgb(0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgb(251, 255, 255)",
-              "display": "block",
-              "width": 1440,
-              "height": 1888
-            },
-            ".calendar-shell": {
-              "selector": ".calendar-shell",
-              "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell",
-              "bg": "rgb(59, 60, 62)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
-              "width": 1348,
-              "height": 480
-            },
-            ".detail-calendar-shell": {
-              "selector": ".detail-calendar-shell",
-              "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell",
-              "bg": "rgb(59, 60, 62)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
-              "width": 1348,
-              "height": 480
-            },
-            ".homework-square": {
-              "selector": ".homework-square",
-              "id": "pastDueHomeworkBadge",
-              "className": "homework-square is-clear",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "linear-gradient(color(srgb 0.284863 0.343608 0.309569) 0px, rgb(76, 76, 76) 100%)",
-              "color": "rgb(251, 255, 255)",
-              "border": "color(srgb 0.271686 0.389176 0.321098)",
-              "display": "grid",
-              "width": 0,
-              "height": 0
-            },
-            ".field-validation-message": null,
-            ".status.bad": null,
-            ".status.ok": null,
-            "#newsWeekSetModal .portal-modal-dialog": {
-              "selector": "#newsWeekSetModal .portal-modal-dialog",
-              "id": "",
-              "className": "portal-modal-dialog",
-              "bg": "rgb(59, 60, 62)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "grid",
-              "width": 0,
-              "height": 0
-            },
-            "#newsWeekSetModal .portal-modal-backdrop": {
-              "selector": "#newsWeekSetModal .portal-modal-backdrop",
-              "id": "newsWeekSetModalBackdrop",
-              "className": "portal-modal-backdrop",
-              "bg": "rgba(13, 22, 34, 0.58)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgb(251, 255, 255)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            "#newsViewerSourceLink": {
-              "selector": "#newsViewerSourceLink",
-              "id": "newsViewerSourceLink",
-              "className": "",
-              "bg": "rgb(39, 44, 47)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgb(174, 183, 197)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            "#newsComplianceModal .portal-modal-dialog": {
-              "selector": "#newsComplianceModal .portal-modal-dialog",
-              "id": "",
-              "className": "portal-modal-dialog",
-              "bg": "rgb(59, 60, 62)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "grid",
-              "width": 0,
-              "height": 0
-            },
-            "#newsComplianceModal .field-validation-message": null,
-            "#newsComplianceModal .status.bad": null,
-            "#newsComplianceModal .status.ok": null
-          },
-          "axe": []
-        },
-        {
-          "index": 8,
-          "state": {
-            "bodyClass": "student-portal-page",
-            "title": "Student Portal",
-            "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success S"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Library Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Set"
           },
           "surfaces": {
             "body": {
@@ -11459,7 +11316,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -11541,7 +11409,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "grid",
               "width": 726,
-              "height": 1556
+              "height": 1848
             },
             "#newsWeekSetModal .portal-modal-close": {
               "selector": "#newsWeekSetModal .portal-modal-close",
@@ -11579,7 +11447,18 @@
               "width": 160,
               "height": 48
             },
-            ".field-validation-message": null
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 1348,
+              "height": 32
+            }
           },
           "modalAxe": [
             {
@@ -11598,9 +11477,12 @@
             "color": "rgb(251, 255, 255)",
             "bg": "rgb(39, 44, 47)",
             "bgImage": "none",
-            "value": "https://example.com/news/test-article"
+            "value": ""
           },
-          "validationMessage": null
+          "validationMessage": {
+            "color": "rgb(255, 184, 191)",
+            "text": "Source must contain data. | Score 0.00 < 1.00 | Step 1: Open the real article page from an approved source: cnn.com, bbc.com. | Step 2: Do not use only the site home page such as bbc.com or cnn.com. | Step 3: Copy the full web address for that article and paste it again."
+          }
         },
         {
           "complianceModal": true,
@@ -11615,7 +11497,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "grid",
               "width": 760,
-              "height": 530
+              "height": 1064
             },
             "#newsComplianceModal .field-validation-message": null,
             "#newsComplianceModal .portal-modal-close": {
@@ -11839,51 +11721,51 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 728
+          "y": 773
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 718
+          "y": 763
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1024
+          "y": 1069
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 1024
+          "y": 1069
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1153
+          "y": 1198
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1272
+          "y": 1317
         }
       ],
       "frameProfile": {
         "role": "student",
         "main": {
           "x": 0,
-          "y": 24,
+          "y": 36,
           "w": 1440,
-          "h": 1582,
+          "h": 1627,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -11893,9 +11775,9 @@
         "topbar": null,
         "grid": {
           "x": 31,
-          "y": 177,
+          "y": 189,
           "w": 1378,
-          "h": 1292,
+          "h": 1337,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",
