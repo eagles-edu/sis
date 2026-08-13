@@ -3,6 +3,7 @@
 
 import { checkTextWithLanguageTool } from "./student-news-language-tool.mjs"
 import { parseStudentNewsSentence } from "./student-news-parser.mjs"
+import { checkVerbTransitivity } from "./verb-transitivity.mjs"
 import { validateVocabularyEntry, vocabularyEntryError } from "./vocabulary-syllabication.mjs"
 
 /**
@@ -182,6 +183,9 @@ function normalizeStudentNewsVocabulary(value) {
     vietnamese: normalizeText(row?.vietnamese),
     syllabication: normalizeText(row?.syllabication),
     definition: normalizeText(row?.definition),
+    verbTransitivity: normalizeLower(row?.esl?.verbTransitivity),
+    etymologyType: normalizeLower(row?.esl?.etymologyType),
+    etymology: normalizeText(row?.esl?.etymology),
   }))
 }
 
@@ -250,9 +254,54 @@ function findStudentNewsVocabularyExtraPointWarnings(value) {
     .filter(Boolean)
 }
 
+function findStudentNewsTransitivityAttempts(value) {
+  return normalizeStudentNewsVocabulary(value)
+    .map((row, index) => {
+      if (row.partOfSpeech !== "verb" || !row.verbTransitivity) return null
+      let verification
+      try {
+        verification = checkVerbTransitivity(row.english, row.verbTransitivity)
+      } catch (error) {
+        verification = { found: false, matchesExpected: null, verificationStatus: "unavailable", verificationMessage: error.message || "Transitivity verification is unavailable." }
+      }
+      return {
+        index,
+        english: row.english,
+        transitivity: row.verbTransitivity,
+        fields: ["verbTransitivity"],
+        verificationStatus: verification.matchesExpected === true ? "verified" : verification.matchesExpected === false ? "mismatch" : "unavailable",
+        verification: {
+          found: verification.found === true,
+          matchesExpected: verification.matchesExpected ?? null,
+          classification: verification.classification || null,
+          classificationEvidence: verification.classificationEvidence || null,
+        },
+        message: `Entry ${index + 1}${row.english ? ` ("${row.english}")` : ""} includes an optional transitivity attempt for extra points.`,
+      }
+    })
+    .filter(Boolean)
+}
+
+function findStudentNewsEtymologyAttempts(value) {
+  return normalizeStudentNewsVocabulary(value)
+    .map((row, index) => {
+      if (!row.etymologyType && !row.etymology) return null
+      return {
+        index,
+        english: row.english,
+        fields: [row.etymologyType ? "etymologyType" : null, row.etymology ? "etymology" : null].filter(Boolean),
+        etymologyType: row.etymologyType || null,
+        etymology: row.etymology || null,
+        message: `Entry ${index + 1}${row.english ? ` ("${row.english}")` : ""} includes an optional etymology attempt for extra points.`,
+      }
+    })
+    .filter(Boolean)
+}
+
 async function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM } = {}) {
   if (value === undefined || value === null) return { passed: true, message: "", count: 0 }
   const rows = normalizeStudentNewsVocabulary(value)
+  const transitivityAttempts = findStudentNewsTransitivityAttempts(value)
   const populated = rows
     .map((row, index) => ({ row, index }))
     .filter(({ row }) => Object.values(row).some(Boolean))
@@ -279,9 +328,11 @@ async function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEW
       count: populated.length,
       rowErrors,
       rowWarnings,
+      transitivityAttemptCount: transitivityAttempts.length,
+      transitivityAttempts,
     }
   }
-  return { passed: true, message: "", count: populated.length, rowErrors: [], rowWarnings }
+  return { passed: true, message: "", count: populated.length, rowErrors: [], rowWarnings, transitivityAttemptCount: transitivityAttempts.length, transitivityAttempts }
 }
 
 /**
@@ -2120,6 +2171,7 @@ export async function evaluateStudentNewsMinimumRequirements(payload = {}, optio
     }
   }
   const vocabularyWarnings = vocabularyValidation.rowWarnings || []
+  const transitivityAttempts = vocabularyValidation.transitivityAttempts || []
 
   return {
     status: Object.keys(failedFields).length ? "fail" : "pass",
@@ -2128,10 +2180,15 @@ export async function evaluateStudentNewsMinimumRequirements(payload = {}, optio
     requiredTasks: buildTasksFromFailedFields(failedFields, config.allowedDomains),
     sentenceReports,
     config,
-    warningFields: vocabularyWarnings.length ? {
+    warningFields: vocabularyWarnings.length || transitivityAttempts.length ? {
       vocabulary: {
-        message: "Some vocabulary entries could not be verified right now.",
+        message: [
+          vocabularyWarnings.length ? "Some vocabulary entries could not be verified right now." : "",
+          transitivityAttempts.length ? `${transitivityAttempts.length} optional transitivity attempt(s) can earn extra points.` : "",
+        ].filter(Boolean).join(" "),
         rowWarnings: vocabularyWarnings,
+        transitivityAttemptCount: transitivityAttempts.length,
+        transitivityAttempts,
       },
     } : {},
   }
@@ -2139,6 +2196,7 @@ export async function evaluateStudentNewsMinimumRequirements(payload = {}, optio
 
 export {
   evaluateStudentNewsVocabulary,
+  findStudentNewsTransitivityAttempts,
   isValidStudentNewsSyllabication,
   normalizeStudentNewsVocabulary,
 }
@@ -2493,12 +2551,14 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
   }
 
   const vocabularyRowWarnings = findStudentNewsVocabularyExtraPointWarnings(payload?.vocabulary)
+  const transitivityAttempts = findStudentNewsTransitivityAttempts(payload?.vocabulary)
+  const etymologyAttempts = findStudentNewsEtymologyAttempts(payload?.vocabulary)
   const vocabularyRows = normalizeStudentNewsVocabulary(payload?.vocabulary)
   const populatedVocabularyRows = vocabularyRows.filter((row) => Object.values(row).some(Boolean))
   const vocabularyExtraRows = populatedVocabularyRows.length > config.vocabularyMinimumWords
     ? populatedVocabularyRows.slice(config.vocabularyMinimumWords)
     : []
-  if (vocabularyRowWarnings.length || vocabularyExtraRows.length) {
+  if (vocabularyRowWarnings.length || vocabularyExtraRows.length || transitivityAttempts.length || etymologyAttempts.length) {
     const vocabularyMessages = []
     if (vocabularyExtraRows.length) {
       vocabularyMessages.push(`${vocabularyExtraRows.length} vocabulary entr${vocabularyExtraRows.length === 1 ? "y" : "ies"} beyond the required five can earn extra points.`)
@@ -2506,12 +2566,23 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
     if (vocabularyRowWarnings.length) {
       vocabularyMessages.push("A multi-syllable part of a compound can be split for extra points.")
     }
+    if (transitivityAttempts.length) {
+      vocabularyMessages.push(`${transitivityAttempts.length} optional transitivity attempt${transitivityAttempts.length === 1 ? "" : "s"} can earn extra points.`)
+    }
+    if (etymologyAttempts.length) {
+      vocabularyMessages.push(`${etymologyAttempts.length} optional etymology attempt${etymologyAttempts.length === 1 ? "" : "s"} can earn extra points.`)
+    }
     warningFields.vocabulary = {
       message: vocabularyMessages.join(" "),
       score: populatedVocabularyRows.length,
       threshold: config.vocabularyMinimumWords,
       extraEntryCount: vocabularyExtraRows.length,
       rowWarnings: vocabularyRowWarnings,
+      transitivityAttemptCount: transitivityAttempts.length,
+      transitivityAttempts,
+      etymologyAttemptCount: etymologyAttempts.length,
+      etymologyAttempts,
+      extraPointCount: vocabularyExtraRows.length + vocabularyRowWarnings.length + transitivityAttempts.length + etymologyAttempts.length,
     }
   }
   const revisionTasks = buildTasksFromFailedFields(failedFields, allowedDomains)
@@ -2536,6 +2607,28 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
         "Add additional complete entries for extra points.",
       ],
       criterion: `Optional: provide more than ${config.vocabularyMinimumWords} complete vocabulary entries.`,
+    })
+  }
+  if (transitivityAttempts.length) {
+    warningTasks.push({
+      field: "vocabulary",
+      label: "Transitivity extra points",
+      steps: [
+        "Choose a transitivity type when the vocabulary row is a verb.",
+        "The bundled list is advisory; an unknown or differing result does not block saving.",
+      ],
+      criterion: "Optional: attempt a transitivity selection for a verb vocabulary row.",
+    })
+  }
+  if (etymologyAttempts.length) {
+    warningTasks.push({
+      field: "vocabulary",
+      label: "Etymology extra points",
+      steps: [
+        "Choose an origin type when you know the word history.",
+        "Add a brief word-origin note when you can support it; this field is optional and does not block saving.",
+      ],
+      criterion: "Optional: attempt an etymology type or word-origin note for a vocabulary row.",
     })
   }
   return {

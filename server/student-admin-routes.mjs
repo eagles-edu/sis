@@ -28,7 +28,9 @@ import {
 } from "../src/modules/admin/student-new-words.mjs"
 import {
   applyMerriamWebsterLibraryEntry,
+  autoFillLibraryEntryVerbTransitivity,
   assignLibraryWork,
+  checkLibraryEntryVerbTransitivity,
   createLibraryLegacyPreflight,
   cutoverLegacyLibrary,
   getLibraryEntry,
@@ -6607,6 +6609,16 @@ async function handleApiRequest(request, response, pathname, url) {
     sendJson(response, 200, await listLibraryEntries(Object.fromEntries(url.searchParams.entries())))
     return true
   }
+  if (method === "POST" && pathname === `${ADMIN_LIBRARY_API_PATH}/transitivity-check`) {
+    const payload = await parseBody(request)
+    sendJson(response, 200, { ok: true, ...checkLibraryEntryVerbTransitivity(payload) })
+    return true
+  }
+  if (method === "POST" && pathname === `${ADMIN_LIBRARY_API_PATH}/transitivity-autofill`) {
+    const payload = await parseBody(request)
+    sendJson(response, 200, { ok: true, ...autoFillLibraryEntryVerbTransitivity(payload) })
+    return true
+  }
   if (method === "GET" && pathname === `${ADMIN_LIBRARY_API_PATH}/queue`) {
     sendJson(response, 200, await listLibraryReviewQueue(Object.fromEntries(url.searchParams.entries())))
     return true
@@ -6621,7 +6633,7 @@ async function handleApiRequest(request, response, pathname, url) {
   }
   if (method === "POST" && pathname === `${ADMIN_LIBRARY_API_PATH}/contributions`) {
     const payload = await parseBody(request)
-    sendJson(response, 201, await submitLibraryContribution(normalizeText(session?.studentRefId || session?.username), normalizeText(session?.username), payload))
+    sendJson(response, 201, await submitLibraryContribution(null, normalizeText(session?.username), payload))
     return true
   }
   if (method === "POST" && pathname === `${ADMIN_LIBRARY_API_PATH}/legacy/preflight`) {

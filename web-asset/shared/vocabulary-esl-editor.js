@@ -4,20 +4,31 @@
   const safeUid = (value) => String(value || "shared").replace(/[^A-Za-z0-9_-]/gu, "-");
   const option = (value, label = value) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
   const select = (field, label, values, extra = "", rowUid = "shared") => `<label class="vocabulary-pos-control" ${extra}>${escapeHtml(label)}<select name="vocabularyEsl-${escapeHtml(field)}-${safeUid(rowUid)}" data-vocabulary-esl-field="${escapeHtml(field)}"><option value="">Select</option>${values.map((value) => Array.isArray(value) ? option(value[0], value[1]) : option(value)).join("")}</select></label>`;
-  const transitivityHelp = `<p class="vocabulary-transitivity-help"><strong>Types of transitivity</strong><br>Intransitive: no object needed; the thought is complete on its own (e.g., The baby sleeps.).<br>Monotransitive: takes one direct object answering what? or whom? (e.g., She baked a cake.).<br>Ditransitive: takes both an indirect object and a direct object (e.g., He gave Mary a book.).<br>Ambitransitive: can be either transitive or intransitive depending on the sentence (e.g., He reads a book vs. He reads quietly.).</p>`;
+  const transitivityHelp = `<p class="vocabulary-transitivity-help"><strong>Types of transitivity</strong><br>Intransitive: no object needed; the thought is complete on its own (e.g., The baby sleeps.).<br>Transitive: takes an object; use this general choice when the exact subtype is not yet known.<br>Monotransitive: takes one direct object answering what? or whom? (e.g., She baked a cake.).<br>Ditransitive: takes both an indirect object and a direct object (e.g., He gave Mary a book.).<br>Ambitransitive: can be either transitive or intransitive depending on the sentence (e.g., He reads a book vs. He reads quietly.).</p>`;
   const grammarFields = ["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber"];
   const nounTypes = [["common", "Common"], ["proper", "Proper"], ["concrete", "Concrete"], ["abstract", "Abstract"], ["material", "Material"], ["collective", "Collective"], ["compound", "Compound"], ["possessive", "Possessive"]];
   const nounNumbers = [["singular", "Singular"], ["plural", "Plural"], ["singular and plural", "Singular and Plural"]];
+  const etymologyTypes = [["native", "Native English"], ["borrowed", "Borrowed / loanword"], ["derived", "Derived / affixed"], ["compound", "Compound"], ["eponym", "Eponym"], ["onomatopoeic", "Onomatopoeic"], ["unknown", "Unknown"]];
 
-  function parametersHtml(rowUid, { includeMwFill = false } = {}) {
+  function etymologyHtml(rowUid) {
     const uid = safeUid(rowUid);
-    const mwFill = includeMwFill ? `<button type="button" class="portal-button portal-button-alt vocabulary-mw-fill" data-vocabulary-mw-preview title="Fill only fields returned authoritatively by Merriam-Webster." aria-label="Fill Merriam-Webster fields">MW fill</button>` : "";
+    return `<div class="vocabulary-etymology-fields" data-vocabulary-etymology-fields>
+      ${select("etymologyType", "Origin type (optional)", etymologyTypes, "", uid)}
+      <label class="vocabulary-pos-control">Etymology / word origin (optional)<input name="vocabularyEsl-etymology-${uid}" data-vocabulary-esl-field="etymology" placeholder="Borrowed from French; formed with ..." aria-label="Etymology or word origin, optional"></label>
+    </div>`;
+  }
+
+  function parametersHtml(rowUid, { includeMwFill = false, includeTransitivityTools = false } = {}) {
+    const uid = safeUid(rowUid);
+    const mwFill = includeMwFill ? `<button type="button" class="portal-button portal-button-alt vocabulary-mw-fill" data-vocabulary-mw-preview title="Fill only fields returned authoritatively by Merriam-Webster." aria-label="Fill Merriam-Webster fields">MW fill</button><p class="small" data-vocabulary-mw-message aria-live="polite"></p><details data-vocabulary-mw-details hidden><summary>View complete MW data</summary><pre data-vocabulary-mw-json></pre></details>` : "";
+    const transitivityTools = includeTransitivityTools ? `<div class="vocabulary-transitivity-check"><button type="button" class="portal-button portal-button-alt" data-vocabulary-transitivity-check title="Compare the entered verb forms with the bundled corpus evidence. This check is advisory; saving remains allowed.">Check</button><button type="button" class="portal-button portal-button-alt" data-vocabulary-transitivity-autofill title="Suggest transitivity from the bundled corpus list. Review the suggestion before saving.">Auto-fill</button><p class="small" data-vocabulary-transitivity-message aria-live="polite"></p></div>` : "";
     return `<div class="vocabulary-pos-parameters" data-vocabulary-pos-parameters hidden>
       <div class="vocabulary-pos-controls" data-vocabulary-pos-controls></div>
       <div class="vocabulary-verb-forms" data-vocabulary-verb-forms hidden>
         ${[ ["verbInfinitive", "Infinitive"], ["verbV1", "V1 - present"], ["verbV2", "V2 - past"], ["verbV3", "V3 - past participle"], ["verbV4", "V4 - present participle"], ["verbV5", "V5 - -s/-es form"] ].map(([field, placeholder]) => `<input name="vocabularyEsl-${field}-${uid}" data-vocabulary-esl-field="${field}" placeholder="${placeholder}" aria-label="${placeholder}">`).join("")}
       </div>
       ${mwFill}
+      ${transitivityTools}
     </div>`;
   }
 
@@ -31,7 +42,7 @@
       select("displayVerbForm", "Display form", ["infinitive", "v1", "v2", "v3", "v4", "v5"], "", rowUid),
       select("grammarFamily", "Verb type", ["primary", "modal", "action"], "", rowUid),
       select("verbRegularity", "Regularity", ["regular", "irregular"], "", rowUid),
-      `${select("verbTransitivity", "Type of transitivity", [["intransitive", "Intransitive"], ["monotransitive", "Monotransitive"], ["ditransitive", "Ditransitive"], ["ambitransitive", "Ambitransitive"]], "", rowUid)}${transitivityHelp}`,
+      `${select("verbTransitivity", "Type of transitivity (optional)", [["intransitive", "Intransitive"], ["transitive", "Transitive (general)"], ["monotransitive", "Monotransitive"], ["ditransitive", "Ditransitive"], ["ambitransitive", "Ambitransitive"]], "", rowUid)}${transitivityHelp}`,
     ].join("");
     if (pos === "adjective") return select("grammarSubtype", "Adjective subtype", ["-ed adjective", "-ing adjective"], "", rowUid);
     if (pos === "adverb") return select("grammarSubtype", "Adverb subtype", ["manner", "place", "time", "frequency", "degree", "sentence"], "", rowUid);
@@ -95,12 +106,16 @@
   function hydrate(row, data = {}) {
     const classificationValue = data.grammarClassification || {};
     sync(row);
-    const set = (field, value) => { const input = row.querySelector(`[data-vocabulary-esl-field="${field}"]`); if (input) input.value = String(value || ""); };
+    const inputFor = (field) => row.querySelector(`[data-vocabulary-esl-field="${field}"], [data-vocabulary-field="${field}"]`);
+    const set = (field, value) => { const input = inputFor(field); if (input) input.value = String(value || ""); };
+    set("partOfSpeech", data.partOfSpeech);
+    sync(row);
     set("grammarFamily", classificationValue.grammarFamily);
     sync(row);
     set("grammarSubtype", classificationValue.grammarSubtype);
     sync(row);
     Object.entries({ ...data, ...classificationValue }).forEach(([field, value]) => set(field, value));
+    sync(row);
   }
 
   const lookupUrl = (label, english) => {
@@ -183,7 +198,7 @@
     return output.join("");
   }
 
-  function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false } = {}) {
+  function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false, includeTransitivityTools = false } = {}) {
     const uid = safeUid(rowUid);
     const options = POS.map((part) => `<option value="${part}">${part}</option>`).join("");
     const rowActions = removable
@@ -200,7 +215,8 @@
           <input name="vocabularyEnglish-${uid}" type="text" data-vocabulary-field="english" placeholder="Word/phrase EN" aria-label="Word or phrase in English" autocapitalize="off" required>
           <input name="vocabularyVietnamese-${uid}" type="text" data-vocabulary-field="vietnamese" placeholder="Word/phrase VI" aria-label="Word or phrase in Vietnamese" required>
           <input name="vocabularySyllabication-${uid}" type="text" data-vocabulary-field="syllabication" placeholder="Do: air-strike | Extra: air-con-di-tion-ing" aria-label="Syllabication: keep compounds exact; optionally split multi-syllable compound parts for extra points" required>
-          ${parametersHtml(uid, { includeMwFill })}
+          ${etymologyHtml(uid)}
+          ${parametersHtml(uid, { includeMwFill, includeTransitivityTools })}
           <div class="news-vocabulary-definition-row">
             <div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">
               ${["LD", "GT", "WH"].map((label) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup" data-vocabulary-lookup="${label}" title="Look up the ${label} field to complete this vocabulary entry" aria-label="Look up the ${label} field">${label}</button>`).join("")}

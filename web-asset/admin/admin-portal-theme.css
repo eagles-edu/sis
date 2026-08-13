@@ -6394,6 +6394,46 @@ body.admin-portal-page main.library-admin-main {
   scrollbar-gutter: stable;
 }
 
+.library-review-sidebar-heading {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-block-end: 12px;
+}
+
+.library-review-sidebar-heading h3 {
+  margin: 0;
+}
+
+.library-review-sidebar-heading button {
+  flex: 0 0 auto;
+}
+
+.library-review-shell.is-sidebar-collapsed {
+  grid-template-columns: 56px minmax(0, 1fr);
+}
+
+.library-review-list.is-collapsed .library-review-sidebar-body {
+  display: none;
+}
+
+.library-review-list.is-collapsed .library-review-sidebar-heading {
+  align-items: center;
+  flex-direction: column;
+  margin: 0;
+}
+
+.library-review-list.is-collapsed .library-review-sidebar-heading h3 {
+  font-size: 0;
+  writing-mode: vertical-rl;
+}
+
+.library-review-list.is-collapsed .library-review-sidebar-heading h3::after {
+  content: "Queue";
+  font-size: 0.9rem;
+}
+
 .library-review-field-grid {
   display: grid;
   gap: 12px;
@@ -6506,6 +6546,26 @@ body.admin-portal-page .library-review-pane .news-vocabulary-row > [data-vocabul
 
 body.admin-portal-page .library-review-pane .news-vocabulary-row > [data-vocabulary-field="syllabication"] {
   grid-column: 4;
+}
+body.admin-portal-page .library-review-pane .news-vocabulary-row > .vocabulary-etymology-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+body.admin-portal-page .library-review-pane .vocabulary-etymology-fields .vocabulary-pos-control {
+  flex: 1 1 22ch;
+  max-inline-size: 27.5ch;
+}
+body.admin-portal-page .library-review-pane .vocabulary-etymology-fields input,
+body.admin-portal-page .library-review-pane .vocabulary-etymology-fields select {
+  box-sizing: border-box;
+  font-size: 1rem;
+  min-height: 48px;
+  min-width: 0;
+  padding: 12px 14px;
+  width: 100%;
 }
 
 body.admin-portal-page .library-review-pane .news-vocabulary-row > [data-vocabulary-field="partOfSpeech"] {
@@ -6691,6 +6751,12 @@ body.admin-portal-page .vocabulary-verb-forms {
   padding-inline-start: 9px;
 }
 
+.library-review-pane [data-vocabulary-field].is-different,
+.library-review-pane .vocabulary-pos-control.is-different {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
 .library-review-empty {
   align-items: center;
   display: grid;
@@ -6723,6 +6789,10 @@ body.admin-portal-page .menu-group-nested > .menu-group-links {
 
 @media (max-width: 900px) {
   .library-review-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .library-review-shell.is-sidebar-collapsed {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -7396,4 +7466,31 @@ html[data-theme="dark"] .sis-consent-panel {
     max-inline-size: none !important;
     width: 100%;
   }
+}
+
+body.admin-portal-page #libraryMwPreviewDialog {
+  background: var(--portal-surface-card);
+  border: 1px solid var(--portal-border-strong);
+  border-radius: var(--radius-2);
+  color: var(--portal-text);
+  max-block-size: 85vh;
+  max-inline-size: min(900px, 92vw);
+  padding: 0;
+  width: min(900px, 92vw);
+}
+
+body.admin-portal-page #libraryMwPreviewDialog::backdrop {
+  background: var(--portal-modal-backdrop);
+}
+
+.library-mw-preview-json {
+  background: var(--portal-surface-support);
+  border-top: 1px solid var(--portal-border);
+  box-sizing: border-box;
+  margin: 0;
+  max-block-size: 72vh;
+  overflow: auto;
+  padding: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
 }

@@ -13,6 +13,7 @@
   },
   "scripts": {
     "html:normalize-self-closing": "node tools/normalize-html-self-closing.mjs",
+    "verbnet:calibrate": "node tools/build-verbnet-transitivity-calibration.mjs",
     "build:admin-assets": "node tools/build-admin-assets.mjs",
     "build:admin-assets:check": "node tools/build-admin-assets.mjs --check",
     "extract:critical-css": "node tools/extract-critical-css.mjs web-asset/admin/student-admin.html web-asset/admin/student-admin.critical.css web-asset/shared/portal-theme.css web-asset/admin/student-admin.css",

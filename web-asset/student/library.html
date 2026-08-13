@@ -73,7 +73,7 @@
             entry.</p>
         </div>
         <form id="libraryFilters" class="library-toolbar"><label>Search<input id="librarySearch" type="search"
-              placeholder="English, Vietnamese, definition, or AWL family"></label><label>Part of speech<select
+              placeholder="English, Vietnamese, or definition"></label><label>Part of speech<select
               id="libraryPos">
               <option value="">All</option>
               <option>noun</option>
@@ -83,18 +83,6 @@
               <option>pronoun</option>
               <option>conjunction</option>
               <option>preposition</option>
-            </select></label><label>Academic sublist<select id="libraryAwl">
-              <option value="">All</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-              <option value="9">9</option>
-              <option value="10">10</option>
             </select></label><label>Sort<select id="librarySort">
               <option value="english">Alphabetically</option>
               <option value="syllableCount">Number of syllables</option>
@@ -140,7 +128,7 @@
       const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
       async function loadLibrary() {
         const status = document.getElementById("libraryStatus");
-        const query = new URLSearchParams({ page: String(libraryPage), pageSize: "25", search: document.getElementById("librarySearch").value, partOfSpeech: document.getElementById("libraryPos").value, awlSublist: document.getElementById("libraryAwl").value, sortBy: document.getElementById("librarySort").value, myWords: document.getElementById("libraryMyWords").checked ? "true" : "" });
+        const query = new URLSearchParams({ page: String(libraryPage), pageSize: "25", search: document.getElementById("librarySearch").value, partOfSpeech: document.getElementById("libraryPos").value, sortBy: document.getElementById("librarySort").value, myWords: document.getElementById("libraryMyWords").checked ? "true" : "" });
         try {
           status.textContent = "Loading Library…";
           const response = await fetch(`${libraryApi}?${query}`, { credentials: "include" });
@@ -150,7 +138,7 @@
           libraryItems = new Map((data.items || []).map((entry) => [entry.id, entry]));
           document.getElementById("libraryResults").innerHTML = (data.items || []).map((entry) => {
            const editors = (entry.editors || []).map((editor) => `${editor.name} (${new Date(editor.at).toLocaleString()})`).join(", ");
-            const provenance = `<div class="library-meta">Created by ${esc(entry.createdByName)} on ${new Date(entry.createdAt).toLocaleString()} · Last edited by ${esc(entry.lastEditedByName)} on ${new Date(entry.updatedAt).toLocaleString()}</div><div class="library-meta">Editors: ${esc(editors || entry.lastEditedByName)}${entry.awlFamilyHeadword ? ` · AWL family: ${esc(entry.awlFamilyHeadword)} (Sublist ${esc(entry.awlSublist)})` : ""}</div>`;
+            const provenance = `<div class="library-meta">Created by ${esc(entry.createdByName)} on ${new Date(entry.createdAt).toLocaleString()} · Last edited by ${esc(entry.lastEditedByName)} on ${new Date(entry.updatedAt).toLocaleString()}</div><div class="library-meta">Editors: ${esc(editors || entry.lastEditedByName)}</div>`;
             return window.SIS_VOCABULARY_ESL.flatEntryHtml(entry, { editClass: "library-edit", editAttributes: `data-entry-id="${esc(entry.id)}"`, extraHtml: provenance });
           }).join("") || "<p class=\"small\">No approved Library entries match these filters.</p>";
           status.textContent = `${libraryTotal}${libraryTotal === 1 ? " entry" : " entries"}`;
@@ -182,7 +170,7 @@
         form.addEventListener("submit", async (event) => {
           event.preventDefault();
           const payload = Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, row.querySelector(`[data-vocabulary-field="${key}"]`)?.value.trim() || ""]));
-          Object.assign(payload, Object.fromEntries(["countability", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"].map((key) => [key, row.querySelector(`[data-vocabulary-esl-field="${key}"]`)?.value.trim() || ""]).filter(([, value]) => value)));
+          Object.assign(payload, Object.fromEntries(["countability", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "etymologyType", "etymology"].map((key) => [key, row.querySelector(`[data-vocabulary-esl-field="${key}"]`)?.value.trim() || ""]).filter(([, value]) => value)));
           payload.grammarClassification = window.SIS_VOCABULARY_ESL?.classification(row) || {};
           const response = await fetch(`${libraryApi}/entries/${encodeURIComponent(entry.id)}/edit`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
           const data = await response.json();

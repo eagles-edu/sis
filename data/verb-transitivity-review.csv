@@ -1,0 +1,813 @@
+verb,reviewReason,affectedFormCount,affectedForms,pdfRows,pdfSlots,corpusClassification,verbnetClassification,status,frameEvidence,verbnetClasses,reviewStatus
+abash,classification-gap,3,"abash, abashes, abashing",1,"V1, V4, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+abate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+abide,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+absorb,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive),"absorb-39.8, learn-14-2",pending
+accept,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive),"accept-77.1, characterize-29.2-1-1, obtain-13.5.2",pending
+achieve,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),complete-55.2,pending
+acquire,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.asset (monotransitive),obtain-13.5.2-1,pending
+act,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive),"act-114-1-1, masquerade-29.6-1, seem-109-1",pending
+add,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.co-patient (monotransitive); NP V NP (monotransitive); NP V NP together (monotransitive); NP V NP PP.recipient (monotransitive),"mix-22.1-2, multiply-108, say-37.7-1",pending
+address,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),illustrate-25.3,pending
+adjust,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP (monotransitive); NP V NP S_ING (monotransitive),adjust-26.9,pending
+admire,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive),admire-31.2,pending
+admit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP ADV (monotransitive); NP V NP PP.location (monotransitive); NP V NP to be NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"admit-64.3-1, confess-37.10, conjecture-29.5",pending
+advise,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,"advise-37.9-1, say-37.7-1-1",pending
+afford,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+agree,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,correspond-36.1-1,pending
+alight,classification-gap; verbnet-unmatched,1,alit,19,"V2, V3",intransitive,uncertain,unmatched,,,pending
+allow,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S (monotransitive); NP V NP PP.goal (monotransitive),"admit-64.3, allow-64.1-1, future_having-13.3",pending
+animate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),remedy-45.7,pending
+announce,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"order-58.3, reflexive_appearance-48.1.2, say-37.7-1-1",pending
+answer,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),"reciprocate-112-1, subordinate-95.2.1",pending
+apologize,verbnet-unmatched,0,,,,intransitive,uncertain,unmatched,,,pending
+applaud,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive),"admire-31.2, judgment-33.1-1",pending
+apply,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADV (monotransitive); NP V NP PP.predicate (monotransitive); NP V NP S_INF (monotransitive),"put-9.1-1, use-105.1",pending
+arrange,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP PP.destination (monotransitive); NP V NP ADVP (monotransitive),"build-26.1, establish-55.5-1, put-9.1",pending
+arrest,classification-gap; corpus-vs-verbnet-conflict,1,arrests,33,V5,ambitransitive,monotransitive,conflict,NP V NP PP.attribute (monotransitive); NP V NP PP.theme PP.attribute (monotransitive); NP V NP PP.attribute PP.theme (monotransitive),prosecute-33.2-1,pending
+assert,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP to be NP (monotransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"conjecture-29.5, reflexive_appearance-48.1.2",pending
+assort,classification-gap; verbnet-unmatched,2,"assort, assorts",36,"V1, V5",,uncertain,unmatched,,,pending
+astonish,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+attend,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"attend-107.4-1, caring-75.2-1-1, peer-30.3",pending
+attract,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.result (monotransitive),"earn-54.6, lure-59.3",pending
+audit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive),assessment-34.1,pending
+avoid,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"avoid-52, void-106",pending
+awake,classification-gap,2,"awake, awoken",43,"V1, V3",,ambitransitive,provisional,NP V (intransitive); NP V NP ADJ (monotransitive),"appear-48.1.1, other_cos-45.4-1",pending
+banish,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.destination (monotransitive),banish-10.2,pending
+bash,classification-gap,4,"bash, bashed, bashes, bashing",46,"V1, V2, V3, V4, V5",,ditransitive,provisional,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP together (monotransitive); NP V NP ADJP (monotransitive); NP V NP ADJP PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP PP (monotransitive); NP V NP ADJP PP.result (monotransitive); NP V NP-Dative NP (ditransitive),"bump-18.4-1, hit-18.1, throw-17.1-1",pending
+bat,corpus-vs-verbnet-conflict,0,,,,intransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive); NP V NP-Dative NP (ditransitive),"crane-40.3.2, throw-17.1-1",pending
+be is,classification-gap,1,be is,48,V1,,,pending,,,pending
+bear,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive); NP V NP NP (ditransitive),"admire-31.2, birth-28.2-1-1, support-15.3",pending
+beautify,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+become,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive),become-109.1-1-1,pending
+befall,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,occur-48.3-1,pending
+beg,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.Topic (monotransitive),beg-58.2-1-1,pending
+begin,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.subeventuality (monotransitive); NP V NP ADJ (monotransitive),"begin-55.1-1-1, terminus-47.9",pending
+behave,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,"masquerade-29.6, masquerade-29.6-1",pending
+behold,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),sight-30.2,pending
+believe,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive),"admire-31.2, conjecture-29.5-1",pending
+belong,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,attend-107.4-2,pending
+bereave,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),deprive-10.6.2,pending
+beseech,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+bet,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"bill-54.5-1, rely-70, risk-94",pending
+betray,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+bid,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+bind,classification-gap,1,bind,68,V1,,monotransitive,provisional,NP V NP PP.theme (monotransitive); NP V NP (monotransitive),"fill-9.8-1, shake-22.3-2-1",pending
+bite,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP ADJP (monotransitive); NP V NP ADJP PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP PP.location (monotransitive),"hurt-40.8.3-2, swat-18.2",pending
+bless,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.attribute (monotransitive),judgment-33.1-1,pending
+blossom,classification-gap,1,blossoms,72,V5,intransitive,intransitive,provisional,NP V (intransitive),"entity_specific_cos-45.5, entity_specific_modes_being-47.2",pending
+blow,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive); NP V NP PP.co-patient (monotransitive); NP V NP apart (monotransitive),"build-26.1, crane-40.3.2, split-23.2, weather-57",pending
+blur,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+board,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive); NP V NP PP.location (monotransitive),"butter-9.9, odge-46-1",pending
+boast,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),complain-37.8,pending
+boil,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive),"cooking-45.3, preparing-26.3-2",pending
+box,classification-gap,2,"box, boxes",80,"V1, V5",,ambitransitive,provisional,NP V NP (monotransitive); NP V NP PP.theme (monotransitive); NP V NP PP.theme whether S (monotransitive); NP V NP PP.theme what S (monotransitive); NP V NP PP.theme whether S_INF (monotransitive); NP V NP PP.theme what S_INF (monotransitive); NP V (intransitive); NP V NP PP.destination (monotransitive),"battle-36.4-1, meet-36.3-2, pocket-9.10",pending
+bray,classification-gap,3,"bray, brayed, brays",81,"V1, V2, V3, V5",,ambitransitive,provisional,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"animal_sounds-38, manner_speaking-37.3",pending
+breathe,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),breathe-40.1.2-1,pending
+breed,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+bring,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP NP (ditransitive); NP V NP together (monotransitive); NP V NP (monotransitive),"bring-11.3-1, earn-54.6, engender-27.1, establish-55.5",pending
+broadcast,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP-Dative NP (ditransitive); NP V NP PP.topic (monotransitive),instr_communication-37.4.1,pending
+burst,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP PP.instrument (monotransitive),"appear-48.1.1, other_cos-45.4",pending
+bury,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),put-9.1-1,pending
+bust,classification-gap,3,"bust, busting, busts",92,"V1, V2, V3, V4, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),prosecute-33.2,pending
+buy,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.asset (monotransitive); NP V NP PP.source NP.asset (monotransitive),"accept-77.1, get-13.5.1, invest-13.5.4",pending
+calculate,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+call,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V (intransitive); NP V NP NP (ditransitive); NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.asset (monotransitive); NP V NP PP.source NP.asset (monotransitive); NP V NP PP.recipient (monotransitive),"animal_sounds-38, dub-29.3.2, get-13.5.1, initiate_communication-37.4.2-1, manner_speaking-37.3",pending
+canvass,classification-gap; verbnet-unclassified,1,canvasses,97,V5,ambitransitive,uncertain,unclassified,,investigate-35.4,pending
+capture,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP NP (ditransitive),steal-10.5-1,pending
+caress,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme PP.instrument (monotransitive),touch-20-1,pending
+carry,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.initial_location (monotransitive); NP V NP PP.initial_location PP.destination (monotransitive); NP V NP PP.destination PP.initial_location (monotransitive); NP V NP NP (ditransitive); NP V NP PP.location (monotransitive),"carry-11.4, cost-54.2, fit-54.3",pending
+cash,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.source (monotransitive),get-13.5.1-1,pending
+cast,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V NP S_ING (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.destinations (monotransitive); NP V NP PP.initial_location (monotransitive); NP V NP PP.initial_location PP.destination (monotransitive); NP V NP ADVP (monotransitive),"build-26.1, characterize-29.2, throw-17.1",pending
+catch,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.asset (monotransitive); NP V NP PP.source NP.asset (monotransitive),get-13.5.1,pending
+cause,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"act-114, engender-27.1-1, result-27.2",pending
+cease,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,stop-55.4-1-1,pending
+celebrate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.attribute (monotransitive),judgment-33.1-1,pending
+challenge,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+change,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.co-theme (monotransitive); NP V NP PP.co-agent (monotransitive); NP V NP PP.instrument (monotransitive),"dress-41.1.1-1-1, exchange-13.6.1, other_cos-45.4, turn-26.6.1-1",pending
+chase,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.location (monotransitive),chase-51.6,pending
+check,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive); NP V NP PP.theme (monotransitive),"assessment-34.1, peer-30.3, search-35.2",pending
+chide,classification-gap; corpus-vs-verbnet-conflict,1,chidden,116,V3,ambitransitive,monotransitive,conflict,NP V NP PP.attribute (monotransitive),judgment-33.1-1,pending
+chip,classification-gap,2,"chip, chips",117,"V1, V5",,ambitransitive,provisional,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP ADJ (monotransitive); NP V NP ADJ PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V (intransitive),"break-45.1, carve-21.2-1, cut-21.1-1, hurt-40.8.3-1-1",pending
+choke,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP PP.result (monotransitive),"die-42.4-1, fill-9.8, subjugate-42.3, suffocate-40.7",pending
+choose,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.asset (monotransitive); NP V NP PP.source NP.asset (monotransitive),get-13.5.1,pending
+classify,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_ING (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP (monotransitive); NP V NP PP.goal (monotransitive),"characterize-29.2, classify-29.10",pending
+clean,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.source (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive),"clear-10.3, other_cos-45.4, preparing-26.3-2",pending
+cleave,classification-gap; corpus-vs-verbnet-conflict,1,cloven,122,V3,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP ADJ (monotransitive); NP V NP ADJ PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive),"break-45.1, carve-21.2-1, cling-22.5",pending
+close,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive); NP V NP PP.theme (monotransitive); NP V NP PP.instrument (monotransitive),"crane-40.3.2, fill-9.8, other_cos-45.4, stop-55.4-1",pending
+clothe,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"dress-41.1.1, dress-41.1.1-1-2",pending
+clutch,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),hold-15.1-1,pending
+co-operate,classification-gap; verbnet-unmatched,4,"co-operate, co-operated, co-operates, co-operating",184,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+collapse,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+colour,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+comment,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,lecture-37.11-1-1,pending
+compare,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.co-patient (monotransitive); NP V NP (monotransitive),amalgamate-22.2-2,pending
+compel,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_INF (monotransitive),compel-59.1-1,pending
+complete,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),complete-55.2,pending
+conclude,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive),"deduce-97.2, stop-55.4-1-1",pending
+conduct,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP (monotransitive),"accompany-51.7, act-114, conduct-111.1",pending
+confess,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP to be NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP NP (ditransitive),"confess-37.10, declare-29.4, say-37.7-1-1",pending
+confine,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.destination (monotransitive); NP V NP (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.goal (monotransitive); NP V NP S_INF (monotransitive),"confine-92-1, limit-76",pending
+confiscate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.source PP.beneficiary (monotransitive),steal-10.5,pending
+confuse,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.co-patient (monotransitive); NP V NP (monotransitive); NP V NP ADJ (monotransitive),"amalgamate-22.2-2, amuse-31.1",pending
+connote,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+conquer,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),subjugate-42.3,pending
+consecrate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP NP (ditransitive); NP V NP (monotransitive),dub-29.3.2,pending
+consent,classification-gap; verbnet-unclassified,1,consents,150,V5,intransitive,uncertain,unclassified,,acquiesce-95.1-1-1,pending
+conserve,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+consider,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP ADJ (monotransitive); NP V NP NP (ditransitive),consider-29.9-1-1,pending
+consign,classification-gap; verbnet-unmatched,1,consigns,153,V5,ambitransitive,uncertain,unmatched,,,pending
+consist,verbnet-unmatched,0,,,,intransitive,uncertain,unmatched,,,pending
+console,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+consort,classification-gap; verbnet-unmatched,2,"consorting, consorts",156,"V4, V5",intransitive,uncertain,unmatched,,,pending
+constrain,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.goal (monotransitive); NP V NP S_INF (monotransitive),limit-76,pending
+construct,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.material (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.instrument (monotransitive),"create-26.4, remedy-45.7",pending
+construe,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.source (monotransitive); NP V NP PP.source whether S (monotransitive); NP V NP PP.source S_ING (monotransitive); NP V NP PP.source S (monotransitive),base-97.1,pending
+contain,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.location (monotransitive),"comprise-107.2-2, contain-15.4, fit-54.3",pending
+contemn,classification-gap; verbnet-unmatched,1,contemns,164,V5,ambitransitive,uncertain,unmatched,,,pending
+contest,classification-gap; verbnet-unmatched,1,contests,166,V5,ambitransitive,uncertain,unmatched,,,pending
+contract,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP to be NP (monotransitive),"bend-45.2, hire-13.5.3",pending
+contradict,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+contrast,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),amalgamate-22.2-2-1,pending
+contribute,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),contribute-13.2-1-1,pending
+contrive,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.material (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.attribute (monotransitive),create-26.4,pending
+control,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),enforce-63,pending
+convey,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.initial_location (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.initial_location PP.destination (monotransitive); NP V NP PP.destination PP.initial_location (monotransitive),"say-37.7-1-1, send-11.1",pending
+convict,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+convince,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP S_INF (monotransitive),"amuse-31.1, compel-59.1-1",pending
+coo,classification-gap,3,"coo, cooed, coos",181,"V1, V2, V3, V5",,ambitransitive,provisional,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"animal_sounds-38, manner_speaking-37.3",pending
+cook,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive),"build-26.1, cooking-45.3, preparing-26.3-1",pending
+cool,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+copy,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.destination (monotransitive),"scribble-25.2, transcribe-25.4",pending
+correct,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),remedy-45.7,pending
+corrode,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,entity_specific_cos-45.5,pending
+corrupt,classification-gap,1,corrupt,190,V1,,monotransitive,provisional,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+counsel,classification-gap; verbnet-unclassified,2,"counsel, counsels",193,"V1, V5",,uncertain,unclassified,,advise-37.9-1,pending
+course,classification-gap; verbnet-unmatched,2,"course, courses",195,"V1, V5",,uncertain,unmatched,,,pending
+cover,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),"contiguous_location-47.8, fill-9.8-1",pending
+cower,classification-gap,2,"cower, cowers",197,"V1, V5",,intransitive,provisional,NP V (intransitive),"body_internal_states-40.6, flinch-40.5",pending
+crave,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"long-32.2, want-32.1",pending
+create,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.material (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.attribute (monotransitive),"create-26.4, engender-27.1",pending
+crib,classification-gap; verbnet-unmatched,4,"crib, cribbed, cribbing, cribs",204,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+crowd,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,spray-9.7-1-1,pending
+crush,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP ADJ PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive),"amuse-31.1, break-45.1, carve-21.2-1, subjugate-42.3",pending
+cry,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V NP (monotransitive); NP V (intransitive); NP V NP PP.recipient (monotransitive),"breathe-40.1.2-1, manner_speaking-37.3, marvel-31.3, nonverbal_expression-40.2, sound_emission-43.2",pending
+curb,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),subjugate-42.3,pending
+cure,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive),free-10.6.3-1-1,pending
+curve,classification-gap; verbnet-unclassified,2,"curve, curves",211,"V1, V5",,uncertain,unclassified,,knead-26.5,pending
+cut,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP P.asset (monotransitive); NP V NP PP.co-patient (monotransitive); NP V NP apart (monotransitive),"amuse-31.1, braid-41.2.2, build-26.1-1, caused_calibratable_cos-45.6.2, cut-21.1-1, escape-51.1, hurt-40.8.3-2, meander-47.7, split-23.2, stop-55.4",pending
+cycle,classification-gap,3,"cycle, cycled, cycles",213,"V1, V2, V3, V5",,monotransitive,provisional,NP V NP (monotransitive),vehicle-51.4.1-1,pending
+damage,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),destroy-44,pending
+damp,classification-gap; verbnet-unmatched,1,damps,215,V5,ambitransitive,uncertain,unmatched,,,pending
+dance,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP PP.trajectory (monotransitive); NP V NP ADJP (monotransitive); NP V NP PP.goal (monotransitive),"modes_of_being_with_motion-47.3, performance-26.7-1, waltz-51.5",pending
+dare,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP S_ING (monotransitive),urge-58.1-1,pending
+dash,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP together (monotransitive); NP V NP ADJP (monotransitive); NP V NP ADJP PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP PP (monotransitive); NP V NP ADJP PP.result (monotransitive); NP V NP PP.trajectory (monotransitive); NP V NP PP.location (monotransitive); NP V NP PP.source PP.destination PP.trajectory (monotransitive),"hit-18.1, run-51.3.2-2",pending
+dazzle,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+deal,corpus-vs-verbnet-conflict,0,,,,intransitive,ditransitive,conflict,NP V NP PP.recipient (monotransitive); NP V NP-Dative NP (ditransitive); NP V NP (monotransitive),"cope-83, give-13.1",pending
+decay,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,entity_specific_cos-45.5,pending
+decide,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,correspond-36.1-1,pending
+declare,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"declare-29.4-1-1-1, reflexive_appearance-48.1.2, say-37.7-1-1",pending
+decorate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive); NP V NP (monotransitive),"fill-9.8-1, illustrate-25.3",pending
+decrease,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,caused_calibratable_cos-45.6.2-1,pending
+dedicate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_ING (monotransitive); NP V NP PP.goal (monotransitive),dedicate-79,pending
+delay,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),delay-53.3-1-1,pending
+delete,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP (monotransitive),remove-10.1,pending
+deny,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP to be NP (monotransitive),conjecture-29.5,pending
+depend,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,rely-70,pending
+describe,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,characterize-29.2-1-1,pending
+desire,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_INF (monotransitive); NP V NP to be ADJ (monotransitive),"want-32.1, want-32.1-1-1",pending
+destroy,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),destroy-44,pending
+detach,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.co-patient (monotransitive),disassemble-23.3,pending
+detect,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,see-30.1-1,pending
+determine,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP to be NP (monotransitive); NP V NP (monotransitive),"conjecture-29.5, discover-84",pending
+develop,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive),"appear-48.1.1, build-26.1, grow-26.2.1, occur-48.3-1",pending
+digest,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+dim,classification-gap,1,dim,244,V1,,monotransitive,provisional,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+diminish,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,caused_calibratable_cos-45.6.2-1,pending
+disappear,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,disappearance-48.2-1,pending
+discover,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"discover-84-1, encounter-30.5",pending
+discuss,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.co-agent (monotransitive),chit_chat-37.6-1,pending
+disobey,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+display,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),reflexive_appearance-48.1.2,pending
+dispose,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP PP.Theme (monotransitive); NP V NP S_ING (monotransitive),addict-96,pending
+distribute,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.recipient (monotransitive),contribute-13.2-1,pending
+disturb,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+disuse,classification-gap; verbnet-unmatched,3,"disuse, disuses, disusing",257,"V1, V4, V5",,uncertain,unmatched,,,pending
+dive,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive),"calibratable_cos-45.6.1-1, meander-47.7, search-35.2",pending
+divide,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.co-theme (monotransitive); NP V NP PP.instrument (monotransitive),"multiply-108-1, other_cos-45.4, separate-23.1-1",pending
+do,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),act-114-1,pending
+donate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),contribute-13.2-1-1,pending
+download,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+drag,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.initial_location (monotransitive); NP V NP PP.initial_location PP.destination (monotransitive); NP V NP PP.destination PP.initial_location (monotransitive); NP V NP PP.theme (monotransitive),"carry-11.4, search-35.2",pending
+dream,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP ADJ (monotransitive),"cognize-85, wish-62",pending
+dress,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),dress-41.1.1-1-1,pending
+drill,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),carve-21.2-3,pending
+drink,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,eat-39.1-1,pending
+drive,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_INF (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.initial_location (monotransitive); NP V NP PP.initial_location PP.destination (monotransitive); NP V NP PP.destination PP.initial_location (monotransitive); NP V NP ADVP (monotransitive); NP V NP ADJP (monotransitive); NP V NP PP.destinations (monotransitive),"compel-59.1-1, drive-11.5, nonvehicle-51.4.2-1, put_direction-9.4, render-29.90, send-11.1, throw-17.1",pending
+dry,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP ADJ (monotransitive),other_cos-45.4-1,pending
+dump,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,funnel-9.3-1-1,pending
+dye,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJP (monotransitive); NP V NP PP.result (monotransitive),"braid-41.2.2, coloring-24",pending
+earn,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive),"earn-54.6, get-13.5.1-1",pending
+eat,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,eat-39.1-1,pending
+educate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.topic (monotransitive); NP V NP how S_INF (monotransitive); NP V NP S-Quote (monotransitive),advise-37.9,pending
+empower,classification-gap; verbnet-unmatched,1,empowers,278,V5,ambitransitive,uncertain,unmatched,,,pending
+empty,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.source PP.destination (monotransitive); NP V NP PP.instrument (monotransitive),"clear-10.3-1, other_cos-45.4",pending
+encircle,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),"contiguous_location-47.8, fill-9.8",pending
+encourage,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.topic (monotransitive); NP V NP how S_INF (monotransitive); NP V NP S-Quote (monotransitive); NP V NP ADJ (monotransitive); NP V NP that S (monotransitive),"accept-77.1, advise-37.9, amuse-31.1, promote-102, urge-58.1-1-1",pending
+encroach,verbnet-unmatched,0,,,,intransitive,uncertain,unmatched,,,pending
+endanger,verbnet-unmatched,0,,,,monotransitive,uncertain,unmatched,,,pending
+endorse,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),"allow-64.1, illustrate-25.3",pending
+endure,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),exist-47.1-1,pending
+engrave,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),image_impression-25.1,pending
+enjoy,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive); NP V NP ADJ (monotransitive); NP V NP ADV (monotransitive),"admire-31.2, want-32.1-1",pending
+enlarge,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+enlighten,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+enter,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),escape-51.1-1-2,pending
+envy,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive),admire-31.2,pending
+erase,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,wipe_manner-10.4.1-1,pending
+escape,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),escape-51.1-1-1,pending
+evaporate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+exchange,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.co-theme (monotransitive); NP V NP (monotransitive); NP V NP PP.co-agent (monotransitive),exchange-13.6.1,pending
+exclaim,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP PP.recipient (monotransitive),say-37.7-1,pending
+exclude,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.goal S_ING (monotransitive); NP V NP (monotransitive),"exclude-107.3-1, forbid-64.4-1",pending
+expand,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+expect,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP ADJ (monotransitive),"conjecture-29.5-1, wish-62",pending
+explore,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,investigate-35.4,pending
+express,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP-Dative NP (ditransitive),"reflexive_appearance-48.1.2, send-11.1-1",pending
+eye,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive),sight-30.2,pending
+face,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP PP.theme (monotransitive),"confront-98, fill-9.8-1",pending
+fail,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,"neglect-75.1-1, succeed-74-3-1-1",pending
+faint,classification-gap,1,faint,308,V1,,intransitive,provisional,NP V (intransitive),change_bodily_state-40.8.4,pending
+fan,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+fancy,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive); NP V NP to be ADJ (monotransitive),"admire-31.2, characterize-29.2, want-32.1",pending
+favour,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+fax,classification-gap,4,"fax, faxed, faxes, faxing",313,"V1, V2, V3, V4, V5",,ditransitive,provisional,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP-Dative NP (ditransitive); NP V NP PP.topic (monotransitive),instr_communication-37.4.1,pending
+feed,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP-Dative NP (ditransitive); NP V NP PP.location (monotransitive),"feeding-39.7, fit-54.3, gorge-39.6",pending
+ferry,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.initial_location (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.initial_location PP.destination (monotransitive); NP V NP PP.destination PP.initial_location (monotransitive); NP V NP PP.location (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.result (monotransitive),"drive-11.5-1, vehicle-51.4.1",pending
+fetch,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive),"earn-54.6, get-13.5.1-1",pending
+fill,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive); NP V NP PP.instrument (monotransitive),"contiguous_location-47.8, fill-9.8, other_cos-45.4",pending
+find,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.asset (monotransitive); NP V NP PP.source NP.asset (monotransitive),"declare-29.4-1-1, discover-84, encounter-30.5, get-13.5.1",pending
+finish,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,stop-55.4-1-1,pending
+fish,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.theme (monotransitive); NP V NP PP.location (monotransitive),"berry-13.7, hunt-35.1",pending
+fit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.location (monotransitive); NP V NP PP.destination (monotransitive),"adjust-26.9, fit-54.3, funnel-9.3-1",pending
+fix,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.value (monotransitive); NP V NP PP (monotransitive); NP V NP together (monotransitive),"preparing-26.3-1, price-54.4, shake-22.3-2",pending
+fizz,classification-gap,4,"fizz, fizzed, fizzes, fizzing",325,"V1, V2, V3, V4, V5",,intransitive,provisional,NP V (intransitive),"entity_specific_modes_being-47.2, sound_emission-43.2",pending
+flap,classification-gap,1,flaps,326,V5,ambitransitive,ambitransitive,provisional,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive),"body_internal_motion-49.1, crane-40.3.2, modes_of_being_with_motion-47.3",pending
+flee,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive),escape-51.1-1-1,pending
+fling,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP-Dative NP (ditransitive),throw-17.1-1,pending
+fly,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.initial_location (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.initial_location PP.destination (monotransitive); NP V NP PP.destination PP.initial_location (monotransitive); NP V NP ADVP (monotransitive),"drive-11.5-1, nonvehicle-51.4.2-1, put_spatial-9.2, run-51.3.2-2-1, spatial_configuration-47.6-1",pending
+fold,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP PP.instrument (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive),"bend-45.2, build-26.1, crane-40.3.2, knead-26.5",pending
+follow,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive); NP V NP PP.location (monotransitive); NP V NP to be NP (monotransitive),"abide_by-93.2, assessment-34.1, chase-51.6, comprehend-87.2-1, contiguous_location-47.8, occur-48.3-1",pending
+forbid,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),forbid-64.4-1,pending
+force,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_ING (monotransitive),urge-58.1-1,pending
+forecast,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+foretell,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),conjecture-29.5-1,pending
+forget,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+forgive,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.attribute (monotransitive),judgment-33.1-1,pending
+forlese,classification-gap; verbnet-unmatched,3,"forlese, forlesing, forlore",341,"V1, V2, V4, V5",,uncertain,unmatched,,,pending
+form,corpus-vs-verbnet-conflict,0,,,,monotransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.material (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.recipient (monotransitive),"appear-48.1.1, comprise-107.2-1, create-26.4, reflexive_appearance-48.1.2",pending
+forsake,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+found,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.source (monotransitive); NP V NP PP.source whether S (monotransitive); NP V NP PP.source S_ING (monotransitive); NP V NP PP.source S (monotransitive); NP V NP PP.instrument (monotransitive),"base-97.1, establish-55.5-1",pending
+frame,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive); NP V NP (monotransitive),"butter-9.9, contiguous_location-47.8, fill-9.8-1",pending
+free,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_ING (monotransitive),free-10.6.3-1,pending
+freeze,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP ADJ (monotransitive),"other_cos-45.4-1, weather-57",pending
+frighten,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.result (monotransitive),"amuse-31.1, bully-59.5",pending
+fry,classification-gap; corpus-vs-verbnet-conflict,1,fries,349,V5,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.beneficiary (monotransitive),"cooking-45.3, poison-42.2, preparing-26.3-2",pending
+fulfil,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+gag,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive); NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),"butter-9.9, subjugate-42.3",pending
+gain,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.source (monotransitive),"calibratable_cos-45.6.1-1, get-13.5.1-1",pending
+gainsay,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+gash,classification-gap,3,"gash, gashes, gashing",354,"V1, V4, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),carve-21.2-1,pending
+gaze,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,peer-30.3,pending
+get,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP to be NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP S-INF (monotransitive),"become-109.1, birth-28.2-1, comprehend-87.2-1, convert-26.6.2, escape-51.1, get-13.5.1-1, initiate_communication-37.4.2, render-29.90-2",pending
+glance,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,peer-30.3,pending
+glow,classification-gap,1,glow,360,V1,,intransitive,provisional,NP V (intransitive),light_emission-43.1,pending
+google,classification-gap; verbnet-unmatched,4,"google, googled, googles, googling",362,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+govern,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,supervision-95.2.2,pending
+grab,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP NP (ditransitive),"hold-15.1-1, obtain-13.5.2, steal-10.5-1",pending
+grade,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.goal (monotransitive); NP V NP PP.instrument (monotransitive),"classify-29.10, remedy-45.7",pending
+grant,corpus-vs-verbnet-conflict,0,,,,ditransitive,monotransitive,conflict,NP V NP PP.goal (monotransitive),future_having-13.3,pending
+greet,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.attribute (monotransitive),judgment-33.1-1,pending
+grind,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive),"build-26.1, carve-21.2-1, crane-40.3.2",pending
+grip,classification-gap,1,grip,369,V1,,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.theme PP.instrument (monotransitive),"hold-15.1-1, touch-20-1",pending
+grow,corpus-vs-verbnet-conflict,0,,,,intransitive,ditransitive,conflict,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V NP PP.instrument (monotransitive),"appear-48.1.1, become-109.1-1, build-26.1, calibratable_cos-45.6.1-1, grow-26.2.1, other_cos-45.4, rear-26.2.2",pending
+guard,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),"captain-29.8-1, defend-72.3",pending
+guess,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive),"conjecture-29.5-1, discover-84, estimate-34.2-1-1",pending
+guide,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.destination (monotransitive),accompany-51.7,pending
+handle,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),"confront-98, hold-15.1",pending
+happen,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,occur-48.3-1,pending
+harm,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+hatch,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,grow-26.2.1,pending
+hate,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,admire-31.2-1,pending
+have,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"birth-28.2-1, devour-39.4, own-100.1",pending
+heal,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+hear,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,"learn-14-2-1, see-30.1-1-1",pending
+heave,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP-Dative NP (ditransitive); NP V NP (monotransitive),"carry-11.4-1-1, push-12",pending
+help,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,help-72.1-1-1,pending
+hew,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.co-patient (monotransitive); NP V NP apart (monotransitive),"cut-21.1-1, split-23.2",pending
+hide,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),concealment-16-1,pending
+hinder,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),discourage-64.5-1,pending
+hit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V (intransitive); NP V NP (monotransitive); NP V NP-Dative NP (ditransitive),"bump-18.4, contiguous_location-47.8-1, hit-18.1-1, hurt-40.8.3-1, reach-51.8, throw-17.1-1",pending
+hoax,classification-gap; verbnet-unmatched,4,"hoax, hoaxed, hoaxes, hoaxing",390,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+hop,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"run-51.3.2-1, swarm-47.5.1-1",pending
+hope,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,long-32.2,pending
+horrify,classification-gap,3,"horrifies, horrify, horrifying",394,"V1, V4, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+humiliate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+hurl,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP-Dative NP (ditransitive),throw-17.1-1,pending
+hurry,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.trajectory (monotransitive); NP V NP PP.location (monotransitive); NP V NP (monotransitive); NP V NP PP.source PP.destination PP.trajectory (monotransitive); NP V NP PP.result (monotransitive),"run-51.3.2-2, rush-53.2",pending
+hush,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive); NP V NP (monotransitive),"other_cos-45.4, subjugate-42.3",pending
+hustle,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.result (monotransitive),bully-59.5,pending
+hypnotize,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+idealize,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+identify,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),"characterize-29.2-1-1, empathize-88.2",pending
+idolize,classification-gap,3,"idolize, idolizes, idolizing",407,"V1, V4, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive),admire-31.2,pending
+ignite,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+ignore,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),neglect-75.1,pending
+ill-treat,classification-gap; verbnet-unmatched,4,"ill-treat, ill-treated, ill-treating, ill-treats",410,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+illuminate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),illustrate-25.3,pending
+illumine,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+imagine,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP ADJ (monotransitive),"characterize-29.2-1-1, wish-62",pending
+imbibe,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),devour-39.4,pending
+imitate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.result (monotransitive),patent-101,pending
+immerse,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.destination (monotransitive); NP V NP ADVP (monotransitive),put-9.1,pending
+immolate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),murder-42.1,pending
+immure,classification-gap,3,"immure, immures, immuring",419,"V1, V4, V5",,monotransitive,provisional,NP V NP (monotransitive),confine-92,pending
+impair,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+impart,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+impeach,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),prosecute-33.2,pending
+impede,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),discourage-64.5-1,pending
+impel,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_INF (monotransitive),compel-59.1-1,pending
+impend,classification-gap; verbnet-unmatched,2,"impend, impends",425,"V1, V5",,uncertain,unmatched,,,pending
+imperil,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+impinge,verbnet-unmatched,0,,,,intransitive,uncertain,unmatched,,,pending
+implant,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.destination (monotransitive); NP V NP ADVP (monotransitive),put-9.1,pending
+implicate,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+implode,classification-gap; verbnet-unmatched,4,"implode, imploded, implodes, imploding",430,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+implore,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP that S (monotransitive),urge-58.1-1-1,pending
+imply,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),indicate-78,pending
+import,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.initial_location (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.initial_location PP.destination (monotransitive); NP V NP PP.destination PP.initial_location (monotransitive),send-11.1,pending
+impose,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),enforce-63,pending
+impress,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+imprint,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),image_impression-25.1,pending
+imprison,classification-gap; corpus-vs-verbnet-conflict,1,imprisons,437,V5,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.destination (monotransitive),"confine-92, pocket-9.10",pending
+improve,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+inaugurate,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+incise,classification-gap,2,"incise, incises",440,"V1, V5",,intransitive,provisional,NP V (intransitive),image_impression-25.1,pending
+include,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP ADV (monotransitive); NP V NP PP.location (monotransitive); NP V NP (monotransitive); NP V NP PP.goal (monotransitive),"admit-64.3-1, involve-107.1",pending
+increase,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,caused_calibratable_cos-45.6.2-1,pending
+inculcate,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+indent,classification-gap; verbnet-unmatched,3,"indent, indenting, indents",444,"V1, V4, V5",,uncertain,unmatched,,,pending
+indicate,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,indicate-78-1,pending
+induce,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_INF (monotransitive),compel-59.1-1,pending
+indulge,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+infect,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),fill-9.8,pending
+infest,classification-gap; corpus-vs-verbnet-conflict,1,infests,449,V5,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),fill-9.8,pending
+inflame,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+inflate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive),bend-45.2,pending
+inflect,classification-gap; verbnet-unmatched,3,"inflect, inflecting, inflects",452,"V1, V4, V5",,uncertain,unmatched,,,pending
+inform,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,tell-37.2,pending
+infringe,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+infuse,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+ingest,classification-gap; corpus-vs-verbnet-conflict,1,ingests,456,V5,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive),"absorb-39.8, devour-39.4",pending
+inhabit,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+inherit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive),obtain-13.5.2,pending
+initiate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),establish-55.5-1,pending
+inject,classification-gap,1,injects,461,V5,ambitransitive,ambitransitive,provisional,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.theme (monotransitive),"eat-39.1, fill-9.8",pending
+injure,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+inlay,classification-gap,2,"inlay, inlays",463,"V1, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),fill-9.8,pending
+innovate,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive),establish-55.5,pending
+input,classification-gap; verbnet-unmatched,3,"input, inputs, inputting",465,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+inquire,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP PP.topic (monotransitive); NP V NP whether S (monotransitive); NP V NP what S (monotransitive); NP V NP whether S_INF (monotransitive); NP V NP what S_INF (monotransitive); NP V NP PP.topic what S (monotransitive); NP V NP how S (monotransitive),inquire-37.1.2,pending
+inscribe,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),image_impression-25.1,pending
+insert,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),put-9.1-1,pending
+inspect,classification-gap; corpus-vs-verbnet-conflict,1,inspects,469,V5,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive),"assessment-34.1, investigate-35.4",pending
+inspire,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),"amuse-31.1, engender-27.1-1",pending
+install,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP NP (ditransitive); NP V NP PP.attribute (monotransitive); NP V NP to be NP (monotransitive); NP V NP (monotransitive),"appoint-29.1, put-9.1-1",pending
+insult,classification-gap; corpus-vs-verbnet-conflict,1,insulting,472,V4,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.attribute (monotransitive),"amuse-31.1, judgment-33.1-1",pending
+insure,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive); NP V NP NP (ditransitive); NP V NP PP.beneficiary (monotransitive),"defend-72.3, ensure-99",pending
+integrate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.co-patient (monotransitive); NP V NP (monotransitive),"amalgamate-22.2-1, amalgamate-22.2-2",pending
+introduce,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.co-patient (monotransitive); NP V NP PP.instrument (monotransitive),"amalgamate-22.2-3-1, establish-55.5-1",pending
+invent,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),create-26.4-1,pending
+invite,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_ING (monotransitive),"promote-102, urge-58.1-1",pending
+join,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),"cooperate-73.1-1, mix-22.1-2-1",pending
+jump,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive),"attack-60.1, calibratable_cos-45.6.1-1, run-51.3.2-2-1",pending
+keep,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive); NP V NP PP.location (monotransitive); NP V NP (monotransitive); NP V NP ADJ (monotransitive),"forbid-64.4, keep-15.2, seem-109, sustain-55.6-1",pending
+kick,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V (intransitive); NP V NP-Dative NP (ditransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive); NP V NP PP.co-patient (monotransitive); NP V NP apart (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP ADJP (monotransitive); NP V NP ADJP PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP PP.location (monotransitive),"body_internal_motion-49.1, carry-11.4-1-1, crane-40.3.2, hit-18.1-1, split-23.2, swat-18.2, throw-17.1-1-1",pending
+kid,verbnet-unmatched,0,,,,monotransitive,uncertain,unmatched,,,pending
+kneel,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"assuming_position-50, curtsey-40.3.3, spatial_configuration-47.6",pending
+knit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive),"build-26.1, crane-40.3.2",pending
+knock,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V (intransitive); NP V NP PP.co-patient (monotransitive); NP V NP apart (monotransitive); NP V NP-Dative NP (ditransitive),"bump-18.4-1, hit-18.1-1, sound_emission-43.2, split-23.2, throw-17.1-1",pending
+know,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.attribute (monotransitive),comprehend-87.2-1-1-1,pending
+lade,classification-gap; verbnet-unmatched,4,"lade, laded, laden, lades",490,"V1, V2, V3, V5",,uncertain,unmatched,,,pending
+land,classification-gap; corpus-vs-verbnet-conflict,1,lands,491,V5,ambitransitive,intransitive,conflict,NP V (intransitive),pocket-9.10-1,pending
+last,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP NP (ditransitive),cost-54.2,pending
+latch,classification-gap,4,"latch, latched, latches, latching",493,"V1, V2, V3, V4, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.co-patient (monotransitive); NP V NP PP.co-patient PP.instrument (monotransitive); NP V NP together (monotransitive); NP V NP ADJP (monotransitive),tape-22.4,pending
+laugh,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive),nonverbal_expression-40.2,pending
+lay,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.material (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.destination (monotransitive); NP V NP ADVP (monotransitive),"create-26.4, put_spatial-9.2",pending
+lead,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.destination (monotransitive); NP V NP S_INF (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP VP.predicate (monotransitive); NP V NP PP.attribute VP.predicate (monotransitive); NP V NP ADJ (monotransitive),"accompany-51.7, compel-59.1-1, result-27.2, spend_time-104, supervision-95.2.2-1, terminus-47.9",pending
+leak,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V NP PP.recipient (monotransitive); NP V (intransitive),"say-37.7-1, substance_emission-43.4-1",pending
+lean,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP PP.destination (monotransitive); NP V NP ADVP (monotransitive),"assuming_position-50, put_spatial-9.2, spatial_configuration-47.6",pending
+leap,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive),run-51.3.2-1,pending
+learn,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),"learn-14-1, learn-14-2-1",pending
+leer,classification-gap; verbnet-unclassified,3,"leer, leered, leers",502,"V1, V2, V3, V5",,uncertain,unclassified,,peer-30.3,pending
+let,corpus-vs-verbnet-conflict,0,,,,intransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.asset (monotransitive); NP V NP PP.recipient PP.asset (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP S (monotransitive),"admit-64.3, give-13.1-1, let-64.2",pending
+lift,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.initial_location PP.destination (monotransitive); NP V NP ADVP (monotransitive); NP V NP PP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.source PP.beneficiary (monotransitive),"put_direction-9.4, remove-10.1, steal-10.5",pending
+light,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.instrument (monotransitive),"preparing-26.3-1, remedy-45.7",pending
+like,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_INF (monotransitive); NP V NP to be ADJ (monotransitive),"admire-31.2-1, want-32.1-1-1",pending
+limp,classification-gap,2,"limp, limps",511,"V1, V5",,intransitive,provisional,NP V (intransitive),run-51.3.2,pending
+listen,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,"peer-30.3, rummage-35.5",pending
+live,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive),"exist-47.1, exist-47.1-1, lodge-46",pending
+look,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,"peer-30.3, rummage-35.5, seem-109-1-1, stimulus_subject-30.4",pending
+lose,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP (monotransitive),"remove-10.1, succeed-74-3-1",pending
+love,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"admire-31.2-1, want-32.1",pending
+magnify,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"overstate-37.12, remedy-45.7-1",pending
+maintain,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP ADJ (monotransitive); NP V NP PP.instrument (monotransitive),"declare-29.4-1, sustain-55.6",pending
+make,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP P.asset (monotransitive); NP V NP PP.source (monotransitive); NP V NP S (monotransitive),"act-114, build-26.1-1, comprise-107.2-1, obtain-13.5.2, reach-51.8, render-29.90-1",pending
+manage,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"caring-75.2-1, cope-83-1-1, succeed-74-1-1, supervision-95.2.2-1",pending
+march,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive),run-51.3.2-2-1,pending
+mark,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP NP (ditransitive); NP V NP PP.attribute (monotransitive); NP V NP to be NP (monotransitive); NP V NP (monotransitive); NP V (intransitive),"appoint-29.1, image_impression-25.1",pending
+mash,classification-gap,2,"mash, mashes",524,"V1, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),carve-21.2-1,pending
+matter,classification-gap,1,mattering,526,V4,intransitive,intransitive,provisional,NP V (intransitive),matter-91,pending
+mean,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive),"intend-61.2-1, representation-110.1",pending
+measure,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,register-54.1-2-1,pending
+melt,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP ADJ (monotransitive),"knead-26.5, other_cos-45.4-1",pending
+merge,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),mix-22.1-1-1,pending
+mew,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),animal_sounds-38,pending
+migrate,verbnet-unmatched,0,,,,intransitive,uncertain,unmatched,,,pending
+milk,classification-gap; corpus-vs-verbnet-conflict,1,milks,534,V5,ambitransitive,monotransitive,conflict,NP V NP PP.source (monotransitive); NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.source PP.beneficiary (monotransitive),"cheat-10.6.1-1-1, pit-10.7, rob-10.6.4, steal-10.5",pending
+mislead,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.result (monotransitive),trick-59.2,pending
+miss,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive),admire-31.2,pending
+mistake,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+misuse,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+moan,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"animal_sounds-38, complain-37.8, manner_speaking-37.3, nonverbal_expression-40.2, sound_emission-43.2",pending
+modify,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+moo,classification-gap,4,"moo, mooed, mooing, moos",543,"V1, V2, V3, V4, V5",,intransitive,provisional,NP V (intransitive),animal_sounds-38,pending
+motivate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_INF (monotransitive),compel-59.1-1,pending
+mould,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+moult,classification-gap; verbnet-unclassified,3,"moult, moulted, moults",546,"V1, V2, V3, V5",,uncertain,unclassified,,entity_specific_cos-45.5,pending
+mow,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),carve-21.2-2,pending
+murmur,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"manner_speaking-37.3, sound_emission-43.2",pending
+nail,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.co-patient (monotransitive); NP V NP PP.co-patient PP.instrument (monotransitive); NP V NP together (monotransitive); NP V NP ADJP (monotransitive),tape-22.4,pending
+nap,classification-gap,3,"nap, napped, naps",552,"V1, V2, V3, V5",,monotransitive,provisional,NP V NP (monotransitive),snooze-40.4-1,pending
+need,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_INF (monotransitive); NP V NP to be ADJ (monotransitive),"require-103-2, want-32.1-1-1",pending
+neglect,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,neglect-75.1-1,pending
+nip,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),run-51.3.2,pending
+note,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"say-37.7-1-1, sight-30.2",pending
+notice,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,see-30.1-1,pending
+notify,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.topic (monotransitive); NP V NP how S_INF (monotransitive); NP V NP S-Quote (monotransitive),"advise-37.9, tell-37.2",pending
+nourish,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),subjugate-42.3,pending
+nurse,classification-gap,1,nurse,561,V1,,ditransitive,provisional,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP-Dative NP (ditransitive),"captain-29.8-1, feeding-39.7",pending
+obey,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),abide_by-93.2,pending
+oblige,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_INF (monotransitive),compel-59.1-1,pending
+observe,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"abide_by-93.2, investigate-35.4, say-37.7-1-1, sight-30.2",pending
+obstruct,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),discourage-64.5-1,pending
+obtain,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.asset (monotransitive),obtain-13.5.2-1,pending
+occupy,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+occur,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,occur-48.3-1,pending
+offer,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.goal (monotransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP (monotransitive),"future_having-13.3, reflexive_appearance-48.1.2, volunteer-95.4",pending
+offset,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+omit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.goal (monotransitive); NP V NP (monotransitive); NP V NP PP (monotransitive),"exclude-107.3, neglect-75.1-1, remove-10.1",pending
+operate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP (monotransitive),function-105.2.1-1,pending
+opine,verbnet-unmatched,0,,,,intransitive,uncertain,unmatched,,,pending
+oppress,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+opt,classification-gap; verbnet-unmatched,3,"opted, opting, opts",577,"V2, V3, V4, V5",intransitive,uncertain,unmatched,,,pending
+optimize,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+order,classification-gap; corpus-vs-verbnet-conflict,1,orders,579,V5,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.asset (monotransitive); NP V NP PP.source NP.asset (monotransitive); NP V NP S_ING (monotransitive),"get-13.5.1, order-58.3-1",pending
+organize,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.material (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.instrument (monotransitive),"create-26.4, establish-55.5-1",pending
+originate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),establish-55.5-1,pending
+output,classification-gap; verbnet-unmatched,3,"output, outputs, outputting",582,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+overflow,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+overtake,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+owe,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.goal (monotransitive),future_having-13.3,pending
+own,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),own-100.1,pending
+pacify,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+pardon,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.attribute (monotransitive),judgment-33.1-1,pending
+part,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"braid-41.2.2, separate-23.1-1-1",pending
+partake,verbnet-unmatched,0,,,,intransitive,uncertain,unmatched,,,pending
+participate,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,cooperate-73.1-2,pending
+pass,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP-Dative NP (ditransitive); NP V NP PP.attribute (monotransitive); NP V NP VP.predicate (monotransitive); NP V NP PP.attribute VP.predicate (monotransitive),"die-42.4, escape-51.1-1-3, give-13.1, meander-47.7, occur-48.3-1, send-11.1-1, spend_time-104, throw-17.1-1",pending
+paste,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.co-patient (monotransitive); NP V NP PP.co-patient PP.instrument (monotransitive); NP V NP together (monotransitive); NP V NP ADJP (monotransitive),tape-22.4,pending
+pat,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme PP.instrument (monotransitive),touch-20-1,pending
+patch,classification-gap,2,"patch, patches",596,"V1, V5",,monotransitive,provisional,NP V NP PP.theme (monotransitive),butter-9.9,pending
+pause,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,linger-53.1,pending
+pay,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP NP PP.theme (ditransitive); NP V NP NP (ditransitive),pay-68-1,pending
+permit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP ADV (monotransitive); NP V NP PP.location (monotransitive); NP V NP S (monotransitive),"admit-64.3-1, allow-64.1-1",pending
+persuade,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_INF (monotransitive),compel-59.1-1,pending
+phone,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.asset (monotransitive); NP V NP PP.source NP.asset (monotransitive); NP V (intransitive); NP V NP PP.recipient (monotransitive); NP V NP-Dative NP (ditransitive); NP V NP PP.topic (monotransitive),"get-13.5.1, initiate_communication-37.4.2-1, instr_communication-37.4.1",pending
+place,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,put-9.1-2,pending
+plan,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP ADJ (monotransitive),"intend-61.2-1-1, wish-62",pending
+plead,classification-gap; verbnet-unmatched,1,pled,607,"V2, V3",ambitransitive,uncertain,unmatched,,,pending
+please,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+plod,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),run-51.3.2-1,pending
+plot,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),"correspond-36.1, scribble-25.2-1",pending
+pluck,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.asset (monotransitive); NP V NP PP.source NP.asset (monotransitive),"braid-41.2.2, get-13.5.1, wipe_manner-10.4.1-1",pending
+ply,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,equip-13.4.2,pending
+polish,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive); NP V NP PP.source (monotransitive),"butter-9.9, wipe_manner-10.4.1",pending
+pollute,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+ponder,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),focus-87.1-1,pending
+pout,classification-gap,2,"pout, pouts",618,"V1, V5",,ambitransitive,provisional,NP V (intransitive); NP V NP (monotransitive),nonverbal_expression-40.2,pending
+practise,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+praise,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_ING (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP PP.attribute (monotransitive),"characterize-29.2, judgment-33.1-1",pending
+pray,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,long-32.2,pending
+prefer,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive); NP V NP S_INF (monotransitive); NP V NP to be ADJ (monotransitive),"admire-31.2, want-32.1-1-1",pending
+prepare,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive); NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP to be NP (monotransitive); NP V NP PP.beneficiary (monotransitive),"establish-55.5-1, hire-13.5.3, preparing-26.3-1",pending
+prescribe,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+present,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.recipient (monotransitive); NP V NP (monotransitive),"fulfilling-13.4.1, reflexive_appearance-48.1.2",pending
+preserve,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),defend-72.3,pending
+preset,classification-gap; verbnet-unmatched,3,"preset, presets, presetting",628,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+preside,verbnet-unmatched,0,,,,intransitive,uncertain,unmatched,,,pending
+press,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP that S (monotransitive),"push-12-1-1, urge-58.1-1-1",pending
+pretend,verbnet-unmatched,0,,,,intransitive,uncertain,unmatched,,,pending
+prevent,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),forbid-64.4-1,pending
+print,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),scribble-25.2-1,pending
+proceed,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,begin-55.1,pending
+produce,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.material (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.attribute (monotransitive),"create-26.4, engender-27.1",pending
+progress,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,entity_specific_cos-45.5,pending
+prohibit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),forbid-64.4-1,pending
+promise,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.goal (monotransitive); NP V NP that S (monotransitive),"future_having-13.3, promise-37.13",pending
+propose,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP ADJ (monotransitive),"reflexive_appearance-48.1.2, say-37.7-1-1, wish-62",pending
+prosecute,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.attribute (monotransitive); NP V NP PP.theme PP.attribute (monotransitive); NP V NP PP.attribute PP.theme (monotransitive),prosecute-33.2-1,pending
+protect,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),defend-72.3,pending
+prove,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP to be NP (monotransitive),"declare-29.4-1-1, deduce-97.2, indicate-78-1-1",pending
+provide,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP NP (ditransitive); NP V NP PP.beneficiary (monotransitive),"ensure-99, fulfilling-13.4.1-2",pending
+punish,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.attribute (monotransitive); NP V NP PP.theme PP.attribute (monotransitive); NP V NP PP.attribute PP.theme (monotransitive),prosecute-33.2-1,pending
+purify,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive); NP V NP PP.instrument (monotransitive),"free-10.6.3-1-1, other_cos-45.4",pending
+push,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP-Dative NP (ditransitive); NP V NP PP.co-patient (monotransitive); NP V NP apart (monotransitive); NP V NP S_ING (monotransitive),"carry-11.4-1-1, funnel-9.3-1-1, push-12-1-1, split-23.2, urge-58.1-1",pending
+put,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.value (monotransitive); NP V NP PP.goal (monotransitive); NP V NP PP.theme (monotransitive),"estimate-34.2, invest-13.5.4-1, put-9.1-2",pending
+qualify,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,masquerade-29.6,pending
+question,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.topic (monotransitive),interrogate-37.1.3,pending
+quit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"resign-10.11-2, stop-55.4-1-1",pending
+race,classification-gap,2,"race, races",653,"V1, V5",,monotransitive,provisional,NP V NP PP.trajectory (monotransitive); NP V NP PP.location (monotransitive); NP V NP (monotransitive); NP V NP PP.source PP.destination PP.trajectory (monotransitive); NP V NP PP.result (monotransitive),run-51.3.2-2,pending
+rain,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,weather-57,pending
+rattle,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),"animal_sounds-38, sound_emission-43.2",pending
+read,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP to be NP (monotransitive); NP V (intransitive); NP V NP-Dative NP (ditransitive),"comprehend-87.2-1, learn-14-1, learn-14-2-1, register-54.1-2-1, transfer_mesg-37.1.1-1",pending
+realize,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP to be NP (monotransitive); NP V NP (monotransitive),"comprehend-87.2-1, discover-84",pending
+rebuild,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.material (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.attribute (monotransitive),create-26.4,pending
+recall,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.destination (monotransitive),banish-10.2,pending
+recast,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_ING (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP PP.attribute (monotransitive),characterize-29.2,pending
+receive,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP ADV (monotransitive); NP V NP PP.location (monotransitive); NP V NP (monotransitive); NP V NP PP.source (monotransitive),"admit-64.3-1, obtain-13.5.2",pending
+recognize,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP to be NP (monotransitive); NP V NP (monotransitive),"comprehend-87.2-1, sight-30.2",pending
+recollect,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,characterize-29.2-1-1,pending
+redo,classification-gap; verbnet-unmatched,5,"redid, redo, redoes, redoing, redone",667,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+refer,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.recipient (monotransitive),"contribute-13.2, relate-86.2-2",pending
+reflect,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),"focus-87.1-1, marvel-31.3",pending
+refuse,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),reject-77.2,pending
+regard,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive); NP V NP S_ING (monotransitive); NP V NP to be ADJ (monotransitive),"assessment-34.1, characterize-29.2",pending
+regret,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,admire-31.2-1,pending
+relate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.goal (monotransitive),"involve-107.1, relate-86.2-2, say-37.7-1-1",pending
+relax,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+rely,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,rely-70,pending
+remake,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP P.asset (monotransitive),build-26.1-1,pending
+remove,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP (monotransitive),"banish-10.2, fire-10.10, remove-10.1",pending
+rend,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP ADJ (monotransitive); NP V NP ADJ PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive),break-45.1,pending
+renew,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+renounce,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),resign-10.11-2,pending
+repair,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),remedy-45.7,pending
+repeat,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.subeventuality (monotransitive),"begin-55.1-1-1, rehearse-26.8, say-37.7-1-1",pending
+replace,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),substitute-13.6.2-1,pending
+reply,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP PP.recipient (monotransitive),"respond-113, say-37.7-1",pending
+report,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),"characterize-29.2-1-2, prosecute-33.2, say-37.7-1-1, subordinate-95.2.1",pending
+request,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_INF (monotransitive),beg-58.2,pending
+resell,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+resemble,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+reset,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+resist,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+resolve,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+respect,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive),admire-31.2,pending
+rest,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.destination (monotransitive); NP V NP ADVP (monotransitive),"put_spatial-9.2, spatial_configuration-47.6-1",pending
+restrain,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.goal (monotransitive); NP V NP S_INF (monotransitive),"discourage-64.5-1, limit-76",pending
+retain,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+retch,classification-gap,4,"retch, retched, retches, retching",698,"V1, V2, V3, V4, V5",,monotransitive,provisional,NP V NP (monotransitive),breathe-40.1.2-1,pending
+retire,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive),"resign-10.11-1, withdraw-82-2",pending
+reuse,classification-gap,3,"reuse, reuses, reusing",701,"V1, V4, V5",,monotransitive,provisional,NP V NP S_ING (monotransitive); NP V NP PP.goal (monotransitive); NP V NP (monotransitive); NP V NP ADV (monotransitive); NP V NP PP.predicate (monotransitive); NP V NP S_INF (monotransitive),"consume-66-1, use-105.1",pending
+review,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive),assessment-34.1,pending
+rewind,classification-gap; verbnet-unmatched,4,"rewind, rewinding, rewinds, rewound",703,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+rid,classification-gap,1,rids,704,V5,monotransitive,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),deprive-10.6.2,pending
+ride,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.location (monotransitive); NP V NP (monotransitive),nonvehicle-51.4.2,pending
+roar,classification-gap,1,roar,708,V1,,ambitransitive,provisional,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"animal_sounds-38, manner_speaking-37.3, run-51.3.2, sound_emission-43.2, weather-57",pending
+rob,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.source (monotransitive); NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.source PP.beneficiary (monotransitive),"cheat-10.6.1-1-1, rob-10.6.4, steal-10.5",pending
+roll,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP PP.instrument (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V NP PP.location (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive); NP V NP PP.trajectory (monotransitive); NP V NP ADJ.result (monotransitive); NP V NP PP.source PP.destination PP.trajectory (monotransitive); NP V NP PP (monotransitive); NP V NP together (monotransitive); NP V (intransitive); NP V NP PP.co-patient (monotransitive); NP V NP apart (monotransitive),"bend-45.2, build-26.1, coil-9.6, crane-40.3.2, preparing-26.3-1, roll-51.3.1, run-51.3.2-2, shake-22.3-2, slide-11.2-1, sound_emission-43.2, sound_existence-47.4, split-23.2",pending
+rot,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,entity_specific_cos-45.5,pending
+rub,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive); NP V NP PP.destination-Conative (monotransitive); NP V NP PP.theme PP.instrument (monotransitive),"crane-40.3.2, spray-9.7-1, touch-20-1, wipe_manner-10.4.1-1",pending
+rule,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP NP (ditransitive); NP V NP (monotransitive),"dub-29.3.2, supervision-95.2.2",pending
+rush,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP S_INF (monotransitive),"compel-59.1-1, run-51.3.2-2-1, rush-53.2",pending
+sabotage,verbnet-unmatched,0,,,,monotransitive,uncertain,unmatched,,,pending
+sack,classification-gap,2,"sack, sacks",717,"V1, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.attribute (monotransitive),fire-10.10,pending
+sacrifice,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),contribute-13.2-1-1,pending
+sadden,classification-gap,1,saddening,719,V4,ambitransitive,ambitransitive,provisional,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V (intransitive),"amuse-31.1, marvel-31.3",pending
+saddle,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive),"butter-9.9, equip-13.4.2-1",pending
+sally,verbnet-unmatched,0,,,,intransitive,uncertain,unmatched,,,pending
+salvage,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP NP (ditransitive),steal-10.5-1,pending
+salve,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive),butter-9.9,pending
+sample,classification-gap,2,"sample, samples",727,"V1, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive),assessment-34.1,pending
+sanctify,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+sanction,classification-gap; corpus-vs-verbnet-conflict,1,sanctions,729,V5,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),"allow-64.1, prosecute-33.2",pending
+sap,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),deprive-10.6.2,pending
+saponify,classification-gap,4,"saponified, saponifies, saponify, saponifying",731,"V1, V2, V3, V4, V5",,monotransitive,provisional,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+sash,classification-gap; verbnet-unmatched,4,"sash, sashed, sashes, sashing",732,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+sashay,classification-gap,4,"sashay, sashayed, sashaying, sashays",733,"V1, V2, V3, V4, V5",,intransitive,provisional,NP V (intransitive),run-51.3.2,pending
+sass,classification-gap; verbnet-unmatched,4,"sass, sassed, sasses, sassing",734,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+sate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP (monotransitive),satisfy-55.7,pending
+satiate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP (monotransitive),satisfy-55.7,pending
+satirise,classification-gap; verbnet-unmatched,4,"satirise, satirised, satirises, satirising",737,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+saturate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive),fill-9.8-1,pending
+save,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP NP.asset (monotransitive); NP V NP PP.source (monotransitive),"bill-54.5, get-13.5.1-1",pending
+savor,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive),"admire-31.2, sight-30.2",pending
+savvy,classification-gap; verbnet-unmatched,4,"savvied, savvies, savvy, savvying",743,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+saw,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.co-patient (monotransitive); NP V NP apart (monotransitive),"cut-21.1-1, split-23.2",pending
+say,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP NP (ditransitive); NP V NP PP.manner (monotransitive); NP V NP ADVP (monotransitive),"indicate-78-1, pronounce-29.3.1, say-37.7-1-1",pending
+scab,classification-gap; verbnet-unmatched,4,"scab, scabbed, scabbing, scabs",746,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+scabble,classification-gap; verbnet-unmatched,4,"scabble, scabbled, scabbles, scabbling",747,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+scald,classification-gap,4,"scald, scalded, scalding, scalds",748,"V1, V2, V3, V4, V5",,monotransitive,provisional,NP V NP PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP (monotransitive),"cooking-45.3, hurt-40.8.3-2",pending
+scale,classification-gap,4,"scale, scaled, scales, scaling",749,"V1, V2, V3, V4, V5",,monotransitive,provisional,NP V NP (monotransitive),pit-10.7,pending
+scam,classification-gap; verbnet-unmatched,4,"scam, scammed, scamming, scams",750,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+scan,classification-gap,4,"scan, scanned, scanning, scans",751,"V1, V2, V3, V4, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive),"assessment-34.1, investigate-35.4",pending
+scant,classification-gap; verbnet-unmatched,4,"scant, scanted, scanting, scants",752,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+scar,classification-gap,4,"scar, scarred, scarring, scars",753,"V1, V2, V3, V4, V5",,intransitive,provisional,NP V (intransitive),image_impression-25.1,pending
+scare,classification-gap,4,"scare, scared, scares, scaring",754,"V1, V2, V3, V4, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+scarify,classification-gap,4,"scarified, scarifies, scarify, scarifying",755,"V1, V2, V3, V4, V5",,monotransitive,provisional,NP V NP (monotransitive),cut-21.1-1,pending
+scarp,classification-gap; verbnet-unmatched,4,"scarp, scarped, scarping, scarps",756,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+scat,classification-gap; verbnet-unmatched,4,"scat, scats, scatted, scatting",757,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+scatter,classification-gap,1,scatter,758,V1,,monotransitive,provisional,NP V NP PP.destination-Conative (monotransitive),spray-9.7-1,pending
+scold,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.attribute (monotransitive),judgment-33.1-1,pending
+scorch,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+scowl,classification-gap,2,"scowl, scowls",761,"V1, V5",,ambitransitive,provisional,NP V (intransitive); NP V NP (monotransitive),nonverbal_expression-40.2,pending
+scrawl,classification-gap,3,"scrawl, scrawling, scrawls",762,"V1, V4, V5",,intransitive,provisional,NP V (intransitive),scribble-25.2-1,pending
+scream,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"manner_speaking-37.3, sound_emission-43.2",pending
+screw,classification-gap,2,"screw, screws",764,"V1, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.co-patient (monotransitive); NP V NP PP.co-patient PP.instrument (monotransitive); NP V NP together (monotransitive); NP V NP ADJP (monotransitive),tape-22.4,pending
+scrub,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,wipe_manner-10.4.1-1,pending
+search,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive),search-35.2,pending
+seat,classification-gap,1,seat,767,V1,,monotransitive,provisional,NP V NP PP.location (monotransitive),fit-54.3,pending
+secure,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP NP (ditransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.source (monotransitive),"ensure-99, get-13.5.1-1, shake-22.3-2-1",pending
+seem,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,seem-109-1-1-1,pending
+seize,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.source PP.beneficiary (monotransitive),"obtain-13.5.2, steal-10.5",pending
+select,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_ING (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP (monotransitive); NP V NP PP.source (monotransitive),"characterize-29.2, obtain-13.5.2",pending
+sell,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP PP.asset (monotransitive); NP V NP PP.recipient PP.asset (monotransitive); NP V NP NP PP.asset (ditransitive),give-13.1-1,pending
+sentence,classification-gap; verbnet-unmatched,2,"sentence, sentences",776,"V1, V5",,uncertain,unmatched,,,pending
+separate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.goal (monotransitive); NP V NP PP (monotransitive),"classify-29.10, remove-10.1, separate-23.1-1-1",pending
+set,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.beneficiary (monotransitive),"braid-41.2.2, establish-55.5-1, other_cos-45.4-1, preparing-26.3-2, put-9.1-2",pending
+sever,classification-gap,1,severs,779,V5,ambitransitive,ambitransitive,provisional,NP V NP (monotransitive); NP V NP PP (monotransitive); NP V NP PP.co-patient (monotransitive); NP V (intransitive),"remove-10.1, separate-23.1",pending
+sew,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V NP PP (monotransitive); NP V NP together (monotransitive); NP V NP PP.destination-Conative (monotransitive),"build-26.1, shake-22.3-2, spray-9.7-1",pending
+shape,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP P.asset (monotransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"build-26.1-1, engender-27.1, reflexive_appearance-48.1.2",pending
+share,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+shatter,classification-gap; corpus-vs-verbnet-conflict,1,shatters,784,V5,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP ADJ (monotransitive); NP V NP ADJ PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive),"break-45.1, destroy-44",pending
+shear,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.destination (monotransitive),wipe_instr-10.4.2-1,pending
+shed,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),substance_emission-43.4-1,pending
+shirk,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+shock,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.result (monotransitive),"amuse-31.1, bully-59.5",pending
+shoe,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive),butter-9.9,pending
+shoot,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP-Dative NP (ditransitive),"poison-42.2, throw-17.1-1",pending
+shorten,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+show,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive); NP V NP to be NP (monotransitive); NP V NP S_INF (monotransitive); NP V NP S_ING (monotransitive); NP V NP S (monotransitive); NP V NP what S (monotransitive); NP V NP what S_INF (monotransitive); NP V NP how S (monotransitive),"crane-40.3.2, indicate-78-1-1, reflexive_appearance-48.1.2, transfer_mesg-37.1.1-1-1",pending
+shrink,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V NP PP.instrument (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V (intransitive),"bend-45.2, flinch-40.5",pending
+shun,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,avoid-52,pending
+shut,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+sight,classification-gap,2,"sight, sights",801,"V1, V5",,monotransitive,provisional,NP V NP (monotransitive),sight-30.2,pending
+signal,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP-Dative NP (ditransitive); NP V NP PP.topic (monotransitive),instr_communication-37.4.1,pending
+signify,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive),representation-110.1,pending
+sink,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+sit,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP PP.destination (monotransitive); NP V NP ADVP (monotransitive),"assuming_position-50, put_spatial-9.2, spatial_configuration-47.6-1",pending
+ski,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),vehicle-51.4.1-1,pending
+skid,classification-gap,3,"skid, skidded, skids",809,"V1, V2, V3, V5",,intransitive,provisional,NP V (intransitive),run-51.3.2,pending
+slam,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP ADJP (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP PP.location (monotransitive); NP V NP PP PP.instrument (monotransitive); NP V NP-Dative NP (ditransitive),"bump-18.4-1, spank-18.3, throw-17.1-1",pending
+slay,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),murder-42.1,pending
+sleep,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP PP.location (monotransitive); NP V NP (monotransitive),"fit-54.3, snooze-40.4-1",pending
+slide,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.trajectory (monotransitive); NP V NP ADJ.result (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.location (monotransitive); NP V NP (monotransitive); NP V NP PP.source PP.destination PP.trajectory (monotransitive),"calibratable_cos-45.6.1-1, roll-51.3.1, run-51.3.2-2, slide-11.2-1",pending
+slim,classification-gap,4,"slim, slimmed, slimming, slims",814,"V1, V2, V3, V4, V5",,monotransitive,provisional,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+sling,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP PP.destination (monotransitive); NP V NP ADVP (monotransitive); NP V NP-Dative NP (ditransitive),"put-9.1, throw-17.1-1",pending
+slip,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP-Dative NP (ditransitive); NP V NP PP.co-patient (monotransitive); NP V NP apart (monotransitive),"calibratable_cos-45.6.1-1, send-11.1-1, split-23.2",pending
+slit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),carve-21.2-1,pending
+smash,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP ADJ (monotransitive); NP V NP ADJ PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP-Dative NP (ditransitive),"break-45.1, bump-18.4-1, carve-21.2-1, hit-18.1-1, throw-17.1-1",pending
+smile,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"manner_speaking-37.3, nonverbal_expression-40.2",pending
+smite,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP together (monotransitive); NP V NP ADJP (monotransitive); NP V NP ADJP PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP PP (monotransitive); NP V NP ADJP PP.result (monotransitive),"amuse-31.1, hit-18.1",pending
+smooth,classification-gap; corpus-vs-verbnet-conflict,1,smoothes,823,V5,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive); NP V NP PP.source (monotransitive),"other_cos-45.4, wipe_manner-10.4.1",pending
+smother,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive); NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.instrument (monotransitive),"fill-9.8-1, poison-42.2, subjugate-42.3",pending
+snatch,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP NP (ditransitive),"obtain-13.5.2, steal-10.5-1",pending
+sneak,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP PP.trajectory (monotransitive); NP V NP PP.location (monotransitive); NP V NP (monotransitive); NP V NP PP.source PP.destination PP.trajectory (monotransitive); NP V NP PP.result (monotransitive); NP V NP-Dative NP (ditransitive); NP V NP NP (ditransitive),"run-51.3.2-2, send-11.1-1, steal-10.5-1",pending
+sniff,classification-gap,1,sniffs,829,V5,ambitransitive,ambitransitive,provisional,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"nonverbal_expression-40.2, peer-30.3, sight-30.2, transfer_mesg-37.1.1",pending
+soar,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP PP.trajectory (monotransitive); NP V NP ADJ.result (monotransitive); NP V NP PP.result (monotransitive),"calibratable_cos-45.6.1-1, roll-51.3.1",pending
+sob,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive),nonverbal_expression-40.2,pending
+solicit,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+solve,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),discover-84,pending
+soothe,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.result (monotransitive),"amuse-31.1, lure-59.3",pending
+sort,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.goal (monotransitive),classify-29.10,pending
+sow,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.destination-Conative (monotransitive),spray-9.7-1,pending
+speak,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),"lecture-37.11-1, talk-37.5",pending
+speed,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.trajectory (monotransitive); NP V NP PP.location (monotransitive); NP V NP (monotransitive); NP V NP PP.source PP.destination PP.trajectory (monotransitive); NP V NP PP.result (monotransitive),run-51.3.2-2,pending
+spell,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP NP (ditransitive); NP V NP PP.manner (monotransitive); NP V NP ADVP (monotransitive); NP V NP (monotransitive); NP V NP PP.destination (monotransitive),"pronounce-29.3.1, scribble-25.2",pending
+spend,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_ING (monotransitive); NP V NP PP.goal (monotransitive); NP V NP PP.theme (monotransitive); NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP VP.predicate (monotransitive); NP V NP PP.attribute VP.predicate (monotransitive),"consume-66-1, pay-68, spend_time-104",pending
+spin,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V NP PP.location (monotransitive); NP V NP PP.trajectory (monotransitive); NP V NP ADJ.result (monotransitive); NP V NP PP.result (monotransitive); NP V (intransitive),"build-26.1, coil-9.6, create-26.4-1-1, roll-51.3.1, rotate-51.9.1-1, tingle-40.8.2",pending
+spoil,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,entity_specific_cos-45.5,pending
+spray,classification-gap; corpus-vs-verbnet-conflict,1,sprays,847,V5,ambitransitive,monotransitive,conflict,NP V NP PP.destination-Conative (monotransitive),spray-9.7-1,pending
+spring,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),run-51.3.2,pending
+sprout,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP PP.instrument (monotransitive),"entity_specific_cos-45.5, entity_specific_modes_being-47.2, other_cos-45.4, substance_emission-43.4-1",pending
+squeeze,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),"funnel-9.3-1-1, knead-26.5, push-12-1-1, touch-20, wipe_manner-10.4.1-1",pending
+stare,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,peer-30.3,pending
+state,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,say-37.7-1-1,pending
+steal,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V (intransitive); NP V NP NP (ditransitive),"appear-48.1.1, steal-10.5-1",pending
+steep,classification-gap,2,"steep, steeps",859,"V1, V5",,monotransitive,provisional,NP V NP PP.instrument (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive),cooking-45.3,pending
+step,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),run-51.3.2,pending
+sterilize,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),remedy-45.7,pending
+stick,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP (monotransitive); NP V NP together (monotransitive); NP V NP PP.destination-Conative (monotransitive),"poke-19-1-1-1, put-9.1-2, shake-22.3-2, spray-9.7-1",pending
+stimulate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.result (monotransitive),"amuse-31.1, engender-27.1-1, stimulate-59.4",pending
+stitch,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V NP PP.co-patient (monotransitive); NP V NP PP.co-patient PP.instrument (monotransitive); NP V NP together (monotransitive); NP V NP ADJP (monotransitive),"build-26.1, tape-22.4",pending
+stop,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),"forbid-64.4-1, lodge-46, stop-55.4-1-1, terminus-47.9",pending
+store,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.location (monotransitive); NP V NP (monotransitive),"fit-54.3, keep-15.2",pending
+strain,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive),"hurt-40.8.3-2, wipe_manner-10.4.1",pending
+stray,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),run-51.3.2,pending
+strew,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.destination-Conative (monotransitive),spray-9.7-1,pending
+stride,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),run-51.3.2-1,pending
+string,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive); NP V NP (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.destination-Conative (monotransitive); NP V NP PP.co-patient (monotransitive); NP V NP PP.co-patient PP.instrument (monotransitive); NP V NP together (monotransitive); NP V NP ADJP (monotransitive),"butter-9.9, pit-10.7, pocket-9.10, spray-9.7-1, tape-22.4",pending
+strive,verbnet-unmatched,0,,,,intransitive,uncertain,unmatched,,,pending
+submit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),"acquiesce-95.1-1-1, contribute-13.2-1-1",pending
+subscribe,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+subtract,classification-gap; corpus-vs-verbnet-conflict,1,subtracts,884,V5,ambitransitive,monotransitive,conflict,NP V NP PP.co-theme (monotransitive); NP V NP (monotransitive); NP V NP PP (monotransitive),"multiply-108-2, remove-10.1",pending
+succeed,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),succeed-74-1,pending
+suggest,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP to be NP (monotransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"indicate-78-1-1, reflexive_appearance-48.1.2, say-37.7-1-1-1",pending
+summon,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_ING (monotransitive),urge-58.1-1,pending
+supply,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),fulfilling-13.4.1-1,pending
+support,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.theme (monotransitive); NP V NP S_INF (monotransitive); NP V NP PP.instrument (monotransitive),"admire-31.2, contiguous_location-47.8, help-72.1-1, support-15.3-1",pending
+suppose,corpus-vs-verbnet-conflict,0,,,,intransitive,ditransitive,conflict,NP V NP ADJ (monotransitive); NP V NP NP (ditransitive),consider-29.9-2,pending
+surge,classification-gap,2,"surge, surges",893,"V1, V5",,intransitive,provisional,NP V (intransitive),"appear-48.1.1, calibratable_cos-45.6.1-1",pending
+surmise,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP to be NP (monotransitive),conjecture-29.5,pending
+surpass,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive),exceed-90,pending
+survey,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive),"assessment-34.1, investigate-35.4",pending
+survive,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"exist-47.1-1, gorge-39.6",pending
+swear,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP to be NP (monotransitive),conjecture-29.5,pending
+sweat,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),"breathe-40.1.2, substance_emission-43.4-1",pending
+sweep,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.theme (monotransitive),"funnel-9.3-1-1, meander-47.7, run-51.3.2-1, search-35.2, wipe_manner-10.4.1-1",pending
+swell,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,"calibratable_cos-45.6.1-1, entity_specific_cos-45.5",pending
+swim,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V NP (monotransitive); NP V (intransitive),"run-51.3.2-1, swarm-47.5.1-1, tingle-40.8.2",pending
+swing,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.destination (monotransitive); NP V NP ADVP (monotransitive); NP V NP PP.trajectory (monotransitive); NP V NP ADJ.result (monotransitive); NP V NP PP.result (monotransitive),"calibratable_cos-45.6.1-1, coil-9.6-1, put_spatial-9.2, roll-51.3.1, rotate-51.9.1-1, spatial_configuration-47.6-1",pending
+swot,classification-gap; verbnet-unmatched,4,"swot, swots, swotted, swotting",907,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+take,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.initial_location (monotransitive); NP V NP PP.initial_location PP.destination (monotransitive); NP V NP ADVP (monotransitive); NP V NP S_ING (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP NP (ditransitive); NP V NP PP.location (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.asset (monotransitive); NP V NP PP.source NP.asset (monotransitive); NP V NP PP (monotransitive); NP V NP ADJP (monotransitive); NP V NP PP.source PP.beneficiary (monotransitive),"absorb-39.8, adopt-93.1, bring-11.3, characterize-29.2, convert-26.6.2, cost-54.2, devour-39.4, fit-54.3, get-13.5.1, remove-10.1, render-29.90, require-103, scribble-25.2, steal-10.5, vehicle_path-51.4.3",pending
+talk,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V NP S_ING (monotransitive); NP V NP PP.result (monotransitive); NP V (intransitive),"compel-59.1, lecture-37.11-1, talk-37.5",pending
+tap,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP-Dative NP (ditransitive),"hit-18.1-1, investigate-35.4, throw-17.1-1",pending
+taste,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive); NP V NP PP.theme (monotransitive); NP V NP PP.location (monotransitive),"assessment-34.1, see-30.1, seem-109, stalk-35.3, stimulus_subject-30.4",pending
+tax,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,bill-54.5-1,pending
+teach,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_INF (monotransitive); NP V NP S_ING (monotransitive); NP V NP S (monotransitive); NP V NP what S (monotransitive); NP V NP what S_INF (monotransitive); NP V NP how S (monotransitive),transfer_mesg-37.1.1-1-1,pending
+tee,classification-gap; verbnet-unmatched,4,"tee, teed, teeing, tees",915,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+tell,corpus-vs-verbnet-conflict,0,,,,ditransitive,monotransitive,conflict,NP V NP S_INF (monotransitive); NP V NP S_ING (monotransitive); NP V NP S (monotransitive); NP V NP what S (monotransitive); NP V NP what S_INF (monotransitive); NP V NP how S (monotransitive),transfer_mesg-37.1.1-1-1,pending
+tempt,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP S_ING (monotransitive),"amuse-31.1, urge-58.1-1",pending
+tend,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,caring-75.2-1-1,pending
+terminate,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.source (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP ADJ (monotransitive),"fire-10.10, stop-55.4-1, terminus-47.9",pending
+terrify,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.result (monotransitive),"amuse-31.1, bully-59.5",pending
+test,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive),"assessment-34.1, investigate-35.4",pending
+think,corpus-vs-verbnet-conflict,0,,,,intransitive,ditransitive,conflict,NP V NP ADJ (monotransitive); NP V NP NP (ditransitive); NP V (intransitive); NP V NP (monotransitive); NP V NP to be ADJ (monotransitive),"consider-29.9-2, focus-87.1-1, wish-62",pending
+throw,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP (monotransitive); NP V NP PP.result (monotransitive),"amuse-31.1, conduct-111.1, throw-17.1-1-1",pending
+thrust,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP-Dative NP (ditransitive),"carry-11.4-1-1, push-12-1-1",pending
+tie,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.co-patient (monotransitive); NP V NP (monotransitive); NP V NP together (monotransitive); NP V NP PP.co-patient PP.instrument (monotransitive); NP V NP ADJP (monotransitive),"mix-22.1-2, tape-22.4",pending
+toss,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.result (monotransitive),"crane-40.3.2, preparing-26.3-1, throw-17.1-1-1",pending
+train,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP to be NP (monotransitive),hire-13.5.3,pending
+trample,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+transfer,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive); NP V NP (monotransitive); NP V NP PP.initial_location (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.initial_location PP.destination (monotransitive); NP V NP PP.destination PP.initial_location (monotransitive),"contribute-13.2-2, send-11.1",pending
+trap,classification-gap,2,"trap, traps",937,"V1, V5",,monotransitive,provisional,NP V NP PP.destination (monotransitive); NP V NP (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.result (monotransitive),"pocket-9.10, trick-59.2",pending
+travel,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),run-51.3.2-1,pending
+treasure,classification-gap,3,"treasure, treasures, treasuring",940,"V1, V4, V5",,monotransitive,provisional,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive),admire-31.2,pending
+treat,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_ING (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP PP.attribute (monotransitive),"characterize-29.2, equip-13.4.2-1",pending
+tree,classification-gap,4,"tree, treed, treeing, trees",942,"V1, V2, V3, V4, V5",,monotransitive,provisional,NP V NP PP.destination (monotransitive),pocket-9.10,pending
+triumph,classification-gap,1,triumph,944,V1,,intransitive,provisional,NP V (intransitive),marvel-31.3,pending
+trust,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.recipient (monotransitive),"admire-31.2, conjecture-29.5-1, fulfilling-13.4.1",pending
+try,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive); NP V NP PP.theme PP.attribute (monotransitive); NP V NP PP.attribute PP.theme (monotransitive),"amuse-31.1, assessment-34.1, prosecute-33.2-1, try-61.1",pending
+type,classification-gap,1,types,948,V5,ambitransitive,ambitransitive,provisional,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.destination (monotransitive),"scribble-25.2-1, transcribe-25.4",pending
+typeset,classification-gap; verbnet-unmatched,3,"typeset, typesets, typesetting",949,"V1, V2, V3, V4, V5",,uncertain,unmatched,,,pending
+understand,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive),"accept-77.1, comprehend-87.2-1-1-1",pending
+undo,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive),destroy-44,pending
+uproot,classification-gap; corpus-vs-verbnet-conflict,1,uproots,952,V5,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP (monotransitive),remove-10.1,pending
+upset,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+urge,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP that S (monotransitive),urge-58.1-1-1,pending
+utter,classification-gap,1,utter,956,V1,,monotransitive,provisional,NP V NP PP.recipient (monotransitive),say-37.7-1,pending
+value,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive); NP V NP PP.value (monotransitive),"admire-31.2, price-54.4",pending
+vanish,verbnet-unclassified,0,,,,intransitive,uncertain,unclassified,,disappearance-48.2-1,pending
+vary,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),"caused_calibratable_cos-45.6.2-1, differ-23.4",pending
+vex,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP ADJ (monotransitive),amuse-31.1,pending
+view,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"characterize-29.2-1, sight-30.2",pending
+violate,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+vomit,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),breathe-40.1.2,pending
+wake,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+walk,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive),"resign-10.11-1, run-51.3.2-2-1",pending
+wander,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive),"meander-47.7, run-51.3.2-1",pending
+want,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP NP (ditransitive); NP V NP PP.attribute (monotransitive); NP V NP to be NP (monotransitive); NP V NP (monotransitive); NP V NP S_INF (monotransitive); NP V NP to be ADJ (monotransitive),"appoint-29.1, want-32.1-1-1",pending
+warn,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,advise-37.9-1,pending
+waste,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP S_ING (monotransitive); NP V NP PP.goal (monotransitive); NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP PP.theme (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP VP.predicate (monotransitive); NP V NP PP.attribute VP.predicate (monotransitive),"consume-66-1, destroy-44, pay-68, spend_time-104",pending
+watch,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP PP.value (monotransitive); NP V NP PP.theme (monotransitive),"assessment-34.1, search-35.2",pending
+water,classification-gap; corpus-vs-verbnet-conflict,1,waters,973,V5,ambitransitive,monotransitive,conflict,NP V NP PP.theme (monotransitive),butter-9.9,pending
+waylay,verbnet-unmatched,0,,,,ambitransitive,uncertain,unmatched,,,pending
+wear,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive),"simple_dressing-41.3.1-1, wipe_manner-10.4.1-1",pending
+weave,corpus-vs-verbnet-conflict,0,,,,ambitransitive,ditransitive,conflict,NP V NP (monotransitive); NP V NP PP.beneficiary (monotransitive); NP V NP PP.material PP.beneficiary (monotransitive); NP V NP PP.product PP.beneficiary (monotransitive); NP V NP NP PP.asset (ditransitive); NP V NP PP.material PP.asset (monotransitive); NP V (intransitive),"build-26.1, meander-47.7, run-51.3.2",pending
+wed,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),amalgamate-22.2-3-1-1,pending
+weep,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive),"breathe-40.1.2, marvel-31.3, nonverbal_expression-40.2",pending
+weigh,verbnet-unclassified,0,,,,ambitransitive,uncertain,unclassified,,register-54.1-2-1,pending
+welcome,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP ADV (monotransitive); NP V NP PP.location (monotransitive); NP V NP PP.attribute (monotransitive),"admit-64.3-1, judgment-33.1-1",pending
+wend,corpus-vs-verbnet-conflict,0,,,,ambitransitive,intransitive,conflict,NP V (intransitive),run-51.3.2,pending
+wet,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.instrument (monotransitive),other_cos-45.4,pending
+whip,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP ADJP (monotransitive); NP V NP PP.result (monotransitive); NP V NP PP.result PP.instrument (monotransitive); NP V NP PP.location (monotransitive); NP V NP PP PP.instrument (monotransitive),"knead-26.5, shake-22.3-1-1, spank-18.3",pending
+wind,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.location (monotransitive); NP V NP (monotransitive); NP V NP PP.trajectory (monotransitive); NP V NP ADJ.result (monotransitive); NP V NP PP.result (monotransitive),"coil-9.6, knead-26.5, meander-47.7, pit-10.7, roll-51.3.1, rotate-51.9.1-1",pending
+wish,corpus-vs-verbnet-conflict,0,,,,intransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP to be ADJ (monotransitive); NP V NP ADJ (monotransitive),"long-32.2, wish-62",pending
+worship,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.attribute (monotransitive); NP V NP S_ING (monotransitive),admire-31.2,pending
+wring,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP (monotransitive); NP V NP PP.recipient (monotransitive); NP V NP PP.recipient PP.theme (monotransitive); NP V NP PP.destination (monotransitive); NP V NP PP.instrument (monotransitive); NP V NP PP.source (monotransitive),"crane-40.3.2, funnel-9.3-1, touch-20, wipe_manner-10.4.1",pending
+yawn,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive),"hiccup-40.1.1, nonverbal_expression-40.2",pending
+yell,corpus-vs-verbnet-conflict,0,,,,intransitive,ambitransitive,conflict,NP V (intransitive); NP V NP (monotransitive); NP V NP PP.recipient (monotransitive),"animal_sounds-38, manner_speaking-37.3",pending
+yield,corpus-vs-verbnet-conflict,0,,,,ambitransitive,monotransitive,conflict,NP V NP PP.goal (monotransitive),"acquiesce-95.1-1, future_having-13.3",pending
+zinc,classification-gap; verbnet-unmatched,2,"zincked, zincking",999,"V2, V3, V4",ambitransitive,uncertain,unmatched,,,pending
+zoom,classification-gap,4,"zoom, zoomed, zooming, zooms",1000,"V1, V2, V3, V4, V5",,intransitive,provisional,NP V (intransitive),run-51.3.2,pending

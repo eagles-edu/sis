@@ -642,6 +642,8 @@ model LibraryEntry {
   phraseType           String?
   posSubtype           String?
   grammarClassification Json?
+  etymologyType       String?
+  etymology           String?
   vietnamese           String
   syllabication        String
   syllableCount        Int      @default(0)
