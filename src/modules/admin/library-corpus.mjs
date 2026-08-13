@@ -2,6 +2,7 @@ import crypto from "node:crypto"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { queueAnnouncementEmail } from "./notification-queue.mjs"
 import { checkVerbFormsTransitivity, getVerbTransitivity } from "./verb-transitivity.mjs"
+import { getVerbForms, getVerbRegularity } from "./verb-regularity.mjs"
 
 const MW_BASE = "https://www.dictionaryapi.com/api/v3/references/collegiate/json"
 const MAX_PAGE_SIZE = 100
@@ -352,13 +353,22 @@ function stripMwMarkup(textValue) {
     .trim()
 }
 
+function stripMwDefinition(textValue) {
+  const marked = text(textValue)
+    .replace(/\{(?:it|italic)\}([\s\S]*?)\{\/(?:it|italic)\}/giu, "*$1*")
+    .replace(/\{(?:b|bold)\}([\s\S]*?)\{\/(?:b|bold)\}/giu, "**$1**")
+    .replace(/\{(?:ldquo|rdquo)\}/gu, '"')
+    .replace(/\{(?:lsquo|rsquo)\}/gu, "'");
+  return stripMwMarkup(marked)
+}
+
 function stripMw(textValue) { return stripMwMarkup(textValue).replace(/\*+/gu, "-") }
 function stripMwWord(textValue) { return stripMwMarkup(textValue).replace(/\*+/gu, "").trim() }
 
-function uniqueText(values) {
+function uniqueText(values, normalizer = stripMw) {
   const flatten = (value) => Array.isArray(value) ? value.flatMap(flatten) : [value]
   const flattened = flatten(Array.isArray(values) ? values : [values])
-  return [...new Set(flattened.map(stripMw).filter(Boolean))]
+  return [...new Set(flattened.map(normalizer).filter(Boolean))]
 }
 
 function collectDefinitionText(value, output = []) {
@@ -371,6 +381,36 @@ function collectDefinitionText(value, output = []) {
   Object.entries(value).forEach(([key, child]) => {
     if (["dt", "vis", "sdsense", "sseq", "pseq", "sense", "sen", "def", "dros", "bs", "uns", "uros"].includes(key)) collectDefinitionText(child, output)
     else if (key === "t") output.push(child)
+  })
+  return output
+}
+
+function collectDefinitionBlocks(value, output = []) {
+  if (Array.isArray(value)) {
+    if (value[0] === "sense" && value[1] && typeof value[1] === "object") {
+      collectDefinitionBlocks({ sense: value[1] }, output)
+      return output
+    }
+    value.forEach((item) => collectDefinitionBlocks(item, output))
+    return output
+  }
+  if (!value || typeof value !== "object") return output
+  Object.entries(value).forEach(([key, child]) => {
+    if (key === "sense" && child && typeof child === "object" && !Array.isArray(child)) {
+      const number = stripMw(child.sn)
+      const definitions = uniqueText(collectDefinitionText(child.dt), stripMwDefinition)
+      const examples = uniqueText(collectDefinitionText(child.vis), stripMwDefinition)
+      const definition = definitions.join(" ").trim()
+      if (definition) output.push((number ? number + ". " : "") + definition)
+      examples.forEach((example) => output.push("Example: " + example))
+      Object.entries(child).forEach(([childKey, nested]) => {
+        if (!["dt", "vis"].includes(childKey)) collectDefinitionBlocks(nested, output)
+      })
+      return
+    }
+    if (["def", "dros", "bs", "uns", "uros", "sseq", "pseq", "sdsense"].includes(key)) {
+      collectDefinitionBlocks(child, output)
+    }
   })
   return output
 }
@@ -425,8 +465,8 @@ function normalizeCrossReferences(value = []) {
 function normalizeMwEntry(entry, index) {
   const headword = stripMwWord(entry?.hwi?.hw)
   const syllabication = stripMw(entry?.hwi?.hw)
-  const detailedDefinitions = uniqueText(collectDefinitionText(entry?.def))
-  const shortDefinitions = uniqueText(entry?.shortdef)
+  const detailedDefinitions = [...new Set(collectDefinitionBlocks(entry?.def).map((value) => value.trim()).filter(Boolean))]
+  const shortDefinitions = uniqueText(entry?.shortdef, stripMwDefinition)
   const inflections = normalizeInflections(entry?.ins)
   return {
     index,
@@ -451,6 +491,34 @@ function normalizeMwEntry(entry, index) {
   }
 }
 
+function explicitEslFields(record) {
+  const signals = [...record.labels, ...record.verbDividers, ...record.inflections.map((item) => item.grammar)]
+    .map((value) => lower(value))
+    .filter(Boolean)
+  const joined = signals.join(" | ")
+  const fields = {}
+  if (lower(record.partOfSpeech) === "noun") {
+    const countable = /\b(?:count noun|countable)\b/u.test(joined)
+    const uncountable = /\b(?:noncount noun|uncountable)\b/u.test(joined)
+    if (countable && uncountable) fields.countability = "both S & P"
+    else if (countable) fields.countability = "countable"
+    else if (uncountable) fields.countability = "uncountable"
+    if (/\b(?:singular and plural|singular or plural)\b/u.test(joined)) fields.nounNumber = "singular and plural"
+    else if (/\bplural noun\b/u.test(joined)) fields.nounNumber = "plural"
+    else if (/\bsingular noun\b/u.test(joined)) fields.nounNumber = "singular"
+  }
+  if (lower(record.partOfSpeech) === "verb") {
+    const regularity = getVerbRegularity(record.headword)
+    if (regularity.found) fields.verbRegularity = regularity.regularity
+    const transitive = record.verbDividers.some((value) => /\btransitive verb\b/iu.test(value) && !/\bintransitive verb\b/iu.test(value))
+    const intransitive = record.verbDividers.some((value) => /\bintransitive verb\b/iu.test(value))
+    if (transitive && intransitive) fields.verbTransitivity = "ambitransitive"
+    else if (transitive) fields.verbTransitivity = "transitive"
+    else if (intransitive) fields.verbTransitivity = "intransitive"
+  }
+  return fields
+}
+
 function mwFields(record) {
   const forms = record.inflections.map((inflection) => inflection.form).filter(Boolean)
   const fields = {
@@ -459,6 +527,7 @@ function mwFields(record) {
     syllabication: record.syllabication,
     definition: record.definitions.join("\n"),
     etymology: record.etymology.join("\n"),
+    ...explicitEslFields(record),
   }
   if (lower(record.partOfSpeech) !== "verb") return fields
   const labelledPast = record.inflections.find((inflection) => /past(?! participle)|preterite/iu.test(inflection.label))?.form || ""
@@ -469,7 +538,19 @@ function mwFields(record) {
   const presentParticiple = forms.find((form) => /ing$/iu.test(form)) || ""
   const plainHeadword = record.headword.replace(/[^\p{L}\p{N}]+/gu, "")
   const thirdPerson = record.stems.find((form) => [plainHeadword + "s", plainHeadword + "es"].includes(lower(form))) || record.stems.find((form) => /(?:s|es)$/iu.test(form) && !/(?:ss|us)$/iu.test(form)) || ""
-  return { ...fields, verbInfinitive: record.headword, verbV1: record.headword, verbV2: past, verbV3: participle, verbV4: presentParticiple, verbV5: thirdPerson }
+  const referenceForms = getVerbForms(record.headword)
+  if (referenceForms.found) {
+    return {
+      ...fields,
+      verbInfinitive: referenceForms.infinitive,
+      verbV1: referenceForms.forms.V1,
+      verbV2: referenceForms.forms.V2,
+      verbV3: referenceForms.forms.V3,
+      verbV4: referenceForms.forms.V4,
+      verbV5: referenceForms.forms.V5,
+    }
+  }
+  return { ...fields, verbInfinitive: `to ${record.headword}`, verbV1: record.headword, verbV2: past, verbV3: participle, verbV4: presentParticiple, verbV5: thirdPerson }
 }
 
 export async function previewMerriamWebsterLibraryEntry(entry) {

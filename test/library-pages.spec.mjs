@@ -163,5 +163,8 @@ test("flattened vocabulary preserves New Words geometry and formats safe definit
   assert.match(html, /A <strong>bold<\/strong> line/)
   assert.match(html, /<ol><li><em>First<\/em><\/li><li><u>Second<\/u><\/li><\/ol>/)
   assert.match(html, /<ul><li>Third<\/li><\/ul>/)
+  assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\nB"), "A<br>B")
+  assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\n\n- B"), "A<br><br><ul><li>B</li></ul>")
+  assert.match(sharedVocabularyEditor, /Ctrl\+B bold.*Ctrl\+I italic.*Ctrl\+U underline/)
   assert.doesNotMatch(html, /<script|onerror=|javascript:/i)
 })

@@ -143,6 +143,74 @@
     }));
   }
 
+  function dispatchDefinitionInput(textarea) {
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  function formatDefinitionSelection(textarea, prefix, suffix = prefix) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+    const selected = value.slice(start, end);
+    const hasOuterMarkers = start >= prefix.length
+      && value.slice(start - prefix.length, start) === prefix
+      && value.slice(end, end + suffix.length) === suffix;
+    if (hasOuterMarkers) {
+      textarea.setRangeText(selected, start - prefix.length, end + suffix.length, "select");
+      textarea.selectionStart = start - prefix.length;
+      textarea.selectionEnd = end - prefix.length;
+    } else if (selected) {
+      textarea.setRangeText(`${prefix}${selected}${suffix}`, start, end, "select");
+      textarea.selectionStart = start + prefix.length;
+      textarea.selectionEnd = end + prefix.length;
+    } else {
+      textarea.setRangeText(`${prefix}${suffix}`, start, end, "end");
+      textarea.selectionStart = start + prefix.length;
+      textarea.selectionEnd = start + prefix.length;
+    }
+    dispatchDefinitionInput(textarea);
+  }
+
+  function continueDefinitionList(event, textarea) {
+    if (event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (textarea.selectionStart !== textarea.selectionEnd) return;
+    const caret = textarea.selectionStart;
+    const lineStart = textarea.value.lastIndexOf("\n", caret - 1) + 1;
+    const line = textarea.value.slice(lineStart, caret);
+    const unordered = line.match(/^(\s*)([-+*])\s+(.*)$/u);
+    const ordered = line.match(/^(\s*)(\d+)[.)]\s+(.*)$/u);
+    const match = unordered || ordered;
+    if (!match) return;
+    event.preventDefault();
+    if (!match[3]) {
+      textarea.setRangeText("", lineStart, caret, "end");
+    } else {
+      const marker = unordered ? `${match[1]}${match[2]} ` : `${match[1]}${Number(match[2]) + 1}. `;
+      textarea.setRangeText(`\n${marker}`, caret, caret, "end");
+    }
+    dispatchDefinitionInput(textarea);
+  }
+
+  function bindDefinitionFormatting() {
+    if (typeof document === "undefined" || typeof document.addEventListener !== "function") return;
+    document.addEventListener("keydown", (event) => {
+      const textarea = event.target?.closest?.('[data-vocabulary-field="definition"]');
+      if (!(textarea instanceof HTMLTextAreaElement)) return;
+      if ((event.ctrlKey || event.metaKey) && !event.altKey) {
+        const key = String(event.key || "").toLowerCase();
+        const format = key === "b" ? ["**", "**"] : key === "i" ? ["*", "*"] : key === "u" ? ["[u]", "[/u]"] : null;
+        if (format) {
+          event.preventDefault();
+          formatDefinitionSelection(textarea, format[0], format[1]);
+          return;
+        }
+      }
+      continueDefinitionList(event, textarea);
+    });
+  }
+
+  bindDefinitionFormatting();
+
   function bindDefinitionAutosize(row) {
     const textarea = row?.querySelector('[data-vocabulary-field="definition"]');
     if (!(textarea instanceof HTMLTextAreaElement)) return;
@@ -173,6 +241,11 @@
       listType = "";
     };
     lines.forEach((line) => {
+      if (!line.trim()) {
+        closeList();
+        output.push("<br>");
+        return;
+      }
       const ordered = line.match(/^\s*\d+[.)]\s+(.+)$/u);
       const unordered = line.match(/^\s*[-*+]\s+(.+)$/u);
       const item = ordered || unordered;
@@ -189,7 +262,7 @@
       closeList();
       if (line) {
         output.push(definitionInlineHtml(line), "<br>");
-      } else if (output.at(-1) !== "<br>") {
+      } else {
         output.push("<br>");
       }
     });
@@ -221,7 +294,7 @@
             <div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">
               ${["LD", "GT", "WH"].map((label) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup" data-vocabulary-lookup="${label}" title="Look up the ${label} field to complete this vocabulary entry" aria-label="Look up the ${label} field">${label}</button>`).join("")}
             </div>
-            <textarea name="vocabularyDefinition-${uid}" data-vocabulary-field="definition" rows="1" placeholder="Definition" aria-label="Definition" required></textarea>
+            <textarea name="vocabularyDefinition-${uid}" data-vocabulary-field="definition" rows="1" placeholder="Definition" title="Ctrl+B bold · Ctrl+I italic · Ctrl+U underline · Enter continues - and 1. lists" aria-label="Definition" required></textarea>
             ${rowActions}
           </div>
         </div>`;

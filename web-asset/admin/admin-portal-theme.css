@@ -616,7 +616,7 @@ html,
 body {
   color: var(--ink);
   font-family: var(--font-base, system-ui, -apple-system, sans-serif);
-  margin: 0;
+  margin: 6px 0;
   min-height: 100%;
 }
 button,
@@ -3015,7 +3015,7 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition ol,
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition ul {
-  margin: 6px 0;
+  margin: 0;
   padding-inline-start: 28px;
   white-space: normal;
 }

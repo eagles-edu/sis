@@ -48,8 +48,9 @@ test("MW preview keeps complete normalized entry data and does not expose provid
       meta: { id: "give", stems: ["give", "gave"], syns: [["offer"]], ants: [["take"]] },
       hwi: { hw: "give", prs: [{ mw: "ˈgiv", sound: { audio: "give0001" } }] },
       fl: "verb",
+      lbs: ["transitive verb"],
       def: [{ vd: "transitive verb", sseq: [[[
-        "sense", { sn: "1", dt: [["text", "{bc}to make a present of"]], vis: [{ t: "give a gift" }] },
+        "sense", { sn: "1", dt: [["text", "{bc}to make a present of {it}something{/it} {b}bold clue{/b}"]], vis: [{ t: "give a gift" }] },
       ]]] }],
       shortdef: ["to make a present of"],
       ins: [{ if: "gave", il: "past" }, { if: "given", il: "past participle" }],
@@ -63,12 +64,18 @@ test("MW preview keeps complete normalized entry data and does not expose provid
     const result = await previewMerriamWebsterLibraryEntry({ english: "give" })
     assert.equal(result.ok, true)
     assert.match(result.fields.definition, /to make a present of/)
-    assert.match(result.fields.definition, /give a gift/)
-    assert.equal(result.fields.verbInfinitive, "give")
+    assert.match(result.fields.definition, /1\. to make a present of/)
+    assert.match(result.fields.definition, /\*something\*/)
+    assert.match(result.fields.definition, /\*\*bold clue\*\*/)
+    assert.match(result.fields.definition, /Example: give a gift/)
+    assert.equal(result.fields.verbInfinitive, "to give")
     assert.equal(result.fields.verbV1, "give")
     assert.equal(result.fields.verbV2, "gave")
     assert.equal(result.fields.verbV3, "given")
-    assert.equal(result.fields.verbV4, "")
+    assert.equal(result.fields.verbTransitivity, "transitive")
+    assert.equal(result.fields.verbRegularity, "irregular")
+    assert.equal(result.fields.verbV4, "giving")
+    assert.equal(result.fields.verbV5, "gives")
     assert.equal(result.details.entries[0].inflections.length, 2)
     assert.deepEqual(result.details.entries[0].synonyms, ["offer"])
     assert.deepEqual(result.details.entries[0].antonyms, ["take"])
@@ -76,6 +83,18 @@ test("MW preview keeps complete normalized entry data and does not expose provid
     assert.match(result.details.entries[0].etymology.join(" "), /Middle English given/)
     assert.equal(result.details.entries[0].firstKnownUse, "before 12th century")
     assert.equal(Object.hasOwn(result, "raw"), false)
+    globalThis.fetch = async () => ({
+      ok: true,
+      json: async () => [{
+        hwi: { hw: "water" },
+        fl: "noun",
+        lbs: ["count noun"],
+        def: [{ sseq: [[["sense", { sn: "1", dt: [["text", "{bc}a liquid"]], vis: [] }]]] }],
+        shortdef: ["a liquid"],
+      }],
+    })
+    const nounResult = await previewMerriamWebsterLibraryEntry({ english: "water" })
+    assert.equal(nounResult.fields.countability, "countable")
   } finally {
     if (savedKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
     else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedKey
