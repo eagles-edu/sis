@@ -156,7 +156,7 @@
             <h2 id="libraryEngagementTitle">Library assignment engagement</h2>
             <p class="small">Brevo queue, delivery, open, click, and completion tracking for Library assignments.</p>
           </div>
-          <button id="libraryEngagementReloadBtn" type="button" class="portal-button portal-button-alt"
+          <button id="libraryEngagementReloadBtn" type="button" class="portal-button portal-button-btn-refresh"
             title="Reload Library assignment delivery and engagement events.">Refresh</button>
           <p id="libraryEngagementSummary" class="small" aria-live="polite">Loading engagement…</p>
           <div id="libraryEngagementRows" class="table-scroll-wrap"></div>
@@ -179,7 +179,7 @@
     (() => {
       if (!location.pathname.replace(/\/+$/u, "").endsWith("/library")) return;
       const apiRoot = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library`;
-      const fields = ["english", "americanEnglish", "britishEnglish", "partOfSpeech", "entryKind", "phraseType", "posSubtype", "vietnamese", "syllabication", "syllableCount", "definition", "countability", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"];
+      const fields = ["english", "americanEnglish", "britishEnglish", "partOfSpeech", "phraseType", "vietnamese", "syllabication", "syllableCount", "definition", "countability", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"];
       const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character]));
       const label = (field) => field.replace(/([A-Z])/g, " $1").replace(/^./u, (character) => character.toUpperCase());
       const flatHtml = (entry) => window.SIS_VOCABULARY_ESL.flatEntryHtml(entry, { editClass: "library-admin-flat-edit", editAttributes: `data-approved-edit="${esc(entry.id)}"` });
@@ -242,14 +242,14 @@
       const apiRoot = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library`;
       const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
       const json = async (path, options = {}) => { const response = await fetch(`${apiRoot}${path}`, { credentials: "include", ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Library request failed"); return data; };
-      const REVIEW_FIELDS = ["english", "americanEnglish", "britishEnglish", "partOfSpeech", "entryKind", "phraseType", "posSubtype", "vietnamese", "syllabication", "syllableCount", "definition"];
-      const SHARED_FIELDS = new Set(["english", "partOfSpeech", "vietnamese", "syllabication", "definition", "etymologyType", "etymology", "grammarClassification", "grammarClassification.grammarFamily", "grammarClassification.grammarSubtype", "grammarClassification.grammarDetail", "grammarClassification.grammarNumber", "countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"]);
+      const REVIEW_FIELDS = ["english", "americanEnglish", "britishEnglish", "partOfSpeech", "phraseType", "vietnamese", "syllabication", "syllableCount", "definition"];
+      const SHARED_FIELDS = new Set(["english", "partOfSpeech", "vietnamese", "syllabication", "definition", "etymologyType", "etymology", "originPath", "originReferences", "grammarClassification", "grammarClassification.grammarFamily", "grammarClassification.grammarSubtype", "grammarClassification.grammarDetail", "grammarClassification.grammarNumber", "countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"]);
       let queueItems = []; let selectedQueueItem = null; let scrollLock = true;
       const label = (field) => field.split(".").pop().replace(/([A-Z])/g, " $1").replace(/^./u, (c) => c.toUpperCase());
       const getPath = (payload, path) => path.split(".").reduce((value, key) => value && typeof value === "object" ? value[key] : "", payload);
       const setPath = (payload, path, value) => { const parts = path.split("."); const last = parts.pop(); let target = payload; parts.forEach((part) => { target[part] ||= {}; target = target[part]; }); target[last] = value; };
       const fieldsFor = (payload) => [...new Set([...REVIEW_FIELDS, ...Object.keys(payload || {})])].filter((field) => !SHARED_FIELDS.has(field));
-      const fieldPath = (input) => input.dataset.reviewField || (input.dataset.vocabularyEslField && window.SIS_VOCABULARY_ESL?.grammarFields.includes(input.dataset.vocabularyEslField) ? `grammarClassification.${input.dataset.vocabularyEslField}` : input.dataset.vocabularyEslField);
+      const fieldPath = (input) => input.dataset.reviewField || input.dataset.vocabularyOriginField || (input.dataset.vocabularyEslField && window.SIS_VOCABULARY_ESL?.grammarFields.includes(input.dataset.vocabularyEslField) ? `grammarClassification.${input.dataset.vocabularyEslField}` : input.dataset.vocabularyEslField);
       function fieldHtml(payload, field, editable) { const value = getPath(payload, field); const shown = typeof value === "object" ? JSON.stringify(value) : String(value ?? ""); if (!editable) return `<div class="library-review-field"><label>${esc(label(field))}</label><div>${esc(shown || "—")}</div></div>`; if (field === "partOfSpeech") return `<label class="library-review-field"><span>${esc(label(field))}</span><select name="library-review-${esc(field)}" data-review-field="partOfSpeech" data-vocabulary-field="partOfSpeech"><option value="">Select</option>${window.SIS_VOCABULARY_ESL.POS.map((pos) => `<option value="${esc(pos)}"${pos === value ? " selected" : ""}>${esc(pos)}</option>`).join("")}</select></label>`; if (field === "definition") return `<label class="library-review-field library-review-field--wide"><span>${esc(label(field))}</span><textarea name="library-review-${esc(field)}" data-review-field="${esc(field)}">${esc(shown)}</textarea></label>`; return `<label class="library-review-field"><span>${esc(label(field))}</span><input name="library-review-${esc(field)}" data-review-field="${esc(field)}" value="${esc(shown)}"></label>`; }
       function bindSharedEditorRow(pane) {
         const row = pane?.querySelector("[data-news-vocabulary-row]");
@@ -262,21 +262,23 @@
         });
       }
       function hydratePane(pane, payload) { window.SIS_VOCABULARY_ESL?.hydrate(pane, payload); bindSharedEditorRow(pane); window.SIS_VOCABULARY_ESL?.bindLookupButtons(pane); window.SIS_VOCABULARY_ESL?.bindDefinitionAutosize(pane); }
-      function groupFor(item) { return item?.duplicateGroup?.length ? item.duplicateGroup : [item]; }
+      function groupFor(item) { const group = item?.duplicateGroup?.length ? item.duplicateGroup : [item]; return [item, ...group.filter((candidate) => candidate.id !== item.id)]; }
       function optionsFor(item) { return groupFor(item).map((candidate, index) => `<option value="${esc(candidate.id)}">${String.fromCharCode(65 + index)} · ${esc(candidate.contributorName || "Unknown")} · ${esc(candidate.payloadJson?.english || "Untitled")}</option>`).join(""); }
       function lockPanes(workspace) { const panes = [...workspace.querySelectorAll("[data-review-pane]")]; let syncing = false; panes.forEach((pane) => pane.addEventListener("scroll", () => { if (!scrollLock || syncing) return; syncing = true; panes.forEach((other) => { if (other !== pane) { other.scrollTop = pane.scrollTop; other.scrollLeft = pane.scrollLeft; } }); requestAnimationFrame(() => { syncing = false; }); })); }
       function sharedPaneHtml(item, slot, editable) {
         const payload = item?.payloadJson || {};
         const advanced = fieldsFor(payload).map((field) => fieldHtml(payload, field, editable)).join("");
-        return `<article class="library-review-pane" data-review-pane="${slot}" data-review-source-id="${esc(item?.id || "")}"${editable ? "" : " aria-readonly=\"true\""}><h3>${slot === "a" ? "Version A" : "Version B"}${item?.contributorName ? ` · ${esc(item.contributorName)}` : ""}</h3>${window.SIS_VOCABULARY_ESL.editorRowHtml(`review-${slot}`, { includeMwFill: true, includeTransitivityTools: true })}<div class="library-review-advanced-fields"><div class="section-head"><h4>Library metadata</h4><p class="small">Additional fields retained for the reviewed Library record.</p></div><div class="library-review-field-grid">${advanced}</div></div></article>`;
+        return `<article class="library-review-pane" data-review-pane="${slot}" data-review-source-id="${esc(item?.id || "")}"${editable ? "" : " aria-readonly=\"true\""}><h3>${slot === "a" ? "Version A" : "Version B"}${item?.contributorName ? ` · ${esc(item.contributorName)}` : ""}</h3>${window.SIS_VOCABULARY_ESL.editorRowHtml(`review-${slot}`, { includeMwFill: true, includeTransitivityTools: true, originLookupPath: `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library/etymonline` })}<div class="library-review-advanced-fields"><div class="section-head"><h4>Library metadata</h4><p class="small">Additional fields retained for the reviewed Library record.</p></div><div class="library-review-field-grid">${advanced}</div></div></article>`;
       }
       function readSharedPane(pane, original) {
         const next = structuredClone(original || {});
-        pane.querySelectorAll("[data-review-field], [data-approved-field], [data-vocabulary-field], [data-vocabulary-esl-field]").forEach((input) => {
+        pane.querySelectorAll("[data-review-field], [data-approved-field], [data-vocabulary-field], [data-vocabulary-esl-field], [data-vocabulary-origin-field]").forEach((input) => {
           const sourceField = input.dataset.reviewField || input.dataset.approvedField || input.dataset.vocabularyField || input.dataset.vocabularyEslField;
           if (!sourceField) return;
           const field = window.SIS_VOCABULARY_ESL?.grammarFields.includes(sourceField) ? `grammarClassification.${sourceField}` : sourceField;
-          setPath(next, field, input.type === "checkbox" ? input.checked : input.value);
+          let value = input.type === "checkbox" ? input.checked : input.value;
+          if (field === "originReferences") { try { value = JSON.parse(value || "[]"); } catch { value = []; } }
+          setPath(next, field, value);
         });
         return next;
       }
@@ -291,20 +293,20 @@
       if (!location.pathname.replace(/\/+$/u, "").endsWith("/library")) return;
       const apiRoot = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library`;
       const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
-      const fields = ["english", "americanEnglish", "britishEnglish", "partOfSpeech", "entryKind", "phraseType", "posSubtype", "vietnamese", "syllabication", "syllableCount", "definition", "etymologyType", "etymology"];
+      const fields = ["english", "americanEnglish", "britishEnglish", "partOfSpeech", "phraseType", "vietnamese", "syllabication", "syllableCount", "definition", "etymologyType", "etymology"];
       const coreFields = new Set(["english", "partOfSpeech", "vietnamese", "syllabication", "definition"]);
-      const sharedFields = new Set(["etymologyType", "etymology", "grammarClassification", "grammarClassification.grammarFamily", "grammarClassification.grammarSubtype", "grammarClassification.grammarDetail", "grammarClassification.grammarNumber", "countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"]);
+      const sharedFields = new Set(["etymologyType", "etymology", "originPath", "originReferences", "grammarClassification", "grammarClassification.grammarFamily", "grammarClassification.grammarSubtype", "grammarClassification.grammarDetail", "grammarClassification.grammarNumber", "countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"]);
       const getPath = (payload, path) => path.split(".").reduce((value, key) => value && typeof value === "object" ? value[key] : "", payload);
       const setPath = (payload, path, value) => { const parts = path.split("."); const last = parts.pop(); let target = payload; parts.forEach((part) => { target[part] ||= {}; target = target[part]; }); target[last] = value; };
       const label = (field) => field.split(".").pop().replace(/([A-Z])/g, " $1").replace(/^./u, (c) => c.toUpperCase());
       const json = async (path, options = {}) => { const response = await fetch(`${apiRoot}${path}`, { credentials: "include", ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Library request failed"); return data; };
       let entries = new Map();
-      const fieldPath = (input) => input.dataset.vocabularyField || input.dataset.approvedField || (input.dataset.vocabularyEslField && window.SIS_VOCABULARY_ESL?.grammarFields.includes(input.dataset.vocabularyEslField) ? `grammarClassification.${input.dataset.vocabularyEslField}` : input.dataset.vocabularyEslField);
+      const fieldPath = (input) => input.dataset.vocabularyField || input.dataset.approvedField || input.dataset.vocabularyOriginField || (input.dataset.vocabularyEslField && window.SIS_VOCABULARY_ESL?.grammarFields.includes(input.dataset.vocabularyEslField) ? `grammarClassification.${input.dataset.vocabularyEslField}` : input.dataset.vocabularyEslField);
       function fieldHtml(payload, field) { const value = getPath(payload, field); const shown = typeof value === "object" ? JSON.stringify(value) : String(value ?? ""); if (field === "partOfSpeech") return `<label class="library-review-field"><span>${esc(label(field))}</span><select name="library-approved-${esc(field)}" data-approved-field="partOfSpeech" data-vocabulary-field="partOfSpeech"><option value="">Select</option>${window.SIS_VOCABULARY_ESL.POS.map((pos) => `<option value="${esc(pos)}"${pos === value ? " selected" : ""}>${esc(pos)}</option>`).join("")}</select></label>`; if (field === "definition") return `<label class="library-review-field library-review-field--wide"><span>${esc(label(field))}</span><textarea name="library-approved-${esc(field)}" data-approved-field="${esc(field)}">${esc(shown)}</textarea></label>`; return `<label class="library-review-field"><span>${esc(label(field))}</span><input name="library-approved-${esc(field)}" data-approved-field="${esc(field)}" value="${esc(shown)}"></label>`; }
       function editEntry(entry) {
         const workspace = document.getElementById("libraryApprovedEditor");
         workspace.hidden = false;
-        workspace.innerHTML = `<div class="section-head"><h2 id="libraryApprovedEditorTitle">Edit ${esc(entry.english)}</h2><p class="small">The core row uses the same New Words editor interface. Library-only metadata stays below it. Submit creates a provisional edit for approval; the approved canonical entry is unchanged until review.</p></div><div class="library-review-pane" data-surface-role="card" data-vocabulary-editor data-approved-entry-id="${esc(entry.id)}">${window.SIS_VOCABULARY_ESL.editorRowHtml(`library-${entry.id}`, { includeMwFill: true, includeTransitivityTools: true })}<div class="library-review-advanced-fields"><div class="section-head"><h3>Library metadata</h3><p class="small">Additional corpus fields retained for the reviewed Library record.</p></div><div class="library-review-field-grid">${fields.filter((field) => !coreFields.has(field) && !sharedFields.has(field)).map((field) => fieldHtml(entry, field)).join("")}</div></div></div><div class="library-review-actions"><button type="button" class="portal-button portal-button-affirm" data-approved-submit title="Submit this complete Library edit for approval">Submit</button><button type="button" class="portal-button portal-button-alt" data-approved-cancel>Close</button></div><p class="small" data-approved-message aria-live="polite"></p>`;
+        workspace.innerHTML = `<div class="section-head"><h2 id="libraryApprovedEditorTitle">Edit ${esc(entry.english)}</h2><p class="small">The core row uses the same New Words editor interface. Library-only metadata stays below it. Saving from the admin Library applies the approved canonical edit immediately.</p></div><div class="library-review-pane" data-surface-role="card" data-vocabulary-editor data-approved-entry-id="${esc(entry.id)}">${window.SIS_VOCABULARY_ESL.editorRowHtml(`library-${entry.id}`, { includeMwFill: true, includeTransitivityTools: true, originLookupPath: `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library/etymonline` })}<div class="library-review-advanced-fields"><div class="section-head"><h3>Library metadata</h3><p class="small">Additional corpus fields retained for the reviewed Library record.</p></div><div class="library-review-field-grid">${fields.filter((field) => !coreFields.has(field) && !sharedFields.has(field)).map((field) => fieldHtml(entry, field)).join("")}</div></div></div><div class="library-review-actions"><button type="button" class="portal-button portal-button-affirm" data-approved-submit title="Save this complete Library edit as approved">Save</button><button type="button" class="portal-button portal-button-alt" data-approved-cancel>Close</button></div><p class="small" data-approved-message aria-live="polite"></p>`;
         const row = workspace.querySelector("[data-news-vocabulary-row]");
         ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((field) => {
           const input = row?.querySelector(`[data-vocabulary-field="${field}"]`);
@@ -319,14 +321,15 @@
         workspace.querySelector("[data-approved-cancel]").addEventListener("click", () => { workspace.hidden = true; });
         workspace.querySelector("[data-approved-submit]").addEventListener("click", async () => {
           const payload = structuredClone(entry);
-          workspace.querySelectorAll("[data-approved-field], [data-vocabulary-field], [data-vocabulary-esl-field]").forEach((input) => {
+          workspace.querySelectorAll("[data-approved-field], [data-vocabulary-field], [data-vocabulary-esl-field], [data-vocabulary-origin-field]").forEach((input) => {
             const field = fieldPath(input);
-            if (field) setPath(payload, field, input.type === "checkbox" ? input.checked : input.value);
+            if (field) { let value = input.type === "checkbox" ? input.checked : input.value; if (field === "originReferences") { try { value = JSON.parse(value || "[]"); } catch { value = []; } } setPath(payload, field, value); }
           });
           const message = workspace.querySelector("[data-approved-message]");
           try {
-            await json("/contributions", { method: "POST", body: JSON.stringify({ entryId: entry.id, entry: payload }) });
-            message.textContent = "Provisional edit submitted to the approval queue.";
+            await json(`/entries/${encodeURIComponent(entry.id)}`, { method: "PUT", body: JSON.stringify(payload) });
+            message.textContent = "Approved Library edit saved.";
+            await loadApproved();
           } catch (error) {
             message.textContent = error.message;
           }
@@ -348,6 +351,7 @@
     })();
   </script>
   <script src="/web-asset/admin/library-review-workbench.js" defer></script>
+  <script src="/web-asset/admin/admin-b612-mono-loader.js" defer></script>
 </body>
 
 </html>

@@ -4,6 +4,7 @@ import test from "node:test"
 
 const read = (file) => fs.readFileSync(file, "utf8")
 const html = read("web-asset/admin/student-admin.html")
+const libraryHtml = read("web-asset/admin/library-admin.html")
 const adminCss = read("web-asset/admin/student-admin.css")
 
 test("engagement pages remain wired to the shared matrix and their own data endpoints", () => {
@@ -29,6 +30,12 @@ test("engagement pages remain wired to the shared matrix and their own data endp
   assert.match(profile, /emailSent: event\("sentAt"\) \|\| row\.invitationSentAt/u)
   assert.match(profile, /\[row\.parentsId, row\.familyId, row\.eaglesIds, row\.learners, row\.parentName, row\.parentEmail\]/u)
   assert.match(read("server/student-admin-routes.mjs"), /invitationQueuedAt: row\.invitation\?\.queuedAt/u)
+  assert.match(html, /id="profileEngagementReloadBtn"[^>]*class="portal-button portal-button-btn-refresh"/u)
+  assert.match(html, /id="assignmentEngagementReloadBtn"[^>]*class="portal-button portal-button-btn-refresh"/u)
+  assert.match(html, /id="assignmentEngagementDayToggleBtn"[^>]*class="portal-button portal-button-primary"/u)
+  assert.match(html, /id="performanceEngagementReloadBtn"[^>]*class="portal-button portal-button-btn-refresh"/u)
+  assert.match(html, /id="performanceEngagementDayToggleBtn"[^>]*class="portal-button portal-button-primary"/u)
+  assert.match(libraryHtml, /id="libraryEngagementReloadBtn"[^>]*class="portal-button portal-button-btn-refresh"/u)
 })
 
 test("profile engagement stays under Students and exposes the matrix host", () => {

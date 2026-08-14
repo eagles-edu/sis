@@ -46,6 +46,7 @@ import {
   submitLibraryContribution,
   updateLibraryEntry,
 } from "../src/modules/admin/library-corpus.mjs"
+import { fetchEtymonlinePreview } from "../src/modules/admin/library-origin.mjs"
 import {
   deleteStudent,
   importStudentsFromRows,
@@ -317,6 +318,7 @@ const STUDENT_LIBRARY_API_PATH = `${STUDENT_API_PREFIX}/library`
 const STUDENT_LIBRARY_ASSIGNMENTS_PATH = `${STUDENT_LIBRARY_API_PATH}/assignments`
 const STUDENT_LIBRARY_SUBMISSIONS_PATH = `${STUDENT_LIBRARY_API_PATH}/submissions`
 const ADMIN_LIBRARY_API_PATH = `${ADMIN_API_PREFIX}/library`
+const ADMIN_LIBRARY_ETYMONLINE_PATH = `${ADMIN_LIBRARY_API_PATH}/etymonline`
 const ADMIN_LIBRARY_ENTRIES_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)$`)
 const ADMIN_LIBRARY_CONTRIBUTIONS_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/contributions/([^/]+)/review$`)
 const ADMIN_LIBRARY_MW_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/mw-preview$`)
@@ -6614,6 +6616,11 @@ async function handleApiRequest(request, response, pathname, url) {
     }
   }
 
+  if (method === "GET" && pathname === ADMIN_LIBRARY_ETYMONLINE_PATH) {
+    sendJson(response, 200, { ok: true, ...(await fetchEtymonlinePreview(url.searchParams.get("word"))) })
+    return true
+  }
+
   if (method === "GET" && pathname === ADMIN_LIBRARY_API_PATH) {
     sendJson(response, 200, await listLibraryEntries(Object.fromEntries(url.searchParams.entries())))
     return true
@@ -8753,6 +8760,11 @@ async function handleStudentApiRequest(request, response, pathname, url) {
       ...Object.fromEntries(url.searchParams.entries()),
       studentRefId,
     }))
+    return true
+  }
+
+  if (method === "GET" && pathname === `${STUDENT_LIBRARY_API_PATH}/etymonline`) {
+    sendJson(response, 200, { ok: true, ...(await fetchEtymonlinePreview(url.searchParams.get("word"))) })
     return true
   }
 

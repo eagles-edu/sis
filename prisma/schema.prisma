@@ -638,12 +638,12 @@ model LibraryEntry {
   americanEnglish      String?
   britishEnglish       String?
   partOfSpeech         String
-  entryKind            String   @default("word")
   phraseType           String?
-  posSubtype           String?
   grammarClassification Json?
   etymologyType       String?
   etymology           String?
+  originPath          String?
+  originReferences    Json?
   vietnamese           String
   syllabication        String
   syllableCount        Int      @default(0)
@@ -677,7 +677,7 @@ model LibraryEntry {
 
   @@index([normalizedKey, partOfSpeech])
   @@index([english])
-  @@index([partOfSpeech, entryKind, phraseType])
+  @@index([partOfSpeech, phraseType])
   @@index([awlSublist, awlFamilyHeadword])
   @@index([createdAt])
   @@index([updatedAt])

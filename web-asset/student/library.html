@@ -152,7 +152,7 @@
       function openLibraryEdit(entry) {
         const dialog = document.createElement("dialog");
         dialog.className = "library-edit-dialog";
-        dialog.innerHTML = `<form method="dialog" class="library-edit-form"><h2>Propose Library edit</h2>${window.SIS_VOCABULARY_ESL.editorRowHtml(`library-${entry.id}`, { includeMwFill: false })}<div class="library-edit-actions"><button type="button" class="portal-button portal-button-alt" data-library-edit-cancel>Cancel</button><button type="submit" class="portal-button portal-button-affirm">Submit</button></div></form>`;
+        dialog.innerHTML = `<form method="dialog" class="library-edit-form"><h2>Propose Library edit</h2>${window.SIS_VOCABULARY_ESL.editorRowHtml(`library-${entry.id}`, { includeMwFill: false, originLookupPath: `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library/etymonline` })}<div class="library-edit-actions"><button type="button" class="portal-button portal-button-alt" data-library-edit-cancel>Cancel</button><button type="submit" class="portal-button portal-button-affirm">Submit</button></div></form>`;
         document.body.append(dialog);
         const form = dialog.querySelector("form");
         const row = dialog.querySelector("[data-news-vocabulary-row]");
@@ -172,6 +172,7 @@
           const payload = Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, row.querySelector(`[data-vocabulary-field="${key}"]`)?.value.trim() || ""]));
           Object.assign(payload, Object.fromEntries(["countability", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "etymologyType", "etymology"].map((key) => [key, row.querySelector(`[data-vocabulary-esl-field="${key}"]`)?.value.trim() || ""]).filter(([, value]) => value)));
           payload.grammarClassification = window.SIS_VOCABULARY_ESL?.classification(row) || {};
+          Object.assign(payload, window.SIS_VOCABULARY_ESL?.originMetadata(row) || {});
           const response = await fetch(`${libraryApi}/entries/${encodeURIComponent(entry.id)}/edit`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
           const data = await response.json();
           document.getElementById("libraryStatus").textContent = response.ok ? "Full edit submitted for admin approval." : (data.error || "Edit failed");

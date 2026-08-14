@@ -240,7 +240,7 @@ function buildMappingPortalHtml(input) {
       }
 
       .meta-row {
-        font-family: "JetBrains Mono", "Consolas", monospace;
+        font-family: "B612 Mono", monospace;
         font-size: 0.82rem;
         line-height: 1.6;
       }
@@ -392,7 +392,7 @@ function buildMappingPortalHtml(input) {
       }
 
       .diagram.raw {
-        font-family: "JetBrains Mono", "Consolas", monospace;
+        font-family: "B612 Mono", monospace;
         font-size: 0.82rem;
         white-space: pre;
       }
@@ -448,7 +448,7 @@ function buildMappingPortalHtml(input) {
       }
 
       .mono {
-        font-family: "JetBrains Mono", "Consolas", monospace;
+        font-family: "B612 Mono", monospace;
         font-size: 0.8rem;
       }
 
@@ -1179,7 +1179,7 @@ function buildWorkflowViewerHtml(input) {
       }
 
       .diagram.raw {
-        font-family: "JetBrains Mono", "Consolas", monospace;
+        font-family: "B612 Mono", monospace;
         white-space: pre;
         font-size: 0.82rem;
       }

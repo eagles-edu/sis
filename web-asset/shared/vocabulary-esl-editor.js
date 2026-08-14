@@ -14,7 +14,10 @@
     const uid = safeUid(rowUid);
     return `<div class="vocabulary-etymology-fields" data-vocabulary-etymology-fields>
       ${select("etymologyType", "Origin type (optional)", etymologyTypes, "", uid)}
+      <p class="vocabulary-origin-help">Choose the lexical relationship supported by the authoritative source. <a href="https://www.etymonline.com/" target="_blank" rel="noopener noreferrer">Etymonline</a> is primary; <a href="https://www.merriam-webster.com/" target="_blank" rel="noopener noreferrer">Merriam-Webster</a> is supplemental. This is not Works Cited or provenance; an uncertain origin path stays blank.</p>
       <label class="vocabulary-pos-control">Etymology / word origin (optional)<input name="vocabularyEsl-etymology-${uid}" data-vocabulary-esl-field="etymology" placeholder="Borrowed from French; formed with ..." aria-label="Etymology or word origin, optional"></label>
+      <input type="hidden" name="vocabularyOriginPath-${uid}" data-vocabulary-origin-field="originPath">
+      <input type="hidden" name="vocabularyOriginReferences-${uid}" data-vocabulary-origin-field="originReferences">
     </div>`;
   }
 
@@ -104,10 +107,23 @@
     return Object.fromEntries(grammarFields.map((field) => [field, String(row.querySelector(`[data-vocabulary-esl-field="${field}"]`)?.value || "").trim()]).filter(([, value]) => value));
   }
 
+  function originMetadata(row) {
+    const path = String(row?.querySelector('[data-vocabulary-origin-field="originPath"]')?.value || "").trim();
+    const rawReferences = String(row?.querySelector('[data-vocabulary-origin-field="originReferences"]')?.value || "").trim();
+    let originReferences = [];
+    if (rawReferences) {
+      try { originReferences = JSON.parse(rawReferences); } catch { originReferences = []; }
+    }
+    return {
+      ...(path ? { originPath: path } : {}),
+      ...(Array.isArray(originReferences) && originReferences.length ? { originReferences } : {}),
+    };
+  }
+
   function hydrate(row, data = {}, { preserveSyllabication = false } = {}) {
     const classificationValue = data.grammarClassification || {};
     sync(row);
-    const inputFor = (field) => row.querySelector(`[data-vocabulary-esl-field="${field}"], [data-vocabulary-field="${field}"]`);
+    const inputFor = (field) => row.querySelector(`[data-vocabulary-esl-field="${field}"], [data-vocabulary-field="${field}"], [data-vocabulary-origin-field="${field}"]`);
     const set = (field, value) => { const input = inputFor(field); if (input) input.value = String(value || ""); };
     set("partOfSpeech", data.partOfSpeech);
     sync(row);
@@ -119,6 +135,9 @@
       if (preserveSyllabication && field === "syllabication") return;
       set(field, value);
     });
+    const originReferences = Array.isArray(data.originReferences) ? data.originReferences : [];
+    const originReferencesInput = row.querySelector('[data-vocabulary-origin-field="originReferences"]');
+    if (originReferencesInput) originReferencesInput.value = originReferences.length ? JSON.stringify(originReferences) : "";
     sync(row);
   }
 
@@ -137,6 +156,7 @@
     if (label === "LD") return `https://www.ldoceonline.com/dictionary/${encoded.replace(/%20/gu, "-")}`;
     if (label === "GT") return `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate`;
     if (label === "WH") return `https://www.wordhelp.com/syllables/english/?q=${encoded}`;
+    if (label === "ET") return `https://www.etymonline.com/search?q=${encoded}`;
     return "";
   };
 
@@ -144,9 +164,62 @@
     row?.querySelectorAll("[data-vocabulary-lookup]").forEach((button) => {
       if (button.dataset.lookupBound === "true") return;
       button.dataset.lookupBound = "true";
-      button.addEventListener("click", () => {
-      const url = lookupUrl(button.getAttribute("data-vocabulary-lookup"), row.querySelector('[data-vocabulary-field="english"]')?.value);
+      button.addEventListener("click", async () => {
+      const label = button.getAttribute("data-vocabulary-lookup");
+      const english = row.querySelector('[data-vocabulary-field="english"]')?.value;
+      const url = lookupUrl(label, english);
       if (url) window.open(url, "_blank", "noopener,noreferrer");
+      if (label !== "ET") return;
+      const endpoint = button.getAttribute("data-vocabulary-origin-lookup");
+      const message = row.querySelector("[data-vocabulary-et-message]");
+      if (!endpoint || !String(english || "").trim()) { if (message) message.textContent = "Enter an English word before using ET."; return; }
+      if (message) message.textContent = "Loading Etymonline…";
+      try {
+        const response = await fetch(`${endpoint}?word=${encodeURIComponent(String(english).trim())}`, { credentials: "include", headers: { Accept: "application/json" } });
+        const preview = await response.json();
+        if (!response.ok || !preview.ok) throw new Error(preview.error || preview.message || "Etymonline is unavailable.");
+        const textarea = row.querySelector('[data-vocabulary-field="definition"]');
+        const hasFirstUse = /^\*\*First known use:\*\*/imu.test(textarea.value);
+        const current = textarea.value.trim();
+        const paragraph = String(preview.paragraph || "").trim();
+        const alreadyPresent = paragraph && current.includes(paragraph);
+        if (paragraph && !alreadyPresent) {
+          const citationHeading = /^\*\*Works Cited:\*\*[\t ]*$/imu;
+          const citationIndex = current.search(citationHeading);
+          let next = current;
+          if (hasFirstUse && String(row.querySelector('[data-vocabulary-esl-field="etymology"]')?.value || "").trim()) {
+            next = current.replace(/(\*\*First known use:\*\*[^\n]*)/iu, (line) => line.includes(paragraph) ? line : `${line}; ${paragraph}`);
+          } else if (citationIndex >= 0) {
+            next = `${current.slice(0, citationIndex).trimEnd()}\n\n${paragraph}\n\n${current.slice(citationIndex).trimStart()}`;
+          } else {
+            next = current ? `${current}\n\n${paragraph}` : paragraph;
+          }
+          textarea.value = next;
+          dispatchDefinitionInput(textarea);
+        }
+        if (preview.citation && !textarea.value.includes(preview.citation)) {
+          const worksCitedHeading = /^\*\*Works Cited:\*\*[\t ]*$/imu;
+          const worksCitedIndex = textarea.value.search(worksCitedHeading);
+          if (worksCitedIndex >= 0) {
+            const relativeEnd = textarea.value.slice(worksCitedIndex).indexOf("\n");
+            const insertAt = relativeEnd >= 0 ? worksCitedIndex + relativeEnd + 1 : textarea.value.length;
+            textarea.value = `${textarea.value.slice(0, insertAt)}- ${preview.citation}\n${textarea.value.slice(insertAt)}`;
+          } else {
+            textarea.value = `${textarea.value.trimEnd()}\n\n**Works Cited:**\n- ${preview.citation}`;
+          }
+          dispatchDefinitionInput(textarea);
+        }
+        const pathInput = row.querySelector('[data-vocabulary-origin-field="originPath"]');
+        if (pathInput && preview.originPath) pathInput.value = preview.originPath;
+        const referencesInput = row.querySelector('[data-vocabulary-origin-field="originReferences"]');
+        const references = referencesInput?.value ? JSON.parse(referencesInput.value) : [];
+        const incoming = preview.reference ? [...references, preview.reference] : references;
+        const deduped = [...new Map(incoming.filter((item) => item?.url).map((item) => [item.url, item])).values()];
+        if (referencesInput) referencesInput.value = deduped.length ? JSON.stringify(deduped) : "";
+        if (message) message.textContent = "ET paragraph and source metadata added.";
+      } catch (error) {
+        if (message) message.textContent = error.message || "Etymonline is unavailable.";
+      }
       });
     });
   }
@@ -279,7 +352,49 @@
     return output.join("");
   }
 
-  function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false, includeTransitivityTools = false } = {}) {
+  function definitionSections(value) {
+    const sections = { body: [], firstKnownUse: [], stems: [], synonyms: [], antonyms: [], worksCited: [], etymology: [] };
+    let section = "body";
+    String(value == null ? "" : value).replace(/\r\n?/gu, "\n").split("\n").forEach((line) => {
+      const heading = line.match(/^\*\*(First known use|Stems|Synonyms|Antonyms|Works Cited|Etymology):\*\*\s*(.*)$/iu);
+      if (heading) {
+        section = { "First known use": "firstKnownUse", Stems: "stems", Synonyms: "synonyms", Antonyms: "antonyms", "Works Cited": "worksCited", Etymology: "etymology" }[heading[1]] || "body";
+        if (heading[2]) sections[section].push(heading[2]);
+        return;
+      }
+      sections[section]?.push(line);
+    });
+    return Object.fromEntries(Object.entries(sections).map(([key, lines]) => [key, lines.join("\n").trim()]));
+  }
+
+  function referenceCitation(reference) {
+    if (reference?.citation) return reference.citation;
+    const source = String(reference?.source || "Source").trim();
+    const retrieved = String(reference?.retrievedAt || "").slice(0, 10);
+    return `${source}. Retrieved ${retrieved || "n.d."}, from ${String(reference?.url || "")}`.trim();
+  }
+
+  function entryDefinitionHtml(source, value) {
+    const sections = definitionSections(value("definition"));
+    const blocks = [];
+    if (sections.body) blocks.push(`<div class="new-word-entry-definition-body">${definitionHtml(sections.body)}</div>`);
+    const etymology = [sections.etymology, value("etymology")].filter(Boolean).join("\n\n");
+    if (etymology || value("originPath")) blocks.push(`<section class="new-word-entry-etymology"><strong>Etymology</strong>${etymology ? `<div>${definitionHtml(etymology)}</div>` : ""}${value("originPath") ? `<div class="new-word-entry-origin-path"><strong>Origin path:</strong> ${escapeHtml(value("originPath"))}</div>` : ""}</section>`);
+    if (sections.firstKnownUse) blocks.push(`<section class="new-word-entry-first-use"><strong>First known use</strong><div>${definitionHtml(sections.firstKnownUse)}</div></section>`);
+    if (value("partOfSpeech") === "verb" && ["verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5"].some((field) => value(field))) {
+      const labels = ["INF", "V1", "V2", "V3", "V4", "V5"];
+      blocks.push(`<section class="vocabulary-verb-forms-display"><strong>Verb Forms</strong>${labels.map((label, index) => `<div><strong>${label}</strong>: ${escapeHtml(value(index === 0 ? "verbInfinitive" : `verbV${index}`))}</div>`).join("")}</section>`);
+    }
+    if (sections.stems) blocks.push(`<section class="new-word-entry-stems"><strong>Stems</strong><div>${definitionHtml(sections.stems)}</div></section>`);
+    if (sections.synonyms) blocks.push(`<section class="new-word-entry-synonyms"><strong>Synonyms</strong><div>${definitionHtml(sections.synonyms)}</div></section>`);
+    if (sections.antonyms) blocks.push(`<section class="new-word-entry-antonyms"><strong>Antonyms</strong><div>${definitionHtml(sections.antonyms)}</div></section>`);
+    const references = Array.isArray(value("originReferences")) ? value("originReferences") : [];
+    const cited = [...references.map(referenceCitation), ...(sections.worksCited ? [sections.worksCited] : [])].filter(Boolean);
+    if (cited.length) blocks.push(`<section class="vocabulary-origin-references"><strong>Works Cited</strong>${[...new Set(cited)].map((citation) => `<div>${escapeHtml(citation)}</div>`).join("")}</section>`);
+    return blocks.join("") || "No definition yet.";
+  }
+
+  function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false, includeTransitivityTools = false, originLookupPath = "" } = {}) {
     const uid = safeUid(rowUid);
     const options = POS.map((part) => `<option value="${part}">${part}</option>`).join("");
     const rowActions = removable
@@ -300,7 +415,8 @@
           ${parametersHtml(uid, { includeMwFill, includeTransitivityTools })}
           <div class="news-vocabulary-definition-row">
             <div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">
-              ${["LD", "GT", "WH"].map((label) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup" data-vocabulary-lookup="${label}" title="Look up the ${label} field to complete this vocabulary entry" aria-label="Look up the ${label} field">${label}</button>`).join("")}
+              ${["LD", "GT", "WH", "ET"].map((label) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup${label === "ET" ? " vocabulary-etymonline-lookup" : ""}" data-vocabulary-lookup="${label}"${label === "ET" ? ` data-vocabulary-origin-lookup="${escapeHtml(originLookupPath)}"` : ""} title="Look up the ${label} field to complete this vocabulary entry" aria-label="Look up the ${label} field">${label}</button>`).join("")}
+              <p class="small vocabulary-et-message" data-vocabulary-et-message aria-live="polite"></p>
             </div>
             <textarea name="vocabularyDefinition-${uid}" data-vocabulary-field="definition" rows="1" placeholder="Definition" title="Ctrl+B bold · Ctrl+I italic · Ctrl+U underline · Enter continues - and 1. lists" aria-label="Definition" required></textarea>
             ${rowActions}
@@ -316,15 +432,23 @@
     const json = escapeHtml(JSON.stringify(source));
     const indexAttribute = index === "" ? "" : ` data-vocabulary-entry-index="${escapeHtml(index)}"`;
     const editButton = editLabel === null ? "" : `<button type="button" class="portal-button portal-button-primary ${escapeHtml(editClass)}" ${editAttributes} title="Edit this vocabulary entry" aria-label="Edit this vocabulary entry">${escapeHtml(editLabel)}</button>`;
+    const position = String(value("partOfSpeech") || "").toLowerCase();
+    const posMetadataValues = position === "verb"
+      ? [value("displayVerbForm") ? String(value("displayVerbForm")).toUpperCase() : "", value("verbRegularity"), value("grammarFamily"), value("verbTransitivity")]
+      : position === "noun"
+        ? [value("countability"), value("nounType"), value("nounNumber")]
+        : [value("grammarFamily"), value("grammarSubtype"), value("grammarDetail"), value("grammarNumber")];
+    const posMetadata = posMetadataValues.filter(Boolean).join(" | ");
     return `<article class="vocabulary-flat-entry new-word-entry" data-vocabulary-flat-entry${indexAttribute} data-vocabulary-entry-json="${json}" ${entryAttributes}>
       <div class="vocabulary-flat-entry-head new-word-entry-head">
         <strong>${escapeHtml(value("english") || "New word")}</strong>
         <span class="new-word-entry-pronunciation">/${escapeHtml(value("syllabication"))}/</span>
         <strong class="new-word-entry-part-of-speech">${escapeHtml(value("partOfSpeech"))}</strong>
+        ${posMetadata ? `<span class="new-word-entry-pos-details">${escapeHtml(posMetadata)}</span>` : ""}
         <span class="new-word-entry-vietnamese">vi: ${escapeHtml(value("vietnamese"))}</span>
         ${editButton}
       </div>
-      <div class="new-word-entry-definition">${definitionHtml(value("definition"))}</div>
+      <div class="new-word-entry-definition">${entryDefinitionHtml(source, value)}</div>
       ${extraHtml}
     </article>`;
   }
@@ -335,6 +459,7 @@
     sync,
     hydrate,
     classification,
+    originMetadata,
     grammarFields,
     editorRowHtml,
     flatEntryHtml,

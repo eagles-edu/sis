@@ -33,6 +33,19 @@ function extractQuotedEntries(script, listName) {
     .map((line) => line.replace(/^"|"$/g, ""))
 }
 
+const ADMIN_B612_SYNC_SOURCES = [
+  "web-asset/admin/admin-b612-mono-loader.js",
+  "web-asset/fonts/B612Mono/stylesheet.css",
+  "web-asset/fonts/B612Mono/b612mono-regular-webfont.woff2",
+  "web-asset/fonts/B612Mono/b612mono-regular-webfont.woff",
+  "web-asset/fonts/B612Mono/b612mono-bold-webfont.woff2",
+  "web-asset/fonts/B612Mono/b612mono-bold-webfont.woff",
+  "web-asset/fonts/B612Mono/b612mono-italic-webfont.woff2",
+  "web-asset/fonts/B612Mono/b612mono-italic-webfont.woff",
+  "web-asset/fonts/B612Mono/b612mono-bolditalic-webfont.woff2",
+  "web-asset/fonts/B612Mono/b612mono-bolditalic-webfont.woff",
+]
+
 test("live admin sync wrapper is pinned to the live admin host and refreshes Prisma", () => {
   assert.match(liveScript, /\/home\/admin\.eagles\.edu\.vn\/sis/)
   assert.match(liveScript, /\/home\/admin\.eagles\.edu\.vn\/public_html/)
@@ -144,6 +157,23 @@ test("test and live sync wrappers share the same strict whitelist sources except
     extractQuotedEntries(testScript, "TEST_LOCAL_UI_RUNTIME_PARITY_MAP").sort(),
     extractQuotedEntries(liveScript, "LIVE_LOCAL_UI_RUNTIME_PARITY_MAP").sort(),
   )
+})
+
+test("strict runtime and public whitelists include every served admin B612 asset", () => {
+  for (const [script, runtimeMap, publicMap] of [
+    [testScript, "TEST_RUNTIME_WEBFILE_MAP", "TEST_PUBLIC_WEBFILE_MAP"],
+    [liveScript, "LIVE_RUNTIME_WEBFILE_MAP", "LIVE_PUBLIC_WEBFILE_MAP"],
+  ]) {
+    const runtimeEntries = new Set(extractQuotedEntries(script, runtimeMap))
+    const publicEntries = new Set(extractQuotedEntries(script, publicMap))
+    for (const source of ADMIN_B612_SYNC_SOURCES) {
+      assert.ok(runtimeEntries.has(`${source}|${source}`), `${runtimeMap} missing ${source}`)
+      const publicTarget = source === "web-asset/admin/admin-b612-mono-loader.js"
+        ? "sis-admin/admin-b612-mono-loader.js"
+        : source
+      assert.ok(publicEntries.has(`${source}|${publicTarget}`), `${publicMap} missing ${source}`)
+    }
+  }
 })
 
 test("test and live sync wrappers keep immutable runtime files separate from mirrored runtime data", () => {

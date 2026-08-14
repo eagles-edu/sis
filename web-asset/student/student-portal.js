@@ -155,7 +155,7 @@
         "adjective", "noun", "verb", "adverb", "conjunction", "preposition",
         "determiner", "pronoun", "interjection", "phrase", "idiom", "clause",
       ];
-      const VOCABULARY_ESL_FIELDS = ["entryKind", "phraseType", "posSubtype", "countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "edAdjective", "ingAdjective", "etymologyType", "etymology", "grammarClassification"];
+      const VOCABULARY_ESL_FIELDS = ["phraseType", "countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "edAdjective", "ingAdjective", "etymologyType", "etymology", "grammarClassification"];
       const NEWS_GENERIC_COMPLIANCE_FIELD_ID = "__compliance";
       const NEWS_COMPLIANCE_NOTE_START = "[[SIS-COMPLIANCE-V1]]";
       const NEWS_COMPLIANCE_NOTE_END = "[[/SIS-COMPLIANCE-V1]]";
@@ -4193,15 +4193,7 @@
       }
 
       function bindVocabularyLookupButtons(rowEl) {
-        rowEl?.querySelectorAll("[data-vocabulary-lookup]").forEach((button) => {
-          button.addEventListener("click", () => {
-            const url = vocabularyLookupUrl(
-              button.getAttribute("data-vocabulary-lookup"),
-              rowEl.querySelector('[data-vocabulary-field="english"]')?.value,
-            );
-            if (url) window.open(url, "_blank", "noopener,noreferrer");
-          });
-        });
+        window.SIS_VOCABULARY_ESL?.bindLookupButtons(rowEl);
       }
 
       function autoResizeVocabularyDefinition(textarea) {
@@ -4229,6 +4221,7 @@
           index,
           removable,
           actionsHtml: newWordMenuActions,
+          originLookupPath: `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library/etymonline`,
         }) || "";
       }
 
@@ -4243,6 +4236,7 @@
         }).filter(([, entry]) => entry !== "" && entry !== false));
         const grammarClassification = window.SIS_VOCABULARY_ESL?.classification(row) || {};
         if (Object.keys(grammarClassification).length) value.grammarClassification = grammarClassification;
+        Object.assign(value, window.SIS_VOCABULARY_ESL?.originMetadata(row) || {});
         return value;
       }
 

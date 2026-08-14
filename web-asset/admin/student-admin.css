@@ -352,8 +352,7 @@ body {
         overflow: hidden;
         position: relative;
         transform: translateY(0);
-
-transition:
+        transition:
           transform 120ms ease,
           box-shadow 150ms ease,
           border-color 160ms ease,
@@ -950,8 +949,10 @@ grid-template-areas:
   }
       .text-zoom-controls .zoom-label {
         color: var(--portal-color-5bdf769798);
-        font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
+        font-family: "B612 Mono", monospace;
         font-size: 11px;
+        letter-spacing: normal;
+        line-height: normal;
   }
       .page-section {
         display: none;
@@ -2513,7 +2514,9 @@ background: linear-gradient(
         justify-content: flex-end;
   }
       #hubStatusMeta {
-        font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
+        font-family: "B612 Mono", monospace;
+        letter-spacing: normal;
+        line-height: normal;
         margin-top: 4px;
   }
       .attendance-landing-grid {
@@ -2633,8 +2636,10 @@ box-shadow:
   }
       .attendance-row-id {
         color: var(--ink-muted);
-        font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
+        font-family: "B612 Mono", monospace;
         font-size: 10px;
+        letter-spacing: normal;
+        line-height: normal;
         margin-top: 2px;
   }
       .attendance-radio-group {
@@ -3002,6 +3007,7 @@ box-shadow:
         flex-wrap: wrap;
         gap: 8px;
         margin-bottom: 10px;
+        padding: .66rem;
   }
       .engagement-matrix-column-toggle[aria-pressed="false"] {
         opacity: .64;
@@ -3461,7 +3467,9 @@ body.admin-portal-page .performance-engagement-table {
   }
       .parent-tracking-detail-body {
         color: var(--ink);
-        font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
+        font-family: "B612 Mono", monospace;
+        letter-spacing: normal;
+        line-height: normal;
         margin: 0;
         overflow-wrap: anywhere;
         white-space: pre-wrap;
@@ -3666,6 +3674,9 @@ body.admin-portal-page .performance-engagement-table {
         min-width: 0;
   }
       .news-review-vocabulary-definition {
+        font-family: "B612 Mono", monospace;
+        letter-spacing: normal;
+        line-height: normal;
         width: 100%;
   }
       .news-review-vocabulary hr {
@@ -4396,4 +4407,7 @@ background: linear-gradient(
   }
       html[data-theme="dark"] body.admin-portal-page .student-delete-parent-note {
         color: var(--secondary-color);
+  }
+  .bm01rem {
+    margin-bottom: 1rem;
   }

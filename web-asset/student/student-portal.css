@@ -2,9 +2,10 @@
 
     .news-sentence-feedback {
       display: grid;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-family: "B612 Mono", monospace;
       font-size: 1.08rem;
       gap: 12px;
+      letter-spacing: normal;
       line-height: 1.65;
       margin-top: 16px;
       padding-top: 4px;
@@ -33,9 +34,10 @@
   }
 
     #actionWhy,
-    #biasAssessment {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      #biasAssessment {
+      font-family: "B612 Mono", monospace;
       font-size: 1.08rem;
+      letter-spacing: normal;
       line-height: 1.65;
       min-height: 8rem;
   }

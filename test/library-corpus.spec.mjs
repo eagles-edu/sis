@@ -6,6 +6,7 @@ const schema = fs.readFileSync(new URL("../prisma/schema.prisma", import.meta.ur
 const migration = fs.readFileSync(new URL("../prisma/migrations/20260810132000_add_library_corpus/migration.sql", import.meta.url), "utf8")
 const cutoverMigration = fs.readFileSync(new URL("../prisma/migrations/20260810134000_add_full_esl_legacy_cutover/migration.sql", import.meta.url), "utf8")
 const corpus = fs.readFileSync(new URL("../src/modules/admin/library-corpus.mjs", import.meta.url), "utf8")
+const originMigration = fs.readFileSync(new URL("../prisma/migrations/20260814090000_remove_library_redundant_fields_add_origin_metadata/migration.sql", import.meta.url), "utf8")
 
 test("Library uses a dedicated PostgreSQL schema with immutable audit records", () => {
   for (const model of ["LibraryEntry", "LibraryEntryRevision", "LibraryContribution", "LibraryAssignment", "LibraryMigrationPreflight", "LibraryAwlFamily"]) assert.match(schema, new RegExp(`model ${model}[\\s\\S]*?@@schema\\(\\"library\\"\\)`))
@@ -22,7 +23,7 @@ test("Library uses a dedicated PostgreSQL schema with immutable audit records", 
 })
 
 test("Library corpus preserves the required ESL and AWL contracts", () => {
-  for (const token of ["pronoun", "determiner", "conjunction", "phrasal verb", "prepositional", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "grammarClassification", "nounType", "nounNumber", "both s & p", "awlFamilyHeadword", "awlQualifyingMember", "awlMemberForm", "americanEnglish", "britishEnglish", "syllableCount"]) assert.match(`${schema}\n${corpus}`, new RegExp(token))
+  for (const token of ["pronoun", "determiner", "conjunction", "prepositional", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "grammarClassification", "nounType", "nounNumber", "both s & p", "awlFamilyHeadword", "awlQualifyingMember", "awlMemberForm", "americanEnglish", "britishEnglish", "syllableCount"]) assert.match(`${schema}\n${corpus}`, new RegExp(token))
   assert.match(corpus, /Merriam-Webster Collegiate is unavailable; no Library data was changed/)
   assert.match(corpus, /pending_review/)
   assert.match(corpus, /normalizedKey: group\.normalizedKey, partOfSpeech: group\.partOfSpeech/)
@@ -35,6 +36,17 @@ test("legacy cutover groups preflight sources without duplicate cases", () => {
 
 test("Library queue and assignment engagement retain subject and route", () => {
   for (const token of ["listLibraryReviewQueue", "potentialDuplicate", "listLibraryStudents", "sendLibraryAssignmentEmail", "listLibraryAssignmentEngagement", "subject", "route", "LibraryAssignmentEngagement"]) assert.match(`${schema}\n${corpus}`, new RegExp(token))
+})
+
+test("active Library payloads remove redundant metadata but preserve POS-specific controls and origin metadata", () => {
+  assert.doesNotMatch(schema, /entryKind\s+String|posSubtype\s+String/)
+  assert.doesNotMatch(corpus, /ENTRY_KINDS|POS_SUBTYPES|entryKind|posSubtype/)
+  assert.match(schema, /originPath\s+String\?|originReferences\s+Json\?/)
+  assert.match(originMigration, /DROP COLUMN "entryKind"/)
+  assert.match(originMigration, /DROP COLUMN "posSubtype"/)
+  assert.match(originMigration, /ADD COLUMN "originPath"/)
+  assert.match(originMigration, /ADD COLUMN "originReferences"/)
+  for (const control of ["countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "grammarClassification"]) assert.match(corpus, new RegExp(control))
 })
 
 test("MW preview keeps complete normalized entry data and does not expose provider JSON", async () => {

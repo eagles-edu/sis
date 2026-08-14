@@ -28,9 +28,9 @@
     }
 
     body {
+      font-family: var(--font-base, system-ui, -apple-system, sans-serif);
       margin: 0;
       min-height: 100vh;
-      font-family:  var(--font-base, system-ui, -apple-system, sans-serif);
       padding: 20px;
     }
 
@@ -50,11 +50,12 @@
     }
 
     #loginPanel {
-      width: min(100%, 560px);
+      box-sizing: border-box;
       margin-left: auto;
       margin-right: auto;
       margin-top: clamp(3rem, 5vw, 4rem);
       padding: 20px;
+      width: min(100%, 560px);
     }
 
     #loginPanel .row {
@@ -105,7 +106,12 @@
       grid-column: span 12;
     }
 
-    input, select, button { font: inherit; padding: 10px 12px; }
+    input,
+    select,
+    button {
+      font: inherit;
+      padding: 10px 12px;
+    }
 
     button {
       cursor: pointer;
@@ -117,23 +123,27 @@
     }
 
     .chart-wrap {
-      width: 100%;
-      height: 280px;
       border-radius: var(--radius-2);
-      padding: 8px;
       box-sizing: border-box;
+      height: 280px;
+      padding: 8px;
+      width: 100%;
     }
 
     table {
-      width: 100%;
       border-collapse: collapse;
+      width: 100%;
     }
 
-    th, td { text-align: left; padding: 9px 8px; }
+    th,
+    td {
+      padding: 9px 8px;
+      text-align: left;
+    }
 
     .table-wrap {
-      overflow: auto;
       border-radius: var(--radius-2);
+      overflow: auto;
     }
 
     .hidden {
@@ -186,11 +196,13 @@
         </div>
         <div class="field c4">
           <label for="loginBtn">&nbsp;</label>
-          <button id="loginBtn" class="portal-button portal-button-primary" type="button" title="Sign in to load student points" aria-label="Sign in to load student points">Sign In</button>
+          <button id="loginBtn" class="portal-button portal-button-primary" type="button"
+            title="Sign in to load student points" aria-label="Sign in to load student points">Sign In</button>
         </div>
       </div>
       <div class="login-links">
-        <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Student%20points%20password%20reset">Reset password</a>
+        <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Student%20points%20password%20reset">Reset
+          password</a>
         <a class="login-link" href="tel:0937667818">0937&nbsp;667&nbsp;818</a>
       </div>
     </section>
@@ -208,11 +220,15 @@
           </div>
           <div class="field c3">
             <label>
-            <button id="refreshChartBtn" type="button" class="portal-button portal-button-teal-refresh" title="Reload the points chart from current records" aria-label="Reload the points chart from current records">Refresh Chart</button>&nbsp;</label>
+              <button id="refreshChartBtn" type="button" class="portal-button portal-button-teal-refresh"
+                title="Reload the points chart from current records"
+                aria-label="Reload the points chart from current records">Refresh Chart</button>&nbsp;</label>
           </div>
           <div class="field c3">
             <label>
-            <button id="logoutBtn" type="button" class="portal-button portal-button-danger" title="Sign out of the student points admin" aria-label="Sign out of the student points admin">Logout</button>&nbsp;</label>
+              <button id="logoutBtn" type="button" class="portal-button portal-button-danger"
+                title="Sign out of the student points admin"
+                aria-label="Sign out of the student points admin">Logout</button>&nbsp;</label>
           </div>
         </div>
         <div class="chart-wrap panel">
@@ -257,12 +273,22 @@
           <table>
             <thead>
               <tr>
-                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="studentNumber" title="Sort the table by student number" aria-label="Sort the table by student number">#</button></th>
-                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="eaglesId" title="Sort the table by Eagles ID" aria-label="Sort the table by Eagles ID">Eagles ID</button></th>
-                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="fullName" title="Sort the table by student name" aria-label="Sort the table by student name">Name</button></th>
-                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="level" title="Sort the table by class level" aria-label="Sort the table by class level">Level</button></th>
-                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="totalPoints" title="Sort the table by total points" aria-label="Sort the table by total points">Points</button></th>
-                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="lastActivityAt" title="Sort the table by most recent activity" aria-label="Sort the table by most recent activity">Last Activity</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="studentNumber"
+                    title="Sort the table by student number" aria-label="Sort the table by student number">#</button>
+                </th>
+                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="eaglesId"
+                    title="Sort the table by Eagles ID" aria-label="Sort the table by Eagles ID">Eagles ID</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="fullName"
+                    title="Sort the table by student name" aria-label="Sort the table by student name">Name</button>
+                </th>
+                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="level"
+                    title="Sort the table by class level" aria-label="Sort the table by class level">Level</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="totalPoints"
+                    title="Sort the table by total points" aria-label="Sort the table by total points">Points</button>
+                </th>
+                <th scope="col"><button type="button" class="portal-button portal-button-info"
+                    data-sort="lastActivityAt" title="Sort the table by most recent activity"
+                    aria-label="Sort the table by most recent activity">Last Activity</button></th>
                 <th scope="col">Action</th>
               </tr>
             </thead>
@@ -610,11 +636,11 @@
       boot().catch(handleError);
     })();
   </script>
-  <div class="portal-prefooter" aria-label="Runtime environment">
+  <div class="portal-prefooter" name="Runtime environment">
     <p class="portal-prefooter__environment" data-environment-prefooter></p>
   </div>
   <script src="/web-asset/shared/portal-environment.js"></script>
+  <script src="/web-asset/admin/admin-b612-mono-loader.js" defer></script>
 </body>
 
 </html>
-

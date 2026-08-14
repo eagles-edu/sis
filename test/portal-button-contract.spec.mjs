@@ -92,6 +92,7 @@ test("student and parent portals use the shared semantic button contract", () =>
     "portal-button-affirm",
     "portal-button-alt",
     "portal-button-refresh",
+    "portal-button-btn-refresh",
     "portal-button-teal-refresh",
     "portal-button-info",
     "portal-button-immutable-chrome",
@@ -116,6 +117,7 @@ test("admin portal sources use the shared semantic button contract", () => {
   const adminRoutes = readPortal("server/student-admin-routes.mjs")
 
   for (const source of [adminHtml, adminJs, adminRoutes]) {
+    const sourceWithoutSharedRefreshClass = source.replaceAll("portal-button-btn-refresh", "")
     assert.doesNotMatch(source, /\bportal-action-btn--utility\b/)
     assert.doesNotMatch(source, /portal-button-neutral-action/)
     assert.doesNotMatch(source, /portal-button-blue-action/)
@@ -124,7 +126,7 @@ test("admin portal sources use the shared semantic button contract", () => {
     assert.doesNotMatch(source, /portal-button-purple-action/)
     assert.doesNotMatch(source, /portal-button-refresh/)
     assert.doesNotMatch(source, /portal-button-amber-info/)
-    assert.doesNotMatch(source, /\bbtn-refresh\b/)
+    assert.doesNotMatch(sourceWithoutSharedRefreshClass, /\bbtn-refresh\b/)
     assert.doesNotMatch(source, /\bbtn-edit\b/)
     assert.doesNotMatch(source, /\bbtn-delete\b/)
   }

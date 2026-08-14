@@ -94,6 +94,13 @@ test("engagement matrix uses ordered 16-event Brevo columns with profile identif
       table.options.columns.map((column) => column.title),
       ["Recipient", "Positive", "Deferred", "Negative", "Interaction"],
     )
+    assert.deepEqual(
+      [...element.querySelectorAll(".engagement-matrix-column-toggle")].map((button) =>
+        [...button.classList].find((className) => className.startsWith("portal-button-"))
+      ),
+      ["portal-button-primary", "portal-button-affirm", "portal-button-warning", "portal-button-danger", "portal-button-info"],
+    )
+    assert.equal(element.querySelector(".engagement-matrix-column-reset")?.classList.contains("portal-button-btn-refresh"), true)
   } finally {
     globalThis.document = previousDocument
     globalThis.window = previousWindow

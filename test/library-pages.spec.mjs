@@ -15,6 +15,7 @@ const standaloneAdminNavs = [
   "report-card.html",
 ].map((name) => [name, fs.readFileSync(new URL(`../web-asset/admin/${name}`, import.meta.url), "utf8")])
 const routes = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
+const libraryCorpus = fs.readFileSync(new URL("../src/modules/admin/library-corpus.mjs", import.meta.url), "utf8")
 const portalScript = fs.readFileSync(new URL("../web-asset/student/student-portal.js", import.meta.url), "utf8")
 const sharedVocabularyEditor = fs.readFileSync(new URL("../web-asset/shared/vocabulary-esl-editor.js", import.meta.url), "utf8")
 const libraryReviewWorkbench = fs.readFileSync(new URL("../web-asset/admin/library-review-workbench.js", import.meta.url), "utf8")
@@ -89,16 +90,21 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(admin, /shared\/vocabulary-esl-editor\.js/)
   assert.match(admin, /class="panel library-review-workspace"[\s\S]*data-surface-role="panel"/)
   assert.match(admin, /data-surface-role="card" data-vocabulary-editor/)
-  assert.match(admin, /editorRowHtml\(`review-\$\{slot\}`, \{ includeMwFill: true, includeTransitivityTools: true \}\)/)
+  assert.match(admin, /editorRowHtml\(`review-\$\{slot\}`, \{ includeMwFill: true, includeTransitivityTools: true, originLookupPath:/)
   assert.match(admin, /const SHARED_FIELDS = new Set\(\["english"[\s\S]*"definition"[\s\S]*"etymologyType", "etymology"/)
   assert.match(admin, /data-review-sidebar-toggle/)
   assert.match(admin, /editorRowHtml\(`library-\$\{entry\.id\}`/)
   assert.match(admin, /library-review-advanced-fields/)
-  assert.match(admin, /const fields = \["english", "americanEnglish", "britishEnglish", "partOfSpeech", "entryKind", "phraseType", "posSubtype", "vietnamese", "syllabication", "syllableCount", "definition", "etymologyType", "etymology"\]/)
+  assert.match(admin, /const fields = \["english", "americanEnglish", "britishEnglish", "partOfSpeech", "phraseType", "vietnamese", "syllabication", "syllableCount", "definition", "etymologyType", "etymology"\]/)
   assert.match(admin, /data-vocabulary-field=\"partOfSpeech\".*window\.SIS_VOCABULARY_ESL\.sync\(row\)/s)
   assert.match(admin, /flatEntryHtml\(entry, \{ editClass: "library-admin-flat-edit"/)
   assert.match(admin, /data-library-entry-id=/)
   assert.match(admin, /data-approved-edit=/)
+  assert.match(admin, /Saving from the admin Library applies the approved canonical edit immediately/)
+  assert.match(admin, /json\(`\/entries\/\$\{encodeURIComponent\(entry\.id\)\}`, \{ method: "PUT"/)
+  assert.match(admin, /message\.textContent = "Approved Library edit saved\."/)
+  assert.match(admin, /function groupFor\(item\) \{ const group = item\?\.duplicateGroup\?\.length \? item\.duplicateGroup : \[item\]; return \[item, \.\.\.group\.filter\(\(candidate\) => candidate\.id !== item\.id\)\]; \}/)
+  assert.doesNotMatch(admin, /Provisional edit submitted to the approval queue/)
   assert.match(admin, /aria-controls="appSidebarNav"/)
   assert.match(admin, /body\.classList\.toggle\("menu-open", open\)/)
   assert.match(admin, /data-vocabulary-field="partOfSpeech"/)
@@ -156,6 +162,11 @@ test("admin Library editor uses the shared New Words row renderer", () => {
   assert.match(sharedVocabularyEditor, /function editorRowHtml\(rowUid/)
   for (const token of ["news-vocabulary-row", "news-vocabulary-lookups", "vocabularyDefinition-", "includeMwFill", "includeTransitivityTools", "data-vocabulary-field"]) assert.match(sharedVocabularyEditor, new RegExp(token))
   assert.match(sharedVocabularyEditor, /data-vocabulary-lookup="\$\{label\}"/)
+})
+
+test("admin Library edits remain approved and use the approved-edit revision action", () => {
+  assert.match(libraryCorpus, /data: \{ \.\.\.data, reviewStatus: "approved", lastEditedByName: clamp\(actor\.name\) \}/)
+  assert.match(libraryCorpus, /writeRevision\(tx, updated, "approved_edit", actor\.name, actor\.role \|\| "admin"\)/)
 })
 
 test("all standalone admin navigation shells expose the Library child menu", () => {

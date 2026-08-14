@@ -1,5 +1,6 @@
 import crypto from "node:crypto"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { buildOriginReference, normalizeOriginReferences } from "./library-origin.mjs"
 import { queueAnnouncementEmail } from "./notification-queue.mjs"
 import { checkVerbFormsTransitivity, getVerbTransitivity } from "./verb-transitivity.mjs"
 import { getVerbForms, getVerbRegularity } from "./verb-regularity.mjs"
@@ -7,9 +8,7 @@ import { getVerbForms, getVerbRegularity } from "./verb-regularity.mjs"
 const MW_BASE = "https://www.dictionaryapi.com/api/v3/references/collegiate/json"
 const MAX_PAGE_SIZE = 100
 const POS = new Set(["noun", "verb", "adjective", "adverb", "pronoun", "determiner", "conjunction", "preposition", "interjection", "numeral", "proper noun", "phrase", "idiom", "clause"])
-const ENTRY_KINDS = new Set(["word", "phrase", "idiom", "phrasal verb"])
 const PHRASE_TYPES = new Set(["verb", "noun", "adjective", "adverbial", "prepositional", "idiom"])
-const POS_SUBTYPES = new Set(["personal", "possessive", "reflexive", "reciprocal", "demonstrative", "interrogative", "relative", "indefinite", "coordinating", "subordinating", "correlative"])
 const VERB_TRANSITIVITY = new Set(["intransitive", "monotransitive", "ditransitive", "ambitransitive", "transitive"])
 const NOUN_TYPES = new Set(["common", "proper", "concrete", "abstract", "material", "collective", "compound", "possessive"])
 const NOUN_NUMBERS = new Set(["singular", "plural", "singular and plural"])
@@ -98,24 +97,21 @@ export function autoFillLibraryEntryVerbTransitivity(payload = {}) {
 function normalizeEntry(value = {}) {
   const english = clamp(value.english)
   const partOfSpeech = lower(value.partOfSpeech)
-  const entryKind = lower(value.entryKind || "word")
   const phraseType = lower(value.phraseType)
-  const posSubtype = lower(value.posSubtype)
   const nounType = lower(value.nounType)
   const nounNumber = lower(value.nounNumber)
   if (!english) throw statusError("English word or phrase is required")
   if (!POS.has(partOfSpeech)) throw statusError("A supported part of speech is required")
-  if (!ENTRY_KINDS.has(entryKind)) throw statusError("A supported entry kind is required")
   if (phraseType && !PHRASE_TYPES.has(phraseType)) throw statusError("Unsupported phrase type")
-  if (posSubtype && !POS_SUBTYPES.has(posSubtype)) throw statusError("Unsupported POS subtype")
   const etymologyType = lower(value.etymologyType)
   if (etymologyType && !ETYMOLOGY_TYPES.has(etymologyType)) throw statusError("Unsupported etymology type")
   if (nounType && !NOUN_TYPES.has(nounType)) throw statusError("Unsupported noun type")
   if (nounNumber && !NOUN_NUMBERS.has(nounNumber)) throw statusError("Unsupported noun number")
   const data = {
     normalizedKey: normalizeKey(english), english, americanEnglish: clamp(value.americanEnglish) || null,
-    britishEnglish: clamp(value.britishEnglish) || null, partOfSpeech, entryKind, phraseType: phraseType || null,
-    posSubtype: posSubtype || null, grammarClassification: grammarClassification(value.grammarClassification), etymologyType: etymologyType || null, etymology: clamp(value.etymology, 4000) || null, vietnamese: clamp(value.vietnamese), syllabication: clamp(value.syllabication),
+    britishEnglish: clamp(value.britishEnglish) || null, partOfSpeech, phraseType: phraseType || null,
+    grammarClassification: grammarClassification(value.grammarClassification), etymologyType: etymologyType || null, etymology: clamp(value.etymology, 4000) || null,
+    originPath: clamp(value.originPath, 500) || null, originReferences: normalizeOriginReferences(value.originReferences), vietnamese: clamp(value.vietnamese), syllabication: clamp(value.syllabication),
     syllableCount: syllableCount(value.syllabication), definition: clamp(value.definition, 4000), countability: lower(value.countability) || null,
     nounType: partOfSpeech === "noun" ? nounType || null : null, nounNumber: partOfSpeech === "noun" ? nounNumber || null : null,
     verbRegularity: lower(value.verbRegularity) || null, verbTransitivity: lower(value.verbTransitivity) || null,
@@ -149,7 +145,7 @@ export async function listLibraryEntries(query = {}) {
   const search = lower(query.search)
   const studentRefId = text(query.studentRefId)
   const myWords = ["1", "true", "yes"].includes(lower(query.myWords))
-  const filters = ["partOfSpeech", "entryKind", "phraseType", "countability", "verbRegularity", "verbTransitivity", "createdByName"].reduce((result, key) => {
+  const filters = ["partOfSpeech", "phraseType", "countability", "verbRegularity", "verbTransitivity", "createdByName"].reduce((result, key) => {
     const value = text(query[key]); if (value) result[key] = lower(value); return result
   }, {})
   const where = {
@@ -186,7 +182,7 @@ export async function submitLibraryContribution(studentRefId, contributorName, p
   const entry = {
     english: clamp(rawEntry.english), partOfSpeech: lower(rawEntry.partOfSpeech), vietnamese: clamp(rawEntry.vietnamese),
     syllabication: clamp(rawEntry.syllabication), definition: clamp(rawEntry.definition, 4000),
-    ...Object.fromEntries(Object.entries({ ...rawEntry, ...esl }).filter(([key]) => key.startsWith("verb") || ["entryKind", "phraseType", "posSubtype", "grammarClassification", "countability", "nounType", "nounNumber", "edAdjective", "ingAdjective", "displayVerbForm", "etymologyType", "etymology"].includes(key))),
+    ...Object.fromEntries(Object.entries({ ...rawEntry, ...esl }).filter(([key]) => key.startsWith("verb") || ["phraseType", "grammarClassification", "countability", "nounType", "nounNumber", "edAdjective", "ingAdjective", "displayVerbForm", "etymologyType", "etymology", "originPath", "originReferences"].includes(key))),
   }
   if (!entry.english || !POS.has(entry.partOfSpeech)) throw statusError("New Words submissions require English and a supported part of speech")
   const client = await prisma()
@@ -228,8 +224,8 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
 export async function updateLibraryEntry(id, actor = {}, payload = {}) {
   const client = await prisma(); const data = normalizeEntry(payload)
   const entry = await client.$transaction(async (tx) => {
-    const updated = await tx.libraryEntry.update({ where: { id }, data: { ...data, lastEditedByName: clamp(actor.name) } })
-    await writeRevision(tx, updated, "edited", actor.name, actor.role || "admin")
+    const updated = await tx.libraryEntry.update({ where: { id }, data: { ...data, reviewStatus: "approved", lastEditedByName: clamp(actor.name) } })
+    await writeRevision(tx, updated, "approved_edit", actor.name, actor.role || "admin")
     return updated
   })
   return { ok: true, entry }
@@ -326,7 +322,7 @@ export async function listLibraryAssignmentEngagement(query = {}) {
 
 function legacyEntry(raw = {}) {
   const esl = raw.esl && typeof raw.esl === "object" ? raw.esl : {}
-  return { normalizedKey: normalizeKey(raw.english), english: clamp(raw.english), americanEnglish: null, britishEnglish: null, partOfSpeech: lower(raw.partOfSpeech), entryKind: lower(esl.entryKind || "word") || "word", phraseType: lower(esl.phraseType) || null, posSubtype: lower(esl.posSubtype) || null, etymologyType: lower(esl.etymologyType) || null, etymology: clamp(esl.etymology, 4000) || null, vietnamese: clamp(raw.vietnamese), syllabication: clamp(raw.syllabication), syllableCount: syllableCount(raw.syllabication), definition: clamp(raw.definition, 4000), countability: lower(esl.countability) || null, nounType: lower(esl.nounType) || null, nounNumber: lower(esl.nounNumber) || null, verbRegularity: lower(esl.verbRegularity) || null, verbTransitivity: lower(esl.verbTransitivity) || null, verbInfinitive: clamp(esl.verbInfinitive) || null, verbV1: clamp(esl.verbV1) || null, verbV2: clamp(esl.verbV2) || null, verbV3: clamp(esl.verbV3) || null, verbV4: clamp(esl.verbV4) || null, verbV5: clamp(esl.verbV5) || null, displayVerbForm: lower(esl.displayVerbForm) || null, edAdjective: Boolean(esl.edAdjective), ingAdjective: Boolean(esl.ingAdjective), awlFamilyHeadword: clamp(esl.awlFamilyHeadword) || null, awlQualifyingMember: clamp(esl.awlQualifyingMember) || null, awlMemberForm: clamp(esl.awlMemberForm) || null, awlSublist: Number(esl.awlSublist) || null }
+  return { normalizedKey: normalizeKey(raw.english), english: clamp(raw.english), americanEnglish: null, britishEnglish: null, partOfSpeech: lower(raw.partOfSpeech), phraseType: lower(esl.phraseType) || null, etymologyType: lower(esl.etymologyType) || null, etymology: clamp(esl.etymology, 4000) || null, originPath: clamp(esl.originPath, 500) || null, originReferences: normalizeOriginReferences(esl.originReferences), vietnamese: clamp(raw.vietnamese), syllabication: clamp(raw.syllabication), syllableCount: syllableCount(raw.syllabication), definition: clamp(raw.definition, 4000), countability: lower(esl.countability) || null, nounType: lower(esl.nounType) || null, nounNumber: lower(esl.nounNumber) || null, verbRegularity: lower(esl.verbRegularity) || null, verbTransitivity: lower(esl.verbTransitivity) || null, verbInfinitive: clamp(esl.verbInfinitive) || null, verbV1: clamp(esl.verbV1) || null, verbV2: clamp(esl.verbV2) || null, verbV3: clamp(esl.verbV3) || null, verbV4: clamp(esl.verbV4) || null, verbV5: clamp(esl.verbV5) || null, displayVerbForm: lower(esl.displayVerbForm) || null, edAdjective: Boolean(esl.edAdjective), ingAdjective: Boolean(esl.ingAdjective), awlFamilyHeadword: clamp(esl.awlFamilyHeadword) || null, awlQualifyingMember: clamp(esl.awlQualifyingMember) || null, awlMemberForm: clamp(esl.awlMemberForm) || null, awlSublist: Number(esl.awlSublist) || null }
 }
 
 function conflicts(rows) {
@@ -588,6 +584,12 @@ function mwFields(record) {
     partOfSpeech: normalizeMwPartOfSpeech(record.partOfSpeech),
     definition: mwDefinition(record),
     etymology: record.etymology.join("\n"),
+    originReferences: record.etymology.length ? [buildOriginReference({
+      source: "Merriam-Webster Collegiate",
+      url: `https://www.merriam-webster.com/dictionary/${encodeURIComponent(record.headword)}`,
+      claims: ["etymology"],
+      provider: "Merriam-Webster",
+    })] : null,
     ...explicitEslFields(record),
   }
   if (lower(record.partOfSpeech) !== "verb") return fields
@@ -635,7 +637,19 @@ export async function applyMerriamWebsterLibraryEntry(id, actor = {}, payload = 
   const preview = await previewMerriamWebsterLibraryEntry(payload.entry); if (!preview.ok) throw statusError(preview.message, 503)
   const client = await prisma(); const existing = await client.libraryEntry.findUnique({ where: { id } }); if (!existing) throw statusError("Library entry was not found", 404)
   const mode = lower(payload.mode); const chosen = Array.isArray(payload.fields) ? payload.fields : Object.keys(preview.fields)
-  const data = {}; for (const field of chosen) { if (!Object.hasOwn(preview.fields, field) || !preview.fields[field]) continue; if (mode === "fill_missing" && text(existing[field])) continue; data[field] = preview.fields[field] }
+  const data = {}
+  for (const field of chosen) {
+    if (!Object.hasOwn(preview.fields, field) || !preview.fields[field]) continue
+    if (field === "originPath" && text(existing.originPath)) continue
+    if (field === "originReferences") {
+      const existingReferences = normalizeOriginReferences(existing.originReferences) || []
+      const incomingReferences = normalizeOriginReferences(preview.fields.originReferences) || []
+      data.originReferences = normalizeOriginReferences([...existingReferences, ...incomingReferences])
+      continue
+    }
+    if (mode === "fill_missing" && text(existing[field])) continue
+    data[field] = preview.fields[field]
+  }
   const updated = await client.$transaction(async (tx) => { const value = await tx.libraryEntry.update({ where: { id }, data: { ...data, lastEditedByName: clamp(actor.name) } }); await writeRevision(tx, value, "mw_import", actor.name, actor.role || "admin"); return value })
   return { ok: true, entry: updated, appliedFields: Object.keys(data) }
 }

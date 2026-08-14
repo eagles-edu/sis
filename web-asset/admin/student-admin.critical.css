@@ -651,7 +651,9 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
         overflow-wrap: anywhere;
   }
       #hubStatusMeta {
-        font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
+        font-family: "B612 Mono", monospace;
+        letter-spacing: normal;
+        line-height: normal;
         margin-top: 4px;
   }
       #pt_actionHelperStatus {
@@ -731,4 +733,7 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       html[data-theme="dark"] body.admin-portal-page .bar-chart-shell .small,
       html[data-theme="dark"] body.admin-portal-page #overviewRiskStudents {
         color: var(--portal-support-message);
+  }
+  .bm01rem {
+    margin-bottom: 1rem;
   }

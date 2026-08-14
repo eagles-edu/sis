@@ -5,11 +5,11 @@ const tableReadyByElement = new WeakMap()
 // while the event columns scroll underneath it.
 export const ENGAGEMENT_IDENTITY_BLOCK_CONTRACT = "SIVB"
 const columnGroups = [
-  { label: "Recipient", fields: ["reviewed", "id", "familyId", "englishName", "level", "emailUsed", "parentName", "parentEmail", "learners", "profileComplete", "invitationStatus", "batchId", "queueType", "providerMessageId"] },
-  { label: "Positive events", fields: ["emailQueued", "emailSent", "emailDelivered", "emailProxy", "emailFirst", "emailUnique", "emailOpened", "emailClicked"] },
-  { label: "Deferred", fields: ["emailDeferred"] },
-  { label: "Negative events", fields: ["emailError", "emailInvalid", "emailBlocked", "emailSoft", "emailHard", "emailComplained", "emailUnsubscribed"] },
-  { label: "SIS interaction", fields: ["linkClicked", "pdfDownloaded", "acknowledged", "actionCompleted"] },
+  { label: "Recipient", buttonClass: "portal-button-primary", fields: ["reviewed", "id", "familyId", "englishName", "level", "emailUsed", "parentName", "parentEmail", "learners", "profileComplete", "invitationStatus", "batchId", "queueType", "providerMessageId"] },
+  { label: "Positive events", buttonClass: "portal-button-affirm", fields: ["emailQueued", "emailSent", "emailDelivered", "emailProxy", "emailFirst", "emailUnique", "emailOpened", "emailClicked"] },
+  { label: "Deferred", buttonClass: "portal-button-warning", fields: ["emailDeferred"] },
+  { label: "Negative events", buttonClass: "portal-button-danger", fields: ["emailError", "emailInvalid", "emailBlocked", "emailSoft", "emailHard", "emailComplained", "emailUnsubscribed"] },
+  { label: "SIS interaction", buttonClass: "portal-button-info", fields: ["linkClicked", "pdfDownloaded", "acknowledged", "actionCompleted"] },
 ]
 let tabulatorPromise
 
@@ -180,7 +180,7 @@ function createMatrixControls(element) {
   for (const group of columnGroups) {
     const button = document.createElement("button")
     button.type = "button"
-    button.className = "portal-button portal-button-alt engagement-matrix-column-toggle"
+    button.className = `portal-button ${group.buttonClass} engagement-matrix-column-toggle`
     button.textContent = group.label
     button.setAttribute("aria-pressed", "true")
     controls.appendChild(button)
@@ -188,7 +188,7 @@ function createMatrixControls(element) {
   }
   const reset = document.createElement("button")
   reset.type = "button"
-  reset.className = "portal-button portal-button-alt engagement-matrix-column-reset"
+  reset.className = "portal-button portal-button-btn-refresh engagement-matrix-column-reset"
   reset.textContent = "Reset columns"
   controls.appendChild(reset)
   element.appendChild(controls)

@@ -44,8 +44,8 @@
     const versionB = workspace.querySelector('[data-review-pane="b"]')
     if (!versionA || !versionB) return
 
-    const inputs = (pane) => [...pane.querySelectorAll("[data-review-field], [data-vocabulary-field], [data-vocabulary-esl-field]")]
-    const key = (input) => input.dataset.reviewField || input.dataset.vocabularyField || input.dataset.vocabularyEslField
+    const inputs = (pane) => [...pane.querySelectorAll("[data-review-field], [data-vocabulary-field], [data-vocabulary-esl-field], [data-vocabulary-origin-field]")]
+    const key = (input) => input.dataset.reviewField || input.dataset.vocabularyField || input.dataset.vocabularyEslField || input.dataset.vocabularyOriginField
     const marker = (input) => input.closest(".library-review-field, .vocabulary-pos-control") || input
     const valuesB = new Map(inputs(versionB).map((input) => [key(input), readValue(input)]))
     inputs(versionA).forEach((input) => {
@@ -59,7 +59,7 @@
 
   const readPayload = (pane) => {
     const payload = {}
-    pane.querySelectorAll("[data-review-field], [data-approved-field], [data-vocabulary-field], [data-vocabulary-esl-field]").forEach((input) => {
+    pane.querySelectorAll("[data-review-field], [data-approved-field], [data-vocabulary-field], [data-vocabulary-esl-field], [data-vocabulary-origin-field]").forEach((input) => {
       const sourceField = input.dataset.reviewField || input.dataset.approvedField || input.dataset.vocabularyField || input.dataset.vocabularyEslField
       if (!sourceField) return
       const field = window.SIS_VOCABULARY_ESL?.grammarFields.includes(sourceField) ? `grammarClassification.${sourceField}` : sourceField
@@ -67,7 +67,9 @@
       const last = parts.pop()
       let target = payload
       parts.forEach((part) => { target[part] ||= {}; target = target[part] })
-      target[last] = readValue(input)
+      let value = readValue(input)
+      if (field === "originReferences") { try { value = JSON.parse(value || "[]") } catch { value = [] } }
+      target[last] = value
     })
     return payload
   }
@@ -90,7 +92,10 @@
           const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/mw-preview`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ entry: readPayload(pane) }) })
           const data = await response.json()
           if (!response.ok || !data.ok) throw new Error(data.message || "Merriam-Webster is unavailable; no Library data was changed.")
-          window.SIS_VOCABULARY_ESL?.hydrate(pane, { ...readPayload(pane), ...data.fields }, { preserveSyllabication: true })
+          const current = readPayload(pane)
+          const mergedReferences = [...new Map([...(Array.isArray(current.originReferences) ? current.originReferences : []), ...(Array.isArray(data.fields?.originReferences) ? data.fields.originReferences : [])].filter((item) => item?.url).map((item) => [item.url, item])).values()]
+          const merged = { ...current, ...data.fields, originPath: current.originPath || data.fields?.originPath || "", originReferences: mergedReferences }
+          window.SIS_VOCABULARY_ESL?.hydrate(pane, merged, { preserveSyllabication: true })
           const appliedFields = Object.keys(data.fields || {}).join(", ") || "none"
           button.title = `Filled authoritative Merriam-Webster fields: ${appliedFields}.`
           if (message) message.textContent = `Filled authoritative MW fields: ${appliedFields}.`

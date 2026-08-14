@@ -1,0 +1,36 @@
+/* B612 Mono is loaded dynamically by the admin-only deferred font loader. */
+@font-face {
+  font-family: "B612 Mono";
+  src: url("b612mono-regular-webfont.woff2") format("woff2"),
+       url("b612mono-regular-webfont.woff") format("woff");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "B612 Mono";
+  src: url("b612mono-bold-webfont.woff2") format("woff2"),
+       url("b612mono-bold-webfont.woff") format("woff");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "B612 Mono";
+  src: url("b612mono-italic-webfont.woff2") format("woff2"),
+       url("b612mono-italic-webfont.woff") format("woff");
+  font-display: swap;
+  font-style: italic;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "B612 Mono";
+  src: url("b612mono-bolditalic-webfont.woff2") format("woff2"),
+       url("b612mono-bolditalic-webfont.woff") format("woff");
+  font-display: swap;
+  font-style: italic;
+  font-weight: 700;
+}
