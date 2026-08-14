@@ -338,7 +338,7 @@ sync_file_map() {
   done
 }
 
-TEST_ENV_DEV_MIRROR_KEYS=(
+TEST_ENV_TEST_MIRROR_KEYS=(
   "STUDENT_ADMIN_API_PREFIX"
   "STUDENT_ADMIN_PAGE_PATH"
   "STUDENT_ADMIN_USER"
@@ -364,6 +364,8 @@ TEST_ENV_DEV_MIRROR_KEYS=(
   "STUDENT_PARENT_PORTAL_ACCOUNTS_JSON"
   "STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON"
   "STUDENT_NEWS_VALIDATION_DISABLED"
+  "MERRIAM_WEBSTER_COLLEGIATE_API_KEY"
+  "MERRIAM_WEBSTER_LEARNERS_API_KEY"
 )
 
 TEST_RUNTIME_CODE_DIRS=(
@@ -772,20 +774,20 @@ sync_env_keys_between_files() {
   log "aligned ${mirrored} env keys from $(basename "$source_env_path") to $(basename "$target_env_path")"
 }
 
-align_test_env_from_dev_source() {
+align_test_env_from_test_source() {
   local test_env_path="${TEST_ROOT}/.env.test"
-  local source_env_path="${REPO_ROOT}/.env.dev"
+  local source_env_path="${REPO_ROOT}/.env.test"
 
   if [[ ! -f "$test_env_path" ]]; then
-    log "skip dev->test env alignment (missing .env.test in ${TEST_ROOT})"
+    log "skip test env alignment (missing .env.test in ${TEST_ROOT})"
     return 0
   fi
   if [[ ! -f "$source_env_path" ]]; then
-    log "skip dev->test env alignment (missing ${source_env_path})"
+    log "skip test env alignment (missing ${source_env_path})"
     return 0
   fi
 
-  sync_env_keys_between_files "$source_env_path" "$test_env_path" "${TEST_ENV_DEV_MIRROR_KEYS[@]}"
+  sync_env_keys_between_files "$source_env_path" "$test_env_path" "${TEST_ENV_TEST_MIRROR_KEYS[@]}"
 }
 
 ensure_test_redis_env() {
@@ -795,37 +797,15 @@ ensure_test_redis_env() {
     return 0
   fi
 
-  local source_env_path=""
-  if [[ -f "${REPO_ROOT}/.env" ]]; then
-    source_env_path="${REPO_ROOT}/.env"
-  elif [[ -f "${REPO_ROOT}/.env.dev" ]]; then
-    source_env_path="${REPO_ROOT}/.env.dev"
-  fi
-
   local redis_url=""
   local redis_session_url=""
   local redis_cache_url=""
   local redis_insight_url=""
 
-  if [[ -n "$source_env_path" ]]; then
-    redis_url="$(read_env_value "$source_env_path" "REDIS_URL")"
-    redis_session_url="$(read_env_value "$source_env_path" "REDIS_SESSION_URL")"
-    redis_cache_url="$(read_env_value "$source_env_path" "REDIS_CACHE_URL")"
-    redis_insight_url="$(read_env_value "$source_env_path" "REDIS_INSIGHT_URL")"
-  fi
-
-  if [[ -z "$redis_url" ]]; then
-    redis_url="$(read_env_value "$test_env_path" "REDIS_URL")"
-  fi
-  if [[ -z "$redis_session_url" ]]; then
-    redis_session_url="$(read_env_value "$test_env_path" "REDIS_SESSION_URL")"
-  fi
-  if [[ -z "$redis_cache_url" ]]; then
-    redis_cache_url="$(read_env_value "$test_env_path" "REDIS_CACHE_URL")"
-  fi
-  if [[ -z "$redis_insight_url" ]]; then
-    redis_insight_url="$(read_env_value "$test_env_path" "REDIS_INSIGHT_URL")"
-  fi
+  redis_url="$(read_env_value "$test_env_path" "REDIS_URL")"
+  redis_session_url="$(read_env_value "$test_env_path" "REDIS_SESSION_URL")"
+  redis_cache_url="$(read_env_value "$test_env_path" "REDIS_CACHE_URL")"
+  redis_insight_url="$(read_env_value "$test_env_path" "REDIS_INSIGHT_URL")"
 
   if [[ -z "$redis_url" || -z "$redis_session_url" || -z "$redis_cache_url" ]]; then
     log "skip Redis wiring (one or more Redis URLs are missing)"
@@ -842,6 +822,63 @@ ensure_test_redis_env() {
   log "ensured test Redis wiring in ${test_env_path}"
 }
 
+ensure_test_redis_runtime_config() {
+  local test_env_path="${TEST_ROOT}/.env.test"
+  local test_config_path="${TEST_ROOT}/SIS_CONFIG.json"
+  if [[ ! -f "$test_env_path" || ! -f "$test_config_path" ]]; then
+    echo "cannot repair test Redis runtime config; missing test env or SIS_CONFIG.json" >&2
+    return 1
+  fi
+
+  local redis_url=""
+  local redis_timeout_ms=""
+  redis_url="$(read_env_value "$test_env_path" "REDIS_SESSION_URL")"
+  if [[ -z "$redis_url" ]]; then
+    redis_url="$(read_env_value "$test_env_path" "REDIS_URL")"
+  fi
+  redis_timeout_ms="$(read_env_value "$test_env_path" "STUDENT_ADMIN_SESSION_REDIS_CONNECT_TIMEOUT_MS")"
+  if [[ -z "$redis_timeout_ms" ]]; then
+    redis_timeout_ms="5000"
+  fi
+  if [[ -z "$redis_url" ]]; then
+    echo "cannot repair test Redis runtime config; no Redis URL is configured" >&2
+    return 1
+  fi
+
+  log "repairing test SIS_CONFIG runtime to use Redis"
+  (
+    cd "$TEST_ROOT"
+    env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" \
+      NODE_ENV=test \
+      SIS_ENV_FILE=.env.test \
+      DOTENV_CONFIG_PATH=.env.test \
+      SIS_CONFIG_FILE=SIS_CONFIG.json \
+      SIS_RUNTIME_SYNC_REDIS_URL="$redis_url" \
+      SIS_RUNTIME_SYNC_REDIS_TIMEOUT_MS="$redis_timeout_ms" \
+      "$TEST_NODE_BIN" --input-type=module <<'EOF'
+import { ensureSisConfigLoaded, saveSisConfigFromRuntime } from "./src/modules/admin/sis-config-store.mjs"
+
+const redisUrl = String(process.env.SIS_RUNTIME_SYNC_REDIS_URL || "").trim()
+const timeoutMs = Number.parseInt(String(process.env.SIS_RUNTIME_SYNC_REDIS_TIMEOUT_MS || ""), 10) || 5000
+if (!redisUrl) throw new Error("test Redis runtime repair received no Redis URL")
+
+const current = await ensureSisConfigLoaded({ refresh: true })
+const runtime = {
+  ...(current.runtime || {}),
+  redisUrl,
+  sessionDriver: "redis",
+  redisConnectTimeoutMs: timeoutMs,
+}
+await saveSisConfigFromRuntime(runtime, "test-runtime-sync")
+const repaired = await ensureSisConfigLoaded({ refresh: true })
+if (repaired.runtime?.sessionDriver !== "redis" || repaired.runtime?.redisUrl !== redisUrl) {
+  throw new Error("test SIS_CONFIG runtime Redis repair did not persist")
+}
+console.log("[sync-test] test SIS_CONFIG runtime now uses Redis")
+EOF
+  )
+}
+
 ensure_test_runtime_env_contract() {
   local test_env_path="${TEST_ROOT}/.env.test"
   local default_env_path="${TEST_ROOT}/.env"
@@ -849,16 +886,10 @@ ensure_test_runtime_env_contract() {
   seed_test_runtime_env_file
 
   local test_dev_roots="${DEV_ROOT_CANONICAL},${TEST_ROOT}"
-  local source_env_path=""
+  local source_env_path="${REPO_ROOT}/.env.test"
   local moodle_secret=""
 
-  if [[ -f "${REPO_ROOT}/.env.dev" ]]; then
-    source_env_path="${REPO_ROOT}/.env.dev"
-  elif [[ -f "${REPO_ROOT}/.env" ]]; then
-    source_env_path="${REPO_ROOT}/.env"
-  fi
-
-  if [[ -n "$source_env_path" ]]; then
+  if [[ -f "$source_env_path" ]]; then
     moodle_secret="$(read_env_value "$source_env_path" "MOODLE_QUIZ_SYNC_SHARED_SECRET")"
     if [[ -z "$moodle_secret" ]]; then
       moodle_secret="$(read_env_value "$source_env_path" "MOODLE_SIS_QUIZ_SYNC_SECRET")"
@@ -1062,13 +1093,9 @@ sync_test_public_assets() {
 
 seed_test_runtime_env_file() {
   local test_env_path="${TEST_ROOT}/.env.test"
-  local source_env_path=""
+  local source_env_path="${REPO_ROOT}/.env.test"
 
-  if [[ -f "${TEST_ROOT}/.env" ]]; then
-    source_env_path="${TEST_ROOT}/.env"
-  elif [[ -f "${REPO_ROOT}/.env" ]]; then
-    source_env_path="${REPO_ROOT}/.env"
-  elif [[ -f "${REPO_ROOT}/.env.test.example" ]]; then
+  if [[ ! -f "$source_env_path" && -f "${REPO_ROOT}/.env.test.example" ]]; then
     source_env_path="${REPO_ROOT}/.env.test.example"
   fi
 
@@ -1330,10 +1357,11 @@ main() {
   verify_local_ui_runtime_parity
   cleanup_test_backup_artifacts
   ensure_test_runtime_env_contract
-  align_test_env_from_dev_source
+  align_test_env_from_test_source
   ensure_test_redis_env
   if should_refresh_prisma; then
     refresh_test_prisma
+    ensure_test_redis_runtime_config
   else
     log "skip Prisma refresh for mode=${MODE}"
   fi

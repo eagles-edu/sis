@@ -145,7 +145,7 @@ test("deploy-moodle-plugin mirrors the plugin into live Moodle and runs upgrade 
 
 test("sync-and-restart-test-runtime pins the test env contract and mirrors the portal hub safely", () => {
   assert.match(testRuntimeSyncScript, /case "\$MODE" in\s+full\|public\|restart-only\|boot-prep\)/s)
-  assert.match(testRuntimeSyncScript, /TEST_ENV_DEV_MIRROR_KEYS=\(/)
+  assert.match(testRuntimeSyncScript, /TEST_ENV_TEST_MIRROR_KEYS=\(/)
   assert.match(testRuntimeSyncScript, /"STUDENT_ADMIN_USER"/)
   assert.match(testRuntimeSyncScript, /"STUDENT_ADMIN_PASS"/)
   assert.match(testRuntimeSyncScript, /"STUDENT_ADMIN_STORE_ENABLED"/)
@@ -155,10 +155,10 @@ test("sync-and-restart-test-runtime pins the test env contract and mirrors the p
   assert.match(testRuntimeSyncScript, /"STUDENT_TEACHER_ACCOUNTS_JSON"/)
   assert.match(testRuntimeSyncScript, /"STUDENT_PARENT_PORTAL_ACCOUNTS_JSON"/)
   assert.match(testRuntimeSyncScript, /"STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON"/)
-  assert.match(testRuntimeSyncScript, /align_test_env_from_dev_source\(\)/)
+  assert.match(testRuntimeSyncScript, /align_test_env_from_test_source\(\)/)
   assert.match(testRuntimeSyncScript, /sync_test_runtime_assets\(\)/)
   assert.match(testRuntimeSyncScript, /sync_test_public_assets\(\)/)
-  assert.match(testRuntimeSyncScript, /sync_env_keys_between_files "\$source_env_path" "\$test_env_path" "\$\{TEST_ENV_DEV_MIRROR_KEYS\[@\]\}"/)
+  assert.match(testRuntimeSyncScript, /sync_env_keys_between_files "\$source_env_path" "\$test_env_path" "\$\{TEST_ENV_TEST_MIRROR_KEYS\[@\]\}"/)
   assert.match(testRuntimeSyncScript, /log "aligned \$\{mirrored\} env keys from \$\(basename "\$source_env_path"\) to \$\(basename "\$target_env_path"\)"/)
   assert.match(testRuntimeSyncScript, /TEST_PRIMARY_ORIGIN="\$\{SIS_TEST_PRIMARY_ORIGIN:-https:\/\/test\.eagles\.edu\.vn\}"/)
   assert.match(testRuntimeSyncScript, /LIVE_ROOT_CANONICAL="\$\{SIS_LIVE_ROOT_CANONICAL:-\/home\/admin\.eagles\.edu\.vn\/sis\}"/)

@@ -36,14 +36,14 @@ Recent improvements now reflected in the system:
 - Richer parent/student portal detail views for homework, news reports, attendance, and performance reports
 - Async side-effect worker support for invitation and notification background work
 - Authoritative vocabulary checking: local CMUdict for pronunciation/primary stress and Merriam-Webster Collegiate/Learner's written-division verification, with canonical accented storage and warning-only temporary service failures
-- Protected Library pages: `/student/library.html` (student chat) and `/admin/library-admin.html` (no admin chat), both using shared portal chrome and theme controls
+- Protected Library pages: `/student/library.html` (student chat) and `/admin/library` (no admin chat), both using shared portal chrome and theme controls
 
 ## Canonical paths
 
 - Project root: `/home/eagles/dockerz/sis`
 - Primary service entrypoint: `server/exercise-mailer.mjs`
 - Admin shell: `web-asset/admin/student-admin.html`
-- Admin Library page: `web-asset/admin/library-admin.html`
+- Admin Library page source: `web-asset/admin/library-admin.html`, served at `/admin/library` with `/admin/library/manage` and `/admin/library/engagement` child routes
 - Parent portal: `web-asset/parent/parent-portal.html`
 - Student portal: `web-asset/student/student-portal.html`
 - Student Library page: `web-asset/student/library.html`

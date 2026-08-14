@@ -296,6 +296,23 @@ test("authoritative validator accepts CMU stress and Collegiate written division
   resetVocabularyDictionaryCacheForTest()
 })
 
+test("authoritative syllable validation ignores MW pronunciation stress and uses only written division", async () => {
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  resetVocabularyDictionaryCacheForTest()
+  const result = await validateVocabularyEntry(
+    { english: "commended", syllabication: "com-MEND-ed" },
+    {
+      fetchImpl: async () => ({
+        ok: true,
+        json: async () => [{ hwi: { hw: "com*mend*ed", prs: [{ mw: "kəmˈɛndɪd" }] } }],
+      }),
+    },
+  )
+  assert.deepEqual(result, { message: "", warning: "" })
+  delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  resetVocabularyDictionaryCacheForTest()
+})
+
 test("authoritative validator rejects wrong stress and uses Learner's only after a Collegiate miss", async () => {
   process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
   process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY = "test-learners"

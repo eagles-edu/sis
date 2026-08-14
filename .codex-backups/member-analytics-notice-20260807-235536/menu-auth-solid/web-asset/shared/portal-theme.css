@@ -5591,6 +5591,7 @@ body.student-portal-page .new-words-empty {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-bottom: 1rem;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head strong {
   color: #B50010;
@@ -5604,7 +5605,7 @@ html[data-theme="dark"] :where(body.admin-portal-page, body.parent-portal-page) 
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > span {
   color: var(--portal-text-muted);
-  font-family: ui-monospace, Courier, monospace;
+  font-family: ui-monospace, Consolas,Courier, monospace;
   font-size: 1.18rem;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .new-word-entry-pronunciation {

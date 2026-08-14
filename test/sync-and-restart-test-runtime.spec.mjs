@@ -14,6 +14,22 @@ test("sync-and-restart-test-runtime defaults to loopback health and split env ex
   )
 })
 
+test("test-mirror sync uses only the test-owned env file", () => {
+  assert.doesNotMatch(script, /\.env\.dev/)
+  assert.match(script, /TEST_ENV_TEST_MIRROR_KEYS=\([\s\S]*"MERRIAM_WEBSTER_COLLEGIATE_API_KEY"[\s\S]*"MERRIAM_WEBSTER_LEARNERS_API_KEY"/)
+  assert.match(script, /align_test_env_from_test_source\(\)/)
+  assert.match(script, /local source_env_path="\$\{REPO_ROOT\}\/\.env\.test"/)
+  assert.match(script, /sync_env_keys_between_files "\$source_env_path" "\$test_env_path" "\$\{TEST_ENV_TEST_MIRROR_KEYS\[@\]\}"/)
+})
+
+test("full test-mirror sync repairs the immutable runtime session driver to Redis", () => {
+  assert.match(script, /ensure_test_redis_runtime_config\(\)/)
+  assert.match(script, /SIS_CONFIG_FILE=SIS_CONFIG\.json/)
+  assert.match(script, /sessionDriver: "redis"/)
+  assert.match(script, /redisConnectTimeoutMs: timeoutMs/)
+  assert.match(script, /ensure_test_redis_runtime_config\s*\n\s*else/)
+})
+
 test("full test-mirror sync creates a restorable database backup without purging the database", () => {
   assert.match(script, /TEST_BACKUP_BUNDLE_DIR=""/)
   assert.match(script, /TEST_DATABASE_BACKUP_DIR=""/)
@@ -33,7 +49,7 @@ test("sync-and-restart-test-runtime skips Prisma refresh in public mode only", (
     script,
     /should_refresh_prisma\(\) \{\s+\[\[ "\$MODE" == "full" \|\| "\$MODE" == "restart-only" \|\| "\$MODE" == "boot-prep" \]\]/
   )
-  assert.match(script, /if should_refresh_prisma; then\s+refresh_test_prisma\s+else\s+log "skip Prisma refresh for mode=\$\{MODE\}"/)
+  assert.match(script, /if should_refresh_prisma; then\s+refresh_test_prisma\s+ensure_test_redis_runtime_config\s+else\s+log "skip Prisma refresh for mode=\$\{MODE\}"/)
   assert.match(script, /build_admin_assets\(\)/)
   assert.match(script, /verify_favicon_mobile_contract repo/)
   assert.match(script, /npm run build:admin-assets/)

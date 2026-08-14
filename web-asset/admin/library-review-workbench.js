@@ -1,6 +1,7 @@
 (() => {
-  const isManage = location.pathname.endsWith("library-manage.html")
-  const isLibrary = location.pathname.endsWith("library-admin.html")
+  const normalizedPath = location.pathname.replace(/\/+$/u, "")
+  const isManage = normalizedPath.endsWith("/library/manage")
+  const isLibrary = normalizedPath.endsWith("/library")
   if (!isManage && !isLibrary) return
 
   const workspace = document.getElementById("libraryReviewWorkspace")
@@ -89,7 +90,7 @@
           const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/mw-preview`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ entry: readPayload(pane) }) })
           const data = await response.json()
           if (!response.ok || !data.ok) throw new Error(data.message || "Merriam-Webster is unavailable; no Library data was changed.")
-          window.SIS_VOCABULARY_ESL?.hydrate(pane, { ...readPayload(pane), ...data.fields })
+          window.SIS_VOCABULARY_ESL?.hydrate(pane, { ...readPayload(pane), ...data.fields }, { preserveSyllabication: true })
           const appliedFields = Object.keys(data.fields || {}).join(", ") || "none"
           button.title = `Filled authoritative Merriam-Webster fields: ${appliedFields}.`
           if (message) message.textContent = `Filled authoritative MW fields: ${appliedFields}.`

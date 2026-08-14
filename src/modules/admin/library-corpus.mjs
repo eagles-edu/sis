@@ -14,6 +14,22 @@ const VERB_TRANSITIVITY = new Set(["intransitive", "monotransitive", "ditransiti
 const NOUN_TYPES = new Set(["common", "proper", "concrete", "abstract", "material", "collective", "compound", "possessive"])
 const NOUN_NUMBERS = new Set(["singular", "plural", "singular and plural"])
 const ETYMOLOGY_TYPES = new Set(["native", "borrowed", "derived", "compound", "eponym", "onomatopoeic", "unknown"])
+const MW_POS_ALIASES = new Map([
+  ["adjective", "adjective"],
+  ["adverb", "adverb"],
+  ["clause", "clause"],
+  ["conjunction", "conjunction"],
+  ["determiner", "determiner"],
+  ["idiom", "idiom"],
+  ["interjection", "interjection"],
+  ["noun", "noun"],
+  ["numeral", "numeral"],
+  ["phrase", "phrase"],
+  ["preposition", "preposition"],
+  ["proper noun", "proper noun"],
+  ["pronoun", "pronoun"],
+  ["verb", "verb"],
+])
 
 function text(value) { return String(value == null ? "" : value).trim() }
 function lower(value) { return text(value).normalize("NFC").toLocaleLowerCase("en-US") }
@@ -345,21 +361,30 @@ export async function cutoverLegacyLibrary(actor = {}, runKey = "legacy-cutover-
   return { ok: true, runKey, migrated }
 }
 
-function stripMwMarkup(textValue) {
-  return text(textValue)
-    .replace(/\{[^{}|]+\|([^{}]*)\}/gu, (_, value) => value.split("|")[0])
+function stripMwMarkup(textValue, { preserveFormatting = false } = {}) {
+  let value = text(textValue)
+  if (preserveFormatting) {
+    value = value
+      .replace(/\{(?:it|italic)\}([\s\S]*?)\{\/(?:it|italic)\}/giu, "*$1*")
+      .replace(/\{(?:b|bold)\}([\s\S]*?)\{\/(?:b|bold)\}/giu, "**$1**")
+      .replace(/\{(?:sc|smallcaps)\}([\s\S]*?)\{\/(?:sc|smallcaps)\}/giu, "**$1**")
+      .replace(/\{(?:br|brk)\}/giu, "\n")
+  }
+  return value
+    .replace(/\{(?:bc)\}/giu, "")
+    .replace(/\{(?:ldquo)\}/gu, '"')
+    .replace(/\{(?:rdquo)\}/gu, '"')
+    .replace(/\{(?:lsquo)\}/gu, "'")
+    .replace(/\{(?:rsquo)\}/gu, "'")
+    .replace(/\{[^{}|]+\|([^{}]*)\}/gu, (_, content) => content.split("|")[0])
     .replace(/\{\/?[^{}]+\}/gu, "")
-    .replace(/\s+/gu, " ")
+    .replace(/[ \t]+/gu, " ")
+    .replace(/[ \t]*\n[ \t]*/gu, "\n")
     .trim()
 }
 
 function stripMwDefinition(textValue) {
-  const marked = text(textValue)
-    .replace(/\{(?:it|italic)\}([\s\S]*?)\{\/(?:it|italic)\}/giu, "*$1*")
-    .replace(/\{(?:b|bold)\}([\s\S]*?)\{\/(?:b|bold)\}/giu, "**$1**")
-    .replace(/\{(?:ldquo|rdquo)\}/gu, '"')
-    .replace(/\{(?:lsquo|rsquo)\}/gu, "'");
-  return stripMwMarkup(marked)
+  return stripMwMarkup(textValue, { preserveFormatting: true })
 }
 
 function stripMw(textValue) { return stripMwMarkup(textValue).replace(/\*+/gu, "-") }
@@ -491,6 +516,43 @@ function normalizeMwEntry(entry, index) {
   }
 }
 
+function normalizeMwPartOfSpeech(value) {
+  const candidate = lower(stripMw(value)).replace(/\s+/gu, " ")
+  if (MW_POS_ALIASES.has(candidate)) return MW_POS_ALIASES.get(candidate)
+  if (/\bverb\b/u.test(candidate)) return "verb"
+  if (/\bnoun\b/u.test(candidate)) return "noun"
+  if (/\badjective\b/u.test(candidate)) return "adjective"
+  if (/\badverb\b/u.test(candidate)) return "adverb"
+  return candidate
+}
+
+function mergeMwRecords(records = []) {
+  const primary = records[0]
+  if (!primary) return null
+  const uniqueFormatted = (values) => uniqueText(values, (value) => text(value))
+  return {
+    ...primary,
+    labels: uniqueFormatted(records.flatMap((record) => record.labels)),
+    verbDividers: uniqueFormatted(records.flatMap((record) => record.verbDividers)),
+    stems: uniqueFormatted(records.flatMap((record) => record.stems)),
+    definitions: uniqueFormatted(records.flatMap((record) => record.definitions)),
+    etymology: uniqueFormatted(records.flatMap((record) => record.etymology)),
+    synonyms: uniqueFormatted(records.flatMap((record) => record.synonyms)),
+    antonyms: uniqueFormatted(records.flatMap((record) => record.antonyms)),
+    firstKnownUse: uniqueFormatted(records.map((record) => record.firstKnownUse)).join("; "),
+    inflections: records.flatMap((record) => record.inflections),
+  }
+}
+
+function mwDefinition(record) {
+  const sections = [...record.definitions]
+  if (record.firstKnownUse) sections.push(`**First known use:** ${record.firstKnownUse}`)
+  if (record.stems.length) sections.push(`**Stems:**\n${record.stems.map((stem) => `- ${stem}`).join("\n")}`)
+  if (record.synonyms.length) sections.push(`**Synonyms:**\n${record.synonyms.map((synonym) => `- ${synonym}`).join("\n")}`)
+  if (record.antonyms.length) sections.push(`**Antonyms:**\n${record.antonyms.map((antonym) => `- ${antonym}`).join("\n")}`)
+  return sections.join("\n\n")
+}
+
 function explicitEslFields(record) {
   const signals = [...record.labels, ...record.verbDividers, ...record.inflections.map((item) => item.grammar)]
     .map((value) => lower(value))
@@ -523,9 +585,8 @@ function mwFields(record) {
   const forms = record.inflections.map((inflection) => inflection.form).filter(Boolean)
   const fields = {
     english: record.headword,
-    partOfSpeech: lower(record.partOfSpeech),
-    syllabication: record.syllabication,
-    definition: record.definitions.join("\n"),
+    partOfSpeech: normalizeMwPartOfSpeech(record.partOfSpeech),
+    definition: mwDefinition(record),
     etymology: record.etymology.join("\n"),
     ...explicitEslFields(record),
   }
@@ -562,8 +623,12 @@ export async function previewMerriamWebsterLibraryEntry(entry) {
   const matching = candidates.filter((item) => lower(stripMw(item?.hwi?.hw)).replace(/[^\p{L}\p{N}]+/gu, "") === normalizedWord)
   const records = (matching.length ? matching : candidates).map(normalizeMwEntry)
   if (!records.length) return { ok: false, available: false, message: "No Merriam-Webster entry was found; no Library data was changed." }
-  const primary = records[0]
-  return { ok: true, available: true, fields: mwFields(primary), details: { source: "Merriam-Webster Collegiate", query: word, entryCount: records.length, entries: records } }
+  const requestedPartOfSpeech = normalizeMwPartOfSpeech(entry?.partOfSpeech)
+  const selectedRecords = requestedPartOfSpeech ? records.filter((record) => normalizeMwPartOfSpeech(record.partOfSpeech) === requestedPartOfSpeech) : records
+  const details = { source: "Merriam-Webster Collegiate", query: word, requestedPartOfSpeech: requestedPartOfSpeech || null, selectedEntryCount: selectedRecords.length, entryCount: records.length, entries: records }
+  if (!selectedRecords.length) return { ok: false, available: true, message: `No Merriam-Webster ${requestedPartOfSpeech} entry was found; no Library data was changed.`, details }
+  const primary = mergeMwRecords(selectedRecords)
+  return { ok: true, available: true, fields: mwFields(primary), details }
 }
 
 export async function applyMerriamWebsterLibraryEntry(id, actor = {}, payload = {}) {

@@ -229,9 +229,9 @@ const STUDENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_STUDENT
 const PARENT_SETTINGS_PAGE_PATH = `${PARENT_PORTAL_PAGE_PATH}/settings`
 const STUDENT_SETTINGS_PAGE_PATH = `${STUDENT_PORTAL_PAGE_PATH}/settings`
 const STUDENT_LIBRARY_PAGE_PATH = `${STUDENT_PORTAL_PAGE_PATH}/library.html`
-const ADMIN_LIBRARY_PAGE_PATH = `${ADMIN_PAGE_PATH}/library-admin.html`
-const ADMIN_LIBRARY_MANAGE_PAGE_PATH = `${ADMIN_PAGE_PATH}/library-manage.html`
-const ADMIN_LIBRARY_ENGAGEMENT_PAGE_PATH = `${ADMIN_PAGE_PATH}/library-engagement.html`
+const ADMIN_LIBRARY_PAGE_PATH = `${ADMIN_PAGE_PATH}/library`
+const ADMIN_LIBRARY_MANAGE_PAGE_PATH = `${ADMIN_LIBRARY_PAGE_PATH}/manage`
+const ADMIN_LIBRARY_ENGAGEMENT_PAGE_PATH = `${ADMIN_LIBRARY_PAGE_PATH}/engagement`
 const LEGACY_ADMIN_PAGE_PATH = "/admin/students"
 const LEGACY_PARENT_PORTAL_PAGE_PATH = "/parent/portal"
 const LEGACY_STUDENT_PORTAL_PAGE_PATH = "/student/portal"
@@ -948,6 +948,15 @@ function resolveCanonicalPagePathname(pathname) {
 
   if (canonicalPathname.length > 1) canonicalPathname = canonicalPathname.replace(/\/+$/, "")
   return canonicalPathname === rawPathname ? "" : canonicalPathname
+}
+
+function buildCanonicalRedirectLocation(pathname, url) {
+  const canonicalPathname = resolveCanonicalPagePathname(pathname)
+  if (!canonicalPathname) return ""
+
+  const query = new URLSearchParams(url.searchParams)
+  const suffix = query.toString()
+  return `${canonicalPathname}${suffix ? `?${suffix}` : ""}`
 }
 
 function escapeRegex(value) {
@@ -8955,9 +8964,9 @@ export async function handleStudentAdminRequest(request, response) {
   }
 
   if (method === "GET") {
-    const redirectLocation = resolveCanonicalPagePathname(pathname)
+    const redirectLocation = buildCanonicalRedirectLocation(pathname, url)
     if (redirectLocation) {
-      sendRedirect(response, 308, `${redirectLocation}${url.search}`)
+      sendRedirect(response, 308, redirectLocation)
       return true
     }
   }
@@ -9436,6 +9445,22 @@ export async function handleStudentAdminRequest(request, response) {
     pathname === ADMIN_PAGE_PATH ? resolveAdminPageSlugFromQuery(url.searchParams) : ""
   const pageSlug = pageSlugFromQuery || pageSlugFromPath
   if (method === "GET" && [ADMIN_LIBRARY_PAGE_PATH, ADMIN_LIBRARY_MANAGE_PAGE_PATH, ADMIN_LIBRARY_ENGAGEMENT_PAGE_PATH].includes(pathname)) {
+    const apiOrigin = normalizeText(url.searchParams.get("apiOrigin"))
+    if (apiOrigin) {
+      let removeApiOrigin = false
+      try {
+        removeApiOrigin = new URL(apiOrigin, requestOrigin).origin === requestOrigin
+      } catch {
+        removeApiOrigin = true
+      }
+      if (removeApiOrigin) {
+        const cleanQuery = new URLSearchParams(url.searchParams)
+        cleanQuery.delete("apiOrigin")
+        const suffix = cleanQuery.toString()
+        sendRedirect(response, 308, `${pathname}${suffix ? `?${suffix}` : ""}`)
+        return true
+      }
+    }
     const session = await peekAdminSession(request)
     if (!session) {
       const next = new URL(ADMIN_PAGE_PATH, requestOrigin)

@@ -180,6 +180,7 @@
   --portal-button-disabled-stroke: #a1b0c5;
   --portal-button-font-size: clamp(0.9rem, 0.25vw + 0.88rem, 0.96rem);
   --portal-button-font-weight: 800;
+  --portal-button-block-padding: 0.5rem;
   --portal-button-gap: 0.42rem;
   --portal-button-green-fill: #1f6e43;
   --portal-button-green-fill-active: #175535;
@@ -190,7 +191,7 @@
   --portal-button-green-stroke-hover: #185433;
   --portal-button-inline: 160px;
   --portal-button-inline-padding: 14px;
-  --portal-button-line-height: 1;
+  --portal-button-line-height: 1.2;
   --portal-button-max-inline: var(--portal-button-inline);
   --portal-button-min-block: 48px;
   --portal-button-min-inline: var(--portal-button-inline);
@@ -759,7 +760,7 @@ summary.portal-button {
   max-inline-size: min(100%, var(--portal-button-max-inline));
   min-block-size: var(--portal-button-min-block);
   min-inline-size: min(100%, var(--portal-button-min-inline));
-  padding: 0 var(--portal-button-inline-padding);
+  padding: var(--portal-button-block-padding) var(--portal-button-inline-padding);
   text-decoration: none;
   user-select: none;
   vertical-align: middle;
@@ -5608,10 +5609,11 @@ body.student-portal-page .new-words-empty {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-bottom: 1rem;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head strong {
   color: #B50010;
-  font-family: ui-monospace, Courier, monospace;
+  font-family: ui-monospace, Consolas, Courier, monospace;
   font-size: 1.38rem;
   overflow-wrap: anywhere;
 }
@@ -5621,12 +5623,12 @@ html[data-theme="dark"] :where(body.admin-portal-page, body.parent-portal-page) 
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > span {
   color: var(--portal-text-muted);
-  font-family: ui-monospace, Courier, monospace;
+  font-family: ui-monospace, Consolas, Courier, monospace;
   font-size: 1.18rem;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .new-word-entry-pronunciation {
   color: var(--portal-text);
-  font-family: ui-monospace, Courier, monospace;
+  font-family: ui-monospace, Consolas, Courier, monospace;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .vocabulary-flat-entry-subtype {
   color: var(--portal-text-muted);
@@ -5711,12 +5713,12 @@ body.student-portal-page main.portal-main {
 body.student-portal-page .library-toolbar {
   align-items: end;
   display: grid;
-  gap: 10px;
+  gap: var(--portal-content-gap);
   grid-template-columns: 2fr repeat(3, minmax(130px, 1fr)) auto auto;
 }
 body.student-portal-page .library-toolbar label {
   display: grid;
-  gap: 4px;
+  gap: 6px;
   font-size: .86rem;
   font-weight: 700;
 }
@@ -5736,15 +5738,16 @@ body.student-portal-page .library-toolbar .library-my-words-filter input {
 }
 body.student-portal-page .library-results {
   display: grid;
-  gap: 8px;
-  margin-top: 14px;
+  gap: var(--portal-content-gap);
+  margin-top: var(--portal-content-gap);
 }
 body.student-portal-page .library-pagination {
   align-items: center;
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: var(--portal-content-gap);
   justify-content: flex-end;
-  margin-top: 12px;
+  margin-top: var(--portal-content-gap);
 }
 body.student-portal-page .library-edit-dialog {
   border: 0;
@@ -5758,11 +5761,8 @@ body.student-portal-page .library-edit-dialog::backdrop {
 }
 body.student-portal-page .library-edit-form {
   display: grid;
-  gap: 10px;
+  gap: var(--portal-content-gap);
   padding: 16px;
-}
-body.student-portal-page .library-edit-form > .news-vocabulary-row {
-  margin: 0;
 }
 body.student-portal-page .library-edit-actions {
   display: flex;
@@ -5779,6 +5779,21 @@ body.student-portal-page .library-edit-actions {
   }
   body.student-portal-page .library-toolbar .library-my-words-filter {
     justify-content: flex-start;
+  }
+  body.student-portal-page .library-pagination {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+  body.student-portal-page .library-pagination > span {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: center;
+  }
+  body.student-portal-page .library-pagination > .portal-button {
+    inline-size: 100%;
+    max-inline-size: none;
+    min-inline-size: 0;
   }
 }
 body.student-portal-page .new-words-pagination,
@@ -10009,7 +10024,7 @@ background: linear-gradient(180deg,
   flex-wrap: wrap;
   gap: 8px;
   justify-content: space-between;
-  margin-bottom: 0;
+  margin-bottom: var(--portal-content-gap);
 }
 .section-head h2,
 .section-head h3,
@@ -11496,6 +11511,18 @@ body.student-portal-page .header-bar {
 /* The login header is a grid child of .wrap. Keep its containing width and
    centering explicit so the generic header-bar reset cannot pin it left. */
 body.admin-portal-page .wrap > .portal-login-header {
+  box-sizing: border-box;
+  inline-size: calc(100% - 32px);
+  margin-inline: auto !important;
+}
+body.student-portal-page .wrap > .portal-login-header {
+  box-sizing: border-box;
+  inline-size: calc(100% - 32px);
+  margin-inline: auto !important;
+}
+body.parent-portal-page .wrap > .portal-login-header {
+  box-sizing: border-box;
+  inline-size: calc(100% - 32px);
   margin-inline: auto !important;
 }
 @media (max-width: 430px) {
@@ -11514,6 +11541,12 @@ body.admin-portal-page .wrap > .portal-login-header {
     block-size: var(--portal-header-bar-mobile-block-size) !important;
     max-block-size: var(--portal-header-bar-mobile-block-size) !important;
     min-block-size: var(--portal-header-bar-mobile-block-size) !important;
+  }
+  body.admin-portal-page .wrap > .portal-login-header,
+  body.student-portal-page .wrap > .portal-login-header,
+  body.parent-portal-page .wrap > .portal-login-header {
+    inline-size: 100%;
+    margin-inline: 0 !important;
   }
 }
 body.portal-hub-page .header-bar a,
@@ -13051,6 +13084,9 @@ body.admin-portal-page #libraryMwPreviewDialog::backdrop {
   background: var(--portal-surface-support);
   border-top: 1px solid var(--portal-border);
   box-sizing: border-box;
+  font-family: ui-monospace, Consolas, Courier, monospace;
+  font-size: 1.15rem;
+  line-height: 1.3rem;
   margin: 0;
   max-block-size: 72vh;
   overflow: auto;

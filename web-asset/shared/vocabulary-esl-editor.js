@@ -1,5 +1,5 @@
 (() => {
-  const POS = ["adjective", "noun", "verb", "adverb", "conjunction", "preposition", "determiner", "pronoun", "interjection", "phrase", "idiom", "clause"];
+  const POS = ["adjective", "noun", "proper noun", "verb", "adverb", "conjunction", "preposition", "determiner", "pronoun", "interjection", "numeral", "phrase", "idiom", "clause"];
   const escapeHtml = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character]));
   const safeUid = (value) => String(value || "shared").replace(/[^A-Za-z0-9_-]/gu, "-");
   const option = (value, label = value) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
@@ -92,7 +92,8 @@
     const values = Object.fromEntries(grammarFields.concat(["countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "displayVerbForm"]).map((field) => [field, row.querySelector(`[data-vocabulary-esl-field="${field}"]`)?.value || ""]));
     const rowUid = row?.querySelector('[name^="vocabularyPartOfSpeech-"]')?.name?.replace(/^vocabularyPartOfSpeech-/u, "") || "shared";
     const content = controlsFor(pos, rowUid);
-    surface.hidden = !content;
+    const hasTools = Boolean(surface.querySelector("[data-vocabulary-mw-preview], [data-vocabulary-transitivity-check], [data-vocabulary-transitivity-autofill]"));
+    surface.hidden = !content && !hasTools;
     controls.innerHTML = content + dependentControls(pos, values.grammarFamily, values.grammarSubtype, rowUid);
     forms.hidden = pos !== "verb";
     Object.entries(values).forEach(([field, value]) => { const input = row.querySelector(`[data-vocabulary-esl-field="${field}"]`); if (input) input.value = value; });
@@ -103,7 +104,7 @@
     return Object.fromEntries(grammarFields.map((field) => [field, String(row.querySelector(`[data-vocabulary-esl-field="${field}"]`)?.value || "").trim()]).filter(([, value]) => value));
   }
 
-  function hydrate(row, data = {}) {
+  function hydrate(row, data = {}, { preserveSyllabication = false } = {}) {
     const classificationValue = data.grammarClassification || {};
     sync(row);
     const inputFor = (field) => row.querySelector(`[data-vocabulary-esl-field="${field}"], [data-vocabulary-field="${field}"]`);
@@ -114,7 +115,10 @@
     sync(row);
     set("grammarSubtype", classificationValue.grammarSubtype);
     sync(row);
-    Object.entries({ ...data, ...classificationValue }).forEach(([field, value]) => set(field, value));
+    Object.entries({ ...data, ...classificationValue }).forEach(([field, value]) => {
+      if (preserveSyllabication && field === "syllabication") return;
+      set(field, value);
+    });
     sync(row);
   }
 
@@ -137,10 +141,14 @@
   };
 
   function bindLookupButtons(row) {
-    row?.querySelectorAll("[data-vocabulary-lookup]").forEach((button) => button.addEventListener("click", () => {
+    row?.querySelectorAll("[data-vocabulary-lookup]").forEach((button) => {
+      if (button.dataset.lookupBound === "true") return;
+      button.dataset.lookupBound = "true";
+      button.addEventListener("click", () => {
       const url = lookupUrl(button.getAttribute("data-vocabulary-lookup"), row.querySelector('[data-vocabulary-field="english"]')?.value);
       if (url) window.open(url, "_blank", "noopener,noreferrer");
-    }));
+      });
+    });
   }
 
   function dispatchDefinitionInput(textarea) {

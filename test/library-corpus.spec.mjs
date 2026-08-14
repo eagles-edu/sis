@@ -101,3 +101,65 @@ test("MW preview keeps complete normalized entry data and does not expose provid
     globalThis.fetch = savedFetch
   }
 })
+
+test("MW preview selects the requested POS, preserves full metadata, and never fills provider syllabication", async () => {
+  const { previewMerriamWebsterLibraryEntry } = await import("../src/modules/admin/library-corpus.mjs")
+  const savedKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  const savedFetch = globalThis.fetch
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  globalThis.fetch = async () => ({
+    ok: true,
+    json: async () => [
+      { hwi: { hw: "record" }, fl: "noun", meta: { stems: ["record", "records"], syns: [["log"]], ants: [["erase"]] }, shortdef: ["a written account"] },
+      { hwi: { hw: "record" }, fl: "verb", meta: { stems: ["record", "recorded"], syns: [["document"]], ants: [["forget"]] }, def: [{ sseq: [[[
+        "sense", { sn: "1", dt: [["text", "{bc}{it}to set down in writing{/it}"]], vis: [] },
+      ]]] }], shortdef: ["to set down"], date: "1597" },
+    ],
+  })
+  try {
+    const result = await previewMerriamWebsterLibraryEntry({ english: "record", partOfSpeech: "verb" })
+    assert.equal(result.ok, true)
+    assert.equal(result.fields.partOfSpeech, "verb")
+    assert.equal(Object.hasOwn(result.fields, "syllabication"), false)
+    assert.match(result.fields.definition, /to set down in writing/)
+    assert.match(result.fields.definition, /\*\*Stems:\*\*/)
+    assert.match(result.fields.definition, /- recorded/)
+    assert.match(result.fields.definition, /\*\*Synonyms:\*\*/)
+    assert.match(result.fields.definition, /- document/)
+    assert.match(result.fields.definition, /\*\*Antonyms:\*\*/)
+    assert.match(result.fields.definition, /- forget/)
+    assert.equal(result.details.entryCount, 2)
+    assert.equal(result.details.selectedEntryCount, 1)
+    assert.equal(result.details.entries[0].partOfSpeech, "noun")
+    assert.equal(result.details.entries[1].partOfSpeech, "verb")
+  } finally {
+    if (savedKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedKey
+    globalThis.fetch = savedFetch
+  }
+})
+
+test("MW preview maps every supported Library part of speech instead of defaulting to the first return", async () => {
+  const { previewMerriamWebsterLibraryEntry } = await import("../src/modules/admin/library-corpus.mjs")
+  const savedKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  const savedFetch = globalThis.fetch
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  const supported = ["adjective", "noun", "proper noun", "verb", "adverb", "conjunction", "preposition", "determiner", "pronoun", "interjection", "numeral", "phrase", "idiom", "clause"]
+  globalThis.fetch = async (url) => {
+    const word = decodeURIComponent(String(url).split("/json/")[1].split("?")[0])
+    const partOfSpeech = word.replace(/^pos-/u, "")
+    return { ok: true, json: async () => [{ hwi: { hw: word }, fl: partOfSpeech, shortdef: [`${partOfSpeech} definition`] }] }
+  }
+  try {
+    for (const partOfSpeech of supported) {
+      const result = await previewMerriamWebsterLibraryEntry({ english: `pos-${partOfSpeech}`, partOfSpeech })
+      assert.equal(result.ok, true, partOfSpeech)
+      assert.equal(result.fields.partOfSpeech, partOfSpeech, partOfSpeech)
+      assert.equal(result.details.selectedEntryCount, 1, partOfSpeech)
+    }
+  } finally {
+    if (savedKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedKey
+    globalThis.fetch = savedFetch
+  }
+})

@@ -74,6 +74,8 @@ The following words are hard constraints, not emphasis: `all`, `every`, `everyth
 
 ## UI Guardrails
 
+- Standard spacing is mandatory for visible portal content: use the shared spacing tokens for vertical gaps, non-zero vertical padding for visible buttons and fields, and wrapping or responsive layout when controls can exceed the available width. Do not add `margin-bottom: 0`, `padding: 0`, or equivalent zero vertical spacing to visible content, controls, headings, action groups, or pagination. Zero-spacing resets are allowed only for structural overlays, native reset normalization, or controls whose spacing is supplied by an explicit parent gap; add a contract test for any such exception.
+
 - Button labels must be compact: use one or two words whenever possible. Put longer explanations, consequences, and workflow detail in the control's `title` tooltip and accessible name/description; never pack instructional sentences into a button label.
 
 - Do not recolor buttons unless the user explicitly asks for button recoloring.
@@ -128,4 +130,4 @@ Admin API auth is cookie-session based, not bearer-token based.
 - Merriam-Webster credentials are server-only and independently configured as `MERRIAM_WEBSTER_COLLEGIATE_API_KEY` and `MERRIAM_WEBSTER_LEARNERS_API_KEY` in the environment-specific `.env.dev`, `.env.test`, and `.env` files. Keys and provider responses must not reach browser payloads or logs.
 - Successful and not-found Merriam-Webster results use a bounded normalized-word/source cache. Temporary timeout, rate-limit, unavailable-service, or missing-key conditions produce an unverified warning and may allow the action; authoritative mismatches, unknown CMUdict words, incorrect syllable division, or incorrect primary stress block without exposing a correction.
 - Stress editing must remain reversible: accept complete uppercase stressed syllables such as `com-MEND-ed`, preserve already accented input such as `com-ménd-ed`, and store canonical accented output. Do not normalize an invalid submission in a way that prevents the student from correcting uppercase stress in the edit form.
-- The protected physical student Library page is `/student/library.html`, linked below New Words, and includes student chat. The protected physical admin Library page is `/admin/library-admin.html`, linked under Administration, and must not include student chat. Both use the canonical shared header/footer and SVG theme-toggle component.
+- The protected physical student Library page is `/student/library.html`, linked below New Words, and includes student chat. The protected admin Library routes are `/admin/library`, `/admin/library/manage`, and `/admin/library/engagement`, linked under Administration, and must not include student chat. All use the canonical shared header/footer and SVG theme-toggle component.

@@ -112,7 +112,7 @@
               "border": "rgb(95, 115, 145)",
               "display": "block",
               "width": 550,
-              "height": 576
+              "height": 588
             }
           },
           "axe": []
@@ -154,7 +154,7 @@
               "border": "rgb(95, 115, 145)",
               "display": "block",
               "width": 550,
-              "height": 576
+              "height": 588
             }
           },
           "axe": []
@@ -2736,7 +2736,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1604
+              "height": 1783
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2748,7 +2748,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1556
+              "height": 1735
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2760,7 +2760,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1472
+              "height": 1651
             },
             ".panel": {
               "selector": ".panel",
@@ -4498,7 +4498,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1675
+              "height": 1685
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4536,18 +4536,7 @@
               "width": 96,
               "height": 99
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(138, 31, 28)",
-              "border": "rgb(138, 31, 28)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -4623,7 +4612,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 5588
+              "height": 5288
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4661,18 +4650,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(138, 31, 28)",
-              "border": "rgb(138, 31, 28)",
-              "display": "block",
-              "width": 1348,
-              "height": 32
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -4748,7 +4726,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1458
+              "height": 1479
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4786,18 +4764,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(138, 31, 28)",
-              "border": "rgb(138, 31, 28)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -4873,7 +4840,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1458
+              "height": 1479
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4911,18 +4878,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(138, 31, 28)",
-              "border": "rgb(138, 31, 28)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -4998,7 +4954,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 2699
+              "height": 2720
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5036,18 +4992,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(138, 31, 28)",
-              "border": "rgb(138, 31, 28)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -5123,7 +5068,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1522
+              "height": 1543
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5161,18 +5106,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(138, 31, 28)",
-              "border": "rgb(138, 31, 28)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -5248,7 +5182,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1888
+              "height": 1908
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5286,18 +5220,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(138, 31, 28)",
-              "border": "rgb(138, 31, 28)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -5373,7 +5296,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1770
+              "height": 1791
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5385,7 +5308,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "flex",
               "width": 1348,
-              "height": 1002
+              "height": 1003
             },
             ".detail-calendar-shell": {
               "selector": ".detail-calendar-shell",
@@ -5397,7 +5320,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "flex",
               "width": 1348,
-              "height": 1002
+              "height": 1003
             },
             ".homework-square": {
               "selector": ".homework-square",
@@ -5411,18 +5334,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(138, 31, 28)",
-              "border": "rgb(138, 31, 28)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -5522,10 +5434,10 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(251, 255, 255)",
+              "bg": "rgb(241, 244, 248)",
               "bgImage": "none",
-              "color": "rgb(23, 32, 51)",
-              "border": "rgb(115, 136, 163)",
+              "color": "rgb(43, 43, 43)",
+              "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 726,
               "height": 44
@@ -5542,18 +5454,7 @@
               "width": 160,
               "height": 48
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(138, 31, 28)",
-              "border": "rgb(138, 31, 28)",
-              "display": "block",
-              "width": 1348,
-              "height": 32
-            }
+            ".field-validation-message": null
           },
           "modalAxe": [
             {
@@ -5569,15 +5470,12 @@
             }
           ],
           "sourceLink": {
-            "color": "rgb(23, 32, 51)",
-            "bg": "rgb(251, 255, 255)",
+            "color": "rgb(43, 43, 43)",
+            "bg": "rgb(241, 244, 248)",
             "bgImage": "none",
             "value": ""
           },
-          "validationMessage": {
-            "color": "rgb(138, 31, 28)",
-            "text": "Source must contain data. | Score 0.00 < 1.00 | Step 1: Open the real article page from an approved source: cnn.com, bbc.com. | Step 2: Do not use only the site home page such as bbc.com or cnn.com. | Step 3: Copy the full web address for that article and paste it again."
-          }
+          "validationMessage": null
         },
         {
           "complianceModal": true,
@@ -5592,7 +5490,7 @@
               "border": "rgb(202, 215, 234)",
               "display": "grid",
               "width": 760,
-              "height": 1064
+              "height": 530
             },
             "#newsComplianceModal .field-validation-message": null,
             "#newsComplianceModal .portal-modal-close": {
@@ -5802,56 +5700,56 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 384
+          "y": 386
         },
         {
           "selector": "#newsQueueCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 374
+          "y": 376
         },
         {
           "selector": "#currentHomeworkCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 773
+          "y": 775
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 763
+          "y": 765
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1069
+          "y": 1071
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 1069
+          "y": 1071
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1198
+          "y": 1204
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1317
+          "y": 1327
         }
       ],
       "frameProfile": {
@@ -5860,7 +5758,7 @@
           "x": 0,
           "y": 36,
           "w": 1440,
-          "h": 1627,
+          "h": 1637,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -5872,7 +5770,7 @@
           "x": 31,
           "y": 189,
           "w": 1378,
-          "h": 1337,
+          "h": 1347,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",
@@ -5993,7 +5891,7 @@
               "border": "rgba(255, 255, 255, 0.36)",
               "display": "block",
               "width": 550,
-              "height": 578
+              "height": 590
             }
           },
           "axe": []
@@ -6035,7 +5933,7 @@
               "border": "rgba(255, 255, 255, 0.36)",
               "display": "block",
               "width": 550,
-              "height": 578
+              "height": 590
             }
           },
           "axe": []
@@ -8641,7 +8539,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1604
+              "height": 1783
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8653,7 +8551,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1556
+              "height": 1735
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8665,7 +8563,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1472
+              "height": 1651
             },
             ".panel": {
               "selector": ".panel",
@@ -10165,9 +10063,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "",
-            "bgImage": "",
-            "color": ""
+            "bg": "rgb(82, 82, 82)",
+            "bgImage": "none",
+            "color": "rgb(229, 245, 255)"
           }
         }
       ]
@@ -10403,7 +10301,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1675
+              "height": 1685
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10441,18 +10339,7 @@
               "width": 96,
               "height": 99
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(255, 184, 191)",
-              "border": "rgb(255, 184, 191)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10528,7 +10415,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 5588
+              "height": 5289
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10566,18 +10453,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(255, 184, 191)",
-              "border": "rgb(255, 184, 191)",
-              "display": "block",
-              "width": 1348,
-              "height": 32
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10653,7 +10529,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1460
+              "height": 1481
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10691,18 +10567,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(255, 184, 191)",
-              "border": "rgb(255, 184, 191)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10778,7 +10643,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1460
+              "height": 1481
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10816,18 +10681,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(255, 184, 191)",
-              "border": "rgb(255, 184, 191)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10903,7 +10757,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 2701
+              "height": 2722
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10941,18 +10795,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(255, 184, 191)",
-              "border": "rgb(255, 184, 191)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -11028,7 +10871,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1524
+              "height": 1545
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11066,18 +10909,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(255, 184, 191)",
-              "border": "rgb(255, 184, 191)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -11153,7 +10985,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1888
+              "height": 1908
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11191,18 +11023,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(255, 184, 191)",
-              "border": "rgb(255, 184, 191)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -11278,7 +11099,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1772
+              "height": 1793
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11290,7 +11111,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "flex",
               "width": 1348,
-              "height": 1004
+              "height": 1005
             },
             ".detail-calendar-shell": {
               "selector": ".detail-calendar-shell",
@@ -11302,7 +11123,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "flex",
               "width": 1348,
-              "height": 1004
+              "height": 1005
             },
             ".homework-square": {
               "selector": ".homework-square",
@@ -11316,18 +11137,7 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(255, 184, 191)",
-              "border": "rgb(255, 184, 191)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
+            ".field-validation-message": null,
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -11447,18 +11257,7 @@
               "width": 160,
               "height": 48
             },
-            ".field-validation-message": {
-              "selector": ".field-validation-message",
-              "id": "newsValidationHelp-sourceLink",
-              "className": "field-validation-message",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(255, 184, 191)",
-              "border": "rgb(255, 184, 191)",
-              "display": "block",
-              "width": 1348,
-              "height": 32
-            }
+            ".field-validation-message": null
           },
           "modalAxe": [
             {
@@ -11479,10 +11278,7 @@
             "bgImage": "none",
             "value": ""
           },
-          "validationMessage": {
-            "color": "rgb(255, 184, 191)",
-            "text": "Source must contain data. | Score 0.00 < 1.00 | Step 1: Open the real article page from an approved source: cnn.com, bbc.com. | Step 2: Do not use only the site home page such as bbc.com or cnn.com. | Step 3: Copy the full web address for that article and paste it again."
-          }
+          "validationMessage": null
         },
         {
           "complianceModal": true,
@@ -11497,7 +11293,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "grid",
               "width": 760,
-              "height": 1064
+              "height": 530
             },
             "#newsComplianceModal .field-validation-message": null,
             "#newsComplianceModal .portal-modal-close": {
@@ -11707,56 +11503,56 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 384
+          "y": 386
         },
         {
           "selector": "#newsQueueCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 374
+          "y": 376
         },
         {
           "selector": "#currentHomeworkCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 773
+          "y": 775
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 763
+          "y": 765
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1069
+          "y": 1071
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 1069
+          "y": 1071
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1198
+          "y": 1204
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1317
+          "y": 1327
         }
       ],
       "frameProfile": {
@@ -11765,7 +11561,7 @@
           "x": 0,
           "y": 36,
           "w": 1440,
-          "h": 1627,
+          "h": 1637,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -11777,7 +11573,7 @@
           "x": 31,
           "y": 189,
           "w": 1378,
-          "h": 1337,
+          "h": 1347,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",
