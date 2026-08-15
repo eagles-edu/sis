@@ -23,6 +23,18 @@
   }
 
   const readValue = (input) => input.type === "checkbox" ? input.checked : input.value
+  const textValue = (value) => String(value == null ? "" : value).trim()
+
+  const mwEtymology = (data = {}) => {
+    const direct = textValue(data.fields?.etymology)
+    if (direct) return direct
+    return (Array.isArray(data.details?.entries) ? data.details.entries : [])
+      .flatMap((entry) => Array.isArray(entry?.etymology) ? entry.etymology : [])
+      .map(textValue)
+      .filter(Boolean)
+      .filter((value, index, values) => values.indexOf(value) === index)
+      .join("\n")
+  }
 
   const bindReviewSidebar = () => {
     const shell = document.querySelector("[data-review-shell]")
@@ -94,7 +106,9 @@
           if (!response.ok || !data.ok) throw new Error(data.message || "Merriam-Webster is unavailable; no Library data was changed.")
           const current = readPayload(pane)
           const mergedReferences = [...new Map([...(Array.isArray(current.originReferences) ? current.originReferences : []), ...(Array.isArray(data.fields?.originReferences) ? data.fields.originReferences : [])].filter((item) => item?.url).map((item) => [item.url, item])).values()]
-          const merged = { ...current, ...data.fields, originPath: current.originPath || data.fields?.originPath || "", originReferences: mergedReferences }
+          const etymology = mwEtymology(data)
+          const nonEmptyMwFields = Object.fromEntries(Object.entries(data.fields || {}).filter(([field, value]) => field !== "originReferences" && value !== null && value !== undefined && (typeof value !== "string" || value.trim())))
+          const merged = { ...current, ...nonEmptyMwFields, ...(etymology ? { etymology } : {}), originPath: current.originPath || data.fields?.originPath || "", originReferences: mergedReferences }
           window.SIS_VOCABULARY_ESL?.hydrate(pane, merged, { preserveSyllabication: true })
           const appliedFields = Object.keys(data.fields || {}).join(", ") || "none"
           button.title = `Filled authoritative Merriam-Webster fields: ${appliedFields}.`

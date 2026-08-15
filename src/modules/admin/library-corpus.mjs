@@ -7,12 +7,19 @@ import { getVerbForms, getVerbRegularity } from "./verb-regularity.mjs"
 
 const MW_BASE = "https://www.dictionaryapi.com/api/v3/references/collegiate/json"
 const MAX_PAGE_SIZE = 100
+export const LIBRARY_DEFINITION_MAX_LENGTH = 50000
+const MAX_REVIEW_QUEUE_SIZE = 10000
 const POS = new Set(["noun", "verb", "adjective", "adverb", "pronoun", "determiner", "conjunction", "preposition", "interjection", "numeral", "proper noun", "phrase", "idiom", "clause"])
 const PHRASE_TYPES = new Set(["verb", "noun", "adjective", "adverbial", "prepositional", "idiom"])
 const VERB_TRANSITIVITY = new Set(["intransitive", "monotransitive", "ditransitive", "ambitransitive", "transitive"])
 const NOUN_TYPES = new Set(["common", "proper", "concrete", "abstract", "material", "collective", "compound", "possessive"])
 const NOUN_NUMBERS = new Set(["singular", "plural", "singular and plural"])
 const ETYMOLOGY_TYPES = new Set(["native", "borrowed", "derived", "compound", "eponym", "onomatopoeic", "unknown"])
+const CONTRIBUTION_LIFETIME_DAYS = 15
+const LEGACY_PENDING_REVIEW = "legacy_pending_review"
+const AWAITING_LEGACY_CANONICAL = "awaiting_legacy_canonical"
+const PENDING_CANONICAL_REPLACEMENT = "pending_canonical_replacement"
+const LEGACY_MIGRATION_TRANSACTION_OPTIONS = { maxWait: 30000, timeout: 120000 }
 const MW_POS_ALIASES = new Map([
   ["adjective", "adjective"],
   ["adverb", "adverb"],
@@ -33,6 +40,7 @@ const MW_POS_ALIASES = new Map([
 function text(value) { return String(value == null ? "" : value).trim() }
 function lower(value) { return text(value).normalize("NFC").toLocaleLowerCase("en-US") }
 function clamp(value, maximum = 240) { return text(value).slice(0, maximum) }
+export function normalizeLibraryDefinition(value) { return clamp(value, LIBRARY_DEFINITION_MAX_LENGTH) }
 function grammarClassification(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null
   const allowed = ["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber"]
@@ -43,6 +51,54 @@ function normalizeKey(value) { return lower(value).replace(/[’']/gu, "'").repl
 function syllableCount(value) { const words = text(value).split(/\s+/u).filter(Boolean); return words.reduce((total, word) => total + Math.max(1, word.split("-").filter(Boolean).length), 0) }
 function statusError(message, statusCode = 400) { const error = new Error(message); error.statusCode = statusCode; return error }
 function weekNumber(value = new Date()) { const date = new Date(value); const start = new Date(Date.UTC(date.getUTCFullYear(), 0, 1)); return Math.max(1, Math.ceil((((date - start) / 86400000) + start.getUTCDay() + 1) / 7)) }
+
+export function libraryContributionDeadline(submittedAt) {
+  const start = new Date(submittedAt)
+  if (Number.isNaN(start.valueOf())) throw statusError("A valid contribution submission time is required")
+  return new Date(start.getTime() + CONTRIBUTION_LIFETIME_DAYS * 24 * 60 * 60 * 1000)
+}
+
+export function selectLargestDuplicate(rows = []) {
+  return [...rows].sort((left, right) => {
+    const leftPayload = left?.payloadJson || left?.payload || {}
+    const rightPayload = right?.payloadJson || right?.payload || {}
+    const definitionLength = (payload) => text(payload.definition).length
+    const lengthDifference = definitionLength(rightPayload) - definitionLength(leftPayload)
+    if (lengthDifference) return lengthDifference
+    const submittedDifference = new Date(left?.submittedAt || left?.createdAt || 0).valueOf() - new Date(right?.submittedAt || right?.createdAt || 0).valueOf()
+    if (submittedDifference) return submittedDifference
+    return text(left?.id).localeCompare(text(right?.id))
+  })[0] || null
+}
+
+function isLegacyPending(value) { return text(value) === LEGACY_PENDING_REVIEW }
+function isAwaitingLegacyCanonical(value) { return text(value) === AWAITING_LEGACY_CANONICAL }
+
+function activePayloadValue(value, key = "") {
+  if (value === null || value === undefined) {
+    if (/references|items|editors/iu.test(key)) return []
+    if (/classification|payloadJson/iu.test(key)) return {}
+    return ""
+  }
+  if (value instanceof Date) return value.toISOString()
+  if (Array.isArray(value)) return value.map((item) => activePayloadValue(item, key))
+  if (typeof value === "object") return Object.fromEntries(Object.entries(value).map(([childKey, child]) => [childKey, activePayloadValue(child, childKey)]))
+  return value
+}
+
+export function normalizeActiveLibraryPayload(value) {
+  return activePayloadValue(value)
+}
+
+function mapContribution(contribution = {}) {
+  const mapped = activePayloadValue(contribution)
+  mapped.payloadJson = activePayloadValue(contribution.payloadJson || {}, "payloadJson")
+  return mapped
+}
+
+function canonicalPair(payload = {}) {
+  return { normalizedKey: normalizeKey(payload.english), partOfSpeech: lower(payload.partOfSpeech) }
+}
 
 export function checkLibraryEntryVerbTransitivity(payload = {}) {
   try {
@@ -112,7 +168,7 @@ function normalizeEntry(value = {}) {
     britishEnglish: clamp(value.britishEnglish) || null, partOfSpeech, phraseType: phraseType || null,
     grammarClassification: grammarClassification(value.grammarClassification), etymologyType: etymologyType || null, etymology: clamp(value.etymology, 4000) || null,
     originPath: clamp(value.originPath, 500) || null, originReferences: normalizeOriginReferences(value.originReferences), vietnamese: clamp(value.vietnamese), syllabication: clamp(value.syllabication),
-    syllableCount: syllableCount(value.syllabication), definition: clamp(value.definition, 4000), countability: lower(value.countability) || null,
+    syllableCount: syllableCount(value.syllabication), definition: normalizeLibraryDefinition(value.definition), countability: lower(value.countability) || null,
     nounType: partOfSpeech === "noun" ? nounType || null : null, nounNumber: partOfSpeech === "noun" ? nounNumber || null : null,
     verbRegularity: lower(value.verbRegularity) || null, verbTransitivity: lower(value.verbTransitivity) || null,
     verbInfinitive: clamp(value.verbInfinitive) || null, verbV1: clamp(value.verbV1) || null,
@@ -133,13 +189,20 @@ function normalizeEntry(value = {}) {
 
 function mapEntry(entry) {
   const revisions = Array.isArray(entry.revisions) ? entry.revisions : []
-  return { ...entry, editors: [...new Map(revisions.map((revision) => [revision.actorName, { name: revision.actorName, at: revision.createdAt }])).values()] }
+  const mapped = activePayloadValue(entry)
+  mapped.grammarClassification = activePayloadValue(entry.grammarClassification, "grammarClassification")
+  mapped.originReferences = Array.isArray(entry.originReferences) ? activePayloadValue(entry.originReferences, "originReferences") : []
+  mapped.editors = [...new Map(revisions.map((revision) => [revision.actorName, { name: revision.actorName || "", at: revision.createdAt || "" }])).values()]
+  mapped.isLegacyPending = text(entry.reviewStatus) === LEGACY_PENDING_REVIEW
+  mapped.reviewLabel = mapped.isLegacyPending ? "Legacy review pending" : ""
+  return mapped
 }
 
 async function prisma() { return getSharedPrismaClient() }
 
 export async function listLibraryEntries(query = {}) {
   const client = await prisma()
+  await reconcileStudentLibraryLifecycle(text(query.studentRefId))
   const page = Math.max(1, Number.parseInt(text(query.page), 10) || 1)
   const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Number.parseInt(text(query.pageSize), 10) || 25))
   const search = lower(query.search)
@@ -150,7 +213,7 @@ export async function listLibraryEntries(query = {}) {
   }, {})
   const where = {
     ...filters,
-    ...(myWords && studentRefId ? { contributions: { some: { studentRefId, status: { in: ["approved", "migrated"] } } } } : {}),
+    ...(myWords && studentRefId ? { contributions: { some: { studentRefId, status: { in: ["approved", "migrated", "canonicalized", LEGACY_PENDING_REVIEW, PENDING_CANONICAL_REPLACEMENT] } } } } : {}),
     ...(search ? { OR: [{ english: { contains: search, mode: "insensitive" } }, { vietnamese: { contains: search, mode: "insensitive" } }, { definition: { contains: search, mode: "insensitive" } }, { etymology: { contains: search, mode: "insensitive" } }] } : {})
   }
   const sortBy = ["english", "createdAt", "updatedAt", "partOfSpeech", "syllableCount"].includes(text(query.sortBy)) ? text(query.sortBy) : "english"
@@ -159,7 +222,28 @@ export async function listLibraryEntries(query = {}) {
     client.libraryEntry.count({ where }),
     client.libraryEntry.findMany({ where, orderBy: [{ [sortBy]: direction }, { english: "asc" }], skip: (page - 1) * pageSize, take: pageSize, include: { revisions: { orderBy: { createdAt: "asc" } } } }),
   ])
-  return { ok: true, page, pageSize, total, items: entries.map(mapEntry) }
+  const pending = myWords && studentRefId
+    ? await client.libraryContribution.findMany({ where: { studentRefId, OR: [{ status: "pending_review", dueAt: { gt: new Date() } }, { status: AWAITING_LEGACY_CANONICAL }] }, orderBy: { submittedAt: "asc" } })
+    : []
+  const pendingItems = pending
+    .filter((contribution) => {
+      const payload = contribution.payloadJson && typeof contribution.payloadJson === "object" ? contribution.payloadJson : {}
+      return (!filters.partOfSpeech || lower(payload.partOfSpeech) === filters.partOfSpeech)
+        && (!search || [payload.english, payload.vietnamese, payload.definition].some((value) => lower(value).includes(search)))
+    })
+    .map((contribution) => ({
+      ...activePayloadValue(contribution.payloadJson || {}, "payloadJson"),
+      id: contribution.id,
+      isContribution: true,
+      contributionId: contribution.id,
+      contributionStatus: contribution.status,
+      dueAt: contribution.dueAt || "",
+      submittedAt: contribution.submittedAt || "",
+      canonicalEntryId: contribution.entryId || "",
+      editors: [],
+    }))
+  const items = [...entries.map(mapEntry), ...pendingItems].sort((left, right) => text(left.english).localeCompare(text(right.english)) || text(left.partOfSpeech).localeCompare(text(right.partOfSpeech)))
+  return { ok: true, page, pageSize, total: total + pendingItems.length, items: items.slice(0, pageSize) }
 }
 
 export async function getLibraryEntry(id) {
@@ -173,7 +257,7 @@ export async function getLibraryEntry(id) {
 
 export async function getStudentLibraryAssignments(studentRefId) {
   const client = await prisma()
-  return { ok: true, items: await client.libraryAssignment.findMany({ where: { studentRefId, status: "assigned" }, include: { entry: true }, orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }] }) }
+  return { ok: true, items: (await client.libraryAssignment.findMany({ where: { studentRefId, status: "assigned" }, include: { entry: true }, orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }] })).map((item) => ({ ...activePayloadValue(item), entry: item.entry ? mapEntry(item.entry) : {} })) }
 }
 
 export async function submitLibraryContribution(studentRefId, contributorName, payload = {}) {
@@ -181,17 +265,154 @@ export async function submitLibraryContribution(studentRefId, contributorName, p
   const esl = rawEntry.esl && typeof rawEntry.esl === "object" ? rawEntry.esl : {}
   const entry = {
     english: clamp(rawEntry.english), partOfSpeech: lower(rawEntry.partOfSpeech), vietnamese: clamp(rawEntry.vietnamese),
-    syllabication: clamp(rawEntry.syllabication), definition: clamp(rawEntry.definition, 4000),
+    syllabication: clamp(rawEntry.syllabication), definition: normalizeLibraryDefinition(rawEntry.definition),
     ...Object.fromEntries(Object.entries({ ...rawEntry, ...esl }).filter(([key]) => key.startsWith("verb") || ["phraseType", "grammarClassification", "countability", "nounType", "nounNumber", "edAdjective", "ingAdjective", "displayVerbForm", "etymologyType", "etymology", "originPath", "originReferences"].includes(key))),
   }
   if (!entry.english || !POS.has(entry.partOfSpeech)) throw statusError("New Words submissions require English and a supported part of speech")
   const client = await prisma()
-  const contribution = await client.libraryContribution.create({ data: { entryId: clamp(payload.entryId) || null, studentRefId: text(studentRefId) || null, contributorName: clamp(contributorName), sourceKind: "student_new_words", sourceId: clamp(payload.sourceId) || null, payloadJson: entry, status: "pending_review" } })
-  return { ok: true, contribution, message: "Submitted to Library for review." }
+  const studentId = text(studentRefId)
+  const sourceId = clamp(payload.sourceId)
+  const existingEntryId = clamp(payload.entryId)
+  if (studentId && existingEntryId) throw statusError("Canonical Library entries are editable by Admin only", 403)
+  const now = new Date()
+  if (studentId && sourceId) {
+    const existing = await client.libraryContribution.findFirst({ where: { studentRefId: studentId, sourceKind: "student_new_words", sourceId }, orderBy: { submittedAt: "desc" } })
+    if (existing) {
+      if (isAwaitingLegacyCanonical(existing.status)) {
+        const refreshed = await client.$transaction(async (tx) => {
+          const updated = await tx.libraryContribution.update({ where: { id: existing.id }, data: { payloadJson: activePayloadValue(entry, "payloadJson"), dueAt: null } })
+          await writeContributionRevision(tx, updated, "student_refresh_awaiting_legacy_canonical")
+          return updated
+        })
+        return { ok: true, contribution: mapContribution(refreshed), refreshed: true, message: "Your contribution is waiting for the legacy canonical review." }
+      }
+      if (existing.status !== "pending_review") throw statusError("This contribution is now canonical and can only be edited by Admin", 403)
+      const dueAt = existing.dueAt || libraryContributionDeadline(existing.submittedAt)
+      if (dueAt <= now) {
+        await reconcileStudentLibraryLifecycle(studentId)
+        throw statusError("This contribution has reached its 15-day deadline and is now canonical", 403)
+      }
+      const updated = await client.$transaction(async (tx) => {
+        const refreshed = await tx.libraryContribution.update({ where: { id: existing.id }, data: { payloadJson: activePayloadValue(entry, "payloadJson"), dueAt } })
+        await writeContributionRevision(tx, refreshed, "student_refresh")
+        return refreshed
+      })
+      return { ok: true, contribution: mapContribution(updated), refreshed: true, message: "Your pending Library contribution was refreshed." }
+    }
+  }
+  const submittedAt = now
+  const pair = canonicalPair(entry)
+  const provisional = studentId
+    ? await client.libraryEntry.findFirst({ where: { normalizedKey: pair.normalizedKey, partOfSpeech: pair.partOfSpeech, reviewStatus: LEGACY_PENDING_REVIEW }, select: { id: true } })
+    : null
+  const contribution = await client.$transaction(async (tx) => {
+    const created = await tx.libraryContribution.create({ data: {
+      entryId: existingEntryId || provisional?.id || null,
+      studentRefId: studentId || null,
+      contributorName: clamp(contributorName),
+      sourceKind: studentId ? "student_new_words" : "admin_library",
+      sourceId: sourceId || null,
+      payloadJson: activePayloadValue(entry, "payloadJson"),
+      status: provisional ? AWAITING_LEGACY_CANONICAL : "pending_review",
+      submittedAt,
+      dueAt: studentId && !provisional ? libraryContributionDeadline(submittedAt) : null,
+    } })
+    await writeContributionRevision(tx, created, provisional ? "submitted_awaiting_legacy_canonical" : "submitted")
+    return created
+  })
+  return { ok: true, contribution: mapContribution(contribution), message: provisional ? "Submitted and waiting for the legacy canonical review." : "Submitted to Library for review." }
+}
+
+export async function refreshStudentLibraryContributions(studentRefId, contributorName, entries = []) {
+  const studentId = text(studentRefId)
+  const rows = Array.isArray(entries) ? entries : []
+  if (!studentId || !rows.length) return { ok: true, refreshed: 0 }
+  const client = await prisma()
+  const sourceIds = rows.map((row) => clamp(row?.id)).filter(Boolean)
+  const pending = sourceIds.length
+    ? await client.libraryContribution.findMany({ where: { studentRefId: studentId, sourceKind: "student_new_words", sourceId: { in: sourceIds }, status: { in: ["pending_review", AWAITING_LEGACY_CANONICAL] } } })
+    : []
+  let refreshed = 0
+  for (const contribution of pending) {
+    const source = rows.find((row) => clamp(row?.id) === contribution.sourceId)
+    if (!source) continue
+    await submitLibraryContribution(studentId, contributorName, { sourceId: contribution.sourceId, entry: source })
+    refreshed += 1
+  }
+  return { ok: true, refreshed }
 }
 
 async function writeRevision(client, entry, action, actorName, actorRole) {
   return client.libraryEntryRevision.create({ data: { entryId: entry.id, action, actorName: clamp(actorName), actorRole: clamp(actorRole), snapshotJson: entry } })
+}
+
+async function writeContributionRevision(client, contribution, action) {
+  return client.libraryContributionRevision.create({ data: {
+    contributionId: contribution.id,
+    action,
+    snapshotJson: {
+      id: contribution.id,
+      entryId: contribution.entryId || "",
+      studentRefId: contribution.studentRefId || "",
+      contributorName: contribution.contributorName || "",
+      sourceKind: contribution.sourceKind || "",
+      sourceId: contribution.sourceId || "",
+      payloadJson: activePayloadValue(contribution.payloadJson || {}, "payloadJson"),
+      status: contribution.status || "",
+      submittedAt: contribution.submittedAt?.toISOString?.() || "",
+      dueAt: contribution.dueAt?.toISOString?.() || "",
+      canonicalizedAt: contribution.canonicalizedAt?.toISOString?.() || "",
+    },
+  } })
+}
+
+async function canonicalEntryForContribution(tx, payload, actor = {}) {
+  const data = normalizeEntry(payload)
+  const pair = canonicalPair(data)
+  const existing = await tx.libraryEntry.findUnique({ where: { normalizedKey_partOfSpeech: pair } })
+  const entry = await tx.libraryEntry.upsert({
+    where: { normalizedKey_partOfSpeech: pair },
+    update: { ...data, reviewStatus: "approved", lastEditedByName: clamp(actor.name) },
+    create: { ...data, reviewStatus: "approved", createdByName: clamp(actor.name || "Library canonicalization"), lastEditedByName: clamp(actor.name || "Library canonicalization") },
+  })
+  return { entry, existing }
+}
+
+export async function reconcileStudentLibraryLifecycle(studentRefId, now = new Date()) {
+  const studentId = text(studentRefId)
+  if (!studentId) return { ok: true, reconciled: 0 }
+  const client = await prisma()
+  const pending = await client.libraryContribution.findMany({ where: { studentRefId: studentId, status: { in: ["pending_review", PENDING_CANONICAL_REPLACEMENT] }, dueAt: { lte: now } }, orderBy: { dueAt: "asc" } })
+  let reconciled = 0
+  for (const contribution of pending) {
+    await client.$transaction(async (tx) => {
+      const current = await tx.libraryContribution.findUnique({ where: { id: contribution.id } })
+      if (!current || !["pending_review", PENDING_CANONICAL_REPLACEMENT].includes(current.status) || !current.dueAt || current.dueAt > now) return
+      const payload = current.payloadJson && typeof current.payloadJson === "object" ? current.payloadJson : {}
+      const preservedCanonical = current.status === PENDING_CANONICAL_REPLACEMENT && current.entryId
+        ? await tx.libraryEntry.findUnique({ where: { id: current.entryId } })
+        : null
+      const { entry, existing } = preservedCanonical
+        ? { entry: preservedCanonical, existing: true }
+        : await canonicalEntryForContribution(tx, payload, { name: "Library lifecycle", role: "system" })
+      const updated = await tx.libraryContribution.update({ where: { id: current.id }, data: { entryId: entry.id, status: "canonicalized", canonicalizedAt: now, reviewedAt: now, reviewedByName: "Library lifecycle", dueAt: current.dueAt } })
+      await writeContributionRevision(tx, updated, current.status === PENDING_CANONICAL_REPLACEMENT ? "expired_canonical_replacement" : "expired_canonicalization")
+      if (!existing) await writeRevision(tx, entry, "expired_canonicalization", "Library lifecycle", "system")
+      if (current.sourceKind === "student_new_words" && current.sourceId) {
+        await tx.studentNewWord.updateMany({ where: { id: current.sourceId, studentRefId: studentId }, data: { englishKey: normalizeKey(entry.english), english: entry.english, partOfSpeech: entry.partOfSpeech, vietnamese: entry.vietnamese, syllabication: entry.syllabication, definition: entry.definition, eslJson: activePayloadValue(entry, "payloadJson"), archivedLibraryEntryId: entry.id } })
+      }
+      reconciled += 1
+    })
+  }
+  return { ok: true, reconciled }
+}
+
+export async function reconcileLibraryLifecycle(now = new Date()) {
+  const client = await prisma()
+  const students = await client.libraryContribution.findMany({ where: { status: { in: ["pending_review", PENDING_CANONICAL_REPLACEMENT] }, dueAt: { lte: now }, studentRefId: { not: null } }, distinct: ["studentRefId"], select: { studentRefId: true } })
+  let reconciled = 0
+  for (const row of students) reconciled += (await reconcileStudentLibraryLifecycle(row.studentRefId, now)).reconciled
+  return { ok: true, reconciled, students: students.length }
 }
 
 export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
@@ -200,7 +421,8 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
   if (!contribution) throw statusError("Library contribution was not found", 404)
   const approved = Boolean(payload.approved)
   if (!approved) {
-    await client.libraryContribution.update({ where: { id }, data: { status: "rejected", reviewedAt: new Date(), reviewedByName: clamp(actor.name) } })
+    const rejected = await client.libraryContribution.update({ where: { id }, data: { status: "rejected", reviewedAt: new Date(), reviewedByName: clamp(actor.name) } })
+    await writeContributionRevision(client, rejected, "rejected")
     return { ok: true, status: "rejected" }
   }
   const canonicalContributionId = clamp(payload.canonicalContributionId) || id
@@ -210,15 +432,32 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
   if (!canonicalContribution) throw statusError("The selected canonical Library contribution was not found", 404)
   const submitted = normalizeEntry(payload.entry || canonicalContribution.payloadJson)
   const result = await client.$transaction(async (tx) => {
-    const existing = contribution.entryId ? await tx.libraryEntry.findUnique({ where: { id: contribution.entryId } }) : null
-    const entry = existing
-      ? await tx.libraryEntry.update({ where: { id: existing.id }, data: { ...submitted, reviewStatus: "approved", lastEditedByName: clamp(actor.name) } })
-      : await tx.libraryEntry.create({ data: { ...submitted, reviewStatus: "approved", createdByName: canonicalContribution.contributorName, lastEditedByName: clamp(actor.name) } })
-    await writeRevision(tx, entry, existing ? "approved_edit" : "approved_submission", actor.name, actor.role || "admin")
-    await tx.libraryContribution.update({ where: { id }, data: { entryId: entry.id, status: "approved", reviewedAt: new Date(), reviewedByName: clamp(actor.name) } })
+    const pair = canonicalPair(submitted)
+    const siblings = await tx.libraryContribution.findMany({ where: { status: { in: ["pending_review", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL] } } })
+    const matching = siblings.filter((candidate) => {
+      const candidatePayload = candidate.payloadJson && typeof candidate.payloadJson === "object" ? candidate.payloadJson : {}
+      return lower(candidatePayload.partOfSpeech) === submitted.partOfSpeech && normalizeKey(candidatePayload.english) === pair.normalizedKey
+    })
+    const legacy = matching.some((candidate) => isLegacyPending(candidate.status)) || isLegacyPending(contribution.status)
+    const duplicate = matching.length > 1 || legacy
+    const { entry, existing } = await canonicalEntryForContribution(tx, submitted, actor)
+    if (!existing || duplicate) await writeRevision(tx, entry, legacy ? "legacy_canonicalization" : duplicate ? "canonicalization" : "approved_submission", actor.name, actor.role || "admin")
+    const targets = duplicate ? matching.filter((target) => !isAwaitingLegacyCanonical(target.status)) : [contribution]
+    const canonicalizedAt = new Date()
+    for (const target of targets) {
+      const updated = await tx.libraryContribution.update({ where: { id: target.id }, data: { entryId: entry.id, status: duplicate ? "canonicalized" : "approved", reviewedAt: canonicalizedAt, reviewedByName: clamp(actor.name), canonicalizedAt } })
+      await writeContributionRevision(tx, updated, legacy ? "legacy_canonicalized" : duplicate ? "canonicalized" : "approved")
+    }
+    if (legacy) {
+      const waiting = matching.filter((target) => isAwaitingLegacyCanonical(target.status))
+      for (const target of waiting) {
+        const updated = await tx.libraryContribution.update({ where: { id: target.id }, data: { entryId: entry.id, status: PENDING_CANONICAL_REPLACEMENT, dueAt: libraryContributionDeadline(canonicalizedAt), reviewedAt: canonicalizedAt, reviewedByName: clamp(actor.name) } })
+        await writeContributionRevision(tx, updated, "legacy_canonical_declared")
+      }
+    }
     return entry
   })
-  return { ok: true, entry: result }
+  return { ok: true, entry: mapEntry(result) }
 }
 
 export async function updateLibraryEntry(id, actor = {}, payload = {}) {
@@ -228,7 +467,7 @@ export async function updateLibraryEntry(id, actor = {}, payload = {}) {
     await writeRevision(tx, updated, "approved_edit", actor.name, actor.role || "admin")
     return updated
   })
-  return { ok: true, entry }
+  return { ok: true, entry: mapEntry(entry) }
 }
 
 export async function assignLibraryWork(actor = {}, payload = {}) {
@@ -243,9 +482,13 @@ export async function assignLibraryWork(actor = {}, payload = {}) {
 
 export async function listLibraryReviewQueue(query = {}) {
   const client = await prisma()
-  const status = lower(query.status) || "pending_review"
+  const requestedStatus = lower(query.status)
+  const status = requestedStatus || "open_review"
   const subject = lower(query.subject); const route = lower(query.route)
-  const contributions = await client.libraryContribution.findMany({ where: { status }, orderBy: { submittedAt: "asc" }, take: MAX_PAGE_SIZE })
+  const contributionWhere = status === "open_review"
+    ? { status: { in: ["pending_review", LEGACY_PENDING_REVIEW] } }
+    : { status }
+  const contributions = await client.libraryContribution.findMany({ where: contributionWhere, orderBy: { submittedAt: "asc" }, take: MAX_REVIEW_QUEUE_SIZE })
   const grouped = new Map()
   for (const contribution of contributions) {
     const payload = contribution.payloadJson && typeof contribution.payloadJson === "object" ? contribution.payloadJson : {}
@@ -254,28 +497,47 @@ export async function listLibraryReviewQueue(query = {}) {
     siblings.push(contribution)
     grouped.set(key, siblings)
   }
-  const items = contributions.map((contribution) => {
+  const queueContributions = contributions.filter((contribution) => {
     const payload = contribution.payloadJson || {}
     const key = `${normalizeKey(payload.english)}|${lower(payload.partOfSpeech)}`
     const siblings = grouped.get(key) || []
+    const legacySiblings = siblings.filter((sibling) => isLegacyPending(sibling.status))
+    return !legacySiblings.length || selectLargestDuplicate(legacySiblings)?.id === contribution.id
+  })
+  const items = queueContributions.map((contribution) => {
+    const payload = contribution.payloadJson || {}
+    const key = `${normalizeKey(payload.english)}|${lower(payload.partOfSpeech)}`
+    const siblings = grouped.get(key) || []
+    const legacyReview = isLegacyPending(contribution.status)
+    const legacyGroup = siblings.some((sibling) => isLegacyPending(sibling.status))
+    const legacySiblings = siblings.filter((sibling) => isLegacyPending(sibling.status))
+    const comparable = siblings.length > 1 || legacyReview || legacyGroup
     return {
-      ...contribution,
-      payloadJson: payload,
+      ...mapContribution(contribution),
+      payloadJson: activePayloadValue(payload, "payloadJson"),
       queueType: contribution.entryId ? "edit" : "new_entry",
       duplicateGroupKey: key,
       potentialDuplicate: siblings.length > 1,
-      duplicateGroup: siblings.length > 1 ? siblings.map((sibling) => ({
+      legacyReview,
+      legacyGroup,
+      canonicalizationMode: legacyGroup ? "legacy_canonicalization" : siblings.length > 1 ? "canonicalization" : "approval",
+      largestDuplicateId: comparable ? selectLargestDuplicate(legacyGroup ? legacySiblings : siblings)?.id || "" : "",
+      duplicateGroup: comparable ? siblings.map((sibling) => ({
         id: sibling.id,
         entryId: sibling.entryId,
-        contributorName: sibling.contributorName,
-        submittedAt: sibling.submittedAt,
-        payloadJson: sibling.payloadJson || {},
+        contributorName: sibling.contributorName || "",
+        submittedAt: sibling.submittedAt || "",
+        dueAt: sibling.dueAt || "",
+        canonicalizedAt: sibling.canonicalizedAt || "",
+        status: sibling.status || "",
+        legacyReview: isLegacyPending(sibling.status),
+        payloadJson: activePayloadValue(sibling.payloadJson || {}, "payloadJson"),
         queueType: sibling.entryId ? "edit" : "new_entry",
       })) : [],
     }
   })
   const assignments = await client.libraryAssignment.findMany({ where: { status: "assigned", ...(subject ? { subject: { contains: subject, mode: "insensitive" } } : {}), ...(route ? { route: { contains: route, mode: "insensitive" } } : {}) }, include: { entry: true }, orderBy: { createdAt: "asc" }, take: MAX_PAGE_SIZE })
-  return { ok: true, total: items.length + assignments.length, items, assignments }
+  return { ok: true, total: items.length + assignments.length, items, assignments: assignments.map((assignment) => ({ ...activePayloadValue(assignment), entry: assignment.entry ? mapEntry(assignment.entry) : {} })) }
 }
 
 export async function listLibraryStudents() {
@@ -317,12 +579,13 @@ export async function listLibraryAssignmentEngagement(query = {}) {
   const queueMap = new Map(queues.map((queue) => [queue.id, queue]))
   const students = await client.student.findMany({ include: { profile: true } })
   const names = new Map(students.map((student) => [student.id, text(student.profile?.englishName || student.profile?.fullName || student.eaglesId)]))
-  return { ok: true, total: rows.length, items: rows.map((row) => ({ ...row, sentAt: row.sentAt || queueMap.get(row.queueId)?.sentAt || null, queueStatus: queueMap.get(row.queueId)?.status || "queued", studentName: names.get(row.assignment.studentRefId) || row.assignment.studentRefId, assignmentTitle: row.assignment.entry?.english || "New Library entry", subject: row.assignment.subject || "", route: row.assignment.route || "", status: row.sentAt || queueMap.get(row.queueId)?.sentAt ? "sent" : "queued" })) }
+  return { ok: true, total: rows.length, items: rows.map((row) => activePayloadValue({ ...row, sentAt: row.sentAt || queueMap.get(row.queueId)?.sentAt || "", queueStatus: queueMap.get(row.queueId)?.status || "queued", studentName: names.get(row.assignment.studentRefId) || row.assignment.studentRefId, assignmentTitle: row.assignment.entry?.english || "New Library entry", subject: row.assignment.subject || "", route: row.assignment.route || "", status: row.sentAt || queueMap.get(row.queueId)?.sentAt ? "sent" : "queued" })) }
 }
 
 function legacyEntry(raw = {}) {
   const esl = raw.esl && typeof raw.esl === "object" ? raw.esl : {}
-  return { normalizedKey: normalizeKey(raw.english), english: clamp(raw.english), americanEnglish: null, britishEnglish: null, partOfSpeech: lower(raw.partOfSpeech), phraseType: lower(esl.phraseType) || null, etymologyType: lower(esl.etymologyType) || null, etymology: clamp(esl.etymology, 4000) || null, originPath: clamp(esl.originPath, 500) || null, originReferences: normalizeOriginReferences(esl.originReferences), vietnamese: clamp(raw.vietnamese), syllabication: clamp(raw.syllabication), syllableCount: syllableCount(raw.syllabication), definition: clamp(raw.definition, 4000), countability: lower(esl.countability) || null, nounType: lower(esl.nounType) || null, nounNumber: lower(esl.nounNumber) || null, verbRegularity: lower(esl.verbRegularity) || null, verbTransitivity: lower(esl.verbTransitivity) || null, verbInfinitive: clamp(esl.verbInfinitive) || null, verbV1: clamp(esl.verbV1) || null, verbV2: clamp(esl.verbV2) || null, verbV3: clamp(esl.verbV3) || null, verbV4: clamp(esl.verbV4) || null, verbV5: clamp(esl.verbV5) || null, displayVerbForm: lower(esl.displayVerbForm) || null, edAdjective: Boolean(esl.edAdjective), ingAdjective: Boolean(esl.ingAdjective), awlFamilyHeadword: clamp(esl.awlFamilyHeadword) || null, awlQualifyingMember: clamp(esl.awlQualifyingMember) || null, awlMemberForm: clamp(esl.awlMemberForm) || null, awlSublist: Number(esl.awlSublist) || null }
+  const value = { ...raw, ...esl }
+  return { normalizedKey: normalizeKey(value.english), english: clamp(value.english), americanEnglish: clamp(value.americanEnglish) || null, britishEnglish: clamp(value.britishEnglish) || null, partOfSpeech: lower(value.partOfSpeech), phraseType: lower(value.phraseType) || null, grammarClassification: grammarClassification(value.grammarClassification), etymologyType: lower(value.etymologyType) || null, etymology: clamp(value.etymology, 4000) || null, originPath: clamp(value.originPath, 500) || null, originReferences: normalizeOriginReferences(value.originReferences), vietnamese: clamp(value.vietnamese), syllabication: clamp(value.syllabication), syllableCount: syllableCount(value.syllabication), definition: normalizeLibraryDefinition(value.definition), countability: lower(value.countability) || null, nounType: lower(value.nounType) || null, nounNumber: lower(value.nounNumber) || null, verbRegularity: lower(value.verbRegularity) || null, verbTransitivity: lower(value.verbTransitivity) || null, verbInfinitive: clamp(value.verbInfinitive) || null, verbV1: clamp(value.verbV1) || null, verbV2: clamp(value.verbV2) || null, verbV3: clamp(value.verbV3) || null, verbV4: clamp(value.verbV4) || null, verbV5: clamp(value.verbV5) || null, displayVerbForm: lower(value.displayVerbForm) || null, edAdjective: Boolean(value.edAdjective), ingAdjective: Boolean(value.ingAdjective), awlFamilyHeadword: clamp(value.awlFamilyHeadword) || null, awlQualifyingMember: clamp(value.awlQualifyingMember) || null, awlMemberForm: clamp(value.awlMemberForm) || null, awlSublist: Number(value.awlSublist) || null }
 }
 
 function conflicts(rows) {
@@ -332,29 +595,89 @@ function conflicts(rows) {
 
 export async function createLibraryLegacyPreflight(runKey = "legacy-cutover-v1") {
   const client = await prisma()
-  const [words, reports, students] = await Promise.all([
+  const [words, reports, students, entries] = await Promise.all([
     client.studentNewWord.findMany({ where: { archivedAt: null } }),
     client.studentNewsReport.findMany({ where: { OR: [{ mmrPassedAt: { not: null } }, { dateSatisfiedAt: { not: null } }, { submissionState: "ready" }, { submissionState: "submitted", firstSubmittedAt: { not: null } }] } }),
     client.student.findMany({ include: { profile: true } }),
+    client.libraryEntry.findMany({ include: { revisions: { orderBy: { createdAt: "asc" } } } }),
   ])
   const names = new Map(students.map((student) => [student.id, text(student.profile?.englishName || student.profile?.fullName || student.eaglesId)]))
+  const entryGroups = new Map()
+  for (const entry of entries) {
+    const key = `${entry.normalizedKey}|${lower(entry.partOfSpeech)}`
+    entryGroups.set(key, [...(entryGroups.get(key) || []), entry])
+  }
+  const legacyEntries = [...entryGroups.values()].flat().filter((entry) => (entryGroups.get(`${entry.normalizedKey}|${lower(entry.partOfSpeech)}`) || []).length > 1 || text(entry.reviewStatus) !== "approved")
   const rows = [
     ...words.map((word) => ({ sourceKind: "legacy_new_word", sourceId: word.id, studentRefId: word.studentRefId, contributorName: names.get(word.studentRefId) || word.studentRefId, createdAt: word.createdAt, payload: { english: word.english, partOfSpeech: word.partOfSpeech, vietnamese: word.vietnamese, syllabication: word.syllabication, definition: word.definition, esl: word.eslJson || {} } })),
     ...reports.flatMap((report) => (Array.isArray(report.vocabularyJson) ? report.vocabularyJson : []).map((payload, index) => ({ sourceKind: "legacy_news_vocabulary", sourceId: `${report.id}:${index}`, studentRefId: report.studentRefId, contributorName: names.get(report.studentRefId) || report.studentRefId, createdAt: report.createdAt, payload }))),
+    ...legacyEntries.map((entry) => ({ sourceKind: "legacy_library_entry", sourceId: entry.id, studentRefId: null, contributorName: entry.createdByName || "legacy Library", createdAt: entry.createdAt, payload: activePayloadValue(entry, "payloadJson"), entrySnapshotJson: activePayloadValue(entry, "payloadJson"), entryRevisionsJson: activePayloadValue(entry.revisions || [], "items") })),
   ].filter((row) => normalizeKey(row.payload.english) && lower(row.payload.partOfSpeech))
   const groups = new Map(); for (const row of rows) { const key = `${normalizeKey(row.payload.english)}|${lower(row.payload.partOfSpeech)}`; groups.set(key, [...(groups.get(key) || []), row]) }
-  await client.$transaction(async (tx) => { for (const [key, group] of groups) { const [normalizedKey, partOfSpeech] = key.split("|"); await tx.libraryMigrationPreflight.upsert({ where: { runKey_normalizedKey_partOfSpeech: { runKey, normalizedKey, partOfSpeech } }, update: { sourceRowsJson: group, conflictsJson: conflicts(group) }, create: { runKey, normalizedKey, partOfSpeech, sourceRowsJson: group, conflictsJson: conflicts(group) } }) } })
+  await client.$transaction(async (tx) => { for (const [key, group] of groups) { const [normalizedKey, partOfSpeech] = key.split("|"); await tx.libraryMigrationPreflight.upsert({ where: { runKey_normalizedKey_partOfSpeech: { runKey, normalizedKey, partOfSpeech } }, update: { sourceRowsJson: group, conflictsJson: conflicts(group) }, create: { runKey, normalizedKey, partOfSpeech, sourceRowsJson: group, conflictsJson: conflicts(group) } }) } }, LEGACY_MIGRATION_TRANSACTION_OPTIONS)
   return { ok: true, runKey, groups: groups.size, sourceRows: rows.length }
 }
 
 export async function cutoverLegacyLibrary(actor = {}, runKey = "legacy-cutover-v1") {
-  const client = await prisma(); const preflight = await client.libraryMigrationPreflight.findMany({ where: { runKey }, orderBy: { normalizedKey: "asc" } }); if (!preflight.length) throw statusError("Run the immutable legacy preflight before cutover")
+  const client = await prisma()
+  const preflight = await client.libraryMigrationPreflight.findMany({ where: { runKey }, orderBy: { normalizedKey: "asc" } })
+  if (!preflight.length) throw statusError("Run the immutable legacy preflight before cutover")
   let migrated = 0
-  await client.$transaction(async (tx) => { for (const group of preflight) { const rows = Array.isArray(group.sourceRowsJson) ? group.sourceRowsJson : []; const canonical = [...rows].sort((left, right) => Object.values(right.payload).filter(Boolean).length - Object.values(left.payload).filter(Boolean).length || new Date(left.createdAt) - new Date(right.createdAt))[0]; if (!canonical) continue; let entry = await tx.libraryEntry.findFirst({ where: { normalizedKey: group.normalizedKey, partOfSpeech: group.partOfSpeech } }); if (!entry) { entry = await tx.libraryEntry.create({ data: { ...legacyEntry(canonical.payload), reviewStatus: "legacy_imported", createdByName: canonical.contributorName, lastEditedByName: clamp(actor.name || "legacy cutover") } }); await writeRevision(tx, entry, "legacy_cutover", actor.name || "legacy cutover", actor.role || "system") }
-    for (const row of rows) { const existing = await tx.libraryContribution.findFirst({ where: { sourceKind: row.sourceKind, sourceId: row.sourceId } }); if (!existing) await tx.libraryContribution.create({ data: { entryId: entry.id, studentRefId: row.studentRefId, contributorName: row.contributorName, sourceKind: row.sourceKind, sourceId: row.sourceId, payloadJson: row.payload, status: "migrated", submittedAt: new Date(row.createdAt), reviewedAt: new Date(), reviewedByName: clamp(actor.name || "legacy cutover") } }); if (row.sourceKind === "legacy_new_word") await tx.studentNewWord.update({ where: { id: row.sourceId }, data: { archivedAt: new Date(), archivedLibraryEntryId: entry.id } }) }
-    migrated += 1
-  } })
-  return { ok: true, runKey, migrated }
+  let archivedSources = 0
+  let collapsedEntries = 0
+  await client.$transaction(async (tx) => {
+    for (const group of preflight) {
+      const rows = Array.isArray(group.sourceRowsJson) ? group.sourceRowsJson : []
+      const selected = selectLargestDuplicate(rows)
+      if (!selected) continue
+      for (const row of rows) {
+        await tx.libraryLegacySourceArchive.upsert({
+          where: { runKey_sourceKind_sourceId: { runKey, sourceKind: text(row.sourceKind), sourceId: text(row.sourceId) } },
+          update: {},
+          create: { runKey, sourceKind: text(row.sourceKind), sourceId: text(row.sourceId), normalizedKey: group.normalizedKey, partOfSpeech: group.partOfSpeech, payloadJson: activePayloadValue(row.payload || {}, "payloadJson"), entrySnapshotJson: row.entrySnapshotJson || null, entryRevisionsJson: row.entryRevisionsJson || null },
+        })
+        archivedSources += 1
+      }
+      const existingEntries = await tx.libraryEntry.findMany({ where: { normalizedKey: group.normalizedKey, partOfSpeech: group.partOfSpeech }, include: { revisions: true } })
+      let entry = null
+      if (existingEntries.length > 1) {
+        const selectedExisting = selected.sourceKind === "legacy_library_entry" ? existingEntries.find((candidate) => candidate.id === selected.sourceId) : null
+        const retained = selectedExisting || selectLargestDuplicate(existingEntries.map((candidate) => ({ id: candidate.id, createdAt: candidate.createdAt, payload: candidate })))
+        const retainedId = retained?.id || existingEntries[0].id
+        entry = await tx.libraryEntry.update({ where: { id: retainedId }, data: { ...legacyEntry(selected.payload), reviewStatus: LEGACY_PENDING_REVIEW, lastEditedByName: clamp(actor.name || "legacy cutover") } })
+        const retiredIds = existingEntries.map((candidate) => candidate.id).filter((id) => id !== entry.id)
+        if (retiredIds.length) {
+          await tx.libraryContribution.updateMany({ where: { entryId: { in: retiredIds } }, data: { entryId: entry.id } })
+          await tx.libraryAssignment.updateMany({ where: { entryId: { in: retiredIds } }, data: { entryId: entry.id } })
+          await tx.libraryEntryRevision.deleteMany({ where: { entryId: { in: retiredIds } } })
+          await tx.libraryEntry.deleteMany({ where: { id: { in: retiredIds } } })
+          collapsedEntries += retiredIds.length
+        }
+        await writeRevision(tx, entry, "legacy_cutover_provisional", actor.name || "legacy cutover", actor.role || "system")
+      } else if (existingEntries.length === 1) {
+        entry = existingEntries[0]
+        if (text(entry.reviewStatus) !== "approved" && text(entry.reviewStatus) !== LEGACY_PENDING_REVIEW) {
+          entry = await tx.libraryEntry.update({ where: { id: entry.id }, data: { ...legacyEntry(selected.payload), reviewStatus: LEGACY_PENDING_REVIEW, lastEditedByName: clamp(actor.name || "legacy cutover") } })
+          await writeRevision(tx, entry, "legacy_cutover_provisional", actor.name || "legacy cutover", actor.role || "system")
+        }
+      } else {
+        entry = await tx.libraryEntry.create({ data: { ...legacyEntry(selected.payload), reviewStatus: LEGACY_PENDING_REVIEW, createdByName: selected.contributorName, lastEditedByName: clamp(actor.name || "legacy cutover") } })
+        await writeRevision(tx, entry, "legacy_cutover_provisional", actor.name || "legacy cutover", actor.role || "system")
+      }
+      for (const row of rows) {
+        const existing = await tx.libraryContribution.findFirst({ where: { sourceKind: text(row.sourceKind), sourceId: text(row.sourceId) }, orderBy: { submittedAt: "asc" } })
+        const data = { entryId: entry.id, studentRefId: row.studentRefId || null, contributorName: text(row.contributorName), sourceKind: text(row.sourceKind), sourceId: text(row.sourceId), payloadJson: activePayloadValue(row.payload || {}, "payloadJson"), status: LEGACY_PENDING_REVIEW, submittedAt: new Date(row.createdAt), dueAt: null, reviewedAt: null, reviewedByName: null, canonicalizedAt: null }
+        const alreadyCutOver = existing && existing.status === LEGACY_PENDING_REVIEW && existing.entryId === entry.id
+        const contribution = existing
+          ? alreadyCutOver ? existing : await tx.libraryContribution.update({ where: { id: existing.id }, data })
+          : await tx.libraryContribution.create({ data })
+        if (!alreadyCutOver) await writeContributionRevision(tx, contribution, existing ? "legacy_cutover_reopened" : "legacy_cutover_pending")
+        if (row.sourceKind === "legacy_new_word") await tx.studentNewWord.updateMany({ where: { id: row.sourceId, archivedAt: null }, data: { archivedAt: new Date(), archivedLibraryEntryId: entry.id } })
+      }
+      migrated += 1
+    }
+  }, LEGACY_MIGRATION_TRANSACTION_OPTIONS)
+  return { ok: true, runKey, migrated, archivedSources, collapsedEntries }
 }
 
 function stripMwMarkup(textValue, { preserveFormatting = false } = {}) {
@@ -637,19 +960,21 @@ export async function applyMerriamWebsterLibraryEntry(id, actor = {}, payload = 
   const preview = await previewMerriamWebsterLibraryEntry(payload.entry); if (!preview.ok) throw statusError(preview.message, 503)
   const client = await prisma(); const existing = await client.libraryEntry.findUnique({ where: { id } }); if (!existing) throw statusError("Library entry was not found", 404)
   const mode = lower(payload.mode); const chosen = Array.isArray(payload.fields) ? payload.fields : Object.keys(preview.fields)
-  const data = {}
+  const proposed = {}
   for (const field of chosen) {
     if (!Object.hasOwn(preview.fields, field) || !preview.fields[field]) continue
     if (field === "originPath" && text(existing.originPath)) continue
     if (field === "originReferences") {
       const existingReferences = normalizeOriginReferences(existing.originReferences) || []
       const incomingReferences = normalizeOriginReferences(preview.fields.originReferences) || []
-      data.originReferences = normalizeOriginReferences([...existingReferences, ...incomingReferences])
+      proposed.originReferences = normalizeOriginReferences([...existingReferences, ...incomingReferences])
       continue
     }
     if (mode === "fill_missing" && text(existing[field])) continue
-    data[field] = preview.fields[field]
+    proposed[field] = preview.fields[field]
   }
+  const data = Object.fromEntries(Object.entries(proposed).filter(([field, value]) => JSON.stringify(activePayloadValue(existing[field], field)) !== JSON.stringify(activePayloadValue(value, field))))
+  if (!Object.keys(data).length) return { ok: true, entry: mapEntry(existing), appliedFields: [] }
   const updated = await client.$transaction(async (tx) => { const value = await tx.libraryEntry.update({ where: { id }, data: { ...data, lastEditedByName: clamp(actor.name) } }); await writeRevision(tx, value, "mw_import", actor.name, actor.role || "admin"); return value })
-  return { ok: true, entry: updated, appliedFields: Object.keys(data) }
+  return { ok: true, entry: mapEntry(updated), appliedFields: Object.keys(data) }
 }

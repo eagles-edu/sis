@@ -46,6 +46,15 @@ const ADMIN_B612_SYNC_SOURCES = [
   "web-asset/fonts/B612Mono/b612mono-bolditalic-webfont.woff",
 ]
 
+const LIBRARY_SYNC_ENTRIES = [
+  ["web-asset/admin/library-admin.html", "sis-admin/library-admin.html"],
+  ["web-asset/admin/library-review-workbench.js", "web-asset/admin/library-review-workbench.js"],
+  ["web-asset/shared/vocabulary-esl-editor.js", "web-asset/shared/vocabulary-esl-editor.js"],
+  ["web-asset/shared/portal-theme.css", "web-asset/shared/portal-theme.css"],
+  ["web-asset/shared/portal-theme.min.css", "web-asset/shared/portal-theme.min.css"],
+  ["web-asset/student/library.html", "sis-student/library.html"],
+]
+
 test("live admin sync wrapper is pinned to the live admin host and refreshes Prisma", () => {
   assert.match(liveScript, /\/home\/admin\.eagles\.edu\.vn\/sis/)
   assert.match(liveScript, /\/home\/admin\.eagles\.edu\.vn\/public_html/)
@@ -171,6 +180,20 @@ test("strict runtime and public whitelists include every served admin B612 asset
       const publicTarget = source === "web-asset/admin/admin-b612-mono-loader.js"
         ? "sis-admin/admin-b612-mono-loader.js"
         : source
+      assert.ok(publicEntries.has(`${source}|${publicTarget}`), `${publicMap} missing ${source}`)
+    }
+  }
+})
+
+test("strict runtime and public whitelists include every served Library asset", () => {
+  for (const [script, runtimeMap, publicMap] of [
+    [testScript, "TEST_RUNTIME_WEBFILE_MAP", "TEST_PUBLIC_WEBFILE_MAP"],
+    [liveScript, "LIVE_RUNTIME_WEBFILE_MAP", "LIVE_PUBLIC_WEBFILE_MAP"],
+  ]) {
+    const runtimeEntries = new Set(extractQuotedEntries(script, runtimeMap))
+    const publicEntries = new Set(extractQuotedEntries(script, publicMap))
+    for (const [source, publicTarget] of LIBRARY_SYNC_ENTRIES) {
+      assert.ok(runtimeEntries.has(`${source}|${source}`), `${runtimeMap} missing ${source}`)
       assert.ok(publicEntries.has(`${source}|${publicTarget}`), `${publicMap} missing ${source}`)
     }
   }

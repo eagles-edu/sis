@@ -9,7 +9,7 @@ const corpus = fs.readFileSync(new URL("../src/modules/admin/library-corpus.mjs"
 const originMigration = fs.readFileSync(new URL("../prisma/migrations/20260814090000_remove_library_redundant_fields_add_origin_metadata/migration.sql", import.meta.url), "utf8")
 
 test("Library uses a dedicated PostgreSQL schema with immutable audit records", () => {
-  for (const model of ["LibraryEntry", "LibraryEntryRevision", "LibraryContribution", "LibraryAssignment", "LibraryMigrationPreflight", "LibraryAwlFamily"]) assert.match(schema, new RegExp(`model ${model}[\\s\\S]*?@@schema\\(\\"library\\"\\)`))
+  for (const model of ["LibraryEntry", "LibraryEntryRevision", "LibraryContribution", "LibraryContributionRevision", "LibraryLegacySourceArchive", "LibraryAssignment", "LibraryMigrationPreflight", "LibraryAwlFamily"]) assert.match(schema, new RegExp(`model ${model}[\\s\\S]*?@@schema\\(\\"library\\"\\)`))
   assert.match(migration, /CREATE SCHEMA IF NOT EXISTS "library"/)
   assert.match(migration, /FOREIGN KEY \("studentRefId"\) REFERENCES "public"\."Student"/)
   assert.match(migration, /legacy_new_word/)
@@ -18,8 +18,30 @@ test("Library uses a dedicated PostgreSQL schema with immutable audit records", 
   assert.match(corpus, /snapshotJson/)
   assert.match(corpus, /writeRevision/)
   assert.doesNotMatch(schema, /model LibraryDuplicateCase/)
+  assert.match(schema, /@@unique\(\[\s*normalizedKey,\s*partOfSpeech\s*\]\)/)
+  assert.match(schema, /model LibraryContributionRevision/)
+  assert.match(schema, /dueAt\s+DateTime\?/)
+  assert.match(schema, /canonicalizedAt\s+DateTime\?/)
   assert.match(cutoverMigration, /LibraryMigrationPreflight/)
   assert.match(cutoverMigration, /DROP TABLE IF EXISTS "library"\."LibraryDuplicateCase"/)
+})
+
+test("canonical duplicate selection and student deadlines are deterministic", async () => {
+  const { libraryContributionDeadline, selectLargestDuplicate, normalizeActiveLibraryPayload } = await import("../src/modules/admin/library-corpus.mjs")
+  const first = { id: "b", submittedAt: "2026-08-01T00:00:00.000Z", payloadJson: { definition: "same length" } }
+  const second = { id: "a", submittedAt: "2026-08-01T00:00:00.000Z", payloadJson: { definition: "same length" } }
+  assert.equal(selectLargestDuplicate([first, second]).id, "a")
+  assert.equal(libraryContributionDeadline("2026-08-01T00:00:00.000Z").toISOString(), "2026-08-16T00:00:00.000Z")
+  assert.deepEqual(normalizeActiveLibraryPayload({ grammarClassification: null, originReferences: null, definition: null }), { grammarClassification: {}, originReferences: [], definition: "" })
+})
+
+test("legacy archive migration precedes the guarded canonical uniqueness migration", () => {
+  const archiveMigration = fs.readFileSync(new URL("../prisma/migrations/20260815090000_library_canonical_uniqueness_and_lifecycle/migration.sql", import.meta.url), "utf8")
+  const uniquenessMigration = fs.readFileSync(new URL("../prisma/migrations/20260815093000_enforce_library_canonical_uniqueness/migration.sql", import.meta.url), "utf8")
+  assert.match(archiveMigration, /LibraryContributionRevision/)
+  assert.match(archiveMigration, /LibraryLegacySourceArchive/)
+  assert.ok(uniquenessMigration.indexOf("RAISE EXCEPTION") < uniquenessMigration.indexOf("CREATE UNIQUE INDEX \"LibraryEntry_normalizedKey_partOfSpeech_key\""))
+  assert.match(uniquenessMigration, /GROUP BY \"normalizedKey\", \"partOfSpeech\"[\s\S]*HAVING COUNT\(\*\) > 1/)
 })
 
 test("Library corpus preserves the required ESL and AWL contracts", () => {
@@ -29,8 +51,16 @@ test("Library corpus preserves the required ESL and AWL contracts", () => {
   assert.match(corpus, /normalizedKey: group\.normalizedKey, partOfSpeech: group\.partOfSpeech/)
 })
 
-test("legacy cutover groups preflight sources without duplicate cases", () => {
-  for (const token of ["createLibraryLegacyPreflight", "cutoverLegacyLibrary", "archivedAt", "archivedLibraryEntryId", "conflictsJson"]) assert.match(corpus, new RegExp(token))
+test("Library definitions keep up to 50,000 characters through normalization", async () => {
+  const { LIBRARY_DEFINITION_MAX_LENGTH, normalizeLibraryDefinition } = await import("../src/modules/admin/library-corpus.mjs")
+  const definition = "definition ".repeat(6000)
+  assert.equal(LIBRARY_DEFINITION_MAX_LENGTH, 50000)
+  assert.equal(normalizeLibraryDefinition(definition).length, 50000)
+  assert.equal(normalizeLibraryDefinition(definition.slice(0, 49999)).length, 49999)
+})
+
+test("legacy cutover preserves sources while creating provisional A/B review groups", () => {
+  for (const token of ["createLibraryLegacyPreflight", "cutoverLegacyLibrary", "libraryLegacySourceArchive", "legacy_library_entry", "legacy_pending_review", "awaiting_legacy_canonical", "pending_canonical_replacement", "archivedAt", "archivedLibraryEntryId", "conflictsJson", "legacy_cutover_provisional"]) assert.match(corpus, new RegExp(token))
   assert.doesNotMatch(corpus, /libraryDuplicateCase/)
 })
 
@@ -93,6 +123,7 @@ test("MW preview keeps complete normalized entry data and does not expose provid
     assert.deepEqual(result.details.entries[0].antonyms, ["take"])
     assert.match(result.details.entries[0].definitions.join(" "), /to make a present of/)
     assert.match(result.details.entries[0].etymology.join(" "), /Middle English given/)
+    assert.match(result.fields.etymology, /Middle English given/)
     assert.equal(result.details.entries[0].firstKnownUse, "before 12th century")
     assert.equal(Object.hasOwn(result, "raw"), false)
     globalThis.fetch = async () => ({

@@ -8,6 +8,7 @@ import { URL, fileURLToPath } from "node:url"
 import { getEmailProviderStatus, isBrevoEmailProvider, sendBrevoEmail } from "../src/modules/email/brevo.mjs"
 import { getBrevoWebhookHealth, recordBrevoEmailDeliverySafely } from "../src/modules/email/brevo-delivery.mjs"
 import { observeStudentWriteRequest } from "../src/infra/observability/student-write-metrics.mjs"
+import { reconcileLibraryLifecycle } from "../src/modules/admin/library-corpus.mjs"
 
 const require = createRequire(import.meta.url)
 const isDebugEnabled = () =>
@@ -931,6 +932,16 @@ function startRuntimeSelfHealLoop() {
       clearInterval(timer)
     },
   }
+}
+
+function startLibraryLifecycleLoop() {
+  const run = () => reconcileLibraryLifecycle().catch((error) => {
+    if (isDebugEnabled()) console.warn(`[library] lifecycle reconciliation failed: ${normalizeEnvText(error?.message || error)}`)
+  })
+  void run()
+  const timer = setInterval(() => { void run() }, 60_000)
+  if (typeof timer.unref === "function") timer.unref()
+  return { stop: () => clearInterval(timer) }
 }
 
 /** @returns {SelfHealStatus} */
@@ -1934,6 +1945,7 @@ export function startExerciseMailer(options = {}) {
     options.host === undefined || options.host === null ? DEFAULT_HOST : String(options.host)
   const selfHealLoop = startRuntimeSelfHealLoop()
   const studentNewsAutoApprovalLoop = startStudentNewsAutoApprovalLoop()
+  const libraryLifecycleLoop = startLibraryLifecycleLoop()
   setStudentAdminRuntimeHealthProvider(() => buildRuntimeHealthPayload())
 
   const server = http.createServer((request, response) => {
@@ -1982,6 +1994,9 @@ export function startExerciseMailer(options = {}) {
     }
     if (studentNewsAutoApprovalLoop && typeof studentNewsAutoApprovalLoop.stop === "function") {
       studentNewsAutoApprovalLoop.stop()
+    }
+    if (libraryLifecycleLoop && typeof libraryLifecycleLoop.stop === "function") {
+      libraryLifecycleLoop.stop()
     }
   })
 

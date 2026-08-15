@@ -463,6 +463,11 @@ body.student-points-page .header-bar a:hover,
   }
 }
 
+body.admin-portal-page #newsReviewViewerModal .queue-modal-card {
+  max-inline-size: min(1180px, calc(100vw - 36px));
+  width: min(1180px, calc(100vw - 36px));
+}
+
 html,
 body#top.admin-portal-page {
   margin: 0;
@@ -733,7 +738,4 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       html[data-theme="dark"] body.admin-portal-page .bar-chart-shell .small,
       html[data-theme="dark"] body.admin-portal-page #overviewRiskStudents {
         color: var(--portal-support-message);
-  }
-  .bm01rem {
-    margin-bottom: 1rem;
   }

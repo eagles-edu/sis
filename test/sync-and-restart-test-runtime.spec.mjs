@@ -73,6 +73,8 @@ test("sync-and-restart-test-runtime skips Prisma refresh in public mode only", (
   assert.match(script, /web-asset\/student\/library\.html\|sis-student\/library\.html/)
   assert.match(script, /web-asset\/shared\/vocabulary-esl-editor\.js\|web-asset\/shared\/vocabulary-esl-editor\.js/)
   assert.match(script, /npm run db:migrate:deploy/)
+  assert.match(script, /SIS_LEGACY_PRE_CUTOVER/)
+  assert.match(script, /skipping Prisma migrations for legacy pre-cutover preview/)
   assert.match(script, /refresh_test_prisma\(\)/)
   assert.match(script, /restart_test_runtime\(\)/)
   assert.match(script, /log "syncing test runtime web assets into \$\{TEST_ROOT\}"/)

@@ -157,8 +157,39 @@
     if (label === "GT") return `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate`;
     if (label === "WH") return `https://www.wordhelp.com/syllables/english/?q=${encoded}`;
     if (label === "ET") return `https://www.etymonline.com/search?q=${encoded}`;
+    if (label === "MW") return `https://www.merriam-webster.com/dictionary/${encoded}`;
+    if (label === "TH") return `https://www.merriam-webster.com/thesaurus/${encoded}`;
     return "";
   };
+
+  function insertEtymologyDeterministically(definition, paragraph) {
+    const source = String(definition == null ? "" : definition).replace(/\r\n?/gu, "\n").replace(/\n{3,}/gu, "\n\n").trim();
+    const addition = String(paragraph == null ? "" : paragraph).replace(/\r\n?/gu, "\n").replace(/\n{3,}/gu, "\n\n").trim();
+    if (!addition) return source;
+    const firstUse = source.match(/^\*\*First known use:\*\*[\t ]*([^\n]*)$/imu);
+    if (!firstUse && source.includes(addition)) return source;
+    let next = source;
+    if (firstUse) {
+      const line = firstUse[0];
+      if (line.includes(addition)) return source;
+      next = source.replace(line, `${line}${line.trim().endsWith(":**") ? ` ${addition}` : `; ${addition}`}`);
+    } else {
+      const etymology = source.match(/^(\*\*Etymology:\*\*[\t ]*[^\n]*)$/imu);
+      if (etymology) next = source.replace(etymology[0], `${etymology[0]}; ${addition}`);
+      else {
+        const nextHeading = source.search(/^\*\*(?:Stems|Synonyms|Antonyms|Works Cited):\*\*/imu);
+        next = nextHeading >= 0 ? `${source.slice(0, nextHeading).trimEnd()}\n\n${addition}\n\n${source.slice(nextHeading).trimStart()}` : (source ? `${source}\n\n${addition}` : addition);
+      }
+    }
+    const sections = { body: [], Etymology: [], "First known use": [], Stems: [], Synonyms: [], Antonyms: [], "Works Cited": [] };
+    let section = "body";
+    next.split("\n").forEach((line) => {
+      const heading = line.match(/^\*\*(First known use|Etymology|Stems|Synonyms|Antonyms|Works Cited):\*[\t ]*\*?[\t ]*(.*)$/iu);
+      if (heading) { section = heading[1]; if (heading[2]) sections[section].push(heading[2]); return; }
+      sections[section].push(line);
+    });
+    return [sections.body.join("\n").trim(), ...["Etymology", "First known use", "Stems", "Synonyms", "Antonyms", "Works Cited"].map((heading) => sections[heading].join("\n").trim() ? `**${heading}:** ${sections[heading].join("\n").trim()}` : "")].filter(Boolean).join("\n\n").trim();
+  }
 
   function bindLookupButtons(row) {
     row?.querySelectorAll("[data-vocabulary-lookup]").forEach((button) => {
@@ -179,24 +210,9 @@
         const preview = await response.json();
         if (!response.ok || !preview.ok) throw new Error(preview.error || preview.message || "Etymonline is unavailable.");
         const textarea = row.querySelector('[data-vocabulary-field="definition"]');
-        const hasFirstUse = /^\*\*First known use:\*\*/imu.test(textarea.value);
         const current = textarea.value.trim();
         const paragraph = String(preview.paragraph || "").trim();
-        const alreadyPresent = paragraph && current.includes(paragraph);
-        if (paragraph && !alreadyPresent) {
-          const citationHeading = /^\*\*Works Cited:\*\*[\t ]*$/imu;
-          const citationIndex = current.search(citationHeading);
-          let next = current;
-          if (hasFirstUse && String(row.querySelector('[data-vocabulary-esl-field="etymology"]')?.value || "").trim()) {
-            next = current.replace(/(\*\*First known use:\*\*[^\n]*)/iu, (line) => line.includes(paragraph) ? line : `${line}; ${paragraph}`);
-          } else if (citationIndex >= 0) {
-            next = `${current.slice(0, citationIndex).trimEnd()}\n\n${paragraph}\n\n${current.slice(citationIndex).trimStart()}`;
-          } else {
-            next = current ? `${current}\n\n${paragraph}` : paragraph;
-          }
-          textarea.value = next;
-          dispatchDefinitionInput(textarea);
-        }
+        if (paragraph) { textarea.value = insertEtymologyDeterministically(current, paragraph); dispatchDefinitionInput(textarea); }
         if (preview.citation && !textarea.value.includes(preview.citation)) {
           const worksCitedHeading = /^\*\*Works Cited:\*\*[\t ]*$/imu;
           const worksCitedIndex = textarea.value.search(worksCitedHeading);
@@ -415,10 +431,10 @@
           ${parametersHtml(uid, { includeMwFill, includeTransitivityTools })}
           <div class="news-vocabulary-definition-row">
             <div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">
-              ${["LD", "GT", "WH", "ET"].map((label) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup${label === "ET" ? " vocabulary-etymonline-lookup" : ""}" data-vocabulary-lookup="${label}"${label === "ET" ? ` data-vocabulary-origin-lookup="${escapeHtml(originLookupPath)}"` : ""} title="Look up the ${label} field to complete this vocabulary entry" aria-label="Look up the ${label} field">${label}</button>`).join("")}
+              ${["LD", "GT", "WH", "ET", "MW", "TH"].map((label) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup${label === "ET" ? " vocabulary-etymonline-lookup" : ""}" data-vocabulary-lookup="${label}"${label === "ET" ? ` data-vocabulary-origin-lookup="${escapeHtml(originLookupPath)}"` : ""} title="Look up the ${label} field to complete this vocabulary entry" aria-label="Look up the ${label} field">${label}</button>`).join("")}
               <p class="small vocabulary-et-message" data-vocabulary-et-message aria-live="polite"></p>
             </div>
-            <textarea name="vocabularyDefinition-${uid}" data-vocabulary-field="definition" rows="1" placeholder="Definition" title="Ctrl+B bold · Ctrl+I italic · Ctrl+U underline · Enter continues - and 1. lists" aria-label="Definition" required></textarea>
+            <textarea name="vocabularyDefinition-${uid}" data-vocabulary-field="definition" rows="1" maxlength="50000" placeholder="Definition" title="Up to 50,000 characters. Ctrl+B bold · Ctrl+I italic · Ctrl+U underline · Enter continues - and 1. lists" aria-label="Definition, up to 50,000 characters" required></textarea>
             ${rowActions}
           </div>
         </div>`;
@@ -431,7 +447,8 @@
     const value = (field) => source[field] ?? esl[field] ?? classification[field] ?? "";
     const json = escapeHtml(JSON.stringify(source));
     const indexAttribute = index === "" ? "" : ` data-vocabulary-entry-index="${escapeHtml(index)}"`;
-    const editButton = editLabel === null ? "" : `<button type="button" class="portal-button portal-button-primary ${escapeHtml(editClass)}" ${editAttributes} title="Edit this vocabulary entry" aria-label="Edit this vocabulary entry">${escapeHtml(editLabel)}</button>`;
+    const legacyPending = source.isLegacyPending === true || value("reviewStatus") === "legacy_pending_review";
+    const editButton = editLabel === null || legacyPending ? "" : `<button type="button" class="portal-button portal-button-primary ${escapeHtml(editClass)}" ${editAttributes} title="Edit this vocabulary entry" aria-label="Edit this vocabulary entry">${escapeHtml(editLabel)}</button>`;
     const position = String(value("partOfSpeech") || "").toLowerCase();
     const posMetadataValues = position === "verb"
       ? [value("displayVerbForm") ? String(value("displayVerbForm")).toUpperCase() : "", value("verbRegularity"), value("grammarFamily"), value("verbTransitivity")]
@@ -442,6 +459,7 @@
     return `<article class="vocabulary-flat-entry new-word-entry" data-vocabulary-flat-entry${indexAttribute} data-vocabulary-entry-json="${json}" ${entryAttributes}>
       <div class="vocabulary-flat-entry-head new-word-entry-head">
         <strong>${escapeHtml(value("english") || "New word")}</strong>
+        ${legacyPending ? `<span class="chip chip-warn">Legacy review pending</span>` : ""}
         <span class="new-word-entry-pronunciation">/${escapeHtml(value("syllabication"))}/</span>
         <strong class="new-word-entry-part-of-speech">${escapeHtml(value("partOfSpeech"))}</strong>
         ${posMetadata ? `<span class="new-word-entry-pos-details">${escapeHtml(posMetadata)}</span>` : ""}
@@ -464,6 +482,7 @@
     editorRowHtml,
     flatEntryHtml,
     definitionHtml,
+    insertEtymologyDeterministically,
     bindLookupButtons,
     bindDefinitionAutosize,
   };

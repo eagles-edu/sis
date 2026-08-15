@@ -10983,6 +10983,224 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   }
 }
 
+/* Shared ESL vocabulary editor parity for the protected admin Library editor. */
+body.admin-portal-page .news-vocabulary-row {
+  align-items: start;
+  box-sizing: border-box;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: max-content minmax(160px, 1.25fr) minmax(160px, 1.25fr) minmax(180px, 1.5fr);
+  min-width: 0;
+  width: 100%;
+}
+
+body.admin-portal-page .news-vocabulary-row > :is(input, select, textarea) {
+  min-width: 0;
+}
+
+body.admin-portal-page .news-vocabulary-row > :is(input, select) {
+  box-sizing: border-box;
+  font-size: 1rem;
+  min-height: 48px;
+  padding: 12px 14px;
+  width: 100%;
+}
+
+body.admin-portal-page .news-vocabulary-row > [data-vocabulary-field="partOfSpeech"] {
+  grid-column: 1;
+}
+
+body.admin-portal-page .news-vocabulary-row > [data-vocabulary-field="english"] {
+  grid-column: 2;
+}
+
+body.admin-portal-page .news-vocabulary-row > [data-vocabulary-field="vietnamese"] {
+  grid-column: 3;
+}
+
+body.admin-portal-page .news-vocabulary-row > [data-vocabulary-field="syllabication"] {
+  grid-column: 4;
+}
+
+body.admin-portal-page .news-vocabulary-row > .vocabulary-etymology-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+body.admin-portal-page .vocabulary-etymology-fields .vocabulary-pos-control {
+  flex: 1 1 22ch;
+  max-inline-size: 27.5ch;
+}
+
+body.admin-portal-page .vocabulary-etymology-fields input,
+body.admin-portal-page .vocabulary-etymology-fields select {
+  box-sizing: border-box;
+  font-size: 1rem;
+  min-height: 48px;
+  min-width: 0;
+  padding: 12px 14px;
+  width: 100%;
+}
+
+body.admin-portal-page .vocabulary-origin-help {
+  flex: 1 1 100%;
+  margin: 0;
+}
+
+body.admin-portal-page .vocabulary-pos-parameters {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+body.admin-portal-page .vocabulary-pos-parameters[hidden],
+body.admin-portal-page .vocabulary-verb-forms[hidden] {
+  display: none;
+}
+
+body.admin-portal-page .vocabulary-pos-controls {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-start;
+  inline-size: 100%;
+  max-inline-size: none;
+}
+
+body.admin-portal-page .vocabulary-pos-control {
+  display: grid;
+  gap: 3px;
+  flex: 1 1 22ch;
+  max-inline-size: 27.5ch;
+  min-inline-size: 0;
+}
+
+body.admin-portal-page .vocabulary-pos-control select {
+  inline-size: 100%;
+  max-inline-size: 27.5ch;
+}
+
+body.admin-portal-page .vocabulary-verb-forms {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-block-start: 8px;
+  min-width: 0;
+}
+
+body.admin-portal-page .vocabulary-verb-forms input {
+  min-width: 0;
+}
+
+body.admin-portal-page .news-vocabulary-row select[data-vocabulary-field="partOfSpeech"] {
+  field-sizing: initial;
+  inline-size: 12ch;
+  max-inline-size: 12ch;
+}
+
+body.admin-portal-page .news-vocabulary-definition-row {
+  align-items: start;
+  display: grid;
+  gap: 8px;
+  grid-column: 1 / -1;
+  grid-template-columns: 144px minmax(0, 1fr) 28px;
+}
+
+body.admin-portal-page .news-vocabulary-lookups {
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(3, 48px);
+  grid-template-rows: repeat(2, 48px) auto;
+}
+
+body:is(.student-portal-page, .admin-portal-page) .news-vocabulary-lookup[data-vocabulary-lookup="LD"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+body:is(.student-portal-page, .admin-portal-page) .news-vocabulary-lookup[data-vocabulary-lookup="GT"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+body:is(.student-portal-page, .admin-portal-page) .news-vocabulary-lookup[data-vocabulary-lookup="WH"] {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+body:is(.student-portal-page, .admin-portal-page) .news-vocabulary-lookup[data-vocabulary-lookup="ET"] {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+body:is(.student-portal-page, .admin-portal-page) .news-vocabulary-lookup[data-vocabulary-lookup="MW"] {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+body:is(.student-portal-page, .admin-portal-page) .news-vocabulary-lookup[data-vocabulary-lookup="TH"] {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+body:is(.student-portal-page, .admin-portal-page) .vocabulary-et-message {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  margin: 0;
+}
+
+body.admin-portal-page .news-vocabulary-lookup {
+  align-items: center;
+  border-radius: 0;
+  display: inline-flex;
+  font-size: 11px;
+  gap: 2px;
+  justify-content: center;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 4px;
+}
+
+body.admin-portal-page .news-vocabulary-lookup:first-child {
+  border-radius: var(--radius-2) 0 0 var(--radius-2);
+}
+
+body.admin-portal-page .news-vocabulary-lookup:last-of-type {
+  border-radius: 0 var(--radius-2) var(--radius-2) 0;
+}
+
+body.admin-portal-page .vocabulary-et-message {
+  align-self: center;
+}
+
+body.admin-portal-page .news-vocabulary-definition-row textarea {
+  block-size: 48px;
+  box-sizing: border-box;
+  font-family: "B612 Mono", monospace;
+  font-size: 1rem;
+  letter-spacing: normal;
+  line-height: 1.35;
+  margin: 0;
+  min-block-size: 48px;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: hidden;
+  resize: vertical;
+  width: 100%;
+}
+
+body.admin-portal-page .news-vocabulary-row-dots {
+  align-items: center;
+  display: inline-flex;
+  font-size: 1.2rem;
+  justify-content: center;
+  line-height: 1;
+  min-height: 48px;
+}
+
 .password-visibility-field {
   align-items: center;
   display: flex;
@@ -11693,6 +11911,7 @@ body.admin-portal-page main.library-admin-main {
 }
 
 .library-admin-entry summary {
+  background: #CDE0FF;
   align-items: center;
   box-sizing: border-box;
   cursor: pointer;
@@ -11700,6 +11919,10 @@ body.admin-portal-page main.library-admin-main {
   gap: 7px;
   min-height: 48px;
   padding: 8px 12px;
+}
+
+html[data-theme="dark"] .library-admin-entry summary {
+  background: #212121;
 }
 
 .library-admin-entry summary::-webkit-details-marker {
@@ -12060,6 +12283,13 @@ body.admin-portal-page .library-review-pane .news-vocabulary-definition-row text
   padding: 12px 14px;
   resize: vertical;
   width: 100%;
+}
+
+body.student-portal-page .news-vocabulary-definition-row textarea,
+body.admin-portal-page .library-review-pane .news-vocabulary-definition-row textarea {
+  max-block-size: 50vh;
+  min-block-size: 120px;
+  overflow-y: auto;
 }
 
 body.admin-portal-page .library-review-pane .news-vocabulary-row-dots {
@@ -13174,3 +13404,38 @@ body.admin-portal-page #libraryMwPreviewDialog::backdrop {
   .bm01rem {
     margin-bottom: 1rem;
   }
+
+/* Keep the widened news editor and admin viewer modal after route-specific rules. */
+body.student-portal-page #newsWeekSetModal .portal-modal-dialog,
+body.parent-portal-page #newsWeekSetModal .portal-modal-dialog {
+  max-width: min(1080px, calc(100vw - 36px));
+  width: min(1080px, calc(100vw - 36px));
+}
+
+body.admin-portal-page #newsReviewViewerModal .queue-modal-card {
+  max-inline-size: min(1180px, calc(100vw - 36px));
+  width: min(1180px, calc(100vw - 36px));
+}
+
+@media (max-width: 640px) {
+  body.admin-portal-page .news-vocabulary-row {
+    grid-template-columns: 1fr;
+  }
+
+  body.admin-portal-page .news-vocabulary-row > [data-vocabulary-field] {
+    grid-column: auto;
+  }
+
+  body.admin-portal-page .news-vocabulary-definition-row {
+    grid-template-columns: 1fr;
+  }
+
+  body.admin-portal-page .vocabulary-pos-control {
+    flex: 1 1 15ch;
+    max-inline-size: none;
+  }
+
+  body.admin-portal-page .vocabulary-pos-control select {
+    max-inline-size: none;
+  }
+}

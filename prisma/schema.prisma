@@ -675,6 +675,7 @@ model LibraryEntry {
   contributions        LibraryContribution[]
   assignments          LibraryAssignment[]
 
+  @@unique([normalizedKey, partOfSpeech])
   @@index([normalizedKey, partOfSpeech])
   @@index([english])
   @@index([partOfSpeech, phraseType])
@@ -712,10 +713,43 @@ model LibraryContribution {
   submittedAt     DateTime @default(now())
   reviewedAt      DateTime?
   reviewedByName  String?
+  dueAt           DateTime?
+  canonicalizedAt DateTime?
+  revisions       LibraryContributionRevision[]
 
   @@index([entryId, status])
   @@index([studentRefId, status])
   @@index([sourceKind, sourceId])
+  @@schema("library")
+}
+
+model LibraryContributionRevision {
+  id             String   @id @default(cuid())
+  contributionId String
+  contribution   LibraryContribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+  action         String
+  snapshotJson   Json
+  createdAt      DateTime @default(now())
+
+  @@index([contributionId, createdAt])
+  @@schema("library")
+}
+
+model LibraryLegacySourceArchive {
+  id                   String   @id @default(cuid())
+  runKey               String
+  sourceKind           String
+  sourceId             String
+  normalizedKey        String
+  partOfSpeech         String
+  payloadJson          Json
+  entrySnapshotJson    Json?
+  entryRevisionsJson   Json?
+  archivedAt           DateTime @default(now())
+
+  @@unique([runKey, sourceKind, sourceId])
+  @@index([runKey, normalizedKey, partOfSpeech])
+  @@index([normalizedKey, partOfSpeech])
   @@schema("library")
 }
 

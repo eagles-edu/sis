@@ -1317,8 +1317,12 @@ refresh_test_prisma() {
   log "refreshing test Prisma client in ${TEST_ROOT}"
   (cd "$TEST_ROOT" && env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" "${TEST_VERBOSE_ENV[@]}" npm run db:generate)
 
-  log "running Prisma migrations against test database"
-  (cd "$TEST_ROOT" && env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" "${TEST_VERBOSE_ENV[@]}" npm run db:migrate:deploy)
+  if [[ "${SIS_LEGACY_PRE_CUTOVER:-0}" == "1" ]]; then
+    log "skipping Prisma migrations for legacy pre-cutover preview"
+  else
+    log "running Prisma migrations against test database"
+    (cd "$TEST_ROOT" && env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" "${TEST_VERBOSE_ENV[@]}" npm run db:migrate:deploy)
+  fi
 }
 
 should_refresh_prisma() {
