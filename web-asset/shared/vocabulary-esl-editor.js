@@ -23,8 +23,8 @@
 
   function parametersHtml(rowUid, { includeMwFill = false, includeTransitivityTools = false } = {}) {
     const uid = safeUid(rowUid);
-    const mwFill = includeMwFill ? `<button type="button" class="portal-button portal-button-alt vocabulary-mw-fill" data-vocabulary-mw-preview title="Fill only fields returned authoritatively by Merriam-Webster." aria-label="Fill Merriam-Webster fields">MW fill</button><p class="small" data-vocabulary-mw-message aria-live="polite"></p><details data-vocabulary-mw-details hidden><summary>View complete MW data</summary><pre data-vocabulary-mw-json></pre></details>` : "";
-    const transitivityTools = includeTransitivityTools ? `<div class="vocabulary-transitivity-check"><button type="button" class="portal-button portal-button-alt" data-vocabulary-transitivity-check title="Compare the entered verb forms with the bundled corpus evidence. This check is advisory; saving remains allowed.">Check</button><button type="button" class="portal-button portal-button-alt" data-vocabulary-transitivity-autofill title="Suggest transitivity from the bundled corpus list. Review the suggestion before saving.">Auto-fill</button><p class="small" data-vocabulary-transitivity-message aria-live="polite"></p></div>` : "";
+    const mwFill = includeMwFill ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-mw-fill" data-vocabulary-mw-preview title="Fill only fields returned authoritatively by Merriam-Webster." aria-label="Fill Merriam-Webster fields">MW fill</button><p class="small" data-vocabulary-mw-message aria-live="polite"></p><details data-vocabulary-mw-details hidden><summary>View complete MW data</summary><pre data-vocabulary-mw-json></pre></details>` : "";
+    const transitivityTools = includeTransitivityTools ? `<div class="vocabulary-transitivity-check"><button type="button" class="portal-button portal-button-blue-action" data-vocabulary-transitivity-check title="Compare the entered verb forms with the bundled corpus evidence. This check is advisory; saving remains allowed.">Check</button><button type="button" class="portal-button portal-button-blue-action" data-vocabulary-transitivity-autofill title="Suggest transitivity from the bundled corpus list. Review the suggestion before saving.">Auto-fill</button><p class="small" data-vocabulary-transitivity-message aria-live="polite"></p></div>` : "";
     return `<div class="vocabulary-pos-parameters" data-vocabulary-pos-parameters hidden>
       <div class="vocabulary-pos-controls" data-vocabulary-pos-controls></div>
       <div class="vocabulary-verb-forms" data-vocabulary-verb-forms hidden>
@@ -166,29 +166,45 @@
     const source = String(definition == null ? "" : definition).replace(/\r\n?/gu, "\n").replace(/\n{3,}/gu, "\n\n").trim();
     const addition = String(paragraph == null ? "" : paragraph).replace(/\r\n?/gu, "\n").replace(/\n{3,}/gu, "\n\n").trim();
     if (!addition) return source;
-    const firstUse = source.match(/^\*\*First known use:\*\*[\t ]*([^\n]*)$/imu);
+    const firstUse = source.match(/^\*\*First known use:?\*\*:?[\t ]*([^\n]*)$/imu);
     if (!firstUse && source.includes(addition)) return source;
     let next = source;
     if (firstUse) {
       const line = firstUse[0];
       if (line.includes(addition)) return source;
-      next = source.replace(line, `${line}${line.trim().endsWith(":**") ? ` ${addition}` : `; ${addition}`}`);
+      next = source.replace(line, `${line}\n\n**Etymology:** ${addition}`);
     } else {
-      const etymology = source.match(/^(\*\*Etymology:\*\*[\t ]*[^\n]*)$/imu);
+      const etymology = source.match(/^(\*\*Etymology:?\*\*:?[\t ]*[^\n]*)$/imu);
       if (etymology) next = source.replace(etymology[0], `${etymology[0]}; ${addition}`);
       else {
-        const nextHeading = source.search(/^\*\*(?:Stems|Synonyms|Antonyms|Works Cited):\*\*/imu);
+        const nextHeading = source.search(/^\*\*(?:Stems|Synonyms|Antonyms|Works Cited):?\*\*:?/imu);
         next = nextHeading >= 0 ? `${source.slice(0, nextHeading).trimEnd()}\n\n${addition}\n\n${source.slice(nextHeading).trimStart()}` : (source ? `${source}\n\n${addition}` : addition);
       }
     }
-    const sections = { body: [], Etymology: [], "First known use": [], Stems: [], Synonyms: [], Antonyms: [], "Works Cited": [] };
+    const sections = { body: [], "First known use": [], Etymology: [], "Origin path": [], "Verb Forms": [], Stems: [], Synonyms: [], Antonyms: [], "Works Cited": [] };
+    const sectionLabels = {
+      "first known use": "First known use",
+      etymology: "Etymology",
+      "origin path": "Origin path",
+      "verb forms": "Verb Forms",
+      stems: "Stems",
+      synonyms: "Synonyms",
+      antonyms: "Antonyms",
+      "works cited": "Works Cited",
+    };
+    const stemListItem = /^\s*(?:(?:\d+|[a-z])[.)]|[-+*])\s+/iu;
     let section = "body";
     next.split("\n").forEach((line) => {
-      const heading = line.match(/^\*\*(First known use|Etymology|Stems|Synonyms|Antonyms|Works Cited):\*[\t ]*\*?[\t ]*(.*)$/iu);
-      if (heading) { section = heading[1]; if (heading[2]) sections[section].push(heading[2]); return; }
+      const heading = line.match(/^\*\*(First known use|Etymology|Origin path|Verb Forms|Stems|Synonyms|Antonyms|Works Cited):?\*\*:?[\t ]*(.*)$/iu);
+      if (heading) {
+        section = sectionLabels[heading[1].toLowerCase()] || "body";
+        if (heading[2]) sections[section].push(heading[2]);
+        return;
+      }
+      if (section === "Stems" && line.trim() && !stemListItem.test(line)) section = "Etymology";
       sections[section].push(line);
     });
-    return [sections.body.join("\n").trim(), ...["Etymology", "First known use", "Stems", "Synonyms", "Antonyms", "Works Cited"].map((heading) => sections[heading].join("\n").trim() ? `**${heading}:** ${sections[heading].join("\n").trim()}` : "")].filter(Boolean).join("\n\n").trim();
+    return [sections.body.join("\n").trim(), ...["First known use", "Etymology", "Origin path", "Verb Forms", "Stems", "Synonyms", "Antonyms", "Works Cited"].map((heading) => sections[heading].join("\n").trim() ? `**${heading}:** ${sections[heading].join("\n").trim()}` : "")].filter(Boolean).join("\n\n").trim();
   }
 
   function bindLookupButtons(row) {
@@ -214,7 +230,7 @@
         const paragraph = String(preview.paragraph || "").trim();
         if (paragraph) { textarea.value = insertEtymologyDeterministically(current, paragraph); dispatchDefinitionInput(textarea); }
         if (preview.citation && !textarea.value.includes(preview.citation)) {
-          const worksCitedHeading = /^\*\*Works Cited:\*\*[\t ]*$/imu;
+          const worksCitedHeading = /^\*\*Works Cited:?\*\*:?[\t ]*$/imu;
           const worksCitedIndex = textarea.value.search(worksCitedHeading);
           if (worksCitedIndex >= 0) {
             const relativeEnd = textarea.value.slice(worksCitedIndex).indexOf("\n");
@@ -276,13 +292,18 @@
     const line = textarea.value.slice(lineStart, caret);
     const unordered = line.match(/^(\s*)([-+*])\s+(.*)$/u);
     const ordered = line.match(/^(\s*)(\d+)[.)]\s+(.*)$/u);
-    const match = unordered || ordered;
+    const alphabetic = line.match(/^(\s*)([a-z])[.)]\s+(.*)$/iu);
+    const match = unordered || ordered || alphabetic;
     if (!match) return;
     event.preventDefault();
     if (!match[3]) {
       textarea.setRangeText("", lineStart, caret, "end");
     } else {
-      const marker = unordered ? `${match[1]}${match[2]} ` : `${match[1]}${Number(match[2]) + 1}. `;
+      const marker = unordered
+        ? `${match[1]}${match[2]} `
+        : ordered
+          ? `${match[1]}${Number(match[2]) + 1}. `
+          : `${match[1]}${String.fromCharCode(Math.min("z".charCodeAt(0), match[2].toLowerCase().charCodeAt(0) + 1))}. `;
       textarea.setRangeText(`\n${marker}`, caret, caret, "end");
     }
     dispatchDefinitionInput(textarea);
@@ -331,53 +352,109 @@
     const source = String(value == null ? "" : value).replace(/\r\n?/gu, "\n").trim();
     if (!source) return "No definition yet.";
     const lines = source.split("\n");
-    const output = [];
-    let listType = "";
-    const closeList = () => {
-      if (listType) output.push(`</${listType}>`);
-      listType = "";
+    const listItemFromLine = (line) => {
+      const match = String(line).match(/^([\t ]*)(?:(\d+)[.)]|([a-z])[.)]|[-+*])\s+(.+)$/iu);
+      if (!match) return null;
+      const indentation = match[1].replace(/\t/gu, "    ").length;
+      return {
+        indentation,
+        listType: match[2] || match[3] ? "ol" : "ul",
+        orderedStyle: match[3] ? "a" : "",
+        text: match[4],
+      };
     };
-    lines.forEach((line) => {
-      if (!line.trim()) {
-        closeList();
-        output.push("<br>");
-        return;
-      }
-      const ordered = line.match(/^\s*\d+[.)]\s+(.+)$/u);
-      const unordered = line.match(/^\s*[-*+]\s+(.+)$/u);
-      const item = ordered || unordered;
-      if (item) {
-        const nextType = ordered ? "ol" : "ul";
-        if (listType && listType !== nextType) closeList();
-        if (!listType) {
-          listType = nextType;
-          output.push(`<${listType}>`);
+    const renderList = (start, indentation) => {
+      const first = listItemFromLine(lines[start]);
+      if (!first) return { html: "", next: start };
+      const listType = first.listType;
+      const orderedStyle = first.orderedStyle;
+      const typeAttribute = orderedStyle ? ' type="a"' : "";
+      const isSameList = (item) => item && item.indentation === indentation && item.listType === listType && (!item.orderedStyle || item.orderedStyle === orderedStyle);
+      const output = [`<${listType}${typeAttribute}>`];
+      let index = start;
+      while (index < lines.length) {
+        const item = listItemFromLine(lines[index]);
+        if (!item) {
+          const nextItem = !lines[index].trim() ? listItemFromLine(lines[index + 1]) : null;
+          if (isSameList(nextItem)) {
+            index += 1;
+            continue;
+          }
+          break;
         }
-        output.push(`<li>${definitionInlineHtml(item[1])}</li>`);
-        return;
+        if (!isSameList(item)) break;
+        output.push(`<li>${definitionInlineHtml(item.text)}`);
+        index += 1;
+        const nested = index < lines.length ? listItemFromLine(lines[index]) : null;
+        if (nested && nested.indentation > indentation) {
+          const renderedNested = renderList(index, nested.indentation);
+          output.push(renderedNested.html);
+          index = renderedNested.next;
+        }
+        output.push("</li>");
       }
-      closeList();
-      if (line) {
-        output.push(definitionInlineHtml(line), "<br>");
-      } else {
-        output.push("<br>");
+      output.push(`</${listType}>`);
+      return { html: output.join(""), next: index };
+    };
+    const output = [];
+    const paragraph = [];
+    const flushParagraph = () => {
+      if (!paragraph.length) return;
+      output.push(`<p>${paragraph.map((line) => definitionInlineHtml(line)).join("<br>")}</p>`);
+      paragraph.length = 0;
+    };
+    let index = 0;
+    while (index < lines.length) {
+      const line = lines[index];
+      if (!line.trim()) {
+        flushParagraph();
+        index += 1;
+        continue;
       }
-    });
-    closeList();
-    if (output.at(-1) === "<br>") output.pop();
+      const item = listItemFromLine(line);
+      if (item) {
+        flushParagraph();
+        const renderedList = renderList(index, item.indentation);
+        output.push(renderedList.html);
+        index = renderedList.next;
+        continue;
+      }
+      paragraph.push(line);
+      index += 1;
+    }
+    flushParagraph();
     return output.join("");
   }
 
   function definitionSections(value) {
-    const sections = { body: [], firstKnownUse: [], stems: [], synonyms: [], antonyms: [], worksCited: [], etymology: [] };
+    const sections = { body: [], firstKnownUse: [], stems: [], synonyms: [], antonyms: [], worksCited: [], etymology: [], originPath: [], verbForms: [] };
+    const labels = {
+      "first known use": "firstKnownUse",
+      etymology: "etymology",
+      "origin path": "originPath",
+      "verb forms": "verbForms",
+      stems: "stems",
+      synonyms: "synonyms",
+      antonyms: "antonyms",
+      "works cited": "worksCited",
+    };
+    const headingFromLine = (line) => {
+      const bold = String(line).match(/^\*\*(First known use|Etymology|Origin path|Verb Forms|Stems|Synonyms|Antonyms|Works Cited):?\*\*:?\s*(.*)$/iu);
+      if (bold) return { key: labels[bold[1].toLowerCase()], content: bold[2] };
+      const plain = String(line).match(/^(First known use|Etymology|Origin path|Verb Forms|Stems|Synonyms|Antonyms|Works Cited)\s*:?[\t ]*$/iu);
+      return plain ? { key: labels[plain[1].toLowerCase()], content: "" } : null;
+    };
+    const stemListItem = /^\s*(?:(?:\d+|[a-z])[.)]|[-+*])\s+/iu;
     let section = "body";
     String(value == null ? "" : value).replace(/\r\n?/gu, "\n").split("\n").forEach((line) => {
-      const heading = line.match(/^\*\*(First known use|Stems|Synonyms|Antonyms|Works Cited|Etymology):\*\*\s*(.*)$/iu);
+      const heading = headingFromLine(line);
       if (heading) {
-        section = { "First known use": "firstKnownUse", Stems: "stems", Synonyms: "synonyms", Antonyms: "antonyms", "Works Cited": "worksCited", Etymology: "etymology" }[heading[1]] || "body";
-        if (heading[2]) sections[section].push(heading[2]);
+        section = heading.key || "body";
+        if (heading.content) sections[section].push(heading.content);
         return;
       }
+      // Stems are list-only. Legacy Etymonline payloads sometimes omit the Etymology heading and append prose after the stems list.
+      if (section === "stems" && line.trim() && !stemListItem.test(line)) section = "etymology";
       sections[section]?.push(line);
     });
     return Object.fromEntries(Object.entries(sections).map(([key, lines]) => [key, lines.join("\n").trim()]));
@@ -394,19 +471,24 @@
     const sections = definitionSections(value("definition"));
     const blocks = [];
     if (sections.body) blocks.push(`<div class="new-word-entry-definition-body">${definitionHtml(sections.body)}</div>`);
-    const etymology = [sections.etymology, value("etymology")].filter(Boolean).join("\n\n");
-    if (etymology || value("originPath")) blocks.push(`<section class="new-word-entry-etymology"><strong>Etymology</strong>${etymology ? `<div>${definitionHtml(etymology)}</div>` : ""}${value("originPath") ? `<div class="new-word-entry-origin-path"><strong>Origin path:</strong> ${escapeHtml(value("originPath"))}</div>` : ""}</section>`);
     if (sections.firstKnownUse) blocks.push(`<section class="new-word-entry-first-use"><strong>First known use</strong><div>${definitionHtml(sections.firstKnownUse)}</div></section>`);
+    const etymology = [sections.etymology, value("etymology")].filter(Boolean).join("\n\n");
+    if (etymology) blocks.push(`<section class="new-word-entry-etymology"><strong>Etymology</strong><div>${definitionHtml(etymology)}</div></section>`);
+    const originPath = [sections.originPath, value("originPath")].filter(Boolean).join("\n").trim();
+    if (originPath) blocks.push(`<section class="new-word-entry-origin-path"><strong>Origin path</strong><div>${definitionHtml(originPath)}</div></section>`);
     if (value("partOfSpeech") === "verb" && ["verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5"].some((field) => value(field))) {
       const labels = ["INF", "V1", "V2", "V3", "V4", "V5"];
       blocks.push(`<section class="vocabulary-verb-forms-display"><strong>Verb Forms</strong>${labels.map((label, index) => `<div><strong>${label}</strong>: ${escapeHtml(value(index === 0 ? "verbInfinitive" : `verbV${index}`))}</div>`).join("")}</section>`);
-    }
+    } else if (sections.verbForms) blocks.push(`<section class="vocabulary-verb-forms-display"><strong>Verb Forms</strong><div>${definitionHtml(sections.verbForms)}</div></section>`);
     if (sections.stems) blocks.push(`<section class="new-word-entry-stems"><strong>Stems</strong><div>${definitionHtml(sections.stems)}</div></section>`);
     if (sections.synonyms) blocks.push(`<section class="new-word-entry-synonyms"><strong>Synonyms</strong><div>${definitionHtml(sections.synonyms)}</div></section>`);
     if (sections.antonyms) blocks.push(`<section class="new-word-entry-antonyms"><strong>Antonyms</strong><div>${definitionHtml(sections.antonyms)}</div></section>`);
     const references = Array.isArray(value("originReferences")) ? value("originReferences") : [];
-    const cited = [...references.map(referenceCitation), ...(sections.worksCited ? [sections.worksCited] : [])].filter(Boolean);
-    if (cited.length) blocks.push(`<section class="vocabulary-origin-references"><strong>Works Cited</strong>${[...new Set(cited)].map((citation) => `<div>${escapeHtml(citation)}</div>`).join("")}</section>`);
+    const cited = [...references.map(referenceCitation), ...String(sections.worksCited || "").split("\n")]
+      .map((citation) => String(citation).replace(/^\s*[-+*]\s+/u, "").replace(/\s+<--\s+dupe\s*$/iu, "").trim())
+      .filter(Boolean);
+    const uniqueCitations = [...new Map(cited.map((citation) => [citation.toLocaleLowerCase().replace(/\s+/gu, " "), citation])).values()];
+    if (uniqueCitations.length) blocks.push(`<section class="vocabulary-origin-references"><strong>Works Cited</strong><div><ul>${uniqueCitations.map((citation) => `<li>${definitionInlineHtml(citation)}</li>`).join("")}</ul></div></section>`);
     return blocks.join("") || "No definition yet.";
   }
 
@@ -434,36 +516,69 @@
               ${["LD", "GT", "WH", "ET", "MW", "TH"].map((label) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup${label === "ET" ? " vocabulary-etymonline-lookup" : ""}" data-vocabulary-lookup="${label}"${label === "ET" ? ` data-vocabulary-origin-lookup="${escapeHtml(originLookupPath)}"` : ""} title="Look up the ${label} field to complete this vocabulary entry" aria-label="Look up the ${label} field">${label}</button>`).join("")}
               <p class="small vocabulary-et-message" data-vocabulary-et-message aria-live="polite"></p>
             </div>
-            <textarea name="vocabularyDefinition-${uid}" data-vocabulary-field="definition" rows="1" maxlength="50000" placeholder="Definition" title="Up to 50,000 characters. Ctrl+B bold · Ctrl+I italic · Ctrl+U underline · Enter continues - and 1. lists" aria-label="Definition, up to 50,000 characters" required></textarea>
+            <textarea name="vocabularyDefinition-${uid}" data-vocabulary-field="definition" rows="1" maxlength="50000" placeholder="Definition" title="Up to 50,000 characters. Ctrl+B bold · Ctrl+I italic · Ctrl+U underline · Enter continues -, a., and 1. lists · indent nested items · **Heading** sections" aria-label="Definition, up to 50,000 characters" required></textarea>
             ${rowActions}
           </div>
         </div>`;
   }
 
-  function flatEntryHtml(entry = {}, { index = "", editClass = "vocabulary-flat-edit", editLabel = "Edit", editAttributes = "", entryAttributes = "", extraHtml = "" } = {}) {
+  function flatEntryHeaderModel(entry = {}) {
     const source = entry && typeof entry === "object" ? entry : {};
     const esl = source.esl && typeof source.esl === "object" ? source.esl : {};
     const classification = source.grammarClassification || esl.grammarClassification || {};
     const value = (field) => source[field] ?? esl[field] ?? classification[field] ?? "";
+    const position = String(value("partOfSpeech") || "").toLowerCase();
+    const nounPosition = position === "noun" || position === "proper noun";
+    const primaryMetadata = position === "verb"
+      ? (value("displayVerbForm") ? String(value("displayVerbForm")).toUpperCase() : "")
+      : nounPosition
+        ? value("countability")
+        : ["phrase", "pronoun", "determiner"].includes(position)
+          ? value("grammarFamily")
+          : value("grammarSubtype");
+    const secondaryMetadataValues = position === "verb"
+      ? [value("verbRegularity"), value("grammarFamily"), value("verbTransitivity")]
+      : nounPosition
+        ? [value("nounNumber"), value("nounType")]
+        : ["phrase", "pronoun", "determiner"].includes(position)
+          ? [value("grammarSubtype"), value("grammarDetail"), value("grammarNumber")]
+          : [value("grammarFamily"), value("grammarDetail"), value("grammarNumber")];
+    return {
+      english: value("english") || "New word",
+      pronunciation: value("syllabication"),
+      partOfSpeech: value("partOfSpeech"),
+      primaryMetadata,
+      vietnamese: value("vietnamese"),
+      secondaryMetadata: secondaryMetadataValues.filter(Boolean).join(", "),
+      legacyPending: source.isLegacyPending === true || value("reviewStatus") === "legacy_pending_review",
+    };
+  }
+
+  function flatEntrySummaryText(entry = {}) {
+    const model = flatEntryHeaderModel(entry);
+    const primary = [model.english, `/${model.pronunciation}/`, model.partOfSpeech, model.primaryMetadata].filter(Boolean).join(" ");
+    return `${primary} | vi: ${model.vietnamese} |${model.secondaryMetadata ? ` ${model.secondaryMetadata}` : ""}`;
+  }
+
+  function flatEntryHtml(entry = {}, { index = "", editClass = "vocabulary-flat-edit", editLabel = "Edit", editAttributes = "", entryAttributes = "", extraHtml = "" } = {}) {
+    const source = entry && typeof entry === "object" ? entry : {};
+    const model = flatEntryHeaderModel(source);
+    const value = (field) => source[field] ?? (source.esl && typeof source.esl === "object" ? source.esl[field] : undefined) ?? (source.grammarClassification && typeof source.grammarClassification === "object" ? source.grammarClassification[field] : undefined) ?? "";
     const json = escapeHtml(JSON.stringify(source));
     const indexAttribute = index === "" ? "" : ` data-vocabulary-entry-index="${escapeHtml(index)}"`;
-    const legacyPending = source.isLegacyPending === true || value("reviewStatus") === "legacy_pending_review";
-    const editButton = editLabel === null || legacyPending ? "" : `<button type="button" class="portal-button portal-button-primary ${escapeHtml(editClass)}" ${editAttributes} title="Edit this vocabulary entry" aria-label="Edit this vocabulary entry">${escapeHtml(editLabel)}</button>`;
-    const position = String(value("partOfSpeech") || "").toLowerCase();
-    const posMetadataValues = position === "verb"
-      ? [value("displayVerbForm") ? String(value("displayVerbForm")).toUpperCase() : "", value("verbRegularity"), value("grammarFamily"), value("verbTransitivity")]
-      : position === "noun"
-        ? [value("countability"), value("nounType"), value("nounNumber")]
-        : [value("grammarFamily"), value("grammarSubtype"), value("grammarDetail"), value("grammarNumber")];
-    const posMetadata = posMetadataValues.filter(Boolean).join(" | ");
+    const editButton = editLabel === null ? "" : `<button type="button" class="portal-button portal-button-primary ${escapeHtml(editClass)}" ${editAttributes} title="Edit this vocabulary entry" aria-label="Edit this vocabulary entry">${escapeHtml(editLabel)}</button>`;
+    const headerSeparator = `<span class="vocabulary-flat-entry-separator" aria-hidden="true">|</span>`;
     return `<article class="vocabulary-flat-entry new-word-entry" data-vocabulary-flat-entry${indexAttribute} data-vocabulary-entry-json="${json}" ${entryAttributes}>
+      ${model.legacyPending ? `<div class="vocabulary-flat-entry-status"><span class="chip chip-warn">Legacy</span></div>` : ""}
       <div class="vocabulary-flat-entry-head new-word-entry-head">
-        <strong>${escapeHtml(value("english") || "New word")}</strong>
-        ${legacyPending ? `<span class="chip chip-warn">Legacy review pending</span>` : ""}
-        <span class="new-word-entry-pronunciation">/${escapeHtml(value("syllabication"))}/</span>
-        <strong class="new-word-entry-part-of-speech">${escapeHtml(value("partOfSpeech"))}</strong>
-        ${posMetadata ? `<span class="new-word-entry-pos-details">${escapeHtml(posMetadata)}</span>` : ""}
-        <span class="new-word-entry-vietnamese">vi: ${escapeHtml(value("vietnamese"))}</span>
+        <strong>${escapeHtml(model.english)}</strong>
+        <span class="new-word-entry-pronunciation">/${escapeHtml(model.pronunciation)}/</span>
+        <strong class="new-word-entry-part-of-speech">${escapeHtml(model.partOfSpeech)}</strong>
+        ${model.primaryMetadata ? `<span class="vocabulary-flat-entry-subtype">${escapeHtml(model.primaryMetadata)}</span>` : ""}
+        ${headerSeparator}
+        <span class="new-word-entry-vietnamese">vi: ${escapeHtml(model.vietnamese)}</span>
+        ${headerSeparator}
+        ${model.secondaryMetadata ? `<span class="new-word-entry-pos-details">${escapeHtml(model.secondaryMetadata)}</span>` : ""}
         ${editButton}
       </div>
       <div class="new-word-entry-definition">${entryDefinitionHtml(source, value)}</div>
@@ -480,6 +595,7 @@
     originMetadata,
     grammarFields,
     editorRowHtml,
+    flatEntrySummaryText,
     flatEntryHtml,
     definitionHtml,
     insertEtymologyDeterministically,

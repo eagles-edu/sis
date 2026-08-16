@@ -20,6 +20,7 @@ const portalScript = fs.readFileSync(new URL("../web-asset/student/student-porta
 const sharedVocabularyEditor = fs.readFileSync(new URL("../web-asset/shared/vocabulary-esl-editor.js", import.meta.url), "utf8")
 const libraryReviewWorkbench = fs.readFileSync(new URL("../web-asset/admin/library-review-workbench.js", import.meta.url), "utf8")
 const sharedPortalTheme = fs.readFileSync(new URL("../web-asset/shared/portal-theme.css", import.meta.url), "utf8")
+const definitionSpacingSample = fs.readFileSync(new URL("../docs/defspace-1.md", import.meta.url), "utf8").split("==================================================================")[0].replace(/^preferredformat as:\s*/u, "").trim()
 
 test("student Library is a protected physical page with shared chrome and student chat", () => {
   assert.match(student, /body class="student-portal-page"/)
@@ -52,10 +53,12 @@ test("New Words and News vocabulary use the same full ESL row payload without st
   assert.match(sharedVocabularyEditor, /select\("nounNumber", "Number"/)
   assert.match(portalScript, /VOCABULARY_ESL_FIELDS = \[[^\]]*nounType[^\]]*nounNumber/)
   for (const surface of ["newWordsRows", "newsVocabularyRows", "newsWeekSetModalVocabularyRows"]) assert.match(studentPortal, new RegExp(surface))
-  assert.match(sharedVocabularyEditor, /const nextType = ordered \? "ol" : "ul"/)
+  assert.match(sharedVocabularyEditor, /const renderList = \(start, indentation\) =>/)
+  assert.match(sharedVocabularyEditor, /const alphabetic = line\.match/)
+  assert.match(sharedVocabularyEditor, /indent nested items/)
   for (const label of ["LD", "GT", "WH", "ET", "MW", "TH"]) assert.match(sharedVocabularyEditor, new RegExp(`\\\"${label}\\\"`))
   assert.match(sharedVocabularyEditor, /includeMwFill = false/)
-  assert.match(sharedVocabularyEditor, /output\.push\(`<\$\{listType\}>`\)/)
+  assert.match(sharedVocabularyEditor, /const output = \[`<\$\{listType\}\$\{typeAttribute\}>`\]/)
   assert.doesNotMatch(routes, /STUDENT_LIBRARY_API_PATH\}\/mw-preview/)
   assert.match(student, /vocabulary-esl-editor\.js/)
   assert.match(student, /Full edit submitted for admin approval/)
@@ -64,7 +67,11 @@ test("New Words and News vocabulary use the same full ESL row payload without st
 })
 
 test("admin Library is a protected physical page under Administration without chat", () => {
-  assert.match(admin, /body class="admin-portal-page page"/)
+  assert.match(admin, /body class="admin-portal-page page library-admin-page"/)
+  assert.match(admin, /<button id="floatingMenuBtn"[\s\S]*?<div id="menuBackdrop"[\s\S]*?<div class="wrap">[\s\S]*?<aside class="panel app-sidebar"[\s\S]*?<\/aside>[\s\S]*?<div class="header-bar portal-login-header"[\s\S]*?<main id="appMain"/)
+  assert.match(admin, /<main id="appMain"[\s\S]*?<\/main>\s*<section class="content portal-prefooter"[\s\S]*?<footer class="hub-footer"/)
+  assert.doesNotMatch(admin, /<div class="app-shell">/)
+  assert.match(sharedPortalTheme, /body\.admin-portal-page\.library-admin-page \.wrap\s*\{[\s\S]*?display:\s*grid;[\s\S]*?padding:\s*18px;[\s\S]*?width:\s*min\(100%, 1440px\)/)
   assert.match(admin, /portal-theme\.min\.css/)
   assert.doesNotMatch(admin, /admin-portal-theme\.min\.css/)
   assert.match(admin, /import svgIcon from "\/web-asset\/icons\/web-component\/svg-icon\.js"/)
@@ -100,16 +107,28 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(admin, /const fields = \["english", "americanEnglish", "britishEnglish", "partOfSpeech", "phraseType", "vietnamese", "syllabication", "syllableCount", "definition", "etymologyType", "etymology"\]/)
   assert.match(admin, /data-vocabulary-field=\"partOfSpeech\".*window\.SIS_VOCABULARY_ESL\.sync\(row\)/s)
   assert.match(admin, /flatEntryHtml\(entry, \{ editClass: "library-admin-flat-edit"/)
+  assert.match(admin, /let entries = new Map\(\);\s+const flatHtml = \(entry\) => window\.SIS_VOCABULARY_ESL\.flatEntryHtml[\s\S]*?function enhanceAccordions\(\) \{[\s\S]*?async function loadApproved\(\)/)
   assert.match(admin, /data-library-entry-id=/)
   assert.match(admin, /data-approved-edit=/)
-  assert.match(admin, /Saving from the admin Library applies the approved canonical edit immediately/)
+  assert.match(admin, /Saving here updates this entry as the approved canonical version immediately/)
   assert.match(admin, /json\(`\/entries\/\$\{encodeURIComponent\(entry\.id\)\}`, \{ method: "PUT"/)
-  assert.match(admin, /message\.textContent = "Approved Library edit saved\."/)
+  assert.match(admin, /message\.textContent = saved\.canonicalizedContributions \?[\s\S]*?"Canonical Library entry saved\."/)
+  assert.match(admin, /saved\.canonicalizedContributions/)
+  assert.match(libraryCorpus, /selectContributionsForCanonicalEntry/)
+  assert.match(libraryCorpus, /canonicalized_by_admin_edit/)
+  assert.match(libraryCorpus, /canonicalEntryForContribution\(tx, submitted, actor, \{ allowIncomplete: true \}\)/)
+  assert.match(admin, /json\(`\/entries\/\$\{encodeURIComponent\(entry\.id\)\}`, \{ method: "PUT"/)
+  assert.doesNotMatch(admin, /window\.location\.assign\(`\$\{location\.origin\}\/admin\/library\/manage/)
+  assert.match(admin, /editAttributes: `data-approved-edit="\$\{esc\(entry\.id\)\}"`/)
+  assert.doesNotMatch(sharedVocabularyEditor, /model\.legacyPending \? ""/)
   assert.match(admin, /function groupFor\(item\) \{ const group = item\?\.duplicateGroup\?\.length \? \[item, \.\.\.item\.duplicateGroup\.filter/)
   assert.doesNotMatch(admin, /Provisional edit submitted to the approval queue/)
   assert.match(admin, /aria-controls="appSidebarNav"/)
   assert.match(admin, /body\.classList\.toggle\("menu-open", open\)/)
   assert.match(admin, /data-vocabulary-field="partOfSpeech"/)
+  assert.match(admin, /item\.legacyReview \? " <span class=\\"chip chip-warn\\">Legacy<\/span>"/)
+  assert.match(sharedPortalTheme, /body\.admin-portal-page \.chip\s*\{[\s\S]*?background:\s*#e2edff/)
+  assert.match(sharedPortalTheme, /body\.admin-portal-page \.chip-warn\s*\{[\s\S]*?background:\s*#ffe9c7/)
   assert.doesNotMatch(admin, /Ed Adjective|Ing Adjective/)
   assert.doesNotMatch(admin, /AWL:|awlFamilyHeadword|awlSublist/)
   assert.doesNotMatch(student, /Academic sublist|libraryAwl|AWL family/)
@@ -128,14 +147,29 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(admin, /library-review-workbench\.js/)
   assert.doesNotMatch(admin, /classList\.toggle\("open"/)
   assert.match(admin, /parentElement\?\.classList\.toggle\("expanded", expanded\)/)
-  for (const token of ["Full flattened review", "Largest dupe", "Legacy source", "open_review", "New canonical", "Horizontal split", "Vertical split", "Lock pane scroll", "Save canonical", "Assign merge task", "data-review-field", "data-vocabulary-field", "data-canonical-select"]) assert.match(admin, new RegExp(token))
-  assert.match(sharedVocabularyEditor, /Legacy review pending/)
+  for (const token of ["Full flattened review", "Largest dupe", "Legacy source", "open_review", "New canonical", "Horizontal split", "Vertical split", "Lock pane scroll", "Save canonical", "Assign merge", "data-review-field", "data-vocabulary-field", "data-canonical-select"]) assert.match(admin, new RegExp(token))
+  assert.match(sharedVocabularyEditor, /<span class="chip chip-warn">Legacy<\/span>/)
   assert.match(admin, /selectedQueueItem = refreshed \|\| queueItems\[0\] \|\| null/)
   assert.match(libraryReviewWorkbench, /is-sidebar-collapsed/)
+  assert.match(libraryReviewWorkbench, /MW returned no etymology section for this part of speech/)
   assert.doesNotMatch(admin, /data-review-pane-collapse/)
   assert.match(libraryReviewWorkbench, /data-review-sidebar-toggle/)
   assert.match(admin, /library-review-sidebar-body/)
   assert.match(sharedPortalTheme, /library-review-shell\.is-sidebar-collapsed/)
+  assert.match(sharedPortalTheme, /\.library-admin-entry summary\s*\{[\s\S]*?background:\s*#CDE0FF/)
+  assert.match(sharedPortalTheme, /html\[data-theme="dark"\] \.library-admin-entry summary\s*\{[\s\S]*?background:\s*#212121/)
+  assert.match(sharedPortalTheme, /\.library-review-list\s*\{[\s\S]*?background:\s*var\(--portal-surface-panel\)/)
+  assert.match(sharedPortalTheme, /\.library-review-item\s*\{[\s\S]*?background:\s*#CDE0FF !important[\s\S]*?color:\s*#173962 !important/)
+  assert.match(sharedPortalTheme, /html\[data-theme="dark"\] \.library-review-item\s*\{[\s\S]*?background:\s*#212121 !important[\s\S]*?color:\s*var\(--portal-text\) !important/)
+  assert.doesNotMatch(sharedPortalTheme, /\.library-admin-entry summary,\s*\.library-review-list\s*\{[\s\S]*?background:/)
+  assert.match(admin, /portal-button-blue-action[\s\S]*data-mw-preview/)
+  assert.match(admin, /portal-button-blue-action[\s\S]*data-library-assign/)
+  assert.match(admin, /portal-button-blue-action[\s\S]*data-review-assign-merge/)
+  assert.match(sharedVocabularyEditor, /portal-button-blue-action vocabulary-mw-fill/)
+  assert.match(sharedVocabularyEditor, /portal-button-blue-action" data-vocabulary-transitivity-check/)
+  assert.match(sharedVocabularyEditor, /portal-button-blue-action" data-vocabulary-transitivity-autofill/)
+  assert.doesNotMatch(admin, /portal-button-alt/)
+  assert.doesNotMatch(libraryReviewWorkbench, /portal-button-alt/)
   assert.match(libraryReviewWorkbench, /is-different/)
   assert.match(libraryReviewWorkbench, /MutationObserver/)
   assert.match(routes, /const ADMIN_LIBRARY_API_PATH = `\$\{ADMIN_API_PREFIX\}\/library`/)
@@ -143,6 +177,7 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(sharedVocabularyEditor, /data-vocabulary-transitivity-check/)
   assert.match(sharedVocabularyEditor, /data-vocabulary-transitivity-autofill/)
   assert.match(routes, /autoFillLibraryEntryVerbTransitivity\(payload\)/)
+  assert.match(libraryReviewWorkbench, /\["verb", pane\.querySelector\('\[data-vocabulary-field="english"\]'\)\?\.value \|\| ""\]/)
   assert.match(libraryReviewWorkbench, /transitivity-autofill/)
   assert.match(libraryReviewWorkbench, /Merriam-Webster complete data/)
   assert.match(admin, /function bindSharedEditorRow\(pane\)/)
@@ -159,6 +194,8 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(libraryReviewWorkbench, /preserveSyllabication: true/)
   assert.match(libraryReviewWorkbench, /const mwEtymology = \(data = \{\}\)/)
   assert.match(libraryReviewWorkbench, /\.\.\.current, \.\.\.nonEmptyMwFields, \.\.\.\(etymology \? \{ etymology \} : \{\}\)/)
+  assert.match(libraryReviewWorkbench, /window\.SIS_VOCABULARY_ESL\?\.hydrate\(pane, merged, \{ preserveSyllabication: true \}\)/)
+  assert.match(sharedVocabularyEditor, /data-vocabulary-verb-forms[\s\S]*verbInfinitive[\s\S]*verbV1[\s\S]*verbV2[\s\S]*verbV3[\s\S]*verbV4[\s\S]*verbV5/)
   assert.match(sharedVocabularyEditor, /maxlength="50000"/)
   assert.match(sharedPortalTheme, /body\.admin-portal-page \.news-vocabulary-row \{[\s\S]*display: grid/)
   assert.match(sharedPortalTheme, /data-vocabulary-lookup="MW"|news-vocabulary-lookup\[data-vocabulary-lookup="MW"\]/)
@@ -177,6 +214,8 @@ test("admin Library editor uses the shared New Words row renderer", () => {
 test("admin Library edits remain approved and use the approved-edit revision action", () => {
   assert.match(libraryCorpus, /data: \{ \.\.\.data, reviewStatus: "approved", lastEditedByName: clamp\(actor\.name\) \}/)
   assert.match(libraryCorpus, /writeRevision\(tx, updated, "approved_edit", actor\.name, actor\.role \|\| "admin"\)/)
+  assert.match(libraryCorpus, /export function selectReviewQueueRepresentatives\(rows = \[\]\)/)
+  assert.match(libraryCorpus, /const queueContributions = selectReviewQueueRepresentatives\(contributions\)/)
 })
 
 test("all standalone admin navigation shells expose the Library child menu", () => {
@@ -204,8 +243,88 @@ test("flattened vocabulary preserves New Words geometry and formats safe definit
   assert.match(html, /A <strong>bold<\/strong> line/)
   assert.match(html, /<ol><li><em>First<\/em><\/li><li><u>Second<\/u><\/li><\/ol>/)
   assert.match(html, /<ul><li>Third<\/li><\/ul>/)
-  assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\nB"), "A<br>B")
-  assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\n\n- B"), "A<br><br><ul><li>B</li></ul>")
+  const flattenedChairDefinitions = context.window.SIS_VOCABULARY_ESL.definitionHtml(
+    "1. to preside as chairperson of chaired a commission\n\n1. to install in office\n\n1. to carry on the shoulders in acclaim We chaired you through the market-place …",
+  )
+  assert.equal((flattenedChairDefinitions.match(/<ol>/gu) || []).length, 1)
+  assert.equal((flattenedChairDefinitions.match(/<li>/gu) || []).length, 3)
+  assert.match(flattenedChairDefinitions, /to preside as chairperson[\s\S]*to install in office[\s\S]*to carry on the shoulders/)
+  assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\nB"), "<p>A<br>B</p>")
+  assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\n\n- B"), "<p>A</p><ul><li>B</li></ul>")
+  const preferredHtml = context.window.SIS_VOCABULARY_ESL.definitionHtml(definitionSpacingSample)
+  assert.match(preferredHtml, /<ol><li>to resound with echoes<\/li><li>to produce an echo<ol type="a">/)
+  assert.match(preferredHtml, /<ol type="a"><li>repeat, imitate<ul><li>children echoing their teacher&#39;s words<\/li><\/ul>/)
+  assert.match(preferredHtml, /<strong>Etymology<\/strong>/)
+  assert.match(context.window.SIS_VOCABULARY_ESL.flatEntryHtml({ partOfSpeech: "noun", definition: "**Etymology**\nFrom Latin\n\n**Works Cited**\n- Source" }), /new-word-entry-etymology/)
+  const preferredEntryHtml = context.window.SIS_VOCABULARY_ESL.flatEntryHtml({
+    partOfSpeech: "verb",
+    definition: definitionSpacingSample,
+    originReferences: [{ citation: "Online Etymology Dictionary. (n.d.). *echo*. Retrieved 2026-08-15, from https://www.etymonline.com/search?q=echo" }],
+  })
+  assert.equal((preferredEntryHtml.match(/<li>Online Etymology Dictionary/g) || []).length, 1)
   assert.match(sharedVocabularyEditor, /Ctrl\+B bold.*Ctrl\+I italic.*Ctrl\+U underline/)
   assert.doesNotMatch(html, /<script|onerror=|javascript:/i)
+})
+
+test("unheaded Etymonline prose after Stems is restored to Etymology after First known use and before Stems", () => {
+  const context = { window: {}, document: {} }
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const html = context.window.SIS_VOCABULARY_ESL.flatEntryHtml({
+    english: "wildfire",
+    partOfSpeech: "noun",
+    definition: "**First known use:** 12th century\n\n**Stems:**\n- wildfire\n- wildfires\n\nlate Old English *wilde fyr* \"destructive fire, raging conflagration\" (perhaps originally one caused by lightning); also \"erysipelas, spreading skin disease;\" see wild (adj.) + fire (n.).",
+  })
+  const order = ["new-word-entry-etymology", "new-word-entry-first-use", "new-word-entry-stems"].map((className) => html.indexOf(`class="${className}"`))
+  assert.ok(order.every((index) => index >= 0), "all restored definition sections must render")
+  assert.ok(order[1] < order[0] && order[0] < order[2], "First known use must precede Etymology, then Stems")
+  assert.match(html, /<section class="new-word-entry-etymology">[\s\S]*late Old English <em>wilde fyr<\/em>[\s\S]*<\/section>/)
+  assert.doesNotMatch(html, /new-word-entry-stems[\s\S]*late Old English \*wilde fyr\*/)
+  const inserted = context.window.SIS_VOCABULARY_ESL.insertEtymologyDeterministically(
+    "**First known use:** 12th century\n\n**Stems:**\n- wildfire\n- wildfires\n\nlate Old English *wilde fyr*",
+    "from Old French via Latin",
+  )
+  assert.ok(inserted.indexOf("**First known use:**") < inserted.indexOf("**Etymology:**"))
+  assert.ok(inserted.indexOf("**Etymology:**") < inserted.indexOf("**Stems:**"))
+  assert.doesNotMatch(inserted, /\*\*First known use:\*\* 12th century; from Old French via Latin/)
+  const verbHtml = context.window.SIS_VOCABULARY_ESL.flatEntryHtml({
+    english: "threaten",
+    partOfSpeech: "verb",
+    definition: "**First known use:** 13th century\n\n**Etymology:** from Old French\n\n**Stems:**\n- threaten\n\n**Works Cited:**\n- Source",
+    verbInfinitive: "to threaten",
+    verbV1: "threaten",
+    verbV2: "threatened",
+    verbV3: "threatened",
+    verbV4: "threatening",
+    verbV5: "threatens",
+  })
+  const verbOrder = ["new-word-entry-first-use", "new-word-entry-etymology", "vocabulary-verb-forms-display", "new-word-entry-stems", "vocabulary-origin-references"].map((className) => verbHtml.indexOf(`class="${className}"`))
+  assert.ok(verbOrder.every((index) => index >= 0), "verb entry sections must render")
+  assert.ok(verbOrder.every((index, position) => position === 0 || verbOrder[position - 1] < index), "verb forms must remain between Etymology and Stems")
+})
+
+test("flattened vocabulary keeps the established header format for every POS", () => {
+  const context = { window: {}, document: {} }
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const cases = [
+    [{ english: "threaten", partOfSpeech: "verb", syllabication: "thréat-en", vietnamese: "hăm dọa", displayVerbForm: "v1", verbRegularity: "regular", grammarFamily: "action", verbTransitivity: "ambitransitive" }, "threaten.*?thréat-en.*?verb.*?V1.*?\\|.*?vi: hăm dọa.*?\\|.*?regular, action, ambitransitive"],
+    [{ english: "language", partOfSpeech: "noun", syllabication: "lán-guage", vietnamese: "ngôn ngữ", countability: "countable", nounNumber: "singular", nounType: "common" }, "language.*?lán-guage.*?noun.*?countable.*?\\|.*?vi: ngôn ngữ.*?\\|.*?singular, common"],
+    [{ english: "funny", partOfSpeech: "adjective", syllabication: "fún-ny", vietnamese: "buồn cười" }, "funny.*?fún-ny.*?adjective.*?\\|.*?vi: buồn cười.*?\\|"],
+    [{ english: "however", partOfSpeech: "conjunction", syllabication: "how-év-er", vietnamese: "nhung", grammarSubtype: "subordinate" }, "however.*?how-év-er.*?conjunction.*?subordinate.*?\\|.*?vi: nhung.*?\\|"],
+    [{ english: "quickly", partOfSpeech: "adverb", syllabication: "quick-ly", vietnamese: "nhanh", grammarSubtype: "manner", grammarNumber: "singular" }, "quickly.*?quick-ly.*?adverb.*?manner.*?\\|.*?vi: nhanh.*?\\|.*?singular"],
+    [{ english: "under", partOfSpeech: "preposition", syllabication: "un-der", vietnamese: "dưới", grammarSubtype: "simple" }, "under.*?un-der.*?preposition.*?simple.*?\\|.*?vi: dưới.*?\\|"],
+    [{ english: "the", partOfSpeech: "determiner", syllabication: "the", vietnamese: "cái", grammarFamily: "articles", grammarNumber: "singular" }, "the.*?the.*?determiner.*?articles.*?\\|.*?vi: cái.*?\\|.*?singular"],
+    [{ english: "she", partOfSpeech: "pronoun", syllabication: "she", vietnamese: "cô ấy", grammarFamily: "personal", grammarSubtype: "subject", grammarNumber: "singular" }, "she.*?she.*?pronoun.*?personal.*?\\|.*?vi: cô ấy.*?\\|.*?subject, singular"],
+    [{ english: "wow", partOfSpeech: "interjection", syllabication: "wow", vietnamese: "ồ", grammarSubtype: "emphatic" }, "wow.*?wow.*?interjection.*?emphatic.*?\\|.*?vi: ồ.*?\\|"],
+    [{ english: "three", partOfSpeech: "numeral", syllabication: "three", vietnamese: "ba" }, "three.*?three.*?numeral.*?\\|.*?vi: ba.*?\\|"],
+    [{ english: "break down", partOfSpeech: "phrase", syllabication: "break-down", vietnamese: "suy sụp", grammarFamily: "verbal phrases", grammarSubtype: "phrasal" }, "break down.*?break-down.*?phrase.*?verbal phrases.*?\\|.*?vi: suy sụp.*?\\|.*?phrasal"],
+    [{ english: "break a leg", partOfSpeech: "idiom", syllabication: "break-a-leg", vietnamese: "chúc may mắn", grammarSubtype: "pure idioms" }, "break a leg.*?break-a-leg.*?idiom.*?pure idioms.*?\\|.*?vi: chúc may mắn.*?\\|"],
+    [{ english: "because", partOfSpeech: "clause", syllabication: "be-cause", vietnamese: "bởi vì", grammarSubtype: "dependent" }, "because.*?be-cause.*?clause.*?dependent.*?\\|.*?vi: bởi vì.*?\\|"],
+    [{ english: "London", partOfSpeech: "proper noun", syllabication: "Lon-don", vietnamese: "Luân Đôn", countability: "countable", nounNumber: "singular", nounType: "proper" }, "London.*?Lon-don.*?proper noun.*?countable.*?\\|.*?vi: Luân Đôn.*?\\|.*?singular, proper"],
+  ]
+  for (const [entry, pattern] of cases) {
+    const html = context.window.SIS_VOCABULARY_ESL.flatEntryHtml(entry)
+    assert.match(html, new RegExp(pattern, "s"), entry.partOfSpeech)
+    assert.match(context.window.SIS_VOCABULARY_ESL.flatEntrySummaryText(entry), new RegExp(pattern, "s"), `${entry.partOfSpeech} summary`)
+    assert.equal((html.match(/class="vocabulary-flat-entry-separator"/g) || []).length, 2, entry.partOfSpeech)
+  }
 })

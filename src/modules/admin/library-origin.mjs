@@ -116,19 +116,22 @@ export function normalizeDefinitionText(value) {
   return String(value == null ? "" : value).replace(/\r\n?/gu, "\n").split("\n").map((line) => line.trimEnd()).join("\n").replace(/\n{3,}/gu, "\n\n").trim()
 }
 
-const DEFINITION_SECTION_RE = /^\*\*(First known use|Etymology|Stems|Synonyms|Antonyms|Works Cited):\*\*[\t ]*(.*)$/iu
-const DEFINITION_SECTION_ORDER = ["Etymology", "First known use", "Stems", "Synonyms", "Antonyms", "Works Cited"]
+const DEFINITION_SECTION_RE = /^\*\*(First known use|Etymology|Origin path|Verb Forms|Stems|Synonyms|Antonyms|Works Cited):?\*\*:?[	 ]*(.*)$/iu
+const DEFINITION_SECTION_ORDER = ["First known use", "Etymology", "Origin path", "Verb Forms", "Stems", "Synonyms", "Antonyms", "Works Cited"]
+const STEM_LIST_ITEM_RE = /^\s*(?:(?:\d+|[a-z])[.)]|[-+*])\s+/iu
 
 export function parseDefinitionSections(value) {
-  const sections = { body: [], Etymology: [], "First known use": [], Stems: [], Synonyms: [], Antonyms: [], "Works Cited": [] }
+  const sections = { body: [], "First known use": [], Etymology: [], "Origin path": [], "Verb Forms": [], Stems: [], Synonyms: [], Antonyms: [], "Works Cited": [] }
+  const sectionLabels = Object.fromEntries(Object.keys(sections).filter((key) => key !== "body").map((key) => [key.toLowerCase(), key]))
   let current = "body"
   normalizeDefinitionText(value).split("\n").forEach((line) => {
     const heading = line.match(DEFINITION_SECTION_RE)
     if (heading) {
-      current = heading[1]
+      current = sectionLabels[heading[1].toLowerCase()] || "body"
       if (heading[2]) sections[current].push(heading[2])
       return
     }
+    if (current === "Stems" && line.trim() && !STEM_LIST_ITEM_RE.test(line)) current = "Etymology"
     sections[current].push(line)
   })
   return Object.fromEntries(Object.entries(sections).map(([key, lines]) => [key, lines.join("\n").trim()]))
@@ -138,23 +141,9 @@ export function insertEtymologyDeterministically(definition, paragraph) {
   const source = normalizeDefinitionText(definition)
   const addition = normalizeDefinitionText(paragraph)
   if (!addition) return source
-  const firstUse = source.match(/^\*\*First known use:\*\*[\t ]*([^\n]*)$/imu)
-  if (!firstUse && source.includes(addition)) return source
-  let next = source
-  if (firstUse) {
-    const line = firstUse[0]
-    if (line.includes(addition)) return source
-    next = source.replace(line, `${line}${line.trim().endsWith(":**") ? ` ${addition}` : `; ${addition}`}`)
-  } else {
-    const sections = parseDefinitionSections(source)
-    if (sections.Etymology) {
-      next = source.replace(/^(\*\*Etymology:\*\*[\t ]*[^\n]*)$/imu, (line) => `${line}; ${addition}`)
-    } else {
-      const nextHeading = source.search(/^\*\*(?:Stems|Synonyms|Antonyms|Works Cited):\*\*/imu)
-      next = nextHeading >= 0 ? `${source.slice(0, nextHeading).trimEnd()}\n\n${addition}\n\n${source.slice(nextHeading).trimStart()}` : (source ? `${source}\n\n${addition}` : addition)
-    }
-  }
-  const parsed = parseDefinitionSections(next)
+  if (source.includes(addition)) return source
+  const parsed = parseDefinitionSections(source)
+  parsed.Etymology = parsed.Etymology ? `${parsed.Etymology}\n\n${addition}` : addition
   const rendered = [
     parsed.body,
     ...DEFINITION_SECTION_ORDER.map((heading) => parsed[heading] ? `**${heading}:** ${parsed[heading]}` : ""),

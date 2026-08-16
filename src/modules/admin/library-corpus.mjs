@@ -39,6 +39,10 @@ const MW_POS_ALIASES = new Map([
 
 function text(value) { return String(value == null ? "" : value).trim() }
 function lower(value) { return text(value).normalize("NFC").toLocaleLowerCase("en-US") }
+export function normalizeLibraryEnum(value) {
+  const candidate = lower(value)
+  return ["null", "undefined"].includes(candidate) ? "" : candidate
+}
 function clamp(value, maximum = 240) { return text(value).slice(0, maximum) }
 export function normalizeLibraryDefinition(value) { return clamp(value, LIBRARY_DEFINITION_MAX_LENGTH) }
 function grammarClassification(value) {
@@ -71,6 +75,25 @@ export function selectLargestDuplicate(rows = []) {
   })[0] || null
 }
 
+export function selectReviewQueueRepresentatives(rows = []) {
+  const grouped = new Map()
+  for (const row of rows) {
+    const payload = row?.payloadJson || row?.payload || {}
+    const key = `${normalizeKey(payload.english)}|${lower(payload.partOfSpeech)}`
+    const siblings = grouped.get(key) || []
+    siblings.push(row)
+    grouped.set(key, siblings)
+  }
+  return rows.filter((row) => {
+    const payload = row?.payloadJson || row?.payload || {}
+    const key = `${normalizeKey(payload.english)}|${lower(payload.partOfSpeech)}`
+    const siblings = grouped.get(key) || []
+    const legacySiblings = siblings.filter((sibling) => isLegacyPending(sibling.status))
+    const candidates = legacySiblings.length ? legacySiblings : siblings
+    return selectLargestDuplicate(candidates)?.id === row.id
+  })
+}
+
 function isLegacyPending(value) { return text(value) === LEGACY_PENDING_REVIEW }
 function isAwaitingLegacyCanonical(value) { return text(value) === AWAITING_LEGACY_CANONICAL }
 
@@ -98,6 +121,18 @@ function mapContribution(contribution = {}) {
 
 function canonicalPair(payload = {}) {
   return { normalizedKey: normalizeKey(payload.english), partOfSpeech: lower(payload.partOfSpeech) }
+}
+
+const OPEN_CANONICAL_CONTRIBUTION_STATUSES = ["pending_review", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL]
+
+export function selectContributionsForCanonicalEntry(rows = [], entry = {}) {
+  const pair = canonicalPair(entry)
+  return rows.filter((row) => {
+    if (!OPEN_CANONICAL_CONTRIBUTION_STATUSES.includes(text(row?.status))) return false
+    const payload = row?.payloadJson && typeof row.payloadJson === "object" ? row.payloadJson : row?.payload || {}
+    const candidate = canonicalPair(payload)
+    return candidate.normalizedKey === pair.normalizedKey && candidate.partOfSpeech === pair.partOfSpeech
+  })
 }
 
 export function checkLibraryEntryVerbTransitivity(payload = {}) {
@@ -135,7 +170,7 @@ export function autoFillLibraryEntryVerbTransitivity(payload = {}) {
       ...result,
       autofillStatus: "unavailable",
       suggestedVerbTransitivity: null,
-      autofillMessage: "No bundled corpus classification was found for the entered verb forms; saving remains allowed.",
+      autofillMessage: "No corpus match; saving remains allowed.",
     }
   }
   const lemmaResult = getVerbTransitivity(lower(payload.verbInfinitive || payload.verb))
@@ -150,16 +185,16 @@ export function autoFillLibraryEntryVerbTransitivity(payload = {}) {
   }
 }
 
-function normalizeEntry(value = {}) {
+function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
   const english = clamp(value.english)
   const partOfSpeech = lower(value.partOfSpeech)
-  const phraseType = lower(value.phraseType)
-  const nounType = lower(value.nounType)
-  const nounNumber = lower(value.nounNumber)
+  const phraseType = normalizeLibraryEnum(value.phraseType)
+  const nounType = normalizeLibraryEnum(value.nounType)
+  const nounNumber = normalizeLibraryEnum(value.nounNumber)
   if (!english) throw statusError("English word or phrase is required")
   if (!POS.has(partOfSpeech)) throw statusError("A supported part of speech is required")
   if (phraseType && !PHRASE_TYPES.has(phraseType)) throw statusError("Unsupported phrase type")
-  const etymologyType = lower(value.etymologyType)
+  const etymologyType = normalizeLibraryEnum(value.etymologyType)
   if (etymologyType && !ETYMOLOGY_TYPES.has(etymologyType)) throw statusError("Unsupported etymology type")
   if (nounType && !NOUN_TYPES.has(nounType)) throw statusError("Unsupported noun type")
   if (nounNumber && !NOUN_NUMBERS.has(nounNumber)) throw statusError("Unsupported noun number")
@@ -168,9 +203,9 @@ function normalizeEntry(value = {}) {
     britishEnglish: clamp(value.britishEnglish) || null, partOfSpeech, phraseType: phraseType || null,
     grammarClassification: grammarClassification(value.grammarClassification), etymologyType: etymologyType || null, etymology: clamp(value.etymology, 4000) || null,
     originPath: clamp(value.originPath, 500) || null, originReferences: normalizeOriginReferences(value.originReferences), vietnamese: clamp(value.vietnamese), syllabication: clamp(value.syllabication),
-    syllableCount: syllableCount(value.syllabication), definition: normalizeLibraryDefinition(value.definition), countability: lower(value.countability) || null,
+    syllableCount: syllableCount(value.syllabication), definition: normalizeLibraryDefinition(value.definition), countability: normalizeLibraryEnum(value.countability) || null,
     nounType: partOfSpeech === "noun" ? nounType || null : null, nounNumber: partOfSpeech === "noun" ? nounNumber || null : null,
-    verbRegularity: lower(value.verbRegularity) || null, verbTransitivity: lower(value.verbTransitivity) || null,
+    verbRegularity: normalizeLibraryEnum(value.verbRegularity) || null, verbTransitivity: normalizeLibraryEnum(value.verbTransitivity) || null,
     verbInfinitive: clamp(value.verbInfinitive) || null, verbV1: clamp(value.verbV1) || null,
     verbV2: clamp(value.verbV2) || null, verbV3: clamp(value.verbV3) || null,
     verbV4: clamp(value.verbV4) || null, verbV5: clamp(value.verbV5) || null,
@@ -178,10 +213,10 @@ function normalizeEntry(value = {}) {
     awlFamilyHeadword: clamp(value.awlFamilyHeadword) || null, awlQualifyingMember: clamp(value.awlQualifyingMember) || null,
     awlMemberForm: clamp(value.awlMemberForm) || null, awlSublist: Number.isInteger(Number(value.awlSublist)) ? Number(value.awlSublist) : null,
   }
-  if (partOfSpeech === "noun" && !["countable", "uncountable", "both s & p"].includes(data.countability || "")) throw statusError("Nouns require countable, uncountable, or both S & P")
+  if (partOfSpeech === "noun" && !allowIncomplete && !["countable", "uncountable", "both s & p"].includes(data.countability || "")) throw statusError("Nouns require countable, uncountable, or both S & P")
   if (partOfSpeech === "verb") {
-    if (!data.verbInfinitive || !data.verbV1 || !data.verbV2 || !data.verbV3 || !data.verbV4 || !data.verbV5) throw statusError("Verbs require infinitive and V1-V5 forms")
-    if (!["regular", "irregular"].includes(data.verbRegularity || "")) throw statusError("Verbs require regular or irregular")
+    if (!allowIncomplete && (!data.verbInfinitive || !data.verbV1 || !data.verbV2 || !data.verbV3 || !data.verbV4 || !data.verbV5)) throw statusError("Verbs require infinitive and V1-V5 forms")
+    if (!allowIncomplete && !["regular", "irregular"].includes(data.verbRegularity || "")) throw statusError("Verbs require regular or irregular")
     if (data.verbTransitivity && !VERB_TRANSITIVITY.has(data.verbTransitivity)) throw statusError("Transitivity must be blank, intransitive, monotransitive, transitive, ditransitive, or ambitransitive")
   }
   return data
@@ -366,8 +401,8 @@ async function writeContributionRevision(client, contribution, action) {
   } })
 }
 
-async function canonicalEntryForContribution(tx, payload, actor = {}) {
-  const data = normalizeEntry(payload)
+async function canonicalEntryForContribution(tx, payload, actor = {}, options = {}) {
+  const data = normalizeEntry(payload, options)
   const pair = canonicalPair(data)
   const existing = await tx.libraryEntry.findUnique({ where: { normalizedKey_partOfSpeech: pair } })
   const entry = await tx.libraryEntry.upsert({
@@ -430,7 +465,7 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
     ? contribution
     : await client.libraryContribution.findUnique({ where: { id: canonicalContributionId } })
   if (!canonicalContribution) throw statusError("The selected canonical Library contribution was not found", 404)
-  const submitted = normalizeEntry(payload.entry || canonicalContribution.payloadJson)
+  const submitted = normalizeEntry(payload.entry || canonicalContribution.payloadJson, { allowIncomplete: true })
   const result = await client.$transaction(async (tx) => {
     const pair = canonicalPair(submitted)
     const siblings = await tx.libraryContribution.findMany({ where: { status: { in: ["pending_review", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL] } } })
@@ -440,7 +475,7 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
     })
     const legacy = matching.some((candidate) => isLegacyPending(candidate.status)) || isLegacyPending(contribution.status)
     const duplicate = matching.length > 1 || legacy
-    const { entry, existing } = await canonicalEntryForContribution(tx, submitted, actor)
+    const { entry, existing } = await canonicalEntryForContribution(tx, submitted, actor, { allowIncomplete: true })
     if (!existing || duplicate) await writeRevision(tx, entry, legacy ? "legacy_canonicalization" : duplicate ? "canonicalization" : "approved_submission", actor.name, actor.role || "admin")
     const targets = duplicate ? matching.filter((target) => !isAwaitingLegacyCanonical(target.status)) : [contribution]
     const canonicalizedAt = new Date()
@@ -461,13 +496,28 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
 }
 
 export async function updateLibraryEntry(id, actor = {}, payload = {}) {
-  const client = await prisma(); const data = normalizeEntry(payload)
-  const entry = await client.$transaction(async (tx) => {
+  const client = await prisma(); const data = normalizeEntry(payload, { allowIncomplete: true })
+  const result = await client.$transaction(async (tx) => {
     const updated = await tx.libraryEntry.update({ where: { id }, data: { ...data, reviewStatus: "approved", lastEditedByName: clamp(actor.name) } })
     await writeRevision(tx, updated, "approved_edit", actor.name, actor.role || "admin")
-    return updated
+    const openContributions = await tx.libraryContribution.findMany({ where: { status: { in: OPEN_CANONICAL_CONTRIBUTION_STATUSES } } })
+    const matching = selectContributionsForCanonicalEntry(openContributions, updated)
+    const legacy = matching.some((contribution) => isLegacyPending(contribution.status))
+    const canonicalizedAt = new Date()
+    let canonicalizedContributions = 0
+    for (const contribution of matching.filter((candidate) => !isAwaitingLegacyCanonical(candidate.status))) {
+      const canonicalized = await tx.libraryContribution.update({ where: { id: contribution.id }, data: { entryId: updated.id, status: "canonicalized", reviewedAt: canonicalizedAt, reviewedByName: clamp(actor.name), canonicalizedAt } })
+      await writeContributionRevision(tx, canonicalized, "canonicalized_by_admin_edit")
+      canonicalizedContributions += 1
+    }
+    for (const contribution of matching.filter((candidate) => isAwaitingLegacyCanonical(candidate.status))) {
+      const waiting = await tx.libraryContribution.update({ where: { id: contribution.id }, data: { entryId: updated.id, status: PENDING_CANONICAL_REPLACEMENT, dueAt: libraryContributionDeadline(canonicalizedAt), reviewedAt: canonicalizedAt, reviewedByName: clamp(actor.name) } })
+      await writeContributionRevision(tx, waiting, "legacy_canonical_declared_by_admin_edit")
+    }
+    if (legacy) await writeRevision(tx, updated, "canonicalization_by_admin_edit", actor.name, actor.role || "admin")
+    return { entry: updated, canonicalizedContributions }
   })
-  return { ok: true, entry: mapEntry(entry) }
+  return { ok: true, entry: mapEntry(result.entry), canonicalizedContributions: result.canonicalizedContributions }
 }
 
 export async function assignLibraryWork(actor = {}, payload = {}) {
@@ -497,13 +547,7 @@ export async function listLibraryReviewQueue(query = {}) {
     siblings.push(contribution)
     grouped.set(key, siblings)
   }
-  const queueContributions = contributions.filter((contribution) => {
-    const payload = contribution.payloadJson || {}
-    const key = `${normalizeKey(payload.english)}|${lower(payload.partOfSpeech)}`
-    const siblings = grouped.get(key) || []
-    const legacySiblings = siblings.filter((sibling) => isLegacyPending(sibling.status))
-    return !legacySiblings.length || selectLargestDuplicate(legacySiblings)?.id === contribution.id
-  })
+  const queueContributions = selectReviewQueueRepresentatives(contributions)
   const items = queueContributions.map((contribution) => {
     const payload = contribution.payloadJson || {}
     const key = `${normalizeKey(payload.english)}|${lower(payload.partOfSpeech)}`
@@ -729,6 +773,24 @@ function collectDefinitionText(value, output = []) {
   return output
 }
 
+function collectEtymologyText(value, output = []) {
+  if (typeof value === "string") {
+    output.push(value)
+    return output
+  }
+  if (Array.isArray(value)) {
+    if (typeof value[0] === "string" && ["text", "t"].includes(value[0])) output.push(value[1])
+    else value.forEach((item) => collectEtymologyText(item, output))
+    return output
+  }
+  if (!value || typeof value !== "object") return output
+  Object.entries(value).forEach(([key, child]) => {
+    if (["et", "etymology", "text", "t"].includes(key) && typeof child === "string") output.push(child)
+    else collectEtymologyText(child, output)
+  })
+  return output
+}
+
 function collectDefinitionBlocks(value, output = []) {
   if (Array.isArray(value)) {
     if (value[0] === "sense" && value[1] && typeof value[1] === "object") {
@@ -827,7 +889,7 @@ function normalizeMwEntry(entry, index) {
     stems: uniqueText(entry?.meta?.stems),
     shortDefinitions,
     definitions: detailedDefinitions.length ? detailedDefinitions : shortDefinitions,
-    etymology: uniqueText(collectDefinitionText(entry?.et)),
+    etymology: uniqueText(collectEtymologyText(entry?.et)),
     firstKnownUse: stripMw(entry?.date).replace(/(century|year|\d)t$/iu, "$1"),
     synonyms: uniqueText(entry?.meta?.syns || entry?.syns),
     antonyms: uniqueText(entry?.meta?.ants || entry?.ants),
@@ -923,7 +985,8 @@ function mwFields(record) {
   const participle = labelledParticiple || nonGerunds.find((form) => /(?:ed|en)$/iu.test(form)) || nonGerunds[1] || past
   const presentParticiple = forms.find((form) => /ing$/iu.test(form)) || ""
   const plainHeadword = record.headword.replace(/[^\p{L}\p{N}]+/gu, "")
-  const thirdPerson = record.stems.find((form) => [plainHeadword + "s", plainHeadword + "es"].includes(lower(form))) || record.stems.find((form) => /(?:s|es)$/iu.test(form) && !/(?:ss|us)$/iu.test(form)) || ""
+  const labelledThirdPerson = record.inflections.find((inflection) => /third person|present tense/iu.test(inflection.label))?.form || ""
+  const thirdPerson = labelledThirdPerson || record.stems.find((form) => [plainHeadword + "s", plainHeadword + "es"].includes(lower(form))) || record.stems.find((form) => /(?:s|es)$/iu.test(form) && !/(?:ss|us)$/iu.test(form)) || ""
   const referenceForms = getVerbForms(record.headword)
   if (referenceForms.found) {
     return {
@@ -939,18 +1002,80 @@ function mwFields(record) {
   return { ...fields, verbInfinitive: `to ${record.headword}`, verbV1: record.headword, verbV2: past, verbV3: participle, verbV4: presentParticiple, verbV5: thirdPerson }
 }
 
+function normalizedMwLookupWord(value) {
+  return lower(value).replace(/^to\s+/u, "").replace(/[^\p{L}\p{N}\s'-]+/gu, " ").replace(/[’‘]/gu, "'").replace(/\s+/gu, " ").trim()
+}
+
+function verbLookupCandidates(entry = {}) {
+  const candidates = []
+  const seen = new Set()
+  const add = (value) => {
+    const cleaned = normalizedMwLookupWord(value)
+    const key = cleaned.replace(/[^\p{L}\p{N}]+/gu, "")
+    if (!cleaned || !key || seen.has(key)) return
+    seen.add(key)
+    candidates.push(cleaned)
+  }
+  const addInflectedCandidates = (value) => {
+    const source = normalizedMwLookupWord(value)
+    if (!source || /\s/gu.test(source)) return
+    if (source.endsWith("ies") && source.length > 3) add(`${source.slice(0, -3)}y`)
+    if (source.endsWith("ied") && source.length > 3) add(`${source.slice(0, -3)}y`)
+    if (source.endsWith("ing") && source.length > 4) {
+      const stem = source.slice(0, -3)
+      add(stem)
+      if (stem.length > 1 && stem.at(-1) === stem.at(-2) && /[^aeiou]/u.test(stem.at(-1) || "")) add(stem.slice(0, -1))
+      add(`${stem}e`)
+    }
+    if (source.endsWith("ed") && source.length > 3) {
+      const stem = source.slice(0, -2)
+      add(stem)
+      if (stem.length > 1 && stem.at(-1) === stem.at(-2) && /[^aeiou]/u.test(stem.at(-1) || "")) add(stem.slice(0, -1))
+      add(`${stem}e`)
+    }
+    if (source.endsWith("ies") || source.endsWith("ied")) return
+    if (source.endsWith("es") && source.length > 3) add(source.slice(0, -2))
+    if (source.endsWith("s") && source.length > 2) add(source.slice(0, -1))
+  }
+  for (const value of [entry.english, entry.verbV1, entry.verbInfinitive, entry.verbV2, entry.verbV3, entry.verbV4, entry.verbV5]) {
+    add(value)
+    addInflectedCandidates(value)
+  }
+  return candidates
+}
+
 export async function previewMerriamWebsterLibraryEntry(entry) {
   const word = clamp(entry?.english); const key = text(process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY)
   if (!word || !key) return { ok: false, available: false, message: "Merriam-Webster Collegiate is unavailable; no Library data was changed." }
-  const response = await fetch(`${MW_BASE}/${encodeURIComponent(word)}?key=${encodeURIComponent(key)}`); if (!response.ok) return { ok: false, available: false, message: "Merriam-Webster is unavailable; no Library data was changed." }
-  const payload = await response.json(); const candidates = Array.isArray(payload) ? payload.filter((item) => item && typeof item === "object" && item.hwi) : []
-  const normalizedWord = lower(word).replace(/[^\p{L}\p{N}]+/gu, "")
-  const matching = candidates.filter((item) => lower(stripMw(item?.hwi?.hw)).replace(/[^\p{L}\p{N}]+/gu, "") === normalizedWord)
-  const records = (matching.length ? matching : candidates).map(normalizeMwEntry)
-  if (!records.length) return { ok: false, available: false, message: "No Merriam-Webster entry was found; no Library data was changed." }
   const requestedPartOfSpeech = normalizeMwPartOfSpeech(entry?.partOfSpeech)
-  const selectedRecords = requestedPartOfSpeech ? records.filter((record) => normalizeMwPartOfSpeech(record.partOfSpeech) === requestedPartOfSpeech) : records
-  const details = { source: "Merriam-Webster Collegiate", query: word, requestedPartOfSpeech: requestedPartOfSpeech || null, selectedEntryCount: selectedRecords.length, entryCount: records.length, entries: records }
+  const lookupWords = requestedPartOfSpeech === "verb" ? verbLookupCandidates(entry) : [normalizedMwLookupWord(word)]
+  const allRecords = []
+  let selectedRecords = []
+  let selectedQuery = word
+  let providerUnavailable = false
+  for (const lookupWord of lookupWords) {
+    const response = await fetch(`${MW_BASE}/${encodeURIComponent(lookupWord)}?key=${encodeURIComponent(key)}`)
+    if (!response.ok) {
+      providerUnavailable = true
+      continue
+    }
+    const payload = await response.json()
+    const candidates = Array.isArray(payload) ? payload.filter((item) => item && typeof item === "object" && item.hwi) : []
+    const normalizedWord = normalizedMwLookupWord(lookupWord).replace(/[^\p{L}\p{N}]+/gu, "")
+    const matching = candidates.filter((item) => normalizedMwLookupWord(stripMw(item?.hwi?.hw)).replace(/[^\p{L}\p{N}]+/gu, "") === normalizedWord)
+    const records = (matching.length ? matching : candidates).map(normalizeMwEntry)
+    allRecords.push(...records)
+    const matchingPartOfSpeech = requestedPartOfSpeech ? records.filter((record) => normalizeMwPartOfSpeech(record.partOfSpeech) === requestedPartOfSpeech) : records
+    if (matchingPartOfSpeech.length) {
+      selectedRecords = matchingPartOfSpeech
+      selectedQuery = lookupWord
+      break
+    }
+  }
+  const uniqueRecords = [...new Map(allRecords.map((record) => [`${record.headword}\u0000${record.partOfSpeech}\u0000${record.index}`, record])).values()]
+  if (!selectedRecords.length && providerUnavailable && !uniqueRecords.length) return { ok: false, available: false, message: "Merriam-Webster is unavailable; no Library data was changed." }
+  if (!uniqueRecords.length) return { ok: false, available: false, message: "No Merriam-Webster entry was found; no Library data was changed." }
+  const details = { source: "Merriam-Webster Collegiate", query: word, lookupQuery: selectedQuery, requestedPartOfSpeech: requestedPartOfSpeech || null, selectedEntryCount: selectedRecords.length, entryCount: uniqueRecords.length, entries: uniqueRecords }
   if (!selectedRecords.length) return { ok: false, available: true, message: `No Merriam-Webster ${requestedPartOfSpeech} entry was found; no Library data was changed.`, details }
   const primary = mergeMwRecords(selectedRecords)
   return { ok: true, available: true, fields: mwFields(primary), details }

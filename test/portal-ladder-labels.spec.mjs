@@ -23,7 +23,7 @@ const sharedPortalThemeCss = fs.readFileSync(
 )
 
 test("portal ladder surfaces are labeled explicitly in markup", () => {
-  assert.match(hubHtml, /<body class="portal-hub-page" id="top" data-surface-role="page">/)
+  assert.match(hubHtml, /<body class="portal-hub-page" id="top" data-surface-role="page" data-admin-font-scope="excluded-multi-audience">/)
   assert.match(hubHtml, /<div class="header-bar portal-login-header" data-surface-role="content">/)
   assert.match(hubHtml, /<section class="content topbar" data-surface-role="content">/)
   assert.match(hubHtml, /<section class="card section-card section-card--primary" aria-labelledby="primary-portals" data-surface-role="content">/)

@@ -88,6 +88,7 @@ The following words are hard constraints, not emphasis: `all`, `every`, `everyth
 - For dark-mode work, preserve the established component palette and visual language unless the user explicitly requests a redesign.
 - Treat dark-mode coverage and accessibility fixes as scope-limited work: fix missing dark styling and illegible text, but do not make unrelated visual changes.
 - In dark mode, normalize element grouping to the established hierarchy: panel background darker, cards lighter.
+- A-B Library queue surfaces are separate: `.library-review-list` keeps `var(--portal-surface-panel)`, while `.library-review-item` owns the Library accordion-header colors (`#CDE0FF` light and `#212121` dark). Never apply the row color to the containing panel; keep a contract test for both surfaces.
 - If that panel/card hierarchy is ambiguous for a given surface, ask the user before choosing a direction.
 - Before making any out-of-scope UI or design change, stop and ask the user first.
 - Avoid regression-by-cleanup: do not rewrite or replace settled styling rules unless the current task requires it.

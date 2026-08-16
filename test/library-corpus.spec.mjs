@@ -27,12 +27,44 @@ test("Library uses a dedicated PostgreSQL schema with immutable audit records", 
 })
 
 test("canonical duplicate selection and student deadlines are deterministic", async () => {
-  const { libraryContributionDeadline, selectLargestDuplicate, normalizeActiveLibraryPayload } = await import("../src/modules/admin/library-corpus.mjs")
+  const { libraryContributionDeadline, selectLargestDuplicate, selectReviewQueueRepresentatives, selectContributionsForCanonicalEntry, normalizeActiveLibraryPayload, normalizeLibraryEnum } = await import("../src/modules/admin/library-corpus.mjs")
   const first = { id: "b", submittedAt: "2026-08-01T00:00:00.000Z", payloadJson: { definition: "same length" } }
   const second = { id: "a", submittedAt: "2026-08-01T00:00:00.000Z", payloadJson: { definition: "same length" } }
   assert.equal(selectLargestDuplicate([first, second]).id, "a")
+  const exhausted = [
+    { id: "exhausted-short", submittedAt: "2026-08-13T04:37:52.000Z", status: "pending_review", payloadJson: { english: "exhausted", partOfSpeech: "noun", definition: "tired" } },
+    { id: "exhausted-long", submittedAt: "2026-08-13T04:42:14.000Z", status: "pending_review", payloadJson: { english: "exhausted", partOfSpeech: "noun", definition: "completely used up; drained of strength or resources" } },
+    { id: "exhausted-medium", submittedAt: "2026-08-13T04:42:17.000Z", status: "pending_review", payloadJson: { english: "exhausted", partOfSpeech: "noun", definition: "very tired or depleted" } },
+    { id: "unique", submittedAt: "2026-08-13T04:43:00.000Z", status: "pending_review", payloadJson: { english: "unique", partOfSpeech: "adjective", definition: "one of a kind" } },
+  ]
+  assert.deepEqual(selectReviewQueueRepresentatives(exhausted).map((row) => row.id), ["exhausted-long", "unique"])
+  assert.deepEqual(selectContributionsForCanonicalEntry([
+    { id: "exhausted-1", entryId: "entry-exhausted", status: "pending_review", payloadJson: { english: "exhausted", partOfSpeech: "noun" } },
+    { id: "exhausted-2", entryId: "entry-exhausted", status: "legacy_pending_review", payloadJson: { english: "exhausted", partOfSpeech: "noun" } },
+    { id: "other-pos", entryId: "entry-exhausted", status: "pending_review", payloadJson: { english: "exhausted", partOfSpeech: "adjective" } },
+    { id: "waiting", entryId: "entry-exhausted", status: "awaiting_legacy_canonical", payloadJson: { english: "exhausted", partOfSpeech: "noun" } },
+  ], { id: "entry-exhausted", english: "exhausted", partOfSpeech: "noun" }).map((row) => row.id), ["exhausted-1", "exhausted-2", "waiting"])
   assert.equal(libraryContributionDeadline("2026-08-01T00:00:00.000Z").toISOString(), "2026-08-16T00:00:00.000Z")
   assert.deepEqual(normalizeActiveLibraryPayload({ grammarClassification: null, originReferences: null, definition: null }), { grammarClassification: {}, originReferences: [], definition: "" })
+  assert.equal(normalizeLibraryEnum("null"), "")
+  assert.equal(normalizeLibraryEnum("countable"), "countable")
+})
+
+test("MW etymology extraction accepts nested etymology payloads", async () => {
+  const { previewMerriamWebsterLibraryEntry } = await import("../src/modules/admin/library-corpus.mjs")
+  const savedKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  const savedFetch = globalThis.fetch
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  globalThis.fetch = async () => ({ ok: true, json: async () => [{ hwi: { hw: "give" }, fl: "verb", et: { etymology: [{ text: "Middle English" }, { et_snote: { t: "from Old English" } }] }, shortdef: ["to make a present of"] }] })
+  try {
+    const result = await previewMerriamWebsterLibraryEntry({ english: "give", partOfSpeech: "verb" })
+    assert.equal(result.ok, true)
+    assert.equal(result.fields.etymology, "Middle English\nfrom Old English")
+  } finally {
+    if (savedKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedKey
+    globalThis.fetch = savedFetch
+  }
 })
 
 test("legacy archive migration precedes the guarded canonical uniqueness migration", () => {
@@ -175,6 +207,36 @@ test("MW preview selects the requested POS, preserves full metadata, and never f
     assert.equal(result.details.selectedEntryCount, 1)
     assert.equal(result.details.entries[0].partOfSpeech, "noun")
     assert.equal(result.details.entries[1].partOfSpeech, "verb")
+  } finally {
+    if (savedKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedKey
+    globalThis.fetch = savedFetch
+  }
+})
+
+test("MW preview retries an inflected verb with its lemma before rejecting the verb POS", async () => {
+  const { previewMerriamWebsterLibraryEntry } = await import("../src/modules/admin/library-corpus.mjs")
+  const savedKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  const savedFetch = globalThis.fetch
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  const queries = []
+  globalThis.fetch = async (url) => {
+    const query = decodeURIComponent(String(url).split("/json/")[1].split("?")[0])
+    queries.push(query)
+    if (query === "exhausted") return { ok: true, json: async () => [{ hwi: { hw: "exhausted" }, fl: "adjective", shortdef: ["very tired"] }] }
+    return { ok: true, json: async () => [{ hwi: { hw: "exhaust" }, fl: "verb", ins: [{ if: "exhausted", il: "past" }, { if: "exhausted", il: "past participle" }, { if: "exhausting", il: "present participle" }, { if: "exhausts", il: "third person singular" }], shortdef: ["to use up"] }] }
+  }
+  try {
+    const result = await previewMerriamWebsterLibraryEntry({ english: "exhausted", partOfSpeech: "verb" })
+    assert.equal(result.ok, true)
+    assert.deepEqual(queries.slice(0, 2), ["exhausted", "exhaust"])
+    assert.equal(result.details.lookupQuery, "exhaust")
+    assert.equal(result.fields.verbInfinitive, "to exhaust")
+    assert.equal(result.fields.verbV1, "exhaust")
+    assert.equal(result.fields.verbV2, "exhausted")
+    assert.equal(result.fields.verbV3, "exhausted")
+    assert.equal(result.fields.verbV4, "exhausting")
+    assert.equal(result.fields.verbV5, "exhausts")
   } finally {
     if (savedKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
     else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedKey

@@ -600,7 +600,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3235
+              "height": 3267
             },
             ".wrap": {
               "selector": ".wrap",
@@ -612,7 +612,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3187
+              "height": 3219
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -624,7 +624,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3103
+              "height": 3135
             },
             ".panel": {
               "selector": ".panel",
@@ -740,7 +740,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1298
+              "height": 1319
             },
             ".wrap": {
               "selector": ".wrap",
@@ -752,7 +752,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1250
+              "height": 1271
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -764,7 +764,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1166
+              "height": 1187
             },
             ".panel": {
               "selector": ".panel",
@@ -2736,7 +2736,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1783
+              "height": 1604
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2748,7 +2748,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1735
+              "height": 1556
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2760,7 +2760,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1651
+              "height": 1472
             },
             ".panel": {
               "selector": ".panel",
@@ -3182,7 +3182,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1759
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3194,7 +3194,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1711
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3206,7 +3206,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1627
+              "height": 892
             },
             ".panel": {
               "selector": ".panel",
@@ -3777,7 +3777,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2547
+              "height": 2563
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3789,7 +3789,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2499
+              "height": 2515
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3801,7 +3801,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2415
+              "height": 2431
             },
             ".panel": {
               "selector": ".panel",
@@ -4229,7 +4229,7 @@
               "color": "rgb(0, 0, 0)",
               "border": "rgb(0, 0, 0)",
               "display": "grid",
-              "width": 460,
+              "width": 560,
               "height": 71
             },
             "#newsReviewViewerNote": {
@@ -4241,7 +4241,7 @@
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
-              "width": 932,
+              "width": 1132,
               "height": 75
             },
             ".news-review-note-line.pending": null,
@@ -4498,7 +4498,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1685
+              "height": 1640
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4612,7 +4612,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 5288
+              "height": 6338
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5403,7 +5403,7 @@
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
               "display": "grid",
-              "width": 760,
+              "width": 1080,
               "height": 1064
             },
             "#newsWeekSetModal .portal-modal-body": {
@@ -5415,7 +5415,7 @@
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "grid",
-              "width": 726,
+              "width": 1046,
               "height": 1848
             },
             "#newsWeekSetModal .portal-modal-close": {
@@ -5439,7 +5439,7 @@
               "color": "rgb(43, 43, 43)",
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
-              "width": 726,
+              "width": 1046,
               "height": 44
             },
             "#openNewsComplianceModalBtn": {
@@ -5714,42 +5714,42 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 775
+          "y": 730
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 765
+          "y": 720
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1071
+          "y": 1026
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 1071
+          "y": 1026
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1204
+          "y": 1159
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1327
+          "y": 1282
         }
       ],
       "frameProfile": {
@@ -5758,7 +5758,7 @@
           "x": 0,
           "y": 36,
           "w": 1440,
-          "h": 1637,
+          "h": 1592,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -5770,7 +5770,7 @@
           "x": 31,
           "y": 189,
           "w": 1378,
-          "h": 1347,
+          "h": 1302,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",
@@ -6239,7 +6239,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3918
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6251,7 +6251,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3870
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6263,7 +6263,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3786
+              "height": 475
             },
             ".panel": {
               "selector": ".panel",
@@ -6379,7 +6379,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3235
+              "height": 3267
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6391,7 +6391,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3187
+              "height": 3219
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6403,7 +6403,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3103
+              "height": 3135
             },
             ".panel": {
               "selector": ".panel",
@@ -6519,7 +6519,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1298
+              "height": 1319
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6531,7 +6531,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1250
+              "height": 1271
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6543,7 +6543,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1166
+              "height": 1187
             },
             ".panel": {
               "selector": ".panel",
@@ -8539,7 +8539,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1783
+              "height": 1604
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8551,7 +8551,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1735
+              "height": 1556
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8563,7 +8563,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1651
+              "height": 1472
             },
             ".panel": {
               "selector": ".panel",
@@ -9580,7 +9580,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2547
+              "height": 2563
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9592,7 +9592,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2499
+              "height": 2515
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9604,7 +9604,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2415
+              "height": 2431
             },
             ".panel": {
               "selector": ".panel",
@@ -10032,7 +10032,7 @@
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "grid",
-              "width": 460,
+              "width": 560,
               "height": 71
             },
             "#newsReviewViewerNote": {
@@ -10044,7 +10044,7 @@
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
-              "width": 932,
+              "width": 1132,
               "height": 75
             },
             ".news-review-note-line.pending": null,
@@ -10301,7 +10301,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1685
+              "height": 1640
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10415,7 +10415,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 5289
+              "height": 6339
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11206,7 +11206,7 @@
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "grid",
-              "width": 760,
+              "width": 1080,
               "height": 1064
             },
             "#newsWeekSetModal .portal-modal-body": {
@@ -11218,7 +11218,7 @@
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "grid",
-              "width": 726,
+              "width": 1046,
               "height": 1848
             },
             "#newsWeekSetModal .portal-modal-close": {
@@ -11242,7 +11242,7 @@
               "color": "rgb(251, 255, 255)",
               "border": "rgb(174, 183, 197)",
               "display": "block",
-              "width": 726,
+              "width": 1046,
               "height": 44
             },
             "#openNewsComplianceModalBtn": {
@@ -11517,42 +11517,42 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 775
+          "y": 730
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 765
+          "y": 720
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1071
+          "y": 1026
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 1071
+          "y": 1026
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1204
+          "y": 1159
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1327
+          "y": 1282
         }
       ],
       "frameProfile": {
@@ -11561,7 +11561,7 @@
           "x": 0,
           "y": 36,
           "w": 1440,
-          "h": 1637,
+          "h": 1592,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -11573,7 +11573,7 @@
           "x": 31,
           "y": 189,
           "w": 1378,
-          "h": 1347,
+          "h": 1302,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",

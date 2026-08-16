@@ -399,6 +399,7 @@
   --portal-page-bg-base: #e8eef4;
   --portal-page-stack-gap: 12px;
   --portal-content-gap: 12px;
+  --portal-definition-flow-gap: 12px;
   --portal-panel-shadow: 0 8px 22px rgba(17, 38, 63, 0.08);
   --portal-panel-shadow-soft: 0 8px 22px rgba(10, 28, 48, 0.18);
   --portal-panel-shadow-strong: 0 26px 60px rgba(8, 22, 40, 0.26);
@@ -3628,6 +3629,41 @@ body.parent-portal-page .chip-warn {
   border-color: #b16d00;
   color: #5b3500;
 }
+body.admin-portal-page .chip {
+  --chip-height: 30px;
+  --chip-min-ar: 0;
+  align-items: center;
+  background: #e2edff;
+  border: 2px solid #5f7ca6;
+  border-bottom-width: 3px;
+  border-radius: 999px;
+  box-shadow: 0 1px 0 rgba(11, 32, 60, 0.22);
+  box-sizing: border-box;
+  color: #173962;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 6px;
+  height: var(--chip-height);
+  inline-size: auto;
+  justify-content: center;
+  line-height: 1;
+  max-inline-size: 100%;
+  min-height: 0;
+  min-inline-size: 0;
+  overflow: hidden;
+  padding: 0 10px;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: none;
+  white-space: nowrap;
+}
+body.admin-portal-page .chip-warn {
+  background: #ffe9c7;
+  border-color: #b16d00;
+  color: #5b3500;
+}
 body.student-portal-page .chip-open,
 body.parent-portal-page .chip-open {
   background: #d8edff;
@@ -5620,6 +5656,9 @@ body.student-portal-page .new-words-empty {
   line-height: normal;
   margin-bottom: 1rem;
 }
+:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .vocabulary-flat-entry-status {
+  margin-block-end: 6px;
+}
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head strong {
   color: #B50010;
   font-family: "B612 Mono", monospace;
@@ -5665,7 +5704,7 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
   font-weight: 700;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .new-word-entry-vietnamese {
-  margin-inline-end: auto;
+  margin-inline-end: 0;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head .new-word-edit {
   --portal-button-max-inline: 72px;
@@ -5678,7 +5717,7 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
   font-family: "B612 Mono", monospace;
   font-size: 1.18rem;
   letter-spacing: normal;
-  line-height: 1.35;
+  line-height: 1.45;
   margin: 0;
   overflow-wrap: anywhere;
   padding-inline-start: 18px;
@@ -5687,18 +5726,28 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition ol,
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition ul {
-  margin: 0;
+  margin-block: var(--portal-definition-flow-gap);
   padding-inline-start: 28px;
   white-space: normal;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition li {
-  margin-block: 3px;
+  margin-block: 4px;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition :is(section, .new-word-entry-definition-body) {
-  margin-block: 8px;
+  margin-block: var(--portal-definition-flow-gap);
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition :is(section, .new-word-entry-definition-body):first-child {
   margin-block-start: 0;
+}
+:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition p {
+  margin-block: var(--portal-definition-flow-gap);
+}
+:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition p:first-child {
+  margin-block-start: 0;
+}
+:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition > section > strong {
+  display: block;
+  margin-block-end: 6px;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-pos-details,
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-origin-path,
@@ -6035,7 +6084,7 @@ body.student-portal-page .news-vocabulary-definition-row textarea {
   font-family: "B612 Mono", monospace;
   font-size: 1rem;
   letter-spacing: normal;
-  line-height: 1.35;
+  line-height: 1.45;
   margin: 0;
   min-block-size: 48px;
   min-height: 0;
@@ -11182,7 +11231,7 @@ body.admin-portal-page .news-vocabulary-definition-row textarea {
   font-family: "B612 Mono", monospace;
   font-size: 1rem;
   letter-spacing: normal;
-  line-height: 1.35;
+  line-height: 1.45;
   margin: 0;
   min-block-size: 48px;
   min-height: 0;
@@ -11636,6 +11685,8 @@ body.admin-portal-page .news-vocabulary-row-dots {
   margin: 0;
   max-block-size: var(--portal-prefooter-block-size);
   min-block-size: var(--portal-prefooter-block-size);
+  padding-bottom: 24px;
+  padding-top: 24px;
   width: 100%;
 }
 .portal-prefooter .env-badge {
@@ -11656,6 +11707,7 @@ body.portal-hub-page .hub-prefooter .env-badge {
   justify-self: end;
 }
 .portal-prefooter__environment {
+  background-color: var(--portal-action-green-top);
   color: var(--ink-soft, var(--secondary-color));
   font-family: "B612 Mono", monospace;
   font-size: 0.75rem;
@@ -11788,6 +11840,18 @@ body.admin-portal-page .wrap > .portal-login-header {
   inline-size: calc(100% - 32px);
   margin-inline: auto !important;
 }
+body.admin-portal-page.library-admin-page .wrap {
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--portal-shell-gap);
+  grid-template-columns: minmax(0, 1fr);
+  margin-inline: auto;
+  padding: 18px;
+  width: min(100%, 1440px);
+}
+body.admin-portal-page.library-admin-page .wrap > * {
+  min-width: 0;
+}
 body.student-portal-page .wrap > .portal-login-header {
   box-sizing: border-box;
   inline-size: calc(100% - 32px);
@@ -11864,7 +11928,7 @@ body.admin-portal-page main.library-admin-main {
   gap: var(--portal-shell-gap);
   margin: 0 auto;
   max-width: 1440px;
-  padding: 16px;
+  padding: 0;
   width: 100%;
 }
 
@@ -11912,6 +11976,9 @@ body.admin-portal-page main.library-admin-main {
 
 .library-admin-entry summary {
   background: #CDE0FF;
+}
+
+.library-admin-entry summary {
   align-items: center;
   box-sizing: border-box;
   cursor: pointer;
@@ -11990,15 +12057,19 @@ body.admin-portal-page #libraryQueueRows .library-admin-entry .library-admin-bod
 }
 
 .library-review-list {
+  background: var(--portal-surface-panel);
+  border: 1px solid var(--portal-border-strong);
+  border-radius: var(--radius-2);
   max-block-size: 72vh;
   overflow: auto;
   overscroll-behavior: contain;
 }
 
 .library-review-item {
-  background: transparent;
+  background: #CDE0FF !important;
   border: 0;
   border-bottom: 1px solid var(--portal-border-strong);
+  color: #173962 !important;
   cursor: pointer;
   display: grid;
   gap: 4px;
@@ -12008,8 +12079,17 @@ body.admin-portal-page #libraryQueueRows .library-admin-entry .library-admin-bod
 }
 
 .library-review-item[aria-current="true"] {
-  background: var(--portal-surface-support);
+  background: var(--portal-surface-support) !important;
   box-shadow: inset 4px 0 0 var(--brand);
+}
+
+html[data-theme="dark"] .library-review-item {
+  background: #212121 !important;
+  color: var(--portal-text) !important;
+}
+
+html[data-theme="dark"] .library-review-item[aria-current="true"] {
+  background: var(--portal-surface-support) !important;
 }
 
 .library-review-workspace {
@@ -12274,7 +12354,7 @@ body.admin-portal-page .library-review-pane .news-vocabulary-definition-row text
   font-family: "B612 Mono", monospace;
   font-size: 1rem;
   letter-spacing: normal;
-  line-height: 1.35;
+  line-height: 1.45;
   margin: 0;
   min-block-size: 48px;
   min-height: 0;

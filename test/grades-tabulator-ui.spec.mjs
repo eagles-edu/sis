@@ -17,6 +17,7 @@ const TABULATOR_HTML = fs
   .replace(/<script src="\.\.\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/shared\/portal-environment\.js"><\/script>\s*/i, "")
+  .replace(/<script src="\/web-asset\/admin\/admin-b612-mono-loader\.js"[^>]*><\/script>\s*/i, "")
   .replace(/<link rel="stylesheet" href="\/web-asset\/admin\/grades-tabulator\.min\.css">\s*/i, "")
   .replace(/<script src="\/web-asset\/admin\/grades-tabulator\.min\.js"><\/script>/i, () => `<script>${TABULATOR_JS}</script>`)
 const SHARED_THEME_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-theme.min.css")

@@ -27,12 +27,16 @@ test("origin references are bounded and deduplicated by exact URL", () => {
   assert.equal(normalized[0].url, first.url)
 })
 
-test("ET insertion appends to First known use once and remains before Stems and Works Cited", async () => {
+test("ET insertion places Etymology after First known use and before Stems and Works Cited", async () => {
   const { insertEtymologyDeterministically } = await import("../src/modules/admin/library-origin.mjs")
-  const source = "Definition\n\n**First known use:** 1600\n\n**Stems:**\n- stem\n\n**Works Cited:**\n- citation"
+  const source = "Definition\n\n**First known use:** 1600\n\n**Stems:**\n- stem\n\nlate Old English *wilde fyr*\n\n**Works Cited:**\n- citation"
   const result = insertEtymologyDeterministically(source, "from Old French via Latin")
+  assert.ok(result.indexOf("First known use") < result.indexOf("Etymology"))
+  assert.ok(result.indexOf("Etymology") < result.indexOf("Stems"))
   assert.ok(result.indexOf("First known use") < result.indexOf("Stems"))
   assert.ok(result.indexOf("Stems") < result.indexOf("Works Cited"))
+  assert.match(result, /\*\*Etymology:\*\*[\s\S]*late Old English \*wilde fyr\*[\s\S]*from Old French via Latin/)
+  assert.doesNotMatch(result, /\*\*First known use:\*\* 1600; from Old French via Latin/)
   assert.equal((result.match(/from Old French via Latin/gu) || []).length, 1)
   assert.equal(insertEtymologyDeterministically(result, "from Old French via Latin"), result)
 })

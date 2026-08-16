@@ -25,11 +25,15 @@
   const readValue = (input) => input.type === "checkbox" ? input.checked : input.value
   const textValue = (value) => String(value == null ? "" : value).trim()
 
+  const etymologyValues = (value) => {
+    if (Array.isArray(value)) return value.flatMap(etymologyValues)
+    if (value && typeof value === "object") return Object.values(value).flatMap(etymologyValues)
+    return [value]
+  }
+
   const mwEtymology = (data = {}) => {
-    const direct = textValue(data.fields?.etymology)
-    if (direct) return direct
-    return (Array.isArray(data.details?.entries) ? data.details.entries : [])
-      .flatMap((entry) => Array.isArray(entry?.etymology) ? entry.etymology : [])
+    return [data.fields?.etymology, ...(Array.isArray(data.details?.entries) ? data.details.entries : []).flatMap((entry) => etymologyValues(entry?.etymology))]
+      .flatMap(etymologyValues)
       .map(textValue)
       .filter(Boolean)
       .filter((value, index, values) => values.indexOf(value) === index)
@@ -110,9 +114,10 @@
           const nonEmptyMwFields = Object.fromEntries(Object.entries(data.fields || {}).filter(([field, value]) => field !== "originReferences" && value !== null && value !== undefined && (typeof value !== "string" || value.trim())))
           const merged = { ...current, ...nonEmptyMwFields, ...(etymology ? { etymology } : {}), originPath: current.originPath || data.fields?.originPath || "", originReferences: mergedReferences }
           window.SIS_VOCABULARY_ESL?.hydrate(pane, merged, { preserveSyllabication: true })
-          const appliedFields = Object.keys(data.fields || {}).join(", ") || "none"
+          const appliedFields = Object.keys(nonEmptyMwFields).join(", ") || "none"
           button.title = `Filled authoritative Merriam-Webster fields: ${appliedFields}.`
-          if (message) message.textContent = `Filled authoritative MW fields: ${appliedFields}.`
+          const etymologyMessage = etymology ? "" : current.etymology ? " MW returned no etymology section for this part of speech; the existing value was preserved." : " MW returned no etymology section for this part of speech."
+          if (message) message.textContent = `Filled authoritative MW fields: ${appliedFields}.${etymologyMessage}`
           if (detailsJson) detailsJson.textContent = JSON.stringify(data.details || {}, null, 2)
           if (details) details.hidden = false
         } catch (error) {
@@ -134,7 +139,7 @@
       dialog = document.createElement("dialog")
       dialog.id = "libraryMwPreviewDialog"
       dialog.className = "portal-modal"
-      dialog.innerHTML = `<form method="dialog"><div class="portal-modal-header"><h2>Merriam-Webster complete data</h2><button type="submit" class="portal-button portal-button-alt" aria-label="Close Merriam-Webster data">Close</button></div><pre class="library-mw-preview-json"></pre></form>`
+      dialog.innerHTML = `<form method="dialog"><div class="portal-modal-header"><h2>Merriam-Webster complete data</h2><button type="submit" class="portal-button portal-button-neutral-action" aria-label="Close Merriam-Webster data">Close</button></div><pre class="library-mw-preview-json"></pre></form>`
       document.body.append(dialog)
     }
     dialog.querySelector(".library-mw-preview-json").textContent = JSON.stringify(data.details || {}, null, 2)
@@ -165,10 +170,11 @@
     }
   }, true)
 
-  const transitivityPayload = (pane) => Object.fromEntries(
-    ["verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5"]
+  const transitivityPayload = (pane) => Object.fromEntries([
+    ["verb", pane.querySelector('[data-vocabulary-field="english"]')?.value || ""],
+    ...["verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5"]
       .map((field) => [field, pane.querySelector(`[data-vocabulary-esl-field="${field}"]`)?.value || ""]),
-  )
+  ])
 
   const bindTransitivityTools = () => {
     const apiRoot = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library`
@@ -193,7 +199,7 @@
               input.value = data.suggestedVerbTransitivity
               input.dispatchEvent(new Event("change", { bubbles: true }))
               message.textContent = data.autofillMessage || `Suggested ${data.suggestedVerbTransitivity}; review it before saving.`
-            } else message.textContent = data.autofillMessage || "No bundled classification was found; saving remains allowed."
+            } else message.textContent = data.autofillMessage || "No corpus match; saving remains allowed."
           } else if (!data.foundForms?.length) message.textContent = "No bundled corpus match; transitivity is optional and saving remains allowed."
           else if (data.matchesExpected === true) message.textContent = `Bundled corpus supports ${data.expected} for ${data.foundForms.join(", ")}. Saving remains allowed.`
           else if (data.matchesExpected === false) message.textContent = `Bundled corpus differs from ${data.expected}; this is advisory and saving remains allowed.`
