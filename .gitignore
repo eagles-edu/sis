@@ -43,6 +43,9 @@ docs/**
 !docs/
 !docs/chips.md
 !docs/chips.xlsx
+!docs/CODE-EDITING-DOCS-INDEX.md
+!docs/CORE-DESIGN-PARAMETERS.md
+!docs/DOCUMENT-STATUS-AND-PARAMETER-AUDIT.md
 !docs/sis-admin-wiring-map.ascii.txt
 !docs/mapping/
 !docs/mapping/**

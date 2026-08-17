@@ -93,6 +93,31 @@ test("portal pages load the shared portal theme stylesheet", () => {
   }
 })
 
+test("environment badges keep the shared green immutable contract across theme and runtime states", () => {
+  assert.match(
+    sharedThemeSource,
+    /\.env-badge\s*\{[\s\S]*?background:\s*var\(--portal-action-green-top\);[\s\S]*?border-color:\s*var\(--portal-action-green-border\);[\s\S]*?color:\s*var\(--portal-action-secondary-text\);/m,
+    "the shared .env-badge contract must use the immutable green action tokens",
+  )
+  assert.match(
+    sharedThemeSource,
+    /\.env-badge\[data-env="development"\]\s*\{[\s\S]*?background:\s*var\(--portal-action-green-top\);[\s\S]*?border-color:\s*var\(--portal-action-green-border\);[\s\S]*?color:\s*var\(--portal-action-secondary-text\);/m,
+    "development-labeled env badges must keep the same green action token contract",
+  )
+  assert.match(
+    sharedThemeSource,
+    /\.env-badge\[data-env="production"\]\s*\{[\s\S]*?background:\s*var\(--portal-action-green-top\);[\s\S]*?border-color:\s*var\(--portal-action-green-border\);[\s\S]*?color:\s*var\(--portal-action-secondary-text\);/m,
+    "production-labeled env badges must keep the same green action token contract",
+  )
+  assert.doesNotMatch(
+    sharedThemeSource,
+    /html\[data-theme="dark"\]\s*\.env-badge\s*\{[\s\S]*?background:\s*(?!var\(--portal-action-green-top\))/m,
+    "dark theme must not override the env badge away from the immutable green contract",
+  )
+  assert.match(parentPortal, /id="envBadge"/, "parent portal must expose the shared env badge element")
+  assert.match(studentPortal, /id="envBadge"/, "student portal must expose the shared env badge element")
+})
+
 
 test("every header-bearing portal page has a shared page-stack owner", () => {
   for (const [label, relPath, bodyClass, stackClass] of pageStackPaths) {

@@ -422,6 +422,19 @@ test("admin quarter controls share the attendance quarter safety default", () =>
   assert.match(source, /updateAttendanceQuarterWarning\(\)/)
 })
 
+test("admin systems health includes a non-secret Redis health card", () => {
+  const source = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
+  const css = fs.readFileSync(new URL("../web-asset/admin/student-admin.css", import.meta.url), "utf8")
+  assert.match(source, /key: "redis"/)
+  assert.match(source, /label: "Redis"/)
+  assert.match(source, /source=\$\{redis\.source \|\| "environment"\}/)
+  assert.match(source, /action: \{ label: "Ping Redis", action: "redis-ping" \}/)
+  assert.match(source, /method: "POST"/)
+  assert.match(source, /ADMIN_REDIS_PING_PATH/)
+  assert.match(css, /\.system-health-redis-ping-btn[\s\S]*block-size: 48px[\s\S]*inline-size: 48px/)
+  assert.doesNotMatch(source, /redis\.url/)
+})
+
 test("admin attendance restores only the selected level and always derives the current date context", () => {
   const source = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
   assert.match(source, /const ATTENDANCE_FORM_STORAGE_KEY = "sis\.admin\.attendance\.form\.v1"/)
@@ -2376,6 +2389,10 @@ test("teacher can access runtime health endpoint", async () => {
   assert.ok(body.studentAdminRuntime.sessionRedis && typeof body.studentAdminRuntime.sessionRedis === "object")
   assert.ok(Object.prototype.hasOwnProperty.call(body.studentAdminRuntime.sessionRedis, "redisConnected"))
   assert.ok(Object.prototype.hasOwnProperty.call(body.studentAdminRuntime.sessionRedis, "redisReady"))
+  assert.ok(body.studentAdminRuntime.redis && typeof body.studentAdminRuntime.redis === "object")
+  assert.equal(body.studentAdminRuntime.redis.source, "environment")
+  assert.ok(Object.prototype.hasOwnProperty.call(body.studentAdminRuntime.redis, "configured"))
+  assert.ok(Object.prototype.hasOwnProperty.call(body.studentAdminRuntime.redis, "ready"))
   assert.ok(body.maintenance && typeof body.maintenance === "object")
   assert.ok(Object.prototype.hasOwnProperty.call(body.maintenance, "lastIncomingVacuumAt"))
   assert.ok(Object.prototype.hasOwnProperty.call(body.maintenance, "lastBackupAt"))

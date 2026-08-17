@@ -105,7 +105,7 @@
   --portal-action-blue-top-hover: #3a74e0;
   --portal-action-green-border: #123a25;
   --portal-action-green-bottom: #174d31;
-  --portal-action-green-text: #fbffff;
+  --portal-action-secondary-text: #fbffff;
   --portal-action-green-top: #23774a;
   --portal-action-red-border: #75131b;
   --portal-action-red-bottom: #8f1620;
@@ -2276,7 +2276,7 @@ body.grades-tabulator-page .header-action-btn {
 body.grades-tabulator-page .header-action-btn.plus {
   background: linear-gradient(180deg, var(--portal-action-green-top) 0%, var(--portal-action-green-bottom) 100%);
   border-color: var(--portal-action-green-border);
-  color: var(--portal-action-green-text);
+  color: var(--portal-action-secondary-text);
 }
 body.grades-tabulator-page .header-action-btn.minus {
   background: linear-gradient(180deg, var(--portal-action-red-top) 0%, var(--portal-action-red-bottom) 100%);
@@ -3280,13 +3280,13 @@ html[data-theme="dark"] body.student-portal-page #loginPanel,
 html[data-theme="dark"] body.parent-portal-page #loginCard,
 html[data-theme="dark"] body.admin-portal-page #authPanel,
 html[data-theme="dark"] body.admin-portal-page #authBootPanel {
-  background: #4c4c4c;
+  background: var(--portal-dark-surface-panel);
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.admin-portal-page #authPanel,
 html[data-theme="dark"] body.admin-portal-page #authBootPanel {
-  background: #4c4c4c !important;
+  background: var(--portal-dark-surface-panel) !important;
 }
 html[data-theme="dark"] body.student-portal-page :where(#loginPanel, #loginPanel #loginForm, #loginPanel input, #loginPanel select, #loginPanel textarea),
 html[data-theme="dark"] body.parent-portal-page :where(#loginCard, #loginCard .login-form, #loginCard input, #loginCard select, #loginCard textarea),
@@ -3365,20 +3365,20 @@ html[data-theme="dark"] .brand-logo-wrap {
   background: var(--portal-dark-surface-support);
   border-color: var(--portal-dark-border);
 }
-html[data-theme="dark"] .env-badge {
-  background: rgba(49, 54, 58, 0.96);
-  border-color: rgba(255, 255, 255, 0.18);
-  color: var(--portal-dark-text);
+.env-badge {
+  background: var(--portal-action-green-top);
+  border-color: var(--portal-action-green-border);
+  color: var(--portal-action-secondary-text);
 }
-html[data-theme="dark"] .env-badge[data-env="development"] {
-  background: rgba(49, 54, 58, 0.96);
-  border-color: rgba(124, 214, 164, 0.34);
-  color: #cbeeda;
+.env-badge[data-env="development"] {
+  background: var(--portal-action-green-top);
+  border-color: var(--portal-action-green-border);
+  color: var(--portal-action-secondary-text);
 }
-html[data-theme="dark"] .env-badge[data-env="production"] {
-  background: rgba(49, 54, 58, 0.96);
-  border-color: rgba(240, 176, 95, 0.34);
-  color: #ffe0b6;
+.env-badge[data-env="production"] {
+  background: var(--portal-action-green-top);
+  border-color: var(--portal-action-green-border);
+  color: var(--portal-action-secondary-text);
 }
 html[data-theme="dark"] body.student-points-page {
   --portal-student-points-muted-text: #c5d4e1;
@@ -5264,29 +5264,29 @@ body.menu-open .floating-menu-icon::after {
 }
 .env-badge {
   align-items: center;
-  background: #eef3ff;
-  border: 1px solid #b7cae3;
+  background: var(--portal-action-green-top);
+  border: 1px solid var(--portal-action-green-border);
   border-radius: var(--radius-pill);
-  color: #1d2e4f;
+  color: var(--portal-action-secondary-text);
   display: inline-flex;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.02em;
   max-width: 360px;
   overflow: hidden;
-  padding: 4px 10px;
+  padding: 8px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .env-badge[data-env="development"] {
-  background: #e8f8ef;
-  border-color: #9dd5b3;
-  color: #0f4f30;
+  background: var(--portal-action-green-top);
+  border-color: var(--portal-action-green-border);
+  color: var(--portal-action-secondary-text);
 }
 .env-badge[data-env="production"] {
-  background: #fff4da;
-  border-color: #d8b228;
-  color: #5b3b00;
+  background: var(--portal-action-green-top);
+  border-color: var(--portal-action-green-border);
+  color: var(--portal-action-secondary-text);
 }
 .portal-grid,
 .portal-col,
@@ -6325,8 +6325,8 @@ body.admin-portal-page .news-vocabulary-row-dots {
   margin: 0;
   max-block-size: var(--portal-prefooter-block-size);
   min-block-size: var(--portal-prefooter-block-size);
-  padding-bottom: 24px;
-  padding-top: 24px;
+  padding-bottom: 24px!important;
+  padding-top: 24px!important;
   width: 100%;
 }
 .portal-prefooter .env-badge {

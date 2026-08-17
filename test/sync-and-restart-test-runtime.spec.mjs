@@ -16,8 +16,13 @@ test("sync-and-restart-test-runtime defaults to loopback health and split env ex
 
 test("test-mirror sync uses only the test-owned env file", () => {
   assert.doesNotMatch(script, /\.env\.dev/)
+  assert.match(script, /TEST_ENV_TEST_MIRROR_KEYS=\([\s\S]*"REDIS_URL"[\s\S]*"REDIS_SESSION_URL"[\s\S]*"REDIS_CACHE_URL"[\s\S]*"REDIS_INSIGHT_URL"/)
   assert.match(script, /TEST_ENV_TEST_MIRROR_KEYS=\([\s\S]*"MERRIAM_WEBSTER_COLLEGIATE_API_KEY"[\s\S]*"MERRIAM_WEBSTER_LEARNERS_API_KEY"/)
   assert.match(script, /align_test_env_from_test_source\(\)/)
+  assert.match(script, /repair_test_source_redis_env\(\)/)
+  assert.match(script, /ensure_test_runtime_env_contract\s+repair_test_source_redis_env\s+align_test_env_from_test_source/s)
+  assert.match(script, /docker inspect redis-stack/)
+  assert.match(script, /redis-stack authoritative password is unavailable/)
   assert.match(script, /local source_env_path="\$\{REPO_ROOT\}\/\.env\.test"/)
   assert.match(script, /sync_env_keys_between_files "\$source_env_path" "\$test_env_path" "\$\{TEST_ENV_TEST_MIRROR_KEYS\[@\]\}"/)
 })
@@ -25,6 +30,8 @@ test("test-mirror sync uses only the test-owned env file", () => {
 test("full test-mirror sync repairs the immutable runtime session driver to Redis", () => {
   assert.match(script, /ensure_test_redis_runtime_config\(\)/)
   assert.match(script, /SIS_CONFIG_FILE=SIS_CONFIG\.json/)
+  assert.match(script, /REDIS_SESSION_URL="\$redis_url"/)
+  assert.match(script, /REDIS_URL="\$redis_url"/)
   assert.match(script, /sessionDriver: "redis"/)
   assert.match(script, /redisConnectTimeoutMs: timeoutMs/)
   assert.match(script, /ensure_test_redis_runtime_config\s*\n\s*else/)

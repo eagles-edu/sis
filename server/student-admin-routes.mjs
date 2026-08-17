@@ -290,6 +290,7 @@ const ADMIN_ASSIGNMENT_REMINDER_ENGAGEMENT_PATH = `${ADMIN_API_PREFIX}/assignmen
 const ADMIN_INCOMING_EXERCISE_RESULTS_PATH = `${ADMIN_API_PREFIX}/exercise-results/incoming`
 const ADMIN_PROFILE_SUBMISSIONS_PATH = `${ADMIN_API_PREFIX}/profile-submissions`
 const ADMIN_RUNTIME_HEALTH_PATH = `${ADMIN_API_PREFIX}/runtime/health`
+const ADMIN_REDIS_PING_PATH = `${ADMIN_API_PREFIX}/runtime/redis-ping`
 const ADMIN_BREVO_STATISTICS_PATH = `${ADMIN_API_PREFIX}/runtime/brevo-statistics`
 const ADMIN_SIS_CONFIG_REPAIR_PATH = `${ADMIN_API_PREFIX}/runtime/sis-config-repair`
 const ADMIN_SERVICE_CONTROL_PATH = `${ADMIN_API_PREFIX}/runtime/service-control`
@@ -546,18 +547,21 @@ const SESSION_STORE = createStudentAdminSessionStore({
   redisUrl: normalizeText(SIS_RUNTIME_CONFIG.redisUrl),
   ttlSeconds: SESSION_TTL_SECONDS,
   redisConnectTimeoutMs: SIS_RUNTIME_CONFIG.redisConnectTimeoutMs,
+  connectOnCreate: true,
 })
 const PARENT_SESSION_STORE = createStudentAdminSessionStore({
   driver: normalizeText(SIS_RUNTIME_CONFIG.sessionDriver) || "auto",
   redisUrl: normalizeText(SIS_RUNTIME_CONFIG.redisUrl),
   ttlSeconds: PARENT_SESSION_TTL_SECONDS,
   redisConnectTimeoutMs: SIS_RUNTIME_CONFIG.redisConnectTimeoutMs,
+  connectOnCreate: true,
 })
 const STUDENT_SESSION_STORE = createStudentAdminSessionStore({
   driver: normalizeText(SIS_RUNTIME_CONFIG.sessionDriver) || "auto",
   redisUrl: normalizeText(SIS_RUNTIME_CONFIG.redisUrl),
   ttlSeconds: STUDENT_SESSION_TTL_SECONDS,
   redisConnectTimeoutMs: SIS_RUNTIME_CONFIG.redisConnectTimeoutMs,
+  connectOnCreate: true,
 })
 const PARENT_PROFILE_QUEUE_STATUS_DRAFT = "draft"
 const PARENT_PROFILE_QUEUE_STATUS_SUBMITTED = "submitted"
@@ -1616,7 +1620,7 @@ function injectAdminRuntimeConfig(html, pageSlug, origin, initialAuthState = { a
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_PREFERENCES_PATH=${JSON.stringify(ADMIN_PREFERENCES_PATH)};window.__SIS_ADMIN_ASSETS_PATH=${JSON.stringify(ADMIN_ASSETS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_BREVO_STATISTICS_PATH=${JSON.stringify(ADMIN_BREVO_STATISTICS_PATH)};window.__SIS_ADMIN_SIS_CONFIG_REPAIR_PATH=${JSON.stringify(ADMIN_SIS_CONFIG_REPAIR_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_PREFERENCES_PATH=${JSON.stringify(ADMIN_PREFERENCES_PATH)};window.__SIS_ADMIN_ASSETS_PATH=${JSON.stringify(ADMIN_ASSETS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_REDIS_PING_PATH=${JSON.stringify(ADMIN_REDIS_PING_PATH)};window.__SIS_ADMIN_BREVO_STATISTICS_PATH=${JSON.stringify(ADMIN_BREVO_STATISTICS_PATH)};window.__SIS_ADMIN_SIS_CONFIG_REPAIR_PATH=${JSON.stringify(ADMIN_SIS_CONFIG_REPAIR_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-admin-auth-state", authStateName)
   const bodyClassName =
     normalizedAuthState.authenticated ?
@@ -1852,6 +1856,7 @@ export function getStudentAdminRuntimeStatus() {
     profileSubmissionsPath: ADMIN_PROFILE_SUBMISSIONS_PATH,
     brevoWebhookPath: BREVO_WEBHOOK_PATH,
     runtimeHealthPath: ADMIN_RUNTIME_HEALTH_PATH,
+    redisPingPath: ADMIN_REDIS_PING_PATH,
     brevoStatisticsPath: ADMIN_BREVO_STATISTICS_PATH,
     serviceControlPath: ADMIN_SERVICE_CONTROL_PATH,
     assignmentAnnouncementPreviewCreatePath: ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH,
@@ -1884,6 +1889,18 @@ export function getStudentAdminRuntimeStatus() {
     permissionRoles: [...ADMIN_PERMISSION_ROLES],
     rolePermissions: getRolePermissionsSnapshot(),
     sessionDriver: SESSION_STORE.driver,
+    redis: {
+      configured: Boolean(normalizeText(SIS_RUNTIME_CONFIG.redisUrl)),
+      source: "environment",
+      connected: sessionRedis.redisConnected && parentSessionRedis.redisConnected && studentSessionRedis.redisConnected,
+      ready: sessionRedis.redisReady && parentSessionRedis.redisReady && studentSessionRedis.redisReady,
+      lastError: sessionRedis.lastRedisError || parentSessionRedis.lastRedisError || studentSessionRedis.lastRedisError,
+      reconnectAttempts: Math.max(
+        sessionRedis.reconnectAttempts,
+        parentSessionRedis.reconnectAttempts,
+        studentSessionRedis.reconnectAttempts,
+      ),
+    },
     sessionRedis,
     sessionStores: {
       admin: { driver: SESSION_STORE.driver, redis: sessionRedis },
@@ -1948,6 +1965,25 @@ async function resolveAdminRuntimeHealthPayload() {
       syncCount: 0,
       lastError: "runtime health provider unavailable",
     },
+  }
+}
+
+async function resolveAdminRedisPingPayload() {
+  const startedAt = Date.now()
+  const stores = [
+    ["admin", SESSION_STORE],
+    ["parent", PARENT_SESSION_STORE],
+    ["student", STUDENT_SESSION_STORE],
+  ]
+  const results = await Promise.all(stores.map(async ([name, store]) => ({
+    name,
+    ...(await store.ping()),
+  })))
+  return {
+    ok: results.length > 0 && results.every((result) => result.ok),
+    checkedAt: new Date().toISOString(),
+    latencyMs: Date.now() - startedAt,
+    stores: results,
   }
 }
 
@@ -6809,6 +6845,11 @@ async function handleApiRequest(request, response, pathname, url) {
   if (method === "GET" && pathname === ADMIN_RUNTIME_HEALTH_PATH) {
     const payload = await resolveAdminRuntimeHealthPayload()
     sendJson(response, 200, payload)
+    return true
+  }
+
+  if (method === "POST" && pathname === ADMIN_REDIS_PING_PATH) {
+    sendJson(response, 200, await resolveAdminRedisPingPayload())
     return true
   }
 

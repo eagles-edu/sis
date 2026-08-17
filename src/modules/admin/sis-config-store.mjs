@@ -476,9 +476,10 @@ function normalizeUiSettings(source = {}) {
 
 function normalizeRuntimeConfig(source = {}) {
   const candidate = toPlainObject(source)
+  const environmentRedisUrl = normalizeText(process.env.REDIS_SESSION_URL || process.env.REDIS_URL)
   return {
     databaseUrl: normalizeText(candidate.databaseUrl || process.env.DATABASE_URL),
-    redisUrl: normalizeText(candidate.redisUrl || process.env.REDIS_SESSION_URL || process.env.REDIS_URL),
+    redisUrl: environmentRedisUrl,
     sessionDriver: normalizeText(candidate.sessionDriver || process.env.STUDENT_ADMIN_SESSION_DRIVER) || "auto",
     adminSessionTtlSeconds: toPositiveInt(
       candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
@@ -497,6 +498,13 @@ function normalizeRuntimeConfig(source = {}) {
       DEFAULT_SESSION_REDIS_CONNECT_TIMEOUT_MS,
     ),
     consentVersion: toPositiveInt(candidate.consentVersion ?? process.env.CONSENT_VERSION, DEFAULT_CONSENT_VERSION),
+  }
+}
+
+function runtimeConfigForPersistence(source = {}) {
+  return {
+    ...normalizeRuntimeConfig(source),
+    redisUrl: "",
   }
 }
 
@@ -821,7 +829,7 @@ async function upsertMirrorToDatabase(snapshot = {}) {
     const prisma = await getSharedPrismaClient()
     const payload = {
       uiSettings: normalizeUiSettings(source.uiSettings || {}),
-      runtime: normalizeRuntimeConfig(source.runtime || {}),
+      runtime: runtimeConfigForPersistence(source.runtime || {}),
       newsReports: normalizeNewsReportsConfig(source.newsReports || {}),
       environment: normalizeRuntimeEnvironment(source.environment),
       updatedAt: normalizeText(source.updatedAt) || nowIso(),
@@ -870,7 +878,7 @@ async function writeSnapshotFiles(snapshot = {}) {
   backupCorruptJsonFileIfNeeded(resolveSisConfigFilePath(), currentFileState)
   writeJsonFileAtomic(resolveSisConfigFilePath(), {
     uiSettings: normalized.uiSettings,
-    runtime: normalized.runtime,
+    runtime: runtimeConfigForPersistence(normalized.runtime),
     newsReports: normalized.newsReports,
     environment: normalized.environment,
     updatedAt: normalized.updatedAt || nowIso(),
@@ -959,6 +967,8 @@ export async function ensureSisConfigLoaded(options = {}) {
   }, filePath, latest.source || "file")
 
   const latestSourceIsDatabase = latest.source === "database"
+  const fileContainsPersistedRedisUrl = Boolean(normalizeText(toPlainObject(fileParsed.runtime).redisUrl))
+  const dbContainsPersistedRedisUrl = Boolean(normalizeText(toPlainObject(dbParsed.runtime).redisUrl))
   const fileMatchesSnapshot = !fileSnapshot.parsed || rawSnapshotComparisonKey(fileSnapshot.parsed) === snapshotComparisonKey(snapshot)
   const dbMatchesSnapshot = !dbSnapshot || rawSnapshotComparisonKey({
     uiSettings: dbSnapshot.uiSettings,
@@ -972,6 +982,7 @@ export async function ensureSisConfigLoaded(options = {}) {
     fileSnapshot.error ||
     (!preferSisConfigFile && latestSourceIsDatabase) ||
     !fileMatchesSnapshot ||
+    fileContainsPersistedRedisUrl ||
     (fileLoaded && compareIsoValues(snapshot.updatedAt, fileLoaded.updatedAt) > 0)
 
   backupCorruptJsonFileIfNeeded(filePath, fileSnapshot)
@@ -979,7 +990,7 @@ export async function ensureSisConfigLoaded(options = {}) {
   if (fileNeedsWrite) {
     writeJsonFileAtomic(filePath, {
       uiSettings: snapshot.uiSettings,
-      runtime: snapshot.runtime,
+      runtime: runtimeConfigForPersistence(snapshot.runtime),
       newsReports: snapshot.newsReports,
       environment: snapshot.environment,
       updatedAt: snapshot.updatedAt,
@@ -993,6 +1004,7 @@ export async function ensureSisConfigLoaded(options = {}) {
     latest.source === "file" ||
     fileNeedsWrite ||
     !dbMatchesSnapshot ||
+    dbContainsPersistedRedisUrl ||
     compareIsoValues(snapshot.updatedAt, dbSnapshot.updatedAt) !== 0
   if (mirrorNeedsWrite) {
     await upsertMirrorToDatabase(snapshot)

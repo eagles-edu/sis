@@ -339,6 +339,10 @@ sync_file_map() {
 }
 
 TEST_ENV_TEST_MIRROR_KEYS=(
+  "REDIS_URL"
+  "REDIS_SESSION_URL"
+  "REDIS_CACHE_URL"
+  "REDIS_INSIGHT_URL"
   "STUDENT_ADMIN_API_PREFIX"
   "STUDENT_ADMIN_PAGE_PATH"
   "STUDENT_ADMIN_USER"
@@ -820,6 +824,46 @@ align_test_env_from_test_source() {
   sync_env_keys_between_files "$source_env_path" "$test_env_path" "${TEST_ENV_TEST_MIRROR_KEYS[@]}"
 }
 
+repair_test_source_redis_env() {
+  local source_env_path="${REPO_ROOT}/.env.test"
+  if [[ ! -f "$source_env_path" ]]; then
+    echo "cannot repair test Redis source env; missing ${source_env_path}" >&2
+    return 1
+  fi
+
+  local redis_args=""
+  local redis_password=""
+  redis_args="$(docker inspect redis-stack --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | awk -F= '$1=="REDIS_ARGS" {print $2}')"
+  redis_password="$(printf '%s\n' "$redis_args" | sed -n 's/.*--requirepass[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
+  if [[ -z "$redis_password" ]]; then
+    echo "cannot repair test Redis source env; redis-stack authoritative password is unavailable" >&2
+    return 1
+  fi
+
+  local key=""
+  local source_url=""
+  local repaired_url=""
+  for key in REDIS_URL REDIS_SESSION_URL REDIS_CACHE_URL; do
+    source_url="$(read_env_value "$source_env_path" "$key")"
+    if [[ -z "$source_url" ]]; then
+      echo "cannot repair test Redis source env; missing ${key}" >&2
+      return 1
+    fi
+    repaired_url="$(SIS_TASK_REDIS_SOURCE_URL="$source_url" SIS_TASK_REDIS_PASSWORD="$redis_password" "$TEST_NODE_BIN" --input-type=module <<'EOF'
+const sourceUrl = String(process.env.SIS_TASK_REDIS_SOURCE_URL || "")
+const password = String(process.env.SIS_TASK_REDIS_PASSWORD || "")
+if (!sourceUrl || !password) throw new Error("missing Redis URL or authoritative password")
+const url = new URL(sourceUrl)
+url.username = ""
+url.password = password
+process.stdout.write(url.toString())
+EOF
+    )"
+    upsert_env_value "$source_env_path" "$key" "$repaired_url"
+  done
+  log "repaired test Redis source URLs from redis-stack authoritative configuration"
+}
+
 ensure_test_redis_env() {
   local test_env_path="${TEST_ROOT}/.env.test"
   if [[ ! -f "$test_env_path" ]]; then
@@ -883,6 +927,8 @@ ensure_test_redis_runtime_config() {
       SIS_ENV_FILE=.env.test \
       DOTENV_CONFIG_PATH=.env.test \
       SIS_CONFIG_FILE=SIS_CONFIG.json \
+      REDIS_SESSION_URL="$redis_url" \
+      REDIS_URL="$redis_url" \
       SIS_RUNTIME_SYNC_REDIS_URL="$redis_url" \
       SIS_RUNTIME_SYNC_REDIS_TIMEOUT_MS="$redis_timeout_ms" \
       "$TEST_NODE_BIN" --input-type=module <<'EOF'
@@ -1391,6 +1437,7 @@ main() {
   verify_local_ui_runtime_parity
   cleanup_test_backup_artifacts
   ensure_test_runtime_env_contract
+  repair_test_source_redis_env
   align_test_env_from_test_source
   ensure_test_redis_env
   if should_refresh_prisma; then

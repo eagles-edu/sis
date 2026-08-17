@@ -20,6 +20,8 @@
         runtimeHealth: null,
         runtimeHealthFetchedAt: 0,
         runtimeHealthRequest: null,
+        redisPing: null,
+        redisPingRequest: null,
         brevoStatistics: null,
         brevoStatisticsBusy: false,
         sisConfigRepairBusy: false,
@@ -1982,6 +1984,24 @@
           detail: `driver=${runtime.sessionDriver || "n/a"} | ttl=${Number(runtime.sessionTtlSeconds || 0)}s`,
         });
 
+        const redis = runtime.redis && typeof runtime.redis === "object" ? runtime.redis : {};
+        const redisConfigured = Boolean(redis.configured);
+        const redisConnected = redis.connected === true;
+        const redisReady = redis.ready === true;
+        const redisError = normalizeText(redis.lastError);
+        const redisPing = state.redisPing && typeof state.redisPing === "object" ? state.redisPing : null;
+        let redisState = "pending";
+        if (!redisConfigured) redisState = "error";
+        else if (redisError || !redisConnected || !redisReady) redisState = "error";
+        else redisState = "ok";
+        checks.push({
+          key: "redis",
+          label: "Redis",
+          state: redisState,
+          detail: `source=${redis.source || "environment"} | configured=${redisConfigured ? "yes" : "no"} | connected=${redisConnected ? "yes" : "no"} | ready=${redisReady ? "yes" : "no"}${redisError ? ` | error=${redisError}` : ""}${redisPing ? ` | ping=${redisPing.ok ? "PONG" : "failed"}${redisPing.latencyMs != null ? ` (${redisPing.latencyMs}ms)` : ""}` : ""}`,
+          action: { label: "Ping Redis", action: "redis-ping" },
+        });
+
         const filterBackend = normalizeLower(filterCache.backend);
         let filterState = "pending";
         const hasFilterError = Boolean(normalizeText(filterCache.lastError));
@@ -2282,6 +2302,19 @@
             actionLabel.textContent = action.label;
             actionBtn.replaceChildren(actionLabel);
             actionBtn.addEventListener("click", () => openBrevoStatisticsModal());
+            item.appendChild(actionBtn);
+          }
+          if (action?.label && action?.action === "redis-ping") {
+            const actionBtn = document.createElement("button");
+            actionBtn.type = "button";
+            actionBtn.className = "portal-button portal-button-teal-refresh system-health-redis-ping-btn";
+            actionBtn.setAttribute("aria-label", "Ping Redis");
+            actionBtn.title = "Send an authenticated PING to Redis";
+            actionBtn.textContent = state.redisPingRequest ? "..." : "PING";
+            actionBtn.disabled = Boolean(state.redisPingRequest);
+            actionBtn.addEventListener("click", () => {
+              pingRedis({ notify: true }).catch(handleError);
+            });
             item.appendChild(actionBtn);
           }
 
@@ -2708,6 +2741,37 @@
         }
       }
 
+      async function pingRedis({ notify = false } = {}) {
+        if (state.redisPingRequest) return state.redisPingRequest;
+        const request = (async () => {
+          const endpoint = resolveApiUrl(ADMIN_REDIS_PING_PATH);
+          const response = await fetch(endpoint, {
+            method: "POST",
+            cache: "no-store",
+            credentials: "include",
+          });
+          const body = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+          state.redisPing = body;
+          renderSystemHealthPanel();
+          if (notify) {
+            setStatus(
+              body.ok ? `Redis PONG (${body.latencyMs}ms).` : "Redis ping failed.",
+              !body.ok,
+            );
+          }
+          return body;
+        })();
+        state.redisPingRequest = request;
+        renderSystemHealthPanel();
+        try {
+          return await request;
+        } finally {
+          if (state.redisPingRequest === request) state.redisPingRequest = null;
+          renderSystemHealthPanel();
+        }
+      }
+
       async function probeHubConnection({ notify = false, paint = true } = {}) {
         let probeConfig = resolveHubProbeConfig();
         state.hubConnection.endpoint = resolveApiUrl(probeConfig.path);
@@ -2801,6 +2865,7 @@
         // visible probe immediately; idle-only probing can leave the card in
         // "Checking systems" indefinitely on busy pages.
         void probeHubConnection({ notify: false, paint: true }).catch(() => {});
+        void pingRedis({ notify: false }).catch(() => {});
         const scheduleProbe = () => {
           const runWhenIdle = () => runProbe({ paint: false });
           if (typeof window.requestIdleCallback === "function") {
@@ -9533,6 +9598,9 @@
       const ADMIN_RUNTIME_HEALTH_PATH =
         normalizeText(window.__SIS_ADMIN_RUNTIME_HEALTH_PATH) ||
         "/api/admin/runtime/health";
+      const ADMIN_REDIS_PING_PATH =
+        normalizeText(window.__SIS_ADMIN_REDIS_PING_PATH) ||
+        "/api/admin/runtime/redis-ping";
       const ADMIN_BREVO_STATISTICS_PATH =
         normalizeText(window.__SIS_ADMIN_BREVO_STATISTICS_PATH) ||
         "/api/admin/runtime/brevo-statistics";

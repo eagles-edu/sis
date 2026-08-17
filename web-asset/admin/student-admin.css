@@ -485,7 +485,7 @@ grid-template-areas:
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        padding: 0;
+        padding: 6px 4px;
   }
       .profile-tab-nav button {
         flex: 0 0 auto;
@@ -2475,6 +2475,16 @@ background: linear-gradient(
         gap: 6px;
         grid-template-columns: minmax(0, 1fr) auto;
   }
+      .system-health-redis-ping-btn {
+        align-items: center;
+        display: inline-flex;
+        block-size: 48px;
+        inline-size: 48px;
+        justify-content: center;
+        min-block-size: 48px;
+        min-inline-size: 48px;
+        padding: 0;
+      }
       .hub-pill {
         align-items: center;
         border: 1px solid transparent;

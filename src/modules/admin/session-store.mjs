@@ -19,6 +19,7 @@ import crypto from "node:crypto"
  *   redisUrl?: unknown,
  *   keyPrefix?: unknown,
  *   redisConnectTimeoutMs?: unknown,
+ *   connectOnCreate?: boolean,
  *   createRedisClient?: (redisUrl: string, connectTimeoutMs: number) => Promise<unknown>,
  * }} StudentAdminSessionStoreOptions
  *
@@ -35,6 +36,7 @@ import crypto from "node:crypto"
  *   getSession: (id: string) => Promise<Record<string, unknown> | null>,
  *   touchSession: (id: string) => Promise<Record<string, unknown> | null>,
  *   deleteSession: (id: string) => Promise<boolean>,
+ *   ping: () => Promise<{ ok: boolean, latencyMs: number | null, detail: string }>,
  *   close: () => Promise<void>,
  * }} StudentAdminSessionStore
  */
@@ -258,6 +260,10 @@ function createMemoryStore(ttlSeconds) {
     return sessions.delete(key)
   }
 
+  async function ping() {
+    return { ok: false, latencyMs: 0, detail: "Redis session store is not configured" }
+  }
+
   async function close() {}
 
   return {
@@ -275,6 +281,7 @@ function createMemoryStore(ttlSeconds) {
     getSession,
     touchSession,
     deleteSession,
+    ping,
     close,
   }
 }
@@ -299,6 +306,7 @@ function createRedisBackedStore({
   fallbackStore,
   createRedisClient,
   redisConnectTimeoutMs,
+  connectOnCreate,
 }) {
   let redisClient = null
   let redisConnectPromise = null
@@ -569,6 +577,34 @@ function createRedisBackedStore({
     )
   }
 
+  async function ping() {
+    const startedAt = Date.now()
+    try {
+      const result = await executeRedisOperation(
+        "ping",
+        async (client) => {
+          if (typeof client.ping !== "function") throw new Error("Redis client does not support PING")
+          return client.ping()
+        },
+      )
+      return {
+        ok: result === "PONG",
+        latencyMs: Date.now() - startedAt,
+        detail: result === "PONG" ? "PONG" : `unexpected-response=${normalizeText(result) || "empty"}`,
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        latencyMs: Date.now() - startedAt,
+        detail: stringifyError(error),
+      }
+    }
+  }
+
+  if (connectOnCreate === true) {
+    void ensureRedisClient().catch(() => {})
+  }
+
   return {
     get driver() {
       return usingFallback ? "memory" : "redis"
@@ -586,6 +622,7 @@ function createRedisBackedStore({
     getSession,
     touchSession,
     deleteSession,
+    ping,
     close,
   }
 }
@@ -653,5 +690,6 @@ export function createStudentAdminSessionStore(options = {}) {
     fallbackStore: memoryStore,
     createRedisClient,
     redisConnectTimeoutMs,
+    connectOnCreate: options.connectOnCreate === true,
   })
 }

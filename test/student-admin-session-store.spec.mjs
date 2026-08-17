@@ -223,6 +223,22 @@ test("session store uses redis-backed driver when redis client is available", as
   assert.equal(redisClient.state().quitCalls, 1)
 })
 
+test("session store can establish Redis status during creation", async () => {
+  const redisClient = createMockRedisClient()
+  const store = createStudentAdminSessionStore({
+    driver: "redis",
+    redisUrl: "redis://mock.local:6379/0",
+    createRedisClient: async () => redisClient,
+    connectOnCreate: true,
+  })
+
+  await new Promise((resolve) => setImmediate(resolve))
+  const runtimeStatus = store.getRuntimeStatus()
+  assert.equal(runtimeStatus.redisConnected, true)
+  assert.equal(runtimeStatus.redisReady, true)
+  await store.close()
+})
+
 test("session store surfaces connect errors when redis driver is required", async () => {
   const store = createStudentAdminSessionStore({
     driver: "redis",

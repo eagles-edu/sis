@@ -141,6 +141,7 @@ test("saveSisConfigSnapshot writes config and leaves the legacy mirror untouched
     const configJson = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))
     assert.equal(configJson.uiSettings.schoolSetup.schoolYear, "2026-2027")
     assert.equal(configJson.runtime.databaseUrl, "postgresql://user:pass@localhost:5432/sis")
+    assert.equal(configJson.runtime.redisUrl, "")
     assert.equal(configJson.newsReports.weeklyMinimumReports, 5)
     assert.equal(configJson.newsReports.autoApproveEnabled, false)
     assert.equal(configJson.newsReports.autoApproveDelayHours, 24)

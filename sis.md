@@ -12,6 +12,9 @@
 
 - `AGENTS.md`: short always-loaded contract, including the dev/test location split
 - `docs/sop.md`: operational procedure and workflow
+- `docs/CODE-EDITING-DOCS-INDEX.md`: code-editing documentation directory and review order
+- `docs/CORE-DESIGN-PARAMETERS.md`: normalized shared colors, functions, geometry, theme, headers, chips, buttons, and definitions contract
+- `docs/DOCUMENT-STATUS-AND-PARAMETER-AUDIT.md`: current-versus-historical parameter ledger and document quarantine rules
 - `docs/history.md`: historical migration log
 - `docs/plan-upgrade-0426.md`: current upgrade plan
 

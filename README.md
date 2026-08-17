@@ -70,6 +70,9 @@ Recent improvements now reflected in the system:
 
 ## Documentation map
 
+- Code-editing review index: [`docs/CODE-EDITING-DOCS-INDEX.md`](docs/CODE-EDITING-DOCS-INDEX.md)
+- Normalized shared design parameters: [`docs/CORE-DESIGN-PARAMETERS.md`](docs/CORE-DESIGN-PARAMETERS.md)
+- Current-versus-historical parameter audit: [`docs/DOCUMENT-STATUS-AND-PARAMETER-AUDIT.md`](docs/DOCUMENT-STATUS-AND-PARAMETER-AUDIT.md)
 - System audit: [`docs/sis-audit.md`](docs/sis-audit.md)
 - Staff admin handbook: [`docs/admin-staff-user-manual.md`](docs/admin-staff-user-manual.md)
 - Vietnamese parent/student manual: [`docs/parent-student-user-manual.vi.md`](docs/parent-student-user-manual.vi.md)

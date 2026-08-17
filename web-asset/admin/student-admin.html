@@ -308,13 +308,13 @@ html[data-theme="dark"] body.student-portal-page #loginPanel,
 html[data-theme="dark"] body.parent-portal-page #loginCard,
 html[data-theme="dark"] body.admin-portal-page #authPanel,
 html[data-theme="dark"] body.admin-portal-page #authBootPanel {
-  background: #4c4c4c;
+  background: var(--portal-dark-surface-panel);
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.admin-portal-page #authPanel,
 html[data-theme="dark"] body.admin-portal-page #authBootPanel {
-  background: #4c4c4c !important;
+  background: var(--portal-dark-surface-panel) !important;
 }
 html[data-theme="dark"] body.student-portal-page #loginPanel #loginForm,
 html[data-theme="dark"] body.parent-portal-page #loginCard .login-form {
@@ -936,10 +936,10 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       display: none !important;
     }
   </style>
-  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=sha256-2bfe638bbc324f4e" as="style"
+  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=sha256-0562a07acc6e272d" as="style"
     onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
-    <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=sha256-2bfe638bbc324f4e">
+    <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=sha256-0562a07acc6e272d">
   </noscript>
 </head>
 
@@ -5078,7 +5078,7 @@ No family lookup yet.</pre>
           if (adminAppLoaded) return
           adminAppLoaded = true
           const script = document.createElement("script")
-          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-f6dfe5740ded2bec"
+          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-7ed22e0b907196f3"
           script.defer = true
           if (replaySubmit || replayClick || replayPage) {
             script.addEventListener("load", () => {
