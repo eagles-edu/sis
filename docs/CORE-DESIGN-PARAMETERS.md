@@ -90,6 +90,8 @@ Do not use the environment badge as evidence that every status chip should be gr
 | Page stack gap | `12px` (`--portal-page-stack-gap`) | fixed vertical gap between shell surfaces |
 | Shared content gap | `12px` (`--portal-content-gap`) | standard internal layout gap |
 | Definition flow gap | `12px` (`--portal-definition-flow-gap`) | paragraphs/lists/sections in formatted definitions |
+| Baseline visible-group gap | non-zero; use `var(--portal-content-gap)` where the group is shared | visible siblings must not touch; use deliberate margin only for a documented structural exception |
+| Standalone pagination alignment | centered with wrapping and non-zero inset/block spacing | a different alignment requires an explicit surface contract and responsive proof |
 | Shell gap | `var(--portal-page-stack-gap)` | aliases the page stack gap |
 | Header bar desktop max/min | `40px` | stable header bar geometry |
 | Header bar mobile | `64px` | fixed mobile header block size |
@@ -105,6 +107,8 @@ Do not use the environment badge as evidence that every status chip should be gr
 | Chip radius | `var(--radius-2)` | shared chip radius |
 
 Visible controls must retain non-zero vertical padding or an explicit parent gap. Responsive controls must wrap or use the established mobile width rules; do not solve overflow by zeroing spacing.
+
+Across all portals, visible sibling content must not touch. Use a shared non-zero parent gap or deliberate margin, preserve readable inset padding on visible surfaces and controls, and center standalone pagination/action groups unless a current surface contract explicitly requires another alignment. This is a rendered acceptance requirement, not a visual preference; verify it in authenticated desktop and mobile browser states.
 
 ## 6. Typography and font ownership
 

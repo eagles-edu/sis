@@ -37,6 +37,8 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 15. Shared admin menu state is `.menu-group.expanded`, not `.menu-group.open`. Every menu handler must initialize the class from `aria-expanded` and toggle `aria-expanded` plus `.expanded` together; do not introduce `.open` as an alternate menu state class.
 
 16. Before acting on a request, create a semantic lock from its exact words: preserve every literal constraint, map each one to an observable acceptance check, and keep that mapping active through implementation and verification. Do not silently replace an objective term with a weaker synonym, visual approximation, inferred preference, or narrower scope. If the requested term and the discovered source appear to conflict, stop and resolve the conflict from the source or ask; do not reinterpret the request.
+17. Before every code edit, read `docs/CODE-EDITING-DOCS-INDEX.md` and follow its review order, including the current status audit, core design parameters, and surface-specific source/tests. If an implementation would intentionally depart from an established web-layout, accessibility, responsive, or source contract, stop and ask before proceeding.
+18. Baseline layout sanity is mandatory across every portal: visible sibling content must have a non-zero parent gap or deliberate margin, visible surfaces and controls must have readable inset padding, and standalone pagination/action groups must be centered or explicitly aligned by the current surface contract. Verify these relationships in the rendered authenticated desktop and mobile browser at the affected portal surfaces.
 
 ## Literal Instruction Terms
 

@@ -469,9 +469,12 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
   const result = await client.$transaction(async (tx) => {
     const pair = canonicalPair(submitted)
     const siblings = await tx.libraryContribution.findMany({ where: { status: { in: ["pending_review", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL] } } })
+    const sourceEntryIds = new Set([contribution.entryId, canonicalContribution.entryId].map(text).filter(Boolean))
     const matching = siblings.filter((candidate) => {
       const candidatePayload = candidate.payloadJson && typeof candidate.payloadJson === "object" ? candidate.payloadJson : {}
-      return lower(candidatePayload.partOfSpeech) === submitted.partOfSpeech && normalizeKey(candidatePayload.english) === pair.normalizedKey
+      const sameSourceEntry = sourceEntryIds.has(text(candidate.entryId))
+      const sameCanonicalPair = lower(candidatePayload.partOfSpeech) === submitted.partOfSpeech && normalizeKey(candidatePayload.english) === pair.normalizedKey
+      return sameSourceEntry || sameCanonicalPair
     })
     const legacy = matching.some((candidate) => isLegacyPending(candidate.status)) || isLegacyPending(contribution.status)
     const duplicate = matching.length > 1 || legacy
@@ -501,7 +504,7 @@ export async function updateLibraryEntry(id, actor = {}, payload = {}) {
     const updated = await tx.libraryEntry.update({ where: { id }, data: { ...data, reviewStatus: "approved", lastEditedByName: clamp(actor.name) } })
     await writeRevision(tx, updated, "approved_edit", actor.name, actor.role || "admin")
     const openContributions = await tx.libraryContribution.findMany({ where: { status: { in: OPEN_CANONICAL_CONTRIBUTION_STATUSES } } })
-    const matching = selectContributionsForCanonicalEntry(openContributions, updated)
+    const matching = openContributions.filter((contribution) => contribution.entryId === updated.id || selectContributionsForCanonicalEntry([contribution], updated).length > 0)
     const legacy = matching.some((contribution) => isLegacyPending(contribution.status))
     const canonicalizedAt = new Date()
     let canonicalizedContributions = 0

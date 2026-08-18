@@ -14,6 +14,10 @@ This is the review directory for code changes that can affect SIS behavior, port
 8. Rebuild generated assets, restart the relevant runtime, and run the contract gate named by the document.
 9. Update this index or the core parameters document when a new durable contract is created; update [`docs/history.md`](history.md) only for a milestone or incident.
 
+### Baseline layout sanity gate
+
+Every portal UI edit must preserve basic rendered layout hygiene before feature-specific review: visible sibling elements must not touch, visible groups must use a non-zero shared gap or deliberate margin, surfaces and controls must retain readable inset padding, and standalone pagination/action groups must use the established alignment contract (centered by default unless the surface document explicitly requires another alignment). Check the indexed source and tests before coding; if the requested result would intentionally violate an established web-layout, accessibility, or responsive practice, ask before editing. Verify the result in an authenticated browser at desktop and mobile widths for every affected portal.
+
 ## Normative source hierarchy
 
 | Priority | Source | Authority | Use |

@@ -5831,8 +5831,9 @@ body.student-portal-page .library-pagination {
   display: flex;
   flex-wrap: wrap;
   gap: var(--portal-content-gap);
-  justify-content: flex-end;
-  margin-top: var(--portal-content-gap);
+  justify-content: center;
+  margin-block: var(--portal-content-gap);
+  padding-block: 4px;
 }
 body.student-portal-page .library-edit-dialog {
   border: 0;
@@ -11837,7 +11838,7 @@ body.student-portal-page .header-bar {
    centering explicit so the generic header-bar reset cannot pin it left. */
 body.admin-portal-page .wrap > .portal-login-header {
   box-sizing: border-box;
-  inline-size: calc(100% - 32px);
+  /*  inline-size: calc(100% - 32px); */
   margin-inline: auto !important;
 }
 body.admin-portal-page.library-admin-page .wrap {
@@ -11934,9 +11935,9 @@ body.admin-portal-page main.library-admin-main {
 
 .library-admin-toolbar {
   display: grid;
-  gap: 10px;
+  gap: var(--portal-content-gap);
   grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(140px, 1fr)) auto;
-  margin-bottom: 1rem;
+  margin-block-end: var(--portal-content-gap);
 }
 
 .library-admin-toolbar label {
@@ -11964,8 +11965,22 @@ body.admin-portal-page main.library-admin-main {
 
 .library-admin-results {
   display: grid;
-  gap: 8px;
-  margin-top: 14px;
+  gap: var(--portal-content-gap);
+  margin-block-start: var(--portal-content-gap);
+}
+
+body.admin-portal-page.library-admin-page .library-pagination {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--portal-content-gap);
+  justify-content: center;
+  margin-block: var(--portal-content-gap);
+  padding-block: 4px;
+}
+
+body.admin-portal-page.library-admin-page .library-pagination > span {
+  text-align: center;
 }
 
 .library-admin-entry {
@@ -12009,7 +12024,7 @@ html[data-theme="dark"] .library-admin-entry summary {
 .library-admin-body {
   border-top: 1px solid var(--portal-border-strong);
   display: grid;
-  gap: 10px;
+  gap: var(--portal-content-gap);
   padding: 12px;
 }
 
@@ -12118,16 +12133,25 @@ html[data-theme="dark"] .library-review-item[aria-current="true"] {
 }
 
 .library-review-pane {
+  align-content: start;
   background: var(--portal-surface-card);
   border: 1px solid var(--portal-border-strong);
   border-radius: var(--radius-2);
+  display: grid;
+  gap: var(--portal-content-gap);
   max-block-size: 70vh;
   min-block-size: 260px;
   min-width: 0;
   overflow: auto;
   overscroll-behavior: contain;
-  padding: 14px;
+  padding: var(--portal-content-gap);
   scrollbar-gutter: stable;
+}
+
+.library-review-pane > h3 {
+  border-block-end: 1px solid var(--portal-border);
+  margin: 0;
+  padding-block-end: var(--portal-content-gap);
 }
 
 .library-review-sidebar-heading {

@@ -479,7 +479,7 @@ function normalizeRuntimeConfig(source = {}) {
   const environmentRedisUrl = normalizeText(process.env.REDIS_SESSION_URL || process.env.REDIS_URL)
   return {
     databaseUrl: normalizeText(candidate.databaseUrl || process.env.DATABASE_URL),
-    redisUrl: environmentRedisUrl,
+    redisUrl: environmentRedisUrl || normalizeText(candidate.redisUrl),
     sessionDriver: normalizeText(candidate.sessionDriver || process.env.STUDENT_ADMIN_SESSION_DRIVER) || "auto",
     adminSessionTtlSeconds: toPositiveInt(
       candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
@@ -504,7 +504,6 @@ function normalizeRuntimeConfig(source = {}) {
 function runtimeConfigForPersistence(source = {}) {
   return {
     ...normalizeRuntimeConfig(source),
-    redisUrl: "",
   }
 }
 

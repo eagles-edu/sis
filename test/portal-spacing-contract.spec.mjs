@@ -5,6 +5,15 @@ import test from "node:test"
 const sharedTheme = fs.readFileSync(new URL("../web-asset/shared/portal-theme.css", import.meta.url), "utf8")
 const sharedButtonRule = sharedTheme.match(/\.portal-button,\na\.portal-button,\nsummary\.portal-button \{([\s\S]*?)\n\}/u)?.[1] || ""
 const libraryAdmin = fs.readFileSync(new URL("../web-asset/admin/library-admin.html", import.meta.url), "utf8")
+const agents = fs.readFileSync(new URL("../AGENTS.md", import.meta.url), "utf8")
+const docsIndex = fs.readFileSync(new URL("../docs/CODE-EDITING-DOCS-INDEX.md", import.meta.url), "utf8")
+
+test("portal UI edits retain the indexed review and layout-sanity gates", () => {
+  assert.match(agents, /Before every code edit, read `docs\/CODE-EDITING-DOCS-INDEX\.md`/)
+  assert.match(agents, /Baseline layout sanity is mandatory across every portal/)
+  assert.match(docsIndex, /### Baseline layout sanity gate/)
+  assert.match(docsIndex, /authenticated browser at desktop and mobile widths for every affected portal/)
+})
 
 test("shared visible controls use standard vertical spacing", () => {
   assert.match(sharedTheme, /--portal-button-block-padding:\s*0\.5rem/)
@@ -17,8 +26,16 @@ test("Library content and pagination preserve vertical spacing and mobile contro
   assert.match(sharedTheme, /\.section-head\s*\{[\s\S]*?margin-bottom:\s*var\(--portal-content-gap\)/)
   assert.match(sharedTheme, /body\.student-portal-page \.library-toolbar\s*\{[\s\S]*?gap:\s*var\(--portal-content-gap\)/)
   assert.match(sharedTheme, /body\.student-portal-page \.library-results\s*\{[\s\S]*?gap:\s*var\(--portal-content-gap\)[\s\S]*?margin-top:\s*var\(--portal-content-gap\)/)
-  assert.match(sharedTheme, /body\.student-portal-page \.library-pagination\s*\{[\s\S]*?flex-wrap:\s*wrap[\s\S]*?gap:\s*var\(--portal-content-gap\)[\s\S]*?margin-top:\s*var\(--portal-content-gap\)/)
+  assert.match(sharedTheme, /body\.student-portal-page \.library-pagination\s*\{[\s\S]*?flex-wrap:\s*wrap[\s\S]*?gap:\s*var\(--portal-content-gap\)[\s\S]*?justify-content:\s*center[\s\S]*?margin-block:\s*var\(--portal-content-gap\)[\s\S]*?padding-block:\s*4px/)
   assert.match(sharedTheme, /body\.student-portal-page \.library-pagination > \.portal-button\s*\{[\s\S]*?min-inline-size:\s*0/)
+  assert.match(sharedTheme, /body\.admin-portal-page\.library-admin-page \.library-pagination\s*\{[\s\S]*?flex-wrap:\s*wrap[\s\S]*?gap:\s*var\(--portal-content-gap\)[\s\S]*?justify-content:\s*center[\s\S]*?margin-block:\s*var\(--portal-content-gap\)[\s\S]*?padding-block:\s*4px/)
+})
+
+test("Library review panes keep headings and editor groups separated", () => {
+  assert.match(sharedTheme, /\.library-review-pane\s*\{[\s\S]*?align-content:\s*start;[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*var\(--portal-content-gap\)[\s\S]*?padding:\s*var\(--portal-content-gap\)/)
+  assert.match(sharedTheme, /\.library-review-pane > h3\s*\{[\s\S]*?border-block-end:\s*1px solid var\(--portal-border\);[\s\S]*?margin:\s*0;[\s\S]*?padding-block-end:\s*var\(--portal-content-gap\)/)
+  assert.match(sharedTheme, /\.library-admin-toolbar\s*\{[\s\S]*?gap:\s*var\(--portal-content-gap\)[\s\S]*?margin-block-end:\s*var\(--portal-content-gap\)/)
+  assert.match(sharedTheme, /\.library-admin-results\s*\{[\s\S]*?gap:\s*var\(--portal-content-gap\)[\s\S]*?margin-block-start:\s*var\(--portal-content-gap\)/)
 })
 
 test("formatted vocabulary definitions preserve readable flow spacing", () => {
