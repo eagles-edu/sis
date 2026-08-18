@@ -155,7 +155,7 @@
         "adjective", "noun", "verb", "adverb", "conjunction", "preposition",
         "determiner", "pronoun", "interjection", "phrase", "idiom", "clause",
       ];
-      const VOCABULARY_ESL_FIELDS = ["phraseType", "countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "edAdjective", "ingAdjective", "etymologyType", "etymology", "grammarClassification"];
+      const VOCABULARY_ESL_FIELDS = ["phraseType", "countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "edAdjective", "ingAdjective", "etymologyType", "etymology", "grammarClassification"];
       const NEWS_GENERIC_COMPLIANCE_FIELD_ID = "__compliance";
       const NEWS_COMPLIANCE_NOTE_START = "[[SIS-COMPLIANCE-V1]]";
       const NEWS_COMPLIANCE_NOTE_END = "[[/SIS-COMPLIANCE-V1]]";

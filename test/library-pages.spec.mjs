@@ -48,10 +48,9 @@ test("student Library is a protected physical page with shared chrome and studen
 test("New Words and News vocabulary use the same full ESL row payload without student MW fill", () => {
   for (const token of ["VOCABULARY_ESL_FIELDS", "verbInfinitive", "verbV5", "grammarClassification", "readVocabularyRows", "syncVocabularyEslRow", "SIS_VOCABULARY_ESL"]) assert.match(portalScript, new RegExp(token))
   assert.doesNotMatch(portalScript, /data-vocabulary-mw-preview|mw-preview/)
-  for (const token of ["countable", "uncountable", "both S & P", "Noun Types", "Common", "Proper", "Concrete", "Abstract", "Material", "Collective", "Compound", "Possessive", "Singular and Plural", "primary", "modal", "action", "intransitive", "transitive", "monotransitive", "ditransitive", "ambitransitive", "Types of transitivity", "optional", "etymologyType", "Etymology / word origin", "vocabulary-verb-forms", "hydrate", "name=\"vocabularyPartOfSpeech-", "flatEntryHtml", "definitionHtml", "<strong>", "<em>", "<u>"]) assert.match(sharedVocabularyEditor, new RegExp(token))
-  assert.match(sharedVocabularyEditor, /select\("nounType", "Noun Types"/)
-  assert.match(sharedVocabularyEditor, /select\("nounNumber", "Number"/)
-  assert.match(portalScript, /VOCABULARY_ESL_FIELDS = \[[^\]]*nounType[^\]]*nounNumber/)
+  for (const token of ["countable", "uncountable", "countable_and_uncountable", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage", "1. Countability", "2. Quality", "3. Number", "4. Classification", "Common", "Proper", "Concrete", "Abstract", "Material", "Collective", "Compound", "Possessive", "primary", "modal", "action", "intransitive", "transitive", "monotransitive", "ditransitive", "ambitransitive", "Types of transitivity", "optional", "etymologyType", "Etymology / word origin", "vocabulary-verb-forms", "hydrate", "name=\"vocabularyPartOfSpeech-", "flatEntryHtml", "definitionHtml", "<strong>", "<em>", "<u>"]) assert.match(sharedVocabularyEditor, new RegExp(token))
+  assert.match(sharedVocabularyEditor, /function nounState/)
+  assert.match(portalScript, /VOCABULARY_ESL_FIELDS = \[[^\]]*physicalQuality[^\]]*dualCountabilityUsage/)
   for (const surface of ["newWordsRows", "newsVocabularyRows", "newsWeekSetModalVocabularyRows"]) assert.match(studentPortal, new RegExp(surface))
   assert.match(sharedVocabularyEditor, /const renderList = \(start, indentation\) =>/)
   assert.match(sharedVocabularyEditor, /const alphabetic = line\.match/)

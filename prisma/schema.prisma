@@ -651,6 +651,12 @@ model LibraryEntry {
   countability         String?
   nounType             String?
   nounNumber           String?
+  physicalQuality      String?
+  grammaticalNumber    String?
+  primaryClassification String?
+  materialUsage        String?
+  properNounVariantShift Boolean @default(false)
+  dualCountabilityUsage String?
   verbRegularity       String?
   verbTransitivity     String?
   verbInfinitive       String?
@@ -679,9 +685,47 @@ model LibraryEntry {
   @@index([normalizedKey, partOfSpeech])
   @@index([english])
   @@index([partOfSpeech, phraseType])
+  @@index([countability, physicalQuality, primaryClassification])
   @@index([awlSublist, awlFamilyHeadword])
   @@index([createdAt])
   @@index([updatedAt])
+  @@schema("library")
+}
+
+model LibraryReferenceCatalogEntry {
+  id                String   @id @default(cuid())
+  catalogKey        String
+  naturalKey        String
+  term              String
+  partOfSpeech      String?
+  subtype           String?
+  dataJson          Json
+  sourceLabel       String?
+  sourceUrl         String?
+  editorialStatus   String   @default("seeded")
+  createdByName     String
+  lastEditedByName  String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  revisions         LibraryReferenceCatalogRevision[]
+
+  @@unique([catalogKey, naturalKey])
+  @@index([catalogKey, term])
+  @@index([catalogKey, partOfSpeech, subtype])
+  @@schema("library")
+}
+
+model LibraryReferenceCatalogRevision {
+  id          String   @id @default(cuid())
+  entryId     String
+  entry       LibraryReferenceCatalogEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  action      String
+  actorName   String
+  snapshotJson Json
+  createdAt   DateTime @default(now())
+
+  @@index([entryId, createdAt])
+  @@index([actorName, createdAt])
   @@schema("library")
 }
 

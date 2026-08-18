@@ -3,12 +3,27 @@
   const escapeHtml = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character]));
   const safeUid = (value) => String(value || "shared").replace(/[^A-Za-z0-9_-]/gu, "-");
   const option = (value, label = value) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
-  const select = (field, label, values, extra = "", rowUid = "shared") => `<label class="vocabulary-pos-control" ${extra}>${escapeHtml(label)}<select name="vocabularyEsl-${escapeHtml(field)}-${safeUid(rowUid)}" data-vocabulary-esl-field="${escapeHtml(field)}"><option value="">Select</option>${values.map((value) => Array.isArray(value) ? option(value[0], value[1]) : option(value)).join("")}</select></label>`;
+  const select = (field, label, values, attributes = "", rowUid = "shared") => `<label class="vocabulary-pos-control">${escapeHtml(label)}<select name="vocabularyEsl-${escapeHtml(field)}-${safeUid(rowUid)}" data-vocabulary-esl-field="${escapeHtml(field)}" ${attributes}><option value="">Select</option>${values.map((value) => Array.isArray(value) ? option(value[0], value[1]) : option(value)).join("")}</select></label>`;
   const transitivityHelp = `<p class="vocabulary-transitivity-help"><strong>Types of transitivity</strong><br>Intransitive: no object needed; the thought is complete on its own (e.g., The baby sleeps.).<br>Transitive: takes an object; use this general choice when the exact subtype is not yet known.<br>Monotransitive: takes one direct object answering what? or whom? (e.g., She baked a cake.).<br>Ditransitive: takes both an indirect object and a direct object (e.g., He gave Mary a book.).<br>Ambitransitive: can be either transitive or intransitive depending on the sentence (e.g., He reads a book vs. He reads quietly.).</p>`;
   const grammarFields = ["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber"];
   const nounTypes = [["common", "Common"], ["proper", "Proper"], ["concrete", "Concrete"], ["abstract", "Abstract"], ["material", "Material"], ["collective", "Collective"], ["compound", "Compound"], ["possessive", "Possessive"]];
   const nounNumbers = [["singular", "Singular"], ["plural", "Plural"], ["singular and plural", "Singular and Plural"]];
   const etymologyTypes = [["native", "Native English"], ["borrowed", "Borrowed / loanword"], ["derived", "Derived / affixed"], ["compound", "Compound"], ["eponym", "Eponym"], ["onomatopoeic", "Onomatopoeic"], ["unknown", "Unknown"]];
+
+  function nounState(values = {}) {
+    const state = { ...values };
+    if (!state.physicalQuality && !state.primaryClassification && !state.grammaticalNumber && !state.materialUsage && !state.countability) return state;
+    if (state.physicalQuality === "material") {
+      if (state.materialUsage === "variety") Object.assign(state, { countability: state.countability === "countable_and_uncountable" ? "countable_and_uncountable" : "countable", grammaticalNumber: state.countability === "countable_and_uncountable" ? "singular_and_plural" : "plural", primaryClassification: "common" });
+      else Object.assign(state, { materialUsage: "mass", countability: "uncountable", grammaticalNumber: "singular", primaryClassification: "common" });
+    }
+    if (state.countability === "uncountable") state.grammaticalNumber = "singular";
+    if (state.countability === "countable_and_uncountable") state.grammaticalNumber = "singular_and_plural";
+    if (state.primaryClassification === "collective") state.physicalQuality = "concrete";
+    if (state.physicalQuality === "abstract" && ["collective", "proper"].includes(state.primaryClassification)) state.primaryClassification = "common";
+    if (state.primaryClassification === "proper") { state.physicalQuality = "concrete"; if (!state.properNounVariantShift) state.grammaticalNumber = "singular"; }
+    return state;
+  }
 
   function etymologyHtml(rowUid) {
     const uid = safeUid(rowUid);
@@ -35,11 +50,15 @@
     </div>`;
   }
 
-  function controlsFor(pos, rowUid) {
+  function controlsFor(pos, rowUid, values = {}) {
     if (pos === "noun") return [
-      select("countability", "Countability", ["countable", "uncountable", "both S & P"], "", rowUid),
-      select("nounType", "Noun Types", nounTypes, "", rowUid),
-      select("nounNumber", "Number", nounNumbers, "", rowUid),
+      select("countability", "1. Countability", [["countable", "Countable"], ["uncountable", "Uncountable"], ["countable_and_uncountable", "Countable and uncountable"]], "", rowUid),
+      select("physicalQuality", "2. Quality", [["concrete", "Concrete"], ["material", "Material"], ["abstract", "Abstract"]], "", rowUid),
+      select("grammaticalNumber", "3. Number", [["singular", "Singular"], ["plural", "Plural"], ["singular_and_plural", "Singular and plural"]], values.countability === "uncountable" || (values.physicalQuality === "material" && values.materialUsage !== "variety") ? "disabled" : "", rowUid),
+      select("primaryClassification", "4. Classification", [["common", "Common"], ["proper", "Proper"], ["collective", "Collective"], ["compound", "Compound"], ["possessive", "Possessive"]], values.physicalQuality === "material" ? "disabled" : "", rowUid),
+      values.physicalQuality === "material" ? select("materialUsage", "Material usage", [["mass", "Mass substance"], ["variety", "Type or variety"]], "", rowUid) : "",
+      values.countability === "countable_and_uncountable" ? select("dualCountabilityUsage", "Dual usage", [["same_sense", "Same sense"], ["different_senses", "Different senses"]], "", rowUid) : "",
+      values.primaryClassification === "proper" ? `<label class="vocabulary-pos-control">Proper noun variant<input type="checkbox" data-vocabulary-esl-field="properNounVariantShift" name="vocabularyEsl-properNounVariantShift-${safeUid(rowUid)}">Allow plural variant</label>` : "",
     ].join("");
     if (pos === "verb") return [
       select("displayVerbForm", "Display form", ["infinitive", "v1", "v2", "v3", "v4", "v5"], "", rowUid),
@@ -92,14 +111,16 @@
     const controls = row?.querySelector("[data-vocabulary-pos-controls]");
     const forms = row?.querySelector("[data-vocabulary-verb-forms]");
     if (!surface || !controls) return;
-    const values = Object.fromEntries(grammarFields.concat(["countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "displayVerbForm"]).map((field) => [field, row.querySelector(`[data-vocabulary-esl-field="${field}"]`)?.value || ""]));
+    const values = Object.fromEntries(grammarFields.concat(["countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "dualCountabilityUsage", "verbRegularity", "verbTransitivity", "displayVerbForm"]).map((field) => [field, row.querySelector(`[data-vocabulary-esl-field="${field}"]`)?.value || ""]));
+    values.properNounVariantShift = Boolean(row.querySelector('[data-vocabulary-esl-field="properNounVariantShift"]')?.checked);
+    const normalizedNoun = pos === "noun" ? nounState(values) : values;
     const rowUid = row?.querySelector('[name^="vocabularyPartOfSpeech-"]')?.name?.replace(/^vocabularyPartOfSpeech-/u, "") || "shared";
-    const content = controlsFor(pos, rowUid);
+    const content = controlsFor(pos, rowUid, normalizedNoun);
     const hasTools = Boolean(surface.querySelector("[data-vocabulary-mw-preview], [data-vocabulary-transitivity-check], [data-vocabulary-transitivity-autofill]"));
     surface.hidden = !content && !hasTools;
     controls.innerHTML = content + dependentControls(pos, values.grammarFamily, values.grammarSubtype, rowUid);
     forms.hidden = pos !== "verb";
-    Object.entries(values).forEach(([field, value]) => { const input = row.querySelector(`[data-vocabulary-esl-field="${field}"]`); if (input) input.value = value; });
+    Object.entries(normalizedNoun).forEach(([field, value]) => { const input = row.querySelector(`[data-vocabulary-esl-field="${field}"]`); if (!input) return; if (input.type === "checkbox") input.checked = Boolean(value); else input.value = value; });
     if (pos === "verb" && forms.children.length === 0) forms.innerHTML = parametersHtml("").match(/<div class="vocabulary-verb-forms"[\s\S]*?<\/div>/)?.[0] || "";
   }
 
@@ -124,7 +145,7 @@
     const classificationValue = data.grammarClassification || {};
     sync(row);
     const inputFor = (field) => row.querySelector(`[data-vocabulary-esl-field="${field}"], [data-vocabulary-field="${field}"], [data-vocabulary-origin-field="${field}"]`);
-    const set = (field, value) => { const input = inputFor(field); if (input) input.value = String(value || ""); };
+    const set = (field, value) => { const input = inputFor(field); if (!input) return; if (input.type === "checkbox") input.checked = Boolean(value); else input.value = String(value || ""); };
     set("partOfSpeech", data.partOfSpeech);
     sync(row);
     set("grammarFamily", classificationValue.grammarFamily);

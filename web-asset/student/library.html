@@ -171,7 +171,8 @@
         form.addEventListener("submit", async (event) => {
           event.preventDefault();
           const payload = Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, row.querySelector(`[data-vocabulary-field="${key}"]`)?.value.trim() || ""]));
-          Object.assign(payload, Object.fromEntries(["countability", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "etymologyType", "etymology"].map((key) => [key, row.querySelector(`[data-vocabulary-esl-field="${key}"]`)?.value.trim() || ""]).filter(([, value]) => value)));
+          Object.assign(payload, Object.fromEntries(["countability", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "dualCountabilityUsage", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "etymologyType", "etymology"].map((key) => [key, row.querySelector(`[data-vocabulary-esl-field="${key}"]`)?.value.trim() || ""]).filter(([, value]) => value)));
+          payload.properNounVariantShift = Boolean(row.querySelector('[data-vocabulary-esl-field="properNounVariantShift"]')?.checked);
           payload.grammarClassification = window.SIS_VOCABULARY_ESL?.classification(row) || {};
           Object.assign(payload, window.SIS_VOCABULARY_ESL?.originMetadata(row) || {});
           const response = await fetch(`${libraryApi}/entries/${encodeURIComponent(entry.id)}/edit`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });

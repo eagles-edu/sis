@@ -5,6 +5,7 @@ import { spawn } from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
 import * as XLSX from "xlsx"
+import { exportReferenceCatalog, importReferenceCatalog, listReferenceCatalog, previewReferenceCatalogImport, REFERENCE_CATALOGS } from "../src/modules/admin/library-reference-catalogs.mjs"
 import {
   deleteIncomingExerciseResultById,
   getIncomingExerciseResultById,
@@ -234,6 +235,7 @@ const STUDENT_LIBRARY_PAGE_PATH = `${STUDENT_PORTAL_PAGE_PATH}/library.html`
 const ADMIN_LIBRARY_PAGE_PATH = `${ADMIN_PAGE_PATH}/library`
 const ADMIN_LIBRARY_MANAGE_PAGE_PATH = `${ADMIN_LIBRARY_PAGE_PATH}/manage`
 const ADMIN_LIBRARY_ENGAGEMENT_PAGE_PATH = `${ADMIN_LIBRARY_PAGE_PATH}/engagement`
+const ADMIN_LIBRARY_REFERENCES_PAGE_PATH = `${ADMIN_LIBRARY_PAGE_PATH}/references`
 const LEGACY_ADMIN_PAGE_PATH = "/admin/students"
 const LEGACY_PARENT_PORTAL_PAGE_PATH = "/parent/portal"
 const LEGACY_STUDENT_PORTAL_PAGE_PATH = "/student/portal"
@@ -325,6 +327,10 @@ const ADMIN_LIBRARY_ENTRIES_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_A
 const ADMIN_LIBRARY_CONTRIBUTIONS_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/contributions/([^/]+)/review$`)
 const ADMIN_LIBRARY_MW_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/mw-preview$`)
 const ADMIN_LIBRARY_MW_APPLY_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/mw-apply$`)
+const ADMIN_LIBRARY_REFERENCE_CATALOG_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/reference-catalogs/([^/]+)$`)
+const ADMIN_LIBRARY_REFERENCE_CATALOG_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/reference-catalogs/([^/]+)/preview$`)
+const ADMIN_LIBRARY_REFERENCE_CATALOG_IMPORT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/reference-catalogs/([^/]+)/import$`)
+const ADMIN_LIBRARY_REFERENCE_CATALOG_EXPORT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/reference-catalogs/([^/]+)/export$`)
 const LIBRARY_ASSIGNMENT_CLICK_PATH_RE = /^\/api\/library-assignments\/track\/click\/([^/]+)$/u
 const LIBRARY_ASSIGNMENT_OPEN_PATH_RE = /^\/api\/library-assignments\/track\/open\/([^/]+)$/u
 const STUDENT_REPORT_PAGE_PREFIX = `${STUDENT_PORTAL_PAGE_PATH}/reports`
@@ -2093,6 +2099,17 @@ function buildXlsxFromPayload(payload = {}) {
   }
 }
 
+function sendReferenceCatalogFile(response, catalogKey, rows, requestedFormat = "xlsx") {
+  const format = ["xlsx", "ods", "csv"].includes(normalizeLower(requestedFormat)) ? normalizeLower(requestedFormat) : "xlsx"
+  const worksheet = XLSX.utils.json_to_sheet(rows)
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, normalizeWorksheetName(catalogKey, "Reference"))
+  const buffer = XLSX.write(workbook, { bookType: format, type: "buffer" })
+  const contentType = format === "csv" ? "text/csv; charset=utf-8" : format === "ods" ? "application/vnd.oasis.opendocument.spreadsheet" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  response.writeHead(200, { "Content-Type": contentType, "Content-Disposition": `attachment; filename="${catalogKey}.${format}"`, "Cache-Control": "no-store", "Content-Length": String(buffer.length) })
+  response.end(buffer)
+}
+
 function parseDelimitedRows(text, delimiter) {
   const rows = []
   let row = []
@@ -2180,10 +2197,11 @@ function normalizeRowObjectKeys(row = {}) {
 
 function detectSpreadsheetFormat(fileName, explicitFormat) {
   const format = normalizeLower(explicitFormat)
-  if (["xlsx", "xls", "csv", "tsv"].includes(format)) return format
+  if (["xlsx", "xls", "ods", "csv", "tsv"].includes(format)) return format
   const lowerName = normalizeLower(fileName)
   if (lowerName.endsWith(".xlsx")) return "xlsx"
   if (lowerName.endsWith(".xls")) return "xls"
+  if (lowerName.endsWith(".ods")) return "ods"
   if (lowerName.endsWith(".tsv")) return "tsv"
   return "csv"
 }
@@ -2333,7 +2351,7 @@ export function parseSpreadsheetRowsFromUploadPayload(payload = {}) {
     throw error
   }
 
-  if (format === "xlsx" || format === "xls") {
+  if (format === "xlsx" || format === "xls" || format === "ods") {
     const workbook = XLSX.read(fileBuffer, { type: "buffer" })
     const firstSheetName = Array.isArray(workbook.SheetNames) ? workbook.SheetNames[0] : ""
     if (!firstSheetName) {
@@ -6662,6 +6680,37 @@ async function handleApiRequest(request, response, pathname, url) {
     sendJson(response, 200, await listLibraryEntries(Object.fromEntries(url.searchParams.entries())))
     return true
   }
+  if (pathname === `${ADMIN_LIBRARY_API_PATH}/reference-catalogs` && method === "GET") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    sendJson(response, 200, { ok: true, items: Object.entries(REFERENCE_CATALOGS).map(([key, value]) => ({ key, ...value })) })
+    return true
+  }
+  const catalogExportMatch = pathname.match(ADMIN_LIBRARY_REFERENCE_CATALOG_EXPORT_PATH_RE)
+  if (catalogExportMatch && method === "GET") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    sendReferenceCatalogFile(response, decodeURIComponent(catalogExportMatch[1]), await exportReferenceCatalog(decodeURIComponent(catalogExportMatch[1])), url.searchParams.get("format"))
+    return true
+  }
+  const catalogPreviewMatch = pathname.match(ADMIN_LIBRARY_REFERENCE_CATALOG_PREVIEW_PATH_RE)
+  if (catalogPreviewMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    sendJson(response, 200, await previewReferenceCatalogImport(decodeURIComponent(catalogPreviewMatch[1]), parseSpreadsheetRowsFromUploadPayload(payload)))
+    return true
+  }
+  const catalogImportMatch = pathname.match(ADMIN_LIBRARY_REFERENCE_CATALOG_IMPORT_PATH_RE)
+  if (catalogImportMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    sendJson(response, 200, await importReferenceCatalog(decodeURIComponent(catalogImportMatch[1]), session.username, parseSpreadsheetRowsFromUploadPayload(payload)))
+    return true
+  }
+  const catalogMatch = pathname.match(ADMIN_LIBRARY_REFERENCE_CATALOG_PATH_RE)
+  if (catalogMatch && method === "GET") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    sendJson(response, 200, await listReferenceCatalog(decodeURIComponent(catalogMatch[1]), Object.fromEntries(url.searchParams.entries())))
+    return true
+  }
   if (method === "POST" && pathname === `${ADMIN_LIBRARY_API_PATH}/transitivity-check`) {
     const payload = await parseBody(request)
     sendJson(response, 200, { ok: true, ...checkLibraryEntryVerbTransitivity(payload) })
@@ -9499,7 +9548,7 @@ export async function handleStudentAdminRequest(request, response) {
   const pageSlugFromQuery =
     pathname === ADMIN_PAGE_PATH ? resolveAdminPageSlugFromQuery(url.searchParams) : ""
   const pageSlug = pageSlugFromQuery || pageSlugFromPath
-  if (method === "GET" && [ADMIN_LIBRARY_PAGE_PATH, ADMIN_LIBRARY_MANAGE_PAGE_PATH, ADMIN_LIBRARY_ENGAGEMENT_PAGE_PATH].includes(pathname)) {
+  if (method === "GET" && [ADMIN_LIBRARY_PAGE_PATH, ADMIN_LIBRARY_MANAGE_PAGE_PATH, ADMIN_LIBRARY_ENGAGEMENT_PAGE_PATH, ADMIN_LIBRARY_REFERENCES_PAGE_PATH].includes(pathname)) {
     const apiOrigin = normalizeText(url.searchParams.get("apiOrigin"))
     if (apiOrigin) {
       let removeApiOrigin = false

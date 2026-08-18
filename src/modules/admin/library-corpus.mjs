@@ -14,6 +14,12 @@ const PHRASE_TYPES = new Set(["verb", "noun", "adjective", "adverbial", "preposi
 const VERB_TRANSITIVITY = new Set(["intransitive", "monotransitive", "ditransitive", "ambitransitive", "transitive"])
 const NOUN_TYPES = new Set(["common", "proper", "concrete", "abstract", "material", "collective", "compound", "possessive"])
 const NOUN_NUMBERS = new Set(["singular", "plural", "singular and plural"])
+const NOUN_COUNTABILITY = new Set(["countable", "uncountable", "countable_and_uncountable"])
+const NOUN_QUALITIES = new Set(["concrete", "material", "abstract"])
+const NOUN_NUMBERS_V2 = new Set(["singular", "plural", "singular_and_plural"])
+const NOUN_PRIMARY_CLASSIFICATIONS = new Set(["common", "proper", "collective", "compound", "possessive"])
+const NOUN_MATERIAL_USAGES = new Set(["mass", "variety"])
+const NOUN_DUAL_USAGES = new Set(["same_sense", "different_senses"])
 const ETYMOLOGY_TYPES = new Set(["native", "borrowed", "derived", "compound", "eponym", "onomatopoeic", "unknown"])
 const CONTRIBUTION_LIFETIME_DAYS = 15
 const LEGACY_PENDING_REVIEW = "legacy_pending_review"
@@ -50,6 +56,32 @@ function grammarClassification(value) {
   const allowed = ["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber"]
   const normalized = Object.fromEntries(allowed.map((key) => [key, clamp(value[key], 120)]).filter(([, item]) => item))
   return Object.keys(normalized).length ? normalized : null
+}
+function normalizeNounProfile(value = {}, partOfSpeech = "") {
+  if (partOfSpeech !== "noun") return { physicalQuality: null, grammaticalNumber: null, primaryClassification: null, materialUsage: null, properNounVariantShift: false, dualCountabilityUsage: null }
+  const countability = normalizeLibraryEnum(value.countability)
+  const physicalQuality = normalizeLibraryEnum(value.physicalQuality)
+  const grammaticalNumber = normalizeLibraryEnum(value.grammaticalNumber)
+  const primaryClassification = normalizeLibraryEnum(value.primaryClassification)
+  const materialUsage = normalizeLibraryEnum(value.materialUsage)
+  const properNounVariantShift = Boolean(value.properNounVariantShift)
+  const dualCountabilityUsage = normalizeLibraryEnum(value.dualCountabilityUsage)
+  const provided = [physicalQuality, grammaticalNumber, primaryClassification, materialUsage, dualCountabilityUsage].some(Boolean) || properNounVariantShift
+  if (!provided) return { physicalQuality: null, grammaticalNumber: null, primaryClassification: null, materialUsage: null, properNounVariantShift: false, dualCountabilityUsage: null }
+  if (!NOUN_COUNTABILITY.has(countability) || !NOUN_QUALITIES.has(physicalQuality) || !NOUN_NUMBERS_V2.has(grammaticalNumber) || !NOUN_PRIMARY_CLASSIFICATIONS.has(primaryClassification)) throw statusError("Nouns require a complete supported noun-class profile")
+  if (countability === "uncountable" && grammaticalNumber !== "singular") throw statusError("Uncountable nouns must be singular")
+  if (countability === "countable_and_uncountable" && grammaticalNumber !== "singular_and_plural") throw statusError("Dual-countability nouns require singular and plural")
+  if (countability === "countable_and_uncountable" && !NOUN_DUAL_USAGES.has(dualCountabilityUsage)) throw statusError("Dual-countability nouns require a usage classification")
+  if (countability !== "countable_and_uncountable" && dualCountabilityUsage) throw statusError("Dual-countability usage only applies to dual-countability nouns")
+  if (physicalQuality === "material") {
+    if (!NOUN_MATERIAL_USAGES.has(materialUsage)) throw statusError("Material nouns require mass or variety usage")
+    const mass = materialUsage === "mass"
+    if ((mass && (countability !== "uncountable" || grammaticalNumber !== "singular" || primaryClassification !== "common")) || (!mass && (countability !== "countable" && countability !== "countable_and_uncountable" || primaryClassification !== "common" || grammaticalNumber !== (countability === "countable" ? "plural" : "singular_and_plural")))) throw statusError("Material noun profile is incompatible with its usage")
+  } else if (materialUsage) throw statusError("Material usage only applies to material nouns")
+  if (primaryClassification === "collective" && physicalQuality !== "concrete") throw statusError("Collective nouns must be concrete")
+  if (["collective", "proper"].includes(primaryClassification) && physicalQuality === "abstract") throw statusError("Abstract nouns cannot be collective or proper")
+  if (primaryClassification === "proper" && (physicalQuality !== "concrete" || (!properNounVariantShift && grammaticalNumber !== "singular"))) throw statusError("Proper nouns require concrete singular unless their variant shift is enabled")
+  return { physicalQuality, grammaticalNumber, primaryClassification, materialUsage: materialUsage || null, properNounVariantShift, dualCountabilityUsage: dualCountabilityUsage || null }
 }
 function normalizeKey(value) { return lower(value).replace(/[’']/gu, "'").replace(/[^\p{L}\p{N}]+/gu, " ").trim() }
 function syllableCount(value) { const words = text(value).split(/\s+/u).filter(Boolean); return words.reduce((total, word) => total + Math.max(1, word.split("-").filter(Boolean).length), 0) }
@@ -198,6 +230,7 @@ function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
   if (etymologyType && !ETYMOLOGY_TYPES.has(etymologyType)) throw statusError("Unsupported etymology type")
   if (nounType && !NOUN_TYPES.has(nounType)) throw statusError("Unsupported noun type")
   if (nounNumber && !NOUN_NUMBERS.has(nounNumber)) throw statusError("Unsupported noun number")
+  const nounProfile = normalizeNounProfile(value, partOfSpeech)
   const data = {
     normalizedKey: normalizeKey(english), english, americanEnglish: clamp(value.americanEnglish) || null,
     britishEnglish: clamp(value.britishEnglish) || null, partOfSpeech, phraseType: phraseType || null,
@@ -205,6 +238,7 @@ function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
     originPath: clamp(value.originPath, 500) || null, originReferences: normalizeOriginReferences(value.originReferences), vietnamese: clamp(value.vietnamese), syllabication: clamp(value.syllabication),
     syllableCount: syllableCount(value.syllabication), definition: normalizeLibraryDefinition(value.definition), countability: normalizeLibraryEnum(value.countability) || null,
     nounType: partOfSpeech === "noun" ? nounType || null : null, nounNumber: partOfSpeech === "noun" ? nounNumber || null : null,
+    ...nounProfile,
     verbRegularity: normalizeLibraryEnum(value.verbRegularity) || null, verbTransitivity: normalizeLibraryEnum(value.verbTransitivity) || null,
     verbInfinitive: clamp(value.verbInfinitive) || null, verbV1: clamp(value.verbV1) || null,
     verbV2: clamp(value.verbV2) || null, verbV3: clamp(value.verbV3) || null,
@@ -213,7 +247,7 @@ function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
     awlFamilyHeadword: clamp(value.awlFamilyHeadword) || null, awlQualifyingMember: clamp(value.awlQualifyingMember) || null,
     awlMemberForm: clamp(value.awlMemberForm) || null, awlSublist: Number.isInteger(Number(value.awlSublist)) ? Number(value.awlSublist) : null,
   }
-  if (partOfSpeech === "noun" && !allowIncomplete && !["countable", "uncountable", "both s & p"].includes(data.countability || "")) throw statusError("Nouns require countable, uncountable, or both S & P")
+  if (partOfSpeech === "noun" && !allowIncomplete && !NOUN_COUNTABILITY.has(data.countability || "")) throw statusError("Nouns require countable, uncountable, or countable and uncountable")
   if (partOfSpeech === "verb") {
     if (!allowIncomplete && (!data.verbInfinitive || !data.verbV1 || !data.verbV2 || !data.verbV3 || !data.verbV4 || !data.verbV5)) throw statusError("Verbs require infinitive and V1-V5 forms")
     if (!allowIncomplete && !["regular", "irregular"].includes(data.verbRegularity || "")) throw statusError("Verbs require regular or irregular")
@@ -243,7 +277,7 @@ export async function listLibraryEntries(query = {}) {
   const search = lower(query.search)
   const studentRefId = text(query.studentRefId)
   const myWords = ["1", "true", "yes"].includes(lower(query.myWords))
-  const filters = ["partOfSpeech", "phraseType", "countability", "verbRegularity", "verbTransitivity", "createdByName"].reduce((result, key) => {
+  const filters = ["partOfSpeech", "phraseType", "countability", "verbRegularity", "verbTransitivity", "createdByName", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage"].reduce((result, key) => {
     const value = text(query[key]); if (value) result[key] = lower(value); return result
   }, {})
   const where = {
@@ -301,7 +335,7 @@ export async function submitLibraryContribution(studentRefId, contributorName, p
   const entry = {
     english: clamp(rawEntry.english), partOfSpeech: lower(rawEntry.partOfSpeech), vietnamese: clamp(rawEntry.vietnamese),
     syllabication: clamp(rawEntry.syllabication), definition: normalizeLibraryDefinition(rawEntry.definition),
-    ...Object.fromEntries(Object.entries({ ...rawEntry, ...esl }).filter(([key]) => key.startsWith("verb") || ["phraseType", "grammarClassification", "countability", "nounType", "nounNumber", "edAdjective", "ingAdjective", "displayVerbForm", "etymologyType", "etymology", "originPath", "originReferences"].includes(key))),
+    ...Object.fromEntries(Object.entries({ ...rawEntry, ...esl }).filter(([key]) => key.startsWith("verb") || ["phraseType", "grammarClassification", "countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage", "edAdjective", "ingAdjective", "displayVerbForm", "etymologyType", "etymology", "originPath", "originReferences"].includes(key))),
   }
   if (!entry.english || !POS.has(entry.partOfSpeech)) throw statusError("New Words submissions require English and a supported part of speech")
   const client = await prisma()
@@ -632,7 +666,7 @@ export async function listLibraryAssignmentEngagement(query = {}) {
 function legacyEntry(raw = {}) {
   const esl = raw.esl && typeof raw.esl === "object" ? raw.esl : {}
   const value = { ...raw, ...esl }
-  return { normalizedKey: normalizeKey(value.english), english: clamp(value.english), americanEnglish: clamp(value.americanEnglish) || null, britishEnglish: clamp(value.britishEnglish) || null, partOfSpeech: lower(value.partOfSpeech), phraseType: lower(value.phraseType) || null, grammarClassification: grammarClassification(value.grammarClassification), etymologyType: lower(value.etymologyType) || null, etymology: clamp(value.etymology, 4000) || null, originPath: clamp(value.originPath, 500) || null, originReferences: normalizeOriginReferences(value.originReferences), vietnamese: clamp(value.vietnamese), syllabication: clamp(value.syllabication), syllableCount: syllableCount(value.syllabication), definition: normalizeLibraryDefinition(value.definition), countability: lower(value.countability) || null, nounType: lower(value.nounType) || null, nounNumber: lower(value.nounNumber) || null, verbRegularity: lower(value.verbRegularity) || null, verbTransitivity: lower(value.verbTransitivity) || null, verbInfinitive: clamp(value.verbInfinitive) || null, verbV1: clamp(value.verbV1) || null, verbV2: clamp(value.verbV2) || null, verbV3: clamp(value.verbV3) || null, verbV4: clamp(value.verbV4) || null, verbV5: clamp(value.verbV5) || null, displayVerbForm: lower(value.displayVerbForm) || null, edAdjective: Boolean(value.edAdjective), ingAdjective: Boolean(value.ingAdjective), awlFamilyHeadword: clamp(value.awlFamilyHeadword) || null, awlQualifyingMember: clamp(value.awlQualifyingMember) || null, awlMemberForm: clamp(value.awlMemberForm) || null, awlSublist: Number(value.awlSublist) || null }
+  return { normalizedKey: normalizeKey(value.english), english: clamp(value.english), americanEnglish: clamp(value.americanEnglish) || null, britishEnglish: clamp(value.britishEnglish) || null, partOfSpeech: lower(value.partOfSpeech), phraseType: lower(value.phraseType) || null, grammarClassification: grammarClassification(value.grammarClassification), etymologyType: lower(value.etymologyType) || null, etymology: clamp(value.etymology, 4000) || null, originPath: clamp(value.originPath, 500) || null, originReferences: normalizeOriginReferences(value.originReferences), vietnamese: clamp(value.vietnamese), syllabication: clamp(value.syllabication), syllableCount: syllableCount(value.syllabication), definition: normalizeLibraryDefinition(value.definition), countability: lower(value.countability) || null, nounType: lower(value.nounType) || null, nounNumber: lower(value.nounNumber) || null, physicalQuality: lower(value.physicalQuality) || null, grammaticalNumber: lower(value.grammaticalNumber) || null, primaryClassification: lower(value.primaryClassification) || null, materialUsage: lower(value.materialUsage) || null, properNounVariantShift: Boolean(value.properNounVariantShift), dualCountabilityUsage: lower(value.dualCountabilityUsage) || null, verbRegularity: lower(value.verbRegularity) || null, verbTransitivity: lower(value.verbTransitivity) || null, verbInfinitive: clamp(value.verbInfinitive) || null, verbV1: clamp(value.verbV1) || null, verbV2: clamp(value.verbV2) || null, verbV3: clamp(value.verbV3) || null, verbV4: clamp(value.verbV4) || null, verbV5: clamp(value.verbV5) || null, displayVerbForm: lower(value.displayVerbForm) || null, edAdjective: Boolean(value.edAdjective), ingAdjective: Boolean(value.ingAdjective), awlFamilyHeadword: clamp(value.awlFamilyHeadword) || null, awlQualifyingMember: clamp(value.awlQualifyingMember) || null, awlMemberForm: clamp(value.awlMemberForm) || null, awlSublist: Number(value.awlSublist) || null }
 }
 
 function conflicts(rows) {

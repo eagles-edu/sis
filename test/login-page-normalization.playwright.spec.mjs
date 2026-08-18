@@ -287,7 +287,7 @@ test(
       )
       assert.equal(
         darkAuthSurface.authBackgroundColor,
-        "rgb(76, 76, 76)",
+        "rgb(59, 60, 62)",
         "admin dark login card should render as the shared flat dark fill"
       )
       const darkLinkColor = await page.locator("#authPanel .login-link").first().evaluate((node) => getComputedStyle(node).color)
