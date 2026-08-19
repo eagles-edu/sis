@@ -4171,11 +4171,9 @@
           input.value = input.value.toLocaleLowerCase("en-US");
           return;
         }
-        // Keep syllabication exactly as typed while editing. In particular,
-        // do not convert an uppercase stress marker to an accent on every
-        // keystroke; students must be able to replace a rejected stress or
-        // division. Canonical accented storage is applied when the row is
-        // read for save and by the server validator.
+        if (input?.matches?.('[data-vocabulary-field="syllabication"]')) {
+          input.value = normalizeSyllabication(input.value);
+        }
       }
 
       function validateVocabularyEntrySurface(container, onInvalid) {

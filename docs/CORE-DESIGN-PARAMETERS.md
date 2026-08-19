@@ -89,7 +89,7 @@ Do not use the environment badge as evidence that every status chip should be gr
 | --- | --- | --- |
 | Page stack gap | `12px` (`--portal-page-stack-gap`) | fixed vertical gap between shell surfaces |
 | Shared content gap | `12px` (`--portal-content-gap`) | standard internal layout gap |
-| Definition flow gap | `12px` (`--portal-definition-flow-gap`) | paragraphs/lists/sections in formatted definitions |
+| Definition spacing | `12px` flow (`--portal-definition-flow-gap`); `7.416px` inner (`--portal-definition-item-gap`) | paragraphs/lists/sections use the flow gap; list items, nested lists, and section headings use flow / χ |
 | Baseline visible-group gap | non-zero; use `var(--portal-content-gap)` where the group is shared | visible siblings must not touch; use deliberate margin only for a documented structural exception |
 | Standalone pagination alignment | centered with wrapping and non-zero inset/block spacing | a different alignment requires an explicit surface contract and responsive proof |
 | Shell gap | `var(--portal-page-stack-gap)` | aliases the page stack gap |
@@ -114,7 +114,7 @@ Across all portals, visible sibling content must not touch. Use a shared non-zer
 
 - Shared portal body typography belongs in `web-asset/shared/portal-theme.css`.
 - B612 Mono is the designated admin-only font boundary for definition displays/editors and documented admin surfaces; follow `docs/font-hosting.md`.
-- Formatted definitions use `line-height: 1.45` and the shared `12px` flow gap.
+- Formatted definitions use `line-height: 1.45`; `--portal-definition-flow-gap` is `12px`, while `--portal-definition-item-gap` is exactly flow / `--portal-definition-chi` (`1.61803398875`) for list items, nested lists, and section headings.
 - Definition display and editor text must preserve readable list indentation, paragraph separation, and safe inline emphasis.
 - Do not add a page-local font or letter-spacing override to compensate for a shared geometry problem.
 

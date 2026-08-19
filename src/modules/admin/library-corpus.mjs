@@ -810,6 +810,48 @@ function collectDefinitionText(value, output = []) {
   return output
 }
 
+function collectSenseDefinitionText(value, output = []) {
+  if (Array.isArray(value)) {
+    if (typeof value[0] === "string" && ["text", "t"].includes(value[0])) output.push(value[1])
+    else if (value[0] !== "vis") value.forEach((item) => collectSenseDefinitionText(item, output))
+    return output
+  }
+  if (!value || typeof value !== "object") return output
+  Object.entries(value).forEach(([key, child]) => {
+    if (key === "vis") return
+    if (key === "t") output.push(child)
+    else collectSenseDefinitionText(child, output)
+  })
+  return output
+}
+
+function collectSenseExamples(value, output = [], inVisualExample = false) {
+  if (Array.isArray(value)) {
+    if (value[0] === "vis") value.slice(1).forEach((item) => collectSenseExamples(item, output, true))
+    else if (typeof value[0] === "string" && ["text", "t"].includes(value[0])) {
+      if (inVisualExample) output.push(value[1])
+    } else value.forEach((item) => collectSenseExamples(item, output, inVisualExample))
+    return output
+  }
+  if (!value || typeof value !== "object") return output
+  Object.entries(value).forEach(([key, child]) => {
+    if (key === "vis") collectSenseExamples(child, output, true)
+    else if (key === "t") {
+      if (inVisualExample) output.push(child)
+    } else collectSenseExamples(child, output, inVisualExample)
+  })
+  return output
+}
+
+function senseListPrefix(value) {
+  const label = stripMw(value).replace(/\s+/gu, " ").trim()
+  const match = label.match(/^(\d+)(?:\s*([a-z]))?(?:\s*\((\d+)\))?$/iu)
+  if (!match) return { indentation: "", level: 0, marker: "" }
+  if (match[3]) return { indentation: "        ", level: 2, marker: `${match[3]}.` }
+  if (match[2]) return { indentation: "    ", level: 1, marker: `${match[2]}.` }
+  return { indentation: "", level: 0, marker: `${match[1]}.` }
+}
+
 function collectEtymologyText(value, output = []) {
   if (typeof value === "string") {
     output.push(value)
@@ -840,14 +882,24 @@ function collectDefinitionBlocks(value, output = []) {
   if (!value || typeof value !== "object") return output
   Object.entries(value).forEach(([key, child]) => {
     if (key === "sense" && child && typeof child === "object" && !Array.isArray(child)) {
-      const number = stripMw(child.sn)
-      const definitions = uniqueText(collectDefinitionText(child.dt), stripMwDefinition)
-      const examples = uniqueText(collectDefinitionText(child.vis), stripMwDefinition)
-      const definition = definitions.join(" ").trim()
-      if (definition) output.push((number ? number + ". " : "") + definition)
-      examples.forEach((example) => output.push("Example: " + example))
+      const prefix = senseListPrefix(child.sn)
+      const definitions = uniqueText(collectSenseDefinitionText(child.dt), stripMwDefinition)
+      const dividedSense = child.sdsense && typeof child.sdsense === "object"
+        ? [stripMw(child.sdsense.sd), ...uniqueText(collectSenseDefinitionText(child.sdsense.dt), stripMwDefinition)].filter(Boolean).join(" ")
+        : ""
+      const definition = [definitions.join(" ").trim(), dividedSense].filter(Boolean).join(dividedSense && definitions.length ? "; " : "")
+      const examples = uniqueText([
+        ...collectSenseExamples(child.dt),
+        ...collectSenseExamples(child.vis, [], true),
+        ...collectSenseExamples(child.sdsense),
+      ], stripMwDefinition)
+      const senseLines = [
+        definition ? (prefix.marker ? `${prefix.indentation}${prefix.marker} ${definition}` : definition) : "",
+        ...examples.map((example) => `${"    ".repeat(prefix.level + 1)}- ${example}`),
+      ].filter(Boolean)
+      if (senseLines.length) output.push(senseLines.join("\n"))
       Object.entries(child).forEach(([childKey, nested]) => {
-        if (!["dt", "vis"].includes(childKey)) collectDefinitionBlocks(nested, output)
+        if (!["dt", "vis", "sdsense"].includes(childKey)) collectDefinitionBlocks(nested, output)
       })
       return
     }

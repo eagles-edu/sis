@@ -399,7 +399,9 @@
   --portal-page-bg-base: #e8eef4;
   --portal-page-stack-gap: 12px;
   --portal-content-gap: 12px;
+  --portal-definition-chi: 1.61803398875;
   --portal-definition-flow-gap: 12px;
+  --portal-definition-item-gap: calc(var(--portal-definition-flow-gap) / var(--portal-definition-chi));
   --portal-panel-shadow: 0 8px 22px rgba(17, 38, 63, 0.08);
   --portal-panel-shadow-soft: 0 8px 22px rgba(10, 28, 48, 0.18);
   --portal-panel-shadow-strong: 0 26px 60px rgba(8, 22, 40, 0.26);
@@ -5714,6 +5716,7 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
   margin-inline-start: auto;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition {
+  display: flow-root;
   font-family: "B612 Mono", monospace;
   font-size: 1.18rem;
   letter-spacing: normal;
@@ -5722,7 +5725,7 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
   overflow-wrap: anywhere;
   padding-inline-start: 18px;
   text-align: left;
-  white-space: pre-wrap;
+  white-space: normal;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition ol,
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition ul {
@@ -5731,7 +5734,10 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
   white-space: normal;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition li {
-  margin-block: 4px;
+  margin-block: var(--portal-definition-item-gap);
+}
+:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition li > :is(ol, ul) {
+  margin-block: var(--portal-definition-item-gap);
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition :is(section, .new-word-entry-definition-body) {
   margin-block: var(--portal-definition-flow-gap);
@@ -5747,7 +5753,7 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition > section > strong {
   display: block;
-  margin-block-end: 6px;
+  margin-block-end: var(--portal-definition-item-gap);
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-pos-details,
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-origin-path,

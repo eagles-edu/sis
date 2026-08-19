@@ -39,11 +39,15 @@ test("Library review panes keep headings and editor groups separated", () => {
 })
 
 test("formatted vocabulary definitions preserve readable flow spacing", () => {
+  assert.match(sharedTheme, /--portal-definition-chi:\s*1\.61803398875;/)
   assert.match(sharedTheme, /--portal-definition-flow-gap:\s*12px;/)
+  assert.match(sharedTheme, /--portal-definition-item-gap:\s*calc\(var\(--portal-definition-flow-gap\) \/ var\(--portal-definition-chi\)\);/)
   assert.match(sharedTheme, /\.new-word-entry-definition\s*\{[\s\S]*?line-height:\s*1\.45;/)
   assert.match(sharedTheme, /\.new-word-entry-definition ol,[\s\S]*?\.new-word-entry-definition ul\s*\{[\s\S]*?margin-block:\s*var\(--portal-definition-flow-gap\)/)
+  assert.match(sharedTheme, /\.new-word-entry-definition li\s*\{[\s\S]*?margin-block:\s*var\(--portal-definition-item-gap\)/)
+  assert.match(sharedTheme, /\.new-word-entry-definition li > :is\(ol, ul\)\s*\{[\s\S]*?margin-block:\s*var\(--portal-definition-item-gap\)/)
   assert.match(sharedTheme, /\.new-word-entry-definition :is\(section, \.new-word-entry-definition-body\)\s*\{[\s\S]*?margin-block:\s*var\(--portal-definition-flow-gap\)/)
-  assert.match(sharedTheme, /\.new-word-entry-definition > section > strong\s*\{[\s\S]*?margin-block-end:\s*6px;/)
+  assert.match(sharedTheme, /\.new-word-entry-definition > section > strong\s*\{[\s\S]*?margin-block-end:\s*var\(--portal-definition-item-gap\);/)
   assert.match(sharedTheme, /body\.student-portal-page \.news-vocabulary-definition-row textarea\s*\{[\s\S]*?line-height:\s*1\.45;/)
   assert.match(sharedTheme, /body\.admin-portal-page \.library-review-pane \.news-vocabulary-definition-row textarea\s*\{[\s\S]*?line-height:\s*1\.45;/)
 })

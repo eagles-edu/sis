@@ -221,6 +221,7 @@ test("syllabication rejects partial capitalization and missing stress", () => {
 test("vocabulary guard accepts uppercase or accented stress and preserves canonical accented entry", () => {
   assert.equal(vocabularyEntryError({ english: "commended", syllabication: "com-MEND-ed" }), "")
   assert.equal(vocabularyEntryError({ english: "commended", syllabication: "com-ménd-ed" }), "")
+  assert.equal(vocabularyEntryError({ english: "devoted", syllabication: "de-vó-ted" }), "")
   assert.equal(vocabularyEntryError({ english: "lion", syllabication: "LI-on" }), "")
   assert.equal(vocabularyEntryError({ english: "lion", syllabication: "lí-on" }), "")
   assert.equal(vocabularyEntryError({ english: "lion", syllabication: "li\u0301-on" }), "")
@@ -239,7 +240,9 @@ test("vocabulary guard accepts uppercase or accented stress and preserves canoni
   assert.doesNotMatch(missingStress, /com-MEND-ed/)
   assert.equal(normalizeVocabularySyllabication("com-MEND-ed"), "com-ménd-ed")
   assert.equal(normalizeVocabularySyllabication("com-ménd-ed"), "com-ménd-ed")
+  assert.equal(normalizeVocabularySyllabication("de-VO-ted"), "de-vó-ted")
   assert.equal(normalizeVocabularySyllabication("con-GRÉS-sion-al"), "con-grés-sion-al")
+  assert.match(STUDENT_JS, /input\?\.matches\?\('\[data-vocabulary-field="syllabication"\]'\)[\s\S]*input\.value = normalizeSyllabication\(input\.value\)/)
 })
 
 test("New Words persistence keeps canonical accented stress without drift", () => {

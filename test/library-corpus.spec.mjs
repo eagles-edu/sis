@@ -141,7 +141,7 @@ test("MW preview keeps complete normalized entry data and does not expose provid
     assert.match(result.fields.definition, /1\. to make a present of/)
     assert.match(result.fields.definition, /\*something\*/)
     assert.match(result.fields.definition, /\*\*bold clue\*\*/)
-    assert.match(result.fields.definition, /Example: give a gift/)
+    assert.match(result.fields.definition, /1\. to make a present of \*something\* \*\*bold clue\*\*\n    - give a gift/)
     assert.equal(result.fields.verbInfinitive, "to give")
     assert.equal(result.fields.verbV1, "give")
     assert.equal(result.fields.verbV2, "gave")

@@ -9,6 +9,33 @@
   const nounTypes = [["common", "Common"], ["proper", "Proper"], ["concrete", "Concrete"], ["abstract", "Abstract"], ["material", "Material"], ["collective", "Collective"], ["compound", "Compound"], ["possessive", "Possessive"]];
   const nounNumbers = [["singular", "Singular"], ["plural", "Plural"], ["singular and plural", "Singular and Plural"]];
   const etymologyTypes = [["native", "Native English"], ["borrowed", "Borrowed / loanword"], ["derived", "Derived / affixed"], ["compound", "Compound"], ["eponym", "Eponym"], ["onomatopoeic", "Onomatopoeic"], ["unknown", "Unknown"]];
+  const syllabicationVowels = { a: "á", e: "é", i: "í", o: "ó", u: "ú", y: "ý" };
+
+  function normalizeSyllabication(value) {
+    return String(value == null ? "" : value)
+      .trim()
+      .normalize("NFC")
+      .replace(/[\p{Pd}\u00AD\u2027\u00B7\u22C5\u2212]/gu, "-")
+      .replace(/\p{Z}+/gu, " ")
+      .split(/(\s+|-)/u)
+      .map((token) => {
+        if (!token || /^\s+$/u.test(token) || token === "-") return token;
+        if (/[aeiouy]\p{M}+/iu.test(token.normalize("NFD"))) return token.toLocaleLowerCase("en-US");
+        if (!/[A-Z]/u.test(token)) return token;
+        const chars = Array.from(token.toLocaleLowerCase("en-US"));
+        const vowelIndex = chars.findIndex((char) => syllabicationVowels[char]);
+        if (vowelIndex >= 0) chars[vowelIndex] = syllabicationVowels[chars[vowelIndex]];
+        return chars.join("");
+      })
+      .join("");
+  }
+
+  if (typeof document?.addEventListener === "function") {
+    document.addEventListener("input", (event) => {
+      const input = event?.target;
+      if (input?.matches?.('[data-vocabulary-field="syllabication"]')) input.value = normalizeSyllabication(input.value);
+    });
+  }
 
   function nounState(values = {}) {
     const state = { ...values };
@@ -609,6 +636,7 @@
 
   window.SIS_VOCABULARY_ESL = {
     POS,
+    normalizeSyllabication,
     parametersHtml,
     sync,
     hydrate,

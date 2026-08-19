@@ -205,6 +205,8 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(libraryReviewWorkbench, /window\.SIS_VOCABULARY_ESL\?\.hydrate\(pane, merged, \{ preserveSyllabication: true \}\)/)
   assert.match(sharedVocabularyEditor, /data-vocabulary-verb-forms[\s\S]*verbInfinitive[\s\S]*verbV1[\s\S]*verbV2[\s\S]*verbV3[\s\S]*verbV4[\s\S]*verbV5/)
   assert.match(sharedVocabularyEditor, /maxlength="50000"/)
+  assert.match(sharedVocabularyEditor, /function normalizeSyllabication\(value\)[\s\S]*syllabicationVowels[\s\S]*input\.value = normalizeSyllabication\(input\.value\)/)
+  assert.match(adminPortal, /id="newsReviewVocabularySyllabication"[^>]*data-vocabulary-field="syllabication"/)
   assert.match(sharedPortalTheme, /body\.admin-portal-page \.news-vocabulary-row \{[\s\S]*display: grid/)
   assert.match(sharedPortalTheme, /data-vocabulary-lookup="MW"|news-vocabulary-lookup\[data-vocabulary-lookup="MW"\]/)
   assert.match(sharedPortalTheme, /#newsWeekSetModal \.portal-modal-dialog[\s\S]*min\(1080px/)
@@ -217,6 +219,22 @@ test("admin Library editor uses the shared New Words row renderer", () => {
   assert.match(sharedVocabularyEditor, /function editorRowHtml\(rowUid/)
   for (const token of ["news-vocabulary-row", "news-vocabulary-lookups", "vocabularyDefinition-", "includeMwFill", "includeTransitivityTools", "data-vocabulary-field"]) assert.match(sharedVocabularyEditor, new RegExp(token))
   assert.match(sharedVocabularyEditor, /data-vocabulary-lookup="\$\{label\}"/)
+})
+
+test("every shared vocabulary editor converts uppercase stress syllables to accents", () => {
+  const listeners = []
+  const context = { window: {}, document: { addEventListener: (type, handler) => listeners.push([type, handler]) } }
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const input = {
+    value: "de-VO-ted",
+    matches(selector) {
+      return selector === '[data-vocabulary-field="syllabication"]'
+    },
+  }
+  listeners.find(([type]) => type === "input")[1]({ target: input })
+  assert.equal(input.value, "de-vó-ted")
+  assert.equal(context.window.SIS_VOCABULARY_ESL.normalizeSyllabication("com-MEND-ed"), "com-ménd-ed")
+  assert.match(adminPortal, /newsReviewVocabularySyllabication[\s\S]*data-vocabulary-field="syllabication"/)
 })
 
 test("admin Library edits remain approved and use the approved-edit revision action", () => {
@@ -259,6 +277,10 @@ test("flattened vocabulary preserves New Words geometry and formats safe definit
   assert.match(flattenedChairDefinitions, /to preside as chairperson[\s\S]*to install in office[\s\S]*to carry on the shoulders/)
   assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\nB"), "<p>A<br>B</p>")
   assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\n\n- B"), "<p>A</p><ul><li>B</li></ul>")
+  const nestedExampleHtml = context.window.SIS_VOCABULARY_ESL.definitionHtml(
+    "1. a group or set of 10\n    - It isn't to be done in a day of course, nor yet in a century, nor in a decade of centuries.\n\nsuch as",
+  )
+  assert.match(nestedExampleHtml, /<ol><li>a group or set of 10<ul><li>It isn&#39;t to be done in a day of course, nor yet in a century, nor in a decade of centuries\.<\/li><\/ul><\/li><\/ol><p>such as<\/p>/)
   const preferredHtml = context.window.SIS_VOCABULARY_ESL.definitionHtml(definitionSpacingSample)
   assert.match(preferredHtml, /<ol><li>to resound with echoes<\/li><li>to produce an echo<ol type="a">/)
   assert.match(preferredHtml, /<ol type="a"><li>repeat, imitate<ul><li>children echoing their teacher&#39;s words<\/li><\/ul>/)
@@ -271,6 +293,9 @@ test("flattened vocabulary preserves New Words geometry and formats safe definit
   })
   assert.equal((preferredEntryHtml.match(/<li>Online Etymology Dictionary/g) || []).length, 1)
   assert.match(sharedVocabularyEditor, /Ctrl\+B bold.*Ctrl\+I italic.*Ctrl\+U underline/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-definition \{[\s\S]*display: flow-root;[\s\S]*white-space: normal;/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-definition li \{[\s\S]*margin-block: var\(--portal-definition-item-gap\);/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-definition > section > strong \{[\s\S]*margin-block-end: var\(--portal-definition-item-gap\);/)
   assert.doesNotMatch(html, /<script|onerror=|javascript:/i)
 })
 

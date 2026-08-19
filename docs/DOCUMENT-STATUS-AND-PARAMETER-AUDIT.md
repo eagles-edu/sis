@@ -19,7 +19,7 @@ This audit separates executable current requirements from historical plans and a
 | Shared theme tokens and reusable chrome | `web-asset/shared/portal-theme.css` | `tools/build-admin-assets.mjs`; portal theme contracts |
 | Generated theme assets | `web-asset/shared/portal-theme.min.css` and `web-asset/admin/admin-portal-theme*.css` | `npm run build:admin-assets:check` |
 | Surface roles | `--portal-page-bg`, `--portal-neutral-*`, `--portal-surface-*` in shared CSS | `test/portal-theme-contract.spec.mjs` |
-| Shared page stack/content/definition spacing | `--portal-page-stack-gap: 12px`, `--portal-content-gap: 12px`, `--portal-definition-flow-gap: 12px` | `test/portal-spacing-contract.spec.mjs` |
+| Shared page stack/content/definition spacing | `--portal-page-stack-gap: 12px`, `--portal-content-gap: 12px`, definition flow `12px`, definition inner spacing = flow / χ (`--portal-definition-chi: 1.61803398875`) | `test/portal-spacing-contract.spec.mjs` |
 | Header geometry | `--portal-header-bar-*`, `--portal-brand-header-*` in shared CSS | portal shell tests and authenticated render |
 | Footer/prefooter geometry | `--portal-footer-*`, `--portal-prefooter-block-size` | portal spacing/shell tests |
 | Button geometry and semantic families | `.portal-button` plus `portal-button-*` classes | `docs/BUTTON-PLAN-1.MD`, `test/portal-button-contract.spec.mjs` |
