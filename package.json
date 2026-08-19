@@ -115,7 +115,7 @@
     "@eslint/js": "^10.0.1",
     "@prisma/client": "^7.9.1",
     "@redocly/cli": "^2.43.2",
-    "@types/node": "^20.19.43",
+    "@types/node": "^26.2.0",
     "axe-core": "^4.12.1",
     "dependency-cruiser": "^17.4.3",
     "eslint": "^10.8.0",
