@@ -121,7 +121,7 @@
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.9.0",
-    "html-validate": "^10.17.0",
+    "html-validate": "^11.6.2",
     "html-validate-markdown": "^5.2.0",
     "html-validate-vue": "^8.3.1",
     "jsdom": "^24.1.3",
