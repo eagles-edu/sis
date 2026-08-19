@@ -460,7 +460,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3938
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -472,7 +472,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3890
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -484,7 +484,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3806
+              "height": 495
             },
             ".panel": {
               "selector": ".panel",
@@ -600,7 +600,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3287
+              "height": 3299
             },
             ".wrap": {
               "selector": ".wrap",
@@ -612,7 +612,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3239
+              "height": 3251
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -624,7 +624,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3155
+              "height": 3167
             },
             ".panel": {
               "selector": ".panel",
@@ -2736,7 +2736,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1803
+              "height": 1624
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2748,7 +2748,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1755
+              "height": 1576
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2760,7 +2760,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1671
+              "height": 1492
             },
             ".panel": {
               "selector": ".panel",
@@ -3182,7 +3182,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1779
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3194,7 +3194,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1731
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3206,7 +3206,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1647
+              "height": 912
             },
             ".panel": {
               "selector": ".panel",
@@ -4498,7 +4498,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1640
+              "height": 1660
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4612,7 +4612,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 6338
+              "height": 6358
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4726,7 +4726,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1479
+              "height": 1499
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4840,7 +4840,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1479
+              "height": 1499
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4954,7 +4954,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 2720
+              "height": 2740
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5068,7 +5068,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1543
+              "height": 1563
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5182,7 +5182,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1908
+              "height": 1928
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5296,7 +5296,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1791
+              "height": 1811
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5758,7 +5758,7 @@
           "x": 0,
           "y": 36,
           "w": 1440,
-          "h": 1592,
+          "h": 1612,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -5831,7 +5831,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -5885,7 +5885,7 @@
               "selector": ".panel",
               "id": "loginCard",
               "className": "panel",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.36)",
@@ -5927,7 +5927,7 @@
               "selector": ".panel",
               "id": "loginPanel",
               "className": "panel",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.36)",
@@ -6129,7 +6129,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -6239,7 +6239,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3938
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6251,7 +6251,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3890
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6263,13 +6263,13 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3806
+              "height": 495
             },
             ".panel": {
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -6379,7 +6379,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3287
+              "height": 3299
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6391,7 +6391,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3239
+              "height": 3251
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6403,13 +6403,13 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3155
+              "height": 3167
             },
             ".panel": {
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -6549,7 +6549,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -6782,7 +6782,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -6922,7 +6922,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -7062,7 +7062,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -7202,7 +7202,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -7366,7 +7366,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -7599,7 +7599,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -7739,7 +7739,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -7965,7 +7965,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -8125,7 +8125,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -8289,7 +8289,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -8429,7 +8429,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -8569,7 +8569,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -8709,7 +8709,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -9015,7 +9015,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -9178,7 +9178,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -9330,7 +9330,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -9470,7 +9470,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -9610,7 +9610,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -9894,7 +9894,7 @@
               "selector": ".panel",
               "id": "authBootPanel",
               "className": "panel hidden",
-              "bg": "rgb(76, 76, 76)",
+              "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
@@ -10301,7 +10301,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1640
+              "height": 1660
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10415,7 +10415,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 6339
+              "height": 6359
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10529,7 +10529,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1481
+              "height": 1501
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10643,7 +10643,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1481
+              "height": 1501
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10757,7 +10757,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 2722
+              "height": 2742
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10871,7 +10871,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1545
+              "height": 1565
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10985,7 +10985,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1908
+              "height": 1928
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11099,7 +11099,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1793
+              "height": 1813
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11561,7 +11561,7 @@
           "x": 0,
           "y": 36,
           "w": 1440,
-          "h": 1592,
+          "h": 1612,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
