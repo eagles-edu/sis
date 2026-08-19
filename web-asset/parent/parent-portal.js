@@ -1,3 +1,19 @@
+function decorateStudentParentSurfaces(root = document) {
+  root.querySelectorAll?.('.panel, [data-surface-role="panel"]').forEach((surface) => {
+    surface.classList.add("panel", "panel-theme", "panel-structure")
+  })
+  root.querySelectorAll?.(".portal-theme-card, .homework-card, .report-head-card, .report-grade-card, .quarter-board-card").forEach((surface) => {
+    surface.classList.add("card-theme", "card-structure")
+  })
+}
+
+decorateStudentParentSurfaces()
+new MutationObserver((records) => {
+  records.forEach((record) => record.addedNodes.forEach((node) => {
+    if (node.nodeType === Node.ELEMENT_NODE) decorateStudentParentSurfaces(node)
+  }))
+}).observe(document.documentElement, { childList: true, subtree: true })
+
 const DEFAULT_PARENT_API_PREFIX = "/api/parent"
       const PARENT_API_PREFIX = normalizePathPrefix(
         window.__SIS_PARENT_API_PREFIX,
@@ -2562,7 +2578,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         const board = document.createElement("div")
         board.className = "quarter-board-shell"
         const card = document.createElement("section")
-        card.className = "quarter-board-card quarter-board-maintenance-card"
+        card.className = "quarter-board-card card-theme card-structure quarter-board-maintenance-card"
         const wrap = document.createElement("div")
         wrap.className = "quarter-board-maintenance"
         const copy = document.createElement("div")
@@ -2614,7 +2630,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
       function buildQuarterStatBadge(label, value) {
         const card = document.createElement("div")
         card.className =
-          "metric portal-theme-card metric-blue grade-quarter-stat"
+          "metric portal-theme-card card-theme card-structure metric-blue grade-quarter-stat"
         const key = document.createElement("span")
         key.className = "k grade-quarter-stat-label"
         key.textContent = normalizeText(label)
@@ -2664,7 +2680,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         const shell = document.createElement("div")
         shell.className = "quarter-board-shell"
         const card = document.createElement("section")
-        card.className = "quarter-board-card"
+        card.className = "quarter-board-card card-theme card-structure"
         const head = document.createElement("div")
         head.className = "quarter-board-head"
         const copy = document.createElement("div")
@@ -3029,7 +3045,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
 
       function metricCard(label, value, tone = "blue") {
         const card = document.createElement("div")
-        card.className = "metric portal-theme-card"
+        card.className = "metric portal-theme-card card-theme card-structure"
         if (tone) card.classList.add(`metric-${tone}`)
         const keyNode = document.createElement("div")
         keyNode.className = "k"
@@ -4483,7 +4499,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
 
       function buildDetailItemMarkup(item = {}) {
         const article = document.createElement("article")
-        article.className = "detail-item portal-theme-card"
+        article.className = "detail-item portal-theme-card card-theme card-structure"
         if (normalizeText(item?.tone)) {
           article.classList.add(item.tone)
         }

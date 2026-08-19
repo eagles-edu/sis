@@ -32,41 +32,90 @@
       })
     }
   </script>
-  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme-colors.min.css">
+  <link rel="stylesheet" href="/web-asset/shared/student-parent-structure.min.css">
+  <style id="student-parent-critical-css">
+/* STUDENT_PARENT_CRITICAL_CSS_START */
+:root{--portal-chi:1.61803398875;--portal-chi-dense:1.17461894309;--portal-chi-base:8px;--portal-chi-space-0:8px;--portal-chi-space-1:12.9443px;--portal-chi-space-2:20.9443px;--portal-chi-space-3:33.8885px;--portal-chi-space-4:54.8328px;--portal-chi-space-5:88.7213px;--portal-chi-shell-gap:20.9443px;--portal-chi-viewport-min:100vh;--portal-chi-side-min:210px;--portal-chi-shell-max:1440px;--portal-chi-control-block:33.8885px;--portal-chi-prefooter-block:54.8328px;--portal-chi-header-block:54.8328px;--portal-chi-header-mobile-block:88.7213px;--portal-chi-header-row-block:33.8885px;--portal-chi-radius-0:8px;--portal-chi-radius-1:12.9443px;--portal-chi-radius-2:20.9443px;--portal-chi-radius-pill:999px;--portal-chi-shadow-y-1:12.9443px;--portal-chi-shadow-blur-1:20.9443px;--portal-chi-shadow-y-2:20.9443px;--portal-chi-shadow-blur-2:33.8885px;--portal-chi-font-0:14px;--portal-chi-font-1:16.4447px;--portal-chi-font-2:19.3237px;--portal-chi-font-3:22.7093px;--portal-chi-line-compact:1.17461894309;--portal-chi-line-body:1.61803398875}html{box-sizing:border-box;font-family:var(--font-base,system-ui,-apple-system,sans-serif)}*,
+*::after,
+*::before{box-sizing:inherit}
+body.parent-portal-page,body.student-portal-page{margin:0;min-block-size:var(--portal-chi-viewport-min)}
+body.parent-portal-page .portal-layout,
+body.parent-portal-page .portal-shell,body.student-portal-page .portal-shell{min-block-size:var(--portal-chi-viewport-min)}
+body.parent-portal-page .portal-shell,body.student-portal-page .portal-shell{display:block}
+body.parent-portal-page .side-nav,body.student-portal-page .side-nav{min-inline-size:0;padding:var(--portal-chi-space-2)}
+body.parent-portal-page .side-brand,
+body.parent-portal-page .side-links,body.student-portal-page .side-brand,
+body.student-portal-page .side-links{display:grid;gap:var(--portal-chi-space-1)}
+body.parent-portal-page .side-link,body.student-portal-page .side-link{min-block-size:var(--portal-chi-control-block);padding-block:var(--portal-chi-space-1);padding-inline:var(--portal-chi-space-2)}
+body.parent-portal-page .hero,
+body.parent-portal-page .topbar,body.student-portal-page .hero,
+body.student-portal-page .topbar{align-items:center;border-radius:var(--portal-chi-radius-1);display:grid;gap:var(--portal-chi-space-1);min-block-size:var(--portal-chi-header-block);padding-block:var(--portal-chi-space-1);padding-inline:var(--portal-chi-space-3)}
+body.parent-portal-page .hero-line,
+body.parent-portal-page .topbar-head,
+body.student-portal-page .hero-line,body.student-portal-page .topbar-head{align-items:center;display:grid;gap:var(--portal-chi-space-1);grid-template-columns:minmax(0,1fr) auto;min-inline-size:0}
+body.parent-portal-page .brand-head,body.student-portal-page .brand-head{align-items:center;display:flex;gap:var(--portal-chi-space-1);min-inline-size:0}
+body.parent-portal-page .header-actions,body.student-portal-page .header-actions{align-items:center;display:inline-flex;flex-wrap:nowrap;gap:var(--portal-chi-space-1)}
+body.parent-portal-page .hero h1,
+body.parent-portal-page .topbar h1,
+body.student-portal-page .hero h1,body.student-portal-page .topbar h1{font-size:var(--portal-chi-font-3);line-height:var(--portal-chi-line-compact);margin-block:0}
+body.parent-portal-page main.portal-main,body.student-portal-page main.portal-main{box-sizing:border-box;display:grid;gap:var(--portal-chi-shell-gap);grid-template-columns:minmax(0,1fr);inline-size:100%;margin-inline:auto;max-inline-size:var(--portal-chi-shell-max);padding:var(--portal-chi-space-2)}
+body.parent-portal-page .card,
+body.parent-portal-page .content,
+body.parent-portal-page .panel,
+body.parent-portal-page [data-surface-role="content"],
+body.parent-portal-page [data-surface-role="panel"],
+body.student-portal-page .card,body.student-portal-page .content,
+body.student-portal-page .panel,
+body.student-portal-page [data-surface-role="content"],
+body.student-portal-page [data-surface-role="panel"]{min-inline-size:0}
+body.parent-portal-page .card-theme,
+body.parent-portal-page .panel-theme,
+body.student-portal-page .card-theme,body.student-portal-page .panel-theme{border-radius:var(--portal-chi-radius-1);box-shadow:0 var(--portal-chi-shadow-y-1) var(--portal-chi-shadow-blur-1) var(--portal-shadow-color,transparent)}
+body.parent-portal-page .card-structure,
+body.parent-portal-page .panel-structure,
+body.student-portal-page .card-structure,body.student-portal-page .panel-structure{padding:var(--portal-chi-space-2)}
+body.parent-portal-page #envBadge,
+body.parent-portal-page .portal-prefooter,
+body.student-portal-page #envBadge,body.student-portal-page .portal-prefooter{display:block;min-block-size:var(--portal-chi-prefooter-block)}
+body.parent-portal-page .card > :first-child,
+body.parent-portal-page .panel > :first-child,
+body.student-portal-page .card > :first-child,body.student-portal-page .panel > :first-child{margin-block-start:0}
+body.parent-portal-page .card > :last-child,
+body.parent-portal-page .panel > :last-child,
+body.student-portal-page .card > :last-child,body.student-portal-page .panel > :last-child{margin-block-end:0}
+body.parent-portal-page h2,body.student-portal-page h2{font-size:var(--portal-chi-font-2);line-height:var(--portal-chi-line-compact);margin-block:var(--portal-chi-space-1)}
+body.parent-portal-page h3,
+body.parent-portal-page h4,body.student-portal-page h3,
+body.student-portal-page h4{font-size:var(--portal-chi-font-1);line-height:var(--portal-chi-line-compact);margin-block:var(--portal-chi-space-1)}
+body.parent-portal-page li,
+body.parent-portal-page p,
+body.student-portal-page li,body.student-portal-page p{line-height:var(--portal-chi-line-body)}
+body.parent-portal-page .field,
+body.parent-portal-page .form-row,
+body.parent-portal-page .row,
+body.student-portal-page .field,
+body.student-portal-page .form-row,body.student-portal-page .row{display:grid;gap:var(--portal-chi-space-1)}
+body.parent-portal-page button,
+body.parent-portal-page input,
+body.parent-portal-page select,
+body.parent-portal-page textarea,body.student-portal-page button,
+body.student-portal-page input,
+body.student-portal-page select,
+body.student-portal-page textarea{min-block-size:var(--portal-chi-control-block)}
+body.parent-portal-page .hidden,body.student-portal-page .hidden{display:none!important}
+html[data-parent-auth-state="booting"] body.parent-portal-page,html[data-student-auth-state="booting"] body.student-portal-page{opacity:0;visibility:hidden}
+html[data-parent-auth-state="booting"] body.parent-portal-page #loginCard,
+html[data-parent-auth-state="booting"] body.parent-portal-page #portalCard,
+html[data-student-auth-state="booting"] body.student-portal-page #appPanel,html[data-student-auth-state="booting"] body.student-portal-page #loginPanel{display:none!important}@media (min-width:1000px){
+  body.parent-portal-page .topbar-head,body.student-portal-page .topbar-head{grid-template-columns:minmax(0,1fr) auto}}@media (max-width:520px){
+  body.parent-portal-page .hero,
+  body.parent-portal-page .topbar,body.student-portal-page .hero,
+  body.student-portal-page .topbar{min-block-size:var(--portal-chi-header-mobile-block);padding-inline:var(--portal-chi-space-1)}
+  body.parent-portal-page .topbar-head,body.student-portal-page .topbar-head{grid-template-columns:1fr;grid-template-rows:repeat(2,var(--portal-chi-header-row-block));min-block-size:var(--portal-chi-header-mobile-block)}
+  body.parent-portal-page main.portal-main,body.student-portal-page main.portal-main{padding:var(--portal-chi-space-1)}}/* STUDENT_PARENT_CRITICAL_CSS_END */
+</style>
   <script src="/web-asset/shared/portal-navigation.js"></script>
-  <style>
-    html {
-      font-family: var(--font-base, system-ui, -apple-system, sans-serif);
-    }
-
-    body.parent-portal-page main.portal-main {
-      box-sizing: border-box;
-      display: grid;
-      gap: var(--portal-shell-gap);
-      grid-template-columns: minmax(0, 1fr);
-      margin: 0 auto;
-      max-width: 1440px;
-      padding: 16px;
-      width: 100%;
-    }
-
-    html[data-parent-auth-state="unauthenticated"] body.parent-portal-page main.portal-main {
-      gap: var(--portal-shell-gap);
-      margin-inline: auto;
-      max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
-      width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
-    }
-
-    html[data-parent-auth-state="booting"] body.parent-portal-page {
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    html[data-parent-auth-state="booting"] body.parent-portal-page #loginCard,
-    html[data-parent-auth-state="booting"] body.parent-portal-page #portalCard {
-      display: none !important;
-    }
-  </style>
   <link rel="stylesheet" href="/web-asset/parent/parent-portal.min.css">
   <title>
     Trang chủ dành cho phụ huynh - Câu lạc bộ Eagles
@@ -154,7 +203,7 @@
         </div>
       </section>
 
-      <section class="panel" id="loginCard" data-surface-role="panel">
+      <section class="panel panel-theme panel-structure" id="loginCard" data-surface-role="panel">
         <div class="section-head">
           <h1>Đăng nhập</h1>
           <div class="security-badge">
@@ -205,7 +254,7 @@
         </div>
         <p id="loginStatus" class="status"></p>
       </section>
-      <section class="panel hidden" id="invitationRecoveryCard" data-surface-role="panel">
+      <section class="panel panel-theme panel-structure hidden" id="invitationRecoveryCard" data-surface-role="panel">
         <div class="section-head">
           <h1>This link is no longer available</h1>
           <span class="chip chip-warning">A new link is needed</span>
@@ -218,7 +267,7 @@
         </div>
         <p id="invitationRecoveryStatus" class="status" aria-live="polite"></p>
       </section>
-      <section class="panel hidden" id="passwordSetupCard" data-surface-role="panel">
+      <section class="panel panel-theme panel-structure hidden" id="passwordSetupCard" data-surface-role="panel">
         <div class="section-head">
           <h1>Choose your parent password</h1>
           <span class="chip chip-warning">Required first step</span>
@@ -250,11 +299,11 @@
       <section class="content hidden" id="portalCard" data-surface-role="content">
         <div class="portal-grid">
           <div class="portal-col">
-            <h2 id="parentOverviewSummary" class="panel parent-overview-title-head" data-surface-role="panel">
+            <h2 id="parentOverviewSummary" class="panel panel-theme panel-structure parent-overview-title-head" data-surface-role="panel">
               Đang tải bảng điều khiển học sinh...
             </h2>
 
-            <section class="panel" id="identityPanel" data-surface-role="panel">
+            <section class="panel panel-theme panel-structure" id="identityPanel" data-surface-role="panel">
               <div class="section-head">
                 <h3>Thông tin định danh học sinh</h3>
                 <span class="chip chip-lock">Chỉ xem</span>
@@ -285,19 +334,19 @@
                 Đang tải thông tin học sinh...
               </p>
               <div class="identity-list">
-                <div class="identity-item portal-theme-card">
+                <div class="identity-item portal-theme-card card-theme card-structure">
                   <span class="identity-label">Eagles ID</span>
                   <span id="studentEaglesIdValue" class="identity-value">-</span>
                 </div>
-                <div class="identity-item portal-theme-card">
+                <div class="identity-item portal-theme-card card-theme card-structure">
                   <span class="identity-label">Mã số học sinh</span>
                   <span id="studentNumberValue" class="identity-value">-</span>
                 </div>
-                <div class="identity-item portal-theme-card">
+                <div class="identity-item portal-theme-card card-theme card-structure">
                   <span class="identity-label">Họ và tên</span>
                   <span id="studentNameValue" class="identity-value">-</span>
                 </div>
-                <div class="identity-item portal-theme-card">
+                <div class="identity-item portal-theme-card card-theme card-structure">
                   <span class="identity-label">Lớp hiện tại</span>
                   <span id="studentGradeValue" class="identity-value">-</span>
                   <span id="immutableGrade" class="identity-value hidden">-</span>
@@ -305,7 +354,7 @@
               </div>
             </section>
 
-            <section id="metricsPanel" class="panel" data-surface-role="panel">
+            <section id="metricsPanel" class="panel panel-theme panel-structure" data-surface-role="panel">
               <div class="section-head">
                 <h3>Tổng quan nhanh</h3>
                 <span class="chip chip-neutral" id="snapshotBadge">Chưa có dữ liệu</span>
@@ -313,7 +362,7 @@
               <div class="metrics" id="dashboardMetrics"></div>
             </section>
 
-            <section id="pastDueHomeworkCard" class="panel homework-card" data-surface-role="panel">
+            <section id="pastDueHomeworkCard" class="panel panel-theme panel-structure homework-card card-theme card-structure" data-surface-role="panel">
               <h3 class="homework-card-label">Bài tập về nhà quá hạn</h3>
               <div class="homework-card-shell">
                 <div id="pastDueHomeworkBadge" class="homework-square is-clear">
@@ -336,7 +385,7 @@
               </div>
             </section>
 
-            <section id="newsQueueCard" class="panel queue-panel" data-surface-role="panel">
+            <section id="newsQueueCard" class="panel panel-theme panel-structure queue-panel" data-surface-role="panel">
               <div id="newsQueueDetails">
                 <div class="queue-summary-head">
                   <div class="queue-summary-stack">
@@ -377,7 +426,7 @@
               </div>
             </section>
 
-            <section id="currentHomeworkCard" class="panel homework-card" data-surface-role="panel">
+            <section id="currentHomeworkCard" class="panel panel-theme panel-structure homework-card card-theme card-structure" data-surface-role="panel">
               <h3 class="homework-card-label">Bài tập về nhà hiện tại</h3>
               <div class="homework-card-shell">
                 <div id="currentHomeworkBadge" class="homework-square is-none">
@@ -537,7 +586,7 @@
               </div>
             </section>
 
-            <section id="attendanceCalendarCard" class="panel" data-surface-role="panel">
+            <section id="attendanceCalendarCard" class="panel panel-theme panel-structure" data-surface-role="panel">
               <div class="section-head">
                 <h3>Hồ sơ điểm danh lớp học</h3>
               </div>
@@ -555,7 +604,7 @@
               </p>
             </section>
 
-            <section id="performanceReportsCard" class="panel" data-surface-role="panel">
+            <section id="performanceReportsCard" class="panel panel-theme panel-structure" data-surface-role="panel">
               <div class="section-head">
                 <h3>Lưu trữ báo cáo kết quả học tập của học sinh</h3>
               </div>
@@ -592,13 +641,13 @@
                 </div>
                 <div class="report-modal-body">
                   <section id="performanceReportHeader" class="report-head-grid">
-                    <article class="report-head-card">
+                    <article class="report-head-card card-theme card-structure">
                       <h5>Ngày | Thứ | Giờ</h5>
                       <p id="performanceReportModalMeta" class="report-head-value">
                         -
                       </p>
                     </article>
-                    <article class="report-head-card">
+                    <article class="report-head-card card-theme card-structure">
                       <h5>Lớp | Mã số HS | Họ tên học sinh | Eagles ID</h5>
                       <p id="performanceReportIdentity" class="report-head-value">
                         -
@@ -608,7 +657,7 @@
                   <section id="performanceReportHomeworkBlock" class="report-block">
                     <h5>Bài tập về nhà hiện tại | Bài tập về nhà quá hạn</h5>
                     <div class="report-homework-cards">
-                      <section class="homework-card">
+                      <section class="homework-card card-theme card-structure">
                         <h3 class="homework-card-label">
                           Bài tập về nhà hiện tại
                         </h3>
@@ -628,7 +677,7 @@
                           </div>
                         </div>
                       </section>
-                      <section class="homework-card">
+                      <section class="homework-card card-theme card-structure">
                         <h3 class="homework-card-label">
                           Bài tập về nhà quá hạn
                         </h3>
@@ -658,7 +707,7 @@
                   <div id="performanceReportModalSections" class="report-bands"></div>
                   <section class="report-grade-block">
                     <h5>Điểm YTD</h5>
-                    <div class="report-grade-card">
+                    <div class="report-grade-card card-theme card-structure">
                       <div id="performanceReportGradesTable"
                         class="report-grades-table portal-theme-table-shell data-surface"
                         data-surface-role="data-surface"></div>
@@ -708,14 +757,14 @@
               </div>
             </section>
 
-            <section id="gradesYtdCard" class="panel" data-surface-role="panel">
+            <section id="gradesYtdCard" class="panel panel-theme panel-structure" data-surface-role="panel">
               <div class="section-head">
                 <h3>Điểm YTD</h3>
               </div>
               <p class="hint" id="gradesYtdSummary">Chưa có dữ liệu.</p>
             </section>
 
-            <section id="recommendationsCard" class="panel" data-surface-role="panel">
+            <section id="recommendationsCard" class="panel panel-theme panel-structure" data-surface-role="panel">
               <div class="section-head">
                 <h3>Khuyến nghị học tập</h3>
               </div>
@@ -742,7 +791,7 @@
         </p>
         <div class="metrics" id="portalDetailMetrics"></div>
         <div class="detail-layout">
-          <section class="panel detail-calendar-panel" data-surface-role="panel">
+          <section class="panel panel-theme panel-structure detail-calendar-panel" data-surface-role="panel">
             <div class="section-head">
               <h3 id="portalDetailCalendarTitle">Lịch</h3>
             </div>
@@ -752,7 +801,7 @@
             <div id="portalDetailCalendarGrid" class="calendar-shell" aria-live="polite"></div>
           </section>
 
-          <section class="panel" data-surface-role="panel">
+          <section class="panel panel-theme panel-structure" data-surface-role="panel">
             <div class="section-head">
               <h3 id="portalDetailPrimaryTitle">Trọng tâm hiện tại</h3>
             </div>
@@ -778,7 +827,7 @@
             </div>
           </section>
 
-          <section class="panel" data-surface-role="panel">
+          <section class="panel panel-theme panel-structure" data-surface-role="panel">
             <div class="section-head">
               <h3 id="portalDetailHistoryTitle">Lịch sử gần đây</h3>
             </div>
@@ -805,7 +854,7 @@
         <p id="childPageBadge" class="hint">
           Chọn học sinh từ Bảng điều khiển để chỉnh sửa hồ sơ.
         </p>
-        <section class="panel" id="profilePanel" data-surface-role="panel">
+        <section class="panel panel-theme panel-structure" id="profilePanel" data-surface-role="panel">
           <div class="section-head">
             <h3>Biểu mẫu cập nhật hồ sơ</h3>
             <span class="chip chip-neutral" id="draftCountBadge">0 mục chưa lưu</span>

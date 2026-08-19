@@ -82,14 +82,17 @@ function collectColorLiteralHits(cssText, filePath) {
   return hits
 }
 
-test("portal pages load the shared portal theme stylesheet", () => {
+test("admin pages keep the full shared theme while Student/Parent use the pilot split", () => {
   for (const [label, relPath] of portalPaths) {
     const html = fs.readFileSync(path.resolve(rootDir, relPath), "utf8")
-    assert.match(
-      html,
-      /portal-theme\.min\.css/,
-      `${label} should link the shared portal theme`,
-    )
+    if (label === "parent portal" || label === "student portal") {
+      assert.match(html, /portal-theme-colors\.min\.css/, `${label} should load the shared pilot color asset`)
+      assert.match(html, /student-parent-structure\.min\.css/, `${label} should load the blocking structure asset`)
+      assert.match(html, /student-parent-critical-css/, `${label} should inline the generated critical asset`)
+      assert.doesNotMatch(html, /portal-theme\.min\.css/, `${label} must not load the full shared theme`)
+    } else {
+      assert.match(html, /portal-theme\.min\.css/, `${label} should keep the shared portal theme`)
+    }
   }
 })
 
@@ -502,8 +505,9 @@ test("security badges use the white secure-network asset in dark mode", () => {
 test("portal pages fail closed on local theme ownership outside the explicit structural allowlist", () => {
   const allowlists = new Map([
   [studentPortalPath, [
-    /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
+      /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
       /body\.student-portal-page\s*\{\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
+      /\/\*\s*STUDENT_PARENT_CRITICAL_CSS_START\s*\*\/[\s\S]*?\/\*\s*STUDENT_PARENT_CRITICAL_CSS_END\s*\*\//gs,
       /\/\*\s*portal-critical-theme:start\s*\*\/[\s\S]*?\/\*\s*portal-critical-theme:end\s*\*\//gs,
       /\.queue-table-wrap\s*\{[\s\S]*?background:\s*var\(--portal-surface-card\);\s*\}/gs,
       /\.queue-table-wrap table\.news-queue-table tbody tr\s*\{[\s\S]*?background:\s*var\(--portal-surface-support\);\s*padding:\s*8px;\s*\}/gs,
@@ -514,6 +518,7 @@ test("portal pages fail closed on local theme ownership outside the explicit str
     [parentPortalPath, [
       /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
       /body\.parent-portal-page\s*\{\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
+      /\/\*\s*STUDENT_PARENT_CRITICAL_CSS_START\s*\*\/[\s\S]*?\/\*\s*STUDENT_PARENT_CRITICAL_CSS_END\s*\*\//gs,
       /\/\*\s*portal-critical-theme:start\s*\*\/[\s\S]*?\/\*\s*portal-critical-theme:end\s*\*\//gs,
     ]],
   [adminPortalPath, [
@@ -586,7 +591,13 @@ test("shared hamburger remains visible across the 1440px shell breakpoint", () =
   ]) {
     const html = fs.readFileSync(path.resolve(rootDir, relPath), "utf8")
     assert.match(html, /floating-menu-btn/, `${relPath} must retain the shared hamburger control`)
-    assert.match(html, /portal-theme\.min\.css/, `${relPath} must load the shared breakpoint rule`)
+    assert.match(
+      html,
+      relPath.includes("student/student") || relPath.includes("parent/parent")
+        ? /student-parent-structure\.min\.css/
+        : /portal-theme\.min\.css/,
+      `${relPath} must load the shared breakpoint rule`,
+    )
   }
 })
 
@@ -714,7 +725,7 @@ test("shared portal theme keeps unauthenticated header bars aligned to the login
 test("parent identity panel keeps the chooser at the top of the same panel", () => {
   assert.match(
     parentPortal,
-    /<section\s+class="panel"\s+id="identityPanel"[^>]*>[\s\S]*?<div\s+id="quickLinksPanel"\s+class="portal-action-strip"[\s\S]*?<p\s+id="studentIdentity"\s+class="hint"\s*>/s,
+    /<section\s+class="panel[^\"]*"\s+id="identityPanel"[^>]*>[\s\S]*?<div\s+id="quickLinksPanel"\s+class="portal-action-strip"[\s\S]*?<p\s+id="studentIdentity"\s+class="hint"\s*>/s,
     "the chooser should sit inside the identity panel before the identity rows",
   )
 })

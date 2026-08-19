@@ -485,6 +485,13 @@
   --portal-theme-toggle-icon-bg-dark: rgba(255, 255, 255, 0.12);
   --portal-theme-toggle-ink: #172033;
   --portal-theme-toggle-ink-dark: #ffd76a;
+  --portal-student-compliance-success: #167447;
+  --portal-student-news-autofill-wash: #fef3c7;
+  --portal-student-news-autofill-label: #17324d;
+  --portal-student-modal-shadow: 0 20px 58px rgba(8, 22, 40, 0.38);
+  --portal-student-confetti-shadow: 0 0 0 1px rgba(255, 255, 255, 0.48), 0 0 14px color-mix(in srgb, var(--piece-color) 72%, transparent);
+  --portal-student-confetti-filter: saturate(1.45) drop-shadow(0 2px 4px rgba(8, 22, 40, 0.32));
+  --portal-student-success-shadow: 0 16px 30px rgba(21, 95, 63, 0.18);
   --primary-color: #b50010;
   --radius-base: 3.667px;
   --radius-pill: 999px;

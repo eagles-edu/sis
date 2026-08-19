@@ -18,6 +18,7 @@ For every code edit affecting a rendered surface, preserve these invariants unle
 | Concern | Canonical source | Generated/consuming copies | Required proof |
 | --- | --- | --- | --- |
 | Shared portal theme | `web-asset/shared/portal-theme.css` | `portal-theme.min.css`, generated admin theme | `npm run build:admin-assets:check`, theme tests |
+| Student/Parent pilot theme | `tools/build-admin-assets.mjs` plus `web-asset/shared/student-parent-critical.css` | `portal-theme-colors*.css`, `student-parent-structure*.css`, generated inline critical blocks | `test/student-parent-chi-contract.spec.mjs`, authenticated desktop/mobile render |
 | Admin theme subset | `tools/build-admin-assets.mjs` extraction boundary | `web-asset/admin/admin-portal-theme.css` and `.min.css` | admin-theme split contract |
 | Portal markup/chrome | corresponding HTML source plus shared selectors | runtime/public mirror copies | source structure, DOM order, authenticated render |
 | Button semantics | shared CSS plus `docs/BUTTON-PLAN-1.MD` | portal HTML/JS usages | `test/portal-button-contract.spec.mjs` |
@@ -93,6 +94,7 @@ Do not use the environment badge as evidence that every status chip should be gr
 | Baseline visible-group gap | non-zero; use `var(--portal-content-gap)` where the group is shared | visible siblings must not touch; use deliberate margin only for a documented structural exception |
 | Standalone pagination alignment | centered with wrapping and non-zero inset/block spacing | a different alignment requires an explicit surface contract and responsive proof |
 | Shell gap | `var(--portal-page-stack-gap)` | aliases the page stack gap |
+| Student/Parent χ base | `--portal-chi: 1.61803398875`, `--portal-chi-base: 8px` | authored critical geometry uses whole χ steps; dense type/control scale uses `χ^(1/3)` |
 | Header bar desktop max/min | `40px` | stable header bar geometry |
 | Header bar mobile | `64px` | fixed mobile header block size |
 | Brand header block | `58px` desktop; `110px` mobile; `44px` row | shared brand/header geometry |

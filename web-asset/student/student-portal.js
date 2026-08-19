@@ -1,4 +1,20 @@
 (() => {
+      function decorateStudentParentSurfaces(root = document) {
+        root.querySelectorAll?.('.panel, [data-surface-role="panel"]').forEach((surface) => {
+          surface.classList.add("panel", "panel-theme", "panel-structure")
+        })
+        root.querySelectorAll?.(".portal-theme-card, .homework-card, .report-head-card, .report-grade-card, .quarter-board-card").forEach((surface) => {
+          surface.classList.add("card-theme", "card-structure")
+        })
+      }
+
+      decorateStudentParentSurfaces()
+      new MutationObserver((records) => {
+        records.forEach((record) => record.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) decorateStudentParentSurfaces(node)
+        }))
+      }).observe(document.documentElement, { childList: true, subtree: true })
+
       const STUDENT_AUTH_PREFIX = window.__SIS_STUDENT_AUTH_PREFIX || "/api/student/auth";
       const STUDENT_DASHBOARD_PATH = window.__SIS_STUDENT_DASHBOARD_PATH || "/api/student/dashboard";
       const STUDENT_NEWS_REPORTS_PATH = window.__SIS_STUDENT_NEWS_REPORTS_PATH || "/api/student/news-reports";
@@ -1598,7 +1614,7 @@
         const board = document.createElement("div");
         board.className = "quarter-board-shell";
         const card = document.createElement("section");
-        card.className = "quarter-board-card quarter-board-maintenance-card";
+        card.className = "quarter-board-card card-theme card-structure quarter-board-maintenance-card";
         const wrap = document.createElement("div");
         wrap.className = "quarter-board-maintenance";
         const copy = document.createElement("div");
@@ -1646,7 +1662,7 @@
 
       function buildQuarterStatBadge(label, value) {
         const card = document.createElement("div");
-        card.className = "metric portal-theme-card metric-blue grade-quarter-stat";
+        card.className = "metric portal-theme-card card-theme card-structure metric-blue grade-quarter-stat";
         const key = document.createElement("span");
         key.className = "k grade-quarter-stat-label";
         key.textContent = t(label);
@@ -1692,7 +1708,7 @@
         const shell = document.createElement("div");
         shell.className = "quarter-board-shell";
         const card = document.createElement("section");
-        card.className = "quarter-board-card";
+        card.className = "quarter-board-card card-theme card-structure";
         const head = document.createElement("div");
         head.className = "quarter-board-head";
         const copy = document.createElement("div");
@@ -1973,7 +1989,7 @@
 
       function metricCard(label, value, tone = "blue") {
         const article = document.createElement("article");
-        article.className = "metric portal-theme-card";
+        article.className = "metric portal-theme-card card-theme card-structure";
         if (tone) article.classList.add(`metric-${tone}`);
         const key = document.createElement("div");
         key.className = "k";
@@ -2465,7 +2481,7 @@
 
       function buildDetailItemMarkup(item = {}) {
         const article = document.createElement("article");
-        article.className = "detail-item portal-theme-card";
+        article.className = "detail-item portal-theme-card card-theme card-structure";
         if (item?.tone) {
           article.classList.add(item.tone);
         }

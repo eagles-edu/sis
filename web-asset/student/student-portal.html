@@ -30,41 +30,90 @@
       });
     }
   </script>
-  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme-colors.min.css">
+  <link rel="stylesheet" href="/web-asset/shared/student-parent-structure.min.css">
+  <style id="student-parent-critical-css">
+/* STUDENT_PARENT_CRITICAL_CSS_START */
+:root{--portal-chi:1.61803398875;--portal-chi-dense:1.17461894309;--portal-chi-base:8px;--portal-chi-space-0:8px;--portal-chi-space-1:12.9443px;--portal-chi-space-2:20.9443px;--portal-chi-space-3:33.8885px;--portal-chi-space-4:54.8328px;--portal-chi-space-5:88.7213px;--portal-chi-shell-gap:20.9443px;--portal-chi-viewport-min:100vh;--portal-chi-side-min:210px;--portal-chi-shell-max:1440px;--portal-chi-control-block:33.8885px;--portal-chi-prefooter-block:54.8328px;--portal-chi-header-block:54.8328px;--portal-chi-header-mobile-block:88.7213px;--portal-chi-header-row-block:33.8885px;--portal-chi-radius-0:8px;--portal-chi-radius-1:12.9443px;--portal-chi-radius-2:20.9443px;--portal-chi-radius-pill:999px;--portal-chi-shadow-y-1:12.9443px;--portal-chi-shadow-blur-1:20.9443px;--portal-chi-shadow-y-2:20.9443px;--portal-chi-shadow-blur-2:33.8885px;--portal-chi-font-0:14px;--portal-chi-font-1:16.4447px;--portal-chi-font-2:19.3237px;--portal-chi-font-3:22.7093px;--portal-chi-line-compact:1.17461894309;--portal-chi-line-body:1.61803398875}html{box-sizing:border-box;font-family:var(--font-base,system-ui,-apple-system,sans-serif)}*,
+*::after,
+*::before{box-sizing:inherit}
+body.parent-portal-page,body.student-portal-page{margin:0;min-block-size:var(--portal-chi-viewport-min)}
+body.parent-portal-page .portal-layout,
+body.parent-portal-page .portal-shell,body.student-portal-page .portal-shell{min-block-size:var(--portal-chi-viewport-min)}
+body.parent-portal-page .portal-shell,body.student-portal-page .portal-shell{display:block}
+body.parent-portal-page .side-nav,body.student-portal-page .side-nav{min-inline-size:0;padding:var(--portal-chi-space-2)}
+body.parent-portal-page .side-brand,
+body.parent-portal-page .side-links,body.student-portal-page .side-brand,
+body.student-portal-page .side-links{display:grid;gap:var(--portal-chi-space-1)}
+body.parent-portal-page .side-link,body.student-portal-page .side-link{min-block-size:var(--portal-chi-control-block);padding-block:var(--portal-chi-space-1);padding-inline:var(--portal-chi-space-2)}
+body.parent-portal-page .hero,
+body.parent-portal-page .topbar,body.student-portal-page .hero,
+body.student-portal-page .topbar{align-items:center;border-radius:var(--portal-chi-radius-1);display:grid;gap:var(--portal-chi-space-1);min-block-size:var(--portal-chi-header-block);padding-block:var(--portal-chi-space-1);padding-inline:var(--portal-chi-space-3)}
+body.parent-portal-page .hero-line,
+body.parent-portal-page .topbar-head,
+body.student-portal-page .hero-line,body.student-portal-page .topbar-head{align-items:center;display:grid;gap:var(--portal-chi-space-1);grid-template-columns:minmax(0,1fr) auto;min-inline-size:0}
+body.parent-portal-page .brand-head,body.student-portal-page .brand-head{align-items:center;display:flex;gap:var(--portal-chi-space-1);min-inline-size:0}
+body.parent-portal-page .header-actions,body.student-portal-page .header-actions{align-items:center;display:inline-flex;flex-wrap:nowrap;gap:var(--portal-chi-space-1)}
+body.parent-portal-page .hero h1,
+body.parent-portal-page .topbar h1,
+body.student-portal-page .hero h1,body.student-portal-page .topbar h1{font-size:var(--portal-chi-font-3);line-height:var(--portal-chi-line-compact);margin-block:0}
+body.parent-portal-page main.portal-main,body.student-portal-page main.portal-main{box-sizing:border-box;display:grid;gap:var(--portal-chi-shell-gap);grid-template-columns:minmax(0,1fr);inline-size:100%;margin-inline:auto;max-inline-size:var(--portal-chi-shell-max);padding:var(--portal-chi-space-2)}
+body.parent-portal-page .card,
+body.parent-portal-page .content,
+body.parent-portal-page .panel,
+body.parent-portal-page [data-surface-role="content"],
+body.parent-portal-page [data-surface-role="panel"],
+body.student-portal-page .card,body.student-portal-page .content,
+body.student-portal-page .panel,
+body.student-portal-page [data-surface-role="content"],
+body.student-portal-page [data-surface-role="panel"]{min-inline-size:0}
+body.parent-portal-page .card-theme,
+body.parent-portal-page .panel-theme,
+body.student-portal-page .card-theme,body.student-portal-page .panel-theme{border-radius:var(--portal-chi-radius-1);box-shadow:0 var(--portal-chi-shadow-y-1) var(--portal-chi-shadow-blur-1) var(--portal-shadow-color,transparent)}
+body.parent-portal-page .card-structure,
+body.parent-portal-page .panel-structure,
+body.student-portal-page .card-structure,body.student-portal-page .panel-structure{padding:var(--portal-chi-space-2)}
+body.parent-portal-page #envBadge,
+body.parent-portal-page .portal-prefooter,
+body.student-portal-page #envBadge,body.student-portal-page .portal-prefooter{display:block;min-block-size:var(--portal-chi-prefooter-block)}
+body.parent-portal-page .card > :first-child,
+body.parent-portal-page .panel > :first-child,
+body.student-portal-page .card > :first-child,body.student-portal-page .panel > :first-child{margin-block-start:0}
+body.parent-portal-page .card > :last-child,
+body.parent-portal-page .panel > :last-child,
+body.student-portal-page .card > :last-child,body.student-portal-page .panel > :last-child{margin-block-end:0}
+body.parent-portal-page h2,body.student-portal-page h2{font-size:var(--portal-chi-font-2);line-height:var(--portal-chi-line-compact);margin-block:var(--portal-chi-space-1)}
+body.parent-portal-page h3,
+body.parent-portal-page h4,body.student-portal-page h3,
+body.student-portal-page h4{font-size:var(--portal-chi-font-1);line-height:var(--portal-chi-line-compact);margin-block:var(--portal-chi-space-1)}
+body.parent-portal-page li,
+body.parent-portal-page p,
+body.student-portal-page li,body.student-portal-page p{line-height:var(--portal-chi-line-body)}
+body.parent-portal-page .field,
+body.parent-portal-page .form-row,
+body.parent-portal-page .row,
+body.student-portal-page .field,
+body.student-portal-page .form-row,body.student-portal-page .row{display:grid;gap:var(--portal-chi-space-1)}
+body.parent-portal-page button,
+body.parent-portal-page input,
+body.parent-portal-page select,
+body.parent-portal-page textarea,body.student-portal-page button,
+body.student-portal-page input,
+body.student-portal-page select,
+body.student-portal-page textarea{min-block-size:var(--portal-chi-control-block)}
+body.parent-portal-page .hidden,body.student-portal-page .hidden{display:none!important}
+html[data-parent-auth-state="booting"] body.parent-portal-page,html[data-student-auth-state="booting"] body.student-portal-page{opacity:0;visibility:hidden}
+html[data-parent-auth-state="booting"] body.parent-portal-page #loginCard,
+html[data-parent-auth-state="booting"] body.parent-portal-page #portalCard,
+html[data-student-auth-state="booting"] body.student-portal-page #appPanel,html[data-student-auth-state="booting"] body.student-portal-page #loginPanel{display:none!important}@media (min-width:1000px){
+  body.parent-portal-page .topbar-head,body.student-portal-page .topbar-head{grid-template-columns:minmax(0,1fr) auto}}@media (max-width:520px){
+  body.parent-portal-page .hero,
+  body.parent-portal-page .topbar,body.student-portal-page .hero,
+  body.student-portal-page .topbar{min-block-size:var(--portal-chi-header-mobile-block);padding-inline:var(--portal-chi-space-1)}
+  body.parent-portal-page .topbar-head,body.student-portal-page .topbar-head{grid-template-columns:1fr;grid-template-rows:repeat(2,var(--portal-chi-header-row-block));min-block-size:var(--portal-chi-header-mobile-block)}
+  body.parent-portal-page main.portal-main,body.student-portal-page main.portal-main{padding:var(--portal-chi-space-1)}}/* STUDENT_PARENT_CRITICAL_CSS_END */
+</style>
   <script src="/web-asset/shared/portal-navigation.js"></script>
-  <style>
-    html {
-      font-family: var(--font-base, system-ui, -apple-system, sans-serif);
-    }
-
-    body.student-portal-page main.portal-main {
-      box-sizing: border-box;
-      display: grid;
-      gap: var(--portal-shell-gap);
-      grid-template-columns: minmax(0, 1fr);
-      margin: 0 auto;
-      max-width: 1440px;
-      padding: 16px;
-      width: 100%;
-    }
-
-    html[data-student-auth-state="unauthenticated"] body.student-portal-page main.portal-main {
-      gap: var(--portal-shell-gap);
-      margin-inline: auto;
-      max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
-      width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
-    }
-
-    html[data-student-auth-state="booting"] body.student-portal-page {
-      visibility: hidden;
-      opacity: 0;
-    }
-
-    html[data-student-auth-state="booting"] body.student-portal-page #loginPanel,
-    html[data-student-auth-state="booting"] body.student-portal-page #appPanel {
-      display: none !important;
-    }
-  </style>
   <link rel="stylesheet" href="/web-asset/student/student-portal.min.css">
   <title>Student Portal</title>
 </head>
@@ -142,7 +191,7 @@
         </div>
       </section>
 
-      <section class="panel" id="loginPanel" data-surface-role="panel">
+      <section class="panel panel-theme panel-structure" id="loginPanel" data-surface-role="panel">
         <div class="section-head">
           <h1>STUDENT LOG-IN</h1>
           <div class="security-badge">
@@ -190,10 +239,10 @@
         <section id="studentHomeCard" class="content" data-surface-role="content">
           <div class="portal-grid">
             <div id="studentHomeGrid" class="portal-col">
-              <div id="studentOverviewSummary" class="panel" data-surface-role="panel">Loading student dashboard...
+              <div id="studentOverviewSummary" class="panel panel-theme panel-structure" data-surface-role="panel">Loading student dashboard...
               </div>
 
-              <section id="identityPanel" class="panel" data-surface-role="panel">
+              <section id="identityPanel" class="panel panel-theme panel-structure" data-surface-role="panel">
                 <div class="section-head">
                   <h2>Thông tin định danh học sinh</h2>
                   <span class="chip chip-lock">Chỉ xem</span>
@@ -208,26 +257,26 @@
                 </div>
                 <p id="studentIdentity" class="hint">Loading student metrics...</p>
                 <div class="identity-list">
-                  <div class="identity-item portal-theme-card">
+                  <div class="identity-item portal-theme-card card-theme card-structure">
                     <span class="identity-label">Eagles ID</span>
                     <span id="studentEaglesIdValue" class="identity-value">-</span>
                   </div>
-                  <div class="identity-item portal-theme-card">
+                  <div class="identity-item portal-theme-card card-theme card-structure">
                     <span class="identity-label">Mã học sinh</span>
                     <span id="studentNumberValue" class="identity-value">-</span>
                   </div>
-                  <div class="identity-item portal-theme-card">
+                  <div class="identity-item portal-theme-card card-theme card-structure">
                     <span class="identity-label">Họ và tên</span>
                     <span id="studentNameValue" class="identity-value">-</span>
                   </div>
-                  <div class="identity-item portal-theme-card">
+                  <div class="identity-item portal-theme-card card-theme card-structure">
                     <span class="identity-label">Lớp hiện tại</span>
                     <span id="studentGradeValue" class="identity-value">-</span>
                   </div>
                 </div>
               </section>
 
-              <section id="metricsPanel" class="panel" data-surface-role="panel">
+              <section id="metricsPanel" class="panel panel-theme panel-structure" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Quick Overview</h3>
                   <span id="snapshotBadge" class="chip chip-neutral">No data yet</span>
@@ -235,7 +284,7 @@
                 <div id="dashboardMetrics" class="metrics"></div>
               </section>
 
-              <section id="pastDueHomeworkCard" class="panel homework-card" data-surface-role="panel">
+              <section id="pastDueHomeworkCard" class="panel panel-theme panel-structure homework-card card-theme card-structure" data-surface-role="panel">
                 <h3 class="homework-card-label">Past Due Homework</h3>
                 <div class="homework-card-shell">
                   <div id="pastDueHomeworkBadge" class="homework-square is-clear">
@@ -251,7 +300,7 @@
                 </div>
               </section>
 
-              <section id="newsQueueCard" class="panel queue-panel" data-surface-role="panel">
+              <section id="newsQueueCard" class="panel panel-theme panel-structure queue-panel" data-surface-role="panel">
                 <div id="newsQueueDetails">
                   <div class="queue-summary-head">
                     <div class="queue-summary-stack">
@@ -286,7 +335,7 @@
                 </div>
               </section>
 
-              <section id="currentHomeworkCard" class="panel homework-card" data-surface-role="panel">
+              <section id="currentHomeworkCard" class="panel panel-theme panel-structure homework-card card-theme card-structure" data-surface-role="panel">
                 <h3 class="homework-card-label">Current Homework</h3>
                 <div class="homework-card-shell">
                   <div id="currentHomeworkBadge" class="homework-square is-none">
@@ -552,7 +601,7 @@
                       </div>
                     </div>
                   </div>
-                  <details class="panel student-new-words-instructions">
+                  <details class="panel panel-theme panel-structure student-new-words-instructions">
                     <summary>How to enter New Words</summary>
                     <div class="student-new-words-instructions-body">
                       <div class="student-new-words-instructions-copy">
@@ -623,7 +672,7 @@
                 </div>
               </section>
 
-              <section id="attendanceCalendarCard" class="panel" data-surface-role="panel">
+              <section id="attendanceCalendarCard" class="panel panel-theme panel-structure" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Attendance Calendar SYTD</h3>
                 </div>
@@ -631,28 +680,28 @@
                 <p id="attendanceCalendarSummary" class="hint">No data yet.</p>
               </section>
 
-              <section id="performanceReportsCard" class="panel" data-surface-role="panel">
+              <section id="performanceReportsCard" class="panel panel-theme panel-structure" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Performance Reports SYTD Archive</h3>
                 </div>
                 <p id="performanceReportsSummary" class="hint">No data yet.</p>
               </section>
 
-              <section id="gradesYtdCard" class="panel" data-surface-role="panel">
+              <section id="gradesYtdCard" class="panel panel-theme panel-structure" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Grades YTD</h3>
                 </div>
                 <p id="gradesYtdSummary" class="hint">No data yet.</p>
               </section>
 
-              <section id="recommendationsCard" class="panel" data-surface-role="panel">
+              <section id="recommendationsCard" class="panel panel-theme panel-structure" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Recommendations for Success</h3>
                 </div>
                 <p id="recommendationsSummary" class="hint">No data yet.</p>
               </section>
 
-              <section id="quickLinksPanel" class="panel" style="display:none" data-surface-role="panel">
+              <section id="quickLinksPanel" class="panel panel-theme panel-structure" style="display:none" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Liên kết nhanh</h3>
                 </div>
@@ -674,7 +723,7 @@
           <p id="studentDetailLead" class="detail-copy">Loading student detail...</p>
           <div id="studentDetailMetrics" class="metrics detail-metrics"></div>
           <div class="detail-layout">
-            <section class="panel detail-calendar-panel" data-surface-role="panel">
+            <section class="panel panel-theme panel-structure detail-calendar-panel" data-surface-role="panel">
               <div class="section-head">
                 <h3 id="studentDetailCalendarTitle">Calendar</h3>
               </div>
@@ -682,7 +731,7 @@
               <div id="studentDetailCalendarGrid" class="calendar-shell detail-calendar-shell" aria-live="polite"></div>
             </section>
 
-            <section class="panel" data-surface-role="panel">
+            <section class="panel panel-theme panel-structure" data-surface-role="panel">
               <div class="section-head">
                 <h3 id="studentDetailPrimaryTitle">Current Focus</h3>
               </div>
@@ -690,7 +739,7 @@
               <div id="studentDetailPrimaryList" class="detail-list"></div>
             </section>
 
-            <section class="panel" data-surface-role="panel">
+            <section class="panel panel-theme panel-structure" data-surface-role="panel">
               <div class="section-head">
                 <h3 id="studentDetailHistoryTitle">Recent History</h3>
               </div>
@@ -704,7 +753,7 @@
           <div class="section-head new-words-page-head bm015">
             <h2>New Words Section</h2>
           </div>
-          <details class="panel new-words-intro">
+          <details class="panel panel-theme panel-structure new-words-intro">
             <summary>Read Instructions</summary>
             <div class="new-words-intro-body">
               <div class="new-words-intro-copy">
@@ -790,7 +839,7 @@
               </button>
             </div>
           </details>
-          <div class="panel new-words-tools" data-surface-role="panel">
+          <div class="panel panel-theme panel-structure new-words-tools" data-surface-role="panel">
             <label for="newWordsSort">Sort by</label>
             <select id="newWordsSort">
               <option value="date-desc">Date added</option>
@@ -849,7 +898,7 @@
             </div>
           </div>
           <div class="news-layout">
-            <section id="studentCalendar" class="panel" data-surface-role="panel">
+            <section id="studentCalendar" class="panel panel-theme panel-structure" data-surface-role="panel">
               <h2>Your View Month Calendar</h2>
               <p id="calendarTitle" class="sub calendar-range">Your View timeline</p>
               <div class="legend">
@@ -864,7 +913,7 @@
               <div id="calendarGrid" class="calendar-shell" aria-live="polite"></div>
             </section>
 
-            <section id="newsQueuePanel" class="panel queue-panel" data-surface-role="panel">
+            <section id="newsQueuePanel" class="panel panel-theme panel-structure queue-panel" data-surface-role="panel">
               <div id="newsPageQueueDetails">
                 <div class="queue-summary-head">
                   <div class="queue-summary-stack">
@@ -893,7 +942,7 @@
               </div>
             </section>
 
-            <section id="newsReportFormCard" class="panel" data-surface-role="panel">
+            <section id="newsReportFormCard" class="panel panel-theme panel-structure" data-surface-role="panel">
               <div class="section-head news-report-form-head">
                 <h2>Media Report Form</h2>
                 <button id="newNewsFormBtn" type="button" class="portal-button portal-button-primary"
@@ -982,7 +1031,7 @@
                 </div>
 
                 <div class="field c12">
-                  <details class="panel student-new-words-instructions">
+                  <details class="panel panel-theme panel-structure student-new-words-instructions">
                     <summary>How to enter New Words</summary>
                     <div class="student-new-words-instructions-body">
                       <div class="student-new-words-instructions-copy">

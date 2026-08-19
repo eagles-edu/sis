@@ -17,6 +17,7 @@ This audit separates executable current requirements from historical plans and a
 | Concern | Current authority | Verification anchor |
 | --- | --- | --- |
 | Shared theme tokens and reusable chrome | `web-asset/shared/portal-theme.css` | `tools/build-admin-assets.mjs`; portal theme contracts |
+| Student/Parent χ pilot assets | `web-asset/shared/student-parent-critical.css` plus builder extraction | `portal-theme-colors*.css`, `student-parent-structure*.css`, both portal inline critical blocks | `test/student-parent-chi-contract.spec.mjs`; authenticated desktop/mobile render |
 | Generated theme assets | `web-asset/shared/portal-theme.min.css` and `web-asset/admin/admin-portal-theme*.css` | `npm run build:admin-assets:check` |
 | Surface roles | `--portal-page-bg`, `--portal-neutral-*`, `--portal-surface-*` in shared CSS | `test/portal-theme-contract.spec.mjs` |
 | Shared page stack/content/definition spacing | `--portal-page-stack-gap: 12px`, `--portal-content-gap: 12px`, definition flow `12px`, definition inner spacing = flow / χ (`--portal-definition-chi: 1.61803398875`) | `test/portal-spacing-contract.spec.mjs` |

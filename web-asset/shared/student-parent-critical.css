@@ -1,0 +1,286 @@
+/* Authored Student/Parent first-paint geometry. Keep this source small and token-only. */
+:root {
+  --portal-chi: 1.61803398875;
+  --portal-chi-dense: 1.17461894309;
+  --portal-chi-base: 8px;
+  --portal-chi-space-0: 8px;
+  --portal-chi-space-1: 12.9443px;
+  --portal-chi-space-2: 20.9443px;
+  --portal-chi-space-3: 33.8885px;
+  --portal-chi-space-4: 54.8328px;
+  --portal-chi-space-5: 88.7213px;
+  --portal-chi-shell-gap: 20.9443px;
+  --portal-chi-viewport-min: 100vh;
+  --portal-chi-side-min: 210px;
+  --portal-chi-shell-max: 1440px;
+  --portal-chi-control-block: 33.8885px;
+  --portal-chi-prefooter-block: 54.8328px;
+  --portal-chi-header-block: 54.8328px;
+  --portal-chi-header-mobile-block: 88.7213px;
+  --portal-chi-header-row-block: 33.8885px;
+  --portal-chi-radius-0: 8px;
+  --portal-chi-radius-1: 12.9443px;
+  --portal-chi-radius-2: 20.9443px;
+  --portal-chi-radius-pill: 999px;
+  --portal-chi-shadow-y-1: 12.9443px;
+  --portal-chi-shadow-blur-1: 20.9443px;
+  --portal-chi-shadow-y-2: 20.9443px;
+  --portal-chi-shadow-blur-2: 33.8885px;
+  --portal-chi-font-0: 14px;
+  --portal-chi-font-1: 16.4447px;
+  --portal-chi-font-2: 19.3237px;
+  --portal-chi-font-3: 22.7093px;
+  --portal-chi-line-compact: 1.17461894309;
+  --portal-chi-line-body: 1.61803398875;
+}
+
+html {
+  box-sizing: border-box;
+  font-family: var(--font-base, system-ui, -apple-system, sans-serif);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body.student-portal-page,
+body.parent-portal-page {
+  margin: 0;
+  min-block-size: var(--portal-chi-viewport-min);
+}
+
+body.student-portal-page .portal-shell,
+body.parent-portal-page .portal-shell,
+body.parent-portal-page .portal-layout {
+  min-block-size: var(--portal-chi-viewport-min);
+}
+
+body.student-portal-page .portal-shell,
+body.parent-portal-page .portal-shell {
+  display: block;
+}
+
+body.student-portal-page .side-nav,
+body.parent-portal-page .side-nav {
+  min-inline-size: 0;
+  padding: var(--portal-chi-space-2);
+}
+
+body.student-portal-page .side-brand,
+body.parent-portal-page .side-brand,
+body.student-portal-page .side-links,
+body.parent-portal-page .side-links {
+  display: grid;
+  gap: var(--portal-chi-space-1);
+}
+
+body.student-portal-page .side-link,
+body.parent-portal-page .side-link {
+  min-block-size: var(--portal-chi-control-block);
+  padding-block: var(--portal-chi-space-1);
+  padding-inline: var(--portal-chi-space-2);
+}
+
+body.student-portal-page .hero,
+body.student-portal-page .topbar,
+body.parent-portal-page .hero,
+body.parent-portal-page .topbar {
+  align-items: center;
+  border-radius: var(--portal-chi-radius-1);
+  display: grid;
+  gap: var(--portal-chi-space-1);
+  min-block-size: var(--portal-chi-header-block);
+  padding-block: var(--portal-chi-space-1);
+  padding-inline: var(--portal-chi-space-3);
+}
+
+body.student-portal-page .topbar-head,
+body.parent-portal-page .topbar-head,
+body.student-portal-page .hero-line,
+body.parent-portal-page .hero-line {
+  align-items: center;
+  display: grid;
+  gap: var(--portal-chi-space-1);
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-inline-size: 0;
+}
+
+body.student-portal-page .brand-head,
+body.parent-portal-page .brand-head {
+  align-items: center;
+  display: flex;
+  gap: var(--portal-chi-space-1);
+  min-inline-size: 0;
+}
+
+body.student-portal-page .header-actions,
+body.parent-portal-page .header-actions {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: var(--portal-chi-space-1);
+}
+
+body.student-portal-page .topbar h1,
+body.parent-portal-page .topbar h1,
+body.student-portal-page .hero h1,
+body.parent-portal-page .hero h1 {
+  font-size: var(--portal-chi-font-3);
+  line-height: var(--portal-chi-line-compact);
+  margin-block: 0;
+}
+
+body.student-portal-page main.portal-main,
+body.parent-portal-page main.portal-main {
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--portal-chi-shell-gap);
+  grid-template-columns: minmax(0, 1fr);
+  margin-inline: auto;
+  max-inline-size: var(--portal-chi-shell-max);
+  padding: var(--portal-chi-space-2);
+  inline-size: 100%;
+}
+
+body.student-portal-page .content,
+body.parent-portal-page .content,
+body.student-portal-page .panel,
+body.parent-portal-page .panel,
+body.student-portal-page .card,
+body.parent-portal-page .card,
+body.student-portal-page [data-surface-role="content"],
+body.parent-portal-page [data-surface-role="content"],
+body.student-portal-page [data-surface-role="panel"],
+body.parent-portal-page [data-surface-role="panel"] {
+  min-inline-size: 0;
+}
+
+body.student-portal-page .panel-theme,
+body.parent-portal-page .panel-theme,
+body.student-portal-page .card-theme,
+body.parent-portal-page .card-theme {
+  border-radius: var(--portal-chi-radius-1);
+  box-shadow: 0 var(--portal-chi-shadow-y-1) var(--portal-chi-shadow-blur-1) var(--portal-shadow-color, transparent);
+}
+
+body.student-portal-page .panel-structure,
+body.parent-portal-page .panel-structure,
+body.student-portal-page .card-structure,
+body.parent-portal-page .card-structure {
+  padding: var(--portal-chi-space-2);
+}
+
+body.student-portal-page .portal-prefooter,
+body.parent-portal-page .portal-prefooter,
+body.student-portal-page #envBadge,
+body.parent-portal-page #envBadge {
+  display: block;
+  min-block-size: var(--portal-chi-prefooter-block);
+}
+
+body.student-portal-page .panel > :first-child,
+body.parent-portal-page .panel > :first-child,
+body.student-portal-page .card > :first-child,
+body.parent-portal-page .card > :first-child {
+  margin-block-start: 0;
+}
+
+body.student-portal-page .panel > :last-child,
+body.parent-portal-page .panel > :last-child,
+body.student-portal-page .card > :last-child,
+body.parent-portal-page .card > :last-child {
+  margin-block-end: 0;
+}
+
+body.student-portal-page h2,
+body.parent-portal-page h2 {
+  font-size: var(--portal-chi-font-2);
+  line-height: var(--portal-chi-line-compact);
+  margin-block: var(--portal-chi-space-1);
+}
+
+body.student-portal-page h3,
+body.parent-portal-page h3,
+body.student-portal-page h4,
+body.parent-portal-page h4 {
+  font-size: var(--portal-chi-font-1);
+  line-height: var(--portal-chi-line-compact);
+  margin-block: var(--portal-chi-space-1);
+}
+
+body.student-portal-page p,
+body.parent-portal-page p,
+body.student-portal-page li,
+body.parent-portal-page li {
+  line-height: var(--portal-chi-line-body);
+}
+
+body.student-portal-page .row,
+body.parent-portal-page .row,
+body.student-portal-page .field,
+body.parent-portal-page .field,
+body.student-portal-page .form-row,
+body.parent-portal-page .form-row {
+  display: grid;
+  gap: var(--portal-chi-space-1);
+}
+
+body.student-portal-page button,
+body.parent-portal-page button,
+body.student-portal-page input,
+body.parent-portal-page input,
+body.student-portal-page select,
+body.parent-portal-page select,
+body.student-portal-page textarea,
+body.parent-portal-page textarea {
+  min-block-size: var(--portal-chi-control-block);
+}
+
+body.student-portal-page .hidden,
+body.parent-portal-page .hidden {
+  display: none !important;
+}
+
+html[data-student-auth-state="booting"] body.student-portal-page,
+html[data-parent-auth-state="booting"] body.parent-portal-page {
+  opacity: 0;
+  visibility: hidden;
+}
+
+html[data-student-auth-state="booting"] body.student-portal-page #loginPanel,
+html[data-student-auth-state="booting"] body.student-portal-page #appPanel,
+html[data-parent-auth-state="booting"] body.parent-portal-page #loginCard,
+html[data-parent-auth-state="booting"] body.parent-portal-page #portalCard {
+  display: none !important;
+}
+
+@media (min-width: 1000px) {
+  body.student-portal-page .topbar-head,
+  body.parent-portal-page .topbar-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 520px) {
+  body.student-portal-page .hero,
+  body.student-portal-page .topbar,
+  body.parent-portal-page .hero,
+  body.parent-portal-page .topbar {
+    min-block-size: var(--portal-chi-header-mobile-block);
+    padding-inline: var(--portal-chi-space-1);
+  }
+
+  body.student-portal-page .topbar-head,
+  body.parent-portal-page .topbar-head {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(2, var(--portal-chi-header-row-block));
+    min-block-size: var(--portal-chi-header-mobile-block);
+  }
+
+  body.student-portal-page main.portal-main,
+  body.parent-portal-page main.portal-main {
+    padding: var(--portal-chi-space-1);
+  }
+}
