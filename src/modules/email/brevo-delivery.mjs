@@ -19,10 +19,19 @@ function eventDate(value) {
 }
 
 function eventKey(payload, eventType, messageId, recipientEmail, occurredAt) {
-  // Brevo's `id` is the webhook ID and is reused for every event sent to
-  // this endpoint. Only use a per-event identifier as an explicit key.
+  // Brevo may reuse both `id` and `uuid` for every lifecycle callback of one
+  // message. The event type and occurrence time are part of the event
+  // identity, so a delivery/open/click sequence cannot collapse into one row.
   const explicitId = normalizeText(payload?.uuid || payload?.eventId || payload?.eventUuid)
-  const basis = explicitId || [eventType, messageId, recipientEmail, occurredAt.toISOString(), normalizeText(payload?.subject)].join("|")
+  const basis = [
+    eventType,
+    explicitId,
+    messageId,
+    recipientEmail,
+    occurredAt.toISOString(),
+    normalizeText(payload?.subject),
+    normalizeText(payload?.link),
+  ].join("|")
   return crypto.createHash("sha256").update(basis).digest("hex")
 }
 

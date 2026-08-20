@@ -7986,6 +7986,7 @@ async function handleApiRequest(request, response, pathname, url) {
     assertStoreEnabled()
     const prisma = await getSharedPrismaClient()
     const students = await prisma.student.findMany({
+      where: { parentProfileInvitations: { some: {} } },
       include: { profile: true, parentProfileInvitations: { orderBy: { createdAt: "desc" }, take: 1 } },
       orderBy: [{ profile: { familyId: "asc" } }, { eaglesId: "asc" }],
       take: Math.min(2000, Math.max(1, Number.parseInt(url.searchParams.get("take") || "1000", 10) || 1000)),
@@ -8567,6 +8568,7 @@ async function handleParentApiRequest(request, response, pathname, url) {
   const invitationLinkMatch = pathname.match(PARENT_PROFILE_INVITATION_PATH_RE)
   if (method === "GET" && invitationLinkMatch) {
     try {
+      await consumeParentProfileInvitation(decodeURIComponent(invitationLinkMatch[1]), { mark: "clicked" })
       const next = new URL(PARENT_PORTAL_PAGE_PATH, requestOrigin)
       next.searchParams.set("activate", decodeURIComponent(invitationLinkMatch[1]))
       sendRedirect(response, 302, `${next.pathname}${next.search}`)

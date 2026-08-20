@@ -58,6 +58,7 @@ function publicOrigin() {
   return origin.replace(/\/+$/, "")
 }
 function invitationUrl(token) { return `${publicOrigin()}/parent/profile-invitations/${encodeURIComponent(token)}` }
+function invitationOpenUrl(token) { return `${publicOrigin()}/api/parent/profile-invitations/${encodeURIComponent(token)}/open.gif` }
 
 function initialPassword() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
@@ -121,7 +122,7 @@ export async function ensureParentPortalAccount(prisma, student, recipientEmail 
   return { account }
 }
 
-function invitationMessage({ student, url, parentId, mustChangePassword, expiresAt }) {
+function invitationMessage({ student, url, openUrl, parentId, mustChangePassword, expiresAt }) {
   const name = text(student?.profile?.fullName || student?.profile?.englishName || student?.eaglesId) || "your learner"
   const subject = `Complete the Eagles student profile for ${name}`
   const expiresOn = expiresAt instanceof Date ? expiresAt.toLocaleDateString("en-CA") : "the configured expiry date"
@@ -134,13 +135,14 @@ function invitationMessage({ student, url, parentId, mustChangePassword, expires
   const credentialHtml = mustChangePassword
     ? `<p><strong>Parent ID:</strong> ${safe(parentId)}<br>When the completion link opens, choose a new password and save both your Parent ID and password in a safe place.</p>`
     : `<p><strong>Parent ID:</strong> ${safe(parentId)}<br>Use your existing parent-portal password at <a href="${publicOrigin()}/parent">the parent portal</a>.</p>`
-  const html = `${completionHtml}<p>Student: <strong>${safe(name)}</strong></p>${credentialHtml}`
+  const openPixel = `<img src="${safe(openUrl)}" width="1" height="1" alt="" aria-hidden="true" style="display:block;border:0" />`
+  const html = `${completionHtml}<p>Student: <strong>${safe(name)}</strong></p>${credentialHtml}${openPixel}`
   return { subject, textBody, html }
 }
 
 async function sendInvitationEmail({ invitationId, recipientEmail, student, token, expiresAt, parentId, mustChangePassword }) {
   const url = invitationUrl(token)
-  const message = invitationMessage({ student, url, parentId, mustChangePassword, expiresAt })
+  const message = invitationMessage({ student, url, openUrl: invitationOpenUrl(token), parentId, mustChangePassword, expiresAt })
   const fromEmail = text(process.env.BREVO_FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER)
   const fromName = text(process.env.BREVO_FROM_NAME || "The Eagles Club")
   if (isBrevoEmailProvider()) {

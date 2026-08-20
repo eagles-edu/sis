@@ -4096,7 +4096,7 @@
           .split(/(\s+|-)/u)
           .map((token) => {
             if (!token || /^\s+$/u.test(token) || token === "-") return token;
-            if (/[aeiouy]\p{M}+/iu.test(token.normalize("NFD"))) return token.toLocaleLowerCase("en-US");
+            if (/[aeiouy]\p{M}+/iu.test(token.normalize("NFD"))) return token;
             if (!/[A-Z]/u.test(token)) return token;
             const chars = Array.from(token.toLocaleLowerCase("en-US"));
             const vowelIndex = chars.findIndex((char) => vowels[char]);
@@ -4169,10 +4169,6 @@
         const input = event?.target;
         if (input?.matches?.('[data-vocabulary-field="english"]')) {
           input.value = input.value.toLocaleLowerCase("en-US");
-          return;
-        }
-        if (input?.matches?.('[data-vocabulary-field="syllabication"]')) {
-          input.value = normalizeSyllabication(input.value);
         }
       }
 

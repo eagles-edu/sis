@@ -1802,6 +1802,25 @@ html[data-theme="dark"] body.page {
   background: var(--portal-role-card-bg);
   box-shadow: var(--portal-role-shadow);
 }
+/* Shared default for the custom button tooltip created by the admin shell. */
+body.admin-portal-page .admin-button-tooltip {
+  background: rgba(49, 109, 214, 0.96);
+  border: 1px solid rgba(207, 222, 247, 0.92);
+  border-radius: var(--radius-2);
+  box-shadow: 0 12px 28px rgba(8, 22, 40, 0.24);
+  color: #fbffff;
+  font-size: 12px;
+  font-weight: 700;
+  left: 0;
+  max-width: min(240px, calc(100vw - 24px));
+  padding: 8px 10px;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  white-space: normal;
+  word-break: break-word;
+  z-index: 1200;
+}
 .portal-theme-chart-shell,
 .portal-theme-dialog {
   overflow: hidden;
@@ -6338,12 +6357,13 @@ body.admin-portal-page .news-vocabulary-row-dots {
   margin: 0;
   max-block-size: var(--portal-prefooter-block-size);
   min-block-size: var(--portal-prefooter-block-size);
-  padding-bottom: 24px!important;
-  padding-top: 24px!important;
+  padding-block: 3px;
   width: 100%;
 }
 .portal-prefooter .env-badge {
+  font-size: 11px;
   margin: 0;
+  padding: 4px 10px;
 }
 .status-strip.portal-prefooter {
   gap: var(--hub-space-1, 12px);

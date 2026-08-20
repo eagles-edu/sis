@@ -6,7 +6,7 @@ const tableReadyByElement = new WeakMap()
 export const ENGAGEMENT_IDENTITY_BLOCK_CONTRACT = "SIVB"
 const columnGroups = [
   { label: "Recipient", buttonClass: "portal-button-primary", fields: ["reviewed", "id", "familyId", "englishName", "level", "emailUsed", "parentName", "parentEmail", "learners", "profileComplete", "invitationStatus", "batchId", "queueType", "providerMessageId"] },
-  { label: "Positive events", buttonClass: "portal-button-affirm", fields: ["emailQueued", "emailSent", "emailDelivered", "emailProxy", "emailFirst", "emailUnique", "emailOpened", "emailClicked"] },
+  { label: "Positive events", buttonClass: "portal-button-affirm", fields: ["emailQueued", "emailSent", "emailDelivered", "emailOpened", "emailClicked"] },
   { label: "Deferred", buttonClass: "portal-button-warning", fields: ["emailDeferred"] },
   { label: "Negative events", buttonClass: "portal-button-danger", fields: ["emailError", "emailInvalid", "emailBlocked", "emailSoft", "emailHard", "emailComplained", "emailUnsubscribed"] },
   { label: "SIS interaction", buttonClass: "portal-button-info", fields: ["linkClicked", "pdfDownloaded", "acknowledged", "actionCompleted"] },
@@ -77,8 +77,8 @@ function markFormatter(cell, tone) {
   return `<span class="engagement-matrix-mark is-${tone} ${value === "yes" ? "is-set" : "is-empty"}" title="${title}">${mark}</span>`
 }
 
-function eventColumn(title, field, tone) {
-  return { title, field, width: 92, hozAlign: "center", formatter: (cell) => markFormatter(cell, tone) }
+function eventColumn(title, field, tone, tooltip) {
+  return { title, field, width: 112, hozAlign: "center", headerTooltip: tooltip, formatter: (cell) => markFormatter(cell, tone) }
 }
 
 function completionFormatter(cell) {
@@ -112,37 +112,60 @@ function columns({ profileMode = false } = {}) {
         { title: "Queue", field: "queueType", width: 115 },
         { title: "MessageID", field: "providerMessageId", minWidth: 190 },
       ]
-  return [
-    { title: "Recipient", columns: recipientColumns },
-    { title: "Positive", columns: [
-      eventColumn("Queued", "emailQueued", "positive"),
-      eventColumn("Sent", "emailSent", "positive"),
-      eventColumn("Delivered", "emailDelivered", "positive"),
-      eventColumn("Proxy", "emailProxy", "positive"),
-      eventColumn("First", "emailFirst", "positive"),
-      eventColumn("Unique", "emailUnique", "positive"),
-      eventColumn("Opened", "emailOpened", "positive"),
-      eventColumn("Clicked", "emailClicked", "positive"),
-    ] },
-    { title: "Deferred", columns: [
-      eventColumn("Deferred", "emailDeferred", "deferred"),
-    ] },
-    { title: "Negative", columns: [
-      eventColumn("Error", "emailError", "negative"),
-      eventColumn("Invalid", "emailInvalid", "negative"),
-      eventColumn("Blocked", "emailBlocked", "negative"),
-      eventColumn("Soft", "emailSoft", "negative"),
-      eventColumn("Hard", "emailHard", "negative"),
-      eventColumn("Complaint", "emailComplained", "negative"),
-      eventColumn("Unsubscribed", "emailUnsubscribed", "negative"),
-    ] },
-    { title: "Interaction", columns: [
-      eventColumn("Link", "linkClicked", "interaction"),
-      eventColumn("PDF", "pdfDownloaded", "interaction"),
-      eventColumn("Ack", "acknowledged", "interaction"),
-      eventColumn("Action", "actionCompleted", "interaction"),
-    ] },
+  const interactionColumns = profileMode
+    ? [
+        eventColumn("SIS-RX-CLICK", "linkClicked", "interaction", "SIS received the invitation URL request."),
+        eventColumn("Profile (Submitted)", "actionCompleted", "interaction", "The parent submitted the profile after saving the required signature and agreement."),
+      ]
+    : [
+        eventColumn("Link", "linkClicked", "interaction"),
+        eventColumn("PDF", "pdfDownloaded", "interaction"),
+        eventColumn("Ack", "acknowledged", "interaction"),
+        eventColumn("Action", "actionCompleted", "interaction"),
+      ]
+  const positiveColumns = profileMode
+    ? [
+        eventColumn("Queued", "emailQueued", "positive", "SIS queued the invitation email."),
+        eventColumn("Sent", "emailSent", "positive", "Brevo accepted the invitation email for sending."),
+        eventColumn("Delivered", "emailDelivered", "positive", "Brevo reported delivery to the recipient mailbox."),
+        eventColumn("Opened", "emailOpened", "positive", "Brevo reported that the email was opened."),
+        eventColumn("Clicked", "emailClicked", "positive", "Brevo reported a click on a link in the email."),
+      ]
+    : [
+        eventColumn("Queued", "emailQueued", "positive"),
+        eventColumn("Sent", "emailSent", "positive"),
+        eventColumn("Delivered", "emailDelivered", "positive"),
+        eventColumn("Opened", "emailOpened", "positive"),
+        eventColumn("Clicked", "emailClicked", "positive"),
+      ]
+  const deferredColumns = [
+    eventColumn("Deferred", "emailDeferred", "deferred"),
   ]
+  const negativeColumns = [
+    eventColumn("Error", "emailError", "negative"),
+    eventColumn("Invalid", "emailInvalid", "negative"),
+    eventColumn("Blocked", "emailBlocked", "negative"),
+    eventColumn("Soft", "emailSoft", "negative"),
+    eventColumn("Hard", "emailHard", "negative"),
+    eventColumn("Complaint", "emailComplained", "negative"),
+    eventColumn("Unsubscribed", "emailUnsubscribed", "negative"),
+  ]
+  const profileColumns = profileMode
+    ? [
+        { title: "Recipient", columns: recipientColumns },
+        { title: "Email delivery", columns: positiveColumns },
+        { title: "SIS profile", columns: interactionColumns },
+        { title: "Deferred", columns: deferredColumns },
+        { title: "Negative", columns: negativeColumns },
+      ]
+    : [
+        { title: "Recipient", columns: recipientColumns },
+        { title: "Positive", columns: positiveColumns },
+        { title: "Deferred", columns: deferredColumns },
+        { title: "Negative", columns: negativeColumns },
+        { title: "Interaction", columns: interactionColumns },
+      ]
+  return profileColumns
 }
 
 function positionSivbBeacon(tableHost) {
@@ -271,7 +294,13 @@ export async function renderEngagementMatrix(element, rows = [], { groupBy = "gr
     await tableReady
   } else {
     await tableReadyByElement.get(element)
-    await table.replaceData(rows)
+    if (profileMode) {
+      table.destroy()
+      tableByElement.delete(element)
+      tableReadyByElement.delete(element)
+      return renderEngagementMatrix(element, rows, { groupBy, initialSort, profileMode, groupHeader })
+    }
+    await table.setData(rows)
   }
   return table
 }

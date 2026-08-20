@@ -1,25 +1,25 @@
 # HELP sis_admin_student_write_requests_total Completed authenticated student create or update requests.
 # TYPE sis_admin_student_write_requests_total counter
-sis_admin_student_write_requests_total{route="POST /api/admin/students",status="200"} 1
+sis_admin_student_write_requests_total{route="POST /api/admin/students",status="200"} 2
 # HELP sis_admin_student_write_request_duration_seconds Authenticated student create or update request duration.
 # TYPE sis_admin_student_write_request_duration_seconds summary
-sis_admin_student_write_request_duration_seconds_sum{route="POST /api/admin/students",status="200"} 0.3983174350000918
-sis_admin_student_write_request_duration_seconds_count{route="POST /api/admin/students",status="200"} 1
+sis_admin_student_write_request_duration_seconds_sum{route="POST /api/admin/students",status="200"} 0.7293110939972103
+sis_admin_student_write_request_duration_seconds_count{route="POST /api/admin/students",status="200"} 2
 # HELP sis_admin_student_write_phase_duration_seconds Student write phase duration.
 # TYPE sis_admin_student_write_phase_duration_seconds summary
-sis_admin_student_write_phase_duration_seconds_sum{route="POST /api/admin/students",phase="profile_backup_pre"} 0.005810704000294208
-sis_admin_student_write_phase_duration_seconds_count{route="POST /api/admin/students",phase="profile_backup_pre"} 1
-sis_admin_student_write_phase_duration_seconds_sum{route="POST /api/admin/students",phase="database_transaction"} 0.1351409750021994
-sis_admin_student_write_phase_duration_seconds_count{route="POST /api/admin/students",phase="database_transaction"} 1
-sis_admin_student_write_phase_duration_seconds_sum{route="POST /api/admin/students",phase="filter_cache_invalidation"} 0.0010872149989008904
-sis_admin_student_write_phase_duration_seconds_count{route="POST /api/admin/students",phase="filter_cache_invalidation"} 1
-sis_admin_student_write_phase_duration_seconds_sum{route="POST /api/admin/students",phase="roster_reload"} 0.07007151100039483
-sis_admin_student_write_phase_duration_seconds_count{route="POST /api/admin/students",phase="roster_reload"} 1
-sis_admin_student_write_phase_duration_seconds_sum{route="POST /api/admin/students",phase="profile_backup_post"} 0.007683524001389742
-sis_admin_student_write_phase_duration_seconds_count{route="POST /api/admin/students",phase="profile_backup_post"} 1
+sis_admin_student_write_phase_duration_seconds_sum{route="POST /api/admin/students",phase="profile_backup_pre"} 0.01254874700307846
+sis_admin_student_write_phase_duration_seconds_count{route="POST /api/admin/students",phase="profile_backup_pre"} 2
+sis_admin_student_write_phase_duration_seconds_sum{route="POST /api/admin/students",phase="database_transaction"} 0.2737980150021613
+sis_admin_student_write_phase_duration_seconds_count{route="POST /api/admin/students",phase="database_transaction"} 2
+sis_admin_student_write_phase_duration_seconds_sum{route="POST /api/admin/students",phase="filter_cache_invalidation"} 0.001769729994237423
+sis_admin_student_write_phase_duration_seconds_count{route="POST /api/admin/students",phase="filter_cache_invalidation"} 2
+sis_admin_student_write_phase_duration_seconds_sum{route="POST /api/admin/students",phase="roster_reload"} 0.12669364000111819
+sis_admin_student_write_phase_duration_seconds_count{route="POST /api/admin/students",phase="roster_reload"} 2
+sis_admin_student_write_phase_duration_seconds_sum{route="POST /api/admin/students",phase="profile_backup_post"} 0.009418308001011611
+sis_admin_student_write_phase_duration_seconds_count{route="POST /api/admin/students",phase="profile_backup_post"} 2
 # HELP sis_nodejs_heap_used_bytes SIS Node.js heap used bytes at the latest student write metric flush.
 # TYPE sis_nodejs_heap_used_bytes gauge
-sis_nodejs_heap_used_bytes 85504944
+sis_nodejs_heap_used_bytes 91222800
 # HELP sis_nodejs_rss_bytes SIS Node.js resident set size at the latest student write metric flush.
 # TYPE sis_nodejs_rss_bytes gauge
-sis_nodejs_rss_bytes 329015296
+sis_nodejs_rss_bytes 214700032

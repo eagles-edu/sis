@@ -460,7 +460,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3938
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -472,7 +472,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3890
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -484,7 +484,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3806
+              "height": 495
             },
             ".panel": {
               "selector": ".panel",
@@ -866,15 +866,15 @@
                   "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
                 },
                 {
-                  "target": "div[aria-title=\"Positive\"]",
+                  "target": "div[aria-title=\"Email delivery\"]",
+                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
+                },
+                {
+                  "target": "div[aria-title=\"SIS profile\"]",
                   "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
                 },
                 {
                   "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"Negative\"]",
                   "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
                 }
               ]
@@ -912,15 +912,15 @@
                   "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
                 },
                 {
-                  "target": "div[aria-title=\"Positive\"]",
+                  "target": "div[aria-title=\"Email delivery\"]",
+                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
+                },
+                {
+                  "target": "div[aria-title=\"SIS profile\"]",
                   "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
                 },
                 {
                   "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"Negative\"]",
                   "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
                 }
               ]
@@ -935,15 +935,15 @@
                   "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
                 },
                 {
-                  "target": "div[aria-title=\"Positive\"]",
+                  "target": "div[aria-title=\"Email delivery\"]",
+                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
+                },
+                {
+                  "target": "div[aria-title=\"SIS profile\"]",
                   "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
                 },
                 {
                   "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"Negative\"]",
                   "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
                 }
               ]
@@ -2272,7 +2272,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1193
+              "height": 2242
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2284,7 +2284,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1145
+              "height": 2194
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2296,7 +2296,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1061
+              "height": 2110
             },
             ".panel": {
               "selector": ".panel",
@@ -2387,7 +2387,31 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": []
+          "axe": [
+            {
+              "id": "label",
+              "impact": "critical",
+              "help": "Form elements must have labels",
+              "nodes": [
+                {
+                  "target": "input[data-performance-queue-select=\"notify-msiw6cmn-aec20f93\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-msivpkke-0bd079d4\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-mrzd2aat-2eb906b2\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                },
+                {
+                  "target": "input[data-performance-queue-select=\"notify-mrzd0ywf-3d777c09\"]",
+                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+                }
+              ]
+            }
+          ]
         },
         {
           "link": {
@@ -2552,7 +2576,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1148
+              "height": 8935
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2564,7 +2588,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1100
+              "height": 8887
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2576,7 +2600,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 628
+              "height": 8803
             },
             ".panel": {
               "selector": ".panel",
@@ -3870,7 +3894,7 @@
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(5) > input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
+                  "target": "input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
@@ -3878,7 +3902,7 @@
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(7) > input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
+                  "target": "input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
@@ -3889,19 +3913,19 @@
               "help": "Select element must have an accessible name",
               "nodes": [
                 {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
+                  "target": "select[data-layout-key=\"inputType\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
+                  "target": "select[data-layout-key=\"tabId\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
+                  "target": "select[data-layout-key=\"inputType\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
+                  "target": "select[data-layout-key=\"tabId\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
@@ -4216,9 +4240,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "rgba(0, 0, 0, 0)",
-            "bgImage": "none",
-            "color": "rgb(0, 0, 0)"
+            "bg": "",
+            "bgImage": "",
+            "color": ""
           }
         }
       ]
@@ -6601,15 +6625,15 @@
                   "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
                 },
                 {
-                  "target": "div[aria-title=\"Positive\"]",
+                  "target": "div[aria-title=\"Email delivery\"]",
+                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
+                },
+                {
+                  "target": "div[aria-title=\"SIS profile\"]",
                   "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
                 },
                 {
                   "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"Negative\"]",
                   "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
                 }
               ]
@@ -6647,15 +6671,15 @@
                   "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
                 },
                 {
-                  "target": "div[aria-title=\"Positive\"]",
+                  "target": "div[aria-title=\"Email delivery\"]",
+                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
+                },
+                {
+                  "target": "div[aria-title=\"SIS profile\"]",
                   "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
                 },
                 {
                   "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"Negative\"]",
                   "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
                 }
               ]
@@ -6670,15 +6694,15 @@
                   "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
                 },
                 {
-                  "target": "div[aria-title=\"Positive\"]",
+                  "target": "div[aria-title=\"Email delivery\"]",
+                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
+                },
+                {
+                  "target": "div[aria-title=\"SIS profile\"]",
                   "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
                 },
                 {
                   "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"Negative\"]",
                   "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
                 }
               ]
@@ -8921,7 +8945,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1779
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8933,7 +8957,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1731
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8945,7 +8969,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1647
+              "height": 912
             },
             ".panel": {
               "selector": ".panel",
@@ -9653,7 +9677,7 @@
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(5) > input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
+                  "target": "input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
@@ -9661,7 +9685,7 @@
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(7) > input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
+                  "target": "input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
@@ -9672,19 +9696,19 @@
               "help": "Select element must have an accessible name",
               "nodes": [
                 {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
+                  "target": "select[data-layout-key=\"inputType\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
+                  "target": "select[data-layout-key=\"tabId\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
+                  "target": "select[data-layout-key=\"inputType\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
+                  "target": "select[data-layout-key=\"tabId\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
@@ -9999,9 +10023,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "rgb(82, 82, 82)",
-            "bgImage": "none",
-            "color": "rgb(229, 245, 255)"
+            "bg": "",
+            "bgImage": "",
+            "color": ""
           }
         }
       ]

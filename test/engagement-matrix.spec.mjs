@@ -49,16 +49,13 @@ test("engagement matrix uses ordered 16-event Brevo columns with profile identif
     const element = dom.window.document.getElementById("matrix")
     const table = await renderEngagementMatrix(element, [], { profileMode: true })
     const columns = flattenColumns(table.options.columns)
-    assert.equal(columns.every((column) => !/\s/u.test(column.title)), true)
-
-    assert.deepEqual(
-      columns.slice(6, 22).map((column) => column.title),
-      ["Queued", "Sent", "Delivered", "Proxy", "First", "Unique", "Opened", "Clicked", "Deferred", "Error", "Invalid", "Blocked", "Soft", "Hard", "Complaint", "Unsubscribed"],
-    )
-    assert.deepEqual(
-      columns.slice(6, 22).map((column) => column.field),
-      ["emailQueued", "emailSent", "emailDelivered", "emailProxy", "emailFirst", "emailUnique", "emailOpened", "emailClicked", "emailDeferred", "emailError", "emailInvalid", "emailBlocked", "emailSoft", "emailHard", "emailComplained", "emailUnsubscribed"],
-    )
+    assert.deepEqual(columns.slice(6, 11).map((column) => column.title), ["Queued", "Sent", "Delivered", "Opened", "Clicked"])
+    assert.deepEqual(columns.slice(11, 13).map((column) => column.title), ["SIS-RX-CLICK", "Profile (Submitted)"])
+    assert.deepEqual(columns.slice(13, 14).map((column) => column.title), ["Deferred"])
+    assert.deepEqual(columns.slice(14, 21).map((column) => column.title), ["Error", "Invalid", "Blocked", "Soft", "Hard", "Complaint", "Unsubscribed"])
+    assert.deepEqual(columns.slice(6, 11).map((column) => column.field), ["emailQueued", "emailSent", "emailDelivered", "emailOpened", "emailClicked"])
+    assert.equal(columns.find((column) => column.title === "SIS-RX-CLICK")?.headerTooltip, "SIS received the invitation URL request.")
+    assert.equal(columns.find((column) => column.title === "Profile (Submitted)")?.headerTooltip, "The parent submitted the profile after saving the required signature and agreement.")
     assert.deepEqual(
       table.options.initialSort,
       [{ column: "familyId", dir: "asc" }, { column: "id", dir: "asc" }],
@@ -92,7 +89,7 @@ test("engagement matrix uses ordered 16-event Brevo columns with profile identif
     assert.equal(element.querySelector(".engagement-matrix-table-host").dataset.engagementIdentityBlock, ENGAGEMENT_IDENTITY_BLOCK_CONTRACT)
     assert.deepEqual(
       table.options.columns.map((column) => column.title),
-      ["Recipient", "Positive", "Deferred", "Negative", "Interaction"],
+      ["Recipient", "Email delivery", "SIS profile", "Deferred", "Negative"],
     )
     assert.deepEqual(
       [...element.querySelectorAll(".engagement-matrix-column-toggle")].map((button) =>
@@ -121,6 +118,8 @@ test("engagement matrix keeps the student ID column frozen and centered", async 
   try {
     const { renderEngagementMatrix } = await import("../web-asset/admin/engagement-matrix.mjs?student-id-contract")
     const table = await renderEngagementMatrix(dom.window.document.getElementById("matrix"), [])
+    const visibleTitles = flattenColumns(table.options.columns).map((column) => column.title)
+    assert.equal(visibleTitles.some((title) => ["Proxy", "First", "Unique"].includes(title)), false)
     const idColumn = flattenColumns(table.options.columns).find((column) => column.field === "id")
     const roleColumn = flattenColumns(table.options.columns).find((column) => column.field === "reviewed")
     assert.equal(roleColumn.width, 90)

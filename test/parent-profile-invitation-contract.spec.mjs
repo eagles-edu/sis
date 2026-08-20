@@ -10,11 +10,14 @@ const routes = fs.readFileSync(path.resolve(rootDir, "server/student-admin-route
 
 test("parent invitation emails use a tracker-safe route and one-click activation", () => {
   assert.match(invitations, /function invitationUrl\(token\) \{ return `\$\{publicOrigin\(\)\}\/parent\/profile-invitations\/\$\{encodeURIComponent\(token\)\}` \}/)
+  assert.match(invitations, /function invitationOpenUrl\(token\) \{ return `\$\{publicOrigin\(\)\}\/api\/parent\/profile-invitations\/\$\{encodeURIComponent\(token\)\}\/open\.gif` \}/)
+  assert.match(invitations, /openPixel = `<img src="\$\{safe\(openUrl\)\}" width="1" height="1" alt="" aria-hidden="true"/)
   assert.doesNotMatch(invitations, /Activation code|activationCode/)
   assert.match(invitations, /idempotencyKey: invitationIdempotencyKey\(invitationId\)/)
   assert.match(invitations, /lower\(invitation\.status\) === "sent"/)
   assert.match(invitations, /if \(!invitation\) return \{ ok: false, status: "missing", duplicate: true \}/)
   assert.match(routes, /next\.searchParams\.set\("activate", decodeURIComponent\(invitationLinkMatch\[1\]\)\)/)
+  assert.match(routes, /await consumeParentProfileInvitation\(decodeURIComponent\(invitationLinkMatch\[1\]\), \{ mark: "clicked" \}\)/)
   assert.match(routes, /PARENT_ACTIVATION_RECOVERY_PATH/)
 })
 

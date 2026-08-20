@@ -58,3 +58,17 @@ test("portal content stacks keep the prefooter after main content with a 12px ga
   assert.match(libraryAdmin, /<main id="appMain"[\s\S]*?<\/main>\s*<section class="content portal-prefooter"[\s\S]*?<footer class="hub-footer"/)
   assert.doesNotMatch(libraryAdmin, /<main id="appMain"[\s\S]*<section class="content portal-prefooter"[\s\S]*?<\/main>/)
 })
+
+test("shared portal prefooters retain the compact 30px geometry", () => {
+  const prefooterRule = sharedTheme.match(/\.portal-prefooter\s*\{([\s\S]*?)\n\}/u)?.[1] || ""
+  const prefooterEnvBadgeRule = sharedTheme.match(/\.portal-prefooter \.env-badge\s*\{([\s\S]*?)\n\}/u)?.[1] || ""
+
+  assert.match(sharedTheme, /--portal-prefooter-block-size:\s*30px;/)
+  assert.match(prefooterRule, /block-size:\s*var\(--portal-prefooter-block-size\);/)
+  assert.match(prefooterRule, /min-block-size:\s*var\(--portal-prefooter-block-size\);/)
+  assert.match(prefooterRule, /max-block-size:\s*var\(--portal-prefooter-block-size\);/)
+  assert.match(prefooterRule, /padding-block:\s*3px;/)
+  assert.doesNotMatch(prefooterRule, /padding-(?:top|bottom):/)
+  assert.match(prefooterEnvBadgeRule, /font-size:\s*11px;/)
+  assert.match(prefooterEnvBadgeRule, /padding:\s*4px 10px;/)
+})

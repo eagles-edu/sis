@@ -31,7 +31,7 @@ export function normalizeVocabularySyllabication(value) {
   const vowels = { a: "á", e: "é", i: "í", o: "ó", u: "ú", y: "ý" }
   return normalizeSyllabicationText(value).split(/(\s+|-)/u).map((token) => {
     if (!token || /^\s+$/u.test(token) || token === "-") return token
-    if (hasAccentStress(token)) return token.toLocaleLowerCase("en-US")
+    if (hasAccentStress(token)) return token
     if (!hasUppercase(token)) return token
     const chars = Array.from(token.toLocaleLowerCase("en-US"))
     const vowelIndex = chars.findIndex((char) => vowels[char])

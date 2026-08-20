@@ -22,8 +22,10 @@ export function initProfileEngagementIsland({ document, api, onError }) {
   const metric = (row = {}) => {
     const brevo = row.brevoDelivery || {}
     const invitationField = (field) => row[`invitation${field[0].toUpperCase()}${field.slice(1)}`] || ""
-    const event = (field) => brevo[field] || invitationField(field)
-    const yes = (field) => event(field) ? "yes" : ""
+    const emailEvent = (field) => brevo[field] || invitationField(field)
+    const brevoEvent = (field) => brevo[field] || ""
+    const invitationEvent = (field) => invitationField(field)
+    const yes = (event) => event ? "yes" : ""
     const parentsId = normalize(row.parentsId || row.id)
     const familyId = normalize(row.familyId)
     const eaglesIds = normalize(row.eaglesIds || row.id) || "-"
@@ -43,24 +45,26 @@ export function initProfileEngagementIsland({ document, api, onError }) {
       learners: normalize(row.learners),
       profileComplete: normalize(row.profileComplete),
       invitationStatus: normalize(row.invitationStatus),
-      emailQueued: event("queuedAt") || row.invitationQueuedAt ? "yes" : "",
-      emailQueuedAt: event("queuedAt") || row.invitationQueuedAt || "",
-      emailSent: event("sentAt") || row.invitationSentAt ? "yes" : "",
-      emailSentAt: event("sentAt") || row.invitationSentAt || "",
-      emailDelivered: yes("deliveredAt"), emailDeliveredAt: event("deliveredAt"),
-      emailProxy: yes("proxyLoadedAt"), emailProxyAt: event("proxyLoadedAt"),
-      emailFirst: yes("firstOpenedAt"), emailFirstAt: event("firstOpenedAt"),
-      emailUnique: yes("uniqueOpenedAt"), emailUniqueAt: event("uniqueOpenedAt"),
-      emailOpened: yes("openedAt"), emailOpenedAt: event("openedAt"),
-      emailClicked: yes("clickedAt"), emailClickedAt: event("clickedAt"),
-      emailDeferred: yes("deferredAt"), emailDeferredAt: event("deferredAt"),
-      emailError: yes("errorAt"), emailErrorAt: event("errorAt"),
-      emailInvalid: yes("invalidAt"), emailInvalidAt: event("invalidAt"),
-      emailBlocked: yes("blockedAt"), emailBlockedAt: event("blockedAt"),
-      emailSoft: yes("softBouncedAt"), emailSoftAt: event("softBouncedAt"),
-      emailHard: yes("hardBouncedAt"), emailHardAt: event("hardBouncedAt"),
-      emailComplained: yes("complainedAt"), emailComplainedAt: event("complainedAt"),
-      emailUnsubscribed: yes("unsubscribedAt"), emailUnsubscribedAt: event("unsubscribedAt"),
+      emailQueued: yes(emailEvent("queuedAt")), emailQueuedAt: emailEvent("queuedAt"),
+      emailSent: yes(emailEvent("sentAt")), emailSentAt: emailEvent("sentAt"),
+      emailDelivered: yes(emailEvent("deliveredAt")), emailDeliveredAt: emailEvent("deliveredAt"),
+      emailProxy: yes(emailEvent("proxyLoadedAt")), emailProxyAt: emailEvent("proxyLoadedAt"),
+      emailFirst: yes(emailEvent("firstOpenedAt")), emailFirstAt: emailEvent("firstOpenedAt"),
+      emailUnique: yes(emailEvent("uniqueOpenedAt")), emailUniqueAt: emailEvent("uniqueOpenedAt"),
+      emailOpened: yes(emailEvent("openedAt")), emailOpenedAt: emailEvent("openedAt"),
+      // The Brevo Clicked column is provider telemetry only. A profile-link
+      // activation is an SIS interaction and is shown separately as Link.
+      emailClicked: yes(brevoEvent("clickedAt")), emailClickedAt: brevoEvent("clickedAt"),
+      emailDeferred: yes(emailEvent("deferredAt")), emailDeferredAt: emailEvent("deferredAt"),
+      emailError: yes(emailEvent("errorAt")), emailErrorAt: emailEvent("errorAt"),
+      emailInvalid: yes(emailEvent("invalidAt")), emailInvalidAt: emailEvent("invalidAt"),
+      emailBlocked: yes(emailEvent("blockedAt")), emailBlockedAt: emailEvent("blockedAt"),
+      emailSoft: yes(emailEvent("softBouncedAt")), emailSoftAt: emailEvent("softBouncedAt"),
+      emailHard: yes(emailEvent("hardBouncedAt")), emailHardAt: emailEvent("hardBouncedAt"),
+      emailComplained: yes(emailEvent("complainedAt")), emailComplainedAt: emailEvent("complainedAt"),
+      emailUnsubscribed: yes(emailEvent("unsubscribedAt")), emailUnsubscribedAt: emailEvent("unsubscribedAt"),
+      linkClicked: yes(invitationEvent("clickedAt")), linkClickedAt: invitationEvent("clickedAt"),
+      actionCompleted: yes(invitationEvent("completedAt")), actionCompletedAt: invitationEvent("completedAt"),
       searchText: [row.parentsId, row.familyId, row.eaglesIds, row.parentName, row.parentEmail, row.learners].map(lower).join(" "),
     }
   }

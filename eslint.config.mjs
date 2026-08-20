@@ -49,6 +49,22 @@ export default [
     },
   },
   {
+    files: ["web-asset/**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: 2025,
+      sourceType: "module",
+      globals: {
+        ...globals.browser,
+      },
+    },
+    linterOptions: { reportUnusedDisableDirectives: true },
+    rules: {
+      "no-unused-vars": "off",
+      "no-useless-escape": "off",
+      "no-useless-assignment": "off",
+    },
+  },
+  {
     files: ["web-asset/**/*.js"],
     languageOptions: {
       ecmaVersion: 2023,

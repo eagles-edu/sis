@@ -267,24 +267,6 @@ body {
       .hidden {
         display: none !important;
   }
-      .admin-button-tooltip {
-        background: rgba(49, 109, 214, 0.96);
-        border: 1px solid rgba(207, 222, 247, 0.92);
-        border-radius: var(--radius-2);
-        box-shadow: 0 12px 28px rgba(8, 22, 40, 0.24);
-        color: #fbffff;
-        font-size: 12px;
-        font-weight: 700;
-        left: 0;
-        max-width: min(240px, calc(100vw - 24px));
-        padding: 8px 10px;
-        pointer-events: none;
-        position: absolute;
-        top: 0;
-        white-space: normal;
-        word-break: break-word;
-        z-index: 1200;
-  }
       .row {
         align-items: end;
         display: grid;

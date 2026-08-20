@@ -241,8 +241,9 @@ test("vocabulary guard accepts uppercase or accented stress and preserves canoni
   assert.equal(normalizeVocabularySyllabication("com-MEND-ed"), "com-ménd-ed")
   assert.equal(normalizeVocabularySyllabication("com-ménd-ed"), "com-ménd-ed")
   assert.equal(normalizeVocabularySyllabication("de-VO-ted"), "de-vó-ted")
-  assert.equal(normalizeVocabularySyllabication("con-GRÉS-sion-al"), "con-grés-sion-al")
-  assert.match(STUDENT_JS, /input\?\.matches\?\('\[data-vocabulary-field="syllabication"\]'\)[\s\S]*input\.value = normalizeSyllabication\(input\.value\)/)
+  assert.equal(normalizeVocabularySyllabication("con-GRÉS-sion-al"), "con-GRÉS-sion-al")
+  assert.doesNotMatch(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\) \{[\s\S]*?data-vocabulary-field="syllabication"[\s\S]*?input\.value\s*=\s*normalizeSyllabication\(input\.value\)/)
+  assert.match(STUDENT_JS, /key === "syllabication" \? normalizeSyllabication\(row\.querySelector\([\s\S]*?data-vocabulary-field="\$\{key\}"[\s\S]*?\)\)/)
 })
 
 test("New Words persistence keeps canonical accented stress without drift", () => {
@@ -351,7 +352,8 @@ test("authoritative validator allows a warning only when Merriam-Webster is unav
 
 test("all student vocabulary save and check surfaces run the same client guard", () => {
   assert.match(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\)/)
-  assert.doesNotMatch(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\) \{[\s\S]*data-vocabulary-field="syllabication"[\s\S]*input\.value\s*=\s*normalizeSyllabication\(input\.value\)/)
+  assert.match(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\) \{[\s\S]*?input\?\.matches\?\.\('\[data-vocabulary-field="english"\]'\)[\s\S]*?input\.value\s*=\s*input\.value\.toLocaleLowerCase\("en-US"\)/)
+  assert.doesNotMatch(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\) \{[\s\S]*?data-vocabulary-field="syllabication"[\s\S]*?input\.value\s*=\s*normalizeSyllabication\(input\.value\)/)
   assert.match(STUDENT_JS, /function validateVocabularyEntrySurface\(container, onInvalid\)/)
   assert.match(STUDENT_JS, /if \(!row\.english && !row\.syllabication\) return;/)
   assert.equal((STUDENT_JS.match(/validateVocabularyEntrySurface\(field\("newsVocabularyRows"\)/g) || []).length, 2)
