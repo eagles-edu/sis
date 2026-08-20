@@ -69,6 +69,71 @@ function isDuplicateError(error) {
   return normalizeLower(error?.code) === "p2002"
 }
 
+const EVENT_STATUS_RANK = Object.freeze({
+  event: 0,
+  sent: 10,
+  deferred: 20,
+  delivered: 30,
+  proxy_loaded: 40,
+  first_opened: 50,
+  unique_opened: 60,
+  opened: 70,
+  clicked: 80,
+  complained: 90,
+  unsubscribed: 90,
+  soft_bounced: 90,
+  hard_bounced: 90,
+  error: 90,
+  invalid: 90,
+  blocked: 90,
+})
+
+function eventFieldsForEngagement(status) {
+  if (status === "delivered") return ["deliveredAt"]
+  if (status === "proxy_loaded") return ["proxyLoadedAt"]
+  if (status === "first_opened") return ["firstOpenedAt", "openedAt"]
+  if (status === "unique_opened") return ["uniqueOpenedAt", "openedAt"]
+  if (status === "opened") return ["openedAt"]
+  if (status === "clicked") return ["clickedAt"]
+  return []
+}
+
+async function updateEngagementFields(model, where, fields, occurredAt) {
+  if (!model?.updateMany) return
+  for (const field of fields) {
+    await model.updateMany({ where: { ...where, [field]: null }, data: { [field]: occurredAt } })
+  }
+}
+
+async function syncEngagementsFromEvent(prisma, delivery, status, occurredAt) {
+  const metadata = delivery?.metadataJson && typeof delivery.metadataJson === "object" ? delivery.metadataJson : {}
+  const fields = eventFieldsForEngagement(status)
+  if (!fields.length) return
+  const libraryToken = normalizeText(metadata.libraryAssignmentToken)
+  const reminderToken = normalizeText(metadata.reminderEngagementToken)
+  const profileInvitationId = normalizeText(metadata.profileInvitationId || metadata.invitationId)
+  await updateEngagementFields(prisma?.libraryAssignmentEngagement, { trackingToken: libraryToken }, fields, occurredAt)
+  await updateEngagementFields(prisma?.assignmentReminderEngagement, { trackingToken: reminderToken }, fields, occurredAt)
+  await updateEngagementFields(prisma?.parentProfileInvitation, { id: profileInvitationId }, fields, occurredAt)
+}
+
+async function markEngagementsSent(prisma, delivery, metadata, batchId) {
+  const sentAt = delivery?.sentAt || new Date()
+  const queueId = normalizeText(batchId)
+  const libraryToken = normalizeText(metadata.libraryAssignmentToken)
+  const reminderToken = normalizeText(metadata.reminderEngagementToken)
+  const profileInvitationId = normalizeText(metadata.profileInvitationId || metadata.invitationId)
+  if (libraryToken) {
+    await prisma?.libraryAssignmentEngagement?.updateMany?.({ where: { trackingToken: libraryToken, sentAt: null }, data: { sentAt, ...(queueId ? { queueId } : {}) } })
+  }
+  if (reminderToken) {
+    await prisma?.assignmentReminderEngagement?.updateMany?.({ where: { trackingToken: reminderToken, sentAt: null }, data: { sentAt } })
+  }
+  if (profileInvitationId) {
+    await prisma?.parentProfileInvitation?.updateMany?.({ where: { id: profileInvitationId, sentAt: null }, data: { sentAt, ...(queueId ? { batchId: queueId } : {}) } })
+  }
+}
+
 /**
  * @param {{
  *   messageId?: unknown,
@@ -86,7 +151,7 @@ export async function recordBrevoEmailDelivery(payload = {}) {
   if (!messageId || !recipientEmail) return null
   const prisma = await getSharedPrismaClient()
   if (!prisma?.brevoEmailDelivery?.upsert) return null
-  return prisma.brevoEmailDelivery.upsert({
+  const delivery = await prisma.brevoEmailDelivery.upsert({
     where: {
       providerMessageId_recipientEmail: {
         providerMessageId: messageId,
@@ -113,6 +178,15 @@ export async function recordBrevoEmailDelivery(payload = {}) {
       metadataJson: payload.metadata && typeof payload.metadata === "object" ? payload.metadata : null,
     },
   })
+  const metadata = payload.metadata && typeof payload.metadata === "object" ? payload.metadata : {}
+  if (Object.keys(metadata).length) {
+    await markEngagementsSent(prisma, delivery, metadata, payload.batchId)
+    const events = prisma.brevoEmailWebhookEvent?.findMany
+      ? await prisma.brevoEmailWebhookEvent.findMany({ where: { providerMessageId: messageId, recipientEmail }, orderBy: { eventAt: "asc" } })
+      : []
+    for (const event of events) await syncEngagementsFromEvent(prisma, delivery, eventStatus(event.eventType), event.eventAt)
+  }
+  return delivery
 }
 
 export async function recordBrevoEmailDeliverySafely(payload = {}) {
@@ -207,23 +281,23 @@ export async function processBrevoWebhookEvent(payload = {}) {
   let updatedDelivery = delivery
   if (delivery) {
     const timestampField = statusTimestampField(status)
+    const currentRank = EVENT_STATUS_RANK[normalizeLower(delivery.status)] || 0
+    const nextRank = EVENT_STATUS_RANK[status] || 0
+    const currentLastEventAt = delivery.lastEventAt ? eventDate(delivery.lastEventAt) : null
+    const eventData = {
+      status: nextRank >= currentRank ? status : delivery.status,
+      lastEventAt: currentLastEventAt && currentLastEventAt > occurredAt ? currentLastEventAt : occurredAt,
+      ...(timestampField !== "lastEventAt" ? { [timestampField]: delivery[timestampField] || occurredAt } : {}),
+    }
     updatedDelivery = await prisma.brevoEmailDelivery.update({
       where: { id: delivery.id },
-      data: {
-        status,
-        lastEventAt: occurredAt,
-        [timestampField]: occurredAt,
-      },
+      data: eventData,
     })
     await prisma.brevoEmailWebhookEvent.update({
       where: { id: storedEvent.id },
       data: { deliveryId: delivery.id, processedAt: new Date() },
     })
-    const libraryToken = delivery.metadataJson && typeof delivery.metadataJson === "object" ? normalizeText(delivery.metadataJson.libraryAssignmentToken) : ""
-    if (libraryToken && prisma.libraryAssignmentEngagement?.updateMany) {
-      const field = ["opened", "first_opened", "unique_opened", "proxy_loaded"].includes(status) ? "openedAt" : status === "clicked" ? "clickedAt" : null
-      if (field) await prisma.libraryAssignmentEngagement.updateMany({ where: { trackingToken: libraryToken, [field]: null }, data: { [field]: occurredAt } })
-    }
+    await syncEngagementsFromEvent(prisma, updatedDelivery, status, occurredAt)
     if (delivery.reportId) {
       await recordParentClassReportEvent({
         reportId: delivery.reportId,

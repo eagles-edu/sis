@@ -45,6 +45,25 @@ const MW_POS_ALIASES = new Map([
 
 function text(value) { return String(value == null ? "" : value).trim() }
 function lower(value) { return text(value).normalize("NFC").toLocaleLowerCase("en-US") }
+function libraryAssignmentQueueId(assignmentId) {
+  return `library-assignment-${crypto.createHash("sha256").update(text(assignmentId)).digest("hex").slice(0, 40)}`
+}
+function libraryAssignmentTrackingToken(assignmentId, recipientEmail) {
+  return crypto.createHash("sha256").update(`${text(assignmentId)}|${lower(recipientEmail)}`).digest("hex")
+}
+function dateText(value) { return value?.toISOString?.() || text(value) }
+const engagementTimelineFields = ["queuedAt", "sentAt", "deliveredAt", "proxyLoadedAt", "firstOpenedAt", "uniqueOpenedAt", "openedAt", "clickedAt"]
+function mergeEngagementDelivery(existing, candidate) {
+  if (!existing) return candidate
+  const merged = { ...existing }
+  for (const field of engagementTimelineFields) {
+    const left = existing[field]
+    const right = candidate?.[field]
+    if (!left && right) merged[field] = right
+    else if (left && right && new Date(right).valueOf() < new Date(left).valueOf()) merged[field] = right
+  }
+  return merged
+}
 export function normalizeLibraryEnum(value) {
   const candidate = lower(value)
   return ["null", "undefined"].includes(candidate) ? "" : candidate
@@ -634,12 +653,19 @@ export async function sendLibraryAssignmentEmail(id, actor = {}) {
   const student = await client.student.findUnique({ where: { id: assignment.studentRefId }, include: { profile: true } })
   const recipient = lower(student?.email || student?.profile?.studentEmail)
   if (!recipient) throw statusError("Assigned student has no email address")
-  const token = crypto.randomBytes(24).toString("hex")
+  const existing = await client.libraryAssignmentEngagement.findUnique({ where: { assignmentId_recipientEmail: { assignmentId: id, recipientEmail: recipient } } })
+  if (existing) return { ok: true, duplicate: true, queueId: existing.queueId || "", engagement: existing }
+  const queueId = libraryAssignmentQueueId(id)
+  const token = libraryAssignmentTrackingToken(id, recipient)
   const origin = text(process.env.STUDENT_ADMIN_PUBLIC_ORIGIN || process.env.PUBLIC_APP_ORIGIN || "https://eagles.edu.vn").replace(/\/+$/u, "")
   const actionUrl = `${origin}/api/library-assignments/track/click/${token}`
   const message = `Library task: ${assignment.taskType}. ${assignment.instructions || "Please open the Library and complete your assigned vocabulary work."}`
-  const queued = await queueAnnouncementEmail({ deliveryMode: "weekend-batch", queueType: "announcement", assignmentTitle: assignment.subject || `Library Vocabulary Assignment — Week ${assignment.weekNumber || weekNumber(assignment.createdAt)}`, exerciseTitle: assignment.entry?.english || "Library vocabulary", dueAt: assignment.dueAt?.toISOString?.() || "", message, recipients: [recipient], requestOrigin: origin, actionUrl, libraryAssignmentToken: token }, { queuedByUsername: actor.name || "library-admin" })
-  const engagement = await client.libraryAssignmentEngagement.create({ data: { assignmentId: id, recipientEmail: recipient, trackingToken: token, queueId: queued.queueId, metadataJson: { taskType: assignment.taskType, entryId: assignment.entryId, assignedByName: assignment.assignedByName } } })
+  const queued = await queueAnnouncementEmail({ queueId, deliveryMode: "weekend-batch", queueType: "announcement", assignmentTitle: assignment.subject || `Library Vocabulary Assignment — Week ${assignment.weekNumber || weekNumber(assignment.createdAt)}`, exerciseTitle: assignment.entry?.english || "Library vocabulary", dueAt: assignment.dueAt?.toISOString?.() || "", message, recipients: [recipient], requestOrigin: origin, actionUrl, libraryAssignmentToken: token }, { queuedByUsername: actor.name || "library-admin" })
+  const engagement = await client.libraryAssignmentEngagement.upsert({
+    where: { assignmentId_recipientEmail: { assignmentId: id, recipientEmail: recipient } },
+    update: { queueId: queued.queueId },
+    create: { assignmentId: id, recipientEmail: recipient, trackingToken: token, queueId: queued.queueId, metadataJson: { taskType: assignment.taskType, entryId: assignment.entryId, assignedByName: assignment.assignedByName } },
+  })
   return { ok: true, queueId: queued.queueId, engagement }
 }
 
@@ -648,8 +674,8 @@ export async function trackLibraryAssignment(token, action = "click") {
   const engagement = await client.libraryAssignmentEngagement.findUnique({ where: { trackingToken: token } })
   if (!engagement) return null
   const field = action === "open" ? "openedAt" : action === "complete" ? "completedAt" : "clickedAt"
-  await client.libraryAssignmentEngagement.update({ where: { id: engagement.id }, data: { [field]: engagement[field] || new Date() } })
-  return engagement
+  if (!engagement[field]) await client.libraryAssignmentEngagement.updateMany({ where: { id: engagement.id, [field]: null }, data: { [field]: new Date() } })
+  return client.libraryAssignmentEngagement.findUnique({ where: { id: engagement.id } })
 }
 
 export async function listLibraryAssignmentEngagement(query = {}) {
@@ -658,9 +684,47 @@ export async function listLibraryAssignmentEngagement(query = {}) {
   const queueIds = rows.map((row) => row.queueId).filter(Boolean)
   const queues = queueIds.length ? await client.adminNotificationQueue.findMany({ where: { id: { in: queueIds } }, select: { id: true, sentAt: true, status: true } }) : []
   const queueMap = new Map(queues.map((queue) => [queue.id, queue]))
+  const deliveries = queueIds.length && client.brevoEmailDelivery?.findMany
+    ? await client.brevoEmailDelivery.findMany({ where: { batchId: { in: queueIds } }, orderBy: { createdAt: "asc" } })
+    : []
+  const deliveryMap = new Map()
+  for (const delivery of deliveries) {
+    const key = `${delivery.batchId}|${lower(delivery.recipientEmail)}`
+    deliveryMap.set(key, mergeEngagementDelivery(deliveryMap.get(key), delivery))
+  }
   const students = await client.student.findMany({ include: { profile: true } })
   const names = new Map(students.map((student) => [student.id, text(student.profile?.englishName || student.profile?.fullName || student.eaglesId)]))
-  return { ok: true, total: rows.length, items: rows.map((row) => activePayloadValue({ ...row, sentAt: row.sentAt || queueMap.get(row.queueId)?.sentAt || "", queueStatus: queueMap.get(row.queueId)?.status || "queued", studentName: names.get(row.assignment.studentRefId) || row.assignment.studentRefId, assignmentTitle: row.assignment.entry?.english || "New Library entry", subject: row.assignment.subject || "", route: row.assignment.route || "", status: row.sentAt || queueMap.get(row.queueId)?.sentAt ? "sent" : "queued" })) }
+  return {
+    ok: true,
+    total: rows.length,
+    items: rows.map((row) => {
+      const queue = queueMap.get(row.queueId)
+      const delivery = deliveryMap.get(`${row.queueId}|${lower(row.recipientEmail)}`)
+      const sentAt = dateText(row.sentAt || delivery?.sentAt || queue?.sentAt)
+      const deliveredAt = dateText(row.deliveredAt || delivery?.deliveredAt)
+      const proxyLoadedAt = dateText(row.proxyLoadedAt || delivery?.proxyLoadedAt)
+      const firstOpenedAt = dateText(row.firstOpenedAt || delivery?.firstOpenedAt)
+      const uniqueOpenedAt = dateText(row.uniqueOpenedAt || delivery?.uniqueOpenedAt)
+      const openedAt = dateText(row.openedAt || delivery?.openedAt)
+      const clickedAt = dateText(row.clickedAt || delivery?.clickedAt)
+      return activePayloadValue({
+        ...row,
+        sentAt,
+        deliveredAt,
+        proxyLoadedAt,
+        firstOpenedAt,
+        uniqueOpenedAt,
+        openedAt,
+        clickedAt,
+        queueStatus: queue?.status || "queued",
+        studentName: names.get(row.assignment.studentRefId) || row.assignment.studentRefId,
+        assignmentTitle: row.assignment.entry?.english || "New Library entry",
+        subject: row.assignment.subject || "",
+        route: row.assignment.route || "",
+        status: clickedAt ? "clicked" : openedAt || uniqueOpenedAt || firstOpenedAt ? "opened" : deliveredAt ? "delivered" : sentAt ? "sent" : "queued",
+      })
+    }),
+  }
 }
 
 function legacyEntry(raw = {}) {

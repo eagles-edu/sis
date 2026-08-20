@@ -460,7 +460,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1148
+              "height": 3938
             },
             ".wrap": {
               "selector": ".wrap",
@@ -472,7 +472,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1100
+              "height": 3890
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -484,7 +484,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 495
+              "height": 3806
             },
             ".panel": {
               "selector": ".panel",
@@ -2247,27 +2247,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "label-title-only",
-              "impact": "serious",
-              "help": "Form elements should have a visible label",
-              "nodes": [
-                {
-                  "target": "textarea[name=\"pt_rec_internationalNews\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_readingEnglishEnjoyment\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_vocabularyLookup\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -2292,7 +2272,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2242
+              "height": 1193
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2304,7 +2284,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2194
+              "height": 1145
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2316,7 +2296,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2110
+              "height": 1061
             },
             ".panel": {
               "selector": ".panel",
@@ -2407,31 +2387,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "label",
-              "impact": "critical",
-              "help": "Form elements must have labels",
-              "nodes": [
-                {
-                  "target": "input[data-performance-queue-select=\"notify-msiw6cmn-aec20f93\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-msivpkke-0bd079d4\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mrzd2aat-2eb906b2\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mrzd0ywf-3d777c09\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -2596,7 +2552,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 8935
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2608,7 +2564,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 8887
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2620,7 +2576,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 8803
+              "height": 628
             },
             ".panel": {
               "selector": ".panel",
@@ -3016,7 +2972,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "flex",
               "width": 1440,
-              "height": 19796
+              "height": 20183
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3028,7 +2984,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 19748
+              "height": 20135
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3040,7 +2996,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1280,
-              "height": 19538
+              "height": 19925
             },
             ".panel": {
               "selector": ".panel",
@@ -4287,7 +4243,7 @@
           "border": "rgb(0, 0, 0)",
           "display": "block",
           "width": 1440,
-          "height": 17920
+          "height": 18265
         },
         "#loginPanel": {
           "selector": "#loginPanel",
@@ -8050,27 +8006,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "label-title-only",
-              "impact": "serious",
-              "help": "Form elements should have a visible label",
-              "nodes": [
-                {
-                  "target": "textarea[name=\"pt_rec_internationalNews\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_readingEnglishEnjoyment\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_vocabularyLookup\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -8399,7 +8335,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 8935
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8411,7 +8347,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 8887
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8423,7 +8359,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 8803
+              "height": 628
             },
             ".panel": {
               "selector": ".panel",
@@ -8819,7 +8755,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "flex",
               "width": 1440,
-              "height": 19796
+              "height": 20183
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8831,7 +8767,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 19748
+              "height": 20135
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8843,7 +8779,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1280,
-              "height": 19538
+              "height": 19925
             },
             ".panel": {
               "selector": ".panel",
@@ -10090,7 +10026,7 @@
           "border": "rgb(251, 255, 255)",
           "display": "block",
           "width": 1440,
-          "height": 17920
+          "height": 18265
         },
         "#loginPanel": {
           "selector": "#loginPanel",

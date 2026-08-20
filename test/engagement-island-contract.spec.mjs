@@ -36,6 +36,7 @@ test("engagement pages remain wired to the shared matrix and their own data endp
   assert.match(html, /id="performanceEngagementReloadBtn"[^>]*class="portal-button portal-button-btn-refresh"/u)
   assert.match(html, /id="performanceEngagementDayToggleBtn"[^>]*class="portal-button portal-button-primary"/u)
   assert.match(libraryHtml, /id="libraryEngagementReloadBtn"[^>]*class="portal-button portal-button-btn-refresh"/u)
+  assert.match(read("web-asset/shared/portal-theme.css"), /body\.admin-portal-page \.table-scroll-wrap \{[\s\S]*?overflow-x: auto;/u)
 })
 
 test("profile engagement stays under Students and exposes the matrix host", () => {

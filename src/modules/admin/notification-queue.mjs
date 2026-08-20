@@ -465,6 +465,10 @@ function isQueueDatabaseAuthFailureError(error) {
   )
 }
 
+function isUniqueConstraintError(error) {
+  return normalizeUpper(error?.code) === "P2002"
+}
+
 function markQueueDatabaseFallback(error) {
   EMAIL_QUEUE_DB_DISABLED = true
   EMAIL_BATCH_LAST_ERROR = normalizeText(error?.message || error)
@@ -507,7 +511,7 @@ function buildQueuedAnnouncementEntry(payload = {}, options = {}) {
     throw error
   }
   return {
-    id: createQueueId("notify"),
+    id: normalizeText(payload.queueId) || createQueueId("notify"),
     queueType,
     status: NOTIFICATION_QUEUE_STATUS_QUEUED,
     deliveryMode: normalizeDeliveryMode(payload.deliveryMode),
@@ -620,6 +624,7 @@ export async function listQueuedAnnouncements({ queueType = "", take = 10, inclu
 export async function queueAnnouncementEmail(payload = {}, options = {}) {
   const queueType = normalizeQueueType(payload.queueType)
   const reportId = normalizeText(payload?.reportId || payload?.parentReportId)
+  const explicitQueueId = normalizeText(payload.queueId)
   if (queueType === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT && reportId) {
     const prisma = await getSharedPrismaClient().catch(() => null)
     if (prisma?.parentClassReport?.findUnique) {
@@ -636,6 +641,51 @@ export async function queueAnnouncementEmail(payload = {}, options = {}) {
       }
     }
   }
+  if (explicitQueueId) {
+    const existing = await runQueueDbOperation(
+      async (prisma) => {
+        let row = await prisma.adminNotificationQueue.findUnique({ where: { id: explicitQueueId } })
+        if (row && ["failed", "error"].includes(normalizeLower(row.status))) {
+          row = await prisma.adminNotificationQueue.update({
+            where: { id: explicitQueueId },
+            data: { status: NOTIFICATION_QUEUE_STATUS_QUEUED, lastError: null, sentAt: null },
+          })
+        }
+        return row
+          ? mapQueueRecord({
+              ...row,
+              queuedAt: row.createdAt?.toISOString?.() || "",
+              scheduledFor: row.scheduledFor?.toISOString?.() || "",
+              sentAt: row.sentAt?.toISOString?.() || "",
+            })
+          : null
+      },
+      async () => {
+        const existing = EMAIL_BATCH_QUEUE.find((entry) => normalizeText(entry.id) === explicitQueueId)
+        if (existing && ["failed", "error"].includes(normalizeLower(existing.status))) {
+          existing.status = NOTIFICATION_QUEUE_STATUS_QUEUED
+          existing.lastError = ""
+          existing.sentAt = ""
+        }
+        return mapQueueRecord(existing || {})
+      }
+    )
+    if (existing?.id) {
+      EMAIL_BATCH_LAST_KNOWN_SIZE = await countQueuedAnnouncements()
+      return {
+        ok: true,
+        queued: true,
+        duplicate: true,
+        deliveryMode: "weekend-batch",
+        queueId: existing.id,
+        queuedAt: existing.queuedAt,
+        scheduledFor: existing.scheduledFor,
+        queueSize: EMAIL_BATCH_LAST_KNOWN_SIZE,
+        schedule: weekendBatchScheduleLabel(),
+      }
+    }
+  }
+
   const totalUnsent = await countQueuedAnnouncements()
   if (totalUnsent >= EMAIL_BATCH_QUEUE_LIMIT) {
     const error = new Error("Weekend email batch queue is full")
@@ -646,35 +696,49 @@ export async function queueAnnouncementEmail(payload = {}, options = {}) {
   const entry = buildQueuedAnnouncementEntry(payload, options)
   const saved = await runQueueDbOperation(
     async (prisma) => {
-      const created = await prisma.adminNotificationQueue.create({
-        data: {
-          id: entry.id,
-          queueType: entry.queueType,
-          status: entry.status,
-          deliveryMode: entry.deliveryMode,
-          recipients: entry.recipients,
-          assignmentTitle: entry.assignmentTitle,
-          exerciseTitle: entry.exerciseTitle || null,
-          level: entry.level || null,
-          dueAt: entry.dueAt || null,
-          message: entry.message || null,
-          senderName: entry.senderName || null,
-          queuedByUsername: entry.queuedByUsername || null,
-          reviewedByUsername: null,
-          scheduledFor: parseIsoDateTime(entry.scheduledFor),
-          sentAt: null,
-          attempts: 0,
-          lastError: null,
-          payloadJson: entry.payloadJson || null,
-        },
-      })
-      return mapQueueRecord({
-        ...created,
-        queuedAt: created.createdAt?.toISOString?.() || entry.queuedAt,
-        scheduledFor: created.scheduledFor?.toISOString?.() || entry.scheduledFor,
-      })
+      try {
+        const created = await prisma.adminNotificationQueue.create({
+          data: {
+            id: entry.id,
+            queueType: entry.queueType,
+            status: entry.status,
+            deliveryMode: entry.deliveryMode,
+            recipients: entry.recipients,
+            assignmentTitle: entry.assignmentTitle,
+            exerciseTitle: entry.exerciseTitle || null,
+            level: entry.level || null,
+            dueAt: entry.dueAt || null,
+            message: entry.message || null,
+            senderName: entry.senderName || null,
+            queuedByUsername: entry.queuedByUsername || null,
+            reviewedByUsername: null,
+            scheduledFor: parseIsoDateTime(entry.scheduledFor),
+            sentAt: null,
+            attempts: 0,
+            lastError: null,
+            payloadJson: entry.payloadJson || null,
+          },
+        })
+        return mapQueueRecord({
+          ...created,
+          queuedAt: created.createdAt?.toISOString?.() || entry.queuedAt,
+          scheduledFor: created.scheduledFor?.toISOString?.() || entry.scheduledFor,
+        })
+      } catch (error) {
+        if (!explicitQueueId || !isUniqueConstraintError(error)) throw error
+        const existing = await prisma.adminNotificationQueue.findUnique({ where: { id: explicitQueueId } })
+        if (!existing) throw error
+        return mapQueueRecord({
+          ...existing,
+          queuedAt: existing.createdAt?.toISOString?.() || entry.queuedAt,
+          scheduledFor: existing.scheduledFor?.toISOString?.() || entry.scheduledFor,
+          sentAt: existing.sentAt?.toISOString?.() || "",
+        })
+      }
     },
     async () => {
+      const existing = EMAIL_BATCH_QUEUE.find((queued) => normalizeText(queued.id) === entry.id)
+      if (existing) return mapQueueRecord(existing)
       EMAIL_BATCH_QUEUE.push(entry)
       return mapQueueRecord(entry)
     }
@@ -1063,6 +1127,7 @@ export async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUse
             ? item.payloadJson.reportSnapshot
             : null,
         announcementPayload: {
+          queueId: item.id,
           recipients: item.recipients,
           assignmentTitle: item.assignmentTitle,
           exerciseTitle: item.exerciseTitle,

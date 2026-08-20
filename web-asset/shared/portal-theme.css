@@ -2009,6 +2009,13 @@ body.admin-portal-page :where(.table-scroll-wrap, .list-box) {
   border-radius: var(--radius-2);
   box-sizing: border-box;
 }
+body.admin-portal-page .table-scroll-wrap {
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
 html[data-theme="dark"] body.admin-portal-page .profile-layout-table-wrap.data-surface {
   border-color: var(--portal-dark-border-strong);
 }

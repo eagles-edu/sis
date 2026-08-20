@@ -202,7 +202,7 @@ export async function processParentProfileInvitationJob(job = {}) {
       batchId: invitation.batchId,
       queueType: "profile-invitation",
       subject: "Complete your Eagles student profile",
-      metadata: { invitationId: invitation.id, studentRefId: invitation.studentRefId },
+      metadata: { invitationId: invitation.id, profileInvitationId: invitation.id, studentRefId: invitation.studentRefId },
     })
     await prisma.parentProfileInvitation.update({ where: { id: invitation.id }, data: { status: "sent", sentAt: new Date(), providerMessageId: sent.providerMessageId || null } })
     return { ok: true, status: "sent", providerMessageId: sent.providerMessageId || "" }

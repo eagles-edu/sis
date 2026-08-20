@@ -26,5 +26,7 @@ test("sync-and-restart-runtimes keeps the live runtime root and port pinned", ()
 test("sync-and-restart-live-runtime keeps Prisma deploy in the live wrapper contract", () => {
   assert.match(wrapper, /refresh_runtime_prisma_client\(\)/)
   assert.match(wrapper, /refreshing Prisma client and applying migrations in \$\{LIVE_ROOT\}/)
+  assert.match(wrapper, /env SIS_ENV_FILE=\.env DOTENV_CONFIG_PATH=\.env NODE_ENV=production npm run db:generate/)
+  assert.match(wrapper, /env SIS_ENV_FILE=\.env DOTENV_CONFIG_PATH=\.env NODE_ENV=production npm run db:migrate:deploy/)
   assert.match(wrapper, /npm run db:migrate:deploy/)
 })

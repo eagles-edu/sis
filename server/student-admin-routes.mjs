@@ -894,6 +894,27 @@ function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+const BREVO_ENGAGEMENT_TIMELINE_FIELDS = Object.freeze([
+  "queuedAt", "sentAt", "deliveredAt", "proxyLoadedAt", "firstOpenedAt", "uniqueOpenedAt",
+  "openedAt", "clickedAt", "deferredAt", "errorAt", "invalidAt", "blockedAt",
+  "softBouncedAt", "hardBouncedAt", "bouncedAt", "complainedAt", "unsubscribedAt",
+])
+
+function mergeBrevoEngagementDelivery(existing, candidate) {
+  if (!existing) return candidate
+  const merged = { ...existing }
+  for (const field of BREVO_ENGAGEMENT_TIMELINE_FIELDS) {
+    const left = existing[field]
+    const right = candidate?.[field]
+    if (!left && right) merged[field] = right
+    else if (left && right && new Date(right).valueOf() < new Date(left).valueOf()) merged[field] = right
+  }
+  for (const field of ["providerMessageId", "batchId", "queueType", "subject", "status", "metadataJson"]) {
+    if (!normalizeText(merged[field]) && candidate?.[field] !== undefined && candidate?.[field] !== null) merged[field] = candidate[field]
+  }
+  return merged
+}
+
 function normalizeUpper(value) {
   return normalizeText(value).toUpperCase()
 }
@@ -7438,12 +7459,11 @@ async function handleApiRequest(request, response, pathname, url) {
           orderBy: { sentAt: "asc" },
         })
       : []
-    const brevoDeliveryByAssignment = new Map(
-      brevoDeliveries.map((delivery) => [
-        `${normalizeText(delivery.batchId)}|${normalizeLower(delivery.recipientEmail)}`,
-        delivery,
-      ]),
-    )
+    const brevoDeliveryByAssignment = new Map()
+    for (const delivery of brevoDeliveries) {
+      const key = `${normalizeText(delivery.batchId)}|${normalizeLower(delivery.recipientEmail)}`
+      brevoDeliveryByAssignment.set(key, mergeBrevoEngagementDelivery(brevoDeliveryByAssignment.get(key), delivery))
+    }
     const studentIds = Array.from(new Set(items.map((item) => normalizeText(item.dispatch?.studentRefId)).filter(Boolean)))
     const students = prisma?.student && studentIds.length
       ? await prisma.student.findMany({
@@ -7985,10 +8005,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const profileBrevoByBatch = new Map()
     for (const delivery of profileBrevoDeliveries) {
       const key = `${normalizeText(delivery.batchId)}|${normalizeLower(delivery.recipientEmail)}`
-      const existing = profileBrevoByBatch.get(key)
-      if (!existing || (delivery.sentAt || delivery.createdAt) < (existing.sentAt || existing.createdAt)) {
-        profileBrevoByBatch.set(key, delivery)
-      }
+      profileBrevoByBatch.set(key, mergeBrevoEngagementDelivery(profileBrevoByBatch.get(key), delivery))
     }
     const familyRows = new Map()
     students.forEach((student) => {
@@ -8036,6 +8053,12 @@ async function handleApiRequest(request, response, pathname, url) {
       invitationStatus: normalizeText(row.invitation?.status),
       invitationQueuedAt: row.invitation?.queuedAt || null,
       invitationSentAt: row.invitation?.sentAt || null,
+      invitationDeliveredAt: row.invitation?.deliveredAt || null,
+      invitationProxyLoadedAt: row.invitation?.proxyLoadedAt || null,
+      invitationFirstOpenedAt: row.invitation?.firstOpenedAt || null,
+      invitationUniqueOpenedAt: row.invitation?.uniqueOpenedAt || null,
+      invitationOpenedAt: row.invitation?.openedAt || null,
+      invitationClickedAt: row.invitation?.clickedAt || null,
       invitationLastError: normalizeText(row.invitation?.lastError),
       invitationCompletedAt: row.invitation?.completedAt || null,
       brevoDelivery: (() => {

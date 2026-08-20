@@ -21,7 +21,8 @@ export function initProfileEngagementIsland({ document, api, onError }) {
 
   const metric = (row = {}) => {
     const brevo = row.brevoDelivery || {}
-    const event = (field) => brevo[field] || ""
+    const invitationField = (field) => row[`invitation${field[0].toUpperCase()}${field.slice(1)}`] || ""
+    const event = (field) => brevo[field] || invitationField(field)
     const yes = (field) => event(field) ? "yes" : ""
     const parentsId = normalize(row.parentsId || row.id)
     const familyId = normalize(row.familyId)

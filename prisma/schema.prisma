@@ -828,6 +828,10 @@ model LibraryAssignmentEngagement {
   queueId        String?
   queuedAt       DateTime @default(now())
   sentAt         DateTime?
+  deliveredAt    DateTime?
+  proxyLoadedAt  DateTime?
+  firstOpenedAt  DateTime?
+  uniqueOpenedAt DateTime?
   openedAt       DateTime?
   clickedAt      DateTime?
   completedAt    DateTime?
@@ -974,6 +978,9 @@ model AssignmentReminderEngagement {
   queuedAt       DateTime @default(now())
   sentAt         DateTime?
   deliveredAt    DateTime?
+  proxyLoadedAt  DateTime?
+  firstOpenedAt  DateTime?
+  uniqueOpenedAt DateTime?
   openedAt       DateTime?
   clickedAt      DateTime?
   actionCompletedAt DateTime?
@@ -1081,6 +1088,10 @@ model ParentProfileInvitation {
   providerMessageId String?
   queuedAt          DateTime @default(now())
   sentAt            DateTime?
+  deliveredAt       DateTime?
+  proxyLoadedAt     DateTime?
+  firstOpenedAt     DateTime?
+  uniqueOpenedAt    DateTime?
   openedAt          DateTime?
   clickedAt         DateTime?
   activatedAt       DateTime?

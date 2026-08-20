@@ -1,21 +1,2 @@
 ◇ injected env (44) from .env.dev // tip: ⌘ override existing { override: true }
-node:events:497
-      throw er; // Unhandled 'error' event
-      ^
-
-Error: listen EADDRINUSE: address already in use 127.0.0.1:8788
-    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
-    at listenInCluster (node:net:1997:12)
-    at node:net:2206:7
-    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
-Emitted 'error' event on Server instance at:
-    at emitErrorNT (node:net:1976:8)
-    at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
-  code: 'EADDRINUSE',
-  errno: -98,
-  syscall: 'listen',
-  address: '127.0.0.1',
-  port: 8788
-}
-
-Node.js v22.22.1
+exercise-mailer listening on 127.0.0.1:8788 at /api/exercise-submission and /api/student-intake-submission (health: /healthz)

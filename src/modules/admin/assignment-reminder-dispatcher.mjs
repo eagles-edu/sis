@@ -78,6 +78,14 @@ function stableHash(value) {
   return crypto.createHash("sha256").update(text(value)).digest().readUInt32BE(0)
 }
 
+function stableReminderToken(dispatchKey) {
+  return crypto.createHash("sha256").update(text(dispatchKey)).digest("hex")
+}
+
+function stableReminderQueueId(dispatchKey) {
+  return `assignment-reminder-${crypto.createHash("sha256").update(text(dispatchKey)).digest("hex").slice(0, 40)}`
+}
+
 /**
  * Wednesday reminders use a stable weekly slot per class. This is operationally
  * random-looking while remaining deterministic across retries and restarts.
@@ -198,7 +206,8 @@ async function queueOneReminder({ prisma, template, student, audience, kind, now
   const dispatchKey = [text(template.id), studentId, audience, kind, localDate, recipient].join(":")
 
   const actionUrl = text(template.itemsJson?.[0]?.url || template.assignmentBundleJson?.items?.[0]?.url)
-  const token = crypto.randomBytes(24).toString("hex")
+  const token = stableReminderToken(dispatchKey)
+  const queueId = stableReminderQueueId(dispatchKey)
   if (dryRun) return { dryRun: true, dispatchKey, audience, recipient }
 
   const dispatch = await claimDispatch(prisma, dispatchKey, {
@@ -233,19 +242,15 @@ async function queueOneReminder({ prisma, template, student, audience, kind, now
       recipients: [recipient],
       reminderDispatchKey: dispatchKey,
       reminderEngagementToken: token,
+      queueId,
       requestOrigin: reminderTrackingOrigin(),
       assignmentTemplateId: text(template.id),
       studentRefId: studentId,
     }, { queuedByUsername: "assignment-reminder-dispatcher" })
-    const engagement = await prisma.assignmentReminderEngagement.create({
-      data: {
-        dispatchId: dispatch.id,
-        audience,
-        recipientEmail: recipient,
-        trackingToken: token,
-        actionUrl,
-        metadataJson: { assignmentTemplateId: template.id, reminderKind: kind, level: template.level },
-      },
+    const engagement = await prisma.assignmentReminderEngagement.upsert({
+      where: { dispatchId_audience_recipientEmail: { dispatchId: dispatch.id, audience, recipientEmail: recipient } },
+      update: { trackingToken: token, actionUrl, metadataJson: { assignmentTemplateId: template.id, reminderKind: kind, level: template.level } },
+      create: { dispatchId: dispatch.id, audience, recipientEmail: recipient, trackingToken: token, actionUrl, metadataJson: { assignmentTemplateId: template.id, reminderKind: kind, level: template.level } },
     })
     await prisma.assignmentReminderDispatch.update({
       where: { id: dispatch.id },

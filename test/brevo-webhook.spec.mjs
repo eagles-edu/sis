@@ -22,17 +22,32 @@ test("Brevo webhook rejects unauthenticated requests and idempotently updates de
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const { startExerciseMailer } = await import("../server/exercise-mailer.mjs")
   const { closeStudentAdminRuntimeResources } = await import("../server/student-admin-routes.mjs")
+  const { listPerformanceEngagementData } = await import("../src/modules/admin/performance-engagement.mjs")
   const prisma = await getSharedPrismaClient()
   const messageId = `<webhook-test-${Date.now()}@brevo.test>`
   const recipientEmail = `webhook-${Date.now()}@example.test`
+  const student = await prisma.student.create({ data: { externalKey: `webhook-test-${Date.now()}`, studentNumber: 900000 + Math.floor(Math.random() * 9000), eaglesId: `WEBHOOK-${Date.now()}`, email: recipientEmail } })
+  const assignment = await prisma.libraryAssignment.create({ data: { studentRefId: student.id, taskType: "new_entry", assignedByName: "webhook test" } })
+  const libraryToken = `library-webhook-${Date.now()}`
+  const reminderToken = `reminder-webhook-${Date.now()}`
+  const profileInvitationId = `profile-webhook-${Date.now()}`
+  const queueId = `library-webhook-queue-${Date.now()}`
+  const report = await prisma.parentClassReport.create({ data: { studentRefId: student.id, className: "A2 KET", level: "A2 KET", schoolYear: "2026", quarter: "q1", workflowState: "published", metaPayload: { classDate: "2026-08-20", classDay: "Thursday" } } })
+  await prisma.libraryAssignmentEngagement.create({ data: { assignmentId: assignment.id, recipientEmail, trackingToken: libraryToken, queueId, sentAt: new Date() } })
+  const reminderDispatch = await prisma.assignmentReminderDispatch.create({ data: { dispatchKey: `webhook-${Date.now()}`, assignmentTemplateId: `template-${Date.now()}`, studentRefId: student.id, reminderKind: "assignment-created", localDate: "2026-08-20", status: "queued", queueId } })
+  await prisma.assignmentReminderEngagement.create({ data: { dispatchId: reminderDispatch.id, audience: "student", recipientEmail, trackingToken: reminderToken, sentAt: new Date() } })
+  await prisma.parentProfileInvitation.create({ data: { id: profileInvitationId, tokenHash: `profile-token-${Date.now()}`, recipientEmail, studentRefId: student.id, status: "sent", batchId: queueId, sentAt: new Date(), expiresAt: new Date(Date.now() + 86400000) } })
   await prisma.brevoEmailDelivery.create({
     data: {
       providerMessageId: messageId,
+      batchId: queueId,
       recipientEmail,
+      reportId: report.id,
       subject: "Webhook test",
       status: "sent",
       queuedAt: new Date(),
       sentAt: new Date(),
+      metadataJson: { libraryAssignmentToken: libraryToken, reminderEngagementToken: reminderToken, profileInvitationId },
     },
   })
 
@@ -80,6 +95,16 @@ test("Brevo webhook rejects unauthenticated requests and idempotently updates de
     assert.equal(delivery?.status, "delivered")
     assert.ok(delivery?.deliveredAt)
     assert.ok(delivery?.queuedAt)
+    const deliveredEngagement = await prisma.libraryAssignmentEngagement.findUnique({ where: { trackingToken: libraryToken } })
+    assert.ok(deliveredEngagement?.deliveredAt)
+    const deliveredReminder = await prisma.assignmentReminderEngagement.findUnique({ where: { trackingToken: reminderToken } })
+    assert.ok(deliveredReminder?.deliveredAt)
+    const deliveredProfile = await prisma.parentProfileInvitation.findUnique({ where: { id: profileInvitationId } })
+    assert.ok(deliveredProfile?.deliveredAt)
+    const performance = await listPerformanceEngagementData({ dateFrom: "2026-08-20", dateTo: "2026-08-20" })
+    const performanceRow = performance.rows.find((row) => row.reviewed === "student")
+    assert.equal(performanceRow?.emailDelivered, "yes")
+    assert.ok(performanceRow?.emailDeliveredAt)
 
     const timeline = [
       ["loaded_by_proxy", "proxyLoadedAt"],
@@ -115,11 +140,32 @@ test("Brevo webhook rejects unauthenticated requests and idempotently updates de
         where: { providerMessageId_recipientEmail: { providerMessageId: messageId, recipientEmail } },
       })
       assert.ok(updated?.[field], `${event} should set ${field}`)
+      const engagement = await prisma.libraryAssignmentEngagement.findUnique({ where: { trackingToken: libraryToken } })
+      if (event === "loaded_by_proxy") assert.ok(engagement?.proxyLoadedAt)
+      if (event === "first_opening") assert.ok(engagement?.firstOpenedAt)
+      if (event === "unique_opened") assert.ok(engagement?.uniqueOpenedAt)
+      if (event === "opened") assert.ok(engagement?.openedAt)
+      if (event === "clicked") assert.ok(engagement?.clickedAt)
+      const reminder = await prisma.assignmentReminderEngagement.findUnique({ where: { trackingToken: reminderToken } })
+      const profile = await prisma.parentProfileInvitation.findUnique({ where: { id: profileInvitationId } })
+      if (event === "loaded_by_proxy") { assert.ok(reminder?.proxyLoadedAt); assert.ok(profile?.proxyLoadedAt) }
+      if (event === "first_opening") { assert.ok(reminder?.firstOpenedAt); assert.ok(profile?.firstOpenedAt) }
+      if (event === "unique_opened") { assert.ok(reminder?.uniqueOpenedAt); assert.ok(profile?.uniqueOpenedAt) }
+      if (event === "opened") { assert.ok(reminder?.openedAt); assert.ok(profile?.openedAt) }
+      if (event === "clicked") { assert.ok(reminder?.clickedAt); assert.ok(profile?.clickedAt) }
     }
     assert.equal(await prisma.brevoEmailWebhookEvent.count({ where: { providerMessageId: messageId } }), timeline.length + 1)
   } finally {
     await prisma.brevoEmailWebhookEvent.deleteMany({ where: { providerMessageId: messageId } })
     await prisma.brevoEmailDelivery.deleteMany({ where: { providerMessageId: messageId } })
+    await prisma.libraryAssignmentEngagement.deleteMany({ where: { trackingToken: libraryToken } })
+    await prisma.assignmentReminderEngagement.deleteMany({ where: { trackingToken: reminderToken } })
+    await prisma.assignmentReminderDispatch.delete({ where: { id: reminderDispatch.id } })
+    await prisma.parentProfileInvitation.delete({ where: { id: profileInvitationId } })
+    await prisma.parentClassReport.delete({ where: { id: report.id } })
+    await prisma.adminNotificationQueue.deleteMany({ where: { id: queueId } })
+    await prisma.libraryAssignment.delete({ where: { id: assignment.id } })
+    await prisma.student.delete({ where: { id: student.id } })
     server.closeAllConnections?.()
     server.closeIdleConnections?.()
     await new Promise((resolve) => server.close(resolve))

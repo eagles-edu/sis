@@ -382,6 +382,9 @@ function normalizeAnnouncementPayload(payload = {}, options = {}) {
     level: normalizeText(payload.level),
     message: normalizeText(payload.message),
     senderName: normalizeText(payload.senderName) || "Eagles Student Admin",
+    queueId: normalizeText(payload.queueId),
+    requestOrigin: normalizeOrigin(payload.requestOrigin),
+    reminderEngagementToken: normalizeText(payload.reminderEngagementToken),
     libraryAssignmentToken: normalizeText(payload.libraryAssignmentToken),
   }
 }
@@ -416,6 +419,7 @@ export async function sendAnnouncementEmail(payload = {}) {
           subject: emailContent.subject,
           text: emailContent.text,
           html: emailContent.html,
+          idempotencyKey: normalizeText(payload.queueId) ? `sis-email-${normalizeText(payload.queueId)}-${encodeURIComponent(recipient)}` : "",
           attachments,
         })
         await recordBrevoEmailDeliverySafely({
@@ -425,7 +429,7 @@ export async function sendAnnouncementEmail(payload = {}) {
           reportId: payload.reportId,
           queueType,
           subject: emailContent.subject,
-          metadata: { provider: sentResult.provider, libraryAssignmentToken: normalizedPayload.libraryAssignmentToken || "" },
+          metadata: { provider: sentResult.provider, reportId: normalizeText(payload.reportId), profileInvitationId: normalizeText(payload.profileInvitationId), libraryAssignmentToken: normalizedPayload.libraryAssignmentToken || "", reminderEngagementToken: normalizedPayload.reminderEngagementToken || "" },
         })
         sent += 1
       }
@@ -445,6 +449,7 @@ export async function sendAnnouncementEmail(payload = {}) {
       subject: emailContent.subject,
       text: emailContent.lines.join("\n"),
       html: `<p>${emailContent.htmlLines}</p>`,
+      idempotencyKey: normalizeText(payload.queueId) ? `sis-email-${normalizeText(payload.queueId)}` : "",
     })
     await Promise.all(normalizedPayload.recipients.map((recipient) => recordBrevoEmailDeliverySafely({
       messageId: sentResult.messageId,
@@ -453,7 +458,7 @@ export async function sendAnnouncementEmail(payload = {}) {
       reportId: payload.reportId,
       queueType,
       subject: emailContent.subject,
-      metadata: { provider: sentResult.provider, deliveryMode: "bcc", libraryAssignmentToken: normalizedPayload.libraryAssignmentToken || "" },
+      metadata: { provider: sentResult.provider, deliveryMode: "bcc", reportId: normalizeText(payload.reportId), profileInvitationId: normalizeText(payload.profileInvitationId), libraryAssignmentToken: normalizedPayload.libraryAssignmentToken || "", reminderEngagementToken: normalizedPayload.reminderEngagementToken || "" },
     })))
     return {
       ok: true,
