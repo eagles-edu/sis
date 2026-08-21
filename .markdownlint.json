@@ -1,0 +1,9 @@
+{
+  "MD003": { "style": "atx" },
+  "MD007": { "indent": 2 },
+  "MD013": false,
+  "MD034": false,
+  "MD038": true,
+  "no-hard-tabs": false,
+  "markdownlint.appliesTo": true
+}

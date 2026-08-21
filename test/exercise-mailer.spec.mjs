@@ -109,19 +109,21 @@ test("POST /api/exercise-submission succeeds (204) and dispatches notifications"
 
   assert.ok(teacherMail, "teacher email payload captured")
   assert.equal(teacherMail.to[0], "recipient@example.com")
-  assert.equal(teacherMail.subject, "abc123 Exercise submission — Test Page")
-  assert.match(teacherMail.text, /^abc123 just completed Test Page\./m)
-  assert.match(teacherMail.text, /Eagles ID: abc123/)
-  assert.match(teacherMail.text, /Student email: student@example.com/)
-  assert.match(teacherMail.text, /Score summary: 9\/10/)
+  assert.equal(teacherMail.subject, "abc123 Bài nộp bài tập — Test Page")
+  assert.match(teacherMail.text, /^Thân mến Cha Mẹ:/m)
+  assert.match(teacherMail.text, /abc123 vừa hoàn thành Test Page\./)
+  assert.match(teacherMail.text, /Mã Eagles: abc123/)
+  assert.match(teacherMail.text, /Email học sinh: student@example.com/)
+  assert.match(teacherMail.text, /Tóm tắt điểm: 9\/10/)
+  assert.match(teacherMail.text, /Tran Thi Kim Thanh, Principal/)
   assert.equal(teacherMail.cc, undefined)
 
   assert.ok(learnerMail, "learner confirmation payload captured")
   assert.equal(learnerMail.to[0], "student@example.com")
-  assert.match(learnerMail.subject, /Confirmation/)
+  assert.match(learnerMail.subject, /Xác nhận/)
   assert.match(learnerMail.text, /Test Page/)
-  assert.match(learnerMail.text, /Eagles ID: abc123/)
-  assert.match(learnerMail.text, /Score summary: 9\/10/)
+  assert.match(learnerMail.text, /Mã Eagles: abc123/)
+  assert.match(learnerMail.text, /Tóm tắt điểm: 9\/10/)
 })
 
 test("POST /api/exercise-submission normalizes dotted numeric sections in pageTitle", async () => {
@@ -148,8 +150,8 @@ test("POST /api/exercise-submission normalizes dotted numeric sections in pageTi
   const newHistory = transport.calls.history.slice(beforeHistory)
   assert.equal(newHistory.length, 2, "teacher + learner mails captured")
   const [teacherMail, learnerMail] = newHistory
-  assert.equal(teacherMail.subject, "sec111 Exercise submission — 1 1 1 Common Nouns")
-  assert.match(teacherMail.text, /completed 1 1 1 Common Nouns\./)
+  assert.equal(teacherMail.subject, "sec111 Bài nộp bài tập — 1 1 1 Common Nouns")
+  assert.match(teacherMail.text, /vừa hoàn thành 1 1 1 Common Nouns\./)
   assert.match(learnerMail.subject, /1 1 1 Common Nouns/)
   assert.match(learnerMail.text, /1 1 1 Common Nouns/)
 })
@@ -220,9 +222,9 @@ test("POST /api/exercise-submission sends learner-only receipt for browser sourc
   const [learnerMail] = newHistory
   assert.ok(learnerMail, "learner receipt payload captured")
   assert.equal(learnerMail.to[0], "learner-only@example.com")
-  assert.match(learnerMail.subject, /Confirmation/)
+  assert.match(learnerMail.subject, /Xác nhận/)
   assert.match(learnerMail.text, /Browser Cloze/)
-  assert.match(learnerMail.text, /Eagles ID: browser001/)
+  assert.match(learnerMail.text, /Mã Eagles: browser001/)
 })
 
 test("POST /api/exercise-submission decodes obfuscated recipients", async () => {

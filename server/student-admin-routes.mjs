@@ -3288,7 +3288,7 @@ function normalizeAssignmentAnnouncementPreviewItems(value) {
 function normalizeAssignmentAnnouncementPreviewPayload(payload = {}) {
   const source = payload && typeof payload === "object" ? payload : {}
   return {
-    assignmentTitle: normalizeText(source.assignmentTitle || source.exerciseTitle) || "Assignment update",
+    assignmentTitle: normalizeText(source.assignmentTitle || source.exerciseTitle) || "Cập nhật bài tập",
     level: normalizeText(source.level),
     assignedAt: normalizeText(source.assignedAt || source.dateAssigned),
     dueAt: normalizeText(source.dueAt || source.dueDate),

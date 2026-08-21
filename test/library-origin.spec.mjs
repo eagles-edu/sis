@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { buildOriginReference, extractOriginPath, normalizeOriginReferences, parseEtymonlineParagraph, safeEtymonlineMarkup } from "../src/modules/admin/library-origin.mjs"
-import { analyzeLibraryOrigin, createOriginSourceAdapter, parseMerriamWebsterEtymology, parseMerriamWebsterReaderEtymology } from "../src/modules/admin/library-origin-analysis.mjs"
+import { analyzeLibraryOrigin, createOriginSourceAdapter, fetchWiktionaryEnglishEtymology, parseMerriamWebsterEtymology, parseMerriamWebsterReaderEtymology, parseWiktionaryEnglishEtymology, parseWiktionaryEnglishOriginDetails, wiktionaryEnglishUrl } from "../src/modules/admin/library-origin-analysis.mjs"
 
 const sample = `<section class="prose lg:prose-lg dark:prose-dark [&amp;_em]:bg-warning/30"><p>"humorous," 1756, from <a title="Etymology" href="/word/fun">fun</a> (n.) + <a href="/word/-y">-y</a> (2). Meaning <em>strange</em>, <strong>odd</strong>. <i class="foreign">funny ha-ha</i>.</p></section>`
 
@@ -47,9 +47,13 @@ test("definition normalization preserves user-entered line breaks", async () => 
   assert.equal(normalizeDefinitionText("First line\r\n\r\nSecond line\n"), "First line\n\nSecond line\n")
 })
 
-const analysisOptions = (etymonline, merriamWebster) => ({
+const analysisOptions = (etymonline, merriamWebster, wiktionary = "") => ({
   fetchEtymonlinePreviewImpl: async () => ({ ok: true, paragraph: etymonline }),
   fetchMerriamWebsterEtymologyImpl: async () => ({ ok: true, etymology: merriamWebster }),
+  fetchWiktionaryEnglishEtymologyImpl: async () => {
+    if (!wiktionary) throw new Error("Wiktionary is unavailable for this test")
+    return { ok: true, etymology: wiktionary, sourceUrl: "https://en.wiktionary.org/wiki/example#English", contextSections: [{ title: "Derived terms", items: ["example-derived"] }] }
+  },
 })
 
 test("Merriam-Webster origin review extracts only the public etymology section", () => {
@@ -60,6 +64,20 @@ test("Merriam-Webster origin review extracts only the public etymology section",
 test("Merriam-Webster reader fallback extracts the public Word History etymology", () => {
   const markdown = "# discern\n\n## Word History\n\nEtymology\n\nMiddle English *discernen*, borrowed from Anglo-French *discerner*.\n\n## First Known Use\n\n14th century"
   assert.equal(parseMerriamWebsterReaderEtymology(markdown), "Middle English *discernen*, borrowed from Anglo-French *discerner*.")
+})
+
+test("Wiktionary origin review extracts English etymology and keeps derived terms and descendants as context", async () => {
+  assert.equal(wiktionaryEnglishUrl("ghetto"), "https://en.wiktionary.org/wiki/ghetto#English")
+  const entryHtml = `<main><div class="mw-heading mw-heading2"><h2 id="English">English</h2></div><div class="mw-heading mw-heading3"><h3 id="Etymology">Etymology</h3></div><style>.ignored { color: red; }</style><p>Borrowed from Venetian Ghetto.</p><div class="mw-heading mw-heading3"><h3 id="Noun">Noun</h3></div><p>A district.</p><div class="mw-heading mw-heading4"><h4 id="Derived_terms">Derived terms</h4></div><ul><li>ghettoize</li><li>ghettoisation</li></ul><div class="mw-heading mw-heading3"><h3 id="Descendants">Descendants</h3></div><ul><li>Italian: ghetto</li><li>French: ghetto</li></ul><div class="mw-heading mw-heading2"><h2 id="French">French</h2></div><div class="mw-heading mw-heading3"><h3 id="Etymology_2">Etymology</h3></div><p>Must not be used.</p></main>`
+  assert.equal(parseWiktionaryEnglishEtymology(entryHtml), "Borrowed from Venetian Ghetto.")
+  assert.deepEqual(parseWiktionaryEnglishOriginDetails(entryHtml).contextSections, [
+    { title: "Noun — Derived terms", items: ["ghettoize", "ghettoisation"] },
+    { title: "Descendants", items: ["Italian: ghetto", "French: ghetto"] },
+  ])
+  const result = await fetchWiktionaryEnglishEtymology("ghetto", async () => new Response(entryHtml, { status: 200 }))
+  assert.equal(result.etymology, "Borrowed from Venetian Ghetto.")
+  assert.equal(result.sourceUrl, wiktionaryEnglishUrl("ghetto"))
+  assert.equal(result.contextSections.length, 2)
 })
 
 test("standalone origin analysis accepts code-added source adapters", async () => {
@@ -78,10 +96,38 @@ test("standalone origin analysis classifies a donor-language route without chang
   assert.equal(result.advisory, true)
   assert.equal(result.determination.type, "borrowed")
   assert.equal(result.determination.confidenceLevel, "CL-A (high)")
-  assert.equal(result.topCandidates.length, 3)
+  assert.deepEqual(result.topCandidates.map((item) => item.type), ["borrowed"])
   assert.equal(entry.etymologyType, "")
   assert.equal(entry.etymology, "")
-  assert.equal(result.sources.length, 2)
+  assert.equal(result.sources.length, 3)
+  assert.equal(result.sources[2].provider, "Wiktionary (English)")
+  assert.equal(result.sources[2].available, false)
+})
+
+test("standalone origin analysis includes usable Wiktionary prose as the third source", async () => {
+  const result = await analyzeLibraryOrigin({ english: "utterly", partOfSpeech: "adverb" }, analysisOptions(
+    '"completely, entirely," from utter (adj.) + -ly (2). Old English uterlic meant "external."',
+    "Middle English utter; Old English utera, uterra; Proto-Germanic *utizon*.",
+    "Old English uterlic, formed from utter and -ly; compare German ausserlich.",
+  ))
+  assert.equal(result.determination.type, "native")
+  assert.equal(result.sources.length, 3)
+  assert.ok(result.sources.every((source) => source.available))
+  assert.equal(result.sources[2].provider, "Wiktionary (English)")
+  assert.ok(!result.caveats.some((item) => /configured source/u.test(item)))
+})
+
+test("standalone origin analysis classifies inherited native formations above affixation and cognate comparisons", async () => {
+  const result = await analyzeLibraryOrigin({ english: "utterly", partOfSpeech: "adverb" }, analysisOptions(
+    '"completely, entirely, to an absolute degree," late 14c., from utter (adj.)) + -ly (2). Old English uterlic (adj.) meant "external." Compare German äusserlich.',
+    "Middle English utter; Old English utera, uterra; Proto-Germanic *utizon*.",
+  ))
+  assert.equal(result.determination.type, "native")
+  assert.equal(result.determination.confidenceLevel, "CL-A (high)")
+  assert.deepEqual(result.topCandidates.map((item) => item.type), ["native", "derived"])
+  assert.ok(result.topCandidates.every((item) => item.confidence >= 45))
+  assert.ok(result.caveats.some((item) => /cognate comparison/u.test(item)))
+  assert.ok(!result.topCandidates.some((item) => item.type === "borrowed"))
 })
 
 test("standalone origin analysis distinguishes English affixation from older root ancestry", async () => {
@@ -93,8 +139,19 @@ test("standalone origin analysis distinguishes English affixation from older roo
   assert.equal(result.determination.confidenceLevel, "CL-B (good)")
 })
 
+test("standalone origin analysis does not combine a foreign cognate with unrelated English formation prose", async () => {
+  const result = await analyzeLibraryOrigin({ english: "projectword", partOfSpeech: "noun" }, analysisOptions(
+    "The exact word was formed in English from an established native base.",
+    "Compare German Projektwort.",
+  ))
+  assert.equal(result.determination.type, "derived")
+  assert.ok(!result.topCandidates.some((item) => item.type === "borrowed"))
+})
+
 test("standalone origin analysis requests a stem only when prose leaves an apparent affix unresolved", async () => {
   const result = await analyzeLibraryOrigin({ english: "reframe", partOfSpeech: "verb" }, analysisOptions("A verb of uncertain history.", ""))
+  assert.equal(result.determination.type, "unknown")
+  assert.deepEqual(result.topCandidates.map((item) => item.type), ["unknown"])
   assert.equal(result.requiresStem, true)
   assert.match(result.stemPrompt, /base or stem/u)
   assert.ok(result.missingInfo.some((item) => /exact word/u.test(item)))

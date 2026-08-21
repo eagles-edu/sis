@@ -273,7 +273,7 @@ function normalizeAnnouncementPayload(payload = {}, options = {}) {
 
   return {
     recipients,
-    assignmentTitle: normalizeText(payload.assignmentTitle) || "Assignment update",
+    assignmentTitle: normalizeText(payload.assignmentTitle) || "Cập nhật bài tập",
     exerciseTitle: normalizeText(payload.exerciseTitle),
     dueAt: normalizeText(payload.dueAt),
     level: normalizeText(payload.level),
@@ -375,7 +375,7 @@ function mapQueueRecord(record = {}) {
     status: normalizeQueueStatus(record.status),
     deliveryMode: normalizeDeliveryMode(record.deliveryMode),
     recipients: normalizeRecipientList(record.recipients),
-    assignmentTitle: normalizeText(record.assignmentTitle) || "Assignment update",
+    assignmentTitle: normalizeText(record.assignmentTitle) || "Cập nhật bài tập",
     exerciseTitle: normalizeText(record.exerciseTitle),
     dueAt: normalizeText(record.dueAt),
     level: normalizeText(record.level),
@@ -855,7 +855,7 @@ export async function updateQueuedAnnouncement(queueId, updates = {}, options = 
     status: updates.status !== undefined ? normalizeQueueStatus(updates.status) : undefined,
     assignmentTitle:
       updates.assignmentTitle !== undefined
-        ? normalizeText(updates.assignmentTitle) || "Assignment update"
+        ? normalizeText(updates.assignmentTitle) || "Cập nhật bài tập"
         : undefined,
     exerciseTitle: updates.exerciseTitle !== undefined ? normalizeText(updates.exerciseTitle) : undefined,
     level: updates.level !== undefined ? normalizeText(updates.level) : undefined,

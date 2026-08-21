@@ -95,6 +95,7 @@ import {
 } from "../../../server/student-report-card-pdf.mjs"
 import { isBrevoEmailProvider, sendBrevoEmail } from "../email/brevo.mjs"
 import { recordBrevoEmailDeliverySafely } from "../email/brevo-delivery.mjs"
+import { buildVietnameseEmail, communicationRecipient } from "../email/communication-template.mjs"
 
 /** @type {Promise<{ createTransport: Function }> | null} */
 let nodemailerModule = null
@@ -230,51 +231,50 @@ function buildTrackedParentReportUrls(payload = {}, recipient = "") {
   }
 }
 
-function buildParentReportEmailContent(payload = {}, recipient = "") {
-  const sender = normalizeText(payload.senderName) || "Eagles Student Admin"
-  const assignmentTitle = normalizeText(payload.assignmentTitle) || "Performance report"
+export function buildParentReportEmailContent(payload = {}, recipient = "") {
+  const assignmentTitle = normalizeText(payload.assignmentTitle) || "Báo cáo kết quả học tập"
   const level = normalizeText(payload.level || payload.className)
   const dueAt = normalizeText(payload.dueAt)
   const urls = buildTrackedParentReportUrls(payload, recipient)
   const reportDay = buildReportDayText(dueAt)
-  const subject = [assignmentTitle, level ? `(${level})` : ""].filter(Boolean).join(" ").trim()
+  const subject = [`Báo cáo kết quả học tập: ${assignmentTitle}`, level ? `(${level})` : ""].filter(Boolean).join(" ").trim()
 
-  const lines = [
-    `Hello,`,
+  const bodyLines = [
+    "Báo cáo kết quả học tập của học sinh đã sẵn sàng.",
+    dueAt ? `Thứ: ${reportDay || "-"}` : "",
+    dueAt ? `Ngày: ${dueAt}` : "",
     "",
-    `Your report card is ready.`,
-    dueAt ? `Day: ${reportDay || "-"}` : "",
-    dueAt ? `Date: ${dueAt}` : "",
+    "Vui lòng mở báo cáo đã lưu hoặc tải bản PDF bằng các liên kết dưới đây.",
     "",
-    `Open the saved report or download the PDF using the links below.`,
-    "",
-    `Saved report: ${urls.reportUrl || "-"}`,
-    `Download PDF: ${urls.pdfUrl || "-"}`,
+    `Báo cáo đã lưu: ${urls.reportUrl || "-"}`,
+    `Tải bản PDF: ${urls.pdfUrl || "-"}`,
   ].filter(Boolean)
 
-  const htmlBlocks = [
-    `<p>Hello,</p>`,
+  const bodyHtml = [
     "<p>",
-    `<strong>Your report card is ready.</strong>`,
-    dueAt ? `<br><strong>Day:</strong> ${escapeHtml(reportDay || "-")}` : "",
-    dueAt ? `<br><strong>Date:</strong> ${escapeHtml(dueAt)}` : "",
+    "<strong>Báo cáo kết quả học tập của học sinh đã sẵn sàng.</strong>",
+    dueAt ? `<br><strong>Thứ:</strong> ${escapeHtml(reportDay || "-")}` : "",
+    dueAt ? `<br><strong>Ngày:</strong> ${escapeHtml(dueAt)}` : "",
     "</p>",
-    "<p>Open the saved report or download the PDF using the buttons below.</p>",
+    "<p>Vui lòng mở báo cáo đã lưu hoặc tải bản PDF bằng các liên kết dưới đây.</p>",
     urls.reportUrl
-      ? `<p><a href="${escapeHtml(urls.reportUrl)}" style="display:inline-block;padding:10px 16px;background:#1f5fbf;color:#ffffff;text-decoration:none;border-radius:6px;">Open Saved Report</a></p>`
+      ? `<p><a href="${escapeHtml(urls.reportUrl)}" style="display:inline-block;padding:10px 16px;background:#1f5fbf;color:#ffffff;text-decoration:none;border-radius:6px;">Mở báo cáo đã lưu</a></p>`
       : "",
     urls.pdfUrl
-      ? `<p><a href="${escapeHtml(urls.pdfUrl)}" style="display:inline-block;padding:10px 16px;background:#f4f6fb;color:#123055;text-decoration:none;border:1px solid #cbd4e6;border-radius:6px;">Download PDF</a></p>`
+      ? `<p><a href="${escapeHtml(urls.pdfUrl)}" style="display:inline-block;padding:10px 16px;background:#f4f6fb;color:#123055;text-decoration:none;border:1px solid #cbd4e6;border-radius:6px;">Tải bản PDF</a></p>`
       : "",
-    urls.openPixelUrl
-      ? `<img src="${escapeHtml(urls.openPixelUrl)}" alt="" width="1" height="1" style="display:block;border:0;opacity:0;">`
-      : "",
-  ].filter(Boolean)
+  ].filter(Boolean).join("")
+  const email = buildVietnameseEmail({
+    bodyText: bodyLines.join("\n"),
+    bodyHtml,
+    recipient: communicationRecipient(payload),
+    origin: payload.requestOrigin,
+  })
 
   return {
     subject,
-    text: lines.join("\n"),
-    html: htmlBlocks.join(""),
+    text: email.text,
+    html: `${email.html}${urls.openPixelUrl ? `<img src="${escapeHtml(urls.openPixelUrl)}" alt="" width="1" height="1" style="display:block;border:0;opacity:0;">` : ""}`,
   }
 }
 
@@ -309,8 +309,8 @@ async function buildParentReportPdfAttachment(payload = {}) {
  *   htmlLines: string,
  * }}
  */
-function buildAnnouncementEmailContent(payload = {}) {
-  const assignmentTitle = normalizeText(payload.assignmentTitle) || "Assignment update"
+export function buildAnnouncementEmailContent(payload = {}) {
+  const assignmentTitle = normalizeText(payload.assignmentTitle) || "Cập nhật bài tập"
   const exerciseTitle = normalizeText(payload.exerciseTitle)
   const dueAt = normalizeText(payload.dueAt)
   const level = normalizeText(payload.level)
@@ -323,32 +323,40 @@ function buildAnnouncementEmailContent(payload = {}) {
     ? `${trackingOrigin}${libraryToken ? "/api/library-assignments/track/open/" : "/api/assignment-reminders/track/open/"}${encodeURIComponent(libraryToken || reminderToken)}`
     : ""
 
-  const subjectParts = [assignmentTitle]
+  const subjectParts = [`Thông báo bài tập: ${assignmentTitle}`]
   if (exerciseTitle) subjectParts.push(`(${exerciseTitle})`)
   const subject = subjectParts.join(" ").trim()
 
   const baseLines = [
-    `${sender} announcement`,
+    `Thông báo từ ${sender}`,
     "",
-    `Assignment: ${assignmentTitle}`,
-    exerciseTitle ? `Exercise: ${exerciseTitle}` : "",
-    level ? `Level/Class: ${level}` : "",
-    dueAt ? `Due: ${dueAt}` : "",
+    `Bài tập: ${assignmentTitle}`,
+    exerciseTitle ? `Bài luyện tập: ${exerciseTitle}` : "",
+    level ? `Trình độ/Lớp: ${level}` : "",
+    dueAt ? `Hạn hoàn thành: ${dueAt}` : "",
     "",
   ].filter(Boolean)
-  const message = customMessage || "Please review and complete this assignment."
-  const lines = [...baseLines, message]
+  const message = customMessage || "Vui lòng xem và hoàn thành bài tập này."
+  const bodyText = [...baseLines, message].join("\n")
 
-  const escapedMessage = escapeHtml(customMessage || "Please review and complete this assignment.")
+  const escapedMessage = escapeHtml(message)
     .replace(/(https?:\/\/[^\s<]+)/giu, '<a href="$1">$1</a>')
   const htmlLines = baseLines
-    .map((line) => line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))
+    .map((line) => escapeHtml(line))
     .join("<br>")
+  const email = buildVietnameseEmail({
+    bodyText,
+    bodyHtml: `${htmlLines}<br><br>${escapedMessage}`,
+    recipient: communicationRecipient(payload),
+    origin: trackingOrigin,
+  })
 
   return {
     subject,
-    lines,
-    htmlLines: `${htmlLines}<br><br>${escapedMessage}${openPixelUrl ? `<img src="${escapeHtml(openPixelUrl)}" alt="" width="1" height="1" style="display:block;border:0;opacity:0;">` : ""}`,
+    lines: email.text.split("\n"),
+    htmlLines: email.html,
+    text: email.text,
+    html: `${email.html}${openPixelUrl ? `<img src="${escapeHtml(openPixelUrl)}" alt="" width="1" height="1" style="display:block;border:0;opacity:0;">` : ""}`,
   }
 }
 
@@ -376,7 +384,7 @@ function normalizeAnnouncementPayload(payload = {}, options = {}) {
 
   return {
     recipients,
-    assignmentTitle: normalizeText(payload.assignmentTitle) || "Assignment update",
+    assignmentTitle: normalizeText(payload.assignmentTitle) || "Cập nhật bài tập",
     exerciseTitle: normalizeText(payload.exerciseTitle),
     dueAt: normalizeText(payload.dueAt),
     level: normalizeText(payload.level),
@@ -436,7 +444,7 @@ export async function sendAnnouncementEmail(payload = {}) {
       return {
         ok: true,
         sent,
-        subject: normalizeText(normalizedPayload.assignmentTitle) || "Performance report",
+        subject: buildParentReportEmailContent({ ...payload, ...normalizedPayload }, normalizedPayload.recipients[0]).subject,
         deliveryMode: "immediate",
       }
     }
@@ -447,8 +455,8 @@ export async function sendAnnouncementEmail(payload = {}) {
       to: [{ email: from.email }],
       bcc: normalizedPayload.recipients.map((email) => ({ email })),
       subject: emailContent.subject,
-      text: emailContent.lines.join("\n"),
-      html: `<p>${emailContent.htmlLines}</p>`,
+      text: emailContent.text,
+      html: emailContent.html,
       idempotencyKey: normalizeText(payload.queueId) ? `sis-email-${normalizeText(payload.queueId)}` : "",
     })
     await Promise.all(normalizedPayload.recipients.map((recipient) => recordBrevoEmailDeliverySafely({
@@ -503,7 +511,7 @@ export async function sendAnnouncementEmail(payload = {}) {
     return {
       ok: true,
       sent,
-      subject: normalizeText(normalizedPayload.assignmentTitle) || "Performance report",
+      subject: buildParentReportEmailContent({ ...payload, ...normalizedPayload }, normalizedPayload.recipients[0]).subject,
       deliveryMode: "immediate",
     }
   }
@@ -514,8 +522,8 @@ export async function sendAnnouncementEmail(payload = {}) {
     to: smtp.from,
     bcc: normalizedPayload.recipients,
     subject: emailContent.subject,
-    text: emailContent.lines.join("\n"),
-    html: `<p>${emailContent.htmlLines}</p>`,
+    text: emailContent.text,
+    html: emailContent.html,
   })
 
   return {

@@ -371,12 +371,13 @@
     return panel
   }
 
-  function applyConsentPreferences(preferences) {
+  function applyConsentPreferences(preferences, { loadBrevoConversation = true } = {}) {
     setConsentAttributes(preferences)
-    if (preferences?.supportChat === "granted") {
+    if (preferences?.supportChat === "granted" && loadBrevoConversation) {
       globalThis.__SIS_BREVO_CONVERSATION_DISABLED__ = false
       installBrevoConversation()
     } else {
+      globalThis.__SIS_BREVO_CONVERSATION_DISABLED__ = true
       removeBrevoConversation()
     }
     if (preferences?.analytics === "granted") {

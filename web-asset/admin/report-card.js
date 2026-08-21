@@ -247,6 +247,18 @@ window.SIS_REPORT_CARD_SAMPLE_DATA = {
       const sidebarEl = document.getElementById("appSidebarNav")
       const sidebarLinks = Array.from(document.querySelectorAll("#appSidebarNav a[href^='#']"))
 
+      document.querySelectorAll("[data-menu-group] > .menu-group-btn").forEach((button) => {
+        const group = button.closest("[data-menu-group]")
+        if (!group) return
+        const expanded = button.getAttribute("aria-expanded") === "true"
+        group.classList.toggle("expanded", expanded)
+        button.addEventListener("click", () => {
+          const nextExpanded = button.getAttribute("aria-expanded") !== "true"
+          button.setAttribute("aria-expanded", String(nextExpanded))
+          group.classList.toggle("expanded", nextExpanded)
+        })
+      })
+
       function updateMenuToggleButtonLabel() {
         const menuOpen = document.body.classList.contains("menu-open")
         if (menuToggleBtnEl)

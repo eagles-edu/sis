@@ -190,7 +190,7 @@
       noticeAcknowledgedAt: preferences.noticeAcknowledgedAt,
       preserveNoticeAcknowledgement: false,
     })
-    theme.applyConsentPreferences(localPreferences)
+    theme.applyConsentPreferences(localPreferences, { loadBrevoConversation: false })
   }
   const supportChat = document.querySelector('[data-settings-consent="supportChat"]')
   const analytics = document.querySelector('[data-settings-consent="analytics"]')
@@ -211,7 +211,7 @@
     const saved = theme.writeConsentPreferences(supportChatValue, analyticsValue, {
       noticeAcknowledgedAt: new Date().toISOString(),
     })
-    theme.applyConsentPreferences(saved)
+    theme.applyConsentPreferences(saved, { loadBrevoConversation: false })
     const remoteSaved = await preferenceStore?.save?.(theme.CONSENT_STORAGE_KEY, saved, {
       privacyPreferenceSource: "settings",
     })

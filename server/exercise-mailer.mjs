@@ -7,6 +7,7 @@ import path from "node:path"
 import { URL, fileURLToPath } from "node:url"
 import { getEmailProviderStatus, isBrevoEmailProvider, sendBrevoEmail } from "../src/modules/email/brevo.mjs"
 import { getBrevoWebhookHealth, recordBrevoEmailDeliverySafely } from "../src/modules/email/brevo-delivery.mjs"
+import { buildVietnameseEmail } from "../src/modules/email/communication-template.mjs"
 import { observeStudentWriteRequest } from "../src/infra/observability/student-write-metrics.mjs"
 import { reconcileLibraryLifecycle } from "../src/modules/admin/library-corpus.mjs"
 
@@ -1143,16 +1144,16 @@ function createEmail({
   const to = coerceArray(recipients)
   const trimmedEmail = isEmailLike(email) ? email.trim() : ""
   const submittedAt = completedAt || new Date().toISOString()
-  const subjectBase = `Exercise submission${pageTitle ? ` — ${pageTitle}` : ""}`
+  const subjectBase = `Bài nộp bài tập${pageTitle ? ` — ${pageTitle}` : ""}`
   const teacherSubject = `${eaglesId ? `${eaglesId} ` : ""}${subjectBase}`
 
-  const studentDisplayId = eaglesId || "(not provided)"
-  const introIdentifier = eaglesId ? eaglesId : "Eagles ID (not provided)"
-  const studentIdLine = `Eagles ID: ${studentDisplayId}`
+  const studentDisplayId = eaglesId || "(chưa cung cấp)"
+  const introIdentifier = eaglesId ? eaglesId : "Mã Eagles (chưa cung cấp)"
+  const studentIdLine = `Mã Eagles: ${studentDisplayId}`
   const studentEmailLine = trimmedEmail
-    ? `Student email: ${trimmedEmail}`
-    : "Student email: (not provided)"
-  const scoreLine = `Score summary: ${formatMetricSummary({
+    ? `Email học sinh: ${trimmedEmail}`
+    : "Email học sinh: (chưa cung cấp)"
+  const scoreLine = `Tóm tắt điểm: ${formatMetricSummary({
     correctCount,
     pendingCount,
     incorrectCount,
@@ -1160,23 +1161,23 @@ function createEmail({
     scorePercent,
   })}`
 
-  const textBody = [
-    `${introIdentifier} just completed ${pageTitle || "an exercise"}.`,
+  const teacherBodyText = [
+    `${introIdentifier} vừa hoàn thành ${pageTitle || "một bài tập"}.`,
     "",
-    `Submitted at: ${submittedAt}`,
+    `Thời gian nộp: ${submittedAt}`,
     studentEmailLine,
     studentIdLine,
     scoreLine,
   ].join("\n")
 
-  const htmlBody = `
+  const teacherBodyHtml = `
     <div>
-      <p><strong>${introIdentifier}</strong> just completed <strong>${pageTitle || "an exercise"}</strong>.</p>
+      <p><strong>${introIdentifier}</strong> vừa hoàn thành <strong>${pageTitle || "một bài tập"}</strong>.</p>
       <ul>
-        <li><strong>Submitted at:</strong> ${submittedAt}</li>
-        <li><strong>Student email:</strong> ${trimmedEmail || "(not provided)"}</li>
-        <li><strong>Eagles ID:</strong> ${studentDisplayId}</li>
-        <li><strong>Score summary:</strong> ${formatMetricSummary({
+        <li><strong>Thời gian nộp:</strong> ${submittedAt}</li>
+        <li><strong>Email học sinh:</strong> ${trimmedEmail || "(chưa cung cấp)"}</li>
+        <li><strong>Mã Eagles:</strong> ${studentDisplayId}</li>
+        <li><strong>Tóm tắt điểm:</strong> ${formatMetricSummary({
           correctCount,
           pendingCount,
           incorrectCount,
@@ -1186,25 +1187,27 @@ function createEmail({
       </ul>
     </div>
   `
+  const origin = normalizeEnvText(process.env.EXERCISE_MAILER_ORIGIN || process.env.PUBLIC_APP_ORIGIN || process.env.APP_ORIGIN)
+  const teacherEmailContent = buildVietnameseEmail({ bodyText: teacherBodyText, bodyHtml: teacherBodyHtml, origin })
 
   const teacherEmail = {
     to,
     subject: teacherSubject,
-    text: textBody,
-    html: htmlBody,
+    text: teacherEmailContent.text,
+    html: teacherEmailContent.html,
   }
 
   let learnerEmail = null
 
   if (trimmedEmail) {
-    const pageName = pageTitle || "your exercise"
-    const learnerSubject = `Confirmation — ${pageTitle || "Exercise submission"}`
-    const learnerText = [
-      `Thanks for completing ${pageName}.`,
+    const pageName = pageTitle || "bài tập của bạn"
+    const learnerSubject = `Xác nhận — ${pageTitle || "Bài nộp bài tập"}`
+    const learnerBodyText = [
+      `Cảm ơn bạn đã hoàn thành ${pageName}.`,
       "",
-      `Submitted at: ${submittedAt}`,
-      `Eagles ID: ${eaglesId || "(not provided)"}`,
-      `Score summary: ${formatMetricSummary({
+      `Thời gian nộp: ${submittedAt}`,
+      `Mã Eagles: ${eaglesId || "(chưa cung cấp)"}`,
+      `Tóm tắt điểm: ${formatMetricSummary({
         correctCount,
         pendingCount,
         incorrectCount,
@@ -1214,13 +1217,13 @@ function createEmail({
       `Email: ${trimmedEmail}`,
     ].join("\n")
 
-    const learnerHtml = `
+    const learnerBodyHtml = `
       <div>
-        <p>Thanks for completing <strong>${pageName}</strong>.</p>
+        <p>Cảm ơn bạn đã hoàn thành <strong>${pageName}</strong>.</p>
         <ul>
-          <li><strong>Submitted at:</strong> ${submittedAt}</li>
-          <li><strong>Eagles ID:</strong> ${eaglesId || "(not provided)"}</li>
-          <li><strong>Score summary:</strong> ${formatMetricSummary({
+          <li><strong>Thời gian nộp:</strong> ${submittedAt}</li>
+          <li><strong>Mã Eagles:</strong> ${eaglesId || "(chưa cung cấp)"}</li>
+          <li><strong>Tóm tắt điểm:</strong> ${formatMetricSummary({
             correctCount,
             pendingCount,
             incorrectCount,
@@ -1231,12 +1234,13 @@ function createEmail({
         </ul>
       </div>
     `
+    const learnerEmailContent = buildVietnameseEmail({ bodyText: learnerBodyText, bodyHtml: learnerBodyHtml, origin })
 
     learnerEmail = {
       to: [trimmedEmail],
       subject: learnerSubject,
-      text: learnerText,
-      html: learnerHtml,
+      text: learnerEmailContent.text,
+      html: learnerEmailContent.html,
     }
   }
 

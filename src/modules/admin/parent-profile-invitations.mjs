@@ -5,6 +5,7 @@ import { recordBrevoEmailDeliverySafely } from "../email/brevo-delivery.mjs"
 import { enqueueAsyncSideEffectJob } from "../async/side-effect-jobs.mjs"
 import { sendBrevoEmail, isBrevoEmailProvider } from "../email/brevo.mjs"
 import { hashScryptPassword } from "./users.mjs"
+import { buildVietnameseEmail, communicationRecipient } from "../email/communication-template.mjs"
 
 export const ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION = "parent-profile-invitation"
 const INVITATION_EXPIRY_DEFAULT_DAYS = 7
@@ -122,32 +123,39 @@ export async function ensureParentPortalAccount(prisma, student, recipientEmail 
   return { account }
 }
 
-function invitationMessage({ student, url, openUrl, parentId, mustChangePassword, expiresAt }) {
-  const name = text(student?.profile?.fullName || student?.profile?.englishName || student?.eaglesId) || "your learner"
-  const subject = `Complete the Eagles student profile for ${name}`
-  const expiresOn = expiresAt instanceof Date ? expiresAt.toLocaleDateString("en-CA") : "the configured expiry date"
+export function invitationMessage({ student, recipientEmail = "", url, openUrl, parentId, mustChangePassword, expiresAt }) {
+  const profile = student?.profile || {}
+  const name = text(profile.fullName || profile.englishName || student?.eaglesId) || "học sinh"
+  const subject = `Hoàn tất hồ sơ học sinh Eagles: ${name}`
+  const expiresOn = expiresAt instanceof Date ? expiresAt.toLocaleDateString("vi-VN") : "ngày hết hạn đã cấu hình"
   const credentials = mustChangePassword
-    ? `Parent ID: ${parentId}\nOpen the link, then choose a new password and save both your Parent ID and password in a safe place.\n\n`
-    : `Parent ID: ${parentId}\nUse your existing parent-portal password at ${publicOrigin()}/parent.\n\n`
-  const textBody = `Complete the student profile for ${name} using this secure link:\n\n${url}\n\n${credentials}This invitation expires on ${expiresOn} and can be used once.\n\nIf you did not expect this email, you can ignore it.`
+    ? `Mã phụ huynh: ${parentId}\nMở liên kết, chọn mật khẩu mới và lưu cả mã phụ huynh cùng mật khẩu ở nơi an toàn.\n\n`
+    : `Mã phụ huynh: ${parentId}\nSử dụng mật khẩu cổng phụ huynh hiện có tại ${publicOrigin()}/parent.\n\n`
+  const bodyText = `Vui lòng hoàn tất hồ sơ học sinh ${name} bằng liên kết bảo mật này:\n\n${url}\n\n${credentials}Liên kết hết hạn vào ${expiresOn} và chỉ sử dụng được một lần.`
   const safe = (value) => text(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]))
-  const completionHtml = `<p><strong>Complete the student profile using this link:</strong></p><p><a href="${url}">Complete the student profile</a></p><p>This invitation expires on ${safe(expiresOn)} and can be used once.</p>`
+  const completionHtml = `<p><strong>Vui lòng hoàn tất hồ sơ học sinh bằng liên kết này:</strong></p><p><a href="${safe(url)}">Mở biểu mẫu hồ sơ học sinh</a></p><p>Liên kết hết hạn vào ${safe(expiresOn)} và chỉ sử dụng được một lần.</p>`
   const credentialHtml = mustChangePassword
-    ? `<p><strong>Parent ID:</strong> ${safe(parentId)}<br>When the completion link opens, choose a new password and save both your Parent ID and password in a safe place.</p>`
-    : `<p><strong>Parent ID:</strong> ${safe(parentId)}<br>Use your existing parent-portal password at <a href="${publicOrigin()}/parent">the parent portal</a>.</p>`
+    ? `<p><strong>Mã phụ huynh:</strong> ${safe(parentId)}<br>Mở liên kết, chọn mật khẩu mới và lưu cả mã phụ huynh cùng mật khẩu ở nơi an toàn.</p>`
+    : `<p><strong>Mã phụ huynh:</strong> ${safe(parentId)}<br>Sử dụng mật khẩu cổng phụ huynh hiện có tại <a href="${safe(publicOrigin())}/parent">cổng phụ huynh</a>.</p>`
   const openPixel = `<img src="${safe(openUrl)}" width="1" height="1" alt="" aria-hidden="true" style="display:block;border:0" />`
-  const html = `${completionHtml}<p>Student: <strong>${safe(name)}</strong></p>${credentialHtml}${openPixel}`
-  return { subject, textBody, html }
+  const htmlBody = `${completionHtml}<p>Học sinh: <strong>${safe(name)}</strong></p>${credentialHtml}`
+  const recipient = lower(profile.motherEmail) === lower(recipientEmail)
+    ? communicationRecipient({ recipientName: profile.motherName, recipientRelationship: "mother" })
+    : lower(profile.fatherEmail) === lower(recipientEmail)
+      ? communicationRecipient({ recipientName: profile.fatherName, recipientRelationship: "father" })
+      : {}
+  const email = buildVietnameseEmail({ bodyText, bodyHtml: htmlBody, recipient, origin: publicOrigin() })
+  return { subject, textBody: email.text, html: `${email.html}${openPixel}` }
 }
 
 async function sendInvitationEmail({ invitationId, recipientEmail, student, token, expiresAt, parentId, mustChangePassword }) {
   const url = invitationUrl(token)
-  const message = invitationMessage({ student, url, openUrl: invitationOpenUrl(token), parentId, mustChangePassword, expiresAt })
+  const message = invitationMessage({ student, recipientEmail, url, openUrl: invitationOpenUrl(token), parentId, mustChangePassword, expiresAt })
   const fromEmail = text(process.env.BREVO_FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER)
   const fromName = text(process.env.BREVO_FROM_NAME || "The Eagles Club")
   if (isBrevoEmailProvider()) {
     const result = await sendBrevoEmail({ from: { email: fromEmail, name: fromName }, to: [{ email: recipientEmail }], subject: message.subject, text: message.textBody, html: message.html, idempotencyKey: invitationIdempotencyKey(invitationId) })
-    return { providerMessageId: text(result.messageId), provider: "brevo" }
+    return { providerMessageId: text(result.messageId), provider: "brevo", subject: message.subject }
   }
   const nodemailer = await import("nodemailer")
   const host = text(process.env.SMTP_HOST)
@@ -155,7 +163,7 @@ async function sendInvitationEmail({ invitationId, recipientEmail, student, toke
   if (!host || !fromEmail) throw Object.assign(new Error("SMTP invitation settings are incomplete"), { statusCode: 503 })
   const transporter = nodemailer.default.createTransport({ host, port, secure: String(process.env.SMTP_SECURE || "true").toLowerCase() === "true", auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS || "" } : undefined })
   const result = await transporter.sendMail({ from: fromEmail, to: recipientEmail, subject: message.subject, text: message.textBody, html: message.html })
-  return { providerMessageId: text(result.messageId), provider: "smtp" }
+  return { providerMessageId: text(result.messageId), provider: "smtp", subject: message.subject }
 }
 
 export async function createParentProfileInvitation({ studentRefId, recipientEmail, queuedBy = "" } = {}) {
@@ -203,7 +211,7 @@ export async function processParentProfileInvitationJob(job = {}) {
       recipientEmail: invitation.recipientEmail,
       batchId: invitation.batchId,
       queueType: "profile-invitation",
-      subject: "Complete your Eagles student profile",
+      subject: sent.subject,
       metadata: { invitationId: invitation.id, profileInvitationId: invitation.id, studentRefId: invitation.studentRefId },
     })
     await prisma.parentProfileInvitation.update({ where: { id: invitation.id }, data: { status: "sent", sentAt: new Date(), providerMessageId: sent.providerMessageId || null } })

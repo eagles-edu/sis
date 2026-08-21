@@ -283,10 +283,16 @@ test("admin theme split is generated from the shared theme and excludes portal-o
 test("admin button tooltips use the shared default styling", () => {
   const adminTheme = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/admin-portal-theme.min.css"), "utf8")
   const adminAppCss = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.css"), "utf8")
-  const expectedRule = /body\.admin-portal-page \.admin-button-tooltip\s*\{[\s\S]*?background:\s*rgba\(49, 109, 214, 0\.96\);[\s\S]*?border:\s*1px solid rgba\(207, 222, 247, 0\.92\);[\s\S]*?border-radius:\s*var\(--radius-2\);[\s\S]*?box-shadow:\s*0 12px 28px rgba\(8, 22, 40, 0\.24\);[\s\S]*?color:\s*#fbffff;[\s\S]*?font-size:\s*12px;[\s\S]*?font-weight:\s*700;[\s\S]*?left:\s*0;[\s\S]*?max-width:\s*min\(240px, calc\(100vw - 24px\)\);[\s\S]*?padding:\s*8px 10px;[\s\S]*?pointer-events:\s*none;[\s\S]*?position:\s*absolute;[\s\S]*?top:\s*0;[\s\S]*?white-space:\s*normal;[\s\S]*?word-break:\s*break-word;[\s\S]*?z-index:\s*1200;[\s\S]*?\}/
+  const expectedRule = /body\.admin-portal-page \.admin-button-tooltip\s*\{[\s\S]*?background:\s*rgba\(49, 109, 214, 0\.96\);[\s\S]*?border:\s*1px solid rgba\(207, 222, 247, 0\.92\);[\s\S]*?border-radius:\s*var\(--radius-2\);[\s\S]*?box-shadow:\s*0 12px 28px rgba\(8, 22, 40, 0\.24\);[\s\S]*?color:\s*#fbffff;[\s\S]*?font-size:\s*12px;[\s\S]*?font-weight:\s*700;[\s\S]*?left:\s*0;[\s\S]*?max-width:\s*min\(240px, calc\(100vw - 24px\)\);[\s\S]*?padding:\s*8px 10px;[\s\S]*?pointer-events:\s*none;[\s\S]*?position:\s*fixed;[\s\S]*?top:\s*0;[\s\S]*?white-space:\s*normal;[\s\S]*?word-break:\s*break-word;[\s\S]*?z-index:\s*1200;[\s\S]*?\}/
 
   assert.match(sharedThemeSource, expectedRule)
-  assert.match(adminTheme, /body\.admin-portal-page \.admin-button-tooltip\{background:rgba\(49,109,214,\.96\);border:1px solid rgba\(207,222,247,\.92\);border-radius:var\(--radius-2\);box-shadow:0 12px 28px rgba\(8,22,40,\.24\);color:#fbffff;font-size:12px;font-weight:700;left:0;max-width:min\(240px,calc\(100vw - 24px\)\);padding:8px 10px;pointer-events:none;position:absolute;top:0;white-space:normal;word-break:break-word;z-index:1200\}/)
+  assert.match(adminTheme, /body\.admin-portal-page \.admin-button-tooltip\{[^}]*background:rgba\(49,109,214,\.96\);[^}]*\}/)
+  assert.match(adminTheme, /body\.admin-portal-page \.admin-button-tooltip\{[^}]*position:fixed;[^}]*\}/)
+  assert.match(sharedThemeSource, /body\.admin-portal-page \.tabulator-tooltip\s*\{[\s\S]*?background:\s*#123055;[\s\S]*?color:\s*#ffffff;[\s\S]*?transform:\s*translateY\(calc\(-100% - 28px\)\);/)
+  assert.match(adminTheme, /body\.admin-portal-page \.tabulator-tooltip\{[^}]*background:#123055;/)
+  assert.match(adminTheme, /body\.admin-portal-page \.tabulator-tooltip\{[^}]*color:#fff;/)
+  assert.match(adminTheme, /body\.admin-portal-page \.tabulator-tooltip\{[^}]*position:absolute;/)
+  assert.match(adminTheme, /body\.admin-portal-page \.tabulator-tooltip\{[^}]*transform:translateY\(calc\(-100% - 28px\)\)(?:;|\})/)
   assert.doesNotMatch(adminAppCss, /\.admin-button-tooltip\s*\{/)
 })
 

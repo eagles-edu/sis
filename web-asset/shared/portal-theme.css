@@ -528,7 +528,7 @@
   inset: auto 16px 16px auto;
   max-inline-size: min(420px, calc(100vw - 32px));
   padding: 10px 14px;
-  position: fixed;
+  position: absolute;
   z-index: 1000;
 }
 
@@ -1901,11 +1901,34 @@ body.admin-portal-page .admin-button-tooltip {
   max-width: min(240px, calc(100vw - 24px));
   padding: 8px 10px;
   pointer-events: none;
-  position: absolute;
+  position: fixed;
   top: 0;
   white-space: normal;
   word-break: break-word;
   z-index: 1200;
+}
+/* Shared Tabulator header tooltips stay above the header so they cannot hide the row being explained. */
+body.admin-portal-page .tabulator-tooltip {
+  background: #123055;
+  border: 1px solid #7f9bc4;
+  border-radius: var(--radius-2);
+  box-shadow: 0 12px 28px rgba(8, 22, 40, 0.24);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  max-width: min(280px, calc(100vw - 24px));
+  padding: 8px 10px;
+  pointer-events: none;
+  position: absolute;
+  transform: translateY(calc(-100% - 28px));
+  white-space: normal;
+  word-break: break-word;
+  z-index: 1200;
+}
+html[data-theme="dark"] body.admin-portal-page .tabulator-tooltip {
+  background: #e7f0ff;
+  border-color: #8faed8;
+  color: #10213d;
 }
 .portal-theme-chart-shell,
 .portal-theme-dialog {
@@ -11727,11 +11750,11 @@ body.admin-portal-page .news-vocabulary-row-dots {
   margin: 0;
   max-block-size: var(--portal-prefooter-block-size);
   min-block-size: var(--portal-prefooter-block-size);
-  padding-block: 3px;
+  padding-block: 24px;
   width: 100%;
 }
 .portal-prefooter .env-badge {
-  font-size: 11px;
+  font-size: 13px;
   margin: 0;
   padding: 4px 10px;
 }
@@ -11753,8 +11776,8 @@ body.portal-hub-page .hub-prefooter .env-badge {
   background-color: var(--portal-action-green-top);
   color: var(--ink-soft, var(--secondary-color));
   font-family: "B612 Mono", monospace;
-  font-size: 0.75rem;
-  letter-spacing: normal;
+  font-size: .85rem;
+  letter-spacing: 0.02em;
   line-height: 1.25;
   margin: 0;
   text-align: right;

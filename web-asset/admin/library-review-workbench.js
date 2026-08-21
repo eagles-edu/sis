@@ -168,7 +168,7 @@
     determination.append(title, detail)
     root.append(advisory, determination)
     const candidates = (data.topCandidates || []).map((item) => `${item.label} - ${item.confidenceLevel}: ${item.reason}`)
-    appendOriginList(root, "Top three dropdown choices", candidates)
+    appendOriginList(root, "Supported dropdown choices", candidates)
     appendOriginList(root, "Caveats", data.caveats || [])
     appendOriginList(root, "Missing information to search", data.missingInfo || [])
     const sources = document.createElement("section")
@@ -182,6 +182,17 @@
       heading.textContent = source.provider
       message.textContent = source.excerpt || source.message || "No etymology section returned."
       item.append(heading, message)
+      ;(source.contextSections || []).forEach((context) => {
+        const contextHeading = document.createElement("h5")
+        const contextList = document.createElement("ul")
+        contextHeading.textContent = `${context.title} (context only)`
+        ;(context.items || []).forEach((value) => {
+          const line = document.createElement("li")
+          line.textContent = value
+          contextList.append(line)
+        })
+        item.append(contextHeading, contextList)
+      })
       sources.append(item)
     })
     root.append(sources)
@@ -219,7 +230,7 @@
     const originalLabel = button.textContent
     button.disabled = true
     button.textContent = "Reviewing..."
-    if (message) message.textContent = "Retrieving Etymonline and Merriam-Webster etymology sections..."
+    if (message) message.textContent = "Retrieving Etymonline, Merriam-Webster, and Wiktionary etymology sections..."
     try {
       const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/origin-analysis`, {
         method: "POST",

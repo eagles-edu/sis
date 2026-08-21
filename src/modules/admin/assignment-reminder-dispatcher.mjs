@@ -126,27 +126,25 @@ function buildTrackedActionUrl(url, token) {
  * @returns {string}
  */
 export function buildAssignmentReminderMessage(input) {
-  const status = input.completed ? "Status: completed." : "Status: not completed yet."
+  const status = input.completed ? "Trạng thái: đã hoàn thành." : "Trạng thái: chưa hoàn thành."
   const lines = [
-    `Hello ${input.studentName || "Eagles family"},`,
-    "",
-    `Assignment: ${input.assignmentTitle}`,
-    `Class: ${input.level}`,
-    `Due: ${input.dueAt || "the posted due date"} (Asia/Ho_Chi_Minh)`,
+    `Bài tập: ${input.assignmentTitle}`,
+    `Lớp: ${input.level}`,
+    `Hạn hoàn thành: ${input.dueAt || "theo ngày đã thông báo"} (giờ Việt Nam)`,
     status,
-    `Open the assignment: ${input.actionUrl}`,
+    `Mở bài tập: ${input.actionUrl}`,
   ]
   if (input.mmr) {
     lines.push(
       "",
-      `${input.level} news-report MMR: ${input.mmr.completed}/${input.mmr.required} completed this week.`,
-      `${input.mmr.remaining} report${input.mmr.remaining === 1 ? "" : "s"} remain before Sunday 23:59:59 Vietnam time.`,
+      `MMR bài tin tức của lớp ${input.level}: đã hoàn thành ${input.mmr.completed}/${input.mmr.required} bài trong tuần này.`,
+      `Còn ${input.mmr.remaining} bài cần hoàn thành trước 23:59:59 Chủ nhật theo giờ Việt Nam.`,
     )
     if (input.mmr.warning) {
-      lines.push("Warning: the remaining reports exceed the number of days left through Sunday.")
+      lines.push("Lưu ý: số bài còn lại nhiều hơn số ngày còn lại đến Chủ nhật.")
     }
   }
-  lines.push("", "This reminder is informational. Reply to the school if the assignment link or account data is incorrect.")
+  lines.push("", "Đây là thông báo nhắc việc. Vui lòng liên hệ nhà trường nếu liên kết bài tập hoặc thông tin tài khoản chưa chính xác.")
   return lines.join("\n")
 }
 

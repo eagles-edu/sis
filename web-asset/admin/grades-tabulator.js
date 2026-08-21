@@ -3579,12 +3579,16 @@
       }
       function bindMenuControls() {
         document
-          .querySelectorAll("[data-menu-toggle]")
+          .querySelectorAll("[data-menu-group] > .menu-group-btn")
           .forEach((button) => {
+            const group = button.closest("[data-menu-group]")
+            if (!group) return
+            const expanded = button.getAttribute("aria-expanded") === "true"
+            group.classList.toggle("expanded", expanded)
             button.addEventListener("click", () => {
-              const group = button.closest("[data-menu-group]")
-              if (!group) return
-              group.classList.toggle("expanded")
+              const nextExpanded = button.getAttribute("aria-expanded") !== "true"
+              button.setAttribute("aria-expanded", String(nextExpanded))
+              group.classList.toggle("expanded", nextExpanded)
             })
           })
         document

@@ -341,7 +341,7 @@ function normalizeAssignmentTemplate(source = {}) {
     Array.isArray(template.items) ? template.items
     : Array.isArray(template.itemsJson) ? template.itemsJson
     : []
-  const assignmentTitle = normalizeText(template.assignmentTitle || template.title) || "Assignment update"
+  const assignmentTitle = normalizeText(template.assignmentTitle || template.title) || "Cập nhật bài tập"
   const assignedAt = normalizeText(template.assignedAt || template.dateAssigned)
   const dueAt = normalizeText(template.dueAt || template.dueDate)
   const exerciseTitle = normalizeText(template.exerciseTitle)

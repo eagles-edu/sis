@@ -173,6 +173,20 @@
         syncNavigationMenuState();
       }
 
+      function bindMenuGroupControls() {
+        document.querySelectorAll("[data-menu-group] > .menu-group-btn").forEach((button) => {
+          const group = button.closest("[data-menu-group]");
+          if (!group) return;
+          const expanded = button.getAttribute("aria-expanded") === "true";
+          group.classList.toggle("expanded", expanded);
+          button.addEventListener("click", () => {
+            const nextExpanded = button.getAttribute("aria-expanded") !== "true";
+            button.setAttribute("aria-expanded", String(nextExpanded));
+            group.classList.toggle("expanded", nextExpanded);
+          });
+        });
+      }
+
       function setAuthenticated(authenticated) {
         document.getElementById("sessionRequiredPanel")?.classList.toggle("hidden", authenticated);
         document.getElementById("app")?.classList.toggle("hidden", !authenticated);
@@ -383,7 +397,7 @@
         const studentName = normalizeText(row?.profile?.fullName || row?.profile?.englishName || row?.eaglesId || "Student");
         return `
           <div class="history-rail">
-            <button type="button" class="history-rail__button" data-history-toggle data-button-tooltip-title="menu" aria-haspopup="menu" aria-expanded="false" aria-label="Open history menu for ${escapeHtml(studentName)}">
+            <button type="button" class="history-rail__button" data-history-toggle data-button-tooltip-title="View enrollment changes for this student" aria-haspopup="menu" aria-expanded="false" aria-label="Open history menu for ${escapeHtml(studentName)}">
               <span class="history-rail__dots" aria-hidden="true">⋮</span>
             </button>
             <div class="history-rail__menu hidden" data-history-menu role="menu" aria-label="History actions">
@@ -919,6 +933,7 @@
       });
       bindEnrollmentHistoryModalDismiss();
       bindHistoryRailDismiss();
+      bindMenuGroupControls();
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
         const modal = document.getElementById("enrollmentHistoryModal");

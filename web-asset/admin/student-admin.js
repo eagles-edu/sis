@@ -283,12 +283,11 @@
       function tooltipTextForButton(buttonEl) {
         if (!(buttonEl instanceof HTMLButtonElement)) return "";
         const explicit = normalizeText(buttonEl.dataset.buttonTooltip || "");
-        if (explicit && explicit.toLowerCase() !== "auto") return explicit;
         const storedTitle = normalizeText(buttonEl.dataset.buttonTooltipTitle || "");
-        if (storedTitle) return storedTitle;
-        const ariaLabel = normalizeText(buttonEl.getAttribute("aria-label") || "");
-        if (ariaLabel) return ariaLabel;
-        return normalizeText(buttonEl.textContent || "");
+        const text = explicit && explicit.toLowerCase() !== "auto" ? explicit : storedTitle;
+        if (!text) return "";
+        const visibleLabel = normalizeText(buttonEl.textContent || "");
+        return visibleLabel && text.toLowerCase() === visibleLabel.toLowerCase() ? "" : text;
       }
 
       function ensureButtonTooltipRoot() {
@@ -340,8 +339,8 @@
           margin,
           Math.min(centeredLeft, viewportWidth - tooltipWidth - margin),
         );
-        tooltipEl.style.left = `${Math.round(left + window.scrollX)}px`;
-        tooltipEl.style.top = `${Math.round(top + window.scrollY)}px`;
+        tooltipEl.style.left = `${Math.round(left)}px`;
+        tooltipEl.style.top = `${Math.round(top)}px`;
       }
 
       function showButtonTooltip(buttonEl) {
@@ -10000,6 +9999,7 @@
 
       function pageGroupForSlug(pageSlug) {
         const slug = normalizePageSlug(pageSlug);
+        if (slug === "overview" || slug === "queue-hub") return "";
         const groups = Object.keys(PAGE_GROUPS);
         for (let i = 0; i < groups.length; i += 1) {
           const key = groups[i];
@@ -10095,7 +10095,7 @@
       function updateMenuExpansion(activeGroup) {
         document.querySelectorAll("[data-menu-group]").forEach((groupEl) => {
           const groupName = normalizeText(groupEl.getAttribute("data-menu-group"));
-          const expanded = groupName === activeGroup;
+          const expanded = Boolean(activeGroup) && groupName === activeGroup;
           if (expanded) groupEl.classList.add("expanded");
           else groupEl.classList.remove("expanded");
           groupEl.querySelector("[data-menu-toggle]")?.setAttribute("aria-expanded", String(expanded));

@@ -12,6 +12,25 @@ const columnGroups = [
   { label: "SIS interaction", buttonClass: "portal-button-info", fields: ["linkClicked", "pdfDownloaded", "acknowledged", "actionCompleted"] },
 ]
 let tabulatorPromise
+const EVENT_HEADER_TOOLTIPS = Object.freeze({
+  linkClicked: "The recipient opened the invitation link.",
+  pdfDownloaded: "The recipient downloaded the report PDF.",
+  acknowledged: "The recipient confirmed that they reviewed the report.",
+  actionCompleted: "The recipient completed the requested follow-up action.",
+  emailQueued: "SIS placed the email in the sending queue.",
+  emailSent: "The email provider accepted the message for sending.",
+  emailDelivered: "The email provider reported delivery to the mailbox.",
+  emailOpened: "The email provider reported that the message was opened.",
+  emailClicked: "The email provider reported a link click.",
+  emailDeferred: "The provider postponed delivery and may retry it.",
+  emailError: "SIS recorded an email sending error.",
+  emailInvalid: "The provider rejected the address as invalid.",
+  emailBlocked: "The provider blocked delivery to the address.",
+  emailSoft: "The provider recorded a temporary delivery failure.",
+  emailHard: "The provider recorded a permanent delivery failure.",
+  emailComplained: "The recipient marked the message as unwanted.",
+  emailUnsubscribed: "The recipient opted out of future messages.",
+})
 
 function normalizeGroupText(value, fallback = "Unassigned") {
   const text = value === undefined || value === null ? "" : String(value).trim()
@@ -78,7 +97,14 @@ function markFormatter(cell, tone) {
 }
 
 function eventColumn(title, field, tone, tooltip) {
-  return { title, field, width: 112, hozAlign: "center", headerTooltip: tooltip, formatter: (cell) => markFormatter(cell, tone) }
+  return {
+    title,
+    field,
+    width: 112,
+    hozAlign: "center",
+    headerTooltip: tooltip || EVENT_HEADER_TOOLTIPS[field] || "This column shows the recorded status.",
+    formatter: (cell) => markFormatter(cell, tone),
+  }
 }
 
 function completionFormatter(cell) {

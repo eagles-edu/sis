@@ -165,6 +165,7 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(admin, /selectedQueueItem = refreshed \|\| \(selectFirst \? queueItems\[0\] : null\) \|\| null/)
   assert.match(libraryReviewWorkbench, /is-sidebar-collapsed/)
   assert.match(libraryReviewWorkbench, /MW returned no etymology section for this part of speech/)
+  assert.match(libraryReviewWorkbench, /Supported dropdown choices/)
   assert.doesNotMatch(admin, /data-review-pane-collapse/)
   assert.match(libraryReviewWorkbench, /data-review-sidebar-toggle/)
   assert.match(admin, /library-review-sidebar-body/)

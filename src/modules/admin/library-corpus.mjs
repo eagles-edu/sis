@@ -661,7 +661,7 @@ export async function sendLibraryAssignmentEmail(id, actor = {}) {
   const token = libraryAssignmentTrackingToken(id, recipient)
   const origin = text(process.env.STUDENT_ADMIN_PUBLIC_ORIGIN || process.env.PUBLIC_APP_ORIGIN || "https://eagles.edu.vn").replace(/\/+$/u, "")
   const actionUrl = `${origin}/api/library-assignments/track/click/${token}`
-  const message = `Library task: ${assignment.taskType}. ${assignment.instructions || "Please open the Library and complete your assigned vocabulary work."}`
+  const message = `Nhiệm vụ Thư viện: ${assignment.taskType}. ${assignment.instructions || "Vui lòng mở Thư viện và hoàn thành phần bài tập từ vựng được giao."}`
   const queued = await queueAnnouncementEmail({ queueId, deliveryMode: "weekend-batch", queueType: "announcement", assignmentTitle: assignment.subject || `Library Vocabulary Assignment — Week ${assignment.weekNumber || weekNumber(assignment.createdAt)}`, exerciseTitle: assignment.entry?.english || "Library vocabulary", dueAt: assignment.dueAt?.toISOString?.() || "", message, recipients: [recipient], requestOrigin: origin, actionUrl, libraryAssignmentToken: token }, { queuedByUsername: actor.name || "library-admin" })
   const engagement = await client.libraryAssignmentEngagement.upsert({
     where: { assignmentId_recipientEmail: { assignmentId: id, recipientEmail: recipient } },
