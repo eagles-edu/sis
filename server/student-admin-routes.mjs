@@ -49,6 +49,7 @@ import {
   updateLibraryEntry,
 } from "../src/modules/admin/library-corpus.mjs"
 import { fetchEtymonlinePreview } from "../src/modules/admin/library-origin.mjs"
+import { analyzeLibraryOrigin } from "../src/modules/admin/library-origin-analysis.mjs"
 import {
   deleteStudent,
   importStudentsFromRows,
@@ -328,6 +329,7 @@ const ADMIN_LIBRARY_ENTRIES_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_A
 const ADMIN_LIBRARY_CONTRIBUTIONS_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/contributions/([^/]+)/review$`)
 const ADMIN_LIBRARY_MW_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/mw-preview$`)
 const ADMIN_LIBRARY_MW_APPLY_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/mw-apply$`)
+const ADMIN_LIBRARY_ORIGIN_ANALYSIS_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/origin-analysis$`)
 const ADMIN_LIBRARY_REFERENCE_CATALOG_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/reference-catalogs/([^/]+)$`)
 const ADMIN_LIBRARY_REFERENCE_CATALOG_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/reference-catalogs/([^/]+)/preview$`)
 const ADMIN_LIBRARY_REFERENCE_CATALOG_IMPORT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/reference-catalogs/([^/]+)/import$`)
@@ -6802,6 +6804,17 @@ async function handleApiRequest(request, response, pathname, url) {
     sendJson(response, 200, await previewMerriamWebsterLibraryEntry(entry))
     return true
   }
+  const originAnalysisMatch = pathname.match(ADMIN_LIBRARY_ORIGIN_ANALYSIS_PATH_RE)
+  if (originAnalysisMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    const providedEntry = payload?.entry || payload
+    const entry = normalizeText(providedEntry?.english)
+      ? providedEntry
+      : await getLibraryEntry(decodeURIComponent(originAnalysisMatch[1]))
+    sendJson(response, 200, await analyzeLibraryOrigin(entry, { stem: payload?.stem }))
+    return true
+  }
   const mwApplyMatch = pathname.match(ADMIN_LIBRARY_MW_APPLY_PATH_RE)
   if (mwApplyMatch && method === "POST") {
     const payload = await parseBody(request)
@@ -9596,26 +9609,12 @@ export async function handleStudentAdminRequest(request, response) {
     pathname === ADMIN_PAGE_PATH ? resolveAdminPageSlugFromQuery(url.searchParams) : ""
   const pageSlug = pageSlugFromQuery || pageSlugFromPath
   if (method === "GET" && [ADMIN_LIBRARY_PAGE_PATH, ADMIN_LIBRARY_MANAGE_PAGE_PATH, ADMIN_LIBRARY_ENGAGEMENT_PAGE_PATH, ADMIN_LIBRARY_REFERENCES_PAGE_PATH].includes(pathname)) {
-    const apiOrigin = normalizeText(url.searchParams.get("apiOrigin"))
-    if (apiOrigin) {
-      let removeApiOrigin = false
-      try {
-        removeApiOrigin = new URL(apiOrigin, requestOrigin).origin === requestOrigin
-      } catch {
-        removeApiOrigin = true
-      }
-      if (removeApiOrigin) {
-        const cleanQuery = new URLSearchParams(url.searchParams)
-        cleanQuery.delete("apiOrigin")
-        const suffix = cleanQuery.toString()
-        sendRedirect(response, 308, `${pathname}${suffix ? `?${suffix}` : ""}`)
-        return true
-      }
-    }
     const session = await peekAdminSession(request)
     if (!session) {
       const next = new URL(ADMIN_PAGE_PATH, requestOrigin)
-      next.searchParams.set("next", pathname)
+      const apiOrigin = normalizeText(url.searchParams.get("apiOrigin"))
+      if (apiOrigin) next.searchParams.set("apiOrigin", apiOrigin)
+      next.searchParams.set("next", `${pathname}${url.search}`)
       sendRedirect(response, 302, `${next.pathname}${next.search}`)
       return true
     }

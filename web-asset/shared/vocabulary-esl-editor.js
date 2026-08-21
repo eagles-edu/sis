@@ -82,16 +82,18 @@
     </div>`;
   }
 
-  function parametersHtml(rowUid, { includeMwFill = false, includeTransitivityTools = false } = {}) {
+  function parametersHtml(rowUid, { includeMwFill = false, includeTransitivityTools = false, includeOriginAnalysis = false } = {}) {
     const uid = safeUid(rowUid);
-    const mwFill = includeMwFill ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-mw-fill" data-vocabulary-mw-preview title="Fill only fields returned authoritatively by Merriam-Webster." aria-label="Fill Merriam-Webster fields">MW fill</button><p class="small" data-vocabulary-mw-message aria-live="polite"></p><details data-vocabulary-mw-details hidden><summary>View complete MW data</summary><pre data-vocabulary-mw-json></pre></details>` : "";
+    const mwFill = includeMwFill ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-mw-fill" data-vocabulary-mw-preview title="Fill only fields returned authoritatively by Merriam-Webster." aria-label="Fill Merriam-Webster fields">MW fill</button>` : "";
+    const originAnalysis = includeOriginAnalysis ? `<button type="button" class="portal-button portal-button-amber-info" data-vocabulary-origin-analysis title="Review Etymonline and Merriam-Webster etymology evidence. This advisory review does not change any entry fields.">Origin</button>` : "";
+    const sourceActions = mwFill || originAnalysis ? `<div class="vocabulary-source-actions">${mwFill}${originAnalysis}</div><p class="small" data-vocabulary-mw-message aria-live="polite"></p><p class="small" data-vocabulary-origin-analysis-message aria-live="polite"></p><details data-vocabulary-mw-details hidden><summary>View complete MW data</summary><pre data-vocabulary-mw-json></pre></details>` : "";
     const transitivityTools = includeTransitivityTools ? `<div class="vocabulary-transitivity-check"><button type="button" class="portal-button portal-button-blue-action" data-vocabulary-transitivity-check title="Compare the entered verb forms with the bundled corpus evidence. This check is advisory; saving remains allowed.">Check</button><button type="button" class="portal-button portal-button-blue-action" data-vocabulary-transitivity-autofill title="Suggest transitivity from the bundled corpus list. Review the suggestion before saving.">Auto-fill</button><p class="small" data-vocabulary-transitivity-message aria-live="polite"></p></div>` : "";
     return `<div class="vocabulary-pos-parameters" data-vocabulary-pos-parameters hidden>
       <div class="vocabulary-pos-controls" data-vocabulary-pos-controls></div>
       <div class="vocabulary-verb-forms" data-vocabulary-verb-forms hidden>
         ${[ ["verbInfinitive", "Infinitive"], ["verbV1", "V1 - present"], ["verbV2", "V2 - past"], ["verbV3", "V3 - past participle"], ["verbV4", "V4 - present participle"], ["verbV5", "V5 - -s/-es form"] ].map(([field, placeholder]) => `<input name="vocabularyEsl-${field}-${uid}" data-vocabulary-esl-field="${field}" placeholder="${placeholder}" aria-label="${placeholder}">`).join("")}
       </div>
-      ${mwFill}
+      ${sourceActions}
       ${transitivityTools}
     </div>`;
   }
@@ -569,7 +571,7 @@
     return blocks.join("") || "No definition yet.";
   }
 
-  function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false, includeTransitivityTools = false, originLookupPath = "" } = {}) {
+  function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false, includeTransitivityTools = false, includeOriginAnalysis = false, originLookupPath = "" } = {}) {
     const uid = safeUid(rowUid);
     const options = POS.map((part) => `<option value="${part}">${part}</option>`).join("");
     const rowActions = removable
@@ -587,7 +589,7 @@
           <input name="vocabularyVietnamese-${uid}" type="text" data-vocabulary-field="vietnamese" placeholder="Word/phrase VI" aria-label="Word or phrase in Vietnamese" required>
           <input name="vocabularySyllabication-${uid}" type="text" data-vocabulary-field="syllabication" placeholder="Do: air-strike | Extra: air-con-di-tion-ing" aria-label="Syllabication: keep compounds exact; optionally split multi-syllable compound parts for extra points" required>
           ${etymologyHtml(uid)}
-          ${parametersHtml(uid, { includeMwFill, includeTransitivityTools })}
+          ${parametersHtml(uid, { includeMwFill, includeTransitivityTools, includeOriginAnalysis })}
           <div class="news-vocabulary-definition-row">
             <div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">
               ${["LD", "GT", "WH", "ET", "MW", "TH"].map((label) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup${label === "ET" ? " vocabulary-etymonline-lookup" : ""}" data-vocabulary-lookup="${label}"${label === "ET" ? ` data-vocabulary-origin-lookup="${escapeHtml(originLookupPath)}"` : ""} title="Look up the ${label} field to complete this vocabulary entry" aria-label="Look up the ${label} field">${label}</button>`).join("")}

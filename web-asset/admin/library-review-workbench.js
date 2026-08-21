@@ -131,6 +131,122 @@
     })
   }
 
+  const appendOriginList = (root, title, items) => {
+    if (!items?.length) return
+    const section = document.createElement("section")
+    const heading = document.createElement("h3")
+    const list = document.createElement("ul")
+    heading.textContent = title
+    items.forEach((item) => {
+      const line = document.createElement("li")
+      line.textContent = item
+      list.append(line)
+    })
+    section.append(heading, list)
+    root.append(section)
+  }
+
+  const showOriginAnalysis = (data, pane) => {
+    let dialog = document.getElementById("libraryOriginAnalysisDialog")
+    if (!dialog) {
+      dialog = document.createElement("dialog")
+      dialog.id = "libraryOriginAnalysisDialog"
+      dialog.className = "portal-modal"
+      dialog.innerHTML = `<form method="dialog"><div class="portal-modal-header"><h2>Origin review</h2><button type="submit" class="portal-button portal-button-neutral-action" aria-label="Close origin review">Close</button></div><div class="library-origin-analysis-result"></div></form>`
+      document.body.append(dialog)
+    }
+    const root = dialog.querySelector(".library-origin-analysis-result")
+    root.replaceChildren()
+    const advisory = document.createElement("p")
+    advisory.className = "small"
+    advisory.textContent = "Advisory only. This review does not alter Origin type, Etymology, or any saved entry field."
+    const determination = document.createElement("section")
+    const title = document.createElement("h3")
+    const detail = document.createElement("p")
+    title.textContent = `Suggested: ${data.determination?.label || "Unknown"} - ${data.determination?.confidenceLevel || "CL-D (insufficient)"}`
+    detail.textContent = data.determination?.reason || "No reliable determination was returned."
+    determination.append(title, detail)
+    root.append(advisory, determination)
+    const candidates = (data.topCandidates || []).map((item) => `${item.label} - ${item.confidenceLevel}: ${item.reason}`)
+    appendOriginList(root, "Top three dropdown choices", candidates)
+    appendOriginList(root, "Caveats", data.caveats || [])
+    appendOriginList(root, "Missing information to search", data.missingInfo || [])
+    const sources = document.createElement("section")
+    const sourcesHeading = document.createElement("h3")
+    sourcesHeading.textContent = "Source sections reviewed"
+    sources.append(sourcesHeading)
+    ;(data.sources || []).forEach((source) => {
+      const item = document.createElement("article")
+      const heading = document.createElement("h4")
+      const message = document.createElement("p")
+      heading.textContent = source.provider
+      message.textContent = source.excerpt || source.message || "No etymology section returned."
+      item.append(heading, message)
+      sources.append(item)
+    })
+    root.append(sources)
+    if (data.requiresStem) {
+      const stemSection = document.createElement("section")
+      const label = document.createElement("label")
+      const input = document.createElement("input")
+      const button = document.createElement("button")
+      const prompt = document.createElement("p")
+      label.textContent = "Possible base or stem"
+      input.type = "text"
+      input.maxLength = 200
+      input.setAttribute("aria-label", "Possible base or stem for origin review")
+      button.type = "button"
+      button.className = "portal-button portal-button-blue-action"
+      button.textContent = "Review stem"
+      prompt.className = "small"
+      prompt.textContent = data.stemPrompt
+      button.addEventListener("click", () => requestOriginAnalysis(pane, input.value))
+      label.append(input)
+      stemSection.append(label, prompt, button)
+      root.append(stemSection)
+    }
+    if (typeof dialog.showModal === "function") dialog.showModal()
+    else dialog.setAttribute("open", "")
+  }
+
+  const requestOriginAnalysis = async (pane, stem = "") => {
+    const button = pane?.querySelector("[data-vocabulary-origin-analysis]")
+    const message = pane?.querySelector("[data-vocabulary-origin-analysis-message]")
+    const sourceId = pane?.dataset.reviewSourceId || pane?.dataset.approvedEntryId
+    const english = textValue(pane?.querySelector('[data-vocabulary-field="english"]')?.value)
+    if (!pane || !button || !sourceId) return
+    if (!english) { if (message) message.textContent = "Enter an English word or phrase before reviewing origin."; return }
+    const originalLabel = button.textContent
+    button.disabled = true
+    button.textContent = "Reviewing..."
+    if (message) message.textContent = "Retrieving Etymonline and Merriam-Webster etymology sections..."
+    try {
+      const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/origin-analysis`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entry: readPayload(pane), stem }),
+      })
+      const data = await response.json()
+      if (!response.ok || !data.ok) throw new Error(data.message || "Origin analysis is unavailable.")
+      showOriginAnalysis(data, pane)
+      if (message) message.textContent = "Origin review is ready. No entry fields were changed."
+    } catch (error) {
+      if (message) message.textContent = error.message || "Origin analysis is unavailable."
+    } finally {
+      button.disabled = false
+      button.textContent = originalLabel
+    }
+  }
+
+  const bindOriginAnalysis = () => {
+    document.querySelectorAll("[data-vocabulary-origin-analysis]").forEach((button) => {
+      if (button.dataset.originAnalysisBound === "true") return
+      button.dataset.originAnalysisBound = "true"
+      button.addEventListener("click", () => requestOriginAnalysis(button.closest("[data-review-pane], [data-vocabulary-editor]")))
+    })
+  }
+
   bindReviewSidebar()
 
   const showMwPreview = (data) => {
@@ -216,11 +332,12 @@
 
   workspace?.addEventListener("input", markDifferences)
   workspace?.addEventListener("change", markDifferences)
-  if (workspace) new MutationObserver(() => { ensureReviewDocs(workspace); markDifferences(); bindMwFill(); bindTransitivityTools(); bindReviewSidebar() }).observe(workspace, { childList: true, subtree: true })
-  if (approvedEditor) new MutationObserver(() => { ensureReviewDocs(approvedEditor); bindMwFill(); bindTransitivityTools() }).observe(approvedEditor, { childList: true, subtree: true })
+  if (workspace) new MutationObserver(() => { ensureReviewDocs(workspace); markDifferences(); bindMwFill(); bindOriginAnalysis(); bindTransitivityTools(); bindReviewSidebar() }).observe(workspace, { childList: true, subtree: true })
+  if (approvedEditor) new MutationObserver(() => { ensureReviewDocs(approvedEditor); bindMwFill(); bindOriginAnalysis(); bindTransitivityTools() }).observe(approvedEditor, { childList: true, subtree: true })
   ensureReviewDocs(workspace)
   ensureReviewDocs(approvedEditor)
   bindMwFill()
+  bindOriginAnalysis()
   bindTransitivityTools()
   bindReviewSidebar()
 })()

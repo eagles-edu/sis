@@ -12457,6 +12457,13 @@ body.admin-portal-page .vocabulary-pos-parameters {
   padding-top: 16px;
 }
 
+body.admin-portal-page .vocabulary-source-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--portal-space-2, 8px);
+}
+
 body.admin-portal-page .vocabulary-pos-parameters[hidden],
 body.admin-portal-page .vocabulary-verb-forms[hidden] {
   display: none;

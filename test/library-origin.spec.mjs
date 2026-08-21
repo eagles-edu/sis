@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { buildOriginReference, extractOriginPath, normalizeOriginReferences, parseEtymonlineParagraph, safeEtymonlineMarkup } from "../src/modules/admin/library-origin.mjs"
+import { analyzeLibraryOrigin, createOriginSourceAdapter, parseMerriamWebsterEtymology, parseMerriamWebsterReaderEtymology } from "../src/modules/admin/library-origin-analysis.mjs"
 
 const sample = `<section class="prose lg:prose-lg dark:prose-dark [&amp;_em]:bg-warning/30"><p>"humorous," 1756, from <a title="Etymology" href="/word/fun">fun</a> (n.) + <a href="/word/-y">-y</a> (2). Meaning <em>strange</em>, <strong>odd</strong>. <i class="foreign">funny ha-ha</i>.</p></section>`
 
@@ -44,4 +45,57 @@ test("ET insertion places Etymology after First known use and before Stems and W
 test("definition normalization preserves user-entered line breaks", async () => {
   const { normalizeDefinitionText } = await import("../src/modules/admin/library-origin.mjs")
   assert.equal(normalizeDefinitionText("First line\r\n\r\nSecond line\n"), "First line\n\nSecond line\n")
+})
+
+const analysisOptions = (etymonline, merriamWebster) => ({
+  fetchEtymonlinePreviewImpl: async () => ({ ok: true, paragraph: etymonline }),
+  fetchMerriamWebsterEtymologyImpl: async () => ({ ok: true, etymology: merriamWebster }),
+})
+
+test("Merriam-Webster origin review extracts only the public etymology section", () => {
+  const html = `<main><div class="entry"><p>Definition text must not be used.</p><div class="et"><strong>Etymology</strong><span>Middle English, from Anglo-French discerner, from Latin discernere.</span></div></div></main>`
+  assert.equal(parseMerriamWebsterEtymology(html), "Middle English, from Anglo-French discerner, from Latin discernere.")
+})
+
+test("Merriam-Webster reader fallback extracts the public Word History etymology", () => {
+  const markdown = "# discern\n\n## Word History\n\nEtymology\n\nMiddle English *discernen*, borrowed from Anglo-French *discerner*.\n\n## First Known Use\n\n14th century"
+  assert.equal(parseMerriamWebsterReaderEtymology(markdown), "Middle English *discernen*, borrowed from Anglo-French *discerner*.")
+})
+
+test("standalone origin analysis accepts code-added source adapters", async () => {
+  const source = createOriginSourceAdapter({ id: "project-archive", provider: "Project archive", fetchProse: async () => ({ prose: "coined in English from a documented project term." }) })
+  const result = await analyzeLibraryOrigin({ english: "projectword", partOfSpeech: "noun" }, { sourceAdapters: [source] })
+  assert.equal(result.determination.type, "derived")
+  assert.equal(result.sources[0].id, "project-archive")
+})
+
+test("standalone origin analysis classifies a donor-language route without changing entry data", async () => {
+  const entry = { english: "discern", partOfSpeech: "verb", etymologyType: "", etymology: "" }
+  const result = await analyzeLibraryOrigin(entry, analysisOptions(
+    "late 14c., from Old French discerner, directly from Latin discernere.",
+    "Middle English, borrowed from Anglo-French discerner, from Latin discernere.",
+  ))
+  assert.equal(result.advisory, true)
+  assert.equal(result.determination.type, "borrowed")
+  assert.equal(result.determination.confidenceLevel, "CL-A (high)")
+  assert.equal(result.topCandidates.length, 3)
+  assert.equal(entry.etymologyType, "")
+  assert.equal(entry.etymology, "")
+  assert.equal(result.sources.length, 2)
+})
+
+test("standalone origin analysis distinguishes English affixation from older root ancestry", async () => {
+  const result = await analyzeLibraryOrigin({ english: "unhappy", partOfSpeech: "adjective" }, analysisOptions(
+    "from un- + happy.",
+    "formed from un- and happy.",
+  ))
+  assert.equal(result.determination.type, "derived")
+  assert.equal(result.determination.confidenceLevel, "CL-B (good)")
+})
+
+test("standalone origin analysis requests a stem only when prose leaves an apparent affix unresolved", async () => {
+  const result = await analyzeLibraryOrigin({ english: "reframe", partOfSpeech: "verb" }, analysisOptions("A verb of uncertain history.", ""))
+  assert.equal(result.requiresStem, true)
+  assert.match(result.stemPrompt, /base or stem/u)
+  assert.ok(result.missingInfo.some((item) => /exact word/u.test(item)))
 })
