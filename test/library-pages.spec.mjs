@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import test from "node:test"
 import vm from "node:vm"
+import { JSDOM } from "jsdom"
 
 const student = fs.readFileSync(new URL("../web-asset/student/library.html", import.meta.url), "utf8")
 const admin = fs.readFileSync(new URL("../web-asset/admin/library-admin.html", import.meta.url), "utf8")
@@ -20,6 +21,7 @@ const portalScript = fs.readFileSync(new URL("../web-asset/student/student-porta
 const sharedVocabularyEditor = fs.readFileSync(new URL("../web-asset/shared/vocabulary-esl-editor.js", import.meta.url), "utf8")
 const libraryReviewWorkbench = fs.readFileSync(new URL("../web-asset/admin/library-review-workbench.js", import.meta.url), "utf8")
 const sharedPortalTheme = fs.readFileSync(new URL("../web-asset/shared/portal-theme.css", import.meta.url), "utf8")
+const definitionDocumentation = fs.readFileSync(new URL("../docs/defspace-1.md", import.meta.url), "utf8")
 const definitionSpacingSample = fs.readFileSync(new URL("../docs/defspace-1.md", import.meta.url), "utf8").split("==================================================================")[0].replace(/^preferredformat as:\s*/u, "").trim()
 
 test("student Library is a protected physical page with shared chrome and student chat", () => {
@@ -205,7 +207,8 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(libraryReviewWorkbench, /window\.SIS_VOCABULARY_ESL\?\.hydrate\(pane, merged, \{ preserveSyllabication: true \}\)/)
   assert.match(sharedVocabularyEditor, /data-vocabulary-verb-forms[\s\S]*verbInfinitive[\s\S]*verbV1[\s\S]*verbV2[\s\S]*verbV3[\s\S]*verbV4[\s\S]*verbV5/)
   assert.match(sharedVocabularyEditor, /maxlength="50000"/)
-  assert.match(sharedVocabularyEditor, /function normalizeSyllabication\(value\)[\s\S]*syllabicationVowels[\s\S]*input\.value = normalizeSyllabication\(input\.value\)/)
+  assert.match(sharedVocabularyEditor, /function normalizeSyllabication\(value\)[\s\S]*replace\(\/\\p\{Z\}\+\/gu, " "\)[\s\S]*input\.value = normalizeSyllabication\(input\.value\)/)
+  assert.match(sharedVocabularyEditor, /function canonicalizeSyllabication\(value\)[\s\S]*syllabicationVowels/)
   assert.match(adminPortal, /id="newsReviewVocabularySyllabication"[^>]*data-vocabulary-field="syllabication"/)
   assert.match(sharedPortalTheme, /body\.admin-portal-page \.news-vocabulary-row \{[\s\S]*display: grid/)
   assert.match(sharedPortalTheme, /data-vocabulary-lookup="MW"|news-vocabulary-lookup\[data-vocabulary-lookup="MW"\]/)
@@ -221,7 +224,7 @@ test("admin Library editor uses the shared New Words row renderer", () => {
   assert.match(sharedVocabularyEditor, /data-vocabulary-lookup="\$\{label\}"/)
 })
 
-test("every shared vocabulary editor converts uppercase stress syllables to accents", () => {
+test("every shared vocabulary editor preserves typed stress case until save", () => {
   const listeners = []
   const context = { window: {}, document: { addEventListener: (type, handler) => listeners.push([type, handler]) } }
   vm.runInNewContext(sharedVocabularyEditor, context)
@@ -232,9 +235,79 @@ test("every shared vocabulary editor converts uppercase stress syllables to acce
     },
   }
   listeners.find(([type]) => type === "input")[1]({ target: input })
-  assert.equal(input.value, "de-vó-ted")
-  assert.equal(context.window.SIS_VOCABULARY_ESL.normalizeSyllabication("com-MEND-ed"), "com-ménd-ed")
+  assert.equal(input.value, "de-VO-ted")
+  assert.equal(context.window.SIS_VOCABULARY_ESL.normalizeSyllabication("com-MEND-ed"), "com-MEND-ed")
+  assert.equal(context.window.SIS_VOCABULARY_ESL.normalizeSyllabication("con-GRÉS-sion-al"), "con-GRÉS-sion-al")
+  assert.equal(context.window.SIS_VOCABULARY_ESL.canonicalizeSyllabication("com-MEND-ed"), "com-ménd-ed")
+  assert.equal(context.window.SIS_VOCABULARY_ESL.canonicalizeSyllabication("con-GRÉS-sion-al"), "con-GRÉS-sion-al")
   assert.match(adminPortal, /newsReviewVocabularySyllabication[\s\S]*data-vocabulary-field="syllabication"/)
+})
+
+test("noun subtype guards keep the shared editor matrix valid", () => {
+  const dom = new JSDOM("<!doctype html><body></body>")
+  const context = { window: dom.window, document: dom.window.document, console }
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const row = dom.window.document.createElement("div")
+  row.innerHTML = context.window.SIS_VOCABULARY_ESL.editorRowHtml("noun-guard")
+  dom.window.document.body.append(row.firstElementChild)
+  const editor = dom.window.document.body.firstElementChild
+  const field = (name) => editor.querySelector(`[data-vocabulary-esl-field="${name}"]`)
+  const set = (name, value) => {
+    const input = field(name)
+    input.value = value
+    context.window.SIS_VOCABULARY_ESL.sync(editor)
+  }
+  const optionFor = (name, value) => [...field(name).options].find((option) => option.value === value)
+
+  editor.querySelector('[data-vocabulary-field="partOfSpeech"]').value = "noun"
+  context.window.SIS_VOCABULARY_ESL.sync(editor)
+  set("countability", "uncountable")
+  assert.equal(field("grammaticalNumber").value, "singular")
+  assert.equal(optionFor("grammaticalNumber", "plural").disabled, true)
+  assert.equal(optionFor("grammaticalNumber", "singular_and_plural").disabled, true)
+  assert.equal(optionFor("primaryClassification", "proper").disabled, true)
+  assert.equal(optionFor("primaryClassification", "collective").disabled, true)
+
+  set("countability", "countable")
+  set("physicalQuality", "abstract")
+  assert.equal(optionFor("primaryClassification", "proper").disabled, true)
+  assert.equal(optionFor("primaryClassification", "collective").disabled, true)
+  assert.equal(optionFor("primaryClassification", "compound").disabled, false)
+
+  set("physicalQuality", "material")
+  assert.equal(field("materialUsage").value, "mass")
+  assert.equal(field("countability").value, "uncountable")
+  assert.equal(optionFor("grammaticalNumber", "plural").disabled, true)
+  assert.equal(optionFor("primaryClassification", "compound").disabled, true)
+  set("materialUsage", "variety")
+  assert.equal(field("countability").value, "countable")
+  assert.equal(field("grammaticalNumber").value, "plural")
+
+  set("physicalQuality", "concrete")
+  set("primaryClassification", "proper")
+  assert.equal(field("grammaticalNumber").value, "singular")
+  assert.equal(optionFor("grammaticalNumber", "plural").disabled, true)
+  field("properNounVariantShift").checked = true
+  context.window.SIS_VOCABULARY_ESL.sync(editor)
+  assert.equal(optionFor("grammaticalNumber", "plural").disabled, false)
+
+  set("countability", "countable_and_uncountable")
+  assert.equal(field("grammaticalNumber").value, "singular_and_plural")
+  assert.equal(optionFor("grammaticalNumber", "singular").disabled, false)
+  assert.equal(optionFor("grammaticalNumber", "plural").disabled, true)
+  assert.ok(field("dualCountabilityUsage"))
+})
+
+test("all Library and vocabulary editor surfaces resync every shared POS field", () => {
+  const currentSelector = /\[data-vocabulary-field="partOfSpeech"\], \[data-vocabulary-esl-field\]/g
+  for (const [name, source] of [["student Library", student], ["admin Library", admin], ["student portal script", portalScript]]) {
+    assert.ok((source.match(currentSelector) || []).length > 0, `${name} must resync shared fields`)
+    assert.doesNotMatch(source, /\[data-vocabulary-field="partOfSpeech"\], \[data-vocabulary-esl-field="grammarFamily"\], \[data-vocabulary-esl-field="grammarSubtype"\]/, `${name} retains the narrow POS-only resync guard`)
+  }
+  assert.doesNotMatch(studentPortal, /\[data-vocabulary-field="partOfSpeech"\], \[data-vocabulary-esl-field="grammarFamily"\], \[data-vocabulary-esl-field="grammarSubtype"\]/)
+  for (const field of ["physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage"]) {
+    assert.match(admin, new RegExp(`\\"${field}\\"`), `admin Library must keep ${field} in the shared editor`)
+  }
 })
 
 test("admin Library edits remain approved and use the approved-edit revision action", () => {
@@ -242,6 +315,14 @@ test("admin Library edits remain approved and use the approved-edit revision act
   assert.match(libraryCorpus, /writeRevision\(tx, updated, "approved_edit", actor\.name, actor\.role \|\| "admin"\)/)
   assert.match(libraryCorpus, /export function selectReviewQueueRepresentatives\(rows = \[\]\)/)
   assert.match(libraryCorpus, /const queueContributions = selectReviewQueueRepresentatives\(contributions\)/)
+})
+
+test("Library saves canonicalize stress after the editor preserves typed capitalization", () => {
+  assert.match(libraryCorpus, /import \{ normalizeVocabularySyllabication \} from "\.\/vocabulary-syllabication\.mjs"/)
+  assert.match(libraryCorpus, /syllabication: normalizeVocabularySyllabication\(value\.syllabication\)/)
+  assert.match(libraryCorpus, /syllabication: normalizeVocabularySyllabication\(rawEntry\.syllabication\)/)
+  assert.match(admin, /field === "syllabication"\) value = window\.SIS_VOCABULARY_ESL\.canonicalizeSyllabication\(value\)/)
+  assert.match(student, /key === "syllabication" \? window\.SIS_VOCABULARY_ESL\?\.canonicalizeSyllabication/)
 })
 
 test("all standalone admin navigation shells expose the Library child menu", () => {
@@ -276,6 +357,7 @@ test("flattened vocabulary preserves New Words geometry and formats safe definit
   assert.equal((flattenedChairDefinitions.match(/<li>/gu) || []).length, 3)
   assert.match(flattenedChairDefinitions, /to preside as chairperson[\s\S]*to install in office[\s\S]*to carry on the shoulders/)
   assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\nB"), "<p>A<br>B</p>")
+  assert.equal(context.window.SIS_VOCABULARY_ESL.normalizeDefinitionText("A\r\n\r\nB\n"), "A\n\nB\n")
   assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\n\n- B"), "<p>A</p><ul><li>B</li></ul>")
   const nestedExampleHtml = context.window.SIS_VOCABULARY_ESL.definitionHtml(
     "1. a group or set of 10\n    - It isn't to be done in a day of course, nor yet in a century, nor in a decade of centuries.\n\nsuch as",
@@ -293,10 +375,42 @@ test("flattened vocabulary preserves New Words geometry and formats safe definit
   })
   assert.equal((preferredEntryHtml.match(/<li>Online Etymology Dictionary/g) || []).length, 1)
   assert.match(sharedVocabularyEditor, /Ctrl\+B bold.*Ctrl\+I italic.*Ctrl\+U underline/)
+  assert.match(definitionDocumentation, /Press Shift\+Enter to make a plain line break without automatic list continuation/)
+  assert.match(definitionDocumentation, /type `- ` .*unordered list/)
   assert.match(sharedPortalTheme, /\.new-word-entry-definition \{[\s\S]*display: flow-root;[\s\S]*white-space: normal;/)
   assert.match(sharedPortalTheme, /\.new-word-entry-definition li \{[\s\S]*margin-block: var\(--portal-definition-item-gap\);/)
   assert.match(sharedPortalTheme, /\.new-word-entry-definition > section > strong \{[\s\S]*margin-block-end: var\(--portal-definition-item-gap\);/)
   assert.doesNotMatch(html, /<script|onerror=|javascript:/i)
+})
+
+test("definition keyboard rules preserve new lines and support ordered and unordered lists", () => {
+  const dom = new JSDOM("<!doctype html><body></body>")
+  const context = {
+    window: dom.window,
+    document: dom.window.document,
+    console,
+    Event: dom.window.Event,
+    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
+  }
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const textarea = dom.window.document.createElement("textarea")
+  textarea.setAttribute("data-vocabulary-field", "definition")
+  dom.window.document.body.append(textarea)
+
+  textarea.value = "1. first"
+  textarea.selectionStart = textarea.selectionEnd = textarea.value.length
+  const orderedEnter = new dom.window.KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" })
+  textarea.dispatchEvent(orderedEnter)
+  assert.equal(orderedEnter.defaultPrevented, true)
+  assert.equal(textarea.value, "1. first\n2. ")
+
+  textarea.value = "inline text"
+  textarea.selectionStart = textarea.selectionEnd = textarea.value.length
+  const shiftEnter = new dom.window.KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter", shiftKey: true })
+  textarea.dispatchEvent(shiftEnter)
+  assert.equal(shiftEnter.defaultPrevented, false)
+  assert.match(context.window.SIS_VOCABULARY_ESL.definitionHtml("inline text\n- list item"), /<p>inline text<\/p><ul><li>list item<\/li><\/ul>/)
+  assert.equal(context.window.SIS_VOCABULARY_ESL.normalizeDefinitionText("inline\r\n\nlist\n"), "inline\n\nlist\n")
 })
 
 test("unheaded Etymonline prose after Stems is restored to Etymology after First known use and before Stems", () => {
@@ -340,6 +454,7 @@ test("flattened vocabulary keeps the established header format for every POS", (
   vm.runInNewContext(sharedVocabularyEditor, context)
   const cases = [
     [{ english: "threaten", partOfSpeech: "verb", syllabication: "thréat-en", vietnamese: "hăm dọa", displayVerbForm: "v1", verbRegularity: "regular", grammarFamily: "action", verbTransitivity: "ambitransitive" }, "threaten.*?thréat-en.*?verb.*?V1.*?\\|.*?vi: hăm dọa.*?\\|.*?regular, action, ambitransitive"],
+    [{ english: "decade", partOfSpeech: "noun", syllabication: "déc-ade", vietnamese: "thập kỷ", countability: "countable", physicalQuality: "abstract", grammaticalNumber: "singular", primaryClassification: "common" }, "decade.*?déc-ade.*?noun.*?countable.*?\\|.*?vi: thập kỷ.*?\\|.*?abstract, singular, common"],
     [{ english: "language", partOfSpeech: "noun", syllabication: "lán-guage", vietnamese: "ngôn ngữ", countability: "countable", nounNumber: "singular", nounType: "common" }, "language.*?lán-guage.*?noun.*?countable.*?\\|.*?vi: ngôn ngữ.*?\\|.*?singular, common"],
     [{ english: "funny", partOfSpeech: "adjective", syllabication: "fún-ny", vietnamese: "buồn cười" }, "funny.*?fún-ny.*?adjective.*?\\|.*?vi: buồn cười.*?\\|"],
     [{ english: "however", partOfSpeech: "conjunction", syllabication: "how-év-er", vietnamese: "nhung", grammarSubtype: "subordinate" }, "however.*?how-év-er.*?conjunction.*?subordinate.*?\\|.*?vi: nhung.*?\\|"],
@@ -352,7 +467,7 @@ test("flattened vocabulary keeps the established header format for every POS", (
     [{ english: "break down", partOfSpeech: "phrase", syllabication: "break-down", vietnamese: "suy sụp", grammarFamily: "verbal phrases", grammarSubtype: "phrasal" }, "break down.*?break-down.*?phrase.*?verbal phrases.*?\\|.*?vi: suy sụp.*?\\|.*?phrasal"],
     [{ english: "break a leg", partOfSpeech: "idiom", syllabication: "break-a-leg", vietnamese: "chúc may mắn", grammarSubtype: "pure idioms" }, "break a leg.*?break-a-leg.*?idiom.*?pure idioms.*?\\|.*?vi: chúc may mắn.*?\\|"],
     [{ english: "because", partOfSpeech: "clause", syllabication: "be-cause", vietnamese: "bởi vì", grammarSubtype: "dependent" }, "because.*?be-cause.*?clause.*?dependent.*?\\|.*?vi: bởi vì.*?\\|"],
-    [{ english: "London", partOfSpeech: "proper noun", syllabication: "Lon-don", vietnamese: "Luân Đôn", countability: "countable", nounNumber: "singular", nounType: "proper" }, "London.*?Lon-don.*?proper noun.*?countable.*?\\|.*?vi: Luân Đôn.*?\\|.*?singular, proper"],
+    [{ english: "London", partOfSpeech: "proper noun", syllabication: "Lon-don", vietnamese: "Luân Đôn", countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "proper" }, "London.*?Lon-don.*?proper noun.*?countable.*?\\|.*?vi: Luân Đôn.*?\\|.*?concrete, singular, proper"],
   ]
   for (const [entry, pattern] of cases) {
     const html = context.window.SIS_VOCABULARY_ESL.flatEntryHtml(entry)
@@ -360,4 +475,23 @@ test("flattened vocabulary keeps the established header format for every POS", (
     assert.match(context.window.SIS_VOCABULARY_ESL.flatEntrySummaryText(entry), new RegExp(pattern, "s"), `${entry.partOfSpeech} summary`)
     assert.equal((html.match(/class="vocabulary-flat-entry-separator"/g) || []).length, 2, entry.partOfSpeech)
   }
+})
+
+test("flattened headers ignore object metadata and keep noun traits together", () => {
+  const context = { window: {}, document: {} }
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const html = context.window.SIS_VOCABULARY_ESL.flatEntryHtml({
+    english: "Accountable.",
+    partOfSpeech: "noun",
+    syllabication: "ac-COUNT-a-ble",
+    vietnamese: "chịu trách nhiệm",
+    primaryClassification: {},
+    physicalQuality: "abstract",
+    grammaticalNumber: "singular",
+    countability: "countable",
+  })
+  assert.doesNotMatch(html, /\[object Object\]/)
+  assert.match(html, /abstract, singular/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-pos-details \{[\s\S]*white-space: nowrap;/)
+  assert.match(sharedPortalTheme, /@media \(min-width: 901px\)[\s\S]*\.new-word-entry-head \{[\s\S]*flex-wrap: nowrap;/)
 })

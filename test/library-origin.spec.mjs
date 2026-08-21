@@ -40,3 +40,8 @@ test("ET insertion places Etymology after First known use and before Stems and W
   assert.equal((result.match(/from Old French via Latin/gu) || []).length, 1)
   assert.equal(insertEtymologyDeterministically(result, "from Old French via Latin"), result)
 })
+
+test("definition normalization preserves user-entered line breaks", async () => {
+  const { normalizeDefinitionText } = await import("../src/modules/admin/library-origin.mjs")
+  assert.equal(normalizeDefinitionText("First line\r\n\r\nSecond line\n"), "First line\n\nSecond line\n")
+})

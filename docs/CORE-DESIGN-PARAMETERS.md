@@ -214,6 +214,7 @@ For test/live mirror work, use the environment-owned sync workflow and its backu
 | Header/menu/theme toggle | `test/portal-theme-contract.spec.mjs`, `test/portal-menu-auth-contract.spec.mjs` |
 | Admin performance/assets | `test/admin-font-hosting.contract.spec.mjs`, `test/portal-asset-contract.spec.mjs`, `test/portal-theme-contract.spec.mjs`, authenticated performance gate |
 | Routes/auth | `test/student-admin.spec.mjs`, route trace, route-specific contracts |
+| Email engagement visibility | `src/modules/admin/engagement-retention.mjs` plus engagement route contracts | Sent recipients only; completed rows older than 15 days are GUI-hidden, not deleted |
 
 ## 14. Open gaps to fill deliberately
 

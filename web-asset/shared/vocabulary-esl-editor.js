@@ -2,8 +2,8 @@
   const POS = ["adjective", "noun", "proper noun", "verb", "adverb", "conjunction", "preposition", "determiner", "pronoun", "interjection", "numeral", "phrase", "idiom", "clause"];
   const escapeHtml = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character]));
   const safeUid = (value) => String(value || "shared").replace(/[^A-Za-z0-9_-]/gu, "-");
-  const option = (value, label = value) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
-  const select = (field, label, values, attributes = "", rowUid = "shared") => `<label class="vocabulary-pos-control">${escapeHtml(label)}<select name="vocabularyEsl-${escapeHtml(field)}-${safeUid(rowUid)}" data-vocabulary-esl-field="${escapeHtml(field)}" ${attributes}><option value="">Select</option>${values.map((value) => Array.isArray(value) ? option(value[0], value[1]) : option(value)).join("")}</select></label>`;
+  const option = (value, label = value, attributes = "") => `<option value="${escapeHtml(value)}" ${attributes}>${escapeHtml(label)}</option>`;
+  const select = (field, label, values, attributes = "", rowUid = "shared") => `<label class="vocabulary-pos-control">${escapeHtml(label)}<select name="vocabularyEsl-${escapeHtml(field)}-${safeUid(rowUid)}" data-vocabulary-esl-field="${escapeHtml(field)}" ${attributes}><option value="">Select</option>${values.map((value) => Array.isArray(value) ? option(value[0], value[1], value[2] || "") : option(value)).join("")}</select></label>`;
   const transitivityHelp = `<p class="vocabulary-transitivity-help"><strong>Types of transitivity</strong><br>Intransitive: no object needed; the thought is complete on its own (e.g., The baby sleeps.).<br>Transitive: takes an object; use this general choice when the exact subtype is not yet known.<br>Monotransitive: takes one direct object answering what? or whom? (e.g., She baked a cake.).<br>Ditransitive: takes both an indirect object and a direct object (e.g., He gave Mary a book.).<br>Ambitransitive: can be either transitive or intransitive depending on the sentence (e.g., He reads a book vs. He reads quietly.).</p>`;
   const grammarFields = ["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber"];
   const nounTypes = [["common", "Common"], ["proper", "Proper"], ["concrete", "Concrete"], ["abstract", "Abstract"], ["material", "Material"], ["collective", "Collective"], ["compound", "Compound"], ["possessive", "Possessive"]];
@@ -16,11 +16,19 @@
       .trim()
       .normalize("NFC")
       .replace(/[\p{Pd}\u00AD\u2027\u00B7\u22C5\u2212]/gu, "-")
-      .replace(/\p{Z}+/gu, " ")
+      .replace(/\p{Z}+/gu, " ");
+  }
+
+  function normalizeDefinitionText(value) {
+    return String(value == null ? "" : value).replace(/\r\n?/gu, "\n");
+  }
+
+  function canonicalizeSyllabication(value) {
+    return normalizeSyllabication(value)
       .split(/(\s+|-)/u)
       .map((token) => {
         if (!token || /^\s+$/u.test(token) || token === "-") return token;
-        if (/[aeiouy]\p{M}+/iu.test(token.normalize("NFD"))) return token.toLocaleLowerCase("en-US");
+        if (/[aeiouy]\p{M}+/iu.test(token.normalize("NFD"))) return token;
         if (!/[A-Z]/u.test(token)) return token;
         const chars = Array.from(token.toLocaleLowerCase("en-US"));
         const vowelIndex = chars.findIndex((char) => syllabicationVowels[char]);
@@ -43,12 +51,23 @@
     if (state.physicalQuality === "material") {
       if (state.materialUsage === "variety") Object.assign(state, { countability: state.countability === "countable_and_uncountable" ? "countable_and_uncountable" : "countable", grammaticalNumber: state.countability === "countable_and_uncountable" ? "singular_and_plural" : "plural", primaryClassification: "common" });
       else Object.assign(state, { materialUsage: "mass", countability: "uncountable", grammaticalNumber: "singular", primaryClassification: "common" });
-    }
+    } else state.materialUsage = "";
     if (state.countability === "uncountable") state.grammaticalNumber = "singular";
     if (state.countability === "countable_and_uncountable") state.grammaticalNumber = "singular_and_plural";
-    if (state.primaryClassification === "collective") state.physicalQuality = "concrete";
+    if (state.countability !== "countable_and_uncountable") state.dualCountabilityUsage = "";
+    if (state.primaryClassification === "collective" && (state.countability !== "countable" || state.physicalQuality !== "concrete")) state.primaryClassification = "common";
     if (state.physicalQuality === "abstract" && ["collective", "proper"].includes(state.primaryClassification)) state.primaryClassification = "common";
-    if (state.primaryClassification === "proper") { state.physicalQuality = "concrete"; if (!state.properNounVariantShift) state.grammaticalNumber = "singular"; }
+    if (state.primaryClassification === "proper") {
+      if (state.countability !== "countable") state.primaryClassification = "common";
+      else {
+        state.physicalQuality = "concrete";
+        if (!state.properNounVariantShift) state.grammaticalNumber = "singular";
+      }
+    }
+    if (state.primaryClassification === "collective" && state.physicalQuality !== "concrete") state.primaryClassification = "common";
+    if (state.primaryClassification === "compound" || state.primaryClassification === "possessive") {
+      if (state.physicalQuality === "material") state.primaryClassification = "common";
+    }
     return state;
   }
 
@@ -81,8 +100,18 @@
     if (pos === "noun") return [
       select("countability", "1. Countability", [["countable", "Countable"], ["uncountable", "Uncountable"], ["countable_and_uncountable", "Countable and uncountable"]], "", rowUid),
       select("physicalQuality", "2. Quality", [["concrete", "Concrete"], ["material", "Material"], ["abstract", "Abstract"]], "", rowUid),
-      select("grammaticalNumber", "3. Number", [["singular", "Singular"], ["plural", "Plural"], ["singular_and_plural", "Singular and plural"]], values.countability === "uncountable" || (values.physicalQuality === "material" && values.materialUsage !== "variety") ? "disabled" : "", rowUid),
-      select("primaryClassification", "4. Classification", [["common", "Common"], ["proper", "Proper"], ["collective", "Collective"], ["compound", "Compound"], ["possessive", "Possessive"]], values.physicalQuality === "material" ? "disabled" : "", rowUid),
+      select("grammaticalNumber", "3. Number", [
+        ["singular", "Singular"],
+        ["plural", "Plural", values.countability === "uncountable" || values.countability === "countable_and_uncountable" || (values.physicalQuality === "material" && values.materialUsage !== "variety") || (values.primaryClassification === "proper" && !values.properNounVariantShift) ? "disabled" : ""],
+        ["singular_and_plural", "Singular and plural", values.countability !== "countable_and_uncountable" ? "disabled" : ""],
+      ], "", rowUid),
+      select("primaryClassification", "4. Classification", [
+        ["common", "Common"],
+        ["proper", "Proper", values.countability !== "countable" || values.physicalQuality !== "concrete" ? "disabled" : ""],
+        ["collective", "Collective", values.countability !== "countable" || values.physicalQuality !== "concrete" ? "disabled" : ""],
+        ["compound", "Compound", values.physicalQuality === "material" ? "disabled" : ""],
+        ["possessive", "Possessive", values.physicalQuality === "material" ? "disabled" : ""],
+      ], "", rowUid),
       values.physicalQuality === "material" ? select("materialUsage", "Material usage", [["mass", "Mass substance"], ["variety", "Type or variety"]], "", rowUid) : "",
       values.countability === "countable_and_uncountable" ? select("dualCountabilityUsage", "Dual usage", [["same_sense", "Same sense"], ["different_senses", "Different senses"]], "", rowUid) : "",
       values.primaryClassification === "proper" ? `<label class="vocabulary-pos-control">Proper noun variant<input type="checkbox" data-vocabulary-esl-field="properNounVariantShift" name="vocabularyEsl-properNounVariantShift-${safeUid(rowUid)}">Allow plural variant</label>` : "",
@@ -211,8 +240,8 @@
   };
 
   function insertEtymologyDeterministically(definition, paragraph) {
-    const source = String(definition == null ? "" : definition).replace(/\r\n?/gu, "\n").replace(/\n{3,}/gu, "\n\n").trim();
-    const addition = String(paragraph == null ? "" : paragraph).replace(/\r\n?/gu, "\n").replace(/\n{3,}/gu, "\n\n").trim();
+    const source = normalizeDefinitionText(definition);
+    const addition = normalizeDefinitionText(paragraph).trim();
     if (!addition) return source;
     const firstUse = source.match(/^\*\*First known use:?\*\*:?[\t ]*([^\n]*)$/imu);
     if (!firstUse && source.includes(addition)) return source;
@@ -274,7 +303,7 @@
         const preview = await response.json();
         if (!response.ok || !preview.ok) throw new Error(preview.error || preview.message || "Etymonline is unavailable.");
         const textarea = row.querySelector('[data-vocabulary-field="definition"]');
-        const current = textarea.value.trim();
+        const current = normalizeDefinitionText(textarea.value);
         const paragraph = String(preview.paragraph || "").trim();
         if (paragraph) { textarea.value = insertEtymologyDeterministically(current, paragraph); dispatchDefinitionInput(textarea); }
         if (preview.citation && !textarea.value.includes(preview.citation)) {
@@ -574,9 +603,15 @@
     const source = entry && typeof entry === "object" ? entry : {};
     const esl = source.esl && typeof source.esl === "object" ? source.esl : {};
     const classification = source.grammarClassification || esl.grammarClassification || {};
-    const value = (field) => source[field] ?? esl[field] ?? classification[field] ?? "";
+    const value = (...fields) => fields
+      .map((field) => source[field] ?? esl[field] ?? classification[field])
+      .find((candidate) => ["string", "number", "boolean"].includes(typeof candidate) && String(candidate).trim() !== "") ?? "";
     const position = String(value("partOfSpeech") || "").toLowerCase();
     const nounPosition = position === "noun" || position === "proper noun";
+    const legacyNounType = String(value("nounType") || "").toLowerCase();
+    const physicalQuality = value("physicalQuality") || (["concrete", "abstract", "material"].includes(legacyNounType) ? legacyNounType : "");
+    const grammaticalNumber = value("grammaticalNumber", "nounNumber");
+    const primaryClassification = value("primaryClassification") || (["common", "proper", "collective", "compound", "possessive"].includes(legacyNounType) ? legacyNounType : "");
     const primaryMetadata = position === "verb"
       ? (value("displayVerbForm") ? String(value("displayVerbForm")).toUpperCase() : "")
       : nounPosition
@@ -586,8 +621,8 @@
           : value("grammarSubtype");
     const secondaryMetadataValues = position === "verb"
       ? [value("verbRegularity"), value("grammarFamily"), value("verbTransitivity")]
-      : nounPosition
-        ? [value("nounNumber"), value("nounType")]
+        : nounPosition
+        ? [physicalQuality, grammaticalNumber, primaryClassification]
         : ["phrase", "pronoun", "determiner"].includes(position)
           ? [value("grammarSubtype"), value("grammarDetail"), value("grammarNumber")]
           : [value("grammarFamily"), value("grammarDetail"), value("grammarNumber")];
@@ -637,6 +672,8 @@
   window.SIS_VOCABULARY_ESL = {
     POS,
     normalizeSyllabication,
+    normalizeDefinitionText,
+    canonicalizeSyllabication,
     parametersHtml,
     sync,
     hydrate,

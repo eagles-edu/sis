@@ -166,11 +166,11 @@
         window.SIS_VOCABULARY_ESL?.hydrate(row, entry);
         window.SIS_VOCABULARY_ESL?.bindLookupButtons(row);
         window.SIS_VOCABULARY_ESL?.bindDefinitionAutosize(row);
-        row?.addEventListener("change", (event) => { if (event.target.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="grammarFamily"], [data-vocabulary-esl-field="grammarSubtype"]')) window.SIS_VOCABULARY_ESL?.sync(row); });
+        row?.addEventListener("change", (event) => { if (event.target.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) window.SIS_VOCABULARY_ESL?.sync(row); });
         dialog.querySelector("[data-library-edit-cancel]").addEventListener("click", () => dialog.close());
         form.addEventListener("submit", async (event) => {
           event.preventDefault();
-          const payload = Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, row.querySelector(`[data-vocabulary-field="${key}"]`)?.value.trim() || ""]));
+          const payload = Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, key === "syllabication" ? window.SIS_VOCABULARY_ESL?.canonicalizeSyllabication(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value) || "" : key === "definition" ? window.SIS_VOCABULARY_ESL?.normalizeDefinitionText(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value) || "" : row.querySelector(`[data-vocabulary-field="${key}"]`)?.value.trim() || ""]));
           Object.assign(payload, Object.fromEntries(["countability", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "dualCountabilityUsage", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "etymologyType", "etymology"].map((key) => [key, row.querySelector(`[data-vocabulary-esl-field="${key}"]`)?.value.trim() || ""]).filter(([, value]) => value)));
           payload.properNounVariantShift = Boolean(row.querySelector('[data-vocabulary-esl-field="properNounVariantShift"]')?.checked);
           payload.grammarClassification = window.SIS_VOCABULARY_ESL?.classification(row) || {};

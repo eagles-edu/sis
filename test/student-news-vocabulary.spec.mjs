@@ -59,6 +59,13 @@ test("student news vocabulary requires five complete rows", async () => {
   assert.equal((await evaluateStudentNewsVocabulary(completeVocabularyRows(5))).count, 5)
 })
 
+test("student vocabulary definitions retain entered line breaks", async () => {
+  const { normalizeDefinitionText } = await import("../src/modules/admin/library-origin.mjs")
+  assert.equal(normalizeDefinitionText("Meaning one\n\nMeaning two\n"), "Meaning one\n\nMeaning two\n")
+  assert.match(STUDENT_JS, /key === "definition" \? definitionText\(/)
+  assert.match(STUDENT_LIBRARY_HTML, /key === "definition" \? window\.SIS_VOCABULARY_ESL\?\.normalizeDefinitionText\(/)
+})
+
 test("student test runtime accepts its same-origin HTTPS API origin", () => {
   assert.match(STUDENT_HTML, /if \(env === "development" && !isLoopback\)/)
   assert.match(STUDENT_HTML, /if \(env === "test" && !isLoopback && parsed\.origin !== window\.location\.origin\)/)
@@ -243,7 +250,7 @@ test("vocabulary guard accepts uppercase or accented stress and preserves canoni
   assert.equal(normalizeVocabularySyllabication("de-VO-ted"), "de-vó-ted")
   assert.equal(normalizeVocabularySyllabication("con-GRÉS-sion-al"), "con-GRÉS-sion-al")
   assert.doesNotMatch(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\) \{[\s\S]*?data-vocabulary-field="syllabication"[\s\S]*?input\.value\s*=\s*normalizeSyllabication\(input\.value\)/)
-  assert.match(STUDENT_JS, /key === "syllabication" \? normalizeSyllabication\(row\.querySelector\([\s\S]*?data-vocabulary-field="\$\{key\}"[\s\S]*?\)\)/)
+  assert.match(STUDENT_JS, /key === "syllabication" \? canonicalizeSyllabication\(row\.querySelector\([\s\S]*?data-vocabulary-field="\$\{key\}"[\s\S]*?\)\)/)
 })
 
 test("New Words persistence keeps canonical accented stress without drift", () => {
@@ -260,7 +267,7 @@ test("New Words persistence keeps canonical accented stress without drift", () =
     /syllabication: normalizeVocabularySyllabication\(row\.syllabication\)\.slice\(0, 240\)/,
   )
   assert.match(STUDENT_JS, /function normalizeSyllabication\(value\) \{[\s\S]*\.normalize\("NFC"\)[\s\S]*replace\(\/\[\\p\{Pd\}\\u00AD\\u2027\\u00B7\\u22C5\\u2212\]\/gu, "-"\)/)
-  assert.match(STUDENT_JS, /token\.toLocaleLowerCase\("en-US"\)[\s\S]*vowels\[char\]/)
+  assert.match(STUDENT_JS, /function normalizeSyllabication\(value\)[\s\S]*replace\(\/\\p\{Z\}\+\/gu, " "\)/)
   assert.match(NEW_WORDS_MODULE, /existingByEnglishKey = new Map\(existing\.map\(/)
   assert.match(NEW_WORDS_MODULE, /This English word already exists in your New Words list\./)
   assert.match(NEW_WORDS_MODULE, /Unique constraint failed\.\*englishKey/)
@@ -363,7 +370,7 @@ test("all student vocabulary save and check surfaces run the same client guard",
   assert.match(STUDENT_JS, /invalidateNewWordsCache\(\);[\s\S]*loadDashboard\(\)/)
   // Declaration plus one input listener for News, Week Set, and New Words.
   assert.equal((STUDENT_JS.match(/normalizeVocabularyEnglishEntry\(event\)/g) || []).length, 4)
-  assert.match(NEWS_SUBMISSIONS_MODULE, /definition: normalizeText\(row\?\.definition\)/)
+  assert.match(NEWS_SUBMISSIONS_MODULE, /definition: normalizeDefinitionText\(row\?\.definition\)/)
   assert.doesNotMatch(NEWS_SUBMISSIONS_MODULE, /definition: clampText\(row\?\.definition, 1000\)/)
 })
 
@@ -577,8 +584,8 @@ test("student Library replaces the standalone New Words page with My Words filte
   assert.match(NEW_WORDS_MODULE, /FIXED_TIME_ZONE_OFFSET_MS/)
   assert.match(NEW_WORDS_MODULE, /sourceReportDate: localDateKey\(row\.sourceReportDate\)/)
   assert.match(NEW_WORDS_MODULE, /normalizeVocabularySyllabication\(row\.syllabication\)/)
-  assert.match(NEWS_SUBMISSIONS_MODULE, /syllabication: normalizeSyllabication\(/)
-  assert.match(NEWS_SUBMISSIONS_MODULE, /definition: normalizeText\(row\?\.definition\)/)
+  assert.match(NEWS_SUBMISSIONS_MODULE, /syllabication: normalizeVocabularySyllabication\(/)
+  assert.match(NEWS_SUBMISSIONS_MODULE, /definition: normalizeDefinitionText\(row\?\.definition\)/)
   assert.match(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\)/)
   assert.match(STUDENT_JS, /field\("newWordsRows"\)\?\.addEventListener\("input", \(event\) => \{\s*normalizeVocabularyEnglishEntry\(event\);/)
   assert.doesNotMatch(STUDENT_HTML, /syllableCount\s*===\s*1[\s\S]*?normalizeSyllabication/)

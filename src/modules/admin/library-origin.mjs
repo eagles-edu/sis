@@ -113,7 +113,7 @@ export function parseEtymonlineParagraph(html, { word = "", retrievedAt = new Da
 }
 
 export function normalizeDefinitionText(value) {
-  return String(value == null ? "" : value).replace(/\r\n?/gu, "\n").split("\n").map((line) => line.trimEnd()).join("\n").replace(/\n{3,}/gu, "\n\n").trim()
+  return String(value == null ? "" : value).replace(/\r\n?/gu, "\n")
 }
 
 const DEFINITION_SECTION_RE = /^\*\*(First known use|Etymology|Origin path|Verb Forms|Stems|Synonyms|Antonyms|Works Cited):?\*\*:?[	 ]*(.*)$/iu

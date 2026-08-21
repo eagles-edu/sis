@@ -3123,6 +3123,7 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition > section > strong {
   display: block;
+  margin-block-start: 1.45em;
   margin-block-end: var(--portal-definition-item-gap);
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-pos-details,
@@ -3132,6 +3133,14 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-pos-details {
   color: var(--portal-text-soft);
+  white-space: nowrap;
+}
+
+@media (min-width: 901px) {
+  :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .vocabulary-verb-forms-display,
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .vocabulary-origin-references {

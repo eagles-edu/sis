@@ -2,6 +2,7 @@
 // @ts-check
 
 import { checkTextWithLanguageTool } from "./student-news-language-tool.mjs"
+import { normalizeDefinitionText } from "./library-origin.mjs"
 import { parseStudentNewsSentence } from "./student-news-parser.mjs"
 import { checkVerbTransitivity } from "./verb-transitivity.mjs"
 import { validateVocabularyEntry, vocabularyEntryError } from "./vocabulary-syllabication.mjs"
@@ -182,7 +183,7 @@ function normalizeStudentNewsVocabulary(value) {
     english: normalizeText(row?.english),
     vietnamese: normalizeText(row?.vietnamese),
     syllabication: normalizeText(row?.syllabication),
-    definition: normalizeText(row?.definition),
+    definition: normalizeDefinitionText(row?.definition),
     verbTransitivity: normalizeLower(row?.esl?.verbTransitivity),
     etymologyType: normalizeLower(row?.esl?.etymologyType),
     etymology: normalizeText(row?.esl?.etymology),

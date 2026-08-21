@@ -130,6 +130,10 @@
       function t(v) {
         return String(v == null ? "" : v).trim();
       }
+
+      function definitionText(v) {
+        return String(v == null ? "" : v).replace(/\r\n?/gu, "\n");
+      }
       function gradeLabel(v) {
         const raw = t(v);
         if (!raw) return "";
@@ -3374,7 +3378,7 @@
             english: t(row?.english),
             vietnamese: t(row?.vietnamese),
             syllabication: normalizeSyllabication(row?.syllabication),
-            definition: t(row?.definition),
+            definition: definitionText(row?.definition),
             esl: row?.esl && typeof row.esl === "object" ? row.esl : {},
           })) : [],
           submittedAt: t(entry?.submittedAt),
@@ -4088,22 +4092,14 @@
       }
 
       function normalizeSyllabication(value) {
-        const vowels = { a: "á", e: "é", i: "í", o: "ó", u: "ú", y: "ý" };
         return t(value)
           .normalize("NFC")
           .replace(/[\p{Pd}\u00AD\u2027\u00B7\u22C5\u2212]/gu, "-")
-          .replace(/\p{Z}+/gu, " ")
-          .split(/(\s+|-)/u)
-          .map((token) => {
-            if (!token || /^\s+$/u.test(token) || token === "-") return token;
-            if (/[aeiouy]\p{M}+/iu.test(token.normalize("NFD"))) return token;
-            if (!/[A-Z]/u.test(token)) return token;
-            const chars = Array.from(token.toLocaleLowerCase("en-US"));
-            const vowelIndex = chars.findIndex((char) => vowels[char]);
-            if (vowelIndex >= 0) chars[vowelIndex] = vowels[chars[vowelIndex]];
-            return chars.join("");
-          })
-          .join("");
+          .replace(/\p{Z}+/gu, " ");
+      }
+
+      function canonicalizeSyllabication(value) {
+        return window.SIS_VOCABULARY_ESL?.canonicalizeSyllabication(value) || normalizeSyllabication(value);
       }
 
       function vocabularyEntryError(row = {}) {
@@ -4254,7 +4250,7 @@
           });
           bindVocabularyDefinitionAutosize(rowEl);
           rowEl.addEventListener("change", (event) => {
-            if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="grammarFamily"], [data-vocabulary-esl-field="grammarSubtype"]')) syncVocabularyEslRow(rowEl);
+            if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) syncVocabularyEslRow(rowEl);
           });
           const esl = row?.esl && typeof row.esl === "object" ? row.esl : {};
           VOCABULARY_ESL_FIELDS.filter((key) => key !== "grammarClassification").forEach((key) => { const input = rowEl.querySelector(`[data-vocabulary-esl-field="${key}"]`); if (!input) return; if (input.type === "checkbox" || input.type === "radio") input.checked = input.value ? t(esl[key]) === input.value : Boolean(esl[key]); else input.value = t(esl[key]); });
@@ -4282,7 +4278,7 @@
             bindVocabularyLookupButtons(rowEl);
             window.SIS_VOCABULARY_ESL?.hydrate(rowEl, row.esl && typeof row.esl === "object" ? row.esl : {});
             rowEl.addEventListener("change", (event) => {
-              if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="grammarFamily"], [data-vocabulary-esl-field="grammarSubtype"]')) syncVocabularyEslRow(rowEl);
+              if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) syncVocabularyEslRow(rowEl);
             });
             rowEl.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
               rowEl.remove();
@@ -4308,7 +4304,7 @@
         bindVocabularyLookupButtons(row);
         bindVocabularyDefinitionAutosize(row);
         row?.addEventListener("change", (event) => {
-          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="grammarFamily"], [data-vocabulary-esl-field="grammarSubtype"]')) syncVocabularyEslRow(row);
+          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) syncVocabularyEslRow(row);
         });
         syncVocabularyEslRow(row);
         row?.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
@@ -4324,7 +4320,7 @@
               try { return JSON.parse(row.dataset.vocabularyEntryJson || "{}"); } catch { return {}; }
             }
             if (!row.matches("[data-news-vocabulary-row]")) return {};
-            const value = Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, key === "syllabication" ? normalizeSyllabication(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : t(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value)])); value.esl = readVocabularyEsl(row); return value;
+            const value = Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, key === "syllabication" ? canonicalizeSyllabication(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : key === "definition" ? definitionText(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : t(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value)])); value.esl = readVocabularyEsl(row); return value;
           })
           .filter((row) => Object.values(row).some(Boolean));
       }
@@ -4370,13 +4366,13 @@
             if (editing) {
               ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((key) => {
                 const input = rowEl.querySelector(`[data-vocabulary-field="${key}"]`);
-                if (input) input.value = key === "syllabication" ? normalizeSyllabication(word[key]) : t(word[key]);
+                if (input) input.value = key === "syllabication" ? normalizeSyllabication(word[key]) : key === "definition" ? definitionText(word[key]) : t(word[key]);
               });
               bindVocabularyLookupButtons(rowEl);
               bindVocabularyDefinitionAutosize(rowEl);
               window.SIS_VOCABULARY_ESL?.hydrate(rowEl, word.esl && typeof word.esl === "object" ? word.esl : {});
               rowEl.addEventListener("change", (event) => {
-                if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="grammarFamily"], [data-vocabulary-esl-field="grammarSubtype"]')) syncVocabularyEslRow(rowEl);
+                if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) syncVocabularyEslRow(rowEl);
               });
             }
             rowEl.hidden = state.newWordsPageSize !== "all" && (index < start || index >= start + pageSize);
@@ -4443,7 +4439,7 @@
           const word = words[sourceIndex];
           if (!word) return;
           ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((key) => {
-            word[key] = key === "syllabication" ? normalizeSyllabication(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : t(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value);
+            word[key] = key === "syllabication" ? canonicalizeSyllabication(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : key === "definition" ? definitionText(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : t(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value);
           });
           word.esl = readVocabularyEsl(rowEl);
           delete word.__editing;
@@ -4454,7 +4450,7 @@
           english: t(word.english),
           vietnamese: t(word.vietnamese),
           syllabication: t(word.syllabication),
-          definition: t(word.definition),
+          definition: definitionText(word.definition),
           esl: word.esl && typeof word.esl === "object" ? word.esl : {},
         })).filter((word) => Object.values(word).some(Boolean));
         const data = await api(STUDENT_NEW_WORDS_PATH, { method: "PUT", body: { items: rows } });

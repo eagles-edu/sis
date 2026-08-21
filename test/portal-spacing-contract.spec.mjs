@@ -47,13 +47,15 @@ test("formatted vocabulary definitions preserve readable flow spacing", () => {
   assert.match(sharedTheme, /\.new-word-entry-definition li\s*\{[\s\S]*?margin-block:\s*var\(--portal-definition-item-gap\)/)
   assert.match(sharedTheme, /\.new-word-entry-definition li > :is\(ol, ul\)\s*\{[\s\S]*?margin-block:\s*var\(--portal-definition-item-gap\)/)
   assert.match(sharedTheme, /\.new-word-entry-definition :is\(section, \.new-word-entry-definition-body\)\s*\{[\s\S]*?margin-block:\s*var\(--portal-definition-flow-gap\)/)
-  assert.match(sharedTheme, /\.new-word-entry-definition > section > strong\s*\{[\s\S]*?margin-block-end:\s*var\(--portal-definition-item-gap\);/)
+  assert.match(sharedTheme, /\.new-word-entry-definition > section > strong\s*\{[\s\S]*?margin-block-start:\s*1\.45em;[\s\S]*?margin-block-end:\s*var\(--portal-definition-item-gap\);/)
   assert.match(sharedTheme, /body\.student-portal-page \.news-vocabulary-definition-row textarea\s*\{[\s\S]*?line-height:\s*1\.45;/)
   assert.match(sharedTheme, /body\.admin-portal-page \.library-review-pane \.news-vocabulary-definition-row textarea\s*\{[\s\S]*?line-height:\s*1\.45;/)
 })
 
 test("portal content stacks keep the prefooter after main content with a 12px gap", () => {
   assert.match(sharedTheme, /--portal-page-stack-gap:\s*12px;/)
+  assert.match(sharedTheme, /body\.student-portal-page main\.portal-main\s*\{[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*var\(--portal-shell-gap\);/)
+  assert.match(sharedTheme, /body:is\([^)]*\.student-portal-page[^)]*\)\s*:is\(\.portal-main,[\s\S]*?row-gap:\s*var\(--portal-page-stack-gap\);/)
   assert.match(sharedTheme, /body\.admin-portal-page main\.library-admin-main\s*\{[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*var\(--portal-shell-gap\);[\s\S]*?padding:\s*0;/)
   assert.match(libraryAdmin, /<main id="appMain"[\s\S]*?<\/main>\s*<section class="content portal-prefooter"[\s\S]*?<footer class="hub-footer"/)
   assert.doesNotMatch(libraryAdmin, /<main id="appMain"[\s\S]*<section class="content portal-prefooter"[\s\S]*?<\/main>/)

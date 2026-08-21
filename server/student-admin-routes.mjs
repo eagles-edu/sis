@@ -123,6 +123,7 @@ import {
 import {
   listPerformanceEngagementData,
 } from "../src/modules/admin/performance-engagement.mjs"
+import { engagementRetentionCutoff, isEngagementVisible } from "../src/modules/admin/engagement-retention.mjs"
 import {
   acknowledgeParentClassReportReview,
   approveParentClassReport,
@@ -7435,14 +7436,22 @@ async function handleApiRequest(request, response, pathname, url) {
     const prisma = await getSharedPrismaClient()
     const items = prisma?.assignmentReminderEngagement
       ? await prisma.assignmentReminderEngagement.findMany({
+          where: {
+            sentAt: { not: null },
+            OR: [{ actionCompletedAt: null }, { actionCompletedAt: { gte: engagementRetentionCutoff() } }],
+          },
           orderBy: { queuedAt: "desc" },
           take,
           include: { dispatch: true },
         })
       : []
-    const assignmentBatchIds = Array.from(new Set(items.map((item) => normalizeText(item.dispatch?.queueId)).filter(Boolean)))
-    const assignmentRecipientEmails = Array.from(new Set(items.map((item) => normalizeLower(item.recipientEmail)).filter(Boolean)))
-    const assignmentTemplateIds = Array.from(new Set(items.map((item) => normalizeText(item.dispatch?.assignmentTemplateId)).filter(Boolean)))
+    const visibleItems = items.filter((item) => isEngagementVisible({
+      sentAt: item.sentAt,
+      completedAt: item.actionCompletedAt,
+    }))
+    const assignmentBatchIds = Array.from(new Set(visibleItems.map((item) => normalizeText(item.dispatch?.queueId)).filter(Boolean)))
+    const assignmentRecipientEmails = Array.from(new Set(visibleItems.map((item) => normalizeLower(item.recipientEmail)).filter(Boolean)))
+    const assignmentTemplateIds = Array.from(new Set(visibleItems.map((item) => normalizeText(item.dispatch?.assignmentTemplateId)).filter(Boolean)))
     const assignmentTemplates = prisma?.assignmentTemplate && assignmentTemplateIds.length
       ? await prisma.assignmentTemplate.findMany({
           where: { id: { in: assignmentTemplateIds } },
@@ -7464,7 +7473,7 @@ async function handleApiRequest(request, response, pathname, url) {
       const key = `${normalizeText(delivery.batchId)}|${normalizeLower(delivery.recipientEmail)}`
       brevoDeliveryByAssignment.set(key, mergeBrevoEngagementDelivery(brevoDeliveryByAssignment.get(key), delivery))
     }
-    const studentIds = Array.from(new Set(items.map((item) => normalizeText(item.dispatch?.studentRefId)).filter(Boolean)))
+    const studentIds = Array.from(new Set(visibleItems.map((item) => normalizeText(item.dispatch?.studentRefId)).filter(Boolean)))
     const students = prisma?.student && studentIds.length
       ? await prisma.student.findMany({
           where: { id: { in: studentIds } },
@@ -7484,8 +7493,8 @@ async function handleApiRequest(request, response, pathname, url) {
     }]))
     sendJson(response, 200, {
       ok: true,
-      total: items.length,
-      items: items.map((item) => ({
+      total: visibleItems.length,
+      items: visibleItems.map((item) => ({
         id: item.id,
         audience: item.audience,
         recipientEmail: item.recipientEmail,
@@ -7986,8 +7995,15 @@ async function handleApiRequest(request, response, pathname, url) {
     assertStoreEnabled()
     const prisma = await getSharedPrismaClient()
     const students = await prisma.student.findMany({
-      where: { parentProfileInvitations: { some: {} } },
-      include: { profile: true, parentProfileInvitations: { orderBy: { createdAt: "desc" }, take: 1 } },
+      where: { parentProfileInvitations: { some: { sentAt: { not: null } } } },
+      include: {
+        profile: true,
+        parentProfileInvitations: {
+          where: { sentAt: { not: null } },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+      },
       orderBy: [{ profile: { familyId: "asc" } }, { eaglesId: "asc" }],
       take: Math.min(2000, Math.max(1, Number.parseInt(url.searchParams.get("take") || "1000", 10) || 1000)),
     })
@@ -8091,7 +8107,13 @@ async function handleApiRequest(request, response, pathname, url) {
         }
       })(),
     }))
-    sendJson(response, 200, { ok: true, rows })
+    sendJson(response, 200, {
+      ok: true,
+      rows: rows.filter((row) => isEngagementVisible({
+        sentAt: row.invitationSentAt,
+        completedAt: row.invitationCompletedAt,
+      })),
+    })
     return true
   }
 

@@ -5,6 +5,7 @@ import { isParentReportPortalVisible, mapParentClassReport } from "./parent-repo
 import { parentProctorEmails } from "./proctor-recipient-routing.mjs"
 import { courseWeekNumberForSchoolSetupDate } from "./course-week-calendar.mjs"
 import { getSisConfigSnapshotSync } from "./sis-config-store.mjs"
+import { isEngagementVisible } from "./engagement-retention.mjs"
 
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
@@ -163,8 +164,7 @@ function buildRoleRow({
       normalizeLower(event?.actorType) === role,
   )
   const sentOkReturned = Boolean(report?.notificationSentAt) ||
-    normalizeLower(report?.workflowState) === "notification_sent" ||
-    normalizeLower(report?.workflowState) === "notification_queued"
+    normalizeLower(report?.workflowState) === "notification_sent"
       ? "yes"
       : "no"
 
@@ -334,7 +334,12 @@ export async function listPerformanceEngagementData({
       recipientEmails: studentEmails,
       brevoDeliveries,
     })
-    ;[parentRow, studentRow].forEach((row) => {
+    ;[parentRow, studentRow]
+      .filter((row) => isEngagementVisible({
+        sentAt: row.emailSentAt || (row.emailUsed && report?.notificationSentAt ? report.notificationSentAt : null),
+        completedAt: row.acknowledgedAt,
+      }))
+      .forEach((row) => {
       rows.push(row)
       const dayKey = row.classDate || "unknown"
       const day = days.get(dayKey) || {

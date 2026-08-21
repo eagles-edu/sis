@@ -1,9 +1,11 @@
 import crypto from "node:crypto"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
-import { buildOriginReference, normalizeOriginReferences } from "./library-origin.mjs"
+import { buildOriginReference, normalizeDefinitionText, normalizeOriginReferences } from "./library-origin.mjs"
 import { queueAnnouncementEmail } from "./notification-queue.mjs"
 import { checkVerbFormsTransitivity, getVerbTransitivity } from "./verb-transitivity.mjs"
 import { getVerbForms, getVerbRegularity } from "./verb-regularity.mjs"
+import { normalizeVocabularySyllabication } from "./vocabulary-syllabication.mjs"
+import { engagementRetentionCutoff, isEngagementVisible } from "./engagement-retention.mjs"
 
 const MW_BASE = "https://www.dictionaryapi.com/api/v3/references/collegiate/json"
 const MAX_PAGE_SIZE = 100
@@ -69,7 +71,7 @@ export function normalizeLibraryEnum(value) {
   return ["null", "undefined"].includes(candidate) ? "" : candidate
 }
 function clamp(value, maximum = 240) { return text(value).slice(0, maximum) }
-export function normalizeLibraryDefinition(value) { return clamp(value, LIBRARY_DEFINITION_MAX_LENGTH) }
+export function normalizeLibraryDefinition(value) { return normalizeDefinitionText(value).slice(0, LIBRARY_DEFINITION_MAX_LENGTH) }
 function grammarClassification(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null
   const allowed = ["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber"]
@@ -254,7 +256,7 @@ function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
     normalizedKey: normalizeKey(english), english, americanEnglish: clamp(value.americanEnglish) || null,
     britishEnglish: clamp(value.britishEnglish) || null, partOfSpeech, phraseType: phraseType || null,
     grammarClassification: grammarClassification(value.grammarClassification), etymologyType: etymologyType || null, etymology: clamp(value.etymology, 4000) || null,
-    originPath: clamp(value.originPath, 500) || null, originReferences: normalizeOriginReferences(value.originReferences), vietnamese: clamp(value.vietnamese), syllabication: clamp(value.syllabication),
+    originPath: clamp(value.originPath, 500) || null, originReferences: normalizeOriginReferences(value.originReferences), vietnamese: clamp(value.vietnamese), syllabication: normalizeVocabularySyllabication(value.syllabication),
     syllableCount: syllableCount(value.syllabication), definition: normalizeLibraryDefinition(value.definition), countability: normalizeLibraryEnum(value.countability) || null,
     nounType: partOfSpeech === "noun" ? nounType || null : null, nounNumber: partOfSpeech === "noun" ? nounNumber || null : null,
     ...nounProfile,
@@ -353,7 +355,7 @@ export async function submitLibraryContribution(studentRefId, contributorName, p
   const esl = rawEntry.esl && typeof rawEntry.esl === "object" ? rawEntry.esl : {}
   const entry = {
     english: clamp(rawEntry.english), partOfSpeech: lower(rawEntry.partOfSpeech), vietnamese: clamp(rawEntry.vietnamese),
-    syllabication: clamp(rawEntry.syllabication), definition: normalizeLibraryDefinition(rawEntry.definition),
+    syllabication: normalizeVocabularySyllabication(rawEntry.syllabication), definition: normalizeLibraryDefinition(rawEntry.definition),
     ...Object.fromEntries(Object.entries({ ...rawEntry, ...esl }).filter(([key]) => key.startsWith("verb") || ["phraseType", "grammarClassification", "countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage", "edAdjective", "ingAdjective", "displayVerbForm", "etymologyType", "etymology", "originPath", "originReferences"].includes(key))),
   }
   if (!entry.english || !POS.has(entry.partOfSpeech)) throw statusError("New Words submissions require English and a supported part of speech")
@@ -680,7 +682,16 @@ export async function trackLibraryAssignment(token, action = "click") {
 
 export async function listLibraryAssignmentEngagement(query = {}) {
   const client = await prisma()
-  const rows = await client.libraryAssignmentEngagement.findMany({ orderBy: { queuedAt: "desc" }, take: MAX_PAGE_SIZE, include: { assignment: { include: { entry: true } } } })
+  const rows = (await client.libraryAssignmentEngagement.findMany({
+    where: {
+      sentAt: { not: null },
+      OR: [{ completedAt: null }, { completedAt: { gte: engagementRetentionCutoff() } }],
+    },
+    orderBy: { queuedAt: "desc" },
+    take: MAX_PAGE_SIZE,
+    include: { assignment: { include: { entry: true } } },
+  }))
+    .filter((row) => isEngagementVisible({ sentAt: row.sentAt, completedAt: row.completedAt }))
   const queueIds = rows.map((row) => row.queueId).filter(Boolean)
   const queues = queueIds.length ? await client.adminNotificationQueue.findMany({ where: { id: { in: queueIds } }, select: { id: true, sentAt: true, status: true } }) : []
   const queueMap = new Map(queues.map((queue) => [queue.id, queue]))

@@ -320,7 +320,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2616
+              "height": 2596
             },
             ".wrap": {
               "selector": ".wrap",
@@ -332,7 +332,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2568
+              "height": 2548
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -344,7 +344,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2484
+              "height": 2464
             },
             ".panel": {
               "selector": ".panel",
@@ -484,7 +484,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 495
+              "height": 475
             },
             ".panel": {
               "selector": ".panel",
@@ -600,7 +600,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3299
+              "height": 3279
             },
             ".wrap": {
               "selector": ".wrap",
@@ -612,7 +612,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3251
+              "height": 3231
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -624,7 +624,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3167
+              "height": 3147
             },
             ".panel": {
               "selector": ".panel",
@@ -740,7 +740,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1339
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -752,7 +752,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1291
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -764,7 +764,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1207
+              "height": 447
             },
             ".panel": {
               "selector": ".panel",
@@ -855,100 +855,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "aria-allowed-attr",
-              "impact": "critical",
-              "help": "Elements must only use supported ARIA attributes",
-              "nodes": [
-                {
-                  "target": "div[aria-title=\"Recipient\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"Email delivery\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"SIS profile\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                }
-              ]
-            },
-            {
-              "id": "aria-required-children",
-              "impact": "critical",
-              "help": "Certain ARIA roles must contain particular children",
-              "nodes": [
-                {
-                  "target": ".engagement-matrix-table-host",
-                  "failureSummary": "Fix any of the following:\n  Element has children which are not allowed: div[tabindex]"
-                },
-                {
-                  "target": "#tabulator-table-body",
-                  "failureSummary": "Fix any of the following:\n  Element has children which are not allowed: [role=rowgroup]"
-                },
-                {
-                  "target": ".tabulator-group.tabulator-group-level-0.tabulator-group-visible:nth-child(1)",
-                  "failureSummary": "Fix any of the following:\n  Required ARIA child role not present: row"
-                },
-                {
-                  "target": ".tabulator-group.tabulator-group-level-0.tabulator-group-visible:nth-child(3)",
-                  "failureSummary": "Fix any of the following:\n  Required ARIA child role not present: row"
-                }
-              ]
-            },
-            {
-              "id": "aria-roles",
-              "impact": "critical",
-              "help": "ARIA roles used must conform to valid values",
-              "nodes": [
-                {
-                  "target": "div[aria-title=\"Recipient\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"Email delivery\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"SIS profile\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                }
-              ]
-            },
-            {
-              "id": "aria-valid-attr",
-              "impact": "critical",
-              "help": "ARIA attributes must conform to valid names",
-              "nodes": [
-                {
-                  "target": "div[aria-title=\"Recipient\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"Email delivery\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"SIS profile\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -997,7 +904,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 757
+              "height": 737
             },
             ".panel": {
               "selector": ".panel",
@@ -1113,7 +1020,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1322
+              "height": 1302
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1125,7 +1032,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1274
+              "height": 1254
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1137,7 +1044,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1190
+              "height": 1170
             },
             ".panel": {
               "selector": ".panel",
@@ -1253,7 +1160,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1259
+              "height": 1239
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1265,7 +1172,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1211
+              "height": 1191
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1277,7 +1184,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1127
+              "height": 1107
             },
             ".panel": {
               "selector": ".panel",
@@ -1393,7 +1300,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3079
+              "height": 3059
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1405,7 +1312,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3031
+              "height": 3011
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1417,7 +1324,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2947
+              "height": 2927
             },
             ".panel": {
               "selector": ".panel",
@@ -1533,7 +1440,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1692
+              "height": 1672
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1545,7 +1452,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1644
+              "height": 1624
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1557,7 +1464,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1560
+              "height": 1540
             },
             ".panel": {
               "selector": ".panel",
@@ -1790,7 +1697,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 734
+              "height": 714
             },
             ".panel": {
               "selector": ".panel",
@@ -1906,7 +1813,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1474
+              "height": 1454
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1918,7 +1825,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1426
+              "height": 1406
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1930,7 +1837,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1342
+              "height": 1322
             },
             ".panel": {
               "selector": ".panel",
@@ -2046,7 +1953,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1741
+              "height": 1721
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2058,7 +1965,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1741
+              "height": 1721
             },
             ".app-shell": null,
             ".panel": {
@@ -2132,7 +2039,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3804
+              "height": 3784
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2144,7 +2051,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3756
+              "height": 3736
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2156,7 +2063,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3672
+              "height": 3652
             },
             ".panel": {
               "selector": ".panel",
@@ -2272,7 +2179,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2242
+              "height": 2222
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2284,7 +2191,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2194
+              "height": 2174
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2296,7 +2203,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2110
+              "height": 2090
             },
             ".panel": {
               "selector": ".panel",
@@ -2460,7 +2367,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 658
+              "height": 638
             },
             ".panel": {
               "selector": ".panel",
@@ -2576,7 +2483,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 8935
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2588,7 +2495,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 8887
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2600,7 +2507,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 8803
+              "height": 608
             },
             ".panel": {
               "selector": ".panel",
@@ -2716,7 +2623,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1624
+              "height": 1604
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2728,7 +2635,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1576
+              "height": 1556
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2740,7 +2647,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1492
+              "height": 1472
             },
             ".panel": {
               "selector": ".panel",
@@ -2880,7 +2787,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 827
+              "height": 807
             },
             ".panel": {
               "selector": ".panel",
@@ -2996,7 +2903,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "flex",
               "width": 1440,
-              "height": 20183
+              "height": 20163
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3008,7 +2915,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 20135
+              "height": 20115
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3186,7 +3093,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 912
+              "height": 892
             },
             ".panel": {
               "selector": ".panel",
@@ -3325,7 +3232,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3061
+              "height": 3041
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3337,7 +3244,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3013
+              "height": 2993
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3349,7 +3256,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2929
+              "height": 2909
             },
             ".panel": {
               "selector": ".panel",
@@ -3477,7 +3384,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1251
+              "height": 1231
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3489,7 +3396,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1203
+              "height": 1183
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3501,7 +3408,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1119
+              "height": 1099
             },
             ".panel": {
               "selector": ".panel",
@@ -3617,7 +3524,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2358
+              "height": 2338
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3629,7 +3536,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2310
+              "height": 2290
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3641,7 +3548,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2226
+              "height": 2206
             },
             ".panel": {
               "selector": ".panel",
@@ -3757,7 +3664,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2583
+              "height": 2563
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3769,7 +3676,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2535
+              "height": 2515
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3781,7 +3688,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2451
+              "height": 2431
             },
             ".panel": {
               "selector": ".panel",
@@ -3894,7 +3801,7 @@
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
+                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(5) > input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
@@ -3902,7 +3809,7 @@
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
+                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(7) > input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
@@ -3913,19 +3820,19 @@
               "help": "Select element must have an accessible name",
               "nodes": [
                 {
-                  "target": "select[data-layout-key=\"inputType\"]",
+                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "select[data-layout-key=\"tabId\"]",
+                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "select[data-layout-key=\"inputType\"]",
+                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "select[data-layout-key=\"tabId\"]",
+                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
@@ -3955,7 +3862,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1741
+              "height": 1721
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3967,7 +3874,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1741
+              "height": 1721
             },
             ".app-shell": null,
             ".panel": {
@@ -4041,7 +3948,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2242
+              "height": 2222
             },
             ".wrap": {
               "selector": ".wrap",
@@ -4053,7 +3960,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2194
+              "height": 2174
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -4065,7 +3972,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2110
+              "height": 2090
             },
             ".panel": {
               "selector": ".panel",
@@ -4231,7 +4138,7 @@
           "viewerBlock": {
             "bg": "rgb(250, 252, 255)",
             "color": "rgb(0, 0, 0)",
-            "text": "Report IDcmsmv7sl600027vg0199v8qtd"
+            "text": "Report IDcmt2mczca00007eg00i1nc4w8"
           }
         },
         {
@@ -4240,9 +4147,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "",
-            "bgImage": "",
-            "color": ""
+            "bg": "rgba(0, 0, 0, 0)",
+            "bgImage": "none",
+            "color": "rgb(0, 0, 0)"
           }
         }
       ]
@@ -4267,7 +4174,7 @@
           "border": "rgb(0, 0, 0)",
           "display": "block",
           "width": 1440,
-          "height": 18265
+          "height": 18247
         },
         "#loginPanel": {
           "selector": "#loginPanel",
@@ -4372,7 +4279,7 @@
           "border": "rgb(0, 0, 0)",
           "display": "block",
           "width": 1440,
-          "height": 1741
+          "height": 1721
         },
         "#reloadBtn": null,
         "#gradesTable": null,
@@ -4478,7 +4385,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1660
+              "height": 1685
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4516,7 +4423,18 @@
               "width": 96,
               "height": 99
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -4592,7 +4510,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 6358
+              "height": 6293
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4630,7 +4548,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 1348,
+              "height": 32
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -4706,7 +4635,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1499
+              "height": 1479
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4744,7 +4673,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -4820,7 +4760,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1499
+              "height": 1479
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4858,7 +4798,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -4934,7 +4885,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 2740
+              "height": 2720
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4972,7 +4923,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -5048,7 +5010,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1563
+              "height": 1543
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5086,7 +5048,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -5162,7 +5135,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1928
+              "height": 1908
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5200,7 +5173,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -5276,7 +5260,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1811
+              "height": 1791
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5314,7 +5298,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -5414,10 +5409,10 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(241, 244, 248)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
-              "color": "rgb(43, 43, 43)",
-              "border": "rgba(115, 136, 163, 0.96)",
+              "color": "rgb(23, 32, 51)",
+              "border": "rgb(115, 136, 163)",
               "display": "block",
               "width": 1046,
               "height": 44
@@ -5434,7 +5429,18 @@
               "width": 160,
               "height": 48
             },
-            ".field-validation-message": null
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(138, 31, 28)",
+              "border": "rgb(138, 31, 28)",
+              "display": "block",
+              "width": 1348,
+              "height": 32
+            }
           },
           "modalAxe": [
             {
@@ -5450,12 +5456,15 @@
             }
           ],
           "sourceLink": {
-            "color": "rgb(43, 43, 43)",
-            "bg": "rgb(241, 244, 248)",
+            "color": "rgb(23, 32, 51)",
+            "bg": "rgb(251, 255, 255)",
             "bgImage": "none",
             "value": ""
           },
-          "validationMessage": null
+          "validationMessage": {
+            "color": "rgb(138, 31, 28)",
+            "text": "Source must contain data. | Score 0.00 < 1.00 | Step 1: Open the real article page from an approved source: cnn.com, bbc.com. | Step 2: Do not use only the site home page such as bbc.com or cnn.com. | Step 3: Copy the full web address for that article and paste it again."
+          }
         },
         {
           "complianceModal": true,
@@ -5470,7 +5479,7 @@
               "border": "rgb(202, 215, 234)",
               "display": "grid",
               "width": 760,
-              "height": 530
+              "height": 1064
             },
             "#newsComplianceModal .field-validation-message": null,
             "#newsComplianceModal .portal-modal-close": {
@@ -5694,42 +5703,42 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 730
+          "y": 775
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 720
+          "y": 765
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1026
+          "y": 1071
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 1026
+          "y": 1071
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1159
+          "y": 1204
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1282
+          "y": 1327
         }
       ],
       "frameProfile": {
@@ -5738,7 +5747,7 @@
           "x": 0,
           "y": 36,
           "w": 1440,
-          "h": 1612,
+          "h": 1637,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -5750,7 +5759,7 @@
           "x": 31,
           "y": 189,
           "w": 1378,
-          "h": 1302,
+          "h": 1347,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",
@@ -6079,7 +6088,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2616
+              "height": 2596
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6091,7 +6100,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2568
+              "height": 2548
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6103,7 +6112,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2484
+              "height": 2464
             },
             ".panel": {
               "selector": ".panel",
@@ -6243,7 +6252,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 495
+              "height": 475
             },
             ".panel": {
               "selector": ".panel",
@@ -6359,7 +6368,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3299
+              "height": 3279
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6371,7 +6380,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3251
+              "height": 3231
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6383,7 +6392,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3167
+              "height": 3147
             },
             ".panel": {
               "selector": ".panel",
@@ -6499,7 +6508,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1339
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6511,7 +6520,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1291
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6523,7 +6532,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1207
+              "height": 447
             },
             ".panel": {
               "selector": ".panel",
@@ -6614,100 +6623,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "aria-allowed-attr",
-              "impact": "critical",
-              "help": "Elements must only use supported ARIA attributes",
-              "nodes": [
-                {
-                  "target": "div[aria-title=\"Recipient\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"Email delivery\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"SIS profile\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                },
-                {
-                  "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix all of the following:\n  ARIA attribute is not allowed: aria-sort=\"none\""
-                }
-              ]
-            },
-            {
-              "id": "aria-required-children",
-              "impact": "critical",
-              "help": "Certain ARIA roles must contain particular children",
-              "nodes": [
-                {
-                  "target": ".engagement-matrix-table-host",
-                  "failureSummary": "Fix any of the following:\n  Element has children which are not allowed: div[tabindex]"
-                },
-                {
-                  "target": "#tabulator-table-body",
-                  "failureSummary": "Fix any of the following:\n  Element has children which are not allowed: [role=rowgroup]"
-                },
-                {
-                  "target": ".tabulator-group.tabulator-group-level-0.tabulator-group-visible:nth-child(1)",
-                  "failureSummary": "Fix any of the following:\n  Required ARIA child role not present: row"
-                },
-                {
-                  "target": ".tabulator-group.tabulator-group-level-0.tabulator-group-visible:nth-child(3)",
-                  "failureSummary": "Fix any of the following:\n  Required ARIA child role not present: row"
-                }
-              ]
-            },
-            {
-              "id": "aria-roles",
-              "impact": "critical",
-              "help": "ARIA roles used must conform to valid values",
-              "nodes": [
-                {
-                  "target": "div[aria-title=\"Recipient\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"Email delivery\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"SIS profile\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                },
-                {
-                  "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix all of the following:\n  Role must be one of the valid ARIA roles: columngroup"
-                }
-              ]
-            },
-            {
-              "id": "aria-valid-attr",
-              "impact": "critical",
-              "help": "ARIA attributes must conform to valid names",
-              "nodes": [
-                {
-                  "target": "div[aria-title=\"Recipient\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"Email delivery\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"SIS profile\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                },
-                {
-                  "target": "div[aria-title=\"Deferred\"]",
-                  "failureSummary": "Fix any of the following:\n  Invalid ARIA attribute name: aria-title"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -6756,7 +6672,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 757
+              "height": 737
             },
             ".panel": {
               "selector": ".panel",
@@ -6872,7 +6788,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1322
+              "height": 1302
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6884,7 +6800,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1274
+              "height": 1254
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6896,7 +6812,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1190
+              "height": 1170
             },
             ".panel": {
               "selector": ".panel",
@@ -7012,7 +6928,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1259
+              "height": 1239
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7024,7 +6940,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1211
+              "height": 1191
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7036,7 +6952,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1127
+              "height": 1107
             },
             ".panel": {
               "selector": ".panel",
@@ -7152,7 +7068,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3079
+              "height": 3059
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7164,7 +7080,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3031
+              "height": 3011
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7176,7 +7092,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2947
+              "height": 2927
             },
             ".panel": {
               "selector": ".panel",
@@ -7316,7 +7232,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1692
+              "height": 1672
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7328,7 +7244,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1644
+              "height": 1624
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7340,7 +7256,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1560
+              "height": 1540
             },
             ".panel": {
               "selector": ".panel",
@@ -7573,7 +7489,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 734
+              "height": 714
             },
             ".panel": {
               "selector": ".panel",
@@ -7689,7 +7605,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1474
+              "height": 1454
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7701,7 +7617,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1426
+              "height": 1406
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7713,7 +7629,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1342
+              "height": 1322
             },
             ".panel": {
               "selector": ".panel",
@@ -7829,7 +7745,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1741
+              "height": 1721
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7841,7 +7757,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1741
+              "height": 1721
             },
             ".app-shell": null,
             ".panel": {
@@ -7915,7 +7831,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3804
+              "height": 3784
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7927,7 +7843,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3756
+              "height": 3736
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7939,7 +7855,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3672
+              "height": 3652
             },
             ".panel": {
               "selector": ".panel",
@@ -8055,7 +7971,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2242
+              "height": 2222
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8067,7 +7983,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2194
+              "height": 2174
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8079,7 +7995,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2110
+              "height": 2090
             },
             ".panel": {
               "selector": ".panel",
@@ -8243,7 +8159,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 658
+              "height": 638
             },
             ".panel": {
               "selector": ".panel",
@@ -8359,7 +8275,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1148
+              "height": 8969
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8371,7 +8287,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1100
+              "height": 8921
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8383,7 +8299,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 628
+              "height": 8837
             },
             ".panel": {
               "selector": ".panel",
@@ -8499,7 +8415,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1624
+              "height": 1783
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8511,7 +8427,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1576
+              "height": 1735
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8523,7 +8439,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1492
+              "height": 1651
             },
             ".panel": {
               "selector": ".panel",
@@ -8663,7 +8579,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 827
+              "height": 807
             },
             ".panel": {
               "selector": ".panel",
@@ -8779,7 +8695,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "flex",
               "width": 1440,
-              "height": 20183
+              "height": 20163
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8791,7 +8707,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 20135
+              "height": 20115
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8969,7 +8885,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 912
+              "height": 892
             },
             ".panel": {
               "selector": ".panel",
@@ -9108,7 +9024,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3061
+              "height": 3000
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9120,7 +9036,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3013
+              "height": 2952
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9132,7 +9048,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2929
+              "height": 2868
             },
             ".panel": {
               "selector": ".panel",
@@ -9260,7 +9176,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1251
+              "height": 1148
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9272,7 +9188,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1203
+              "height": 1100
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9284,7 +9200,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1119
+              "height": 579
             },
             ".panel": {
               "selector": ".panel",
@@ -9400,7 +9316,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2358
+              "height": 2338
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9412,7 +9328,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2310
+              "height": 2290
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9424,7 +9340,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2226
+              "height": 2206
             },
             ".panel": {
               "selector": ".panel",
@@ -9540,7 +9456,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2583
+              "height": 2563
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9552,7 +9468,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2535
+              "height": 2515
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9564,7 +9480,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2451
+              "height": 2431
             },
             ".panel": {
               "selector": ".panel",
@@ -9677,7 +9593,7 @@
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
+                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(5) > input[value=\"Thông tin của người học\"][data-layout-key=\"sectionVi\"][type=\"text\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
@@ -9685,7 +9601,7 @@
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
+                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(7) > input[value=\"12\"][data-layout-key=\"width\"][max=\"12\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
@@ -9696,19 +9612,19 @@
               "help": "Select element must have an accessible name",
               "nodes": [
                 {
-                  "target": "select[data-layout-key=\"inputType\"]",
+                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "select[data-layout-key=\"tabId\"]",
+                  "target": "tr[data-profile-field-key=\"studentPhoto\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "select[data-layout-key=\"inputType\"]",
+                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(3) > select[data-layout-key=\"inputType\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 },
                 {
-                  "target": "select[data-layout-key=\"tabId\"]",
+                  "target": "tr[data-profile-field-key=\"fullNameStudent\"] > td:nth-child(4) > select[data-layout-key=\"tabId\"]",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
                 }
               ]
@@ -9738,7 +9654,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1741
+              "height": 1721
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9750,7 +9666,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1741
+              "height": 1721
             },
             ".app-shell": null,
             ".panel": {
@@ -9824,7 +9740,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2242
+              "height": 2222
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9836,7 +9752,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2194
+              "height": 2174
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9848,7 +9764,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2110
+              "height": 2090
             },
             ".panel": {
               "selector": ".panel",
@@ -10014,7 +9930,7 @@
           "viewerBlock": {
             "bg": "rgb(76, 76, 76)",
             "color": "rgb(251, 255, 255)",
-            "text": "Report IDcmsmv7sl600027vg0199v8qtd"
+            "text": "Report IDcmt2mczca00007eg00i1nc4w8"
           }
         },
         {
@@ -10023,9 +9939,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "",
-            "bgImage": "",
-            "color": ""
+            "bg": "rgb(82, 82, 82)",
+            "bgImage": "none",
+            "color": "rgb(229, 245, 255)"
           }
         }
       ]
@@ -10050,7 +9966,7 @@
           "border": "rgb(251, 255, 255)",
           "display": "block",
           "width": 1440,
-          "height": 18265
+          "height": 18247
         },
         "#loginPanel": {
           "selector": "#loginPanel",
@@ -10155,7 +10071,7 @@
           "border": "rgb(251, 255, 255)",
           "display": "block",
           "width": 1440,
-          "height": 1741
+          "height": 1721
         },
         "#reloadBtn": null,
         "#gradesTable": null,
@@ -10261,7 +10177,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1660
+              "height": 1685
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10299,7 +10215,18 @@
               "width": 96,
               "height": 99
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10375,7 +10302,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 6359
+              "height": 6293
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10413,7 +10340,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 1348,
+              "height": 32
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10489,7 +10427,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1501
+              "height": 1481
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10527,7 +10465,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10603,7 +10552,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1501
+              "height": 1481
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10641,7 +10590,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10717,7 +10677,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 2742
+              "height": 2722
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10755,7 +10715,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10831,7 +10802,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1565
+              "height": 1545
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10869,7 +10840,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -10945,7 +10927,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1928
+              "height": 1908
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10983,7 +10965,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -11059,7 +11052,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1813
+              "height": 1793
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11097,7 +11090,18 @@
               "width": 0,
               "height": 0
             },
-            ".field-validation-message": null,
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
             ".status.bad": null,
             ".status.ok": null,
             "#newsWeekSetModal .portal-modal-dialog": {
@@ -11217,7 +11221,18 @@
               "width": 160,
               "height": 48
             },
-            ".field-validation-message": null
+            ".field-validation-message": {
+              "selector": ".field-validation-message",
+              "id": "newsValidationHelp-sourceLink",
+              "className": "field-validation-message",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(255, 184, 191)",
+              "border": "rgb(255, 184, 191)",
+              "display": "block",
+              "width": 1348,
+              "height": 32
+            }
           },
           "modalAxe": [
             {
@@ -11238,7 +11253,10 @@
             "bgImage": "none",
             "value": ""
           },
-          "validationMessage": null
+          "validationMessage": {
+            "color": "rgb(255, 184, 191)",
+            "text": "Source must contain data. | Score 0.00 < 1.00 | Step 1: Open the real article page from an approved source: cnn.com, bbc.com. | Step 2: Do not use only the site home page such as bbc.com or cnn.com. | Step 3: Copy the full web address for that article and paste it again."
+          }
         },
         {
           "complianceModal": true,
@@ -11253,7 +11271,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "grid",
               "width": 760,
-              "height": 530
+              "height": 1064
             },
             "#newsComplianceModal .field-validation-message": null,
             "#newsComplianceModal .portal-modal-close": {
@@ -11477,42 +11495,42 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 730
+          "y": 775
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 720
+          "y": 765
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1026
+          "y": 1071
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 1026
+          "y": 1071
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1159
+          "y": 1204
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1282
+          "y": 1327
         }
       ],
       "frameProfile": {
@@ -11521,7 +11539,7 @@
           "x": 0,
           "y": 36,
           "w": 1440,
-          "h": 1612,
+          "h": 1637,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -11533,7 +11551,7 @@
           "x": 31,
           "y": 189,
           "w": 1378,
-          "h": 1302,
+          "h": 1347,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",

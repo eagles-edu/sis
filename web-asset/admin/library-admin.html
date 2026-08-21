@@ -259,7 +259,7 @@
       const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
       const json = async (path, options = {}) => { const response = await fetch(`${apiRoot}${path}`, { credentials: "include", ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Library request failed"); return data; };
       const REVIEW_FIELDS = ["english", "americanEnglish", "britishEnglish", "partOfSpeech", "phraseType", "vietnamese", "syllabication", "syllableCount", "definition"];
-      const SHARED_FIELDS = new Set(["english", "partOfSpeech", "vietnamese", "syllabication", "definition", "etymologyType", "etymology", "originPath", "originReferences", "grammarClassification", "grammarClassification.grammarFamily", "grammarClassification.grammarSubtype", "grammarClassification.grammarDetail", "grammarClassification.grammarNumber", "countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"]);
+      const SHARED_FIELDS = new Set(["english", "partOfSpeech", "vietnamese", "syllabication", "definition", "etymologyType", "etymology", "originPath", "originReferences", "grammarClassification", "grammarClassification.grammarFamily", "grammarClassification.grammarSubtype", "grammarClassification.grammarDetail", "grammarClassification.grammarNumber", "countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"]);
       let queueItems = []; let selectedQueueItem = null; let scrollLock = true;
       const label = (field) => field.split(".").pop().replace(/([A-Z])/g, " $1").replace(/^./u, (c) => c.toUpperCase());
       const getPath = (payload, path) => path.split(".").reduce((value, key) => value && typeof value === "object" ? value[key] : "", payload);
@@ -272,7 +272,7 @@
         if (!row || row.dataset.sharedEditorBound === "true") return;
         row.dataset.sharedEditorBound = "true";
         row.addEventListener("change", (event) => {
-          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="grammarFamily"], [data-vocabulary-esl-field="grammarSubtype"]')) {
+          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) {
             window.SIS_VOCABULARY_ESL?.sync(row);
           }
         });
@@ -312,7 +312,7 @@
       const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
       const fields = ["english", "americanEnglish", "britishEnglish", "partOfSpeech", "phraseType", "vietnamese", "syllabication", "syllableCount", "definition", "etymologyType", "etymology"];
       const coreFields = new Set(["english", "partOfSpeech", "vietnamese", "syllabication", "definition"]);
-      const sharedFields = new Set(["etymologyType", "etymology", "originPath", "originReferences", "grammarClassification", "grammarClassification.grammarFamily", "grammarClassification.grammarSubtype", "grammarClassification.grammarDetail", "grammarClassification.grammarNumber", "countability", "nounType", "nounNumber", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"]);
+      const sharedFields = new Set(["etymologyType", "etymology", "originPath", "originReferences", "grammarClassification", "grammarClassification.grammarFamily", "grammarClassification.grammarSubtype", "grammarClassification.grammarDetail", "grammarClassification.grammarNumber", "countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"]);
       const getPath = (payload, path) => path.split(".").reduce((value, key) => value && typeof value === "object" ? value[key] : "", payload);
       const setPath = (payload, path, value) => { const parts = path.split("."); const last = parts.pop(); let target = payload; parts.forEach((part) => { target[part] ||= {}; target = target[part]; }); target[last] = value; };
       const label = (field) => field.split(".").pop().replace(/([A-Z])/g, " $1").replace(/^./u, (c) => c.toUpperCase());
@@ -341,7 +341,7 @@
         });
         window.SIS_VOCABULARY_ESL.hydrate(row, entry);
         row?.addEventListener("change", (event) => {
-          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field="grammarFamily"], [data-vocabulary-esl-field="grammarSubtype"]')) window.SIS_VOCABULARY_ESL.sync(row);
+          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) window.SIS_VOCABULARY_ESL.sync(row);
         });
         window.SIS_VOCABULARY_ESL.bindLookupButtons(row);
         window.SIS_VOCABULARY_ESL.bindDefinitionAutosize(row);
@@ -350,7 +350,7 @@
           const payload = structuredClone(entry);
           workspace.querySelectorAll("[data-approved-field], [data-vocabulary-field], [data-vocabulary-esl-field], [data-vocabulary-origin-field]").forEach((input) => {
             const field = fieldPath(input);
-            if (field) { let value = input.type === "checkbox" ? input.checked : input.value; if (field === "originReferences") { try { value = JSON.parse(value || "[]"); } catch { value = []; } } setPath(payload, field, value); }
+            if (field) { let value = input.type === "checkbox" ? input.checked : input.value; if (field === "syllabication") value = window.SIS_VOCABULARY_ESL.canonicalizeSyllabication(value); if (field === "originReferences") { try { value = JSON.parse(value || "[]"); } catch { value = []; } } setPath(payload, field, value); }
           });
           const message = workspace.querySelector("[data-approved-message]");
           try {

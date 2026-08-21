@@ -1,4 +1,5 @@
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { normalizeDefinitionText } from "./library-origin.mjs"
 import { normalizeVocabularySyllabication, validateVocabularyEntry } from "./vocabulary-syllabication.mjs"
 
 const MAX_WORDS = 500
@@ -41,7 +42,7 @@ function normalizeWord(row = {}) {
     englishKey: wordKey(english).slice(0, 240),
     vietnamese: text(row.vietnamese).slice(0, 240),
     syllabication: normalizeVocabularySyllabication(row.syllabication).slice(0, 240),
-    definition: text(row.definition),
+    definition: normalizeDefinitionText(row.definition),
     eslJson: row.esl && typeof row.esl === "object" ? row.esl : (row.eslJson && typeof row.eslJson === "object" ? row.eslJson : null),
     syllableCount: syllableCount(row.syllabication),
   }
@@ -55,7 +56,7 @@ function mapWord(row = {}) {
     english: text(row.english),
     vietnamese: text(row.vietnamese),
     syllabication: normalizeVocabularySyllabication(row.syllabication),
-    definition: text(row.definition),
+    definition: normalizeDefinitionText(row.definition),
     esl: row.eslJson && typeof row.eslJson === "object" ? row.eslJson : {},
     syllableCount: Number(row.syllableCount) || syllableCount(row.syllabication),
     sourceReportDate: localDateKey(row.sourceReportDate),

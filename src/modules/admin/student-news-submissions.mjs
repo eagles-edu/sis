@@ -20,13 +20,14 @@ import {
   stripAwaitingReReviewMarker,
   updateStudentNewsValidationIssues,
 } from "./student-news-compliance.mjs"
-import { validateVocabularyEntry } from "./vocabulary-syllabication.mjs"
+import { normalizeVocabularySyllabication, validateVocabularyEntry } from "./vocabulary-syllabication.mjs"
 import {
   isStudentNewsReportSchemaUnavailableError,
   isStudentNewsReviewSchemaUnavailableError,
   listStudentNewsReportsFromFallbackStore,
   upsertStudentNewsReportInFallbackStore,
 } from "./student-news-fallback.mjs"
+import { normalizeDefinitionText } from "./library-origin.mjs"
 import { getSisConfigSnapshotSync } from "./sis-config-store.mjs"
 import { courseWeekNumberForSchoolSetupDate } from "./course-week-calendar.mjs"
 
@@ -48,10 +49,6 @@ function normalizeText(value) {
  */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
-}
-
-function normalizeSyllabication(value) {
-  return normalizeText(value)
 }
 
 /**
@@ -439,10 +436,10 @@ function normalizeStudentNewsPayload(payload = {}) {
       partOfSpeech: normalizeText(row?.partOfSpeech).toLowerCase(),
       english: clampText(row?.english, 240).value,
       vietnamese: clampText(row?.vietnamese, 240).value,
-      syllabication: normalizeSyllabication(clampText(row?.syllabication, 240).value),
+      syllabication: normalizeVocabularySyllabication(clampText(row?.syllabication, 240).value),
       // Definitions are stored verbatim; silently cutting a student's meaning
       // changes its meaning and makes correction impossible.
-      definition: normalizeText(row?.definition),
+      definition: normalizeDefinitionText(row?.definition),
     })) : [],
     reportDateText: normalizeText(payload?.reportDate),
   }

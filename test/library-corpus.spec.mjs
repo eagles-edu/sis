@@ -89,6 +89,7 @@ test("Library definitions keep up to 50,000 characters through normalization", a
   assert.equal(LIBRARY_DEFINITION_MAX_LENGTH, 50000)
   assert.equal(normalizeLibraryDefinition(definition).length, 50000)
   assert.equal(normalizeLibraryDefinition(definition.slice(0, 49999)).length, 49999)
+  assert.equal(normalizeLibraryDefinition("First line\n\nSecond line\n"), "First line\n\nSecond line\n")
 })
 
 test("legacy cutover preserves sources while creating provisional A/B review groups", () => {
