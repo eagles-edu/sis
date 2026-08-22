@@ -41,6 +41,12 @@ test("student Library is a protected physical page with shared chrome and studen
   assert.match(student, /myWords: document\.getElementById\("libraryMyWords"\)\.checked \? "true" : ""/)
   assert.match(student, /libraryFilters.*addEventListener\("submit"/s)
   assert.match(student, /class="library-results"/)
+  assert.match(student, /id="libraryPage">1 of 1</)
+  assert.match(student, /flatEntryHtml\(entry, \{ accordion: true, editLabel:/)
+  assert.match(student, /libraryPageSize/)
+  assert.match(student, /Math\.ceil\(libraryTotal \/ libraryPageSize\)/)
+  assert.match(sharedVocabularyEditor, /accordion = false/)
+  assert.match(sharedVocabularyEditor, /<details class="library-entry-accordion"/)
   assert.doesNotMatch(student, /<style>/)
   assert.match(student, /createdByName/)
   assert.match(student, /__SIS_STUDENT_API_PREFIX/)
@@ -458,6 +464,21 @@ test("unheaded Etymonline prose after Stems is restored to Etymology after First
   )
   assert.match(insertedBeforeWorksCited, /\*\*Etymology:\*\* from Middle English/)
   assert.ok(insertedBeforeWorksCited.indexOf("**Etymology:**") < insertedBeforeWorksCited.indexOf("**Works Cited:**"))
+  const insertedIntoBlankDefinition = context.window.SIS_VOCABULARY_ESL.insertEtymologyDeterministically(
+    "",
+    "from Middle English",
+  )
+  assert.equal(insertedIntoBlankDefinition, "**Etymology:** from Middle English")
+  const insertedIntoPlainDefinition = context.window.SIS_VOCABULARY_ESL.insertEtymologyDeterministically(
+    "A definition paragraph.",
+    "from Middle English",
+  )
+  assert.match(insertedIntoPlainDefinition, /A definition paragraph\.\n\n\*\*Etymology:\*\* from Middle English/)
+  const existingUnheadedEtymology = context.window.SIS_VOCABULARY_ESL.insertEtymologyDeterministically(
+    "A definition from Middle English",
+    "from Middle English",
+  )
+  assert.equal((existingUnheadedEtymology.match(/\*\*Etymology:\*\*/gu) || []).length, 1)
   const verbHtml = context.window.SIS_VOCABULARY_ESL.flatEntryHtml({
     english: "threaten",
     partOfSpeech: "verb",

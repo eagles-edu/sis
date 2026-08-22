@@ -261,18 +261,25 @@
     const addition = normalizeDefinitionText(paragraph).trim();
     if (!addition) return source;
     const firstUse = source.match(/^\*\*First known use:?\*\*:?[\t ]*([^\n]*)$/imu);
-    if (!firstUse && source.includes(addition)) return source;
+    const etymology = source.match(/^(\*\*Etymology:?\*\*:?[\t ]*[^\n]*)$/imu);
+    if (!firstUse && etymology && source.includes(addition)) return source;
     let next = source;
     if (firstUse) {
       const line = firstUse[0];
       if (line.includes(addition)) return source;
       next = source.replace(line, `${line}\n\n**Etymology:** ${addition}`);
     } else {
-      const etymology = source.match(/^(\*\*Etymology:?\*\*:?[\t ]*[^\n]*)$/imu);
       if (etymology) next = source.replace(etymology[0], `${etymology[0]}; ${addition}`);
       else {
+        const existingAdditionIndex = source.indexOf(addition);
         const nextHeading = source.search(/^\*\*(?:Stems|Synonyms|Antonyms|Works Cited):?\*\*:?/imu);
-        next = nextHeading >= 0 ? `${source.slice(0, nextHeading).trimEnd()}\n\n**Etymology:** ${addition}\n\n${source.slice(nextHeading).trimStart()}` : (source ? `${source}\n\n${addition}` : addition);
+        if (existingAdditionIndex >= 0) {
+          const before = source.slice(0, existingAdditionIndex).trimEnd();
+          const after = source.slice(existingAdditionIndex + addition.length).trimStart();
+          next = (before ? `${before}\n\n` : "") + `**Etymology:** ${addition}` + (after ? `\n\n${after}` : "");
+        } else {
+          next = nextHeading >= 0 ? `${source.slice(0, nextHeading).trimEnd()}\n\n**Etymology:** ${addition}\n\n${source.slice(nextHeading).trimStart()}` : (source ? `${source}\n\n**Etymology:** ${addition}` : `**Etymology:** ${addition}`);
+        }
       }
     }
     const sections = { body: [], "First known use": [], Etymology: [], "Origin path": [], "Verb Forms": [], Stems: [], Synonyms: [], Antonyms: [], "Works Cited": [] };
@@ -670,7 +677,7 @@
     return `${primary} | vi: ${model.vietnamese} |${model.secondaryMetadata ? ` ${model.secondaryMetadata}` : ""}`;
   }
 
-  function flatEntryHtml(entry = {}, { index = "", editClass = "vocabulary-flat-edit", editLabel = "Edit", editAttributes = "", entryAttributes = "", extraHtml = "" } = {}) {
+  function flatEntryHtml(entry = {}, { index = "", editClass = "vocabulary-flat-edit", editLabel = "Edit", editAttributes = "", entryAttributes = "", extraHtml = "", accordion = false } = {}) {
     const source = entry && typeof entry === "object" ? entry : {};
     const model = flatEntryHeaderModel(source);
     const value = (field) => source[field] ?? (source.esl && typeof source.esl === "object" ? source.esl[field] : undefined) ?? (source.grammarClassification && typeof source.grammarClassification === "object" ? source.grammarClassification[field] : undefined) ?? "";
@@ -678,9 +685,7 @@
     const indexAttribute = index === "" ? "" : ` data-vocabulary-entry-index="${escapeHtml(index)}"`;
     const editButton = editLabel === null ? "" : `<button type="button" class="portal-button portal-button-primary ${escapeHtml(editClass)}" ${editAttributes} title="Edit this vocabulary entry" aria-label="Edit this vocabulary entry">${escapeHtml(editLabel)}</button>`;
     const headerSeparator = `<span class="vocabulary-flat-entry-separator" aria-hidden="true">|</span>`;
-    return `<article class="vocabulary-flat-entry new-word-entry" data-vocabulary-flat-entry${indexAttribute} data-vocabulary-entry-json="${json}" ${entryAttributes}>
-      ${model.legacyPending ? `<div class="vocabulary-flat-entry-status"><span class="chip chip-warn">Legacy</span></div>` : ""}
-      <div class="vocabulary-flat-entry-head new-word-entry-head">
+    const header = `${accordion && model.legacyPending ? `<span class="vocabulary-flat-entry-status"><span class="chip chip-warn">Legacy</span></span>` : ""}
         <strong>${escapeHtml(model.english)}</strong>
         <span class="new-word-entry-pronunciation">/${escapeHtml(model.pronunciation)}/</span>
         <strong class="new-word-entry-part-of-speech">${escapeHtml(model.partOfSpeech)}</strong>
@@ -689,10 +694,18 @@
         <span class="new-word-entry-vietnamese">vi: ${escapeHtml(model.vietnamese)}</span>
         ${headerSeparator}
         ${model.secondaryMetadata ? `<span class="new-word-entry-pos-details">${escapeHtml(model.secondaryMetadata)}</span>` : ""}
-        ${editButton}
-      </div>
-      <div class="new-word-entry-definition">${entryDefinitionHtml(source, value)}</div>
-      ${extraHtml}
+        ${editButton}`;
+    const body = `<div class="new-word-entry-definition">${entryDefinitionHtml(source, value)}</div>${extraHtml}`;
+    if (accordion) {
+      return `<details class="library-entry-accordion" data-vocabulary-flat-entry${indexAttribute} data-vocabulary-entry-json="${json}" ${entryAttributes}>
+        <summary class="new-word-entry-head library-entry-accordion-summary">${header}</summary>
+        <div class="library-entry-accordion-body">${body}</div>
+      </details>`;
+    }
+    return `<article class="vocabulary-flat-entry new-word-entry" data-vocabulary-flat-entry${indexAttribute} data-vocabulary-entry-json="${json}" ${entryAttributes}>
+      ${model.legacyPending ? `<div class="vocabulary-flat-entry-status"><span class="chip chip-warn">Legacy</span></div>` : ""}
+      <div class="vocabulary-flat-entry-head new-word-entry-head">${header}</div>
+      ${body}
     </article>`;
   }
 

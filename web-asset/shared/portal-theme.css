@@ -5890,6 +5890,46 @@ body.student-portal-page .library-results {
   gap: var(--portal-content-gap);
   margin-top: var(--portal-content-gap);
 }
+body.student-portal-page .library-entry-accordion {
+  border: 1px solid var(--portal-border-strong);
+  border-radius: var(--radius-2);
+  overflow: hidden;
+}
+body.student-portal-page .library-entry-accordion-summary {
+  align-items: center;
+  background: #CDE0FF;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: flex;
+  gap: 7px;
+  min-height: 48px;
+  margin: 0;
+  padding: 8px 12px;
+  list-style: none;
+}
+body.student-portal-page .library-entry-accordion-summary::-webkit-details-marker {
+  display: none;
+}
+body.student-portal-page .library-entry-accordion-summary::before {
+  content: "+";
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+body.student-portal-page .library-entry-accordion[open] .library-entry-accordion-summary::before {
+  content: "−";
+}
+html[data-theme="dark"] body.student-portal-page .library-entry-accordion-summary {
+  background: #212121;
+}
+body.student-portal-page .library-entry-accordion-body {
+  border-top: 1px solid var(--portal-border-strong);
+  display: grid;
+  gap: var(--portal-content-gap);
+  padding: 12px;
+}
+body.student-portal-page .library-entry-accordion-body .new-word-entry-definition {
+  padding-inline-start: 0;
+}
 body.student-portal-page .library-pagination {
   align-items: center;
   display: flex;
@@ -5932,16 +5972,22 @@ body.student-portal-page .library-edit-actions {
   }
   body.student-portal-page .library-pagination {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     justify-content: stretch;
   }
   body.student-portal-page .library-pagination > span {
-    grid-column: 1 / -1;
+    grid-column: 2;
     grid-row: 1;
     text-align: center;
   }
+  body.student-portal-page .library-pagination > .portal-button:first-of-type {
+    grid-column: 1;
+  }
+  body.student-portal-page .library-pagination > .portal-button:last-of-type {
+    grid-column: 3;
+  }
   body.student-portal-page .library-pagination > .portal-button {
-    inline-size: 100%;
+    inline-size: min(100%, 160px);
     max-inline-size: none;
     min-inline-size: 0;
   }
@@ -5996,18 +6042,22 @@ body.student-portal-page .new-words-back-top {
 }
 body.student-portal-page .news-vocabulary-rows {
   display: grid;
-  gap: 8px;
+  gap: var(--portal-content-gap);
 }
 body.student-portal-page .vocabulary-edit-surface {
   min-width: 0;
 }
 body.student-portal-page .news-vocabulary-row {
   align-items: start;
+  background: var(--portal-surface-card);
+  border: 1px solid var(--portal-border-strong);
+  border-radius: var(--radius-2);
   box-sizing: border-box;
   display: grid;
   gap: 8px;
   grid-template-columns: max-content minmax(160px, 1.25fr) minmax(160px, 1.25fr) minmax(180px, 1.5fr);
   min-width: 0;
+  padding: var(--portal-content-gap);
   width: 100%;
 }
 body.student-portal-page .news-vocabulary-row > :is(input, select, textarea) {

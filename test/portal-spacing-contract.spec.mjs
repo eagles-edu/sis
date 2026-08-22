@@ -28,6 +28,8 @@ test("Library content and pagination preserve vertical spacing and mobile contro
   assert.match(sharedTheme, /body\.student-portal-page \.library-results\s*\{[\s\S]*?gap:\s*var\(--portal-content-gap\)[\s\S]*?margin-top:\s*var\(--portal-content-gap\)/)
   assert.match(sharedTheme, /body\.student-portal-page \.library-pagination\s*\{[\s\S]*?flex-wrap:\s*wrap[\s\S]*?gap:\s*var\(--portal-content-gap\)[\s\S]*?justify-content:\s*center[\s\S]*?margin-block:\s*var\(--portal-content-gap\)[\s\S]*?padding-block:\s*4px/)
   assert.match(sharedTheme, /body\.student-portal-page \.library-pagination > \.portal-button\s*\{[\s\S]*?min-inline-size:\s*0/)
+  assert.match(sharedTheme, /body\.student-portal-page \.library-pagination\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\) auto minmax\(0, 1fr\)/)
+  assert.match(sharedTheme, /body\.student-portal-page \.library-pagination > span\s*\{[\s\S]*?grid-column:\s*2[\s\S]*?text-align:\s*center/)
   assert.match(sharedTheme, /body\.admin-portal-page\.library-admin-page \.library-pagination\s*\{[\s\S]*?flex-wrap:\s*wrap[\s\S]*?gap:\s*var\(--portal-content-gap\)[\s\S]*?justify-content:\s*center[\s\S]*?margin-block:\s*var\(--portal-content-gap\)[\s\S]*?padding-block:\s*4px/)
 })
 
@@ -36,6 +38,11 @@ test("Library review panes keep headings and editor groups separated", () => {
   assert.match(sharedTheme, /\.library-review-pane > h3\s*\{[\s\S]*?border-block-end:\s*1px solid var\(--portal-border\);[\s\S]*?margin:\s*0;[\s\S]*?padding-block-end:\s*var\(--portal-content-gap\)/)
   assert.match(sharedTheme, /\.library-admin-toolbar\s*\{[\s\S]*?gap:\s*var\(--portal-content-gap\)[\s\S]*?margin-block-end:\s*var\(--portal-content-gap\)/)
   assert.match(sharedTheme, /\.library-admin-results\s*\{[\s\S]*?gap:\s*var\(--portal-content-gap\)[\s\S]*?margin-block-start:\s*var\(--portal-content-gap\)/)
+})
+
+test("student vocabulary editors keep each row visually separated", () => {
+  assert.match(sharedTheme, /body\.student-portal-page \.news-vocabulary-rows\s*\{[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*var\(--portal-content-gap\)/)
+  assert.match(sharedTheme, /body\.student-portal-page \.news-vocabulary-row\s*\{[\s\S]*?background:\s*var\(--portal-surface-card\);[\s\S]*?border:\s*1px solid var\(--portal-border-strong\);[\s\S]*?border-radius:\s*var\(--radius-2\);[\s\S]*?padding:\s*var\(--portal-content-gap\)/)
 })
 
 test("formatted vocabulary definitions preserve readable flow spacing", () => {

@@ -97,7 +97,7 @@
         <p id="libraryStatus" class="small" aria-live="polite">Loading Library…</p>
         <div id="libraryResults" class="library-results"></div>
         <div class="library-pagination"><button id="libraryPrevious" type="button"
-            class="portal-button portal-button-alt">Previous</button><span id="libraryPage">Page 0</span><button
+            class="portal-button portal-button-alt">Previous</button><span id="libraryPage">1 of 1</span><button
             id="libraryNext" type="button" class="portal-button portal-button-alt">Next</button></div>
       </section>
       <section class="content status-strip portal-prefooter" aria-label="Runtime environment"><span class="env-badge"
@@ -125,11 +125,11 @@
       document.querySelectorAll("[data-copyright-year]").forEach((element) => { element.textContent = String(new Date().getFullYear()); });
       const zoom = (delta) => { const current = Number.parseInt(document.documentElement.dataset.portalTextZoom || "100", 10) || 100; document.documentElement.dataset.portalTextZoom = String(Math.max(85, Math.min(130, current + delta))); document.documentElement.style.fontSize = `${document.documentElement.dataset.portalTextZoom}%`; };
       document.getElementById("studentTextZoomDownBtn")?.addEventListener("click", () => zoom(-5)); document.getElementById("studentTextZoomUpBtn")?.addEventListener("click", () => zoom(5)); document.getElementById("studentTextZoomResetBtn")?.addEventListener("click", () => { document.documentElement.dataset.portalTextZoom = "100"; document.documentElement.style.fontSize = ""; });
-      const libraryApi = `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library`; let libraryPage = 1; let libraryTotal = 0; let libraryItems = new Map();
+      const libraryApi = `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library`; const libraryPageSize = 25; let libraryPage = 1; let libraryTotal = 0; let libraryItems = new Map();
       const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
       async function loadLibrary() {
         const status = document.getElementById("libraryStatus");
-        const query = new URLSearchParams({ page: String(libraryPage), pageSize: "25", search: document.getElementById("librarySearch").value, partOfSpeech: document.getElementById("libraryPos").value, sortBy: document.getElementById("librarySort").value, myWords: document.getElementById("libraryMyWords").checked ? "true" : "" });
+        const query = new URLSearchParams({ page: String(libraryPage), pageSize: String(libraryPageSize), search: document.getElementById("librarySearch").value, partOfSpeech: document.getElementById("libraryPos").value, sortBy: document.getElementById("librarySort").value, myWords: document.getElementById("libraryMyWords").checked ? "true" : "" });
         try {
           status.textContent = "Loading Library…";
           const response = await fetch(`${libraryApi}?${query}`, { credentials: "include" });
@@ -141,12 +141,12 @@
            const editors = (entry.editors || []).map((editor) => `${editor.name} (${new Date(editor.at).toLocaleString()})`).join(", ");
             const provenance = `<div class="library-meta">Created by ${esc(entry.createdByName)} on ${new Date(entry.createdAt).toLocaleString()} · Last edited by ${esc(entry.lastEditedByName)} on ${new Date(entry.updatedAt).toLocaleString()}</div><div class="library-meta">Editors: ${esc(editors || entry.lastEditedByName)}</div>`;
             const canEdit = entry.isContribution === true || entry.studentCanEdit === true;
-            return window.SIS_VOCABULARY_ESL.flatEntryHtml(entry, { editLabel: canEdit ? "Edit" : null, editClass: "library-edit", editAttributes: `data-entry-id="${esc(entry.id)}"`, extraHtml: provenance });
+            return window.SIS_VOCABULARY_ESL.flatEntryHtml(entry, { accordion: true, editLabel: canEdit ? "Edit" : null, editClass: "library-edit", editAttributes: `data-entry-id="${esc(entry.id)}"`, extraHtml: provenance });
           }).join("") || "<p class=\"small\">No approved Library entries match these filters.</p>";
           status.textContent = `${libraryTotal}${libraryTotal === 1 ? " entry" : " entries"}`;
-          document.getElementById("libraryPage").textContent = `Page ${libraryPage}`;
+          document.getElementById("libraryPage").textContent = `${libraryPage} of ${Math.max(1, Math.ceil(libraryTotal / libraryPageSize))}`;
           document.getElementById("libraryPrevious").disabled = libraryPage <= 1;
-          document.getElementById("libraryNext").disabled = libraryPage * 25 >= libraryTotal;
+          document.getElementById("libraryNext").disabled = libraryPage * libraryPageSize >= libraryTotal;
         } catch (error) {
           status.textContent = error.message;
         }
@@ -199,7 +199,7 @@
       }
       const initialQuery = new URLSearchParams(window.location.search);
       document.getElementById("libraryMyWords").checked = ["1", "true", "yes"].includes((initialQuery.get("myWords") || "").toLowerCase());
-      document.getElementById("libraryResults")?.addEventListener("click", (event) => { const button = event.target.closest("[data-entry-id]"); const entry = libraryItems.get(button?.dataset.entryId); if (entry) openLibraryEdit(entry); });
+      document.getElementById("libraryResults")?.addEventListener("click", (event) => { const button = event.target.closest("[data-entry-id]"); const entry = libraryItems.get(button?.dataset.entryId); if (!entry) return; event.preventDefault(); event.stopPropagation(); openLibraryEdit(entry); });
       document.getElementById("libraryFilters")?.addEventListener("submit", (event) => { event.preventDefault(); libraryPage = 1; loadLibrary(); });
       document.getElementById("libraryFilters")?.addEventListener("input", () => { libraryPage = 1; loadLibrary(); }); document.getElementById("libraryPrevious")?.addEventListener("click", () => { libraryPage = Math.max(1, libraryPage - 1); loadLibrary(); }); document.getElementById("libraryNext")?.addEventListener("click", () => { libraryPage += 1; loadLibrary(); }); window.setTimeout(loadLibrary, 500);
     })();
