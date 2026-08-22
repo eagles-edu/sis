@@ -10,7 +10,7 @@ const serverSource = fs.readFileSync(path.resolve(rootDir, "server/student-admin
 
 for (const [label, html, portal] of [["student", studentHtml, "student"], ["parent", parentHtml, "parent"]]) {
   test(`${label} portal gates third-party integrations behind shared consent`, () => {
-    assert.match(html, new RegExp(`initPrivacyConsent\\?\\.\\(\\{ locale: ["']vi["'], portal: ["']${portal}["'], waitForAuthentication: true \\}\\)`))
+    assert.match(html, new RegExp(`initPrivacyConsent\\?\\.\\(\\{ locale: ["']vi["'], portal: ["']${portal}["'], waitForAuthentication: true(?:, deferIntegrations: true)? \\}\\)`))
     assert.doesNotMatch(html, /conversations-widget\.brevo\.com\/brevo-conversations\.js/)
   })
 }
@@ -32,6 +32,24 @@ test("shared consent state exposes both integrations and versioned persistence",
   assert.match(source, /portal-button-privacy-shaded/)
   assert.match(source, /if \(!preferences\?\.noticeAcknowledgedAt && !document\.getElementById\("sisConsentPanel"\)\)/)
   assert.match(source, /panel\.hidden = !open/)
+})
+
+test("student boot defers consent integrations until after the first authenticated shell paint", () => {
+  const studentJs = fs.readFileSync(path.resolve(rootDir, "web-asset/student/student-portal.js"), "utf8")
+  assert.match(studentHtml, /data-student-auth-state=\"booting\"/)
+  assert.match(studentHtml, /deferIntegrations: true/)
+  assert.match(studentJs, /function scheduleStudentPrivacyConsent\(\)/)
+  assert.match(studentJs, /requestAnimationFrame\(\(\) => window\.requestAnimationFrame\(show\)\)/)
+  assert.match(studentJs, /async function loadStudentData\(options = \{\}\) \{\s*const dashboardPromise = loadDashboard\(\);\s*const calendarPromise = loadCalendar\(options\);\s*await Promise\.all\(\[dashboardPromise, calendarPromise\]\);/)
+  assert.match(studentJs, /let dashboardLoadPromise = null;/)
+  assert.match(studentJs, /if \(dashboardLoadPromise\) return dashboardLoadPromise;/)
+})
+
+test("student home reserves hydrated queue and attendance geometry for CLS", () => {
+  const studentCss = fs.readFileSync(path.resolve(rootDir, "web-asset/student/student-portal.css"), "utf8")
+  assert.match(studentCss, /PERF-CONTRACT: STUDENT-HOME-CLS-RESERVATION/)
+  assert.match(studentCss, /body\.student-portal-page #newsQueueCard \.queue-table-wrap\s*\{[\s\S]*?min-height: 260px;/)
+  assert.match(studentCss, /body\.student-portal-page #attendanceCalendarMetrics\s*\{[\s\S]*?min-height: 189px;/)
 })
 
 test("consent version is runtime-configurable from admin SIS settings", () => {

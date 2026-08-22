@@ -372,6 +372,7 @@
   }
 
   function applyConsentPreferences(preferences, { loadBrevoConversation = true } = {}) {
+    globalThis.__SIS_PRIVACY_CONSENT_INTEGRATIONS_DEFERRED__ = false
     setConsentAttributes(preferences)
     if (preferences?.supportChat === "granted" && loadBrevoConversation) {
       globalThis.__SIS_BREVO_CONVERSATION_DISABLED__ = false
@@ -404,7 +405,7 @@
     return initialAuth?.authenticated === true
   }
 
-  function initPrivacyConsent({ locale = "en", waitForAuthentication = false, portal = "" } = {}) {
+  function initPrivacyConsent({ locale = "en", waitForAuthentication = false, portal = "", deferIntegrations = false } = {}) {
     const normalizedLocale = locale === "vi" ? "vi" : "en"
     const normalizedPortal = consentPortalKind(portal)
     if (waitForAuthentication && !portalIsAuthenticated()) {
@@ -414,6 +415,9 @@
     }
     if (globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__) {
       const preferences = readConsentPreferences()
+      if (globalThis.__SIS_PRIVACY_CONSENT_INTEGRATIONS_DEFERRED__) {
+        applyConsentPreferences(preferences || defaultMemberPreferences())
+      }
       if (!preferences?.noticeAcknowledgedAt && !document.getElementById("sisConsentPanel")) {
         renderConsentUi(normalizedLocale, preferences || defaultMemberPreferences(), true, normalizedPortal)
       }
@@ -422,8 +426,9 @@
     globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__ = true
     const preferences = readConsentPreferences() || defaultMemberPreferences()
     setConsentAttributes(preferences)
-    const panel = renderConsentUi(normalizedLocale, preferences, !preferences.noticeAcknowledgedAt, normalizedPortal)
-    applyConsentPreferences(preferences)
+    renderConsentUi(normalizedLocale, preferences, !preferences.noticeAcknowledgedAt, normalizedPortal)
+    globalThis.__SIS_PRIVACY_CONSENT_INTEGRATIONS_DEFERRED__ = Boolean(deferIntegrations)
+    if (!deferIntegrations) applyConsentPreferences(preferences)
     return preferences
   }
 

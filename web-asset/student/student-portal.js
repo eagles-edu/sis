@@ -67,6 +67,7 @@
         detailGradeTable: null,
         studentEaglesId: "",
       };
+      let dashboardLoadPromise = null;
       const portalAssetPromises = new Map();
       const portalAssetUrls = {
         fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js",
@@ -104,6 +105,15 @@
         return Promise.all([loadPortalAsset("tabulator"), loadPortalAsset("tabulatorCss")]);
       }
       const INITIAL_AUTH_STATE = window.__SIS_STUDENT_INITIAL_AUTH__;
+
+      function scheduleStudentPrivacyConsent() {
+        const show = () => window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "student" });
+        if (typeof window.requestAnimationFrame === "function") {
+          window.requestAnimationFrame(() => window.requestAnimationFrame(show));
+          return;
+        }
+        window.setTimeout(show, 0);
+      }
 
       function setBrevoStudentIdentity(eaglesId) {
         state.studentEaglesId = t(eaglesId);
@@ -5096,13 +5106,21 @@
         }
       }
       async function loadDashboard() {
-        state.dashboard = await api(STUDENT_DASHBOARD_PATH);
-        renderDashboard();
-        renderStudentDetailPage();
-        if (state.activeView === "news") renderCalendar(state.calendarRows);
+        if (dashboardLoadPromise) return dashboardLoadPromise;
+        dashboardLoadPromise = (async () => {
+          state.dashboard = await api(STUDENT_DASHBOARD_PATH);
+          renderDashboard();
+          renderStudentDetailPage();
+          if (state.activeView === "news") renderCalendar(state.calendarRows);
+          return state.dashboard;
+        })();
+        try {
+          return await dashboardLoadPromise;
+        } finally {
+          dashboardLoadPromise = null;
+        }
       }
       async function loadCalendar(options = {}) {
-        if (!state.dashboard) await loadDashboard();
         const data = await api(`${STUDENT_NEWS_CALENDAR_PATH}?days=${studentNewsCalendarLookbackDays()}`);
         state.newsVocabularyMinimumWords = Number.parseInt(String(data?.validationConfig?.vocabularyMinimumWords), 10) || 5;
         renderVocabularyMinimumLabel();
@@ -5129,6 +5147,24 @@
           "No open date currently.";
         if (!state.newWordsLoaded) await loadNewWords();
         updateSubmitAvailability();
+      }
+
+      async function loadStudentData(options = {}) {
+        const dashboardPromise = loadDashboard();
+        const calendarPromise = loadCalendar(options);
+        await Promise.all([dashboardPromise, calendarPromise]);
+      }
+
+      async function revealAuthenticatedStudentView() {
+        try {
+          await loadStudentData();
+        } catch (error) {
+          setAuthenticatedView(true);
+          scheduleStudentPrivacyConsent();
+          throw error;
+        }
+        setAuthenticatedView(true);
+        scheduleStudentPrivacyConsent();
       }
 
       async function handleNewsCheckResult(payloadBody = {}, options = {}) {
@@ -5184,13 +5220,10 @@
         state.newsComplianceSummary = displaySummaryMessage;
         if (options?.viewerItem !== true) renderNewsComplianceModalFromState(displaySummaryMessage);
         invalidateNewWordsCache();
-        await Promise.all([
-          loadDashboard(),
-          loadCalendar({
-            preserveValidation: true,
-            preserveForm: options?.viewerItem === true,
-          }),
-        ]);
+        await loadStudentData({
+          preserveValidation: true,
+          preserveForm: options?.viewerItem === true,
+        });
         // Calendar hydration can briefly return without openReport while the
         // just-saved row is being read back. Restore the authoritative check
         // response so vocabulary and prose never disappear from the form.
@@ -5294,10 +5327,7 @@
             setNewsWeekSetModalStatus(t(saved?.message) || "Report submitted.");
             setFormStatus(t(saved?.message) || "Report saved.", false, true);
             invalidateNewWordsCache();
-            await Promise.all([
-              loadDashboard(),
-              loadCalendar({ preserveForm: true, preserveValidation: true }),
-            ]);
+            await loadStudentData({ preserveForm: true, preserveValidation: true });
             openNewsWeekSetModalByReportId(t(payload?.reportId), {
               reportDate: reopenReportDate,
               silentStatus: true,
@@ -5318,7 +5348,7 @@
             setFormStatus(t(saved?.message) || "Report submitted successfully. A new blank form is ready.", false, true);
           }
           invalidateNewWordsCache();
-          await Promise.all([loadDashboard(), loadCalendar()]);
+          await loadStudentData();
           if (reopenReportDate) {
             openNewsWeekSetModalByReportDate(reopenReportDate, {
               silentStatus: true,
@@ -5450,27 +5480,22 @@
             setBrevoStudentIdentity(INITIAL_AUTH_STATE.user?.eaglesId);
             setGlobalStatus("Student session active.");
             if (handlePortalPostAuthRouteState()) return;
-            await Promise.all([loadDashboard(), loadCalendar()]);
-            setAuthenticatedView(true);
-            window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "student" });
             openReportAccessErrorModalIfNeeded();
             setFormStatus("Use Save to keep a draft. Check runs MMR; Submit unlocks only after Check passes.");
+            await revealAuthenticatedStudentView();
           } else {
             setAuthenticatedView(false);
             setGlobalStatus("Sign in to submit daily news reports.");
           }
           return;
         }
-        setAuthenticatedView(false);
         try {
           await api(`${STUDENT_AUTH_PREFIX}/me`);
           setGlobalStatus("Student session active.");
           if (handlePortalPostAuthRouteState()) return;
-          await Promise.all([loadDashboard(), loadCalendar()]);
-          setAuthenticatedView(true);
-          window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "student" });
           openReportAccessErrorModalIfNeeded();
           setFormStatus("Use Save to keep a draft. Check runs MMR; Submit unlocks only after Check passes.");
+          await revealAuthenticatedStudentView();
         } catch (error) {
           if (error && error.status === 401) {
             setAuthenticatedView(false);
@@ -5513,12 +5538,11 @@
         try {
           await login();
           setBrevoStudentIdentity(field("loginEaglesId")?.value);
-          setAuthenticatedView(true);
+          document.documentElement.dataset.studentAuthState = "booting";
           await window.SIS_PORTAL_PREFERENCES?.migrate?.();
-          window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "student" });
           setGlobalStatus("Student session active.");
           if (handlePortalPostAuthRouteState()) return;
-          await Promise.all([loadDashboard(), loadCalendar()]);
+          await revealAuthenticatedStudentView();
           openReportAccessErrorModalIfNeeded();
           setFormStatus("Fill out all sections and submit once per open date.");
         } catch (error) {
@@ -5565,7 +5589,7 @@
         }
       });
       field("reloadBtn")?.addEventListener("click", () => {
-        Promise.all([loadDashboard(), loadCalendar()]).then(() => {
+        loadStudentData().then(() => {
           setFormStatus("Window refreshed.");
           setGlobalStatus("Student dashboard refreshed.");
         }).catch(handleError);
@@ -5574,7 +5598,7 @@
         openNewsDate(state.window?.reportDate || state.window?.todayDate);
       });
       field("newsQueueRefreshBtn")?.addEventListener("click", () => {
-        Promise.all([loadDashboard(), loadCalendar()]).catch(handleError);
+        loadStudentData().catch(handleError);
       });
       field("studentDetailBackToMainBtn")?.addEventListener("click", () => {
         goToStudentMain();

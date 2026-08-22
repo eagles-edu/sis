@@ -46,6 +46,7 @@ docs/**
 !docs/CODE-EDITING-DOCS-INDEX.md
 !docs/CORE-DESIGN-PARAMETERS.md
 !docs/DOCUMENT-STATUS-AND-PARAMETER-AUDIT.md
+!docs/authenticated-portal-performance-sop.md
 !docs/NOUN-CLASS-PLAN.MD
 !docs/LISTS-REFERENCE-PLAN.MD
 !docs/sis-admin-wiring-map.ascii.txt

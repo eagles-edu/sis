@@ -77,6 +77,7 @@ Recent improvements now reflected in the system:
 - Staff admin handbook: [`docs/admin-staff-user-manual.md`](docs/admin-staff-user-manual.md)
 - Vietnamese parent/student manual: [`docs/parent-student-user-manual.vi.md`](docs/parent-student-user-manual.vi.md)
 - Operating SOP: [`docs/sop.md`](docs/sop.md)
+- Authenticated portal performance SOP: [`docs/authenticated-portal-performance-sop.md`](docs/authenticated-portal-performance-sop.md)
 - Backup and restore workflows: [`docs/db-backup-failsafe.md`](docs/db-backup-failsafe.md)
 
 ## Quick start
@@ -171,6 +172,9 @@ npm run sync:proof:portal
 
 # Lighthouse portal audit
 npm run audit:lighthouse:portals
+
+# Authenticated student boot/performance gate
+npm run test:student:performance
 ```
 
 ## Safe workflow notes

@@ -32,10 +32,10 @@ test("reminder message preserves actionable assignment and Flyers MMR data", () 
       audience: "student",
       mmr: { completed: 2, required: 5, remaining: 3, daysRemaining: 2, warning: true },
     })
-    assert.match(message, new RegExp(`${level} news-report MMR: 2/5 completed this week`))
-    assert.match(message, /Status: not completed yet\./)
-    assert.match(message, /3 reports remain before Sunday/)
-    assert.match(message, /remaining reports exceed the number of days left/)
+    assert.match(message, new RegExp(`MMR bài tin tức của lớp ${level}: đã hoàn thành 2/5 bài trong tuần này\.`))
+    assert.match(message, /Trạng thái: chưa hoàn thành\./u)
+    assert.match(message, /Còn 3 bài cần hoàn thành trước 23:59:59 Chủ nhật theo giờ Việt Nam\./u)
+    assert.match(message, /số bài còn lại nhiều hơn số ngày còn lại đến Chủ nhật\./u)
     assert.match(message, /https:\/\/admin\.eagles\.edu\.vn\/student-news/)
   }
 })

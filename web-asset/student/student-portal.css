@@ -784,6 +784,15 @@
     @media (min-width: 1000px) and (max-width: 1280px) {
 }
 
+    /* PERF-CONTRACT: STUDENT-HOME-CLS-RESERVATION */
+    body.student-portal-page #newsQueueCard .queue-table-wrap {
+      min-height: 260px;
+  }
+
+    body.student-portal-page #attendanceCalendarMetrics {
+      min-height: 189px;
+  }
+
     html[data-student-auth-state="authenticated"] body.student-portal-page #loginPanel {
       display: none !important;
   }

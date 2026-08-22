@@ -66,6 +66,7 @@ listed gap preserved and checked against executable source.
 
 | Document | Review when | Detailed contents |
 | --- | --- | --- |
+| [`authenticated-portal-performance-sop.md`](authenticated-portal-performance-sop.md) | Any portal performance, boot, loading, flash, LCP, network-order, or authenticated browser conclusion | Full visible-login browser flow; clean-profile versus authenticated Lighthouse distinction; student boot acceptance criteria; test/live comparison and repair order |
 | [`docs/admin-performance-contract.md`](admin-performance-contract.md) | Admin shell, first paint, asset loading, island split, critical CSS, or generated admin assets | Regressions and mitigations; protected performance markers; required verification; authenticated desktop/mobile regression gate; CLS/LCP/TBT/request constraints |
 | [`docs/PROMULGATE-LIBRARY-PLAN.md`](PROMULGATE-LIBRARY-PLAN.md) | Library corpus, duplicate lifecycle, canonicalization, review state, ET lookup, or cutover | Canonical uniqueness; migration order; implementation changes; tests; defaults; legacy cutover; assumptions |
 | [`docs/Shared Vocabulary Library Corpus.md`](Shared%20Vocabulary%20Library%20Corpus.md) | Shared Library editor, student/admin parity, fields, origin attribution, or legacy entries | Corpus summary; data/API; origin attribution; UX/classification; verification; assumptions; legacy cutover; full ESL entry flow; MW workflow; preflight/cutover; flowchart; tests |
