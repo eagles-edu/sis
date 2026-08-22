@@ -60,6 +60,23 @@ test("student boot preserves the historical shared loading order", () => {
   assert.match(studentHtml, /<script src="\/web-asset\/student\/student-portal\.min\.js"><\/script>/)
 })
 
+test("parent boot preserves the historical shared loading order", () => {
+  const parentHtml = fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.html"), "utf8")
+  const ordered = [
+    /<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>/,
+    /<script src="\/web-asset\/shared\/portal-action-feedback\.js"><\/script>/,
+    /<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css">/,
+    /<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>/,
+    /<link rel="stylesheet" href="\/web-asset\/parent\/parent-portal\.min\.css">/,
+  ]
+  let previousIndex = -1
+  for (const marker of ordered) {
+    const index = parentHtml.search(marker)
+    assert.ok(index > previousIndex, `parent boot marker ${marker} must preserve source order`)
+    previousIndex = index
+  }
+})
+
 test("all portal origin resolvers preserve the test runtime port", () => {
   for (const [name, html] of [
     ["portal hub", hubHtml],

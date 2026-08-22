@@ -59,11 +59,22 @@ test("New Words and News vocabulary use the same full ESL row payload without st
   assert.match(sharedVocabularyEditor, /indent nested items/)
   for (const label of ["LD", "GT", "WH", "ET", "MW", "TH"]) assert.match(sharedVocabularyEditor, new RegExp(`\\\"${label}\\\"`))
   assert.match(sharedVocabularyEditor, /includeMwFill = false/)
+  for (const label of ["CA", "CL", "GL"]) assert.match(sharedVocabularyEditor, new RegExp(`\\\"${label}\\\"`))
+  assert.match(sharedVocabularyEditor, /lookupButtons = null/)
+  assert.match(sharedVocabularyEditor, /\["LD", "GT", "WH", "ET", "MW", "TH", "CA", "CL", "GL"\]/)
+  assert.match(sharedVocabularyEditor, /portal-button-blue-action/)
+  assert.match(portalScript, /lookupButtons: \["LD", "GT", "WH", "ET", "MW", "TH", "CA", "CL", "GL"\]/)
+  assert.match(sharedVocabularyEditor, /Cambridge English Dictionary/)
+  assert.match(sharedVocabularyEditor, /Collegiate to Learner fallback/)
+  assert.match(sharedVocabularyEditor, /Google definition search/)
   assert.doesNotMatch(studentPortal, /data-vocabulary-origin-analysis|origin-analysis/)
   assert.match(sharedVocabularyEditor, /const output = \[`<\$\{listType\}\$\{typeAttribute\}>`\]/)
   assert.doesNotMatch(routes, /STUDENT_LIBRARY_API_PATH\}\/mw-preview/)
   assert.match(student, /vocabulary-esl-editor\.js/)
-  assert.match(student, /Full edit submitted for admin approval/)
+  assert.match(student, /entry\.isContribution === true \|\| entry\.studentCanEdit === true/)
+  assert.match(student, /entry\.isContribution === true[\s\S]*?contributionId: entry\.contributionId/)
+  assert.match(libraryCorpus, /isStudentLibraryContributionEditable/)
+  assert.match(libraryCorpus, /Students may edit only their own Library contribution/)
   assert.match(studentPortal, /id="newWordsRefreshBtn"/)
   assert.match(portalScript, /function refreshNewWords\(/)
 })
@@ -225,7 +236,7 @@ test("admin Library editor uses the shared New Words row renderer", () => {
   assert.match(portalScript, /vocabularyEsl\?\.editorRowHtml\(rowUid/)
   assert.match(sharedVocabularyEditor, /function editorRowHtml\(rowUid/)
   for (const token of ["news-vocabulary-row", "news-vocabulary-lookups", "vocabularyDefinition-", "includeMwFill", "includeTransitivityTools", "includeOriginAnalysis", "vocabulary-source-actions", "portal-button-amber-info", "data-vocabulary-origin-analysis", "data-vocabulary-field"]) assert.match(sharedVocabularyEditor, new RegExp(token))
-  assert.match(sharedVocabularyEditor, /data-vocabulary-lookup="\$\{label\}"/)
+  assert.match(sharedVocabularyEditor, /data-vocabulary-lookup="\$\{key\}"/)
   assert.match(sharedVocabularyEditor, /vocabulary-source-actions">\$\{mwFill\}\$\{originAnalysis\}/)
   assert.match(routes, /ADMIN_LIBRARY_ORIGIN_ANALYSIS_PATH_RE/)
   assert.match(libraryReviewWorkbench, /Origin review is ready\. No entry fields were changed\./)
@@ -441,6 +452,12 @@ test("unheaded Etymonline prose after Stems is restored to Etymology after First
   assert.ok(inserted.indexOf("**First known use:**") < inserted.indexOf("**Etymology:**"))
   assert.ok(inserted.indexOf("**Etymology:**") < inserted.indexOf("**Stems:**"))
   assert.doesNotMatch(inserted, /\*\*First known use:\*\* 12th century; from Old French via Latin/)
+  const insertedBeforeWorksCited = context.window.SIS_VOCABULARY_ESL.insertEtymologyDeterministically(
+    "A definition paragraph.\n\n**Works Cited:**\n- Source",
+    "from Middle English",
+  )
+  assert.match(insertedBeforeWorksCited, /\*\*Etymology:\*\* from Middle English/)
+  assert.ok(insertedBeforeWorksCited.indexOf("**Etymology:**") < insertedBeforeWorksCited.indexOf("**Works Cited:**"))
   const verbHtml = context.window.SIS_VOCABULARY_ESL.flatEntryHtml({
     english: "threaten",
     partOfSpeech: "verb",

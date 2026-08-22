@@ -37,6 +37,7 @@
         newsWeekSetViewerIndex: -1,
         newsWeekSetViewerPending: false,
         newsWeekSetViewerPendingAction: "",
+        newsOpenReport: null,
         detailCalendar: null,
         detailCalendarHasMounted: false,
         textZoomPct: TEXT_ZOOM_DEFAULT,
@@ -66,13 +67,20 @@
         submitSuccessConfettiBuilt: false,
         detailGradeTable: null,
         studentEaglesId: "",
+        dashboardLoaded: false,
+        calendarLoaded: false,
       };
       let dashboardLoadPromise = null;
+      let calendarLoadPromise = null;
+      let newWordsLoadPromise = null;
+      let vocabularyEslLoadPromise = null;
+      let studentPostPaintHydrationScheduled = false;
       const portalAssetPromises = new Map();
       const portalAssetUrls = {
         fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js",
         tabulator: "/web-asset/vendor/tabulatorz/tabulator.min.js",
         tabulatorCss: "/web-asset/vendor/tabulatorz/tabulator.min.css",
+        vocabularyEsl: "/web-asset/shared/vocabulary-esl-editor.js",
       };
       function loadPortalAsset(name) {
         if (name === "fullcalendar" && window.FullCalendar?.Calendar) return Promise.resolve();
@@ -95,7 +103,11 @@
           script.async = false;
           script.dataset.portalAsset = name;
           script.onload = () => resolve();
-          script.onerror = () => reject(new Error(name === "tabulator" ? "Quarter grade table assets could not be loaded." : "FullCalendar could not be loaded."));
+          script.onerror = () => reject(new Error(
+            name === "tabulator" ? "Quarter grade table assets could not be loaded." :
+              name === "vocabularyEsl" ? "Vocabulary editor could not be loaded." :
+                "FullCalendar could not be loaded.",
+          ));
           document.head.append(script);
         });
         portalAssetPromises.set(name, promise);
@@ -104,15 +116,54 @@
       function loadTabulatorAssets() {
         return Promise.all([loadPortalAsset("tabulator"), loadPortalAsset("tabulatorCss")]);
       }
+
+      function loadVocabularyEslEditor() {
+        if (window.SIS_VOCABULARY_ESL) return Promise.resolve();
+        if (vocabularyEslLoadPromise) return vocabularyEslLoadPromise;
+        vocabularyEslLoadPromise = loadPortalAsset("vocabularyEsl").finally(() => {
+          vocabularyEslLoadPromise = null;
+        });
+        return vocabularyEslLoadPromise;
+      }
       const INITIAL_AUTH_STATE = window.__SIS_STUDENT_INITIAL_AUTH__;
 
       function scheduleStudentPrivacyConsent() {
-        const show = () => window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "student" });
+        const show = () => window.SIS_PORTAL_THEME?.showPrivacyConsent?.({
+          locale: "vi",
+          portal: "student",
+          deferIntegrations: true,
+        });
+        const release = () => window.SIS_PORTAL_THEME?.releaseDeferredIntegrations?.();
+        const scheduleRelease = () => {
+          window.setTimeout(() => {
+            if (typeof window.requestIdleCallback === "function") {
+              window.requestIdleCallback(release, { timeout: 3000 });
+              return;
+            }
+            release();
+          }, 2000);
+        };
         if (typeof window.requestAnimationFrame === "function") {
           window.requestAnimationFrame(() => window.requestAnimationFrame(show));
-          return;
+        } else {
+          window.setTimeout(show, 0);
         }
-        window.setTimeout(show, 0);
+        if (document.readyState === "complete") {
+          scheduleRelease();
+        } else {
+          window.addEventListener("load", scheduleRelease, { once: true });
+        }
+      }
+
+      function scheduleStudentPostPaintHydration() {
+        if (studentPostPaintHydrationScheduled) return;
+        studentPostPaintHydrationScheduled = true;
+        const hydrate = () => {
+          loadDashboard()
+            .then(() => loadCalendar({ deferNewWords: true }))
+            .catch(handleError);
+        };
+        window.setTimeout(hydrate, 500);
       }
 
       function setBrevoStudentIdentity(eaglesId) {
@@ -837,12 +888,13 @@
         return Math.min(TEXT_ZOOM_MAX, Math.max(TEXT_ZOOM_MIN, Math.round(parsed)));
       }
 
-      function applyPortalTextZoom(percent) {
+      function applyPortalTextZoom(percent, { persist = true } = {}) {
         const next = clampTextZoomPct(percent);
         state.textZoomPct = next;
         document.documentElement.style.setProperty("--portal-text-zoom", String(next / 100));
         const label = field("studentTextZoomLabel");
         if (label) label.textContent = `${next}%`;
+        if (!persist) return;
         try {
           void window.SIS_PORTAL_PREFERENCES?.save(TEXT_ZOOM_KEY, String(next));
         } catch (error) {
@@ -3069,6 +3121,7 @@
       function syncStudentPortalView() {
         const authenticated = field("loginPanel")?.classList.contains("hidden");
         if (!authenticated) {
+          delete document.documentElement.dataset.studentActiveSurface;
           field("studentHomeCard")?.classList.add("hidden");
           field("studentDetailPageCard")?.classList.add("hidden");
           field("newsPageCard")?.classList.add("hidden");
@@ -3078,11 +3131,23 @@
         const showNews = state.activeView === "news";
         const showHome = !showNews && state.activePage === "home";
         const showDetail = !showNews && state.activePage !== "home";
+        document.documentElement.dataset.studentActiveSurface = showNews ? "news" : showDetail ? "detail" : "home";
         field("studentHomeCard")?.classList.toggle("hidden", !showHome);
         field("studentDetailPageCard")?.classList.toggle("hidden", !showDetail);
         field("newsPageCard")?.classList.toggle("hidden", !showNews);
         updateActiveStudentNav();
         if (showNews) {
+          if (!state.calendarLoaded) {
+            loadCalendar({ deferNewWords: false }).then(() => {
+              renderNewsVocabularySurface();
+            }).catch(handleError);
+          } else if (!state.newWordsLoaded) {
+            loadNewWords().then(() => {
+              renderNewsVocabularySurface();
+            }).catch(handleError);
+          } else {
+            renderNewsVocabularySurface();
+          }
           // Hidden-container first paint can collapse events into dot mode.
           // Re-render after reveal so the month grid and event rows size correctly.
           requestAnimationFrame(() => {
@@ -3225,7 +3290,7 @@
           snapshotBadge.textContent = `HS ${t(child.eaglesId)}`;
           snapshotBadge.className = "chip chip-ok";
         }
-        renderNewsQueue();
+        if (state.calendarLoaded) renderNewsQueue();
       }
 
       function normalizeNewsReviewStatusToken(reviewStatus = "") {
@@ -3841,7 +3906,7 @@
         });
         renderNewsSentenceFeedback("newsViewerActionWhy", active?.mmrFailedFields?.actionWhy || {});
         renderNewsSentenceFeedback("newsViewerBiasAssessment", active?.mmrFailedFields?.biasAssessment || {});
-        renderVocabularyRows(field("newsWeekSetModalVocabularyRows"), active?.vocabulary || []);
+        renderVocabularyRows(field("newsWeekSetModalVocabularyRows"), active?.vocabulary || [], { editableExisting: true });
         renderNewsWeekSetViewerFeedback(active || {});
         syncNewsWeekSetViewerControls();
       }
@@ -4031,6 +4096,11 @@
           state.calendarRows = [];
           state.newsItems = [];
           state.newsWeekSets = [];
+          state.newsOpenReport = null;
+          state.dashboard = null;
+          state.dashboardLoaded = false;
+          state.calendarLoaded = false;
+          studentPostPaintHydrationScheduled = false;
           state.calendarAlertDates = new Set();
           state.calendarStatusByDate = new Map();
           syncStudentPortalView();
@@ -4048,6 +4118,15 @@
         closeNewsWeekSetModal();
         if (nextView === "home" && !STUDENT_PORTAL_PAGES.has(state.activePage)) {
           state.activePage = "home";
+        }
+        if (nextView === "news") {
+          loadVocabularyEslEditor().then(() => {
+            if (state.activeView === "news") syncStudentPortalView();
+          }).catch((error) => {
+            handleError(error);
+            if (state.activeView === "news") syncStudentPortalView();
+          });
+          return;
         }
         syncStudentPortalView();
       }
@@ -4222,6 +4301,7 @@
           removable,
           actionsHtml: newWordMenuActions,
           originLookupPath: `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library/etymonline`,
+          lookupButtons: ["LD", "GT", "WH", "ET", "MW", "TH", "CA", "CL", "GL"],
         }) || "";
       }
 
@@ -4240,23 +4320,24 @@
         return value;
       }
 
-      function renderVocabularyRows(container, rows = []) {
-        if (!container) return;
+      function renderVocabularyRows(container, rows = [], { editableExisting = false } = {}) {
+        if (!container || !window.SIS_VOCABULARY_ESL) return;
         const source = Array.isArray(rows) ? rows : [];
         const minimum = vocabularyMinimumWords();
-        const blankCount = Math.max(0, minimum - source.length);
-        const flatRows = source.map((row, index) => window.SIS_VOCABULARY_ESL?.flatEntryHtml(row, {
+        const editorCount = editableExisting ? Math.max(minimum, source.length) : Math.max(0, minimum - source.length);
+        const flatRows = editableExisting ? "" : source.map((row, index) => window.SIS_VOCABULARY_ESL?.flatEntryHtml(row, {
           index,
           editClass: "vocabulary-flat-edit",
           editAttributes: `data-vocabulary-edit-index="${index}"`,
         }) || "").join("");
-        const editorRows = Array.from({ length: blankCount }, (_, index) => vocabularyRowHtml(source.length + index, true)).join("");
+        const editorRows = Array.from({ length: editorCount }, (_, index) => vocabularyRowHtml(editableExisting ? index : source.length + index, true)).join("");
         container.innerHTML = flatRows + editorRows;
         Array.from(container.querySelectorAll("[data-news-vocabulary-row]")).forEach((rowEl) => {
-          const row = {};
+          const rowIndex = Number.parseInt(rowEl.getAttribute("data-news-vocabulary-row"), 10);
+          const row = editableExisting && Number.isInteger(rowIndex) ? source[rowIndex] || {} : {};
           ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((key) => {
             const input = rowEl.querySelector(`[data-vocabulary-field="${key}"]`);
-            if (input) input.value = key === "syllabication" ? normalizeSyllabication(row?.[key]) : t(row?.[key]);
+            if (input) input.value = key === "syllabication" ? normalizeSyllabication(row?.[key]) : key === "definition" ? definitionText(row?.[key]) : t(row?.[key]);
           });
           bindVocabularyDefinitionAutosize(rowEl);
           rowEl.addEventListener("change", (event) => {
@@ -4296,6 +4377,12 @@
             });
           });
         });
+      }
+
+      function renderNewsVocabularySurface() {
+        if (!window.SIS_VOCABULARY_ESL) return;
+        renderVocabularyRows(field("newsVocabularyRows"), state.newsOpenReport?.vocabulary || [], { editableExisting: true });
+        renderVocabularyRows(field("newsWeekSetModalVocabularyRows"), [], { editableExisting: true });
       }
 
       function renumberVocabularyRows(container) {
@@ -4354,7 +4441,7 @@
 
       function renderNewWordsRows() {
         const container = field("newWordsRows");
-        if (!container) return;
+        if (!container || !window.SIS_VOCABULARY_ESL) return;
         const words = sortedNewWords();
         const pageSize = state.newWordsPageSize === "all" ? words.length || 1 : Math.max(1, Number.parseInt(state.newWordsPageSize, 10) || 10);
         const totalPages = Math.max(1, Math.ceil(words.length / pageSize));
@@ -4410,10 +4497,21 @@
       }
 
       async function loadNewWords() {
-        const data = await api(STUDENT_NEW_WORDS_PATH);
-        state.newWords = Array.isArray(data?.items) ? data.items : [];
-        state.newWordsLoaded = true;
-        renderNewWordsRows();
+        await loadVocabularyEslEditor();
+        if (state.newWordsLoaded) return state.newWords;
+        if (newWordsLoadPromise) return newWordsLoadPromise;
+        newWordsLoadPromise = (async () => {
+          const data = await api(STUDENT_NEW_WORDS_PATH);
+          state.newWords = Array.isArray(data?.items) ? data.items : [];
+          state.newWordsLoaded = true;
+          renderNewWordsRows();
+          return state.newWords;
+        })();
+        try {
+          return await newWordsLoadPromise;
+        } finally {
+          newWordsLoadPromise = null;
+        }
       }
 
       async function refreshNewWords() {
@@ -4567,7 +4665,7 @@
         ["sourceLink", "articleTitle", "byline", "articleDateline", "leadSynopsis", "actionActor", "actionAffected", "actionWhere", "actionWhat", "actionWhy", "biasAssessment"].forEach((fieldId) => {
           setInputValue(fieldId, fixture[fieldId] || "");
         });
-        renderVocabularyRows(field("newsVocabularyRows"), fixture.vocabulary || []);
+        renderVocabularyRows(field("newsVocabularyRows"), fixture.vocabulary || [], { editableExisting: true });
         state.newsFormDirty = true;
         state.newsCurrentMmrPassed = false;
         state.newsDateSatisfied = false;
@@ -4600,14 +4698,17 @@
       function applyOpenReport(report = null, options = {}) {
         const preserveExistingValidation =
           options && options.preserveExistingValidation === true;
+        const preserveVocabularyEditor =
+          options && options.preserveVocabularyEditor === true;
         const hasReport = report && typeof report === "object";
         if (!hasReport && options?.preserveExistingValues === true) return;
+        state.newsOpenReport = hasReport ? report : null;
         ["sourceLink", "articleTitle", "byline", "articleDateline", "leadSynopsis", "actionActor", "actionAffected", "actionWhere", "actionWhat", "actionWhy", "biasAssessment"].forEach((fieldId) => {
           if (hasReport && !Object.prototype.hasOwnProperty.call(report, fieldId)) return;
           setInputValue(fieldId, hasReport ? report?.[fieldId] : "");
         });
-        if (!hasReport || Object.prototype.hasOwnProperty.call(report, "vocabulary")) {
-          renderVocabularyRows(field("newsVocabularyRows"), hasReport && Array.isArray(report?.vocabulary) ? report.vocabulary : []);
+        if (!preserveVocabularyEditor && (!hasReport || Object.prototype.hasOwnProperty.call(report, "vocabulary"))) {
+          renderVocabularyRows(field("newsVocabularyRows"), hasReport && Array.isArray(report?.vocabulary) ? report.vocabulary : [], { editableExisting: true });
         }
         state.newsReportId = t(report?.id);
         state.newsReportSequence = Math.max(0, Number(report?.reportSequence) || 0);
@@ -5109,9 +5210,10 @@
         if (dashboardLoadPromise) return dashboardLoadPromise;
         dashboardLoadPromise = (async () => {
           state.dashboard = await api(STUDENT_DASHBOARD_PATH);
+          state.dashboardLoaded = true;
           renderDashboard();
-          renderStudentDetailPage();
-          if (state.activeView === "news") renderCalendar(state.calendarRows);
+          if (state.activeView === "home" && state.activePage !== "home") renderStudentDetailPage();
+          if (state.activeView === "news" && state.calendarLoaded) renderCalendar(state.calendarRows);
           return state.dashboard;
         })();
         try {
@@ -5121,49 +5223,61 @@
         }
       }
       async function loadCalendar(options = {}) {
-        const data = await api(`${STUDENT_NEWS_CALENDAR_PATH}?days=${studentNewsCalendarLookbackDays()}`);
-        state.newsVocabularyMinimumWords = Number.parseInt(String(data?.validationConfig?.vocabularyMinimumWords), 10) || 5;
-        renderVocabularyMinimumLabel();
-        state.window = data?.window || null;
-        state.calendarRows = Array.isArray(data?.calendar) ? data.calendar : [];
-        state.newsItems = Array.isArray(data?.items) ? data.items : [];
-        state.newsWeekSets = [];
-        renderNewsQueue();
-        setPortalReportDateInput("reportDate", t(data?.window?.reportDate));
-        if (state.activeView === "news") renderCalendar(state.calendarRows);
-        if (options?.preserveForm !== true) {
-          const currentReport = state.newsReportId
-            ? state.newsItems.find((entry) => t(entry?.id) === state.newsReportId) || data?.openReport || null
-            : data?.openReport || null;
-          applyOpenReport(currentReport, {
-            preserveExistingValidation: options?.preserveValidation === true,
-          });
-          restoreNewsDraftLocally(currentReport);
+        if (state.calendarLoaded && options?.force !== true) {
+          if (options?.deferNewWords !== true && !state.newWordsLoaded) await loadNewWords();
+          return state.calendarRows;
         }
-        const openDate = t(data?.window?.reportDate);
-        const closesAt = t(data?.window?.closesAt);
-        field("windowSummary").textContent = openDate ?
-          `Open entry date: ${formatPortalDate(openDate)} (window closes at ${closesAt ? formatPortalDateTime(closesAt) : "today 23:59 +07"}).` :
-          "No open date currently.";
-        if (!state.newWordsLoaded) await loadNewWords();
-        updateSubmitAvailability();
+        if (calendarLoadPromise) return calendarLoadPromise;
+        calendarLoadPromise = (async () => {
+          const data = await api(`${STUDENT_NEWS_CALENDAR_PATH}?days=${studentNewsCalendarLookbackDays()}`);
+          state.calendarLoaded = true;
+          state.newsVocabularyMinimumWords = Number.parseInt(String(data?.validationConfig?.vocabularyMinimumWords), 10) || 5;
+          renderVocabularyMinimumLabel();
+          state.window = data?.window || null;
+          state.calendarRows = Array.isArray(data?.calendar) ? data.calendar : [];
+          state.newsItems = Array.isArray(data?.items) ? data.items : [];
+          state.newsWeekSets = [];
+          renderNewsQueue();
+          setPortalReportDateInput("reportDate", t(data?.window?.reportDate));
+          if (state.activeView === "news") renderCalendar(state.calendarRows);
+          if (options?.preserveForm !== true) {
+            const currentReport = state.newsReportId
+              ? state.newsItems.find((entry) => t(entry?.id) === state.newsReportId) || data?.openReport || null
+              : data?.openReport || null;
+            applyOpenReport(currentReport, {
+              preserveExistingValidation: options?.preserveValidation === true,
+            });
+            restoreNewsDraftLocally(currentReport);
+          }
+          const openDate = t(data?.window?.reportDate);
+          const closesAt = t(data?.window?.closesAt);
+          field("windowSummary").textContent = openDate ?
+            `Open entry date: ${formatPortalDate(openDate)} (window closes at ${closesAt ? formatPortalDateTime(closesAt) : "today 23:59 +07"}).` :
+            "No open date currently.";
+          if (options?.deferNewWords !== true && !state.newWordsLoaded) await loadNewWords();
+          updateSubmitAvailability();
+          return state.calendarRows;
+        })();
+        try {
+          return await calendarLoadPromise;
+        } finally {
+          calendarLoadPromise = null;
+        }
       }
 
       async function loadStudentData(options = {}) {
         const dashboardPromise = loadDashboard();
-        const calendarPromise = loadCalendar(options);
+        const calendarPromise = options?.deferCalendar === true ? Promise.resolve() : loadCalendar({
+          ...options,
+          force: true,
+        });
         await Promise.all([dashboardPromise, calendarPromise]);
       }
 
       async function revealAuthenticatedStudentView() {
-        try {
-          await loadStudentData();
-        } catch (error) {
-          setAuthenticatedView(true);
-          scheduleStudentPrivacyConsent();
-          throw error;
-        }
         setAuthenticatedView(true);
+        renderDashboard();
+        scheduleStudentPostPaintHydration();
         scheduleStudentPrivacyConsent();
       }
 
@@ -5188,6 +5302,7 @@
         if (checkedItem && options?.viewerItem !== true) {
           applyOpenReport(checkedItem, {
             preserveExistingValidation: true,
+            preserveVocabularyEditor: true,
           });
         }
         if (checkedItem && options?.viewerItem === true) {
@@ -5228,7 +5343,7 @@
         // just-saved row is being read back. Restore the authoritative check
         // response so vocabulary and prose never disappear from the form.
         if (checkedItem && options?.viewerItem !== true) {
-          applyOpenReport(checkedItem, { preserveExistingValidation: true });
+          applyOpenReport(checkedItem, { preserveExistingValidation: true, preserveVocabularyEditor: true });
           state.newsReportId = t(checkedItem?.id);
           state.newsReportSequence = Math.max(0, Number(checkedItem?.reportSequence) || 0);
         }
@@ -5282,7 +5397,7 @@
             method: "POST",
             body: payload,
           });
-          if (saved?.item) applyOpenReport(saved.item, { preserveExistingValidation: false });
+          if (saved?.item) applyOpenReport(saved.item, { preserveExistingValidation: false, preserveVocabularyEditor: true });
           // Save is draft-only: it never runs MMR and preserves a prior passing
           // check when the saved content has not changed.
           applyNewsFieldValidationUi({}, [], {}, []);
@@ -5538,7 +5653,6 @@
         try {
           await login();
           setBrevoStudentIdentity(field("loginEaglesId")?.value);
-          document.documentElement.dataset.studentAuthState = "booting";
           await window.SIS_PORTAL_PREFERENCES?.migrate?.();
           setGlobalStatus("Student session active.");
           if (handlePortalPostAuthRouteState()) return;
@@ -5782,8 +5896,6 @@
             state.newWordsPage += 1;
             renderNewWordsRows();
           });
-      renderVocabularyRows(field("newsVocabularyRows"));
-      renderVocabularyRows(field("newsWeekSetModalVocabularyRows"));
       field("studentTextZoomDownBtn")?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP));
       field("studentTextZoomUpBtn")?.addEventListener("click", () => adjustPortalTextZoom(TEXT_ZOOM_STEP));
       field("studentTextZoomResetBtn")?.addEventListener("click", () => applyPortalTextZoom(TEXT_ZOOM_DEFAULT));
@@ -5792,7 +5904,14 @@
           markNewsDraftDirty();
         });
       });
-      applyPortalTextZoom(TEXT_ZOOM_DEFAULT);
+      applyPortalTextZoom(TEXT_ZOOM_DEFAULT, { persist: false });
+      const preferenceHydration = window.SIS_PORTAL_PREFERENCES?.load?.();
+      if (preferenceHydration && typeof preferenceHydration.then === "function") {
+        preferenceHydration.then(() => {
+          const savedTextZoom = window.SIS_PORTAL_PREFERENCES?.get?.(TEXT_ZOOM_KEY, "");
+          if (savedTextZoom !== "") applyPortalTextZoom(savedTextZoom, { persist: false });
+        }).catch((error) => { void error; });
+      }
       field("submitBtn")?.addEventListener("click", () => {
         submitReport().catch(handleError);
       });

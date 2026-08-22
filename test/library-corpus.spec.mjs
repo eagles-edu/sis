@@ -27,7 +27,7 @@ test("Library uses a dedicated PostgreSQL schema with immutable audit records", 
 })
 
 test("canonical duplicate selection and student deadlines are deterministic", async () => {
-  const { libraryContributionDeadline, selectLargestDuplicate, selectReviewQueueRepresentatives, selectContributionsForCanonicalEntry, normalizeActiveLibraryPayload, normalizeLibraryEnum } = await import("../src/modules/admin/library-corpus.mjs")
+  const { libraryContributionDeadline, isStudentLibraryContributionEditable, selectLargestDuplicate, selectReviewQueueRepresentatives, selectContributionsForCanonicalEntry, normalizeActiveLibraryPayload, normalizeLibraryEnum } = await import("../src/modules/admin/library-corpus.mjs")
   const first = { id: "b", submittedAt: "2026-08-01T00:00:00.000Z", payloadJson: { definition: "same length" } }
   const second = { id: "a", submittedAt: "2026-08-01T00:00:00.000Z", payloadJson: { definition: "same length" } }
   assert.equal(selectLargestDuplicate([first, second]).id, "a")
@@ -45,6 +45,11 @@ test("canonical duplicate selection and student deadlines are deterministic", as
     { id: "waiting", entryId: "entry-exhausted", status: "awaiting_legacy_canonical", payloadJson: { english: "exhausted", partOfSpeech: "noun" } },
   ], { id: "entry-exhausted", english: "exhausted", partOfSpeech: "noun" }).map((row) => row.id), ["exhausted-1", "exhausted-2", "waiting"])
   assert.equal(libraryContributionDeadline("2026-08-01T00:00:00.000Z").toISOString(), "2026-08-16T00:00:00.000Z")
+  assert.equal(isStudentLibraryContributionEditable({ status: "pending_review", dueAt: "2026-01-01T00:00:00.000Z" }, new Date("2026-08-22T00:00:00.000Z")), true)
+  assert.equal(isStudentLibraryContributionEditable({ status: "canonicalized", dueAt: "2026-08-30T00:00:00.000Z" }, new Date("2026-08-22T00:00:00.000Z")), true)
+  assert.equal(isStudentLibraryContributionEditable({ status: "canonicalized", dueAt: "2026-08-21T00:00:00.000Z" }, new Date("2026-08-22T00:00:00.000Z")), false)
+  assert.equal(isStudentLibraryContributionEditable({ status: "legacy_pending_review", dueAt: null }, new Date("2026-08-22T00:00:00.000Z")), true)
+  assert.equal(isStudentLibraryContributionEditable({ status: "awaiting_legacy_canonical", dueAt: null }, new Date("2026-08-22T00:00:00.000Z")), true)
   assert.deepEqual(normalizeActiveLibraryPayload({ grammarClassification: null, originReferences: null, definition: null }), { grammarClassification: {}, originReferences: [], definition: "" })
   assert.equal(normalizeLibraryEnum("null"), "")
   assert.equal(normalizeLibraryEnum("countable"), "countable")

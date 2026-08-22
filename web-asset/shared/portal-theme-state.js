@@ -371,17 +371,18 @@
     return panel
   }
 
-  function applyConsentPreferences(preferences, { loadBrevoConversation = true } = {}) {
-    globalThis.__SIS_PRIVACY_CONSENT_INTEGRATIONS_DEFERRED__ = false
+  function applyConsentPreferences(preferences, { loadBrevoConversation = true, force = false } = {}) {
+    const integrationsDeferred = globalThis.__SIS_PRIVACY_CONSENT_INTEGRATIONS_DEFERRED__ === true && force !== true
+    globalThis.__SIS_PRIVACY_CONSENT_INTEGRATIONS_DEFERRED__ = integrationsDeferred
     setConsentAttributes(preferences)
-    if (preferences?.supportChat === "granted" && loadBrevoConversation) {
+    if (preferences?.supportChat === "granted" && loadBrevoConversation && !integrationsDeferred) {
       globalThis.__SIS_BREVO_CONVERSATION_DISABLED__ = false
       installBrevoConversation()
     } else {
       globalThis.__SIS_BREVO_CONVERSATION_DISABLED__ = true
       removeBrevoConversation()
     }
-    if (preferences?.analytics === "granted") {
+    if (preferences?.analytics === "granted" && !integrationsDeferred) {
       globalThis.__SIS_GA4_DISABLED__ = false
       installGoogleAnalytics()
     } else {
@@ -415,8 +416,8 @@
     }
     if (globalThis.__SIS_PRIVACY_CONSENT_INITIALIZED__) {
       const preferences = readConsentPreferences()
-      if (globalThis.__SIS_PRIVACY_CONSENT_INTEGRATIONS_DEFERRED__) {
-        applyConsentPreferences(preferences || defaultMemberPreferences())
+      if (globalThis.__SIS_PRIVACY_CONSENT_INTEGRATIONS_DEFERRED__ && deferIntegrations !== true) {
+        applyConsentPreferences(preferences || defaultMemberPreferences(), { force: true })
       }
       if (!preferences?.noticeAcknowledgedAt && !document.getElementById("sisConsentPanel")) {
         renderConsentUi(normalizedLocale, preferences || defaultMemberPreferences(), true, normalizedPortal)
@@ -432,11 +433,19 @@
     return preferences
   }
 
-  function showPrivacyConsent({ locale, portal } = {}) {
+  function showPrivacyConsent({ locale, portal, deferIntegrations = false } = {}) {
     return initPrivacyConsent({
       locale: locale || globalThis.__SIS_PRIVACY_CONSENT_LOCALE__ || "en",
       portal: portal || globalThis.__SIS_PRIVACY_CONSENT_PORTAL__ || "",
+      deferIntegrations,
     })
+  }
+
+  function releaseDeferredIntegrations() {
+    if (globalThis.__SIS_PRIVACY_CONSENT_INTEGRATIONS_DEFERRED__ !== true) return false
+    const preferences = readConsentPreferences() || defaultMemberPreferences()
+    applyConsentPreferences(preferences, { force: true })
+    return true
   }
 
   function installBrevoConversationA11y() {
@@ -480,6 +489,7 @@
     initPrivacyConsent,
     showPrivacyConsent,
     applyConsentPreferences,
+    releaseDeferredIntegrations,
     setBrevoIdentity,
   }
 })()

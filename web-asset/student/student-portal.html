@@ -17,9 +17,6 @@
   <script>
     window.SIS_PORTAL_THEME?.initTheme("light")
   </script>
-  <script>
-    document.documentElement.dataset.studentAuthState = "booting";
-  </script>
   <script type="module">
     import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
 
@@ -31,7 +28,7 @@
     }
   </script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
-  <script src="/web-asset/shared/portal-navigation.js"></script>
+  <script defer src="/web-asset/shared/portal-navigation.js"></script>
   <style>
     html {
       font-family: var(--font-base, system-ui, -apple-system, sans-serif);
@@ -55,14 +52,72 @@
       width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
     }
 
-    html[data-student-auth-state="booting"] body.student-portal-page {
-      visibility: hidden;
-      opacity: 0;
+    body.student-portal-page #appPanel {
+      display: none !important;
     }
 
-    html[data-student-auth-state="booting"] body.student-portal-page #loginPanel,
-    html[data-student-auth-state="booting"] body.student-portal-page #appPanel {
+    body.student-portal-page #loginPanel {
+      display: block !important;
+    }
+
+    html[data-student-auth-state="authenticated"] body.student-portal-page #appPanel {
+      display: block !important;
+    }
+
+    html[data-student-auth-state="authenticated"] body.student-portal-page #loginPanel {
       display: none !important;
+    }
+
+    html[data-student-auth-state="authenticated"]:not([data-student-active-surface]) body.student-portal-page :is(#studentDetailPageCard, #newsPageCard),
+    html[data-student-auth-state="authenticated"][data-student-active-surface="home"] body.student-portal-page :is(#studentDetailPageCard, #newsPageCard),
+    html[data-student-auth-state="authenticated"][data-student-active-surface="news"] body.student-portal-page #studentDetailPageCard,
+    html[data-student-auth-state="authenticated"][data-student-active-surface="detail"] body.student-portal-page #newsPageCard {
+      display: none !important;
+    }
+
+    html[data-student-auth-state="unauthenticated"] body.student-portal-page #appPanel {
+      display: none !important;
+    }
+
+    html[data-student-auth-state="unauthenticated"] body.student-portal-page #loginPanel {
+      display: block !important;
+    }
+
+    html[data-student-auth-state="authenticated"] body.student-portal-page :is(#pastDueHomeworkCard, #newsQueueCard) {
+      min-height: 470px;
+    }
+
+    html[data-student-auth-state="authenticated"] body.student-portal-page #metricsPanel {
+      min-height: 308px;
+    }
+
+    @media (max-width: 719px) {
+      html[data-student-auth-state="authenticated"] body.student-portal-page #studentOverviewSummary {
+        min-height: 71px;
+      }
+
+      html[data-student-auth-state="authenticated"] body.student-portal-page #metricsPanel {
+        min-height: 505px;
+      }
+    }
+
+    @media (max-width: 399px) {
+      html[data-student-auth-state="authenticated"] body.student-portal-page #metricsPanel {
+        min-height: 826px;
+      }
+    }
+
+    html[data-student-auth-state="booting"] body.student-portal-page {
+      background: var(--portal-page-bg);
+      color: var(--portal-text);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    body.student-portal-page [data-copyright-year] {
+      display: inline-block;
+      inline-size: 4ch;
+      white-space: nowrap;
     }
   </style>
   <link rel="stylesheet" href="/web-asset/student/student-portal.min.css">
@@ -147,9 +202,9 @@
           <h1>STUDENT LOG-IN</h1>
           <div class="security-badge">
             <img class="security-badge__icon security-badge__icon--light" src="/web-asset/shared/secure-network.svg"
-              alt="" aria-hidden="true">
+              width="56" height="56" alt="" aria-hidden="true">
             <img class="security-badge__icon security-badge__icon--dark"
-              src="/web-asset/shared/secure-network-white.svg" alt="" aria-hidden="true">
+              src="/web-asset/shared/secure-network-white.svg" width="56" height="56" alt="" aria-hidden="true">
             <span class="security-badge__caption">secured connection</span>
           </div>
         </div>
@@ -1197,8 +1252,8 @@
     function formatQueueLatestSubmissionHtml() {}
     ${hour}:${minute}:${second} +07
   -->
-  <script src="/web-asset/shared/portal-preferences.js"></script>
-  <script src="/web-asset/shared/portal-password-visibility.js"></script>
+  <script defer src="/web-asset/shared/portal-preferences.js"></script>
+  <script defer src="/web-asset/shared/portal-password-visibility.js"></script>
   <script>
       (() => {
         const DOT_LOTTIE_MODULE_URL = "https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-wc@latest/dist/dotlottie-wc.js";
@@ -1230,8 +1285,7 @@
         });
       })();
   </script>
-  <script src="/web-asset/shared/vocabulary-esl-editor.js"></script>
-  <script src="/web-asset/student/student-portal.min.js"></script>
+  <script defer src="/web-asset/student/student-portal.min.js"></script>
   <script>
     (() => {
       const root = document.documentElement;

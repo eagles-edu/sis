@@ -88,6 +88,7 @@
     "test:portal-chip-contract": "node --test test/portal-chip-contract.spec.mjs",
     "test:admin:performance": "SIS_ENV_FILE=.env.dev node --test test/admin-performance-regression.playwright.spec.mjs test/portal-asset-contract.spec.mjs",
     "test:student:performance": "SIS_ENV_FILE=.env.dev node --test test/student-portal-authenticated-performance.playwright.spec.mjs",
+    "test:parent:performance": "SIS_ENV_FILE=.env.dev node --test test/parent-portal-authenticated-performance.playwright.spec.mjs",
     "test:file:diagnose": "node tools/test-file-diagnostics.mjs",
     "test:redis": "node tools/test-redis.mjs",
     "test:session-store": "node --test test/student-admin-session-store.spec.mjs",

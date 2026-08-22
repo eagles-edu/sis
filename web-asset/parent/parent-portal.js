@@ -860,6 +860,15 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
       }
       const INITIAL_AUTH_STATE = window.__SIS_PARENT_INITIAL_AUTH__
 
+      function scheduleParentPrivacyConsent() {
+        const show = () => window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "parent" })
+        if (typeof window.requestAnimationFrame === "function") {
+          window.requestAnimationFrame(() => window.requestAnimationFrame(show))
+          return
+        }
+        window.setTimeout(show, 0)
+      }
+
       function setBrevoParentIdentity(parentsId) {
         window.SIS_PORTAL_THEME?.setBrevoIdentity({ parentId: parentsId });
       }
@@ -6694,10 +6703,13 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         }
         syncDashboardPageVisibility()
         if (state.me?.mustChangePassword) return
-        const childrenPayload = await api(PARENT_CHILDREN_PATH)
+        const [childrenPayload, dashboardPayload] = await Promise.all([
+          api(PARENT_CHILDREN_PATH),
+          api(PARENT_DASHBOARD_PATH),
+        ])
         state.children =
           Array.isArray(childrenPayload.items) ? childrenPayload.items : []
-        state.dashboard = await api(PARENT_DASHBOARD_PATH)
+        state.dashboard = dashboardPayload
         const selected = normalizeText(
           document.getElementById("childSelect").value,
         )
@@ -6757,13 +6769,14 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
           role: "parent",
         }
         setBrevoParentIdentity(state.me?.parentsId || parentsId)
+        document.documentElement.dataset.parentAuthState = "booting"
+        await window.SIS_PORTAL_PREFERENCES?.migrate?.()
+        await hydratePortal({ initialUser: state.me, revealAuthState: false })
         document.documentElement.dataset.parentAuthState = "authenticated"
         document.getElementById("loginCard").classList.add("hidden")
-        await window.SIS_PORTAL_PREFERENCES?.migrate?.()
-        window.SIS_PORTAL_THEME?.showPrivacyConsent?.({ locale: "vi", portal: "parent" })
         syncDashboardPageVisibility()
         setActivePortalView("dashboard")
-        await hydratePortal({ initialUser: state.me })
+        scheduleParentPrivacyConsent()
         if (handlePortalPostAuthRouteState()) return
         openReportAccessErrorModalIfNeeded()
         setStatus("Đăng nhập thành công.", "ok")
@@ -6979,6 +6992,7 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
               document.documentElement.dataset.parentAuthState = "authenticated"
               document.getElementById("loginCard").classList.add("hidden")
               setActivePortalView("dashboard")
+              scheduleParentPrivacyConsent()
               openReportAccessErrorModalIfNeeded()
               scheduleChipTooltipRefresh(document)
             } else {

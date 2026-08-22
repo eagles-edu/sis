@@ -1,6 +1,11 @@
 (() => {
   "use strict"
 
+  if (window.__SIS_PORTAL_PREFERENCES_SINGLETON__) {
+    window.SIS_PORTAL_PREFERENCES = window.__SIS_PORTAL_PREFERENCES_SINGLETON__
+    return
+  }
+
   const VERSION = 1
   const LOCAL_ONLY_KEYS = new Set(["sis-theme", "sis-theme-admin", "sis-theme-parent", "sis-theme-student"])
   const memory = Object.create(null)
@@ -164,7 +169,9 @@
     return memory
   }
 
-  window.SIS_PORTAL_PREFERENCES = Object.freeze({ load, get, save, migrate })
+  const preferencesApi = Object.freeze({ load, get, save, migrate })
+  window.__SIS_PORTAL_PREFERENCES_SINGLETON__ = preferencesApi
+  window.SIS_PORTAL_PREFERENCES = preferencesApi
 
   const initialAuth = window.__SIS_ADMIN_INITIAL_AUTH__
     || window.__SIS_PARENT_INITIAL_AUTH__

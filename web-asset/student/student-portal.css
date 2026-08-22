@@ -789,6 +789,31 @@
       min-height: 260px;
   }
 
+    body.student-portal-page #pastDueHomeworkCard,
+    body.student-portal-page #newsQueueCard {
+      min-height: 470px;
+  }
+
+    body.student-portal-page #metricsPanel {
+      min-height: 308px;
+  }
+
+    @media (max-width: 719px) {
+      body.student-portal-page #studentOverviewSummary {
+        min-height: 71px;
+    }
+
+      body.student-portal-page #metricsPanel {
+        min-height: 505px;
+    }
+  }
+
+    @media (max-width: 399px) {
+      body.student-portal-page #metricsPanel {
+        min-height: 826px;
+    }
+  }
+
     body.student-portal-page #attendanceCalendarMetrics {
       min-height: 189px;
   }

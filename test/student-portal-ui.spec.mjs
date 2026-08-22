@@ -12,7 +12,7 @@ const SHARED_THEME = fs.readFileSync(SHARED_THEME_PATH, "utf8")
 const STUDENT_PORTAL_HTML_FOR_TEST = STUDENT_PORTAL_HTML
   .replace(/<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>\s*/i, "")
   .replace(/<script[^>]+src="\/web-asset\/shared\/portal-(?:action-feedback|preferences|password-visibility|navigation)\.js"[^>]*><\/script>\s*/gi, "")
-  .replace(/<script src="\/web-asset\/shared\/vocabulary-esl-editor\.js"><\/script>\s*/i, "")
+  .replace(/<script[^>]*src="\/web-asset\/shared\/vocabulary-esl-editor\.js"[^>]*><\/script>\s*/i, "")
   .replace(/<link rel="stylesheet" href="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.css">\s*/i, "")
   .replace(/<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css">\s*/i, "")
   .replace(/<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>\s*/i, "")
@@ -21,7 +21,7 @@ const STUDENT_PORTAL_HTML_FOR_TEST = STUDENT_PORTAL_HTML
   .replace(/<script type="module">\s*import svgIcon[\s\S]*?<\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js"><\/script>\s*/i, "")
   .replace(/<link rel="stylesheet" href="\/web-asset\/student\/student-portal\.min\.css">\s*/i, "")
-  .replace(/<script src="\/web-asset\/student\/student-portal\.min\.js"[^>]*><\/script>/i, () => `<script>${STUDENT_PORTAL_JS}</script>`)
+  .replace(/<script[^>]*src="\/web-asset\/student\/student-portal\.min\.js"[^>]*><\/script>/i, () => `<script>${STUDENT_PORTAL_JS}</script>`)
   .replace(/<head>/i, `<head><style>${SHARED_THEME}</style>`)
 
 test("student portal uses the mirrored shared favicon", () => {

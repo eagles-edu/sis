@@ -10,7 +10,7 @@
   <meta name="description" content="Student Library">
   <title>Student Library</title>
   <script src="/web-asset/shared/portal-theme-state.js"></script>
-  <script src="/web-asset/shared/portal-navigation.js"></script>
+  <script defer src="/web-asset/shared/portal-navigation.js"></script>
   <script type="module">
     import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
     if (!customElements.get("svg-icon")) svgIcon({ defaultSize: 28, path: "/web-asset/icons/web-component/svgs/" });
@@ -109,8 +109,8 @@
       </footer>
     </main>
   </div>
-  <script src="/web-asset/shared/portal-preferences.js"></script>
-  <script src="/web-asset/shared/vocabulary-esl-editor.js"></script>
+  <script defer src="/web-asset/shared/portal-preferences.js"></script>
+  <script defer src="/web-asset/shared/vocabulary-esl-editor.js"></script>
   <script>window.SIS_PORTAL_THEME?.initPrivacyConsent?.({ locale: "vi", portal: "student" }); window.SIS_PORTAL_THEME?.installBrevoConversationA11y?.();</script>
   <script>
     (() => {
@@ -140,7 +140,8 @@
           document.getElementById("libraryResults").innerHTML = (data.items || []).map((entry) => {
            const editors = (entry.editors || []).map((editor) => `${editor.name} (${new Date(editor.at).toLocaleString()})`).join(", ");
             const provenance = `<div class="library-meta">Created by ${esc(entry.createdByName)} on ${new Date(entry.createdAt).toLocaleString()} · Last edited by ${esc(entry.lastEditedByName)} on ${new Date(entry.updatedAt).toLocaleString()}</div><div class="library-meta">Editors: ${esc(editors || entry.lastEditedByName)}</div>`;
-            return window.SIS_VOCABULARY_ESL.flatEntryHtml(entry, { editClass: "library-edit", editAttributes: `data-entry-id="${esc(entry.id)}"`, extraHtml: provenance });
+            const canEdit = entry.isContribution === true || entry.studentCanEdit === true;
+            return window.SIS_VOCABULARY_ESL.flatEntryHtml(entry, { editLabel: canEdit ? "Edit" : null, editClass: "library-edit", editAttributes: `data-entry-id="${esc(entry.id)}"`, extraHtml: provenance });
           }).join("") || "<p class=\"small\">No approved Library entries match these filters.</p>";
           status.textContent = `${libraryTotal}${libraryTotal === 1 ? " entry" : " entries"}`;
           document.getElementById("libraryPage").textContent = `Page ${libraryPage}`;
@@ -175,10 +176,23 @@
           payload.properNounVariantShift = Boolean(row.querySelector('[data-vocabulary-esl-field="properNounVariantShift"]')?.checked);
           payload.grammarClassification = window.SIS_VOCABULARY_ESL?.classification(row) || {};
           Object.assign(payload, window.SIS_VOCABULARY_ESL?.originMetadata(row) || {});
-          const response = await fetch(`${libraryApi}/entries/${encodeURIComponent(entry.id)}/edit`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-          const data = await response.json();
-          document.getElementById("libraryStatus").textContent = response.ok ? "Full edit submitted for admin approval." : (data.error || "Edit failed");
-          if (response.ok) dialog.close();
+          const endpoint = entry.isContribution === true
+            ? `${libraryApi}/submissions`
+            : `${libraryApi}/entries/${encodeURIComponent(entry.id)}/edit`;
+          const requestBody = entry.isContribution === true
+            ? { contributionId: entry.contributionId, entry: payload }
+            : payload;
+          const status = document.getElementById("libraryStatus");
+          try {
+            const response = await fetch(endpoint, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody) });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Edit failed");
+            dialog.close();
+            await loadLibrary();
+            status.textContent = data.message || "Library edit saved.";
+          } catch (error) {
+            status.textContent = error.message || "Edit failed";
+          }
         });
         dialog.addEventListener("close", () => dialog.remove());
         dialog.showModal();
@@ -187,7 +201,7 @@
       document.getElementById("libraryMyWords").checked = ["1", "true", "yes"].includes((initialQuery.get("myWords") || "").toLowerCase());
       document.getElementById("libraryResults")?.addEventListener("click", (event) => { const button = event.target.closest("[data-entry-id]"); const entry = libraryItems.get(button?.dataset.entryId); if (entry) openLibraryEdit(entry); });
       document.getElementById("libraryFilters")?.addEventListener("submit", (event) => { event.preventDefault(); libraryPage = 1; loadLibrary(); });
-      document.getElementById("libraryFilters")?.addEventListener("input", () => { libraryPage = 1; loadLibrary(); }); document.getElementById("libraryPrevious")?.addEventListener("click", () => { libraryPage = Math.max(1, libraryPage - 1); loadLibrary(); }); document.getElementById("libraryNext")?.addEventListener("click", () => { libraryPage += 1; loadLibrary(); }); loadLibrary();
+      document.getElementById("libraryFilters")?.addEventListener("input", () => { libraryPage = 1; loadLibrary(); }); document.getElementById("libraryPrevious")?.addEventListener("click", () => { libraryPage = Math.max(1, libraryPage - 1); loadLibrary(); }); document.getElementById("libraryNext")?.addEventListener("click", () => { libraryPage += 1; loadLibrary(); }); window.setTimeout(loadLibrary, 500);
     })();
   </script>
 </body>

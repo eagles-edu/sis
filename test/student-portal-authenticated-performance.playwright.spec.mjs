@@ -90,7 +90,7 @@ async function loginThroughVisibleUi(page) {
   await page.locator("#appPanel").waitFor({ state: "visible", timeout: 30000 })
 }
 
-async function collectReloadEvidence(page, requests, failedRequests, consoleErrors) {
+async function collectReloadEvidence(page, requests, failedRequests, consoleErrors, options = {}) {
   await page.reload({ waitUntil: "domcontentloaded" })
   const domContentLoadedState = await page.evaluate(() => ({
     authState: document.documentElement.dataset.studentAuthState || "",
@@ -105,7 +105,7 @@ async function collectReloadEvidence(page, requests, failedRequests, consoleErro
       && app
       && !app.classList.contains("hidden")
       && getComputedStyle(document.body).visibility !== "hidden"
-  }, undefined, { timeout: 30000 })
+  }, undefined, { timeout: options.shellTimeout || 30000 })
   await page.waitForFunction(() => {
     const identity = document.getElementById("studentIdentity")?.textContent || ""
     return Boolean(identity.trim()) && !/loading/iu.test(identity)
@@ -181,7 +181,37 @@ test("authenticated student boot uses one dashboard request and keeps Brevo off 
     failedRequests.length = 0
     consoleErrors.length = 0
 
-    const evidence = await collectReloadEvidence(page, requests, failedRequests, consoleErrors)
+    let releaseNewWordsResponse
+    let newWordsResponseReleased = false
+    const heldNewWordsResponse = new Promise((resolve) => {
+      releaseNewWordsResponse = resolve
+    })
+    let finishNewWordsHandler
+    const newWordsHandlerFinished = new Promise((resolve) => {
+      finishNewWordsHandler = resolve
+    })
+    await page.route("**/api/student/new-words**", async (route) => {
+      try {
+        await heldNewWordsResponse
+        await route.continue()
+        newWordsResponseReleased = true
+      } finally {
+        finishNewWordsHandler()
+      }
+    })
+    let evidence
+    try {
+      evidence = await collectReloadEvidence(page, requests, failedRequests, consoleErrors, { shellTimeout: 5000 })
+      assert.equal(newWordsResponseReleased, false, `${viewport.name}: authenticated shell waited for New Words response`)
+    } finally {
+      releaseNewWordsResponse()
+      await Promise.race([
+        newWordsHandlerFinished,
+        new Promise((resolve) => setTimeout(resolve, 1000)),
+      ])
+      await page.unroute("**/api/student/new-words**")
+    }
+    await page.waitForTimeout(250)
     console.log(
       `[student-performance] ${viewport.name} `
       + `DCL(auth=${evidence.domContentLoadedState.authState},body=${evidence.domContentLoadedState.bodyVisibility},`
@@ -202,6 +232,26 @@ test("authenticated student boot uses one dashboard request and keeps Brevo off 
     assert.ok(evidence.browserEvidence.lcp > 0 && evidence.browserEvidence.lcp <= 4000, `${viewport.name}: LCP ${evidence.browserEvidence.lcp}ms exceeded 4000ms`)
     assert.ok(evidence.browserEvidence.cls <= 0.01, `${viewport.name}: CLS ${evidence.browserEvidence.cls} exceeded 0.01`)
     assert.equal(evidence.dashboardRequests.length, 1, `${viewport.name}: dashboard must load once per authenticated reload`)
+    assert.equal(
+      requests.filter((url) => /\/api\/student\/preferences(?:\?|$)/u.test(url)).length,
+      1,
+      `${viewport.name}: preferences must hydrate once per authenticated reload`,
+    )
+    assert.equal(
+      requests.filter((url) => /\/api\/student\/new-words(?:\?|$)/u.test(url)).length,
+      0,
+      `${viewport.name}: New Words must remain unopened during authenticated boot`,
+    )
+    const newWordsRequestsBeforeNewsOpen = requests.filter((url) => /\/api\/student\/new-words(?:\?|$)/u.test(url)).length
+    const newWordsResponse = page.waitForResponse((response) => /\/api\/student\/new-words(?:\?|$)/u.test(response.url()), { timeout: 5000 })
+    await page.locator("#openNewsPageBtn").click()
+    await newWordsResponse
+    await page.waitForFunction(() => document.documentElement.dataset.studentActiveSurface === "news")
+    assert.equal(
+      requests.filter((url) => /\/api\/student\/new-words(?:\?|$)/u.test(url)).length - newWordsRequestsBeforeNewsOpen,
+      1,
+      `${viewport.name}: News activation must request New Words once`,
+    )
     assert.deepEqual(evidence.brevoResourcesBeforeLcp, [], `${viewport.name}: Brevo entered the critical path before LCP`)
     assert.deepEqual(evidence.failedRequests, [], `${viewport.name}: authenticated reload had failed requests`)
     assert.deepEqual(evidence.consoleErrors, [], `${viewport.name}: authenticated reload had console errors`)

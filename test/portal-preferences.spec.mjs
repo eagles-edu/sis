@@ -113,6 +113,17 @@ test("hydrates consent preferences from the Redis-backed portal preference respo
   assert.equal(JSON.parse(store.get("sis-consent-preferences")).analytics, "denied")
 })
 
+test("reusing the preference script keeps one shared in-flight hydration request", async () => {
+  const { calls, preferences, sandbox } = createSandbox("unauthenticated")
+  const firstLoad = preferences.load()
+  vm.runInNewContext(scriptSource, sandbox, { filename: scriptPath })
+  await Promise.all([firstLoad, sandbox.SIS_PORTAL_PREFERENCES.load()])
+
+  assert.equal(sandbox.SIS_PORTAL_PREFERENCES, preferences)
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0][0], "/api/parent/preferences")
+})
+
 test("keeps the member notice visible when a prior preference has not acknowledged it", async () => {
   let removed = false
   const { preferences, sandbox } = createSandbox("unauthenticated", {

@@ -414,12 +414,12 @@ test("student part-of-speech selectors use Select and a fixed longest-option wid
 })
 
 test("student Save is draft-only and preserves a prior passing MMR result", () => {
-  assert.match(STUDENT_HTML, /if \(saved\?\.item\) applyOpenReport\(saved\.item, \{ preserveExistingValidation: false \}\)/)
-  assert.match(STUDENT_HTML, /applyNewsFieldValidationUi\(\{\}, \[\], \{\}, \[\]\)/)
-  assert.match(STUDENT_HTML, /setNewsComplianceModalOpen\(false\)/)
+  assert.match(STUDENT_JS, /if \(saved\?\.item\) applyOpenReport\(saved\.item, \{ preserveExistingValidation: false, preserveVocabularyEditor: true \}\)/)
+  assert.match(STUDENT_JS, /applyNewsFieldValidationUi\(\{\}, \[\], \{\}, \[\]\)/)
+  assert.match(STUDENT_JS, /setNewsComplianceModalOpen\(false\)/)
   assert.match(STUDENT_JS, /const mmrWasPassed = state\.newsCurrentMmrPassed === true && state\.newsFormDirty !== true/)
   assert.match(STUDENT_JS, /state\.newsCurrentMmrPassed = mmrWasPassed/)
-  assert.match(STUDENT_HTML, /setFormStatus\(auto \? "Draft autosaved\." : "Draft saved\. Check when you are ready to run MMR\."\)/)
+  assert.match(STUDENT_JS, /setFormStatus\(auto \? "Draft autosaved\." : "Draft saved\. Check when you are ready to run MMR\."\)/)
 })
 
 test("student report work survives network interruptions and keeps Submit behind MMR", () => {
@@ -436,11 +436,12 @@ test("student vocabulary warns immediately when POS and English already exist in
   assert.match(STUDENT_JS, /t\(word\?\.partOfSpeech\)\.toLowerCase\(\) === partOfSpeech/)
   assert.match(STUDENT_JS, /t\(word\?\.english\)\.normalize\("NFC"\)\.toLocaleLowerCase\("en-US"\) === englishKey/)
   assert.match(STUDENT_JS, /Warning: \$\{row\.english\} is already in your New Words library\./)
-  assert.match(STUDENT_JS, /if \(!state\.newWordsLoaded\) await loadNewWords\(\)/)
+  assert.match(STUDENT_JS, /!state\.newWordsLoaded[\s\S]*?loadNewWords\(\)/)
 })
 
 test("student consent banner is evaluated for already-authenticated boot sessions", () => {
-  assert.equal((STUDENT_JS.match(/showPrivacyConsent\?\.\(\{ locale: "vi", portal: "student" \}\)/g) || []).length, 3)
+  assert.match(STUDENT_JS, /function revealAuthenticatedStudentView\(\)[\s\S]*?scheduleStudentPrivacyConsent\(\)/)
+  assert.match(STUDENT_JS, /showPrivacyConsent\?\.\(\{[\s\S]*?locale: "vi",[\s\S]*?portal: "student",[\s\S]*?deferIntegrations: true/)
 })
 
 test("student news report dates render Vietnamese text while retaining ISO payload values", () => {
@@ -454,7 +455,14 @@ test("student news report dates render Vietnamese text while retaining ISO paylo
 
 test("student news week-set reports retain vocabulary when calendar items are normalized", () => {
   assert.match(STUDENT_JS, /function normalizeNewsReportItem\(entry = \{\}\) \{[\s\S]*?vocabulary: Array\.isArray\(entry\?\.vocabulary\)/)
-  assert.match(STUDENT_JS, /renderVocabularyRows\(field\("newsWeekSetModalVocabularyRows"\), active\?\.vocabulary \|\| \[\]\)/)
+  assert.match(STUDENT_JS, /renderVocabularyRows\(field\("newsWeekSetModalVocabularyRows"\), active\?\.vocabulary \|\| \[\], \{ editableExisting: true \}\)/)
+})
+
+test("student News keeps vocabulary editors open after draft save and Check", () => {
+  assert.match(STUDENT_JS, /function renderVocabularyRows\(container, rows = \[\], \{ editableExisting = false \} = \{\}\)/)
+  assert.match(STUDENT_JS, /renderVocabularyRows\(field\("newsVocabularyRows"\), state\.newsOpenReport\?\.vocabulary \|\| \[\], \{ editableExisting: true \}\)/)
+  assert.match(STUDENT_JS, /preserveVocabularyEditor: true/)
+  assert.match(STUDENT_JS, /const editorCount = editableExisting \? Math\.max\(minimum, source\.length\)/)
 })
 
 test("parent and admin vocabulary mirrors contain no student lookup controls", () => {

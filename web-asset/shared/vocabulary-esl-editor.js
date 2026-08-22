@@ -238,8 +238,23 @@
     if (label === "ET") return `https://www.etymonline.com/search?q=${encoded}`;
     if (label === "MW") return `https://www.merriam-webster.com/dictionary/${encoded}`;
     if (label === "TH") return `https://www.merriam-webster.com/thesaurus/${encoded}`;
+    if (label === "CA") return `https://dictionary.cambridge.org/dictionary/english/${encoded}`;
+    if (label === "CL") return `https://www.learnersdictionary.com/definition/${encoded}`;
+    if (label === "GL") return `https://www.google.com/search?q=define+${encoded}`;
     return "";
   };
+
+  const LOOKUP_BUTTONS = Object.freeze({
+    LD: { text: "LD", title: "Longman Dictionary", blue: false },
+    GT: { text: "GT", title: "Google Translate", blue: false },
+    WH: { text: "WH", title: "WordHelp syllables", blue: false },
+    ET: { text: "ET", title: "Etymonline", blue: false },
+    MW: { text: "MW", title: "Merriam-Webster Collegiate Dictionary", blue: false },
+    TH: { text: "TH", title: "Merriam-Webster Thesaurus", blue: false },
+    CA: { text: "CA", title: "Cambridge English Dictionary", blue: true },
+    CL: { text: "CL", title: "Collegiate to Learner fallback", blue: true },
+    GL: { text: "GL", title: "Google definition search", blue: true },
+  });
 
   function insertEtymologyDeterministically(definition, paragraph) {
     const source = normalizeDefinitionText(definition);
@@ -257,7 +272,7 @@
       if (etymology) next = source.replace(etymology[0], `${etymology[0]}; ${addition}`);
       else {
         const nextHeading = source.search(/^\*\*(?:Stems|Synonyms|Antonyms|Works Cited):?\*\*:?/imu);
-        next = nextHeading >= 0 ? `${source.slice(0, nextHeading).trimEnd()}\n\n${addition}\n\n${source.slice(nextHeading).trimStart()}` : (source ? `${source}\n\n${addition}` : addition);
+        next = nextHeading >= 0 ? `${source.slice(0, nextHeading).trimEnd()}\n\n**Etymology:** ${addition}\n\n${source.slice(nextHeading).trimStart()}` : (source ? `${source}\n\n${addition}` : addition);
       }
     }
     const sections = { body: [], "First known use": [], Etymology: [], "Origin path": [], "Verb Forms": [], Stems: [], Synonyms: [], Antonyms: [], "Works Cited": [] };
@@ -571,9 +586,19 @@
     return blocks.join("") || "No definition yet.";
   }
 
-  function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false, includeTransitivityTools = false, includeOriginAnalysis = false, originLookupPath = "" } = {}) {
+  function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false, includeTransitivityTools = false, includeOriginAnalysis = false, originLookupPath = "", lookupButtons = null } = {}) {
     const uid = safeUid(rowUid);
     const options = POS.map((part) => `<option value="${part}">${part}</option>`).join("");
+    const lookupLabels = Array.isArray(lookupButtons) && lookupButtons.length ? lookupButtons : ["LD", "GT", "WH", "ET", "MW", "TH", "CA", "CL", "GL"];
+    const lookupHtml = lookupLabels.map((label) => {
+      const key = String(label || "").trim();
+      const lookup = LOOKUP_BUTTONS[key];
+      if (!lookup) return "";
+      const buttonClass = lookup.blue ? "portal-button-blue-action" : "external-link-turquoise portal-button-external-link-turquoise";
+      const etymologyClass = key === "ET" ? " vocabulary-etymonline-lookup" : "";
+      const originAttribute = key === "ET" ? ` data-vocabulary-origin-lookup="${escapeHtml(originLookupPath)}"` : "";
+      return `<button type="button" class="portal-button ${buttonClass} news-vocabulary-lookup${etymologyClass}" data-vocabulary-lookup="${key}"${originAttribute} title="Look up the English word in the ${escapeHtml(lookup.title)}" aria-label="Look up the English word in the ${escapeHtml(lookup.title)}">${escapeHtml(lookup.text)}</button>`;
+    }).join("");
     const rowActions = removable
       ? `<details class="news-vocabulary-row-menu">
               <summary class="news-vocabulary-row-dots" aria-label="Open vocabulary row actions">⋮</summary>
@@ -592,7 +617,7 @@
           ${parametersHtml(uid, { includeMwFill, includeTransitivityTools, includeOriginAnalysis })}
           <div class="news-vocabulary-definition-row">
             <div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">
-              ${["LD", "GT", "WH", "ET", "MW", "TH"].map((label) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup${label === "ET" ? " vocabulary-etymonline-lookup" : ""}" data-vocabulary-lookup="${label}"${label === "ET" ? ` data-vocabulary-origin-lookup="${escapeHtml(originLookupPath)}"` : ""} title="Look up the ${label} field to complete this vocabulary entry" aria-label="Look up the ${label} field">${label}</button>`).join("")}
+              ${lookupHtml}
               <p class="small vocabulary-et-message" data-vocabulary-et-message aria-live="polite"></p>
             </div>
             <textarea name="vocabularyDefinition-${uid}" data-vocabulary-field="definition" rows="1" maxlength="50000" placeholder="Definition" title="Up to 50,000 characters. Ctrl+B bold · Ctrl+I italic · Ctrl+U underline · Enter continues -, a., and 1. lists · indent nested items · **Heading** sections" aria-label="Definition, up to 50,000 characters" required></textarea>

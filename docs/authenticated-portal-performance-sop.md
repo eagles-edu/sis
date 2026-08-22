@@ -47,6 +47,7 @@ An authenticated student boot passes only when all of the following are true for
 - there are no unexpected console errors or failed application requests;
 - LCP is finite and within the local authenticated gate (`4000ms` unless the surface contract sets a tighter limit);
 - the first viewport has no visible flash, clipping, overlap, or layout shift that the screenshots contradict.
+- student boot must use the server-resolved auth state and inline critical shell CSS; it must not replace the login shell with a loading overlay. The home shell paints first, large student scripts are deferred, dashboard hydration starts after first paint, and every non-home surface (News, New Words, Library, homework, attendance, grades, performance, and recommendations) remains hidden and unhydrated until post-paint data or explicit activation.
 
 The clean-profile Lighthouse gate and the authenticated Playwright gate are complementary. A passing clean-profile Lighthouse score cannot waive any authenticated criterion above. An authenticated Lighthouse JSON report is diagnostic evidence only unless it was preceded by the full visible-login browser flow and its consent state is recorded.
 

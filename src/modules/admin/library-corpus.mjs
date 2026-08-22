@@ -115,6 +115,14 @@ export function libraryContributionDeadline(submittedAt) {
   return new Date(start.getTime() + CONTRIBUTION_LIFETIME_DAYS * 24 * 60 * 60 * 1000)
 }
 
+export function isStudentLibraryContributionEditable(contribution = {}, now = new Date()) {
+  const status = text(contribution.status)
+  if (["pending_review", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL].includes(status)) return true
+  if (!["approved", "canonicalized", PENDING_CANONICAL_REPLACEMENT].includes(status)) return false
+  const dueAt = new Date(contribution.dueAt || 0)
+  return !Number.isNaN(dueAt.valueOf()) && dueAt > now
+}
+
 export function selectLargestDuplicate(rows = []) {
   return [...rows].sort((left, right) => {
     const leftPayload = left?.payloadJson || left?.payload || {}
@@ -277,7 +285,7 @@ function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
   return data
 }
 
-function mapEntry(entry) {
+function mapEntry(entry, { now = new Date() } = {}) {
   const revisions = Array.isArray(entry.revisions) ? entry.revisions : []
   const mapped = activePayloadValue(entry)
   mapped.grammarClassification = activePayloadValue(entry.grammarClassification, "grammarClassification")
@@ -285,6 +293,18 @@ function mapEntry(entry) {
   mapped.editors = [...new Map(revisions.map((revision) => [revision.actorName, { name: revision.actorName || "", at: revision.createdAt || "" }])).values()]
   mapped.isLegacyPending = text(entry.reviewStatus) === LEGACY_PENDING_REVIEW
   mapped.reviewLabel = mapped.isLegacyPending ? "Legacy review pending" : ""
+  const studentContribution = Array.isArray(entry.contributions) ? entry.contributions[0] : null
+  if (studentContribution) {
+    mapped.studentContributionId = studentContribution.id || ""
+    mapped.studentContributionStatus = studentContribution.status || ""
+    mapped.studentContributionDueAt = studentContribution.dueAt || ""
+    mapped.studentCanEdit = isStudentLibraryContributionEditable(studentContribution, now)
+  } else {
+    mapped.studentContributionId = ""
+    mapped.studentContributionStatus = ""
+    mapped.studentContributionDueAt = ""
+    mapped.studentCanEdit = false
+  }
   return mapped
 }
 
@@ -303,17 +323,21 @@ export async function listLibraryEntries(query = {}) {
   }, {})
   const where = {
     ...filters,
-    ...(myWords && studentRefId ? { contributions: { some: { studentRefId, status: { in: ["approved", "migrated", "canonicalized", LEGACY_PENDING_REVIEW, PENDING_CANONICAL_REPLACEMENT] } } } } : {}),
+    ...(myWords && studentRefId ? { contributions: { some: { studentRefId, status: { in: ["approved", "migrated", "canonicalized", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL, PENDING_CANONICAL_REPLACEMENT] } } } } : {}),
     ...(search ? { OR: [{ english: { contains: search, mode: "insensitive" } }, { vietnamese: { contains: search, mode: "insensitive" } }, { definition: { contains: search, mode: "insensitive" } }, { etymology: { contains: search, mode: "insensitive" } }] } : {})
   }
   const sortBy = ["english", "createdAt", "updatedAt", "partOfSpeech", "syllableCount"].includes(text(query.sortBy)) ? text(query.sortBy) : "english"
   const direction = lower(query.direction) === "desc" ? "desc" : "asc"
+  const entryInclude = {
+    revisions: { orderBy: { createdAt: "asc" } },
+    ...(studentRefId ? { contributions: { where: { studentRefId }, orderBy: { submittedAt: "desc" }, take: 1 } } : {}),
+  }
   const [total, entries] = await client.$transaction([
     client.libraryEntry.count({ where }),
-    client.libraryEntry.findMany({ where, orderBy: [{ [sortBy]: direction }, { english: "asc" }], skip: (page - 1) * pageSize, take: pageSize, include: { revisions: { orderBy: { createdAt: "asc" } } } }),
+    client.libraryEntry.findMany({ where, orderBy: [{ [sortBy]: direction }, { english: "asc" }], skip: (page - 1) * pageSize, take: pageSize, include: entryInclude }),
   ])
   const pending = myWords && studentRefId
-    ? await client.libraryContribution.findMany({ where: { studentRefId, OR: [{ status: "pending_review", dueAt: { gt: new Date() } }, { status: AWAITING_LEGACY_CANONICAL }] }, orderBy: { submittedAt: "asc" } })
+    ? await client.libraryContribution.findMany({ where: { studentRefId, entryId: null, status: { in: ["pending_review", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL] } }, orderBy: { submittedAt: "asc" } })
     : []
   const pendingItems = pending
     .filter((contribution) => {
@@ -330,9 +354,15 @@ export async function listLibraryEntries(query = {}) {
       dueAt: contribution.dueAt || "",
       submittedAt: contribution.submittedAt || "",
       canonicalEntryId: contribution.entryId || "",
+      sourceKind: contribution.sourceKind || "",
+      sourceId: contribution.sourceId || "",
       editors: [],
+      studentContributionId: contribution.id,
+      studentContributionStatus: contribution.status,
+      studentContributionDueAt: contribution.dueAt || "",
+      studentCanEdit: isStudentLibraryContributionEditable(contribution),
     }))
-  const items = [...entries.map(mapEntry), ...pendingItems].sort((left, right) => text(left.english).localeCompare(text(right.english)) || text(left.partOfSpeech).localeCompare(text(right.partOfSpeech)))
+  const items = [...entries.map((entry) => mapEntry(entry)), ...pendingItems].sort((left, right) => text(left.english).localeCompare(text(right.english)) || text(left.partOfSpeech).localeCompare(text(right.partOfSpeech)))
   return { ok: true, page, pageSize, total: total + pendingItems.length, items: items.slice(0, pageSize) }
 }
 
@@ -363,32 +393,50 @@ export async function submitLibraryContribution(studentRefId, contributorName, p
   const studentId = text(studentRefId)
   const sourceId = clamp(payload.sourceId)
   const existingEntryId = clamp(payload.entryId)
-  if (studentId && existingEntryId) throw statusError("Canonical Library entries are editable by Admin only", 403)
+  const contributionId = clamp(payload.contributionId)
   const now = new Date()
+  const refreshExistingContribution = async (existing) => {
+    if (!existing || text(existing.studentRefId) !== studentId) throw statusError("Students may edit only their own Library contribution", 403)
+    if (!isStudentLibraryContributionEditable(existing, now)) {
+      if (existing.dueAt && new Date(existing.dueAt) <= now) await reconcileStudentLibraryLifecycle(studentId, now)
+      throw statusError("This Library contribution is no longer editable", 403)
+    }
+    const pendingBeforeCanonicalization = ["pending_review", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL].includes(text(existing.status))
+    const refreshed = await client.$transaction(async (tx) => {
+      const updated = await tx.libraryContribution.update({
+        where: { id: existing.id },
+        data: { payloadJson: activePayloadValue(entry, "payloadJson"), dueAt: pendingBeforeCanonicalization ? null : existing.dueAt },
+      })
+      await writeContributionRevision(tx, updated, isAwaitingLegacyCanonical(existing.status) ? "student_refresh_awaiting_legacy_canonical" : "student_refresh")
+      return updated
+    })
+    return {
+      ok: true,
+      contribution: mapContribution(refreshed),
+      refreshed: true,
+      message: isAwaitingLegacyCanonical(existing.status)
+        ? "Your contribution is waiting for the legacy canonical review."
+        : "Your Library contribution was refreshed.",
+    }
+  }
+  if (studentId && contributionId) {
+    const existing = await client.libraryContribution.findUnique({ where: { id: contributionId } })
+    return refreshExistingContribution(existing)
+  }
+  if (studentId && existingEntryId) {
+    const existing = await client.libraryContribution.findFirst({
+      where: {
+        studentRefId: studentId,
+        entryId: existingEntryId,
+        status: { in: ["pending_review", "approved", "canonicalized", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL, PENDING_CANONICAL_REPLACEMENT] },
+      },
+      orderBy: { submittedAt: "desc" },
+    })
+    return refreshExistingContribution(existing)
+  }
   if (studentId && sourceId) {
     const existing = await client.libraryContribution.findFirst({ where: { studentRefId: studentId, sourceKind: "student_new_words", sourceId }, orderBy: { submittedAt: "desc" } })
-    if (existing) {
-      if (isAwaitingLegacyCanonical(existing.status)) {
-        const refreshed = await client.$transaction(async (tx) => {
-          const updated = await tx.libraryContribution.update({ where: { id: existing.id }, data: { payloadJson: activePayloadValue(entry, "payloadJson"), dueAt: null } })
-          await writeContributionRevision(tx, updated, "student_refresh_awaiting_legacy_canonical")
-          return updated
-        })
-        return { ok: true, contribution: mapContribution(refreshed), refreshed: true, message: "Your contribution is waiting for the legacy canonical review." }
-      }
-      if (existing.status !== "pending_review") throw statusError("This contribution is now canonical and can only be edited by Admin", 403)
-      const dueAt = existing.dueAt || libraryContributionDeadline(existing.submittedAt)
-      if (dueAt <= now) {
-        await reconcileStudentLibraryLifecycle(studentId)
-        throw statusError("This contribution has reached its 15-day deadline and is now canonical", 403)
-      }
-      const updated = await client.$transaction(async (tx) => {
-        const refreshed = await tx.libraryContribution.update({ where: { id: existing.id }, data: { payloadJson: activePayloadValue(entry, "payloadJson"), dueAt } })
-        await writeContributionRevision(tx, refreshed, "student_refresh")
-        return refreshed
-      })
-      return { ok: true, contribution: mapContribution(updated), refreshed: true, message: "Your pending Library contribution was refreshed." }
-    }
+    if (existing) return refreshExistingContribution(existing)
   }
   const submittedAt = now
   const pair = canonicalPair(entry)
@@ -405,7 +453,7 @@ export async function submitLibraryContribution(studentRefId, contributorName, p
       payloadJson: activePayloadValue(entry, "payloadJson"),
       status: provisional ? AWAITING_LEGACY_CANONICAL : "pending_review",
       submittedAt,
-      dueAt: studentId && !provisional ? libraryContributionDeadline(submittedAt) : null,
+      dueAt: null,
     } })
     await writeContributionRevision(tx, created, provisional ? "submitted_awaiting_legacy_canonical" : "submitted")
     return created
@@ -472,12 +520,12 @@ export async function reconcileStudentLibraryLifecycle(studentRefId, now = new D
   const studentId = text(studentRefId)
   if (!studentId) return { ok: true, reconciled: 0 }
   const client = await prisma()
-  const pending = await client.libraryContribution.findMany({ where: { studentRefId: studentId, status: { in: ["pending_review", PENDING_CANONICAL_REPLACEMENT] }, dueAt: { lte: now } }, orderBy: { dueAt: "asc" } })
+  const pending = await client.libraryContribution.findMany({ where: { studentRefId: studentId, status: { in: ["approved", "canonicalized", PENDING_CANONICAL_REPLACEMENT] }, dueAt: { lte: now } }, orderBy: { dueAt: "asc" } })
   let reconciled = 0
   for (const contribution of pending) {
     await client.$transaction(async (tx) => {
       const current = await tx.libraryContribution.findUnique({ where: { id: contribution.id } })
-      if (!current || !["pending_review", PENDING_CANONICAL_REPLACEMENT].includes(current.status) || !current.dueAt || current.dueAt > now) return
+      if (!current || !["approved", "canonicalized", PENDING_CANONICAL_REPLACEMENT].includes(current.status) || !current.dueAt || current.dueAt > now) return
       const payload = current.payloadJson && typeof current.payloadJson === "object" ? current.payloadJson : {}
       const preservedCanonical = current.status === PENDING_CANONICAL_REPLACEMENT && current.entryId
         ? await tx.libraryEntry.findUnique({ where: { id: current.entryId } })
@@ -499,7 +547,7 @@ export async function reconcileStudentLibraryLifecycle(studentRefId, now = new D
 
 export async function reconcileLibraryLifecycle(now = new Date()) {
   const client = await prisma()
-  const students = await client.libraryContribution.findMany({ where: { status: { in: ["pending_review", PENDING_CANONICAL_REPLACEMENT] }, dueAt: { lte: now }, studentRefId: { not: null } }, distinct: ["studentRefId"], select: { studentRefId: true } })
+  const students = await client.libraryContribution.findMany({ where: { status: { in: ["approved", "canonicalized", PENDING_CANONICAL_REPLACEMENT] }, dueAt: { lte: now }, studentRefId: { not: null } }, distinct: ["studentRefId"], select: { studentRefId: true } })
   let reconciled = 0
   for (const row of students) reconciled += (await reconcileStudentLibraryLifecycle(row.studentRefId, now)).reconciled
   return { ok: true, reconciled, students: students.length }
@@ -538,7 +586,11 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
     const targets = duplicate ? matching.filter((target) => !isAwaitingLegacyCanonical(target.status)) : [contribution]
     const canonicalizedAt = new Date()
     for (const target of targets) {
-      const updated = await tx.libraryContribution.update({ where: { id: target.id }, data: { entryId: entry.id, status: duplicate ? "canonicalized" : "approved", reviewedAt: canonicalizedAt, reviewedByName: clamp(actor.name), canonicalizedAt } })
+      const targetStatus = duplicate ? "canonicalized" : "approved"
+      const dueAt = target.studentRefId && !isLegacyPending(target.status)
+        ? libraryContributionDeadline(canonicalizedAt)
+        : null
+      const updated = await tx.libraryContribution.update({ where: { id: target.id }, data: { entryId: entry.id, status: targetStatus, reviewedAt: canonicalizedAt, reviewedByName: clamp(actor.name), canonicalizedAt, dueAt } })
       await writeContributionRevision(tx, updated, legacy ? "legacy_canonicalized" : duplicate ? "canonicalized" : "approved")
     }
     if (legacy) {
@@ -564,7 +616,10 @@ export async function updateLibraryEntry(id, actor = {}, payload = {}) {
     const canonicalizedAt = new Date()
     let canonicalizedContributions = 0
     for (const contribution of matching.filter((candidate) => !isAwaitingLegacyCanonical(candidate.status))) {
-      const canonicalized = await tx.libraryContribution.update({ where: { id: contribution.id }, data: { entryId: updated.id, status: "canonicalized", reviewedAt: canonicalizedAt, reviewedByName: clamp(actor.name), canonicalizedAt } })
+      const dueAt = contribution.studentRefId && !isLegacyPending(contribution.status)
+        ? libraryContributionDeadline(canonicalizedAt)
+        : null
+      const canonicalized = await tx.libraryContribution.update({ where: { id: contribution.id }, data: { entryId: updated.id, status: "canonicalized", reviewedAt: canonicalizedAt, reviewedByName: clamp(actor.name), canonicalizedAt, dueAt } })
       await writeContributionRevision(tx, canonicalized, "canonicalized_by_admin_edit")
       canonicalizedContributions += 1
     }

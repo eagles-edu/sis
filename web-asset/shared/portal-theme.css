@@ -6113,7 +6113,7 @@ body.student-portal-page .news-vocabulary-lookups {
   display: grid;
   gap: 0;
   grid-template-columns: repeat(3, 48px);
-  grid-template-rows: repeat(2, 48px);
+  grid-template-rows: repeat(3, 48px) auto;
 }
 body.student-portal-page .news-vocabulary-lookup {
   align-items: center;
@@ -6137,10 +6137,15 @@ body.student-portal-page .news-vocabulary-lookup.vocabulary-etymonline-lookup {
   grid-column: 1;
   grid-row: 2;
 }
+body.student-portal-page .news-vocabulary-lookup[data-vocabulary-lookup="GL"] {
+  border-radius: 0 var(--radius-2) var(--radius-2) 0;
+  grid-column: 3;
+  grid-row: 3;
+}
 body.student-portal-page .vocabulary-et-message {
   align-self: center;
-  grid-column: 2 / -1;
-  grid-row: 2;
+  grid-column: 1 / -1;
+  grid-row: 4;
   margin: 0;
 }
 body.student-portal-page .news-vocabulary-definition-row textarea {
@@ -8810,7 +8815,14 @@ body.portal-hub-page .portal-theme-toggle__icon svg-icon,
 body.student-portal-page .topbar .header-actions .portal-theme-toggle__icon svg-icon,
 body.parent-portal-page .hero .hero-actions .portal-theme-toggle__icon svg-icon,
 body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle__icon svg-icon {
+  align-items: center;
+  block-size: 36px;
   color: inherit;
+  display: inline-flex;
+  flex: 0 0 36px;
+  inline-size: 36px;
+  justify-content: center;
+  line-height: 0;
 }
 body.admin-portal-page .portal-theme-toggle__icon svg {
   color: inherit;
@@ -11227,7 +11239,7 @@ body.admin-portal-page .news-vocabulary-lookups {
   display: grid;
   gap: 0;
   grid-template-columns: repeat(3, 48px);
-  grid-template-rows: repeat(2, 48px) auto;
+  grid-template-rows: repeat(3, 48px) auto;
 }
 
 body:is(.student-portal-page, .admin-portal-page) .news-vocabulary-lookup[data-vocabulary-lookup="LD"] {
@@ -11260,9 +11272,24 @@ body:is(.student-portal-page, .admin-portal-page) .news-vocabulary-lookup[data-v
   grid-row: 2;
 }
 
+body:is(.student-portal-page, .admin-portal-page) .news-vocabulary-lookup[data-vocabulary-lookup="CA"] {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+body:is(.student-portal-page, .admin-portal-page) .news-vocabulary-lookup[data-vocabulary-lookup="CL"] {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+body:is(.student-portal-page, .admin-portal-page) .news-vocabulary-lookup[data-vocabulary-lookup="GL"] {
+  grid-column: 3;
+  grid-row: 3;
+}
+
 body:is(.student-portal-page, .admin-portal-page) .vocabulary-et-message {
   grid-column: 1 / -1;
-  grid-row: 3;
+  grid-row: 4;
   margin: 0;
 }
 
