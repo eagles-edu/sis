@@ -133,7 +133,7 @@
     "prisma": "^7.9.1",
     "stylelint": "^17.14.1",
     "stylelint-config-standard": "^40.0.0",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "uglify-js": "^3.19.3"
   },
   "dependencies": {
