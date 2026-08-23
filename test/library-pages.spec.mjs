@@ -476,6 +476,41 @@ test("definition keyboard rules preserve new lines and support ordered and unord
   assert.equal(context.window.SIS_VOCABULARY_ESL.normalizeDefinitionText("inline\r\n\nlist\n"), "inline\n\nlist\n")
 })
 
+test("definition paste preserves clipboard emphasis, lists, indentation, and paragraph breaks", () => {
+  const dom = new JSDOM("<!doctype html><body></body>")
+  const context = {
+    window: dom.window,
+    document: dom.window.document,
+    console,
+    Event: dom.window.Event,
+    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
+  }
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const textarea = dom.window.document.createElement("textarea")
+  textarea.setAttribute("data-vocabulary-field", "definition")
+  dom.window.document.body.append(textarea)
+  textarea.value = "Existing\n"
+  textarea.selectionStart = textarea.selectionEnd = textarea.value.length
+  const paste = new dom.window.Event("paste", { bubbles: true, cancelable: true })
+  Object.defineProperty(paste, "clipboardData", {
+    value: {
+      getData(type) {
+        if (type === "text/html") return "<p><strong>bold</strong> and <em>italic</em></p><p>next</p><ul><li>one<ul><li><u>nested</u></li></ul></li></ul><ol><li>first</li><li>second</li></ol>"
+        if (type === "text/plain") return "bold and italic\nnext\none\n  nested\nfirst\nsecond"
+        return ""
+      },
+    },
+  })
+  textarea.dispatchEvent(paste)
+  assert.equal(paste.defaultPrevented, true)
+  assert.equal(textarea.value, "Existing\n**bold** and *italic*\n\nnext\n\n- one\n    - [u]nested[/u]\n\n1. first\n2. second")
+  assert.equal(
+    context.window.SIS_VOCABULARY_ESL.htmlToDefinitionText('<p><span style="font-weight:700">styled</span></p><ol type="a"><li>alpha</li><li>beta</li></ol>'),
+    "**styled**\n\na. alpha\nb. beta",
+  )
+  assert.equal(context.window.SIS_VOCABULARY_ESL.htmlToDefinitionText("", "A\r\n\r\nB\n"), "A\n\nB\n")
+})
+
 test("unheaded Etymonline prose after Stems is restored to Etymology after First known use and before Stems", () => {
   const context = { window: {}, document: {} }
   vm.runInNewContext(sharedVocabularyEditor, context)

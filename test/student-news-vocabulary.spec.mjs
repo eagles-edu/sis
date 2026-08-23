@@ -95,9 +95,13 @@ test("student news vocabulary minimum is configurable", async () => {
   assert.equal((await evaluateStudentNewsVocabulary(completeVocabularyRows(6), { minimumWords: 6 })).passed, true)
 })
 
-test("development News autofill uses complete real vocabulary with uppercase stress", () => {
-  assert.match(STUDENT_HTML, /Complete report — real words, stress capitals/)
-  for (const [english, syllabication] of [["apple", "AP-ple"], ["banana", "ba-NA-na"], ["computer", "com-PU-ter"], ["elephant", "EL-e-phant"], ["important", "im-POR-tant"], ["together", "to-GETH-er"]]) {
+test("development News autofill uses a real BBC article and article vocabulary with uppercase stress", () => {
+  assert.match(STUDENT_HTML, /BBC article — article words, stress capitals/)
+  assert.match(STUDENT_JS, /sourceLink: "https:\/\/www\.bbc\.com\/news\/articles\/cy91vrzxn34o"/)
+  assert.match(STUDENT_JS, /articleTitle: "How Pakistan won over Trump to become an unlikely mediator in the Iran war"/)
+  assert.doesNotMatch(STUDENT_JS, /"banana"/)
+  assert.doesNotMatch(STUDENT_JS, /"computer"/)
+  for (const [english, syllabication] of [["unlikely", "un-LIKE-ly"], ["mediator", "ME-di-a-tor"], ["conflict", "CON-flict"], ["diplomatic", "dip-lo-MAT-ic"], ["negotiator", "ne-GO-ti-a-tor"], ["position", "po-SI-tion"]]) {
     assert.match(STUDENT_JS, new RegExp(`"${english}"[\\s\\S]*?"${syllabication}"`))
   }
   assert.match(STUDENT_JS, /countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "common"/)

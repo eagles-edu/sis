@@ -152,6 +152,14 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
       currentMmrPassed: true,
       editableUntil: "2026-07-15T23:59:59.000Z",
       submittedAt: "2026-03-17T09:05:00.000Z",
+      reviewNote: "Please correct the source link before resubmitting.",
+      validationIssuesJson: {
+        sourceLink: {
+          status: "pending",
+          message: "Source must link to the exact article, not only the site home page.",
+          steps: ["Open the full article page and paste its complete URL."],
+        },
+      },
     },
     {
       id: "news-2026-03-13",
@@ -1064,6 +1072,8 @@ test(
           statusChipClass: statusChip?.className || "",
           statusChipText: statusChip?.textContent || "",
           submittedAt: globalThis.document.getElementById("newsViewerSubmittedAt")?.value || "",
+          feedbackVisible: !globalThis.document.getElementById("newsWeekSetModalFeedback")?.classList.contains("hidden"),
+          feedbackText: globalThis.document.getElementById("newsWeekSetModalFeedback")?.textContent || "",
         };
       });
       assert.equal(modalBeforeSubmit.hasSubmit, true);
@@ -1073,6 +1083,9 @@ test(
       assert.match(modalBeforeSubmit.statusChipText, /Waiting/i);
       assert.match(modalBeforeSubmit.statusChipClass, /\bchip-revise\b/i);
       assert.match(modalBeforeSubmit.submittedAt, /^\d{2}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2}\s+\+07$/);
+      assert.equal(modalBeforeSubmit.feedbackVisible, true);
+      assert.match(modalBeforeSubmit.feedbackText, /Source link/i);
+      assert.match(modalBeforeSubmit.feedbackText, /Please correct the source link/i);
 
       await page.fill("#newsViewerArticleTitle", "Waiting Report Updated");
       await page.click("#newsWeekSetModalCheckBtn");

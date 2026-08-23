@@ -987,7 +987,6 @@
 
       function normalizePreviewApiOrigin(rawOrigin) {
         const text = t(rawOrigin);
-        // This must match inferLoopbackPreviewApiOrigin: test refreshes use 8786.
         if (!text) return "";
         const knownRuntimePorts = new Set(["8786", "8787", "8788"]);
         let parsed;
@@ -997,8 +996,8 @@
           void error;
           return inferLoopbackPreviewApiOrigin();
         }
-        if (isLoopbackHostname(parsed.hostname) && !knownRuntimePorts.has(parsed.port)) {
-          return "http://127.0.0.1:8788";
+        if (isLoopbackHostname(parsed.hostname) && knownRuntimePorts.has(parsed.port)) {
+          return parsed.origin;
         }
         return parsed.origin;
       }
@@ -3461,6 +3460,12 @@
           awaitingReReview: entry?.awaitingReReview === true,
           currentMmrPassed: entry?.currentMmrPassed === true,
           editableUntil: t(entry?.editableUntil),
+          reviewNote: t(entry?.reviewNote),
+          validationIssuesJson: entry?.validationIssuesJson && typeof entry.validationIssuesJson === "object" && !Array.isArray(entry.validationIssuesJson)
+            ? entry.validationIssuesJson
+            : {},
+          requiredTasks: Array.isArray(entry?.requiredTasks) ? entry.requiredTasks : [],
+          warningTasks: Array.isArray(entry?.warningTasks) ? entry.warningTasks : [],
           mmrFailedFields: entry?.mmrFailedFields && typeof entry.mmrFailedFields === "object" ? entry.mmrFailedFields : {},
           warningFields: entry?.warningFields && typeof entry.warningFields === "object" ? entry.warningFields : {},
         };
@@ -3786,7 +3791,14 @@
         const pendingIssues = Object.fromEntries(
           Object.entries(issueMap).filter(([, entry]) => t(entry?.status).toLowerCase() !== "fixed")
         );
-        const rows = buildStudentFeedbackRowsFromTasks(pendingIssues, []);
+        const fallbackFailedFields = item?.mmrFailedFields && typeof item.mmrFailedFields === "object"
+          ? item.mmrFailedFields
+          : {};
+        const issueSource = Object.keys(pendingIssues).length ? pendingIssues : fallbackFailedFields;
+        const rows = buildStudentFeedbackRowsFromTasks(
+          issueSource,
+          Array.isArray(item?.requiredTasks) ? item.requiredTasks : [],
+        );
         const editableUntil = t(item?.editableUntil);
         const shouldShow = Boolean(reviewNote || rows.length || editableUntil);
         shell.classList.toggle("hidden", !shouldShow);
@@ -4620,35 +4632,35 @@
 
       const NEWS_DEV_AUTOFILL_FIXTURES = Object.freeze({
         valid: {
-          sourceLink: "https://example.com/news/test-article",
-          articleTitle: "Storms hit coast city",
-          byline: "bbc",
-          articleDateline: "Published March 1, 2026 at 9:00 AM ICT (Indochina Time GMT+7). Updated March 1, 2026 at 11:00 AM ICT (Indochina Time GMT+7).",
-          leadSynopsis: "Officials said emergency teams evacuated hundreds of families after rising waters flooded multiple districts near the river.",
-          actionActor: "Emergency teams",
-          actionAffected: "Hundreds of families",
-          actionWhere: "Riverside districts in Coast City",
-          actionWhat: "Emergency teams evacuated residents after flood levels surged quickly.",
-          actionWhy: "Floodwaters rose because heavy overnight rain and emergency dam releases increased river levels.",
-          biasAssessment: "The report emphasizes official sources but also includes resident perspectives.",
+          sourceLink: "https://www.bbc.com/news/articles/cy91vrzxn34o",
+          articleTitle: "How Pakistan won over Trump to become an unlikely mediator in the Iran war",
+          byline: "Caroline Davies",
+          articleDateline: "Updated 9 hours ago",
+          leadSynopsis: "Pakistan has been making a diplomatic push to position itself as a negotiator in the war.",
+          actionActor: "Pakistan",
+          actionAffected: "Iran and the warring parties",
+          actionWhere: "Iran",
+          actionWhat: "Pakistan made a diplomatic push to act as a negotiator in the war.",
+          actionWhy: "Pakistan sought to help the parties move toward an end to the conflict.",
+          biasAssessment: "The report emphasizes Pakistan's diplomatic role and includes the wider conflict context.",
           vocabulary: [
-            ["apple", "quả táo", "AP-ple", "A round fruit with firm flesh and edible skin."],
-            ["banana", "quả chuối", "ba-NA-na", "A long curved fruit with soft sweet flesh."],
-            ["computer", "máy tính", "com-PU-ter", "An electronic machine that processes information."],
-            ["elephant", "con voi", "EL-e-phant", "A very large animal with a trunk and tusks."],
-            ["important", "quan trọng", "im-POR-tant", "Having great value or influence."],
-            ["together", "cùng nhau", "to-GETH-er", "With or near each other."],
+            ["unlikely", "không có khả năng xảy ra", "un-LIKE-ly", "Not likely to happen or be true."],
+            ["mediator", "người hòa giải", "ME-di-a-tor", "A person who helps settle a disagreement."],
+            ["conflict", "xung đột", "CON-flict", "A serious disagreement or argument."],
+            ["diplomatic", "thuộc ngoại giao", "dip-lo-MAT-ic", "Connected with managing relations between countries."],
+            ["negotiator", "nhà đàm phán", "ne-GO-ti-a-tor", "A person who tries to reach an agreement through discussion."],
+            ["position", "lập trường", "po-SI-tion", "A stated opinion or place in a discussion."],
           ].map(([english, vietnamese, syllabication, definition]) => ({
-            partOfSpeech: english === "important" ? "adjective" : english === "together" ? "adverb" : "noun",
+            partOfSpeech: ["unlikely", "diplomatic"].includes(english) ? "adjective" : "noun",
             english,
             vietnamese,
             syllabication,
             definition,
-            esl: ["apple", "banana", "computer", "elephant"].includes(english)
+            esl: ["mediator", "negotiator"].includes(english)
               ? { countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "common" }
-              : english === "important"
-                ? { grammarClassification: { grammarSubtype: "attributive" } }
-                : { grammarClassification: { grammarSubtype: "manner" } },
+              : ["conflict", "position"].includes(english)
+                ? { countability: "countable", physicalQuality: "abstract", grammaticalNumber: "singular", primaryClassification: "common" }
+                : { grammarClassification: { grammarSubtype: "attributive" } },
           })),
         },
         "grammar-errors": {
@@ -4681,9 +4693,11 @@
         },
       });
 
-      function autofillNewsDevFixture(name = "valid") {
+      async function autofillNewsDevFixture(name = "valid") {
         if (RUNTIME_ENV !== "development") return;
         const fixture = NEWS_DEV_AUTOFILL_FIXTURES[name] || NEWS_DEV_AUTOFILL_FIXTURES.valid;
+        state.newsFormDirty = true;
+        await loadVocabularyEslEditor();
         applyOpenReport(null);
         ["sourceLink", "articleTitle", "byline", "articleDateline", "leadSynopsis", "actionActor", "actionAffected", "actionWhere", "actionWhat", "actionWhy", "biasAssessment"].forEach((fieldId) => {
           setInputValue(fieldId, fixture[fieldId] || "");
@@ -5263,7 +5277,8 @@
           renderNewsQueue();
           setPortalReportDateInput("reportDate", t(data?.window?.reportDate));
           if (state.activeView === "news") renderCalendar(state.calendarRows);
-          if (options?.preserveForm !== true) {
+          const preserveDirtyForm = state.newsFormDirty === true;
+          if (options?.preserveForm !== true && !preserveDirtyForm) {
             const currentReport = state.newsReportId
               ? state.newsItems.find((entry) => t(entry?.id) === state.newsReportId) || data?.openReport || null
               : data?.openReport || null;
@@ -5386,6 +5401,8 @@
       }
 
       const NEWS_GRAMMAR_CHECK_MIN_DISPLAY_MS = 3300;
+      const STUDENT_NEWS_CHECK_UNAUTHORIZED_MESSAGE =
+        "News Check requires an active student session. Sign in again, then retry Check.";
 
       async function checkNewsPayload(payload = {}, options = {}) {
         const reportDate = t(payload?.reportDate);
@@ -5399,6 +5416,14 @@
           });
           await handleNewsCheckResult(saved, options);
           if (saved?.mmrPassed === true && saved?.complianceFailed !== true) clearNewsDraftLocally();
+        } catch (error) {
+          if (Number(error?.status) === 401) {
+            const sessionError = new Error(STUDENT_NEWS_CHECK_UNAUTHORIZED_MESSAGE);
+            sessionError.status = 401;
+            sessionError.payload = error?.payload;
+            throw sessionError;
+          }
+          throw error;
         } finally {
           const remainingDisplayMs = NEWS_GRAMMAR_CHECK_MIN_DISPLAY_MS - (Date.now() - grammarCheckStartedAt);
           if (remainingDisplayMs > 0) {
@@ -5814,7 +5839,7 @@
           });
           field("newsDevAutofill")?.classList.toggle("hidden", RUNTIME_ENV !== "development");
           field("newsDevAutofillBtn")?.addEventListener("click", () => {
-            autofillNewsDevFixture(t(field("newsDevFixture")?.value) || "valid");
+            autofillNewsDevFixture(t(field("newsDevFixture")?.value) || "valid").catch(handleError);
           });
           field("newNewsFormIgnoreBtn")?.addEventListener("click", () => {
             closeNewNewsFormConfirmModal();

@@ -988,7 +988,6 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
 
       function normalizePreviewApiOrigin(rawOrigin) {
         const text = normalizeText(rawOrigin)
-        // This must match inferLoopbackPreviewApiOrigin: test refreshes use 8786.
         if (!text) return ""
         const knownRuntimePorts = new Set(["8786", "8787", "8788"])
         let parsed
@@ -1000,9 +999,9 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         }
         if (
           isLoopbackHostname(parsed.hostname) &&
-          !knownRuntimePorts.has(parsed.port)
+          knownRuntimePorts.has(parsed.port)
         ) {
-          return "http://127.0.0.1:8788"
+          return parsed.origin
         }
         return parsed.origin
       }

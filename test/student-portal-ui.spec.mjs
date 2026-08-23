@@ -245,6 +245,133 @@ test("student portal initial auth paints the dashboard without probing /me", asy
   dom.window.close()
 })
 
+test("student News Check renders a specific session message for a 401 response", async () => {
+  const calls = []
+  const report = {
+    id: "news-check-session-report",
+    reportSequence: 1,
+    reportDate: "2026-04-26",
+    sourceLink: "https://example.com/news/session-check",
+    articleTitle: "Storms hit coast city",
+    byline: "bbc",
+    articleDateline: "Published April 26, 2026 at 9:00 AM ICT (Indochina Time GMT+7).",
+    leadSynopsis: "Officials said emergency teams evacuated families after rising waters flooded districts near the river.",
+    actionActor: "Emergency teams",
+    actionAffected: "Families",
+    actionWhere: "Coast City",
+    actionWhat: "Emergency teams evacuated residents after flood levels surged.",
+    actionWhy: "Heavy rain increased river levels.",
+    biasAssessment: "The report uses official and resident perspectives.",
+    submissionState: "draft",
+    reviewStatus: "draft",
+    vocabulary: [
+      ["apple", "quả táo", "AP-ple", "A round fruit."],
+      ["banana", "quả chuối", "ba-NA-na", "A long curved fruit."],
+      ["carrot", "cà rốt", "CAR-rot", "An orange root vegetable."],
+      ["dragon", "con rồng", "DRAG-on", "A mythical creature."],
+      ["elephant", "con voi", "EL-e-phant", "A large animal."],
+    ].map(([english, vietnamese, syllabication, definition], index) => ({
+      id: `news-check-word-${index}`,
+      partOfSpeech: "noun",
+      english,
+      vietnamese,
+      syllabication,
+      definition,
+      esl: {
+        countability: "countable",
+        physicalQuality: "concrete",
+        grammaticalNumber: "singular",
+        primaryClassification: "common",
+      },
+    })),
+  }
+  const dom = await createStudentPortalDom(
+    async (resource, init = {}) => {
+      const urlText = toUrlText(resource)
+      const method = String(init.method || "GET").toUpperCase()
+      const pathname = new URL(urlText, "http://preview.invalid").pathname
+      calls.push(`${method} ${pathname}`)
+      if (pathname === "/api/student/dashboard" && method === "GET") {
+        return jsonTextResponse(200, {
+          child: {
+            eaglesId: "flyers01",
+            fullName: "Student One",
+            englishName: "Student One",
+            currentGrade: "Eggs & Chicks",
+            studentNumber: 106,
+            attendance: { total: 1, present: 1, absent: 0, late: 0, excused: 0 },
+            assignments: { pending: 0, overdue: 0, completed: 0 },
+            grades: { averageScorePercent: 92 },
+            performance: { reportCount: 1 },
+          },
+          newsReports: { submittedCount: 0, statusSummary: {} },
+          calendarTracks: { review: [], homework: [] },
+        })
+      }
+      if (pathname === "/api/student/news-reports/calendar" && method === "GET") {
+        return jsonTextResponse(200, {
+          window: {
+            reportDate: report.reportDate,
+            todayDate: report.reportDate,
+            closesAt: "2026-04-27T23:59:00+07:00",
+          },
+          calendar: [],
+          items: [report],
+          openReport: report,
+        })
+      }
+      if (pathname === "/api/student/news-reports/check" && method === "POST") {
+        return jsonTextResponse(401, { error: "Unauthorized" })
+      }
+      return jsonTextResponse(200, { items: [] })
+    },
+    "http://127.0.0.1:46145/web-asset/student/student-portal.html",
+    {
+      initialAuthState: {
+        authenticated: true,
+        user: { eaglesId: "flyers01", role: "student" },
+      },
+      beforeParse(window) {
+        window.SIS_VOCABULARY_ESL = {
+          editorRowHtml(rowUid) {
+            const index = String(rowUid).split("-")[0]
+            return `<div data-news-vocabulary-row="${index}">
+              <select data-vocabulary-field="partOfSpeech"><option value="noun">noun</option></select>
+              <input data-vocabulary-field="english">
+              <input data-vocabulary-field="vietnamese">
+              <input data-vocabulary-field="syllabication">
+              <textarea data-vocabulary-field="definition"></textarea>
+            </div>`
+          },
+          hydrate() {},
+          sync() {},
+          bindLookupButtons() {},
+          canonicalizeSyllabication(value) { return String(value || "") },
+          classification() { return {} },
+          originMetadata() { return {} },
+        }
+      },
+    },
+  )
+
+  const document = dom.window.document
+  await waitFor(() => {
+    assert.equal(document.getElementById("appPanel").classList.contains("hidden"), false)
+    assert.equal(document.querySelectorAll('#newsVocabularyRows [data-vocabulary-field="english"]').length, 5, JSON.stringify(calls))
+  }, 5000)
+  document.getElementById("newsPageCard")?.classList.remove("hidden")
+  await waitFor(() => assert.equal(document.getElementById("checkBtn")?.disabled, false), 5000)
+  document.getElementById("checkBtn")?.click()
+  await waitFor(() => {
+    assert.match(
+      document.getElementById("formStatus")?.textContent || "",
+      /News Check requires an active student session\. Sign in again, then retry Check\./u,
+    )
+  }, 5000)
+  assert.ok(calls.includes("POST /api/student/news-reports/check"))
+  dom.window.close()
+})
+
 test("student portal grades YTD uses the setup-defined quarter when a stored label is stale", async () => {
   const fixedNow = "2025-11-15T09:00:00.000Z"
   const dom = await createStudentPortalDom(

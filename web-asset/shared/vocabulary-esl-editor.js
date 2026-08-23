@@ -469,6 +469,134 @@
     dispatchDefinitionInput(textarea);
   }
 
+  function definitionInlineFromClipboard(node) {
+    if (!node) return "";
+    if (node.nodeType === 3) return String(node.nodeValue || "").replace(/[\t\r\n ]+/gu, " ");
+    if (node.nodeType !== 1) return "";
+    const element = /** @type {HTMLElement} */ (node);
+    const tagName = String(element.tagName || "").toLowerCase();
+    if (["script", "style", "noscript", "template"].includes(tagName)) return "";
+    if (tagName === "br") return "\n";
+    const content = Array.from(element.childNodes || []).map(definitionInlineFromClipboard).join("");
+    const style = String(element.getAttribute?.("style") || "");
+    const bold = ["strong", "b"].includes(tagName) || /font-weight\s*:\s*(?:bold|[6-9]00)/iu.test(style);
+    const italic = ["em", "i"].includes(tagName) || /font-style\s*:\s*italic/iu.test(style);
+    const underline = tagName === "u" || /text-decoration(?:-line)?\s*:[^;]*underline/iu.test(style);
+    let formatted = content;
+    if (underline && formatted) formatted = `[u]${formatted}[/u]`;
+    if (italic && formatted) formatted = `*${formatted}*`;
+    if (bold && formatted) formatted = `**${formatted}**`;
+    return formatted;
+  }
+
+  function joinDefinitionClipboardBlocks(blocks) {
+    const source = Array.isArray(blocks) ? blocks : [];
+    return source.reduce((result, block, index) => {
+      const value = normalizeDefinitionText(block);
+      if (index === 0) return value;
+      const separator = result.endsWith("\n\n") ? "" : result.endsWith("\n") ? "\n" : "\n\n";
+      return `${result}${separator}${value}`;
+    }, "");
+  }
+
+  function definitionClipboardBlocks(node) {
+    const blocks = [];
+    let inline = "";
+    const flush = () => {
+      if (inline) blocks.push(inline.trim());
+      inline = "";
+    };
+    Array.from(node?.childNodes || []).forEach((child) => {
+      if (child.nodeType === 3) {
+        inline += definitionInlineFromClipboard(child);
+        return;
+      }
+      if (child.nodeType !== 1) return;
+      const element = /** @type {HTMLElement} */ (child);
+      const tagName = String(element.tagName || "").toLowerCase();
+      if (["script", "style", "noscript", "template"].includes(tagName)) return;
+      if (tagName === "br") {
+        inline += "\n";
+        return;
+      }
+      if (tagName === "ul" || tagName === "ol") {
+        flush();
+        blocks.push(definitionClipboardList(element, 0));
+        return;
+      }
+      if (["p", "div", "section", "article", "header", "footer", "blockquote", "pre", "h1", "h2", "h3", "h4", "h5", "h6", "hr"].includes(tagName)) {
+        flush();
+        const childBlocks = definitionClipboardBlocks(element);
+        if (childBlocks.length) blocks.push(...childBlocks);
+        else blocks.push("");
+        return;
+      }
+      inline += definitionInlineFromClipboard(element);
+    });
+    flush();
+    return blocks;
+  }
+
+  function definitionClipboardList(list, depth = 0) {
+    const ordered = String(list?.tagName || "").toLowerCase() === "ol";
+    const type = String(list?.getAttribute?.("type") || "");
+    let number = 1;
+    const lines = [];
+    Array.from(list?.children || []).filter((child) => String(child?.tagName || "").toLowerCase() === "li").forEach((item) => {
+      const contentNodes = Array.from(item.childNodes || []).filter((child) => {
+        const tagName = String(child?.tagName || "").toLowerCase();
+        return tagName !== "ul" && tagName !== "ol";
+      });
+      const content = contentNodes.map(definitionInlineFromClipboard).join("").trim();
+      const marker = ordered
+        ? type.toLowerCase() === "a"
+          ? `${String.fromCharCode(96 + number)}. `
+          : type === "A"
+            ? `${String.fromCharCode(64 + number)}. `
+            : `${number}. `
+        : "- ";
+      number += 1;
+      const indent = "    ".repeat(depth);
+      lines.push(`${indent}${marker}${content}`.trimEnd());
+      Array.from(item.children || []).filter((child) => ["ul", "ol"].includes(String(child?.tagName || "").toLowerCase())).forEach((nested) => {
+        lines.push(definitionClipboardList(nested, depth + 1));
+      });
+    });
+    return lines.join("\n");
+  }
+
+  function htmlToDefinitionText(html, plainText = "") {
+    const source = String(html == null ? "" : html);
+    if (!source.trim()) return normalizeDefinitionText(plainText);
+    if (typeof document === "undefined" || typeof document.createElement !== "function") return normalizeDefinitionText(plainText);
+    const template = document.createElement("template");
+    template.innerHTML = source;
+    const converted = joinDefinitionClipboardBlocks(definitionClipboardBlocks(template.content));
+    return converted || normalizeDefinitionText(plainText);
+  }
+
+  function insertDefinitionClipboardText(textarea, value) {
+    const start = Number.isInteger(textarea.selectionStart) ? textarea.selectionStart : textarea.value.length;
+    const end = Number.isInteger(textarea.selectionEnd) ? textarea.selectionEnd : start;
+    textarea.setRangeText(value, start, end, "end");
+    dispatchDefinitionInput(textarea);
+  }
+
+  function bindDefinitionPaste() {
+    if (typeof document === "undefined" || typeof document.addEventListener !== "function") return;
+    document.addEventListener("paste", (event) => {
+      const textarea = event.target?.closest?.('[data-vocabulary-field="definition"]');
+      if (!(textarea instanceof HTMLTextAreaElement)) return;
+      const clipboard = event.clipboardData;
+      if (!clipboard || typeof clipboard.getData !== "function") return;
+      const html = clipboard.getData("text/html");
+      const plainText = clipboard.getData("text/plain");
+      if (!html && !plainText) return;
+      event.preventDefault();
+      insertDefinitionClipboardText(textarea, htmlToDefinitionText(html, plainText));
+    });
+  }
+
   function bindDefinitionFormatting() {
     if (typeof document === "undefined" || typeof document.addEventListener !== "function") return;
     document.addEventListener("keydown", (event) => {
@@ -488,6 +616,7 @@
   }
 
   bindDefinitionFormatting();
+  bindDefinitionPaste();
 
   function bindDefinitionAutosize(row) {
     const textarea = row?.querySelector('[data-vocabulary-field="definition"]');
@@ -780,6 +909,7 @@
     isProperNounVocabularyEntry,
     vocabularyEnglishCapitalizationError,
     normalizeDefinitionText,
+    htmlToDefinitionText,
     canonicalizeSyllabication,
     parametersHtml,
     sync,
@@ -795,5 +925,6 @@
     insertEtymologyDeterministically,
     bindLookupButtons,
     bindDefinitionAutosize,
+    bindDefinitionPaste,
   };
 })();

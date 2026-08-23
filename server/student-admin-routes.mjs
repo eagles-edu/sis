@@ -318,6 +318,8 @@ const STUDENT_DASHBOARD_PATH = `${STUDENT_API_PREFIX}/dashboard`
 const STUDENT_PREFERENCES_PATH = `${STUDENT_API_PREFIX}/preferences`
 const STUDENT_NEWS_REPORTS_PATH = `${STUDENT_API_PREFIX}/news-reports`
 const STUDENT_NEWS_REPORTS_CHECK_PATH = `${STUDENT_API_PREFIX}/news-reports/check`
+const STUDENT_NEWS_CHECK_UNAUTHORIZED_MESSAGE =
+  "News Check requires an active student session. Sign in again, then retry Check."
 const STUDENT_NEWS_CALENDAR_PATH = `${STUDENT_API_PREFIX}/news-reports/calendar`
 const STUDENT_NEW_WORDS_PATH = `${STUDENT_API_PREFIX}/new-words`
 const STUDENT_LIBRARY_API_PATH = `${STUDENT_API_PREFIX}/library`
@@ -2723,10 +2725,12 @@ function readStudentSessionIdFromRequest(request) {
   return normalizeText(cookies[STUDENT_SESSION_COOKIE_NAME] || "")
 }
 
-async function requireAuthenticatedStudentSession(request, response) {
+async function requireAuthenticatedStudentSession(request, response, options = {}) {
+  const unauthorizedMessage =
+    normalizeText(options?.unauthorizedMessage) || "Unauthorized"
   const sessionId = readStudentSessionIdFromRequest(request)
   if (!sessionId) {
-    const error = new Error("Unauthorized")
+    const error = new Error(unauthorizedMessage)
     error.statusCode = 401
     throw error
   }
@@ -2734,7 +2738,7 @@ async function requireAuthenticatedStudentSession(request, response) {
   const session = await STUDENT_SESSION_STORE.touchSession(sessionId)
   if (!session) {
     clearStudentSessionCookie(response)
-    const error = new Error("Unauthorized")
+    const error = new Error(unauthorizedMessage)
     error.statusCode = 401
     throw error
   }
@@ -8871,7 +8875,10 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     return true
   }
 
-  const session = await requireAuthenticatedStudentSession(request, response)
+  const session = await requireAuthenticatedStudentSession(request, response, {
+    unauthorizedMessage:
+      pathname === STUDENT_NEWS_REPORTS_CHECK_PATH ? STUDENT_NEWS_CHECK_UNAUTHORIZED_MESSAGE : "",
+  })
   const studentRefId = await resolveStudentPortalSessionStudentRefId(session)
   if (!studentRefId) {
     const error = new Error("Student portal account is not linked to a student record")

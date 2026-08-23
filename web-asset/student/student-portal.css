@@ -70,7 +70,8 @@
   }
 
     .news-grammar-check-wait__dialog {
-      background: var(--portal-panel, #fff);
+      background-image: radial-gradient(circle, #fbffff, #cdd4d5, #a1aaad, #778288, #525b64);
+     /* background: var(--portal-panel, #fff); */
       border: 1px solid var(--portal-border, rgba(21, 44, 76, 0.24));
       border-radius: 18px;
       box-shadow: 0 20px 58px rgba(8, 22, 40, 0.38);

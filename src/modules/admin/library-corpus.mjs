@@ -185,6 +185,14 @@ function canonicalPair(payload = {}) {
 }
 
 const OPEN_CANONICAL_CONTRIBUTION_STATUSES = ["pending_review", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL]
+const LIBRARY_STUDENT_EDIT_FIELDS = new Set([
+  "english", "americanEnglish", "britishEnglish", "partOfSpeech", "phraseType", "grammarClassification",
+  "etymologyType", "etymology", "originPath", "originReferences", "vietnamese", "syllabication", "syllableCount",
+  "definition", "countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber",
+  "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage",
+  "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5",
+  "displayVerbForm", "edAdjective", "ingAdjective", "awlFamilyHeadword", "awlQualifyingMember", "awlMemberForm", "awlSublist",
+])
 
 export function selectContributionsForCanonicalEntry(rows = [], entry = {}) {
   const pair = canonicalPair(entry)
@@ -287,15 +295,21 @@ function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
   return data
 }
 
-function mapEntry(entry, { now = new Date() } = {}) {
+function mapEntry(entry, { now = new Date(), studentRefId = "" } = {}) {
   const revisions = Array.isArray(entry.revisions) ? entry.revisions : []
   const mapped = activePayloadValue(entry)
-  mapped.grammarClassification = activePayloadValue(entry.grammarClassification, "grammarClassification")
-  mapped.originReferences = Array.isArray(entry.originReferences) ? activePayloadValue(entry.originReferences, "originReferences") : []
+  const studentContribution = Array.isArray(entry.contributions) ? entry.contributions[0] : null
+  if (studentRefId && studentContribution) {
+    const contributionPayload = activePayloadValue(studentContribution.payloadJson || {}, "payloadJson")
+    for (const [field, value] of Object.entries(contributionPayload)) {
+      if (LIBRARY_STUDENT_EDIT_FIELDS.has(field)) mapped[field] = value
+    }
+  }
+  mapped.grammarClassification = activePayloadValue(mapped.grammarClassification, "grammarClassification")
+  mapped.originReferences = Array.isArray(mapped.originReferences) ? activePayloadValue(mapped.originReferences, "originReferences") : []
   mapped.editors = [...new Map(revisions.map((revision) => [revision.actorName, { name: revision.actorName || "", at: revision.createdAt || "" }])).values()]
   mapped.isLegacyPending = text(entry.reviewStatus) === LEGACY_PENDING_REVIEW
   mapped.reviewLabel = mapped.isLegacyPending ? "Legacy review pending" : ""
-  const studentContribution = Array.isArray(entry.contributions) ? entry.contributions[0] : null
   if (studentContribution) {
     mapped.studentContributionId = studentContribution.id || ""
     mapped.studentContributionStatus = studentContribution.status || ""
@@ -325,7 +339,7 @@ export async function listLibraryEntries(query = {}) {
   }, {})
   const where = {
     ...filters,
-    ...(myWords && studentRefId ? { contributions: { some: { studentRefId, status: { in: ["approved", "migrated", "canonicalized", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL, PENDING_CANONICAL_REPLACEMENT] } } } } : {}),
+    ...(myWords && studentRefId ? { contributions: { some: { studentRefId, status: { in: ["pending_review", "approved", "migrated", "canonicalized", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL, PENDING_CANONICAL_REPLACEMENT] } } } } : {}),
     ...(search ? { OR: [{ english: { contains: search, mode: "insensitive" } }, { vietnamese: { contains: search, mode: "insensitive" } }, { definition: { contains: search, mode: "insensitive" } }, { etymology: { contains: search, mode: "insensitive" } }] } : {})
   }
   const sortBy = ["english", "createdAt", "updatedAt", "partOfSpeech", "syllableCount"].includes(text(query.sortBy)) ? text(query.sortBy) : "english"
@@ -364,7 +378,7 @@ export async function listLibraryEntries(query = {}) {
       studentContributionDueAt: contribution.dueAt || "",
       studentCanEdit: isStudentLibraryContributionEditable(contribution),
     }))
-  const items = [...entries.map((entry) => mapEntry(entry)), ...pendingItems].sort((left, right) => text(left.english).localeCompare(text(right.english)) || text(left.partOfSpeech).localeCompare(text(right.partOfSpeech)))
+  const items = [...entries.map((entry) => mapEntry(entry, { studentRefId })), ...pendingItems].sort((left, right) => text(left.english).localeCompare(text(right.english)) || text(left.partOfSpeech).localeCompare(text(right.partOfSpeech)))
   return { ok: true, page, pageSize, total: total + pendingItems.length, items: items.slice(0, pageSize) }
 }
 

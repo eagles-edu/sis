@@ -3137,6 +3137,20 @@ test("GET /api/student/news-reports/calendar requires auth", async () => {
   assert.match(body.error, /Unauthorized/i)
 })
 
+test("POST /api/student/news-reports/check explains the missing student session", async () => {
+  const res = await fetchLocal(port, "/api/student/news-reports/check", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ reportDate: "2026-03-11" }),
+  })
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.equal(
+    body.error,
+    "News Check requires an active student session. Sign in again, then retry Check.",
+  )
+})
+
 test("GET /api/student/dashboard requires auth", async () => {
   const res = await fetchLocal(port, "/api/student/dashboard")
   assert.equal(res.status, 401)
