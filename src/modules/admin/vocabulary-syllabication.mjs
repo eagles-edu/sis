@@ -9,6 +9,28 @@ function text(value) {
   return String(value == null ? "" : value).trim()
 }
 
+export function normalizeVocabularyEnglishText(value) {
+  return text(value)
+    .normalize("NFC")
+    .replace(/\p{Z}+/gu, " ")
+}
+
+export function isProperNounVocabularyEntry(row = {}) {
+  const entry = row && typeof row === "object" ? row : {}
+  const esl = entry.esl && typeof entry.esl === "object" && !Array.isArray(entry.esl) ? entry.esl : {}
+  const partOfSpeech = text(entry.partOfSpeech).toLocaleLowerCase("en-US")
+  const primaryClassification = text(entry.primaryClassification || esl.primaryClassification).toLocaleLowerCase("en-US")
+  return partOfSpeech === "proper noun" || primaryClassification === "proper"
+}
+
+export function vocabularyEnglishCapitalizationError(row = {}) {
+  const english = normalizeVocabularyEnglishText(row?.english)
+  const isProperNoun = isProperNounVocabularyEntry(row)
+  if (isProperNoun && !/\p{Lu}/u.test(english)) return "Proper nouns must include a capital letter."
+  if (!isProperNoun && /\p{Lu}/u.test(english)) return "English word/phrase must be lowercase unless it is a proper noun."
+  return ""
+}
+
 function hasUppercase(value) {
   return /[A-Z]/u.test(value)
 }
@@ -61,8 +83,9 @@ export function vocabularySyllabicationError(english, syllabication) {
 }
 
 export function vocabularyEntryError(row = {}) {
-  const english = text(row?.english)
-  if (/[A-Z]/u.test(english)) return "English word/phrase must be lowercase."
+  const english = normalizeVocabularyEnglishText(row?.english)
+  const capitalizationError = vocabularyEnglishCapitalizationError(row)
+  if (capitalizationError) return capitalizationError
   return vocabularySyllabicationError(english, row?.syllabication)
 }
 

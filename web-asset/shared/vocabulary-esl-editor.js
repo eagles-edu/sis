@@ -9,6 +9,12 @@
   const nounTypes = [["common", "Common"], ["proper", "Proper"], ["concrete", "Concrete"], ["abstract", "Abstract"], ["material", "Material"], ["collective", "Collective"], ["compound", "Compound"], ["possessive", "Possessive"]];
   const nounNumbers = [["singular", "Singular"], ["plural", "Plural"], ["singular and plural", "Singular and Plural"]];
   const etymologyTypes = [["native", "Native English"], ["borrowed", "Borrowed / loanword"], ["derived", "Derived / affixed"], ["compound", "Compound"], ["eponym", "Eponym"], ["onomatopoeic", "Onomatopoeic"], ["unknown", "Unknown"]];
+
+  function originTypeText(value) {
+    const key = String(value == null ? "" : value).trim().toLowerCase();
+    const label = etymologyTypes.find(([candidate]) => candidate === key)?.[1] || String(value == null ? "" : value).trim();
+    return label.replace(/\s*\/\s*/gu, "/").toLowerCase();
+  }
   const syllabicationVowels = { a: "á", e: "é", i: "í", o: "ó", u: "ú", y: "ý" };
 
   function normalizeSyllabication(value) {
@@ -17,6 +23,28 @@
       .normalize("NFC")
       .replace(/[\p{Pd}\u00AD\u2027\u00B7\u22C5\u2212]/gu, "-")
       .replace(/\p{Z}+/gu, " ");
+  }
+
+  function normalizeVocabularyEnglishText(value) {
+    return String(value == null ? "" : value)
+      .normalize("NFC")
+      .replace(/\p{Z}+/gu, " ")
+      .trim();
+  }
+
+  function isProperNounVocabularyEntry(row = {}) {
+    const entry = row && typeof row === "object" ? row : {};
+    const esl = entry.esl && typeof entry.esl === "object" ? entry.esl : {};
+    const partOfSpeech = String(entry.partOfSpeech || "").trim().toLocaleLowerCase("en-US");
+    const primaryClassification = String(entry.primaryClassification || esl.primaryClassification || "").trim().toLocaleLowerCase("en-US");
+    return partOfSpeech === "proper noun" || primaryClassification === "proper";
+  }
+
+  function vocabularyEnglishCapitalizationError(row = {}) {
+    const english = normalizeVocabularyEnglishText(row.english);
+    if (isProperNounVocabularyEntry(row) && !/\p{Lu}/u.test(english)) return "Proper nouns must include a capital letter.";
+    if (!isProperNounVocabularyEntry(row) && /\p{Lu}/u.test(english)) return "English word/phrase must be lowercase unless it is a proper noun.";
+    return "";
   }
 
   function normalizeDefinitionText(value) {
@@ -42,6 +70,7 @@
     document.addEventListener("input", (event) => {
       const input = event?.target;
       if (input?.matches?.('[data-vocabulary-field="syllabication"]')) input.value = normalizeSyllabication(input.value);
+      if (input?.matches?.('[data-vocabulary-field="english"]')) input.value = normalizeVocabularyEnglishText(input.value);
     });
   }
 
@@ -199,6 +228,32 @@
     };
   }
 
+  const editorEslFields = ["phraseType", "countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "edAdjective", "ingAdjective", "etymologyType", "etymology"];
+
+  function readEditorEntry(row, existing = {}) {
+    const fallback = existing && typeof existing === "object" ? { ...existing } : {};
+    const fieldValue = (field) => row?.querySelector(`[data-vocabulary-field="${field}"]`);
+    const value = {
+      ...fallback,
+      partOfSpeech: String(fieldValue("partOfSpeech")?.value || "").trim(),
+      english: String(fieldValue("english")?.value || "").trim(),
+      vietnamese: String(fieldValue("vietnamese")?.value || "").trim(),
+      syllabication: canonicalizeSyllabication(fieldValue("syllabication")?.value || ""),
+      definition: normalizeDefinitionText(fieldValue("definition")?.value || ""),
+    };
+    editorEslFields.forEach((field) => {
+      const input = row?.querySelector(`[data-vocabulary-esl-field="${field}"]`);
+      if (!input) return;
+      value[field] = input.type === "checkbox" ? Boolean(input.checked) : String(input.value || "").trim();
+    });
+    const hasGrammarControls = grammarFields.some((field) => row?.querySelector(`[data-vocabulary-esl-field="${field}"]`));
+    if (hasGrammarControls) value.grammarClassification = classification(row);
+    const metadata = originMetadata(row);
+    if (Object.prototype.hasOwnProperty.call(metadata, "originPath")) value.originPath = metadata.originPath;
+    if (Object.prototype.hasOwnProperty.call(metadata, "originReferences")) value.originReferences = metadata.originReferences;
+    return value;
+  }
+
   function hydrate(row, data = {}, { preserveSyllabication = false } = {}) {
     const classificationValue = data.grammarClassification || {};
     sync(row);
@@ -267,7 +322,7 @@
     if (firstUse) {
       const line = firstUse[0];
       if (line.includes(addition)) return source;
-      next = source.replace(line, `${line}\n\n**Etymology:** ${addition}`);
+      next = source.replace(line, `${line}\n\n**Etymology** ${addition}`);
     } else {
       if (etymology) next = source.replace(etymology[0], `${etymology[0]}; ${addition}`);
       else {
@@ -276,9 +331,9 @@
         if (existingAdditionIndex >= 0) {
           const before = source.slice(0, existingAdditionIndex).trimEnd();
           const after = source.slice(existingAdditionIndex + addition.length).trimStart();
-          next = (before ? `${before}\n\n` : "") + `**Etymology:** ${addition}` + (after ? `\n\n${after}` : "");
+          next = (before ? `${before}\n\n` : "") + `**Etymology** ${addition}` + (after ? `\n\n${after}` : "");
         } else {
-          next = nextHeading >= 0 ? `${source.slice(0, nextHeading).trimEnd()}\n\n**Etymology:** ${addition}\n\n${source.slice(nextHeading).trimStart()}` : (source ? `${source}\n\n**Etymology:** ${addition}` : `**Etymology:** ${addition}`);
+          next = nextHeading >= 0 ? `${source.slice(0, nextHeading).trimEnd()}\n\n**Etymology** ${addition}\n\n${source.slice(nextHeading).trimStart()}` : (source ? `${source}\n\n**Etymology** ${addition}` : `**Etymology** ${addition}`);
         }
       }
     }
@@ -305,7 +360,11 @@
       if (section === "Stems" && line.trim() && !stemListItem.test(line)) section = "Etymology";
       sections[section].push(line);
     });
-    return [sections.body.join("\n").trim(), ...["First known use", "Etymology", "Origin path", "Verb Forms", "Stems", "Synonyms", "Antonyms", "Works Cited"].map((heading) => sections[heading].join("\n").trim() ? `**${heading}:** ${sections[heading].join("\n").trim()}` : "")].filter(Boolean).join("\n\n").trim();
+    return [sections.body.join("\n").trim(), ...["First known use", "Etymology", "Origin path", "Verb Forms", "Stems", "Synonyms", "Antonyms", "Works Cited"].map((heading) => {
+      const content = sections[heading].join("\n").trim();
+      if (!content) return "";
+      return ["First known use", "Etymology"].includes(heading) ? `**${heading}**\n${content}` : `**${heading}:** ${content}`;
+    })].filter(Boolean).join("\n\n").trim();
   }
 
   function bindLookupButtons(row) {
@@ -452,7 +511,10 @@
   function definitionHtml(value) {
     const source = String(value == null ? "" : value).replace(/\r\n?/gu, "\n").trim();
     if (!source) return "No definition yet.";
-    const lines = source.split("\n");
+    const lines = source.split("\n").flatMap((line) => {
+      const section = String(line).match(/^\*\*(First known use|Etymology):?\*\*:?[\t ]+(.+)$/iu);
+      return section ? [`**${section[1]}**`, section[2]] : [line];
+    });
     const listItemFromLine = (line) => {
       const match = String(line).match(/^([\t ]*)(?:(\d+)[.)]|([a-z])[.)]|[-+*])\s+(.+)$/iu);
       if (!match) return null;
@@ -573,7 +635,9 @@
     const blocks = [];
     if (sections.body) blocks.push(`<div class="new-word-entry-definition-body">${definitionHtml(sections.body)}</div>`);
     if (sections.firstKnownUse) blocks.push(`<section class="new-word-entry-first-use"><strong>First known use</strong><div>${definitionHtml(sections.firstKnownUse)}</div></section>`);
-    const etymology = [sections.etymology, value("etymology")].filter(Boolean).join("\n\n");
+    const originType = originTypeText(value("etymologyType"));
+    const etymologyProse = [sections.etymology, value("etymology")].filter(Boolean).join("\n\n");
+    const etymology = [originType ? `*${originType}*` : "", etymologyProse].filter(Boolean).join("; ");
     if (etymology) blocks.push(`<section class="new-word-entry-etymology"><strong>Etymology</strong><div>${definitionHtml(etymology)}</div></section>`);
     const originPath = [sections.originPath, value("originPath")].filter(Boolean).join("\n").trim();
     if (originPath) blocks.push(`<section class="new-word-entry-origin-path"><strong>Origin path</strong><div>${definitionHtml(originPath)}</div></section>`);
@@ -712,6 +776,9 @@
   window.SIS_VOCABULARY_ESL = {
     POS,
     normalizeSyllabication,
+    normalizeVocabularyEnglishText,
+    isProperNounVocabularyEntry,
+    vocabularyEnglishCapitalizationError,
     normalizeDefinitionText,
     canonicalizeSyllabication,
     parametersHtml,
@@ -719,6 +786,7 @@
     hydrate,
     classification,
     originMetadata,
+    readEditorEntry,
     grammarFields,
     editorRowHtml,
     flatEntrySummaryText,

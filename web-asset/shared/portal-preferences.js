@@ -79,22 +79,27 @@
     return Array.from(new Set(keys)).filter((key) => key !== "sis-admin-authenticated" && !LOCAL_ONLY_KEYS.has(key))
   }
 
-  async function load() {
+  async function load(options = {}) {
     if (loaded) return memory
     if (loadPromise) return loadPromise
     loadPromise = (async () => {
       const path = endpoint()
-      if (path) {
-        try {
-          const response = await fetch(path, { credentials: "include", headers: { Accept: "application/json" } })
-          if (response.ok) {
-            const payload = await response.json()
-            Object.assign(memory, safeObject(payload?.preferences))
-            syncConsentPreference()
-          }
-        } catch (error) {
-          void error
+      if (!path) {
+        loaded = true
+        return memory
+      }
+      if (options?.forceAuthenticated !== true && !isAuthenticated()) {
+        return memory
+      }
+      try {
+        const response = await fetch(path, { credentials: "include", headers: { Accept: "application/json" } })
+        if (response.ok) {
+          const payload = await response.json()
+          Object.assign(memory, safeObject(payload?.preferences))
+          syncConsentPreference()
         }
+      } catch (error) {
+        void error
       }
       loaded = true
       return memory
@@ -135,7 +140,7 @@
   }
 
   async function migrate() {
-    await load()
+    await load({ forceAuthenticated: true })
     const imported = {}
     for (const key of legacyKeys()) {
       let raw = null

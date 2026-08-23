@@ -95,12 +95,21 @@ test("parent boot follows the student critical loading sequence", () => {
 test("student home reserves hydrated queue and attendance geometry for CLS", () => {
   const studentCss = fs.readFileSync(path.resolve(rootDir, "web-asset/student/student-portal.css"), "utf8")
   assert.match(studentCss, /PERF-CONTRACT: STUDENT-HOME-CLS-RESERVATION/)
+  assert.match(studentCss, /body\.student-portal-page \.queue-summary-chips\s*\{[\s\S]*?min-block-size:\s*66px;/)
   assert.match(studentCss, /body\.student-portal-page #newsQueueCard \.queue-table-wrap\s*\{[\s\S]*?min-height: 260px;/)
   assert.match(studentCss, /body\.student-portal-page #pastDueHomeworkCard,[\s\S]*?body\.student-portal-page #newsQueueCard\s*\{[\s\S]*?min-height: 470px;/)
   assert.match(studentCss, /body\.student-portal-page #metricsPanel\s*\{\s*min-height: 308px;/)
   assert.match(studentCss, /@media \(max-width: 719px\) \{[\s\S]*?body\.student-portal-page #studentOverviewSummary\s*\{\s*min-height: 71px;/)
   assert.match(studentCss, /@media \(max-width: 399px\) \{[\s\S]*?body\.student-portal-page #metricsPanel\s*\{\s*min-height: 826px;/)
   assert.match(studentCss, /body\.student-portal-page #attendanceCalendarMetrics\s*\{[\s\S]*?min-height: 189px;/)
+})
+
+test("parent home reserves hydrated queue geometry for CLS", () => {
+  const parentCss = fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.css"), "utf8")
+  assert.match(parentCss, /PERF-CONTRACT: PARENT-HOME-CLS-RESERVATION/)
+  assert.match(parentCss, /body\.parent-portal-page \.queue-summary-chips\s*\{[\s\S]*?min-block-size:\s*66px;/)
+  assert.match(parentCss, /body\.parent-portal-page #newsQueueCard \.queue-table-wrap\s*\{[\s\S]*?min-height: 260px;/)
+  assert.match(parentCss, /body\.parent-portal-page #pastDueHomeworkCard,[\s\S]*?body\.parent-portal-page #newsQueueCard\s*\{[\s\S]*?min-height: 470px;/)
 })
 
 test("consent version is runtime-configurable from admin SIS settings", () => {

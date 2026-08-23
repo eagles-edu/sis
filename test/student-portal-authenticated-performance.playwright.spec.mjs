@@ -153,6 +153,31 @@ async function collectReloadEvidence(page, requests, failedRequests, consoleErro
   }
 }
 
+async function measureQueueHydrationGeometry(page) {
+  await page.waitForFunction(() => document.getElementById("newsQueueSummary")?.children.length === 4, undefined, { timeout: 30000 })
+  return await page.evaluate(() => {
+    const summary = document.getElementById("newsQueueSummary")
+    const table = document.querySelector("#newsQueueCard .queue-table-wrap")
+    const actions = document.querySelector("#newsQueueCard .actions")
+    const hydratedMarkup = summary?.innerHTML || ""
+    const read = () => ({
+      summaryHeight: Math.round(summary?.getBoundingClientRect().height || 0),
+      tableTop: Math.round(table?.getBoundingClientRect().top || 0),
+      actionsTop: Math.round(actions?.getBoundingClientRect().top || 0),
+    })
+    summary.innerHTML = ""
+    const empty = read()
+    summary.innerHTML = hydratedMarkup
+    const hydrated = read()
+    return {
+      emptySummaryHeight: empty.summaryHeight,
+      hydratedSummaryHeight: hydrated.summaryHeight,
+      tableShift: hydrated.tableTop - empty.tableTop,
+      actionsShift: hydrated.actionsTop - empty.actionsTop,
+    }
+  })
+}
+
 test("authenticated student boot uses one dashboard request and keeps Brevo off the LCP path", { skip: SKIP_REASON }, async (t) => {
   const browser = await chromium.launch({
     headless: true,
@@ -231,6 +256,11 @@ test("authenticated student boot uses one dashboard request and keeps Brevo off 
     assert.ok(evidence.browserEvidence.identity && !/loading/iu.test(evidence.browserEvidence.identity), `${viewport.name}: identity shell did not render`)
     assert.ok(evidence.browserEvidence.lcp > 0 && evidence.browserEvidence.lcp <= 4000, `${viewport.name}: LCP ${evidence.browserEvidence.lcp}ms exceeded 4000ms`)
     assert.ok(evidence.browserEvidence.cls <= 0.01, `${viewport.name}: CLS ${evidence.browserEvidence.cls} exceeded 0.01`)
+    const queueGeometry = await measureQueueHydrationGeometry(page)
+    assert.equal(queueGeometry.emptySummaryHeight, 66, `${viewport.name}: empty queue summary must reserve two chip rows`)
+    assert.equal(queueGeometry.hydratedSummaryHeight, 66, `${viewport.name}: hydrated queue summary must retain its reservation`)
+    assert.equal(queueGeometry.tableShift, 0, `${viewport.name}: queue table shifted during summary hydration`)
+    assert.equal(queueGeometry.actionsShift, 0, `${viewport.name}: queue action buttons shifted during summary hydration`)
     assert.equal(evidence.dashboardRequests.length, 1, `${viewport.name}: dashboard must load once per authenticated reload`)
     assert.equal(
       requests.filter((url) => /\/api\/student\/preferences(?:\?|$)/u.test(url)).length,

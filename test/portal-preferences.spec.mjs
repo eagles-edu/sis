@@ -96,7 +96,7 @@ test("keeps theme local and ignores a deferred server theme", async () => {
 })
 
 test("hydrates consent preferences from the Redis-backed portal preference response", async () => {
-  const { preferences, sandbox, store } = createSandbox("unauthenticated", {
+  const { preferences, sandbox, store } = createSandbox("authenticated", {
     serverPreferences: {
       "sis-consent-preferences": {
         version: 1,
@@ -114,7 +114,7 @@ test("hydrates consent preferences from the Redis-backed portal preference respo
 })
 
 test("reusing the preference script keeps one shared in-flight hydration request", async () => {
-  const { calls, preferences, sandbox } = createSandbox("unauthenticated")
+  const { calls, preferences, sandbox } = createSandbox("authenticated")
   const firstLoad = preferences.load()
   vm.runInNewContext(scriptSource, sandbox, { filename: scriptPath })
   await Promise.all([firstLoad, sandbox.SIS_PORTAL_PREFERENCES.load()])
@@ -126,7 +126,7 @@ test("reusing the preference script keeps one shared in-flight hydration request
 
 test("keeps the member notice visible when a prior preference has not acknowledged it", async () => {
   let removed = false
-  const { preferences, sandbox } = createSandbox("unauthenticated", {
+  const { preferences, sandbox } = createSandbox("authenticated", {
     serverPreferences: {
       "sis-consent-preferences": {
         version: 1,
@@ -141,6 +141,21 @@ test("keeps the member notice visible when a prior preference has not acknowledg
   await preferences.load()
 
   assert.equal(removed, false)
+})
+
+test("defers server preference hydration during the authentication transition", async () => {
+  const { calls, preferences, sandbox } = createSandbox("booting", {
+    serverPreferences: { "sis.student.textZoom": "1.1" },
+  })
+
+  await preferences.load()
+  assert.equal(calls.length, 0)
+
+  sandbox.document.documentElement.dataset.parentAuthState = "authenticated"
+  await preferences.migrate()
+
+  assert.equal(calls.length, 1)
+  assert.equal(preferences.get("sis.student.textZoom"), "1.1")
 })
 
 test("migration never uploads or removes canonical and legacy theme keys", async () => {

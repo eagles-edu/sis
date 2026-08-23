@@ -10,9 +10,14 @@ import {
   normalizeVocabularySyllabication,
   resetVocabularyDictionaryCacheForTest,
   validateVocabularyEntry,
+  vocabularyEnglishCapitalizationError,
   vocabularyEntryError,
 } from "../src/modules/admin/vocabulary-syllabication.mjs"
 import { isCheckedNewsReport } from "../src/modules/admin/student-new-words.mjs"
+import {
+  normalizeStudentNewsPayload,
+  normalizeStudentNewsVocabularyEsl,
+} from "../src/modules/admin/student-news-submissions.mjs"
 
 const STUDENT_HTML = fs.readFileSync(new URL("../web-asset/student/student-portal.html", import.meta.url), "utf8")
 const STUDENT_LIBRARY_HTML = fs.readFileSync(new URL("../web-asset/student/library.html", import.meta.url), "utf8")
@@ -63,7 +68,7 @@ test("student vocabulary definitions retain entered line breaks", async () => {
   const { normalizeDefinitionText } = await import("../src/modules/admin/library-origin.mjs")
   assert.equal(normalizeDefinitionText("Meaning one\n\nMeaning two\n"), "Meaning one\n\nMeaning two\n")
   assert.match(STUDENT_JS, /key === "definition" \? definitionText\(/)
-  assert.match(STUDENT_LIBRARY_HTML, /key === "definition" \? window\.SIS_VOCABULARY_ESL\?\.normalizeDefinitionText\(/)
+  assert.match(STUDENT_LIBRARY_HTML, /readEditorEntry\(row, entry\)/)
 })
 
 test("student test runtime accepts its same-origin HTTPS API origin", () => {
@@ -77,13 +82,29 @@ test("student New Words keeps server validation details visible in dark mode", (
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] \.sis-action-feedback\[data-state="error"\] \{[\s\S]*background: var\(--primary-color\);[\s\S]*color: var\(--secondary-color\);/)
   assert.match(ACTION_FEEDBACK_JS, /response\.clone\(\)\.json\(\)\.catch\(\(\) => null\)\.then\(/)
   assert.match(ACTION_FEEDBACK_JS, /text\(payload\?\.error\) \|\| text\(payload\?\.message\) \|\| `Request failed/)
-  assert.equal(vocabularyEntryError({ english: "Word", syllabication: "word" }), "English word/phrase must be lowercase.")
+  assert.equal(vocabularyEntryError({ english: "Word", partOfSpeech: "noun", syllabication: "word" }), "English word/phrase must be lowercase unless it is a proper noun.")
+  assert.equal(vocabularyEntryError({ english: "london", partOfSpeech: "proper noun", syllabication: "LON-don" }), "Proper nouns must include a capital letter.")
+  assert.equal(vocabularyEntryError({ english: "London", partOfSpeech: "proper noun", syllabication: "LON-don" }), "")
+  assert.equal(vocabularyEnglishCapitalizationError({ english: "New York", primaryClassification: "proper" }), "")
+  assert.equal(vocabularyEnglishCapitalizationError({ english: "new york", primaryClassification: "proper" }), "Proper nouns must include a capital letter.")
   assert.match(vocabularyEntryError({ english: "word", syllabication: "word-word" }), /exactly one stressed syllable/)
 })
 
 test("student news vocabulary minimum is configurable", async () => {
   assert.equal((await evaluateStudentNewsVocabulary(completeVocabularyRows(5), { minimumWords: 6 })).passed, false)
   assert.equal((await evaluateStudentNewsVocabulary(completeVocabularyRows(6), { minimumWords: 6 })).passed, true)
+})
+
+test("development News autofill uses complete real vocabulary with uppercase stress", () => {
+  assert.match(STUDENT_HTML, /Complete report — real words, stress capitals/)
+  for (const [english, syllabication] of [["apple", "AP-ple"], ["banana", "ba-NA-na"], ["computer", "com-PU-ter"], ["elephant", "EL-e-phant"], ["important", "im-POR-tant"], ["together", "to-GETH-er"]]) {
+    assert.match(STUDENT_JS, new RegExp(`"${english}"[\\s\\S]*?"${syllabication}"`))
+  }
+  assert.match(STUDENT_JS, /countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "common"/)
+  assert.match(STUDENT_JS, /hydrate\(rowEl, \{ \.\.\.row, \.\.\.esl \}\)/)
+  assert.doesNotMatch(STUDENT_JS, /hydrate\(rowEl, esl\)/)
+  assert.match(STUDENT_JS, /if \(RUNTIME_ENV !== "development"\) return;/)
+  assert.doesNotMatch(STUDENT_JS, /test-term-/)
 })
 
 test("student news vocabulary reports the offending entry", async () => {
@@ -100,6 +121,21 @@ test("student news vocabulary reports the offending entry", async () => {
   assert.match(result.message, /in the morning/)
   assert.equal(result.rowErrors[0].index, 0)
   assert.match(result.rowErrors[0].message, /exactly one stressed syllable/)
+})
+
+test("student News assigns English capitalization failures to the English field", async () => {
+  const result = await evaluateStudentNewsVocabulary([
+    {
+      partOfSpeech: "noun",
+      english: "Apple",
+      vietnamese: "quả táo",
+      syllabication: "AP-ple",
+      definition: "A fruit.",
+    },
+  ], { minimumWords: 1 })
+  assert.equal(result.passed, false)
+  assert.deepEqual(result.rowErrors[0].fields, ["english"])
+  assert.match(result.rowErrors[0].message, /lowercase unless it is a proper noun/)
 })
 
 test("compound vocabulary passes required validation but can earn an extra-points warning", async () => {
@@ -187,6 +223,37 @@ test("optional etymology attempts earn extra-point metadata without becoming req
   assert.match(result.warningFields.vocabulary.message, /etymology attempt/i)
 })
 
+test("Student News draft normalization preserves shared editor fields", () => {
+  const esl = {
+    countability: "countable",
+    physicalQuality: "abstract",
+    grammaticalNumber: "singular",
+    primaryClassification: "common",
+    etymologyType: "borrowed",
+    etymology: "Borrowed through Arabic.",
+    grammarClassification: { grammarFamily: "primary", grammarSubtype: "manner" },
+    originPath: "Arabic via Spanish",
+    originReferences: [{ source: "Etymonline", url: "https://www.etymonline.com/word/algebra" }],
+  }
+  const normalized = normalizeStudentNewsPayload({
+    reportDate: "2026-08-23",
+    vocabulary: [{
+      partOfSpeech: "noun",
+      english: "algebra",
+      vietnamese: "đại số",
+      syllabication: "AL-ge-bra",
+      definition: "A branch of mathematics.",
+      esl,
+    }],
+  })
+  assert.deepEqual(normalized.vocabulary[0].esl, normalizeStudentNewsVocabularyEsl(esl))
+  assert.equal(normalized.vocabulary[0].esl.etymology, "Borrowed through Arabic.")
+  assert.equal(normalized.vocabulary[0].esl.grammarClassification.grammarSubtype, "manner")
+  assert.equal(normalized.vocabulary[0].esl.originReferences[0].source, "Etymonline")
+  assert.match(NEWS_SUBMISSIONS_MODULE, /draftVocabularyWarnings.push\(/)
+  assert.match(NEWS_SUBMISSIONS_MODULE, /Some vocabulary entries need correction before Check\./)
+})
+
 test("air-strike never receives a false syllabication warning", async () => {
   const { evaluateStudentNewsCompliance } = await import("../src/modules/admin/student-news-compliance.mjs")
   const result = await evaluateStudentNewsCompliance({
@@ -240,7 +307,7 @@ test("vocabulary guard accepts uppercase or accented stress and preserves canoni
     assert.equal(vocabularyEntryError({ english: "lion", syllabication: `lí${separator}on` }), "")
   })
   assert.equal(vocabularyEntryError({ english: "lion", syllabication: "lí‧on" }), "")
-  assert.match(vocabularyEntryError({ english: "Commended", syllabication: "com-MEND-ed" }), /lowercase/)
+  assert.match(vocabularyEntryError({ english: "Commended", partOfSpeech: "noun", syllabication: "com-MEND-ed" }), /lowercase unless it is a proper noun/)
   assert.match(vocabularyEntryError({ english: "commended", syllabication: "com-MEnd-ed" }), /complete stressed syllable/)
   const missingStress = vocabularyEntryError({ english: "commended", syllabication: "com-mend-ed" })
   assert.match(missingStress, /Research it using the provided dictionary links/)
@@ -359,7 +426,9 @@ test("authoritative validator allows a warning only when Merriam-Webster is unav
 
 test("all student vocabulary save and check surfaces run the same client guard", () => {
   assert.match(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\)/)
-  assert.match(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\) \{[\s\S]*?input\?\.matches\?\.\('\[data-vocabulary-field="english"\]'\)[\s\S]*?input\.value\s*=\s*input\.value\.toLocaleLowerCase\("en-US"\)/)
+  assert.match(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\) \{[\s\S]*?input\?\.matches\?\.\('\[data-vocabulary-field="english"\]'\)[\s\S]*?normalizeVocabularyEnglishText/)
+  assert.match(STUDENT_JS, /Proper nouns must include a capital letter/)
+  assert.match(STUDENT_JS, /English word\/phrase must be lowercase unless it is a proper noun/)
   assert.doesNotMatch(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\) \{[\s\S]*?data-vocabulary-field="syllabication"[\s\S]*?input\.value\s*=\s*normalizeSyllabication\(input\.value\)/)
   assert.match(STUDENT_JS, /function validateVocabularyEntrySurface\(container, onInvalid\)/)
   assert.match(STUDENT_JS, /if \(!row\.english && !row\.syllabication\) return;/)

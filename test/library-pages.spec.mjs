@@ -73,6 +73,8 @@ test("New Words and News vocabulary use the same full ESL row payload without st
   assert.match(sharedVocabularyEditor, /Cambridge English Dictionary/)
   assert.match(sharedVocabularyEditor, /Collegiate to Learner fallback/)
   assert.match(sharedVocabularyEditor, /Google definition search/)
+  assert.doesNotMatch(sharedVocabularyEditor, /<strong>(?:First known use|Etymology):<\/strong>/)
+  assert.doesNotMatch(libraryCorpus, /`\*\*(?:First known use|Etymology):\*\*`/)
   assert.doesNotMatch(studentPortal, /data-vocabulary-origin-analysis|origin-analysis/)
   assert.match(sharedVocabularyEditor, /const output = \[`<\$\{listType\}\$\{typeAttribute\}>`\]/)
   assert.doesNotMatch(routes, /STUDENT_LIBRARY_API_PATH\}\/mw-preview/)
@@ -83,6 +85,29 @@ test("New Words and News vocabulary use the same full ESL row payload without st
   assert.match(libraryCorpus, /Students may edit only their own Library contribution/)
   assert.match(studentPortal, /id="newWordsRefreshBtn"/)
   assert.match(portalScript, /function refreshNewWords\(/)
+})
+
+test("Student Library saves the complete shared editor payload without dropping legacy fields", () => {
+  const dom = new JSDOM("<!doctype html><body></body>")
+  const context = { window: dom.window, document: dom.window.document, Event: dom.window.Event, HTMLTextAreaElement: dom.window.HTMLTextAreaElement }
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const row = dom.window.document.createElement("div")
+  row.innerHTML = context.window.SIS_VOCABULARY_ESL.editorRowHtml("library-save")
+  const existing = {
+    partOfSpeech: "noun", english: "apple", vietnamese: "quả táo", syllabication: "AP-ple", definition: "A round fruit.",
+    nounType: "common", nounNumber: "singular", countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "common",
+    etymologyType: "borrowed", etymology: "From Old English.", originPath: "Old English → English", originReferences: [{ source: "Etymonline", url: "https://www.etymonline.com/word/apple" }],
+  }
+  context.window.SIS_VOCABULARY_ESL.hydrate(row, existing)
+  row.querySelector('[data-vocabulary-field="vietnamese"]').value = "táo"
+  const payload = context.window.SIS_VOCABULARY_ESL.readEditorEntry(row, existing)
+  assert.equal(payload.vietnamese, "táo")
+  assert.equal(payload.nounType, "common")
+  assert.equal(payload.nounNumber, "singular")
+  assert.equal(payload.etymology, "From Old English.")
+  assert.deepEqual(JSON.parse(JSON.stringify(payload.originReferences)), existing.originReferences)
+  assert.match(student, /readEditorEntry\(row, entry\)/)
+  dom.window.close()
 })
 
 test("admin Library is a protected physical page under Administration without chat", () => {
@@ -343,11 +368,12 @@ test("admin Library edits remain approved and use the approved-edit revision act
 })
 
 test("Library saves canonicalize stress after the editor preserves typed capitalization", () => {
-  assert.match(libraryCorpus, /import \{ normalizeVocabularySyllabication \} from "\.\/vocabulary-syllabication\.mjs"/)
+  assert.match(libraryCorpus, /import \{ normalizeVocabularySyllabication, vocabularyEnglishCapitalizationError \} from "\.\/vocabulary-syllabication\.mjs"/)
   assert.match(libraryCorpus, /syllabication: normalizeVocabularySyllabication\(value\.syllabication\)/)
   assert.match(libraryCorpus, /syllabication: normalizeVocabularySyllabication\(rawEntry\.syllabication\)/)
   assert.match(admin, /field === "syllabication"\) value = window\.SIS_VOCABULARY_ESL\.canonicalizeSyllabication\(value\)/)
-  assert.match(student, /key === "syllabication" \? window\.SIS_VOCABULARY_ESL\?\.canonicalizeSyllabication/)
+  assert.match(student, /readEditorEntry\(row, entry\)/)
+  assert.match(sharedVocabularyEditor, /syllabication: canonicalizeSyllabication\(fieldValue\("syllabication"\)\?\.value \|\| ""\)/)
 })
 
 test("all standalone admin navigation shells expose the Library child menu", () => {
@@ -382,6 +408,10 @@ test("flattened vocabulary preserves New Words geometry and formats safe definit
   assert.equal((flattenedChairDefinitions.match(/<li>/gu) || []).length, 3)
   assert.match(flattenedChairDefinitions, /to preside as chairperson[\s\S]*to install in office[\s\S]*to carry on the shoulders/)
   assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\nB"), "<p>A<br>B</p>")
+  assert.equal(
+    context.window.SIS_VOCABULARY_ESL.definitionHtml("**First known use:** 12th century\n\n**Etymology:** mid-12c., a wondrous work of God"),
+    "<p><strong>First known use</strong><br>12th century</p><p><strong>Etymology</strong><br>mid-12c., a wondrous work of God</p>",
+  )
   assert.equal(context.window.SIS_VOCABULARY_ESL.normalizeDefinitionText("A\r\n\r\nB\n"), "A\n\nB\n")
   assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\n\n- B"), "<p>A</p><ul><li>B</li></ul>")
   const nestedExampleHtml = context.window.SIS_VOCABULARY_ESL.definitionHtml(
@@ -393,6 +423,14 @@ test("flattened vocabulary preserves New Words geometry and formats safe definit
   assert.match(preferredHtml, /<ol type="a"><li>repeat, imitate<ul><li>children echoing their teacher&#39;s words<\/li><\/ul>/)
   assert.match(preferredHtml, /<strong>Etymology<\/strong>/)
   assert.match(context.window.SIS_VOCABULARY_ESL.flatEntryHtml({ partOfSpeech: "noun", definition: "**Etymology**\nFrom Latin\n\n**Works Cited**\n- Source" }), /new-word-entry-etymology/)
+  assert.match(
+    context.window.SIS_VOCABULARY_ESL.flatEntryHtml({ partOfSpeech: "noun", etymologyType: "borrowed", etymology: "1530s, from Latin exhaurire" }),
+    /<section class="new-word-entry-etymology"><strong>Etymology<\/strong><div><p><em>borrowed\/loanword<\/em>; 1530s, from Latin exhaurire<\/p><\/div><\/section>/,
+  )
+  assert.match(
+    context.window.SIS_VOCABULARY_ESL.flatEntryHtml({ partOfSpeech: "noun", definition: "**First known use:** 12th century\n\n**Etymology:** From Latin" }),
+    /<section class="new-word-entry-first-use"><strong>First known use<\/strong><div><p>12th century<\/p><\/div><\/section><section class="new-word-entry-etymology"><strong>Etymology<\/strong><div><p>From Latin<\/p><\/div><\/section>/,
+  )
   const preferredEntryHtml = context.window.SIS_VOCABULARY_ESL.flatEntryHtml({
     partOfSpeech: "verb",
     definition: definitionSpacingSample,
@@ -455,30 +493,30 @@ test("unheaded Etymonline prose after Stems is restored to Etymology after First
     "**First known use:** 12th century\n\n**Stems:**\n- wildfire\n- wildfires\n\nlate Old English *wilde fyr*",
     "from Old French via Latin",
   )
-  assert.ok(inserted.indexOf("**First known use:**") < inserted.indexOf("**Etymology:**"))
-  assert.ok(inserted.indexOf("**Etymology:**") < inserted.indexOf("**Stems:**"))
-  assert.doesNotMatch(inserted, /\*\*First known use:\*\* 12th century; from Old French via Latin/)
+  assert.ok(inserted.indexOf("**First known use**") < inserted.indexOf("**Etymology**"))
+  assert.ok(inserted.indexOf("**Etymology**") < inserted.indexOf("**Stems:**"))
+  assert.doesNotMatch(inserted, /\*\*(?:First known use|Etymology):\*\*/)
   const insertedBeforeWorksCited = context.window.SIS_VOCABULARY_ESL.insertEtymologyDeterministically(
     "A definition paragraph.\n\n**Works Cited:**\n- Source",
     "from Middle English",
   )
-  assert.match(insertedBeforeWorksCited, /\*\*Etymology:\*\* from Middle English/)
-  assert.ok(insertedBeforeWorksCited.indexOf("**Etymology:**") < insertedBeforeWorksCited.indexOf("**Works Cited:**"))
+  assert.match(insertedBeforeWorksCited, /\*\*Etymology\*\*\nfrom Middle English/)
+  assert.ok(insertedBeforeWorksCited.indexOf("**Etymology**") < insertedBeforeWorksCited.indexOf("**Works Cited:**"))
   const insertedIntoBlankDefinition = context.window.SIS_VOCABULARY_ESL.insertEtymologyDeterministically(
     "",
     "from Middle English",
   )
-  assert.equal(insertedIntoBlankDefinition, "**Etymology:** from Middle English")
+  assert.equal(insertedIntoBlankDefinition, "**Etymology**\nfrom Middle English")
   const insertedIntoPlainDefinition = context.window.SIS_VOCABULARY_ESL.insertEtymologyDeterministically(
     "A definition paragraph.",
     "from Middle English",
   )
-  assert.match(insertedIntoPlainDefinition, /A definition paragraph\.\n\n\*\*Etymology:\*\* from Middle English/)
+  assert.match(insertedIntoPlainDefinition, /A definition paragraph\.\n\n\*\*Etymology\*\*\nfrom Middle English/)
   const existingUnheadedEtymology = context.window.SIS_VOCABULARY_ESL.insertEtymologyDeterministically(
     "A definition from Middle English",
     "from Middle English",
   )
-  assert.equal((existingUnheadedEtymology.match(/\*\*Etymology:\*\*/gu) || []).length, 1)
+  assert.equal((existingUnheadedEtymology.match(/\*\*Etymology\*\*/gu) || []).length, 1)
   const verbHtml = context.window.SIS_VOCABULARY_ESL.flatEntryHtml({
     english: "threaten",
     partOfSpeech: "verb",

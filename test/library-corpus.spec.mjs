@@ -6,6 +6,7 @@ const schema = fs.readFileSync(new URL("../prisma/schema.prisma", import.meta.ur
 const migration = fs.readFileSync(new URL("../prisma/migrations/20260810132000_add_library_corpus/migration.sql", import.meta.url), "utf8")
 const cutoverMigration = fs.readFileSync(new URL("../prisma/migrations/20260810134000_add_full_esl_legacy_cutover/migration.sql", import.meta.url), "utf8")
 const corpus = fs.readFileSync(new URL("../src/modules/admin/library-corpus.mjs", import.meta.url), "utf8")
+const capitalizationNormalizer = fs.readFileSync(new URL("../tools/normalize-vocabulary-english-capitalization.mjs", import.meta.url), "utf8")
 const originMigration = fs.readFileSync(new URL("../prisma/migrations/20260814090000_remove_library_redundant_fields_add_origin_metadata/migration.sql", import.meta.url), "utf8")
 
 test("Library uses a dedicated PostgreSQL schema with immutable audit records", () => {
@@ -95,6 +96,26 @@ test("Library definitions keep up to 50,000 characters through normalization", a
   assert.equal(normalizeLibraryDefinition(definition).length, 50000)
   assert.equal(normalizeLibraryDefinition(definition.slice(0, 49999)).length, 49999)
   assert.equal(normalizeLibraryDefinition("First line\n\nSecond line\n"), "First line\n\nSecond line\n")
+})
+
+test("Library rejects capitals for common entries and requires them for proper nouns", async () => {
+  const { updateLibraryEntry } = await import("../src/modules/admin/library-corpus.mjs")
+  const { vocabularyEnglishCapitalizationError } = await import("../src/modules/admin/vocabulary-syllabication.mjs")
+  assert.equal(vocabularyEnglishCapitalizationError({ english: "Apple", partOfSpeech: "noun" }), "English word/phrase must be lowercase unless it is a proper noun.")
+  assert.equal(vocabularyEnglishCapitalizationError({ english: "apple", partOfSpeech: "proper noun" }), "Proper nouns must include a capital letter.")
+  assert.equal(vocabularyEnglishCapitalizationError({ english: "London", partOfSpeech: "proper noun" }), "")
+  assert.match(corpus, /const capitalizationError = vocabularyEnglishCapitalizationError\(\{ \.\.\.value, english, partOfSpeech \}\)/)
+  assert.match(corpus, /const capitalizationError = vocabularyEnglishCapitalizationError\(entry\)/)
+  assert.match(corpus, /const capitalizationError = vocabularyEnglishCapitalizationError\(\{ \.\.\.existing, \.\.\.data \}\)/)
+  assert.equal(typeof updateLibraryEntry, "function")
+})
+
+test("legacy capitalization normalizer is dry-run first, preserves immutable snapshots, and audits Library changes", () => {
+  assert.match(capitalizationNormalizer, /const apply = process\.argv\.includes\("--apply"\)/)
+  assert.match(capitalizationNormalizer, /immutableAuditSnapshotsPreserved: true/)
+  assert.match(capitalizationNormalizer, /Normalization would merge Library entries/)
+  assert.match(capitalizationNormalizer, /action: "capitalization_normalized"/)
+  assert.match(capitalizationNormalizer, /unresolvedProperNouns/)
 })
 
 test("legacy cutover preserves sources while creating provisional A/B review groups", () => {

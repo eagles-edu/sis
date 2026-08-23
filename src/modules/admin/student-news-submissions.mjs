@@ -20,7 +20,7 @@ import {
   stripAwaitingReReviewMarker,
   updateStudentNewsValidationIssues,
 } from "./student-news-compliance.mjs"
-import { normalizeVocabularySyllabication, validateVocabularyEntry } from "./vocabulary-syllabication.mjs"
+import { normalizeVocabularySyllabication, validateVocabularyEntry, vocabularyEnglishCapitalizationError } from "./vocabulary-syllabication.mjs"
 import {
   isStudentNewsReportSchemaUnavailableError,
   isStudentNewsReviewSchemaUnavailableError,
@@ -290,6 +290,62 @@ const STUDENT_NEWS_SUBMISSION_STATE_DRAFT = "draft"
 const STUDENT_NEWS_SUBMISSION_STATE_READY = "ready"
 const STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED = "submitted"
 const STUDENT_NEWS_STATE_MIGRATION_CUTOFF = new Date("2026-06-28T00:00:00.000Z")
+const STUDENT_NEWS_VOCABULARY_ESL_FIELDS = Object.freeze([
+  "phraseType",
+  "countability",
+  "nounType",
+  "nounNumber",
+  "physicalQuality",
+  "grammaticalNumber",
+  "primaryClassification",
+  "materialUsage",
+  "properNounVariantShift",
+  "dualCountabilityUsage",
+  "verbRegularity",
+  "verbTransitivity",
+  "verbInfinitive",
+  "verbV1",
+  "verbV2",
+  "verbV3",
+  "verbV4",
+  "verbV5",
+  "displayVerbForm",
+  "edAdjective",
+  "ingAdjective",
+  "etymologyType",
+  "etymology",
+  "grammarFamily",
+  "grammarSubtype",
+  "grammarDetail",
+  "grammarNumber",
+  "originPath",
+])
+
+function normalizeStudentNewsVocabularyEsl(value = {}) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {}
+  const normalized = {}
+  for (const field of STUDENT_NEWS_VOCABULARY_ESL_FIELDS) {
+    if (field === "properNounVariantShift" || field === "edAdjective" || field === "ingAdjective") {
+      if (source[field] === true) normalized[field] = true
+      continue
+    }
+    const fieldValue = normalizeText(source[field])
+    if (fieldValue) normalized[field] = fieldValue
+  }
+  const classification = source.grammarClassification
+  if (classification && typeof classification === "object" && !Array.isArray(classification)) {
+    const normalizedClassification = Object.fromEntries(
+      Object.entries(classification)
+        .map(([field, fieldValue]) => [field, normalizeText(fieldValue)])
+        .filter(([, fieldValue]) => fieldValue),
+    )
+    if (Object.keys(normalizedClassification).length) normalized.grammarClassification = normalizedClassification
+  }
+  if (Array.isArray(source.originReferences) && source.originReferences.length) {
+    normalized.originReferences = source.originReferences
+  }
+  return normalized
+}
 
 function normalizeStudentNewsSubmissionState(value, fallback = STUDENT_NEWS_SUBMISSION_STATE_DRAFT) {
   const token = normalizeLower(value)
@@ -440,6 +496,7 @@ function normalizeStudentNewsPayload(payload = {}) {
       // Definitions are stored verbatim; silently cutting a student's meaning
       // changes its meaning and makes correction impossible.
       definition: normalizeDefinitionText(row?.definition),
+      esl: normalizeStudentNewsVocabularyEsl(row?.esl),
     })) : [],
     reportDateText: normalizeText(payload?.reportDate),
   }
@@ -1114,14 +1171,29 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
   const draftVocabularyWarnings = []
   if (mode === "draft") {
     for (const [index, row] of vocabulary.entries()) {
-      // Drafts may contain incomplete work, but a row with both fields entered
-      // must not bypass authoritative syllabication and stress validation.
-      if (!normalizeText(row?.english) || !normalizeText(row?.syllabication)) continue
+      // Drafts may contain incomplete work, but capitalization is always
+      // checked as soon as English is present. Syllabication needs both fields.
+      if (!normalizeText(row?.english)) continue
+      const capitalizationError = vocabularyEnglishCapitalizationError(row)
+      if (capitalizationError) {
+        draftVocabularyWarnings.push({
+          index,
+          english: normalizeText(row.english),
+          message: `Entry ${index + 1} has invalid English capitalization: ${capitalizationError}`,
+          fields: ["english"],
+        })
+        continue
+      }
+      if (!normalizeText(row?.syllabication)) continue
       const result = await validateVocabularyEntry(row)
       if (result.message) {
-        const error = new Error(`Entry ${index + 1} has invalid syllabication: ${result.message}`)
-        error.statusCode = 400
-        throw error
+        draftVocabularyWarnings.push({
+          index,
+          english: normalizeText(row?.english),
+          message: `Entry ${index + 1} has invalid syllabication: ${result.message}`,
+          fields: ["syllabication"],
+        })
+        continue
       }
       if (result.warning) draftVocabularyWarnings.push({ index, english: normalizeText(row?.english), message: result.warning, fields: ["syllabication"] })
     }
@@ -1133,7 +1205,7 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     ? {
         warningFields: draftVocabularyWarnings.length ? {
           vocabulary: {
-            message: "Some vocabulary entries could not be verified right now.",
+            message: "Some vocabulary entries need correction before Check.",
             rowWarnings: draftVocabularyWarnings,
           },
         } : {},
@@ -1445,6 +1517,8 @@ export async function saveStudentNewsReport(studentRefId, payload = {}, options 
 }
 
 export {
+  normalizeStudentNewsPayload,
+  normalizeStudentNewsVocabularyEsl,
   normalizeStudentNewsReviewStatus,
   resolveStudentNewsStatusColor,
 }

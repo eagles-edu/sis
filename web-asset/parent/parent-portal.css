@@ -223,4 +223,43 @@
         #portalCard {
         display: none !important;
       }
+
+      /* PERF-CONTRACT: PARENT-HOME-CLS-RESERVATION */
+      body.parent-portal-page .queue-summary-chips {
+        /* Four queue chips always render as two 30px rows with a 6px gap. */
+        min-block-size: 66px;
+      }
+
+      body.parent-portal-page #newsQueueCard .queue-table-wrap {
+        min-height: 260px;
+      }
+
+      body.parent-portal-page #pastDueHomeworkCard,
+      body.parent-portal-page #newsQueueCard {
+        min-height: 470px;
+      }
+
+      body.parent-portal-page #metricsPanel {
+        min-height: 308px;
+      }
+
+      @media (max-width: 719px) {
+        body.parent-portal-page #parentOverviewSummary {
+          min-height: 71px;
+        }
+
+        body.parent-portal-page #metricsPanel {
+          min-height: 505px;
+        }
+      }
+
+      @media (max-width: 399px) {
+        body.parent-portal-page #metricsPanel {
+          min-height: 826px;
+        }
+      }
+
+      body.parent-portal-page #attendanceCalendarMetrics {
+        min-height: 189px;
+      }
       /* portal-critical-theme:end */

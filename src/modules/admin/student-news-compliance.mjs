@@ -5,7 +5,7 @@ import { checkTextWithLanguageTool } from "./student-news-language-tool.mjs"
 import { normalizeDefinitionText } from "./library-origin.mjs"
 import { parseStudentNewsSentence } from "./student-news-parser.mjs"
 import { checkVerbTransitivity } from "./verb-transitivity.mjs"
-import { validateVocabularyEntry, vocabularyEntryError } from "./vocabulary-syllabication.mjs"
+import { validateVocabularyEntry, vocabularyEnglishCapitalizationError, vocabularyEntryError } from "./vocabulary-syllabication.mjs"
 
 /**
  * @param {unknown} value
@@ -171,6 +171,7 @@ const STUDENT_NEWS_VOCABULARY_PARTS_OF_SPEECH = Object.freeze([
   "determiner",
   "pronoun",
   "interjection",
+  "proper noun",
   "phrase",
   "idiom",
   "clause",
@@ -178,16 +179,19 @@ const STUDENT_NEWS_VOCABULARY_PARTS_OF_SPEECH = Object.freeze([
 
 function normalizeStudentNewsVocabulary(value) {
   const rows = Array.isArray(value) ? value : []
-  return rows.slice(0, 100).map((row) => ({
+  return rows.slice(0, 100).map((row) => {
+    const esl = row?.esl && typeof row.esl === "object" && !Array.isArray(row.esl) ? row.esl : {}
+    return {
     partOfSpeech: normalizeLower(row?.partOfSpeech),
     english: normalizeText(row?.english),
     vietnamese: normalizeText(row?.vietnamese),
     syllabication: normalizeText(row?.syllabication),
     definition: normalizeDefinitionText(row?.definition),
-    verbTransitivity: normalizeLower(row?.esl?.verbTransitivity),
-    etymologyType: normalizeLower(row?.esl?.etymologyType),
-    etymology: normalizeText(row?.esl?.etymology),
-  }))
+    verbTransitivity: normalizeLower(row?.verbTransitivity || esl.verbTransitivity),
+    etymologyType: normalizeLower(row?.etymologyType || esl.etymologyType),
+    etymology: normalizeText(row?.etymology || esl.etymology),
+  }
+  })
 }
 
 function isValidStudentNewsSyllabication(value, english = "") {
@@ -198,8 +202,15 @@ async function studentNewsVocabularyRowError(row, index, dictionaryValidation = 
   const missing = []
   if (!STUDENT_NEWS_VOCABULARY_PARTS_OF_SPEECH.includes(row.partOfSpeech)) missing.push("part of speech")
   if (!row.english) missing.push("English")
-  else if (/[A-Z]/u.test(row.english)) {
-    return { index, english: row.english, fields: ["english"], message: `Entry ${index + 1} must use lowercase for Word/Phrase EN.` }
+  const capitalizationError = vocabularyEnglishCapitalizationError(row)
+  if (capitalizationError) {
+    const entryLabel = row.english ? `\"${row.english}\"` : "this entry"
+    return {
+      index,
+      english: row.english,
+      fields: ["english"],
+      message: `Entry ${index + 1} (${entryLabel}) has invalid English capitalization: ${capitalizationError}`,
+    }
   }
   if (!row.vietnamese) missing.push("Vietnamese")
   if (!row.syllabication) missing.push("syllabication")

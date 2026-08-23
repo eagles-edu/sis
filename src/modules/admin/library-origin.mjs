@@ -146,7 +146,10 @@ export function insertEtymologyDeterministically(definition, paragraph) {
   parsed.Etymology = parsed.Etymology ? `${parsed.Etymology}\n\n${addition}` : addition
   const rendered = [
     parsed.body,
-    ...DEFINITION_SECTION_ORDER.map((heading) => parsed[heading] ? `**${heading}:** ${parsed[heading]}` : ""),
+    ...DEFINITION_SECTION_ORDER.map((heading) => {
+      if (!parsed[heading]) return ""
+      return ["First known use", "Etymology"].includes(heading) ? `**${heading}**\n${parsed[heading]}` : `**${heading}:** ${parsed[heading]}`
+    }),
   ].filter(Boolean).join("\n\n")
   return normalizeDefinitionText(rendered)
 }

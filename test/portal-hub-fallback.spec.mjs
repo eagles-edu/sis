@@ -47,7 +47,7 @@ test("shared portal navigation keeps dev entry URLs aligned", () => {
   assert.match(fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.html"), "utf8"), /<script src="\/web-asset\/shared\/portal-navigation\.js" defer><\/script>/)
   assert.match(fs.readFileSync(path.resolve(rootDir, "web-asset/admin/library-admin.html"), "utf8"), /<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>/)
   assert.match(parentPortalHtml, /<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>/)
-  assert.match(studentPortalHtml, /<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>/)
+  assert.match(studentPortalHtml, /<script (?:defer )?src="\/web-asset\/shared\/portal-navigation\.js"><\/script>/)
 })
 
 test("student boot preserves the historical shared loading order", () => {
@@ -56,8 +56,8 @@ test("student boot preserves the historical shared loading order", () => {
   assert.match(studentHtml, /<link rel="stylesheet" href="\/web-asset\/student\/student-portal\.min\.css">/)
   assert.match(studentHtml, /<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>/)
   assert.match(studentHtml, /<script src="\/web-asset\/shared\/portal-action-feedback\.js"><\/script>/)
-  assert.match(studentHtml, /<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>/)
-  assert.match(studentHtml, /<script src="\/web-asset\/student\/student-portal\.min\.js"><\/script>/)
+  assert.match(studentHtml, /<script (?:defer )?src="\/web-asset\/shared\/portal-navigation\.js"><\/script>/)
+  assert.match(studentHtml, /<script (?:defer )?src="\/web-asset\/student\/student-portal\.min\.js"><\/script>/)
 })
 
 test("parent boot preserves the historical shared loading order", () => {

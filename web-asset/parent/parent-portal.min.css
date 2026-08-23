@@ -15,4 +15,5 @@
         body.parent-portal-page
         #loginCard.hidden,html[data-parent-auth-state="unauthenticated"]
         body.parent-portal-page
-        #portalCard{display:none!important}
+        #portalCard{display:none!important}body.parent-portal-page .queue-summary-chips{min-block-size:66px}body.parent-portal-page #newsQueueCard .queue-table-wrap{min-height:260px}
+      body.parent-portal-page #newsQueueCard,body.parent-portal-page #pastDueHomeworkCard{min-height:470px}body.parent-portal-page #metricsPanel{min-height:308px}@media (max-width:719px){body.parent-portal-page #parentOverviewSummary{min-height:71px}body.parent-portal-page #metricsPanel{min-height:505px}}@media (max-width:399px){body.parent-portal-page #metricsPanel{min-height:826px}}body.parent-portal-page #attendanceCalendarMetrics{min-height:189px}

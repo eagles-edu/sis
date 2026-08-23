@@ -567,6 +567,10 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
           },
           { submitted: 0, approved: 0, revisionRequested: 0 },
         );
+        const openReport = items.find((entry) => entry.reportDate === "2026-03-16") || {
+          reportDate: "2026-03-16",
+          currentMmrPassed: true,
+        };
         sendJson(response, 200, {
           ok: true,
           window: {
@@ -595,11 +599,45 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
             },
             { date: "2026-03-16", color: "amber", canSubmit: true, submittedAt: "" },
           ],
-          openReport: {
-            reportDate: "2026-03-16",
-            currentMmrPassed: true,
-          },
+          openReport,
         });
+        return;
+      }
+
+      if (pathname === "/api/student/news-reports/draft" && request.method === "POST") {
+        if (!isStudentAuthenticated(request)) {
+          sendJson(response, 401, { error: "Unauthorized" });
+          return;
+        }
+        const payload = await readJsonBody(request);
+        const reportDate = String(payload?.reportDate || "2026-03-16");
+        const existingIndex = payload?.reportId
+          ? studentNewsItems.findIndex((entry) => entry.id === String(payload.reportId))
+          : studentNewsItems.findIndex((entry) => entry.reportDate === reportDate);
+        const existing = existingIndex >= 0 ? studentNewsItems[existingIndex] : null;
+        const item = {
+          ...(existing || {}),
+          id: existing?.id || `news-${reportDate}-draft`,
+          reportDate,
+          reportSequence: Number(payload?.reportSequence) || 1,
+          sourceLink: String(payload?.sourceLink || ""),
+          articleTitle: String(payload?.articleTitle || ""),
+          byline: String(payload?.byline || ""),
+          articleDateline: String(payload?.articleDateline || ""),
+          leadSynopsis: String(payload?.leadSynopsis || ""),
+          actionActor: String(payload?.actionActor || ""),
+          actionAffected: String(payload?.actionAffected || ""),
+          actionWhere: String(payload?.actionWhere || ""),
+          actionWhat: String(payload?.actionWhat || ""),
+          actionWhy: String(payload?.actionWhy || ""),
+          biasAssessment: String(payload?.biasAssessment || ""),
+          vocabulary: Array.isArray(payload?.vocabulary) ? payload.vocabulary : [],
+          submissionState: "draft",
+          currentMmrPassed: false,
+        };
+        if (existingIndex >= 0) studentNewsItems.splice(existingIndex, 1, item);
+        else studentNewsItems.push(item);
+        sendJson(response, 200, { ok: true, saved: true, message: "Draft saved.", item });
         return;
       }
 
@@ -1228,6 +1266,86 @@ test(
       assert.match(calendarState.alertDayAnimationName, /dayAlertPulse/i);
       assert.match(calendarState.completedDayClassName, /calendar-day-completed/);
       assert.match(calendarState.openDayClassName, /calendar-day-open/);
+    } finally {
+      if (page) {
+        await page.close().catch(() => {});
+      }
+      if (browser) {
+        await browser.close().catch(() => {});
+      }
+      if (server.listening) {
+        await new Promise((resolve) => server.close(resolve));
+      }
+    }
+  }
+);
+
+test(
+  "student News draft save retains edited vocabulary after authenticated reload",
+  { skip: skipReason },
+  async () => {
+    const server = createStudentPortalFixtureServer(ROOT_DIR);
+    let browser = null;
+    let page = null;
+
+    try {
+      await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+      const address = server.address();
+      const port = typeof address === "object" && address ? address.port : 0;
+
+      browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
+      page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+      await page.goto(`http://127.0.0.1:${port}/student/portal`, { waitUntil: "domcontentloaded" });
+      await page.waitForSelector("#loginForm");
+      await page.fill("#loginEaglesId", STUDENT_LOGIN.eaglesId);
+      await page.fill("#loginPassword", STUDENT_LOGIN.password);
+      await page.click('#loginForm button[type="submit"]');
+      await page.waitForFunction(() => {
+        const appPanel = globalThis.document.getElementById("appPanel");
+        const homeCard = globalThis.document.getElementById("studentHomeCard");
+        return Boolean(
+          appPanel && !appPanel.classList.contains("hidden") &&
+          homeCard && !homeCard.classList.contains("hidden")
+        );
+      });
+
+      await page.click("#openNewsPageBtn");
+      await page.waitForFunction(() => {
+        const newsCard = globalThis.document.getElementById("newsPageCard");
+        return Boolean(newsCard && !newsCard.classList.contains("hidden"));
+      });
+
+      const row = page.locator("#newsVocabularyRows [data-news-vocabulary-row]").first();
+      await row.locator('[data-vocabulary-field="partOfSpeech"]').selectOption("noun");
+      await row.locator('[data-vocabulary-field="english"]').fill("draft-probe");
+      await row.locator('[data-vocabulary-field="vietnamese"]').fill("tu kiem tra");
+      await row.locator('[data-vocabulary-field="syllabication"]').fill("draft-probe");
+      await row.locator('[data-vocabulary-field="definition"]').fill("A draft persistence probe.");
+      await row.locator('[data-vocabulary-esl-field="etymologyType"]').selectOption("borrowed");
+      await row.locator('[data-vocabulary-esl-field="etymology"]').fill("A saved origin.");
+      await page.click("#saveDraftBtn");
+      await page.waitForFunction(() => /Draft saved/i.test(globalThis.document.getElementById("formStatus")?.textContent || ""));
+      assert.equal(await row.locator('[data-vocabulary-field="english"]').inputValue(), "draft-probe");
+
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await page.waitForFunction(() => {
+        const appPanel = globalThis.document.getElementById("appPanel");
+        const homeCard = globalThis.document.getElementById("studentHomeCard");
+        return Boolean(
+          appPanel && !appPanel.classList.contains("hidden") &&
+          homeCard && !homeCard.classList.contains("hidden")
+        );
+      });
+      await page.click("#openNewsPageBtn");
+      await page.waitForFunction(() => {
+        const newsCard = globalThis.document.getElementById("newsPageCard");
+        return Boolean(newsCard && !newsCard.classList.contains("hidden"));
+      });
+
+      const reloadedRow = page.locator("#newsVocabularyRows [data-news-vocabulary-row]").first();
+      assert.equal(await reloadedRow.locator('[data-vocabulary-field="english"]').inputValue(), "draft-probe");
+      assert.equal(await reloadedRow.locator('[data-vocabulary-field="definition"]').inputValue(), "A draft persistence probe.");
+      assert.equal(await reloadedRow.locator('[data-vocabulary-esl-field="etymology"]').inputValue(), "A saved origin.");
     } finally {
       if (page) {
         await page.close().catch(() => {});

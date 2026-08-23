@@ -785,6 +785,11 @@
 }
 
     /* PERF-CONTRACT: STUDENT-HOME-CLS-RESERVATION */
+    body.student-portal-page .queue-summary-chips {
+      /* Four queue chips always render as two 30px rows with a 6px gap. */
+      min-block-size: 66px;
+  }
+
     body.student-portal-page #newsQueueCard .queue-table-wrap {
       min-height: 260px;
   }

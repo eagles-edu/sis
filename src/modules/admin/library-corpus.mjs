@@ -4,7 +4,7 @@ import { buildOriginReference, normalizeDefinitionText, normalizeOriginReference
 import { queueAnnouncementEmail } from "./notification-queue.mjs"
 import { checkVerbFormsTransitivity, getVerbTransitivity } from "./verb-transitivity.mjs"
 import { getVerbForms, getVerbRegularity } from "./verb-regularity.mjs"
-import { normalizeVocabularySyllabication } from "./vocabulary-syllabication.mjs"
+import { normalizeVocabularySyllabication, vocabularyEnglishCapitalizationError } from "./vocabulary-syllabication.mjs"
 import { engagementRetentionCutoff, isEngagementVisible } from "./engagement-retention.mjs"
 
 const MW_BASE = "https://www.dictionaryapi.com/api/v3/references/collegiate/json"
@@ -254,6 +254,8 @@ function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
   const nounNumber = normalizeLibraryEnum(value.nounNumber)
   if (!english) throw statusError("English word or phrase is required")
   if (!POS.has(partOfSpeech)) throw statusError("A supported part of speech is required")
+  const capitalizationError = vocabularyEnglishCapitalizationError({ ...value, english, partOfSpeech })
+  if (capitalizationError) throw statusError(capitalizationError)
   if (phraseType && !PHRASE_TYPES.has(phraseType)) throw statusError("Unsupported phrase type")
   const etymologyType = normalizeLibraryEnum(value.etymologyType)
   if (etymologyType && !ETYMOLOGY_TYPES.has(etymologyType)) throw statusError("Unsupported etymology type")
@@ -389,6 +391,8 @@ export async function submitLibraryContribution(studentRefId, contributorName, p
     ...Object.fromEntries(Object.entries({ ...rawEntry, ...esl }).filter(([key]) => key.startsWith("verb") || ["phraseType", "grammarClassification", "countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage", "edAdjective", "ingAdjective", "displayVerbForm", "etymologyType", "etymology", "originPath", "originReferences"].includes(key))),
   }
   if (!entry.english || !POS.has(entry.partOfSpeech)) throw statusError("New Words submissions require English and a supported part of speech")
+  const capitalizationError = vocabularyEnglishCapitalizationError(entry)
+  if (capitalizationError) throw statusError(capitalizationError)
   const client = await prisma()
   const studentId = text(studentRefId)
   const sourceId = clamp(payload.sourceId)
@@ -1146,7 +1150,7 @@ function mergeMwRecords(records = []) {
 
 function mwDefinition(record) {
   const sections = [...record.definitions]
-  if (record.firstKnownUse) sections.push(`**First known use:** ${record.firstKnownUse}`)
+  if (record.firstKnownUse) sections.push(`**First known use**\n${record.firstKnownUse}`)
   if (record.stems.length) sections.push(`**Stems:**\n${record.stems.map((stem) => `- ${stem}`).join("\n")}`)
   if (record.synonyms.length) sections.push(`**Synonyms:**\n${record.synonyms.map((synonym) => `- ${synonym}`).join("\n")}`)
   if (record.antonyms.length) sections.push(`**Antonyms:**\n${record.antonyms.map((antonym) => `- ${antonym}`).join("\n")}`)
@@ -1318,6 +1322,8 @@ export async function applyMerriamWebsterLibraryEntry(id, actor = {}, payload = 
     proposed[field] = preview.fields[field]
   }
   const data = Object.fromEntries(Object.entries(proposed).filter(([field, value]) => JSON.stringify(activePayloadValue(existing[field], field)) !== JSON.stringify(activePayloadValue(value, field))))
+  const capitalizationError = vocabularyEnglishCapitalizationError({ ...existing, ...data })
+  if (capitalizationError) throw statusError(capitalizationError)
   if (!Object.keys(data).length) return { ok: true, entry: mapEntry(existing), appliedFields: [] }
   const updated = await client.$transaction(async (tx) => { const value = await tx.libraryEntry.update({ where: { id }, data: { ...data, lastEditedByName: clamp(actor.name) } }); await writeRevision(tx, value, "mw_import", actor.name, actor.role || "admin"); return value })
   return { ok: true, entry: mapEntry(updated), appliedFields: Object.keys(data) }

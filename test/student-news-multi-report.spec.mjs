@@ -30,7 +30,8 @@ test("student Check feedback follows the codified field-order directive", () => 
   assert.match(studentHtml, /id="newsSentenceFeedback-newsViewerActionWhy"/)
   assert.match(studentHtml, /id="newsSentenceFeedback-newsViewerBiasAssessment"/)
   assert.match(studentJs, /viewerItem: true/)
-  assert.match(studentJs, /loadCalendar\(\{ preserveForm: true, preserveValidation: true \}\)/)
+  assert.match(studentJs, /loadStudentData\(\{\s*preserveValidation: true,\s*preserveForm: options\?\.viewerItem === true,\s*\}\)/)
+  assert.match(studentJs, /loadStudentData\(\{ preserveForm: true, preserveValidation: true \}\)/)
   assert.match(studentJs, /openNewsWeekSetModalByReportId\(t\(payload\?\.reportId\)/)
 })
 

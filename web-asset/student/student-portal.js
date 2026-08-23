@@ -4193,7 +4193,16 @@
 
       function vocabularyEntryError(row = {}) {
         const english = t(row.english);
-        if (/[A-Z]/u.test(english)) return "Word/Phrase EN must be lowercase.";
+        const capitalizationError = window.SIS_VOCABULARY_ESL?.vocabularyEnglishCapitalizationError?.(row)
+          || (() => {
+            const partOfSpeech = t(row.partOfSpeech).toLocaleLowerCase("en-US");
+            const primaryClassification = t(row.primaryClassification || row?.esl?.primaryClassification).toLocaleLowerCase("en-US");
+            const isProperNoun = partOfSpeech === "proper noun" || primaryClassification === "proper";
+            if (isProperNoun && !/\p{Lu}/u.test(english)) return "Proper nouns must include a capital letter.";
+            if (!isProperNoun && /\p{Lu}/u.test(english)) return "English word/phrase must be lowercase unless it is a proper noun.";
+            return "";
+          })();
+        if (capitalizationError) return capitalizationError;
         const words = normalizeSyllabication(row.syllabication).split(/\s+/u).filter(Boolean);
         if (!words.length) return "Add syllabication.";
         for (const word of words) {
@@ -4218,7 +4227,8 @@
             element.classList.remove("is-invalid");
             if (element.classList.contains("field-validation-message")) element.remove();
           });
-          const row = Object.fromEntries(["english", "syllabication"].map((key) => [key, t(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value)]));
+          const row = Object.fromEntries(["english", "syllabication", "partOfSpeech"].map((key) => [key, t(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value)]));
+          row.primaryClassification = t(rowEl.querySelector('[data-vocabulary-esl-field="primaryClassification"]')?.value);
           // Blank minimum-row placeholders are not entries. The server keeps
           // ownership of required-row and completeness validation.
           if (!row.english && !row.syllabication) return;
@@ -4253,7 +4263,8 @@
       function normalizeVocabularyEnglishEntry(event) {
         const input = event?.target;
         if (input?.matches?.('[data-vocabulary-field="english"]')) {
-          input.value = input.value.toLocaleLowerCase("en-US");
+          input.value = window.SIS_VOCABULARY_ESL?.normalizeVocabularyEnglishText?.(input.value)
+            || String(input.value || "").normalize("NFC").replace(/\p{Z}+/gu, " ").trim();
         }
       }
 
@@ -4345,7 +4356,7 @@
           });
           const esl = row?.esl && typeof row.esl === "object" ? row.esl : {};
           VOCABULARY_ESL_FIELDS.filter((key) => key !== "grammarClassification").forEach((key) => { const input = rowEl.querySelector(`[data-vocabulary-esl-field="${key}"]`); if (!input) return; if (input.type === "checkbox" || input.type === "radio") input.checked = input.value ? t(esl[key]) === input.value : Boolean(esl[key]); else input.value = t(esl[key]); });
-          window.SIS_VOCABULARY_ESL?.hydrate(rowEl, esl);
+          window.SIS_VOCABULARY_ESL?.hydrate(rowEl, { ...row, ...esl });
           rowEl.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
             rowEl.remove();
             renumberVocabularyRows(container);
@@ -4367,7 +4378,7 @@
             });
             bindVocabularyDefinitionAutosize(rowEl);
             bindVocabularyLookupButtons(rowEl);
-            window.SIS_VOCABULARY_ESL?.hydrate(rowEl, row.esl && typeof row.esl === "object" ? row.esl : {});
+            window.SIS_VOCABULARY_ESL?.hydrate(rowEl, { ...row, ...(row.esl && typeof row.esl === "object" ? row.esl : {}) });
             rowEl.addEventListener("change", (event) => {
               if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) syncVocabularyEslRow(rowEl);
             });
@@ -4467,7 +4478,7 @@
               });
               bindVocabularyLookupButtons(rowEl);
               bindVocabularyDefinitionAutosize(rowEl);
-              window.SIS_VOCABULARY_ESL?.hydrate(rowEl, word.esl && typeof word.esl === "object" ? word.esl : {});
+              window.SIS_VOCABULARY_ESL?.hydrate(rowEl, { ...word, ...(word.esl && typeof word.esl === "object" ? word.esl : {}) });
               rowEl.addEventListener("change", (event) => {
                 if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) syncVocabularyEslRow(rowEl);
               });
@@ -4620,12 +4631,24 @@
           actionWhat: "Emergency teams evacuated residents after flood levels surged quickly.",
           actionWhy: "Floodwaters rose because heavy overnight rain and emergency dam releases increased river levels.",
           biasAssessment: "The report emphasizes official sources but also includes resident perspectives.",
-          vocabulary: Array.from({ length: 6 }, (_, index) => ({
-            partOfSpeech: "noun",
-            english: `test-term-${index + 1}`,
-            vietnamese: `tu-kiem-tra-${index + 1}`,
-            syllabication: `test-term-${index + 1}`,
-            definition: `A complete test vocabulary definition ${index + 1}.`,
+          vocabulary: [
+            ["apple", "quả táo", "AP-ple", "A round fruit with firm flesh and edible skin."],
+            ["banana", "quả chuối", "ba-NA-na", "A long curved fruit with soft sweet flesh."],
+            ["computer", "máy tính", "com-PU-ter", "An electronic machine that processes information."],
+            ["elephant", "con voi", "EL-e-phant", "A very large animal with a trunk and tusks."],
+            ["important", "quan trọng", "im-POR-tant", "Having great value or influence."],
+            ["together", "cùng nhau", "to-GETH-er", "With or near each other."],
+          ].map(([english, vietnamese, syllabication, definition]) => ({
+            partOfSpeech: english === "important" ? "adjective" : english === "together" ? "adverb" : "noun",
+            english,
+            vietnamese,
+            syllabication,
+            definition,
+            esl: ["apple", "banana", "computer", "elephant"].includes(english)
+              ? { countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "common" }
+              : english === "important"
+                ? { grammarClassification: { grammarSubtype: "attributive" } }
+                : { grammarClassification: { grammarSubtype: "manner" } },
           })),
         },
         "grammar-errors": {

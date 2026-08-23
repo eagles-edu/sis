@@ -154,7 +154,7 @@
       function openLibraryEdit(entry) {
         const dialog = document.createElement("dialog");
         dialog.className = "library-edit-dialog";
-        dialog.innerHTML = `<form method="dialog" class="library-edit-form"><h2>Propose Library edit</h2>${window.SIS_VOCABULARY_ESL.editorRowHtml(`library-${entry.id}`, { includeMwFill: false, originLookupPath: `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library/etymonline` })}<div class="library-edit-actions"><button type="button" class="portal-button portal-button-alt" data-library-edit-cancel>Cancel</button><button type="submit" class="portal-button portal-button-affirm">Submit</button></div></form>`;
+        dialog.innerHTML = `<form class="library-edit-form"><h2>Propose Library edit</h2>${window.SIS_VOCABULARY_ESL.editorRowHtml(`library-${entry.id}`, { includeMwFill: false, originLookupPath: `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library/etymonline` })}<div class="library-edit-actions"><button type="button" class="portal-button portal-button-alt" data-library-edit-cancel>Cancel</button><button type="submit" class="portal-button portal-button-affirm" data-library-edit-submit>Submit</button></div></form>`;
         document.body.append(dialog);
         const form = dialog.querySelector("form");
         const row = dialog.querySelector("[data-news-vocabulary-row]");
@@ -171,11 +171,8 @@
         dialog.querySelector("[data-library-edit-cancel]").addEventListener("click", () => dialog.close());
         form.addEventListener("submit", async (event) => {
           event.preventDefault();
-          const payload = Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, key === "syllabication" ? window.SIS_VOCABULARY_ESL?.canonicalizeSyllabication(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value) || "" : key === "definition" ? window.SIS_VOCABULARY_ESL?.normalizeDefinitionText(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value) || "" : row.querySelector(`[data-vocabulary-field="${key}"]`)?.value.trim() || ""]));
-          Object.assign(payload, Object.fromEntries(["countability", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "dualCountabilityUsage", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm", "etymologyType", "etymology"].map((key) => [key, row.querySelector(`[data-vocabulary-esl-field="${key}"]`)?.value.trim() || ""]).filter(([, value]) => value)));
-          payload.properNounVariantShift = Boolean(row.querySelector('[data-vocabulary-esl-field="properNounVariantShift"]')?.checked);
-          payload.grammarClassification = window.SIS_VOCABULARY_ESL?.classification(row) || {};
-          Object.assign(payload, window.SIS_VOCABULARY_ESL?.originMetadata(row) || {});
+          const payload = window.SIS_VOCABULARY_ESL?.readEditorEntry(row, entry);
+          if (!payload) return;
           const endpoint = entry.isContribution === true
             ? `${libraryApi}/submissions`
             : `${libraryApi}/entries/${encodeURIComponent(entry.id)}/edit`;
@@ -183,15 +180,19 @@
             ? { contributionId: entry.contributionId, entry: payload }
             : payload;
           const status = document.getElementById("libraryStatus");
+          const submitButton = form.querySelector("[data-library-edit-submit]");
           try {
+            submitButton.disabled = true;
             const response = await fetch(endpoint, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody) });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || "Edit failed");
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || data.ok !== true) throw new Error(data.error || data.message || `Library edit failed (HTTP ${response.status})`);
             dialog.close();
             await loadLibrary();
             status.textContent = data.message || "Library edit saved.";
           } catch (error) {
             status.textContent = error.message || "Edit failed";
+          } finally {
+            submitButton.disabled = false;
           }
         });
         dialog.addEventListener("close", () => dialog.remove());
