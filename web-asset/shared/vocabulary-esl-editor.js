@@ -111,11 +111,16 @@
     </div>`;
   }
 
-  function parametersHtml(rowUid, { includeMwFill = false, includeTransitivityTools = false, includeOriginAnalysis = false } = {}) {
+  function parametersHtml(rowUid, { includeMwFill = false, includeLdoce = false, includeOxford = false, includeBritannica = false, includeMerriamWebster = false, includeDictionaryBuilder = false, includeTransitivityTools = false, includeOriginAnalysis = false } = {}) {
     const uid = safeUid(rowUid);
     const mwFill = includeMwFill ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-mw-fill" data-vocabulary-mw-preview title="Fill only fields returned authoritatively by Merriam-Webster." aria-label="Fill Merriam-Webster fields">MW fill</button>` : "";
+    const ldoceFill = includeLdoce ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-ldoce-fill" data-vocabulary-ldoce-preview title="Preview LDOCE definitions, grammar labels, and protected UK/US audio before applying selected fields." aria-label="Preview LDOCE fields">LDOCE</button>` : "";
+    const oxfordFill = includeOxford ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-oxford-fill" data-vocabulary-oxford-preview title="Preview Oxford Learner's Dictionaries American English definitions, grammar labels, and audio before applying selected fields." aria-label="Preview Oxford fields">Oxford</button>` : "";
+    const britannicaFill = includeBritannica ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-britannica-fill" data-vocabulary-britannica-preview title="Preview all Britannica Dictionary parts of speech, subtypes, definitions, examples, synonyms, collocations, phrases, history, and APA citation before applying selected fields." aria-label="Preview Britannica fields">BR</button>` : "";
+    const merriamWebsterFill = includeMerriamWebster ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-merriam-webster-fill" data-vocabulary-merriam-webster-preview title="Preview all Merriam-Webster.com Dictionary parts of speech, subtypes, definitions, examples, synonyms, collocations, phrases, history, and APA citation before applying selected fields." aria-label="Preview Merriam-Webster fields">MW</button>` : "";
+    const dictionaryBuilder = includeDictionaryBuilder ? `<button type="button" class="portal-button portal-button-blue-action" data-vocabulary-dictionary-builder title="Build one availability-aware, source-attributed Dictionary preview before applying selected data." aria-label="Open Dictionary Builder definition preview">Definition</button><p class="small" data-vocabulary-dictionary-builder-message aria-live="polite"></p>` : "";
     const originAnalysis = includeOriginAnalysis ? `<button type="button" class="portal-button portal-button-amber-info" data-vocabulary-origin-analysis title="Review Etymonline and Merriam-Webster etymology evidence. This advisory review does not change any entry fields.">Origin</button>` : "";
-    const sourceActions = mwFill || originAnalysis ? `<div class="vocabulary-source-actions">${mwFill}${originAnalysis}</div><p class="small" data-vocabulary-mw-message aria-live="polite"></p><p class="small" data-vocabulary-origin-analysis-message aria-live="polite"></p><details data-vocabulary-mw-details hidden><summary>View complete MW data</summary><pre data-vocabulary-mw-json></pre></details>` : "";
+    const sourceActions = mwFill || ldoceFill || oxfordFill || britannicaFill || merriamWebsterFill || dictionaryBuilder || originAnalysis ? `<div class="vocabulary-source-actions">${dictionaryBuilder}${mwFill}${merriamWebsterFill}${britannicaFill}${originAnalysis}${ldoceFill}${oxfordFill}</div><p class="small" data-vocabulary-mw-message aria-live="polite"></p><p class="small" data-vocabulary-ldoce-message aria-live="polite"></p><p class="small" data-vocabulary-oxford-message aria-live="polite"></p><p class="small" data-vocabulary-britannica-message aria-live="polite"></p><p class="small" data-vocabulary-merriam-webster-message aria-live="polite"></p><p class="small" data-vocabulary-origin-analysis-message aria-live="polite"></p>${mwFill ? '<details data-vocabulary-mw-details hidden><summary>View complete MW data</summary><pre data-vocabulary-mw-json></pre></details>' : ""}` : "";
     const transitivityTools = includeTransitivityTools ? `<div class="vocabulary-transitivity-check"><button type="button" class="portal-button portal-button-blue-action" data-vocabulary-transitivity-check title="Compare the entered verb forms with the bundled corpus evidence. This check is advisory; saving remains allowed.">Check</button><button type="button" class="portal-button portal-button-blue-action" data-vocabulary-transitivity-autofill title="Suggest transitivity from the bundled corpus list. Review the suggestion before saving.">Auto-fill</button><p class="small" data-vocabulary-transitivity-message aria-live="polite"></p></div>` : "";
     return `<div class="vocabulary-pos-parameters" data-vocabulary-pos-parameters hidden>
       <div class="vocabulary-pos-controls" data-vocabulary-pos-controls></div>
@@ -203,7 +208,7 @@
     const normalizedNoun = pos === "noun" ? nounState(values) : values;
     const rowUid = row?.querySelector('[name^="vocabularyPartOfSpeech-"]')?.name?.replace(/^vocabularyPartOfSpeech-/u, "") || "shared";
     const content = controlsFor(pos, rowUid, normalizedNoun);
-    const hasTools = Boolean(surface.querySelector("[data-vocabulary-mw-preview], [data-vocabulary-transitivity-check], [data-vocabulary-transitivity-autofill]"));
+    const hasTools = Boolean(surface.querySelector("[data-vocabulary-mw-preview], [data-vocabulary-dictionary-builder], [data-vocabulary-transitivity-check], [data-vocabulary-transitivity-autofill]"));
     surface.hidden = !content && !hasTools;
     controls.innerHTML = content + dependentControls(pos, values.grammarFamily, values.grammarSubtype, rowUid);
     forms.hidden = pos !== "verb";
@@ -275,10 +280,14 @@
     sync(row);
   }
 
+  const replaceControlCharacters = (value) => Array.from(String(value || ""), (character) => {
+    const codePoint = character.codePointAt(0);
+    return codePoint <= 0x1f || codePoint === 0x7f ? " " : character;
+  }).join("");
+
   const lookupUrl = (label, english) => {
-    const term = String(english || "")
-      .normalize("NFC")
-      .replace(/[\u0000-\u001F\u007F]/gu, " ")
+    const term = replaceControlCharacters(String(english || "")
+      .normalize("NFC"))
       .trim()
       .replace(/[’‘]/gu, "'")
       .replace(/[‐‑‒–—―]/gu, "-")
@@ -288,26 +297,32 @@
     if (!term) return "";
     const encoded = encodeURIComponent(term);
     if (label === "LD") return `https://www.ldoceonline.com/dictionary/${encoded.replace(/%20/gu, "-")}`;
+    if (label === "OA") return `https://www.oxfordlearnersdictionaries.com/definition/american_english/${encoded.replace(/%20/gu, "-")}`;
+    if (label === "OB") return `https://www.oxfordlearnersdictionaries.com/definition/english/${encoded.replace(/%20/gu, "-")}`;
+    if (label === "BR") return `https://www.britannica.com/dictionary/${encoded}`;
     if (label === "GT") return `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate`;
     if (label === "WH") return `https://www.wordhelp.com/syllables/english/?q=${encoded}`;
     if (label === "ET") return `https://www.etymonline.com/search?q=${encoded}`;
+    if (label === "WK") return `https://en.wiktionary.org/w/index.php?search=${encoded}`;
     if (label === "MW") return `https://www.merriam-webster.com/dictionary/${encoded}`;
     if (label === "TH") return `https://www.merriam-webster.com/thesaurus/${encoded}`;
     if (label === "CA") return `https://dictionary.cambridge.org/dictionary/english/${encoded}`;
-    if (label === "CL") return `https://www.learnersdictionary.com/definition/${encoded}`;
     if (label === "GL") return `https://www.google.com/search?q=define+${encoded}`;
     return "";
   };
 
   const LOOKUP_BUTTONS = Object.freeze({
+    OA: { text: "OA", title: "Oxford Learner's Dictionaries American English", blue: true },
+    OB: { text: "OB", title: "Oxford Learner's Dictionaries British English", blue: true },
+    BR: { text: "BR", title: "Britannica Dictionary", blue: true },
     LD: { text: "LD", title: "Longman Dictionary", blue: false },
-    GT: { text: "GT", title: "Google Translate", blue: false },
-    WH: { text: "WH", title: "WordHelp syllables", blue: false },
-    ET: { text: "ET", title: "Etymonline", blue: false },
     MW: { text: "MW", title: "Merriam-Webster Collegiate Dictionary", blue: false },
+    ET: { text: "ET", title: "Etymonline", blue: false },
+    WK: { text: "WK", title: "Wiktionary", blue: false },
     TH: { text: "TH", title: "Merriam-Webster Thesaurus", blue: false },
+    WH: { text: "WH", title: "WordHelp syllables", blue: false },
+    GT: { text: "GT", title: "Google Translate", blue: false },
     CA: { text: "CA", title: "Cambridge English Dictionary", blue: true },
-    CL: { text: "CL", title: "Collegiate to Learner fallback", blue: true },
     GL: { text: "GL", title: "Google definition search", blue: true },
   });
 
@@ -655,6 +670,34 @@
         text: match[4],
       };
     };
+    const tableCellsFromLine = (line) => {
+      const sourceLine = String(line).trim();
+      if (!sourceLine.startsWith("|") || !sourceLine.endsWith("|")) return null;
+      return sourceLine.slice(1, -1).split(/(?<!\\)\|/u).map((cell) => cell.replace(/\\\|/gu, "|").trim());
+    };
+    const isTableSeparator = (cells) => Array.isArray(cells) && cells.length > 1 && cells.every((cell) => /^:?-{3,}:?$/u.test(cell));
+    const renderTable = (start) => {
+      const header = tableCellsFromLine(lines[start]);
+      const separator = tableCellsFromLine(lines[start + 1]);
+      if (!header || !separator || header.length !== separator.length || !isTableSeparator(separator)) return null;
+      const rows = [];
+      let index = start + 2;
+      while (index < lines.length) {
+        const cells = tableCellsFromLine(lines[index]);
+        if (!cells || cells.length !== header.length) break;
+        rows.push(cells);
+        index += 1;
+      }
+      const cellHtml = (tag, cell) => `<${tag}>${definitionInlineHtml(cell)}</${tag}>`;
+      const output = [
+        '<div class="definition-markdown-table-wrap"><table class="definition-markdown-table"><thead><tr>',
+        header.map((cell) => cellHtml("th", cell)).join(""),
+        "</tr></thead>",
+      ];
+      if (rows.length) output.push("<tbody>", rows.map((row) => `<tr>${row.map((cell) => cellHtml("td", cell)).join("")}</tr>`).join(""), "</tbody>");
+      output.push("</table></div>");
+      return { html: output.join(""), next: index };
+    };
     const renderList = (start, indentation) => {
       const first = listItemFromLine(lines[start]);
       if (!first) return { html: "", next: start };
@@ -701,6 +744,19 @@
       if (!line.trim()) {
         flushParagraph();
         index += 1;
+        continue;
+      }
+      if (line.trim() === "<hr>") {
+        flushParagraph();
+        output.push('<hr class="definition-safe-rule">');
+        index += 1;
+        continue;
+      }
+      const table = index + 1 < lines.length ? renderTable(index) : null;
+      if (table) {
+        flushParagraph();
+        output.push(table.html);
+        index = table.next;
         continue;
       }
       const item = listItemFromLine(line);
@@ -786,10 +842,10 @@
     return blocks.join("") || "No definition yet.";
   }
 
-  function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false, includeTransitivityTools = false, includeOriginAnalysis = false, originLookupPath = "", lookupButtons = null } = {}) {
+  function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false, includeLdoce = false, includeOxford = false, includeBritannica = false, includeMerriamWebster = false, includeDictionaryBuilder = false, includeTransitivityTools = false, includeOriginAnalysis = false, originLookupPath = "", lookupButtons = null } = {}) {
     const uid = safeUid(rowUid);
     const options = POS.map((part) => `<option value="${part}">${part}</option>`).join("");
-    const lookupLabels = Array.isArray(lookupButtons) && lookupButtons.length ? lookupButtons : ["LD", "GT", "WH", "ET", "MW", "TH", "CA", "CL", "GL"];
+    const lookupLabels = Array.isArray(lookupButtons) ? lookupButtons : ["LD", "OA", "OB", "BR", "MW", "ET", "WK", "CA", "TH", "WH", "GT", "GL"];
     const lookupHtml = lookupLabels.map((label) => {
       const key = String(label || "").trim();
       const lookup = LOOKUP_BUTTONS[key];
@@ -814,12 +870,9 @@
           <input name="vocabularyVietnamese-${uid}" type="text" data-vocabulary-field="vietnamese" placeholder="Word/phrase VI" aria-label="Word or phrase in Vietnamese" required>
           <input name="vocabularySyllabication-${uid}" type="text" data-vocabulary-field="syllabication" placeholder="Do: air-strike | Extra: air-con-di-tion-ing" aria-label="Syllabication: keep compounds exact; optionally split multi-syllable compound parts for extra points" required>
           ${etymologyHtml(uid)}
-          ${parametersHtml(uid, { includeMwFill, includeTransitivityTools, includeOriginAnalysis })}
+      ${parametersHtml(uid, { includeMwFill, includeLdoce, includeOxford, includeBritannica, includeMerriamWebster, includeDictionaryBuilder, includeTransitivityTools, includeOriginAnalysis })}
           <div class="news-vocabulary-definition-row">
-            <div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">
-              ${lookupHtml}
-              <p class="small vocabulary-et-message" data-vocabulary-et-message aria-live="polite"></p>
-            </div>
+            ${lookupHtml ? `<div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">${lookupHtml}<p class="small vocabulary-et-message" data-vocabulary-et-message aria-live="polite"></p></div>` : ""}
             <textarea name="vocabularyDefinition-${uid}" data-vocabulary-field="definition" rows="1" maxlength="50000" placeholder="Definition" title="Up to 50,000 characters. Ctrl+B bold · Ctrl+I italic · Ctrl+U underline · Enter continues -, a., and 1. lists · indent nested items · **Heading** sections" aria-label="Definition, up to 50,000 characters" required></textarea>
             ${rowActions}
           </div>

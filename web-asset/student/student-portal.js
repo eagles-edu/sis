@@ -5,6 +5,7 @@
       const STUDENT_NEWS_REPORTS_CHECK_PATH = window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH || "/api/student/news-reports/check";
       const STUDENT_NEWS_CALENDAR_PATH = window.__SIS_STUDENT_NEWS_CALENDAR_PATH || "/api/student/news-reports/calendar";
       const STUDENT_NEW_WORDS_PATH = window.__SIS_STUDENT_NEW_WORDS_PATH || "/api/student/new-words";
+      const STUDENT_API_PREFIX = window.__SIS_STUDENT_API_PREFIX || "/api/student";
       const RUNTIME_ENV = (window.__SIS_RUNTIME_ENV || "").toLowerCase() || "development";
       const PORTAL_TIME_ZONE = "Asia/Ho_Chi_Minh";
       const STUDENT_API_ORIGIN = resolveStudentApiOrigin();
@@ -610,20 +611,16 @@
       function applyNewsFieldValidationUi(failedFieldMap = {}, revisionTasks = [], warningFieldMap = {}, warningTasks = []) {
         clearNewsFieldValidationUi();
         const failed = normalizeFailedFieldMap(failedFieldMap);
-        const warnings = normalizeFailedFieldMap(warningFieldMap);
-        Object.keys(failed).forEach((fieldId) => {
-          delete warnings[fieldId];
-        });
         state.newsFieldErrors = failed;
         state.newsRevisionTasks = Array.isArray(revisionTasks) ? revisionTasks : [];
-        state.newsWarningFields = warnings;
-        state.newsWarningTasks = Array.isArray(warningTasks) ? warningTasks : [];
+        state.newsWarningFields = {};
+        state.newsWarningTasks = [];
         ["actionWhy", "biasAssessment"].forEach((fieldId) => {
-          renderNewsSentenceFeedback(fieldId, failed[fieldId] || warnings[fieldId] || {});
+          renderNewsSentenceFeedback(fieldId, failed[fieldId] || {});
         });
         const hasFailed = Object.keys(failed).length > 0;
-        setNewsComplianceModalCtaVisible(hasFailed || hasNewsWarnings());
-        if (!hasFailed && !hasNewsWarnings()) {
+        setNewsComplianceModalCtaVisible(hasFailed);
+        if (!hasFailed) {
           state.newsComplianceSummary = "";
           setNewsComplianceModalOpen(false);
         }
@@ -842,8 +839,7 @@
       function renderNewsComplianceModalFromState(summaryText = "") {
         const summary = field("newsComplianceModalSummary");
         const requiredBody = field("newsComplianceRequiredBody");
-        const warningBody = field("newsComplianceWarningBody");
-        if (!summary || !requiredBody || !warningBody) return;
+        if (!summary || !requiredBody) return;
         const hasBlockingErrors = hasNewsFieldValidationErrors();
         const checksPassed = !hasBlockingErrors;
         const defaultSummary = checksPassed ? "Saved. CHECKS PASSED!" : "Saved. Required checks need attention.";
@@ -853,16 +849,10 @@
         summary.textContent = state.newsComplianceSummary;
         summary.classList.toggle("news-compliance-success", checksPassed);
         const requiredTasks = Array.isArray(state.newsRevisionTasks) ? state.newsRevisionTasks : [];
-        const warningTasks = Array.isArray(state.newsWarningTasks) ? state.newsWarningTasks : [];
         renderStudentFeedbackRows(
           requiredBody,
           buildStudentFeedbackRowsFromTasks(state.newsFieldErrors || {}, requiredTasks),
           "NO ERRORS — SUBMIT is now available."
-        );
-        renderStudentFeedbackRows(
-          warningBody,
-          buildStudentFeedbackRowsFromTasks(state.newsWarningFields || {}, warningTasks),
-          "No extra-point suggestions right now."
         );
         setNewsComplianceModalOpen(true);
       }
@@ -4323,8 +4313,8 @@
           index,
           removable,
           actionsHtml: newWordMenuActions,
-          originLookupPath: `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library/etymonline`,
-          lookupButtons: ["LD", "GT", "WH", "ET", "MW", "TH", "CA", "CL", "GL"],
+          originLookupPath: `${STUDENT_API_PREFIX}/library/etymonline`,
+          lookupButtons: ["LD", "OA", "OB", "BR", "MW", "ET", "WK", "CA", "TH", "WH", "GT", "GL"],
         }) || "";
       }
 
@@ -4649,7 +4639,6 @@
             ["conflict", "xung đột", "CON-flict", "A serious disagreement or argument."],
             ["diplomatic", "thuộc ngoại giao", "dip-lo-MAT-ic", "Connected with managing relations between countries."],
             ["negotiator", "nhà đàm phán", "ne-GO-ti-a-tor", "A person who tries to reach an agreement through discussion."],
-            ["position", "lập trường", "po-SI-tion", "A stated opinion or place in a discussion."],
           ].map(([english, vietnamese, syllabication, definition]) => ({
             partOfSpeech: ["unlikely", "diplomatic"].includes(english) ? "adjective" : "noun",
             english,
@@ -4658,7 +4647,7 @@
             definition,
             esl: ["mediator", "negotiator"].includes(english)
               ? { countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "common" }
-              : ["conflict", "position"].includes(english)
+              : ["conflict"].includes(english)
                 ? { countability: "countable", physicalQuality: "abstract", grammaticalNumber: "singular", primaryClassification: "common" }
                 : { grammarClassification: { grammarSubtype: "attributive" } },
           })),

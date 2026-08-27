@@ -1,0 +1,1166 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["public", "library"]
+}
+
+model Student {
+  id                String              @id @default(cuid())
+  externalKey       String              @unique
+  studentNumber     Int                 @unique
+  eaglesId          String              @unique
+  email             String?
+  submissions       ExerciseSubmission[]
+  incomingExerciseResults IncomingExerciseResult[]
+  profile           StudentProfile?
+  intakeSubmissions StudentIntakeSubmission[]
+  attendanceRecords StudentAttendance[]
+  gradeRecords      StudentGradeRecord[]
+  parentReports     ParentClassReport[]
+  pointsAdjustments StudentPointsAdjustment[]
+  newsReports       StudentNewsReport[]
+  enrollmentPeriods StudentEnrollmentPeriod[]
+  parentPortalLinks ParentPortalStudentLink[]
+  studentPortalAccount StudentPortalAccount?
+  parentProfileSubmissions ParentProfileSubmissionQueue[]
+  parentProfileFieldLocks ParentProfileFieldLock[]
+  parentProfileInvitations ParentProfileInvitation[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@schema("public")
+}
+
+model Exercise {
+  id          String               @id @default(cuid())
+  slug        String               @unique
+  title       String
+  submissions ExerciseSubmission[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  @@schema("public")
+}
+
+model ExerciseSubmission {
+  id                 String   @id @default(cuid())
+  studentRefId       String
+  exerciseRefId      String
+  student            Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  exercise           Exercise @relation(fields: [exerciseRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  submittedEaglesId  String
+  submittedEmail     String?
+  sourceSystem       String?
+  sourceAttemptId    String?
+  sourceOriginLabel  String?
+  sourceOriginHost   String?
+  completedAt        DateTime
+  weekNumber         Int?
+  totalQuestions     Int
+  correctCount       Int
+  pendingCount       Int
+  incorrectCount     Int
+  scorePercent       Float
+  recipientsJson     Json?
+  createdAt          DateTime @default(now())
+
+  @@unique([sourceSystem, sourceAttemptId])
+  @@index([studentRefId, completedAt])
+  @@index([exerciseRefId, completedAt])
+  @@index([submittedEaglesId, completedAt])
+  @@schema("public")
+}
+
+model IncomingExerciseResult {
+  id                 String   @id @default(cuid())
+  status             String
+  submittedEaglesId  String
+  submittedEmail     String?
+  sourceSystem       String?
+  sourceAttemptId    String?
+  pageTitle          String
+  sourceOriginLabel  String?
+  sourceOriginHost   String?
+  completedAt        DateTime
+  weekNumber         Int?
+  totalQuestions     Int
+  correctCount       Int
+  pendingCount       Int
+  incorrectCount     Int
+  scorePercent       Float
+  recipientsJson     Json?
+  payloadJson        Json?
+  notes              String?
+  reviewedByUsername String?
+  matchedStudentRefId String?
+  matchedStudent     Student? @relation(fields: [matchedStudentRefId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  resolvedAt         DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([sourceSystem, sourceAttemptId])
+  @@index([status, createdAt])
+  @@index([submittedEaglesId, createdAt])
+  @@index([submittedEmail, createdAt])
+  @@index([matchedStudentRefId, createdAt])
+  @@schema("public")
+}
+
+model AssignmentTemplate {
+  id             String   @id
+  assignmentTitle String
+  exerciseTitle  String?
+  assignedAt     String?
+  weekNumber     Int?
+  dueAt          String?
+  level          String?
+  eaglesId       String?
+  message        String?
+  itemsJson      Json?
+  assignmentBundleJson Json?
+  completed      Boolean  @default(false)
+  completedAt    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([level, dueAt])
+  @@index([assignedAt, dueAt])
+  @@index([updatedAt])
+  @@schema("public")
+}
+
+model SisConfigMirror {
+  id         String   @id
+  payloadJson Json
+  updatedBy  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  @@schema("public")
+}
+
+model PortalPreference {
+  id               String   @id @default(cuid())
+  principalType    String
+  principalId      String
+  payloadJson      Json
+  migrationVersion Int      @default(1)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([principalType, principalId])
+  @@index([principalType, updatedAt])
+  @@schema("public")
+}
+
+model PortalAsset {
+  id            String   @id @default(cuid())
+  assetKey      String   @unique
+  ownerType     String?
+  ownerId       String?
+  kind          String
+  mimeType      String
+  contentText   String?
+  contentBytes  Bytes?
+  width         Int?
+  height        Int?
+  isAnimated    Boolean  @default(false)
+  sha256        String
+  metadataJson  Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([ownerType, ownerId])
+  @@index([kind, updatedAt])
+  @@schema("public")
+}
+
+enum IntakeControlType {
+  text
+  textarea
+  number
+  email
+  select
+  checkbox
+  radio
+  date
+  unknown
+  meta
+  @@schema("public")
+}
+
+enum SchoolQuarter {
+  q1
+  q2
+  q3
+  q4
+  @@schema("public")
+}
+
+enum AttendanceStatus {
+  present
+  absent
+  late
+  excused
+  @@schema("public")
+}
+
+enum AdminUserRole {
+  admin
+  teacher
+  @@schema("public")
+}
+
+enum StudentEnrollmentStatus {
+  active
+  unenrolled
+  @@schema("public")
+}
+
+enum StudentUnenrollmentReason {
+  moved_residence
+  changed_esl_center
+  financial
+  with_prejudice
+  distance_traffic
+  stopped_learning_esl
+  changed_languages
+  pre_high_school_exam_tutoring
+  pre_college_exam_tutoring
+  unknown
+  @@schema("public")
+}
+
+model IntakeFieldDefinition {
+  id           String            @id @default(cuid())
+  formId       String
+  fieldKey     Int
+  dataName     String
+  label        String?
+  controlType  IntakeControlType
+  required     Boolean           @default(false)
+  sourceOrder  Int
+  optionsJson  Json?
+  metadataJson Json?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@unique([formId, fieldKey])
+  @@index([formId, dataName])
+  @@schema("public")
+}
+
+model StudentProfile {
+  id                         String   @id @default(cuid())
+  studentRefId               String   @unique
+  student                    Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sourceFormId               String
+  sourceUrl                  String?
+  fullName                   String?
+  englishName                String?
+  memberSince                String?
+  exercisePoints             Int?
+  parentsId                  String?
+  familyId                   String?
+  photoUrl                   String?
+  genderSelections           String[]
+  studentPhone               String?
+  studentEmail               String?
+  hobbies                    String?
+  dobText                    String?
+  birthOrder                 Int?
+  siblingBrothers            Int?
+  siblingSisters             Int?
+  ethnicity                  String?
+  languagesAtHome            String[]
+  otherLanguage              String?
+  schoolName                 String?
+  currentGrade               String?
+  currentSchoolGrade         String?
+  motherName                 String?
+  motherEmail                String?
+  maIsHomeworkProctor        String?
+  motherPhone                String?
+  motherEmergencyContact     String?
+  motherMessenger            String?
+  fatherName                 String?
+  fatherEmail                String?
+  baIsHomeworkProctor        String?
+  fatherPhone                String?
+  fatherEmergencyContact     String?
+  fatherMessenger            String?
+  streetAddress              String?
+  newAddress                 String?
+  wardDistrict               String?
+  city                       String?
+  postCode                   String?
+  hasGlasses                 String?
+  hadEyeExam                 String?
+  lastEyeExamDateText        String?
+  prescriptionMedicine       String?
+  prescriptionDetails        String?
+  learningDisorders          String[]
+  learningDisorderDetails    String?
+  drugAllergies              String?
+  foodEnvironmentalAllergies String?
+  vaccinesChildhoodUpToDate  String?
+  hadCovidPositive           String?
+  covidNegativeDateText      String?
+  covidShotAlready           String?
+  covidVaccinesUpToDate      String?
+  covidShotHistory           String[]
+  mostRecentCovidShotDate    String?
+  feverMedicineAllowed       String[]
+  whiteOilAllowed            String?
+  signatureFullName          String?
+  signatureEmail             String?
+  extraComments              String?
+  requiredValidationOk       Boolean?
+  rawFormPayload             Json?
+  normalizedFormPayload      Json?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  @@index([sourceFormId, createdAt])
+  @@schema("public")
+}
+
+model Family {
+  id        String   @id @default(cuid())
+  familyId  String   @unique
+  sequence  Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@schema("public")
+}
+
+model StudentIntakeSubmission {
+  id                   String   @id @default(cuid())
+  studentRefId         String
+  student              Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sourceFormId         String
+  sourceUrl            String?
+  submittedAt          DateTime
+  fieldsJson           Json
+  missingRequiredJson  Json?
+  requiredValidationOk Boolean?
+  createdAt            DateTime @default(now())
+
+  @@index([studentRefId, submittedAt])
+  @@index([sourceFormId, submittedAt])
+  @@schema("public")
+}
+
+model StudentAttendance {
+  id             String           @id @default(cuid())
+  studentRefId   String
+  student        Student          @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  enrollmentPeriodId String?
+  enrollmentPeriod   StudentEnrollmentPeriod? @relation("EnrollmentPeriodAttendanceRecords", fields: [enrollmentPeriodId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  className      String
+  level          String?
+  schoolYear     String
+  quarter        SchoolQuarter
+  attendanceDate DateTime
+  weekNumber     Int?
+  status         AttendanceStatus @default(present)
+  comments       String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@unique([studentRefId, className, attendanceDate])
+  @@index([studentRefId, attendanceDate])
+  @@index([enrollmentPeriodId])
+  @@index([level, schoolYear, quarter, attendanceDate])
+  @@schema("public")
+}
+
+model StudentGradeRecord {
+  id                String        @id @default(cuid())
+  studentRefId      String
+  student           Student       @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  enrollmentPeriodId String?
+  enrollmentPeriod   StudentEnrollmentPeriod? @relation("EnrollmentPeriodGradeRecords", fields: [enrollmentPeriodId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  className         String
+  level             String?
+  schoolYear        String
+  quarter           SchoolQuarter
+  assignmentName    String
+  dueAt             DateTime?
+  weekNumber        Int?
+  submittedAt       DateTime?
+  score             Float?
+  maxScore          Float?
+  homeworkCompleted Boolean?
+  homeworkOnTime    Boolean?
+  behaviorScore     Int?
+  participationScore Int?
+  inClassScore      Int?
+  comments          String?
+  sourceSystem      String?
+  sourceAttemptId   String?
+  sourceOriginLabel String?
+  sourceOriginHost  String?
+  assignmentBundleJson Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@unique([sourceSystem, sourceAttemptId])
+  @@index([studentRefId, schoolYear, quarter])
+  @@index([enrollmentPeriodId])
+  @@index([className, schoolYear, quarter])
+  @@index([dueAt])
+  @@schema("public")
+}
+
+model ParentClassReport {
+  id                     String        @id @default(cuid())
+  studentRefId           String
+  student                Student       @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  enrollmentPeriodId     String?
+  enrollmentPeriod       StudentEnrollmentPeriod? @relation("EnrollmentPeriodParentReports", fields: [enrollmentPeriodId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  className              String
+  level                  String?
+  schoolYear             String
+  quarter                SchoolQuarter
+  homeworkCompletionRate Float?
+  homeworkOnTimeRate     Float?
+  behaviorScore          Float?
+  participationScore     Float?
+  inClassScore           Float?
+  participationPointsAward Int?
+  workflowState          String        @default("draft_pr")
+  submittedAt            DateTime?
+  submittedByUsername    String?
+  adminReviewStartedAt   DateTime?
+  adminReviewStartedByUsername String?
+  rcDraftedAt            DateTime?
+  rcDraftedByUsername    String?
+  approvedAt             DateTime?
+  approvedByUsername     String?
+  publishedAt            DateTime?
+  notificationQueuedAt   DateTime?
+  notificationSentAt     DateTime?
+  finalArtifactVersion   Int           @default(0)
+  finalArtifactPayload   Json?
+  finalArtifactFrozenAt  DateTime?
+  comments               String?
+  rubricPayload          Json?
+  metaPayload            Json?
+  generatedAt            DateTime      @default(now())
+  weekNumber             Int?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  brevoDeliveries        BrevoEmailDelivery[]
+
+  @@unique([studentRefId, className, schoolYear, quarter, enrollmentPeriodId])
+  @@index([enrollmentPeriodId])
+  @@index([level, schoolYear, quarter])
+  @@index([workflowState, schoolYear, quarter, generatedAt])
+  @@index([approvedAt])
+  @@schema("public")
+}
+
+model BrevoEmailDelivery {
+  id                  String   @id @default(cuid())
+  providerMessageId   String
+  batchId             String?
+  recipientEmail      String
+  reportId            String?
+  report              ParentClassReport? @relation(fields: [reportId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  queueType           String?
+  subject             String?
+  status              String   @default("sent")
+  queuedAt            DateTime?
+  sentAt              DateTime?
+  deliveredAt         DateTime?
+  proxyLoadedAt       DateTime?
+  firstOpenedAt       DateTime?
+  uniqueOpenedAt      DateTime?
+  openedAt            DateTime?
+  clickedAt           DateTime?
+  deferredAt          DateTime?
+  errorAt             DateTime?
+  invalidAt           DateTime?
+  bouncedAt           DateTime?
+  softBouncedAt       DateTime?
+  hardBouncedAt       DateTime?
+  blockedAt           DateTime?
+  complainedAt        DateTime?
+  unsubscribedAt      DateTime?
+  lastEventAt         DateTime?
+  metadataJson        Json?
+  webhookEvents       BrevoEmailWebhookEvent[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([providerMessageId, recipientEmail])
+  @@index([providerMessageId])
+  @@index([batchId, recipientEmail, sentAt])
+  @@index([recipientEmail, status, lastEventAt])
+  @@index([reportId, status, updatedAt])
+  @@schema("public")
+}
+
+model BrevoEmailWebhookEvent {
+  id                  String   @id @default(cuid())
+  eventKey            String   @unique
+  providerMessageId   String?
+  recipientEmail      String?
+  eventType           String
+  eventAt             DateTime
+  subject             String?
+  payloadJson         Json
+  deliveryId          String?
+  delivery            BrevoEmailDelivery? @relation(fields: [deliveryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  receivedAt          DateTime @default(now())
+  processedAt         DateTime?
+
+  @@index([providerMessageId, recipientEmail, eventAt])
+  @@index([eventType, eventAt])
+  @@index([deliveryId, eventAt])
+  @@schema("public")
+}
+
+model ParentClassReportEvent {
+  id              String   @id @default(cuid())
+  reportId        String
+  artifactVersion Int?
+  eventType       String
+  eventAt         DateTime @default(now())
+  actorType       String?
+  actorId         String?
+  recipientEmail  String?
+  channel         String?
+  userAgent       String?
+  ipHash          String?
+  metadataJson    Json?
+
+  @@index([reportId, eventAt])
+  @@index([eventType, eventAt])
+  @@index([recipientEmail, eventAt])
+  @@schema("public")
+}
+
+model StudentPointsAdjustment {
+  id               String   @id @default(cuid())
+  studentRefId     String
+  student          Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  pointsDelta      Int
+  reason           String?
+  adjustedByUsername String?
+  appliedAt        DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([studentRefId, appliedAt])
+  @@schema("public")
+}
+
+model StudentNewsReport {
+  id            String   @id @default(cuid())
+  studentRefId  String
+  student       Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  enrollmentPeriodId String?
+  enrollmentPeriod   StudentEnrollmentPeriod? @relation("EnrollmentPeriodNewsReports", fields: [enrollmentPeriodId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  reportDate    DateTime
+  reportSequence Int      @default(1)
+  weekNumber    Int?
+  sourceLink    String
+  articleTitle  String
+  byline        String?
+  articleDateline String?
+  leadSynopsis  String
+  actionActor   String
+  actionAffected String
+  actionWhere   String
+  actionWhat    String
+  actionWhy     String
+  biasAssessment String?
+  vocabularyJson Json?
+  submissionState String @default("draft")
+  draftCheckedAt DateTime?
+  mmrPassedAt DateTime?
+  dateSatisfiedAt DateTime?
+  reportDateLockedAt DateTime?
+  firstSubmittedAt DateTime?
+  lastSubmittedAt DateTime?
+  editableUntil DateTime?
+  submittedAt   DateTime?
+  reviewStatus  String   @default("submitted")
+  reviewNote    String?
+  validationIssuesJson Json?
+  reviewedAt    DateTime?
+  reviewedByUsername String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([studentRefId, reportDate, reportSequence])
+  @@index([enrollmentPeriodId])
+  @@index([reportDate, submittedAt])
+  @@index([reviewStatus, reportDate, submittedAt])
+  @@index([submissionState, reportDate, submittedAt])
+  @@index([reviewedAt])
+  @@schema("public")
+}
+
+model StudentNewWord {
+  id                String   @id @default(cuid())
+  studentRefId      String
+  englishKey        String
+  partOfSpeech      String
+  english           String
+  vietnamese        String
+  syllabication     String
+  definition        String
+  eslJson           Json?
+  archivedAt        DateTime?
+  archivedLibraryEntryId String?
+  syllableCount     Int      @default(0)
+  sourceReportDate  DateTime?
+  sourceReportId    String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([studentRefId, englishKey])
+  @@index([studentRefId, sourceReportDate])
+  @@index([studentRefId, partOfSpeech])
+  @@index([studentRefId, archivedAt])
+  @@schema("public")
+}
+
+model LibraryEntry {
+  id                   String   @id @default(cuid())
+  normalizedKey        String
+  english              String
+  americanEnglish      String?
+  britishEnglish       String?
+  partOfSpeech         String
+  phraseType           String?
+  grammarClassification Json?
+  etymologyType       String?
+  etymology           String?
+  originPath          String?
+  originReferences    Json?
+  vietnamese           String
+  syllabication        String
+  syllableCount        Int      @default(0)
+  definition           String
+  countability         String?
+  nounType             String?
+  nounNumber           String?
+  physicalQuality      String?
+  grammaticalNumber    String?
+  primaryClassification String?
+  materialUsage        String?
+  properNounVariantShift Boolean @default(false)
+  dualCountabilityUsage String?
+  verbRegularity       String?
+  verbTransitivity     String?
+  verbInfinitive       String?
+  verbV1               String?
+  verbV2               String?
+  verbV3               String?
+  verbV4               String?
+  verbV5               String?
+  displayVerbForm      String?
+  edAdjective          Boolean  @default(false)
+  ingAdjective         Boolean  @default(false)
+  awlFamilyHeadword    String?
+  awlQualifyingMember  String?
+  awlMemberForm        String?
+  awlSublist           Int?
+  reviewStatus         String   @default("approved")
+  createdByName        String
+  lastEditedByName     String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  revisions            LibraryEntryRevision[]
+  contributions        LibraryContribution[]
+  assignments          LibraryAssignment[]
+  mediaAssets          LibraryMediaAsset[]
+  dictionaryProvider   String?
+  dictionarySourceUrl  String?
+  dictionaryMetadata   Json?
+
+  @@unique([normalizedKey, partOfSpeech])
+  @@index([normalizedKey, partOfSpeech])
+  @@index([english])
+  @@index([partOfSpeech, phraseType])
+  @@index([countability, physicalQuality, primaryClassification])
+  @@index([awlSublist, awlFamilyHeadword])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@schema("library")
+}
+
+model LibraryReferenceCatalogEntry {
+  id                String   @id @default(cuid())
+  catalogKey        String
+  naturalKey        String
+  term              String
+  partOfSpeech      String?
+  subtype           String?
+  dataJson          Json
+  sourceLabel       String?
+  sourceUrl         String?
+  editorialStatus   String   @default("seeded")
+  createdByName     String
+  lastEditedByName  String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  revisions         LibraryReferenceCatalogRevision[]
+
+  @@unique([catalogKey, naturalKey])
+  @@index([catalogKey, term])
+  @@index([catalogKey, partOfSpeech, subtype])
+  @@schema("library")
+}
+
+model LibraryReferenceCatalogRevision {
+  id          String   @id @default(cuid())
+  entryId     String
+  entry       LibraryReferenceCatalogEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  action      String
+  actorName   String
+  snapshotJson Json
+  createdAt   DateTime @default(now())
+
+  @@index([entryId, createdAt])
+  @@index([actorName, createdAt])
+  @@schema("library")
+}
+
+model LibraryEntryRevision {
+  id           String   @id @default(cuid())
+  entryId      String
+  entry        LibraryEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  action       String
+  actorName    String
+  actorRole    String
+  snapshotJson Json
+  createdAt    DateTime @default(now())
+
+  @@index([entryId, createdAt])
+  @@index([actorName, createdAt])
+  @@schema("library")
+}
+
+model LibraryMediaAsset {
+  id          String       @id @default(cuid())
+  entryId     String
+  entry       LibraryEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  provider    String
+  dialect     String
+  sourceUrl   String
+  storagePath String
+  mimeType    String
+  byteLength  Int
+  sha256      String
+  actorName   String
+  actorRole   String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([entryId, provider, dialect])
+  @@index([provider, dialect, createdAt])
+  @@index([sha256])
+  @@schema("library")
+}
+
+model LibraryContribution {
+  id              String   @id @default(cuid())
+  entryId         String?
+  entry           LibraryEntry? @relation(fields: [entryId], references: [id], onDelete: SetNull)
+  studentRefId    String?
+  contributorName String
+  sourceKind      String
+  sourceId        String?
+  payloadJson     Json
+  status          String   @default("pending_review")
+  submittedAt     DateTime @default(now())
+  reviewedAt      DateTime?
+  reviewedByName  String?
+  dueAt           DateTime?
+  canonicalizedAt DateTime?
+  revisions       LibraryContributionRevision[]
+
+  @@index([entryId, status])
+  @@index([studentRefId, status])
+  @@index([sourceKind, sourceId])
+  @@schema("library")
+}
+
+model LibraryContributionRevision {
+  id             String   @id @default(cuid())
+  contributionId String
+  contribution   LibraryContribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+  action         String
+  snapshotJson   Json
+  createdAt      DateTime @default(now())
+
+  @@index([contributionId, createdAt])
+  @@schema("library")
+}
+
+model LibraryLegacySourceArchive {
+  id                   String   @id @default(cuid())
+  runKey               String
+  sourceKind           String
+  sourceId             String
+  normalizedKey        String
+  partOfSpeech         String
+  payloadJson          Json
+  entrySnapshotJson    Json?
+  entryRevisionsJson   Json?
+  archivedAt           DateTime @default(now())
+
+  @@unique([runKey, sourceKind, sourceId])
+  @@index([runKey, normalizedKey, partOfSpeech])
+  @@index([normalizedKey, partOfSpeech])
+  @@schema("library")
+}
+
+model LibraryAssignment {
+  id           String   @id @default(cuid())
+  entryId      String?
+  entry        LibraryEntry? @relation(fields: [entryId], references: [id], onDelete: SetNull)
+  studentRefId String
+  taskType     String
+  subject      String?
+  route        String?
+  weekNumber   Int?
+  instructions String?
+  dueAt        DateTime?
+  status       String   @default("assigned")
+  assignedByName String
+  createdAt    DateTime @default(now())
+  completedAt  DateTime?
+  engagements  LibraryAssignmentEngagement[]
+
+  @@index([studentRefId, status, dueAt])
+  @@index([entryId, status])
+  @@schema("library")
+}
+
+model LibraryAssignmentEngagement {
+  id             String   @id @default(cuid())
+  assignmentId   String
+  assignment     LibraryAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  recipientEmail String
+  trackingToken  String   @unique
+  queueId        String?
+  queuedAt       DateTime @default(now())
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  proxyLoadedAt  DateTime?
+  firstOpenedAt  DateTime?
+  uniqueOpenedAt DateTime?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+  completedAt    DateTime?
+  metadataJson   Json?
+
+  @@unique([assignmentId, recipientEmail])
+  @@index([queuedAt])
+  @@index([openedAt, clickedAt])
+  @@schema("library")
+}
+
+model LibraryMigrationPreflight {
+  id             String   @id @default(cuid())
+  runKey         String
+  normalizedKey  String
+  partOfSpeech   String
+  sourceRowsJson Json
+  conflictsJson  Json
+  createdAt      DateTime @default(now())
+
+  @@unique([runKey, normalizedKey, partOfSpeech])
+  @@index([runKey, createdAt])
+  @@schema("library")
+}
+
+model LibraryAwlFamily {
+  id                 String   @id @default(cuid())
+  familyHeadword     String
+  qualifyingMember   String
+  sublist            Int
+  americanHeadword   String?
+  britishHeadword    String?
+  membersJson        Json
+  sourceVersion      String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([familyHeadword, sublist])
+  @@index([sublist])
+  @@index([americanHeadword])
+  @@schema("library")
+}
+
+model StudentEnrollmentPeriod {
+  id                    String                    @id @default(cuid())
+  studentRefId          String
+  student               Student                   @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  schoolYear            String
+  level                 String?
+  status                StudentEnrollmentStatus
+  startedAt             DateTime
+  endedAt               DateTime?
+  unenrollmentReason    StudentUnenrollmentReason?
+  comment               String?
+  promotedFromPeriodId  String?
+  promotedFromPeriod    StudentEnrollmentPeriod?  @relation("EnrollmentPromotionChain", fields: [promotedFromPeriodId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  promotedToPeriods     StudentEnrollmentPeriod[] @relation("EnrollmentPromotionChain")
+  attendanceRecords     StudentAttendance[]       @relation("EnrollmentPeriodAttendanceRecords")
+  gradeRecords          StudentGradeRecord[]      @relation("EnrollmentPeriodGradeRecords")
+  parentReports         ParentClassReport[]       @relation("EnrollmentPeriodParentReports")
+  newsReports           StudentNewsReport[]       @relation("EnrollmentPeriodNewsReports")
+  createdBy             String?
+  updatedBy             String?
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+
+  @@index([studentRefId, schoolYear])
+  @@index([status, schoolYear, level])
+  @@index([promotedFromPeriodId])
+  @@schema("public")
+}
+
+model AdminUser {
+  id           String        @id @default(cuid())
+  username     String        @unique
+  role         AdminUserRole @default(teacher)
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([role])
+  @@schema("public")
+}
+
+model AdminNotificationQueue {
+  id               String   @id @default(cuid())
+  queueType        String
+  status           String
+  deliveryMode     String
+  recipients       String[]
+  assignmentTitle  String
+  exerciseTitle    String?
+  level            String?
+  dueAt            String?
+  message          String?
+  senderName       String?
+  queuedByUsername String?
+  reviewedByUsername String?
+  studentReviewedAt DateTime?
+  studentReviewedByUsername String?
+  parentReviewedAt DateTime?
+  parentReviewedByUsername String?
+  scheduledFor     DateTime?
+  sentAt           DateTime?
+  attempts         Int      @default(0)
+  lastError        String?
+  payloadJson      Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([queueType, status, createdAt])
+  @@index([status, scheduledFor, createdAt])
+  @@schema("public")
+}
+
+model AssignmentReminderDispatch {
+  id                   String   @id @default(cuid())
+  dispatchKey          String   @unique
+  assignmentTemplateId String
+  studentRefId         String
+  reminderKind         String
+  localDate            String
+  status               String   @default("pending")
+  audience             String   @default("combined")
+  queueId              String?
+  lastError            String?
+  engagements          AssignmentReminderEngagement[]
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([assignmentTemplateId, localDate, reminderKind])
+  @@index([studentRefId, localDate, reminderKind])
+  @@index([status, updatedAt])
+  @@schema("public")
+}
+
+model AssignmentReminderEngagement {
+  id             String   @id @default(cuid())
+  dispatchId     String
+  audience       String
+  recipientEmail String
+  trackingToken  String   @unique
+  actionUrl      String?
+  queuedAt       DateTime @default(now())
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  proxyLoadedAt  DateTime?
+  firstOpenedAt  DateTime?
+  uniqueOpenedAt DateTime?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+  actionCompletedAt DateTime?
+  metadataJson   Json?
+  dispatch       AssignmentReminderDispatch @relation(fields: [dispatchId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([dispatchId, audience, recipientEmail])
+  @@index([audience, queuedAt])
+  @@index([openedAt, clickedAt])
+  @@index([actionCompletedAt])
+  @@schema("public")
+}
+
+model AsyncSideEffectJob {
+  id           String   @id
+  jobType      String
+  status       String   @default("queued")
+  dedupeKey    String?
+  payloadJson  Json?
+  resultJson   Json?
+  lastError    String?
+  attempts     Int      @default(0)
+  availableAt  DateTime?
+  lockedAt     DateTime?
+  lockedBy     String?
+  completedAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([jobType, dedupeKey])
+  @@index([status, availableAt, createdAt])
+  @@index([jobType, status, availableAt, createdAt])
+  @@index([lockedAt])
+  @@schema("public")
+}
+
+model ParentPortalAccount {
+  id               String   @id @default(cuid())
+  parentsId        String   @unique
+  email            String?  @unique
+  passwordHash     String
+  mustChangePassword Boolean @default(false)
+  status           String   @default("active")
+  lastLoginAt      DateTime?
+  links            ParentPortalStudentLink[]
+  profileSubmissions ParentProfileSubmissionQueue[]
+  profileInvitations ParentProfileInvitation[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([status])
+  @@index([email])
+  @@schema("public")
+}
+
+model ParentPortalStudentLink {
+  id              String   @id @default(cuid())
+  parentAccountId String
+  studentRefId    String
+  parentAccount   ParentPortalAccount @relation(fields: [parentAccountId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  student         Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdAt       DateTime @default(now())
+
+  @@unique([parentAccountId, studentRefId])
+  @@index([studentRefId])
+  @@schema("public")
+}
+
+model ParentProfileSubmissionQueue {
+  id                   String   @id @default(cuid())
+  parentAccountId      String
+  studentRefId         String
+  status               String
+  draftPayloadJson     Json?
+  adminEditedPayloadJson Json?
+  diffPayloadJson      Json?
+  failurePoint         String?
+  rejectionReason      String?
+  comment              String?
+  submittedAt          DateTime?
+  reviewedAt           DateTime?
+  reviewedByUsername   String?
+  parentAccount        ParentPortalAccount @relation(fields: [parentAccountId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  student              Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([status, submittedAt, createdAt])
+  @@index([parentAccountId, status, createdAt])
+  @@index([studentRefId, status, createdAt])
+  @@schema("public")
+}
+
+model ParentProfileInvitation {
+  id                String   @id @default(cuid())
+  tokenHash         String   @unique
+  activationCodeHash String? @unique
+  recipientEmail    String
+  studentRefId      String
+  student            Student  @relation(fields: [studentRefId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  parentAccountId   String?
+  parentAccount     ParentPortalAccount? @relation(fields: [parentAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  status            String   @default("queued")
+  batchId           String?
+  providerMessageId String?
+  queuedAt          DateTime @default(now())
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  proxyLoadedAt     DateTime?
+  firstOpenedAt     DateTime?
+  uniqueOpenedAt    DateTime?
+  openedAt          DateTime?
+  clickedAt         DateTime?
+  activatedAt       DateTime?
+  completedAt       DateTime?
+  expiresAt         DateTime
+  lastError         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([studentRefId, status, createdAt])
+  @@index([recipientEmail, status, createdAt])
+  @@index([expiresAt, status])
+  @@schema("public")
+}
+
+model ParentProfileFieldLock {
+  id               String   @id @default(cuid())
+  studentRefId     String
+  fieldKey         String
+  locked           Boolean  @default(true)
+  reason           String?
+  lockedByUsername String?
+  student          Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([studentRefId, fieldKey])
+  @@index([studentRefId, locked])
+  @@schema("public")
+}
+
+model StudentPortalAccount {
+  id               String   @id @default(cuid())
+  eaglesId         String   @unique
+  passwordHash     String
+  status           String   @default("active")
+  studentRefId     String?  @unique
+  student          Student? @relation(fields: [studentRefId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  lastLoginAt      DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([status])
+  @@index([studentRefId])
+  @@schema("public")
+}

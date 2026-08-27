@@ -117,6 +117,7 @@ Across all portals, visible sibling content must not touch. Use a shared non-zer
 - Formatted definitions use `line-height: 1.45`; `--portal-definition-flow-gap` is `12px`, while `--portal-definition-item-gap` is exactly flow / `--portal-definition-chi` (`1.61803398875`) for list items, nested lists, and section headings.
 - Definition display and editor text must preserve readable list indentation, paragraph separation, and safe inline emphasis.
 - Do not add a page-local font or letter-spacing override to compensate for a shared geometry problem.
+- Dictionary Builder candidates are content-sized editing controls: structured values use textareas, auto-expand to their rendered content, and retain manual resize. The modal has one centered header information area for its active-tab/status/feedback messages; candidate panels do not repeat those headings.
 
 ## 7. Header, footer, and prefooter structure
 

@@ -680,6 +680,10 @@ model LibraryEntry {
   revisions            LibraryEntryRevision[]
   contributions        LibraryContribution[]
   assignments          LibraryAssignment[]
+  mediaAssets          LibraryMediaAsset[]
+  dictionaryProvider   String?
+  dictionarySourceUrl  String?
+  dictionaryMetadata   Json?
 
   @@unique([normalizedKey, partOfSpeech])
   @@index([normalizedKey, partOfSpeech])
@@ -741,6 +745,75 @@ model LibraryEntryRevision {
 
   @@index([entryId, createdAt])
   @@index([actorName, createdAt])
+  @@schema("library")
+}
+
+model LibraryMediaAsset {
+  id          String       @id @default(cuid())
+  entryId     String
+  entry       LibraryEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  provider    String
+  dialect     String
+  sourceUrl   String
+  storagePath String
+  mimeType    String
+  byteLength  Int
+  sha256      String
+  actorName   String
+  actorRole   String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([entryId, provider, dialect])
+  @@index([provider, dialect, createdAt])
+  @@index([sha256])
+  @@schema("library")
+}
+
+model DictionaryProviderSuitabilityMetric {
+  id                 String   @id @default(cuid())
+  provider           String
+  partOfSpeech       String
+  datum              String
+  attemptCount       Int      @default(0)
+  availableCount     Int      @default(0)
+  eligibleApplyCount Int      @default(0)
+  selectedApplyCount Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([provider, partOfSpeech, datum])
+  @@index([provider, partOfSpeech])
+  @@schema("library")
+}
+
+model DictionaryBuilderProviderSetting {
+  id                    String   @id @default(cuid())
+  provider              String   @unique
+  enabled               Boolean  @default(true)
+  timeoutMs             Int      @default(8000)
+  maxConcurrentRequests Int      @default(2)
+  maxRequestsPerMinute  Int      @default(30)
+  updatedByName         String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@schema("library")
+}
+
+model DictionaryBuilderDatumSetting {
+  id              String   @id @default(cuid())
+  provider        String
+  partOfSpeech    String
+  datum           String
+  enabled         Boolean  @default(true)
+  qualityOverride Decimal? @db.Decimal(4, 2)
+  updatedByName   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([provider, partOfSpeech, datum])
+  @@index([provider, partOfSpeech])
   @@schema("library")
 }
 

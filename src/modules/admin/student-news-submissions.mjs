@@ -764,8 +764,8 @@ async function buildStudentNewsClientItem(row, { validationConfig = {} } = {}) {
     currentMmrPassed: minimumRequirements.passed === true,
     mmrFailedFields: minimumRequirements.failedFields || {},
     requiredTasks: Array.isArray(minimumRequirements.requiredTasks) ? minimumRequirements.requiredTasks : [],
-    warningFields: compliance.warningFields || {},
-    warningTasks: Array.isArray(compliance.warningTasks) ? compliance.warningTasks : [],
+    warningFields: {},
+    warningTasks: [],
     sentenceReports: minimumRequirements.sentenceReports || {
       actionWhy: { sentenceType: "fragment", issues: [] },
       biasAssessment: { sentenceType: "fragment", issues: [] },
@@ -1303,9 +1303,9 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
         item: existing ? await buildStudentNewsClientItem(existing, { validationConfig }) : null,
         mmrPassed: false,
         mmrFailedFields: minimumRequirements.failedFields || {},
-        warningFields: compliance.warningFields || {},
+        warningFields: {},
         requiredTasks: minimumRequirements.requiredTasks || [],
-        warningTasks: compliance.warningTasks || [],
+        warningTasks: [],
         submissionState: existingSubmissionState,
         dateSatisfied: Boolean(dateSatisfiedAt),
         reportDateLocked: Boolean(reportDateLockedAt),
@@ -1444,12 +1444,13 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     mode === "submit" && reviewStatus === STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
       ? resolveStudentNewsAutoApproveDueAt(saved, autoApproveConfig)
       : null
+  const requiredFixCount = Object.keys(minimumRequirements.failedFields || {}).length
   const responseMessage = mode === "draft"
     ? "Draft saved."
     : mode === "check"
     ? mmrPassed
       ? "Saved. CHECKS PASSED!"
-      : `Draft saved. ${Object.keys(minimumRequirements.failedFields || {}).length} required fixes remain.`
+      : `Draft saved. ${requiredFixCount} required fix${requiredFixCount === 1 ? "" : "es"} remain${requiredFixCount === 1 ? "s" : ""}.`
     : autoApproveConfig.autoApproveEnabled && autoApproveDueAt instanceof Date && !Number.isNaN(autoApproveDueAt.valueOf())
           ? `Submitted. Auto-approval is scheduled after ${autoApproveConfig.autoApproveDelayHours} hours while edits remain open for 30 days.`
           : "Submitted. You may continue improving for 30 days."
@@ -1464,11 +1465,11 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     item: mappedItem,
     mmrPassed,
     mmrFailedFields: mode === "draft" ? {} : minimumRequirements.failedFields || {},
-    warningFields: compliance.warningFields || {},
+    warningFields: {},
     complianceFailedFields: compliance.failedFields || {},
     complianceRevisionTasks: compliance.revisionTasks || [],
     requiredTasks: minimumRequirements.requiredTasks || [],
-    warningTasks: compliance.warningTasks || [],
+    warningTasks: [],
     submissionState,
     dateSatisfied: Boolean(dateSatisfiedAt),
     reportDateLocked: Boolean(reportDateLockedAt),

@@ -1,0 +1,11 @@
+body.library-definitions-page .definitions-layout { display: grid; gap: var(--portal-content-gap); }
+body.library-definitions-page .definitions-toolbar { align-items: end; display: flex; flex-wrap: wrap; gap: var(--portal-content-gap); }
+body.library-definitions-page .definitions-toolbar label { display: grid; gap: 6px; min-inline-size: 180px; }
+body.library-definitions-page .definitions-table-wrap { max-inline-size: 100%; overflow: auto; }
+body.library-definitions-page .definitions-table { border-collapse: collapse; min-inline-size: 1240px; inline-size: 100%; }
+body.library-definitions-page .definitions-table th, body.library-definitions-page .definitions-table td { border: 1px solid var(--portal-border); padding: 8px; text-align: left; vertical-align: top; }
+body.library-definitions-page .definitions-table th { background: var(--portal-surface-panel); position: sticky; inset-block-start: 0; }
+body.library-definitions-page .definitions-score { font-variant-numeric: tabular-nums; }
+body.library-definitions-page .definitions-provider-controls { display: grid; gap: var(--portal-content-gap); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+body.library-definitions-page .definitions-provider-card { padding: 12px; }
+body.library-definitions-page .definitions-provider-card label { display: grid; gap: 5px; margin-block: 8px; }

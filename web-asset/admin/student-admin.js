@@ -11060,6 +11060,18 @@
         document.getElementById("u_password").value = "";
       }
 
+      function beginUserEdit(user) {
+        fillUserForm(user);
+        renderUserRows();
+        const form = document.getElementById("userForm");
+        if (typeof form?.scrollIntoView === "function") {
+          form.scrollIntoView({ block: "start", behavior: "smooth" });
+        }
+        const usernameInput = document.getElementById("u_username");
+        usernameInput?.focus({ preventScroll: true });
+        setStatus(`Editing user: ${user?.username || "selected user"}`);
+      }
+
       function formatDate(value) {
         const text = value instanceof Date ? "" : normalizeText(value);
         const parsed = value instanceof Date ?
@@ -11364,7 +11376,7 @@
         `;
           tr.querySelector(`[data-user-edit="${user.id}"]`).addEventListener(
             "click",
-            () => fillUserForm(user),
+            () => beginUserEdit(user),
           );
           tr.querySelector(`[data-user-del="${user.id}"]`).addEventListener(
             "click",

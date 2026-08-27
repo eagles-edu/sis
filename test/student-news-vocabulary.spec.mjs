@@ -93,6 +93,7 @@ test("student New Words keeps server validation details visible in dark mode", (
 test("student news vocabulary minimum is configurable", async () => {
   assert.equal((await evaluateStudentNewsVocabulary(completeVocabularyRows(5), { minimumWords: 6 })).passed, false)
   assert.equal((await evaluateStudentNewsVocabulary(completeVocabularyRows(6), { minimumWords: 6 })).passed, true)
+  assert.equal((await evaluateStudentNewsVocabulary(completeVocabularyRows(6), { minimumWords: 5 })).passed, true)
 })
 
 test("development News autofill uses a real BBC article and article vocabulary with uppercase stress", () => {
@@ -101,9 +102,10 @@ test("development News autofill uses a real BBC article and article vocabulary w
   assert.match(STUDENT_JS, /articleTitle: "How Pakistan won over Trump to become an unlikely mediator in the Iran war"/)
   assert.doesNotMatch(STUDENT_JS, /"banana"/)
   assert.doesNotMatch(STUDENT_JS, /"computer"/)
-  for (const [english, syllabication] of [["unlikely", "un-LIKE-ly"], ["mediator", "ME-di-a-tor"], ["conflict", "CON-flict"], ["diplomatic", "dip-lo-MAT-ic"], ["negotiator", "ne-GO-ti-a-tor"], ["position", "po-SI-tion"]]) {
+  for (const [english, syllabication] of [["unlikely", "un-LIKE-ly"], ["mediator", "ME-di-a-tor"], ["conflict", "CON-flict"], ["diplomatic", "dip-lo-MAT-ic"], ["negotiator", "ne-GO-ti-a-tor"]]) {
     assert.match(STUDENT_JS, new RegExp(`"${english}"[\\s\\S]*?"${syllabication}"`))
   }
+  assert.doesNotMatch(STUDENT_JS, /\["position", "lập trường", "po-SI-tion"/)
   assert.match(STUDENT_JS, /countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "common"/)
   assert.match(STUDENT_JS, /hydrate\(rowEl, \{ \.\.\.row, \.\.\.esl \}\)/)
   assert.doesNotMatch(STUDENT_JS, /hydrate\(rowEl, esl\)/)

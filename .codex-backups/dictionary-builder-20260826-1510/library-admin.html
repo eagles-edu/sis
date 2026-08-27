@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+  <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+  <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Library Administration</title>
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script src="/web-asset/shared/portal-navigation.js"></script>
+  <script src="/web-asset/shared/vocabulary-esl-editor.js"></script>
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
+    if (!customElements.get("svg-icon")) svgIcon({ defaultSize: 28, path: "/web-asset/icons/web-component/svgs/" });
+  </script>
+  <script>window.SIS_PORTAL_THEME?.initTheme("light")</script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+</head>
+
+<body class="admin-portal-page page library-admin-page" id="top">
+  <button id="floatingMenuBtn" type="button" class="floating-menu-btn portal-button portal-button-immutable-chrome"
+    aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav"><span
+      class="floating-menu-icon" aria-hidden="true"></span></button>
+  <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
+  <div class="wrap">
+    <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation">
+      <h2>Navigation</h2>
+      <div class="sidebar-logo-wrap"><img src="/web-asset/images/logo.svg" alt="The Eagles Club logo"></div>
+      <nav class="menu-groups" id="navMenu" aria-label="MENU">
+        <a href="/admin" data-admin-nav="/admin" class="menu-link menu-link-top">DASHBOARD</a><a href="/admin/queue-hub"
+          data-admin-nav="/admin/queue-hub" class="menu-link menu-link-top">QUEUE HUB</a>
+        <div class="menu-group" data-menu-group="admin"><button type="button" class="menu-group-btn"
+            data-menu-toggle="admin" aria-expanded="true">Administration</button>
+          <div class="menu-group-links"><a href="/admin/enrollment" class="menu-link menu-sublink">Enrollment</a><a
+              href="/admin/student-admin" class="menu-link menu-sublink">Student Admin</a><a href="/admin/school-setup"
+              class="menu-link menu-sublink">School Setup</a><a href="/admin/users"
+              class="menu-link menu-sublink">Users</a><a href="/admin/permissions"
+              class="menu-link menu-sublink">Permissions</a><a href="/admin/settings"
+              class="menu-link menu-sublink">Settings</a>
+            <div class="menu-group menu-group-nested" data-menu-group="library"><button type="button"
+                class="menu-group-btn" data-menu-toggle="library" aria-expanded="true">Library</button>
+              <div class="menu-group-links"><a href="/admin/library" data-admin-nav="/admin/library"
+                  data-library-nav="library" data-library-section="library" class="menu-link menu-sublink">Library</a><a
+                  href="/admin/library/manage" data-admin-nav="/admin/library/manage" data-library-nav="manage"
+                  data-library-section="manage" class="menu-link menu-sublink">Manage</a><a
+                  href="/admin/library/engagement" data-admin-nav="/admin/library/engagement"
+                  data-library-nav="engagement" data-library-section="engagement"
+                  class="menu-link menu-sublink">Engagement</a><a href="/admin/library/references" data-admin-nav="/admin/library/references" data-library-nav="references" data-library-section="references" class="menu-link menu-sublink">References</a></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="sidebar-actions"><button id="libraryAdminLogoutBtn" type="button"
+          class="portal-button portal-button-danger">Logout</button></div>
+    </aside>
+    <div class="header-bar portal-login-header" data-surface-role="content">
+      <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+      <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+    </div>
+    <main id="appMain" class="section-stack library-admin-main" data-surface-role="content">
+      <section class="content topbar" data-surface-role="content">
+        <div class="topbar-head">
+          <div class="brand-head"><a class="brand-logo-wrap brand-logo-wrap--sm" href="/admin" data-admin-nav="/admin"
+              aria-label="Go to admin dashboard"><img class="brand-logo" src="/web-asset/images/logo.svg"
+                alt="The Eagles Club logo"></a>
+            <h1>THE EAGLES CLUB</h1>
+          </div>
+          <div class="header-actions"><button class="portal-theme-toggle portal-button portal-button-immutable-chrome"
+              id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme"><span
+                class="portal-theme-toggle__icon" aria-hidden="true"><svg-icon name="theme-moon" size="110%"
+                  id="adminThemeToggleIcon"></svg-icon></span></button>
+            <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls"><button
+                id="adminTextZoomDownBtn" type="button" class="portal-button portal-button-neutral-action">A-</button><button
+                id="adminTextZoomUpBtn" type="button" class="portal-button portal-button-neutral-action">A+</button><button
+                id="adminTextZoomResetBtn" type="button" class="portal-button portal-button-neutral-action">Reset</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="content" data-surface-role="content" aria-labelledby="libraryAdminTitle">
+        <div class="section-head">
+          <h1 id="libraryAdminTitle">Library</h1>
+          <p class="small">Full shared vocabulary corpus.</p>
+        </div>
+        <form id="libraryAdminFilters" class="library-admin-toolbar"><label>Search<input id="libraryAdminSearch"
+              type="search" placeholder="English, Vietnamese, definition, or family"></label><label>POS<select
+              id="libraryAdminPos">
+              <option value="">All</option>
+              <option>noun</option>
+              <option>verb</option>
+              <option>adjective</option>
+              <option>adverb</option>
+              <option>pronoun</option>
+              <option>conjunction</option>
+              <option>preposition</option>
+            </select></label><label>Sort<select id="libraryAdminSort">
+              <option value="updatedAt">Last edited</option>
+              <option value="createdAt">Created date</option>
+              <option value="english">Alphabetically</option>
+              <option value="syllableCount">Number of syllables</option>
+              <option value="partOfSpeech">POS</option>
+            </select></label><label>Direction<select id="libraryAdminDirection">
+              <option value="desc">Newest first</option>
+              <option value="asc">Oldest/A-Z</option>
+            </select></label><button type="submit" class="portal-button portal-button-blue-action"
+            title="Apply the selected Library filters." aria-label="Apply Library filters">Apply</button></form>
+        <div class="library-admin-actions"><button id="libraryPreflightBtn" type="button"
+            class="portal-button portal-button-blue-action"
+            title="Build the immutable legacy report grouped by normalized English and POS."
+            aria-label="Run legacy preflight">Preflight</button><button id="libraryCutoverBtn" type="button"
+            class="portal-button portal-button-warning"
+            title="Create canonical Library entries, preserve provenance, and archive migrated New Words."
+            aria-label="Run legacy cutover">Cutover</button></div>
+        <p id="libraryAdminStatus" class="small" aria-live="polite">Loading Library…</p>
+        <div id="libraryAdminResults" class="library-admin-results"></div>
+        <nav id="libraryAdminPagination" class="library-pagination" aria-label="Library pages" hidden></nav>
+        <section id="libraryApprovedEditor" class="panel library-review-workspace" data-surface-role="panel"
+          aria-labelledby="libraryApprovedEditorTitle" hidden>
+          <div class="section-head">
+            <h2 id="libraryApprovedEditorTitle">Edit Library entry</h2>
+            <p class="small">Every change is provisional and enters the approval queue.</p>
+          </div>
+        </section>
+      </section>
+      <section class="content library-admin-workbench" data-surface-role="content" aria-labelledby="libraryQueueTitle">
+        <div class="section-head">
+          <h2 id="libraryQueueTitle">Manage</h2>
+          <p class="small">Library assignments and review queue: new entries, edits, and derived potential duplicates.
+          </p>
+        </div>
+        <div class="library-admin-toolbar"><label>Queue status<select id="libraryQueueStatus">
+              <option value="open_review">Open review</option>
+              <option value="legacy_pending_review">Legacy pending</option>
+              <option value="pending_review">New pending</option>
+              <option value="rejected">Rejected</option>
+              <option value="approved">Approved</option>
+            </select></label><label>Assign to student<select id="libraryAssignStudent">
+              <option value="">Choose student</option>
+            </select></label><label>Instructions<input id="libraryAssignInstructions" type="text"
+              placeholder="What should the student check?"></label><label>Due date<input id="libraryAssignDueAt"
+              type="datetime-local"></label></div>
+        <p id="libraryQueueStatusText" class="small" aria-live="polite">Loading Library queue…</p>
+        <div class="library-review-shell" data-review-shell>
+          <aside class="library-review-list" data-review-sidebar aria-label="Library review queue">
+            <div class="library-review-sidebar-heading">
+              <h3>Review queue</h3><button type="button" class="portal-button portal-button-neutral-action"
+                data-review-sidebar-toggle aria-expanded="true" aria-controls="libraryQueueRows"
+                title="Collapse or expand the review queue side panel">Collapse</button>
+            </div>
+            <div id="libraryQueueRows" class="library-review-sidebar-body"></div>
+          </aside>
+          <section id="libraryReviewWorkspace" class="library-review-workspace" aria-labelledby="libraryReviewTitle">
+            <div class="library-review-empty" id="libraryReviewEmpty">Select a queue item to open the full flattened review workspace.</div>
+          </section>
+        </div>
+      </section>
+      <section class="content library-admin-workbench" data-surface-role="content"
+        aria-labelledby="libraryEngagementTitle">
+        <div class="section-head">
+          <h2 id="libraryEngagementTitle">Library assignment engagement</h2>
+          <p class="small">Brevo queue, delivery, open, click, and completion tracking for Library assignments.</p>
+        </div>
+        <button id="libraryEngagementReloadBtn" type="button" class="portal-button portal-button-btn-refresh"
+          title="Reload Library assignment delivery and engagement events.">Refresh</button>
+        <p id="libraryEngagementSummary" class="small" aria-live="polite">Loading engagement…</p>
+        <div id="libraryEngagementRows" class="table-scroll-wrap"></div>
+      </section>
+      <section class="content library-admin-workbench" data-surface-role="content" aria-labelledby="libraryReferenceTitle">
+        <div class="section-head"><h2 id="libraryReferenceTitle">Reference lists</h2><p class="small">Admin-managed lists are separate from Library entries.</p></div>
+        <form id="libraryReferenceFilters" class="library-admin-toolbar"><label>List<select id="libraryReferenceCatalog"></select></label><label>Search<input id="libraryReferenceSearch" type="search" placeholder="Term or subtype"></label><label>Subtype<input id="libraryReferenceSubtype" type="search" placeholder="Optional subtype"></label><button type="submit" class="portal-button portal-button-blue-action">Apply</button></form>
+        <div class="library-admin-actions"><label class="portal-button portal-button-neutral-action">Import<input id="libraryReferenceFile" type="file" accept=".xlsx,.ods,.csv" hidden></label><button id="libraryReferencePreviewBtn" type="button" class="portal-button portal-button-blue-action">Preview</button><button id="libraryReferenceImportBtn" type="button" class="portal-button portal-button-affirm" disabled>Import</button><button id="libraryReferenceExportXlsxBtn" type="button" class="portal-button portal-button-neutral-action">XLSX</button><button id="libraryReferenceExportOdsBtn" type="button" class="portal-button portal-button-neutral-action">ODS</button><button id="libraryReferenceExportCsvBtn" type="button" class="portal-button portal-button-neutral-action">CSV</button></div>
+        <p id="libraryReferenceStatus" class="small" aria-live="polite">Loading reference catalogs…</p><div id="libraryReferenceRows" class="table-scroll-wrap"></div>
+      </section>
+    </main>
+    <section class="content portal-prefooter" aria-label="Runtime environment"><span class="env-badge"
+        data-environment-prefooter>Admin Library</span></section>
+    <footer class="hub-footer" aria-label="Site footer">
+      <p class="hub-footer__copy">© <span data-copyright-year="" data-start="2012"></span> The Eagles American
+        English Club Ltd. All rights reserved.</p>
+      <p class="hub-footer__action"><a href="#top">Về đầu trang</a></p>
+    </footer>
+  </div>
+  <script>
+      (() => {
+        const menu = document.getElementById("floatingMenuBtn"); const setMenuOpen = (open) => { document.body.classList.toggle("menu-open", open); menu?.setAttribute("aria-expanded", String(open)); menu?.setAttribute("aria-label", open ? "Close navigation menu" : "Open navigation menu"); }; menu?.addEventListener("click", () => setMenuOpen(!document.body.classList.contains("menu-open"))); document.querySelectorAll("[data-menu-toggle]").forEach((button) => { const expanded = button.getAttribute("aria-expanded") === "true"; button.parentElement?.classList.toggle("expanded", expanded); button.addEventListener("click", () => { const nextExpanded = button.getAttribute("aria-expanded") !== "true"; button.setAttribute("aria-expanded", String(nextExpanded)); button.parentElement?.classList.toggle("expanded", nextExpanded); }); }); document.addEventListener("click", (event) => { if (!document.body.classList.contains("menu-open") || menu?.contains(event.target) || document.getElementById("appSidebarNav")?.contains(event.target)) return; setMenuOpen(false); }); document.addEventListener("keydown", (event) => { if (event.key === "Escape") setMenuOpen(false); }); const requestedApiOrigin = new URLSearchParams(location.search).get("apiOrigin"); const apiOrigin = (() => { if (!requestedApiOrigin) return ""; try { return new URL(requestedApiOrigin, location.origin).origin === location.origin ? "" : requestedApiOrigin; } catch { return ""; } })(); const withApiOrigin = (path) => { const target = new URL(path, location.origin); if (apiOrigin) target.searchParams.set("apiOrigin", apiOrigin); else target.searchParams.delete("apiOrigin"); return `${target.pathname}${target.search}${target.hash}`; }; document.querySelectorAll("[data-admin-nav]").forEach((link) => { link.href = withApiOrigin(link.dataset.adminNav); }); const normalizedPath = location.pathname.replace(/\/+$/u, ""); const librarySection = normalizedPath.endsWith("/library/manage") ? "manage" : normalizedPath.endsWith("/library/engagement") ? "engagement" : normalizedPath.endsWith("/library/references") ? "references" : "library"; document.querySelectorAll("[data-library-nav]").forEach((link) => { const active = link.dataset.libraryNav === librarySection; link.classList.toggle("active", active); link.toggleAttribute("aria-current", active); });
+        document.getElementById("libraryAdminLogoutBtn")?.addEventListener("click", async () => { await fetch("/api/admin/auth/logout", { method: "POST", credentials: "include" }); window.location.assign(withApiOrigin("/admin")); }); const themeButton = document.getElementById("adminThemeToggle"); const themeIcon = document.getElementById("adminThemeToggleIcon"); const themeState = window.SIS_PORTAL_THEME; const syncTheme = (theme) => { if (!themeButton || !themeIcon) return; const isDark = theme === "dark"; themeButton.setAttribute("aria-pressed", String(isDark)); themeButton.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme"); themeIcon.setAttribute("name", isDark ? "theme-sun" : "theme-moon"); }; window.addEventListener("sis-theme-change", (event) => syncTheme(event.detail?.theme || document.documentElement.dataset.theme)); themeButton?.addEventListener("click", () => syncTheme(themeState?.toggleTheme ? themeState.toggleTheme("light") : (document.documentElement.dataset.theme === "dark" ? "light" : "dark"))); syncTheme(themeState?.getTheme ? themeState.getTheme("light") : document.documentElement.dataset.theme); document.querySelectorAll("[data-copyright-year]").forEach((element) => { element.textContent = String(new Date().getFullYear()); }); const zoom = (delta) => { const current = Number.parseInt(document.documentElement.dataset.portalTextZoom || "100", 10) || 100; document.documentElement.dataset.portalTextZoom = String(Math.max(85, Math.min(130, current + delta))); document.documentElement.style.fontSize = `${document.documentElement.dataset.portalTextZoom}%`; }; document.getElementById("adminTextZoomDownBtn")?.addEventListener("click", () => zoom(-5)); document.getElementById("adminTextZoomUpBtn")?.addEventListener("click", () => zoom(5)); document.getElementById("adminTextZoomResetBtn")?.addEventListener("click", () => { document.documentElement.dataset.portalTextZoom = "100"; document.documentElement.style.fontSize = ""; }); const libraryApi = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library`; const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char])); async function loadLibraryAdmin() { const status = document.getElementById("libraryAdminStatus"); const query = new URLSearchParams({ pageSize: "100", search: document.getElementById("libraryAdminSearch").value, partOfSpeech: document.getElementById("libraryAdminPos").value, sortBy: document.getElementById("libraryAdminSort").value, direction: document.getElementById("libraryAdminDirection").value }); try { const response = await fetch(`${libraryApi}?${query}`, { credentials: "include" }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to load Library"); document.getElementById("libraryAdminResults").innerHTML = (data.items || []).map((entry) => `<details class="library-admin-entry"><summary><strong>${esc(entry.english)}</strong>&nbsp; /${esc(entry.syllabication)}/ &nbsp;${esc(entry.partOfSpeech)} | ${esc(entry.vietnamese)}</summary><div class="library-admin-body"><div>${esc(entry.definition)}</div><div class="library-admin-meta">Created by ${esc(entry.createdByName)} · last edited by ${esc(entry.lastEditedByName)} · ${new Date(entry.updatedAt).toLocaleString()}</div><div class="library-admin-actions"><button type="button" class="portal-button portal-button-blue-action" data-mw-preview="${esc(entry.id)}" title="Preview only the Merriam-Webster fields that can be authoritative." aria-label="Preview MW data">MW preview</button></div></div></details>`).join("") || "<p class=\"small\">No entries match.</p>"; status.textContent = `${data.total || 0} entries`; } catch (error) { status.textContent = error.message; } } document.getElementById("libraryAdminFilters")?.addEventListener("input", loadLibraryAdmin); document.getElementById("libraryAdminResults")?.addEventListener("click", async (event) => { const id = event.target?.dataset?.mwPreview; if (!id) return; const response = await fetch(`${libraryApi}/entries/${encodeURIComponent(id)}/mw-preview`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" }); const data = await response.json(); window.alert(data.ok ? `MW preview:\n${JSON.stringify(data.fields, null, 2)}` : data.message || "MW data unavailable"); }); document.getElementById("libraryPreflightBtn")?.addEventListener("click", async () => { const response = await fetch(`${libraryApi}/legacy/preflight`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" }); const data = await response.json(); document.getElementById("libraryAdminStatus").textContent = data.ok ? `Preflight: ${data.sourceRows} sources in ${data.groups} groups.` : (data.error || "Preflight failed"); }); document.getElementById("libraryCutoverBtn")?.addEventListener("click", async () => { if (!window.confirm("Create canonical Library entries and archive migrated New Words?")) return; const response = await fetch(`${libraryApi}/legacy/cutover`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" }); const data = await response.json(); document.getElementById("libraryAdminStatus").textContent = data.ok ? `Cutover completed: ${data.migrated} Library entries.` : (data.error || "Cutover failed"); if (data.ok) loadLibraryAdmin(); }); loadLibraryAdmin();
+      })();
+  </script>
+  <script>
+    (() => {
+      if (!location.pathname.replace(/\/+$/u, "").endsWith("/library")) return;
+      const apiRoot = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library`;
+      const fields = ["english", "americanEnglish", "britishEnglish", "partOfSpeech", "phraseType", "vietnamese", "syllabication", "syllableCount", "definition", "countability", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"];
+      const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character]));
+      const label = (field) => field.replace(/([A-Z])/g, " $1").replace(/^./u, (character) => character.toUpperCase());
+      const flatHtml = (entry) => window.SIS_VOCABULARY_ESL.flatEntryHtml(entry, { editClass: "library-admin-flat-edit", editAttributes: `data-approved-edit="${esc(entry.id)}"` });
+      let entries = new Map(); let approvedPage = 1;
+      let requestPending = false;
+      async function loadEntriesForAccordion() {
+        if (requestPending) return;
+        requestPending = true;
+        try {
+          const query = new URLSearchParams({ pageSize: "100", search: document.getElementById("libraryAdminSearch")?.value || "", partOfSpeech: document.getElementById("libraryAdminPos")?.value || "", sortBy: document.getElementById("libraryAdminSort")?.value || "updatedAt", direction: document.getElementById("libraryAdminDirection")?.value || "desc" });
+          const response = await fetch(`${apiRoot}?${query}`, { credentials: "include" });
+          const data = await response.json();
+          if (response.ok) entries = new Map((data.items || []).map((entry) => [entry.id, entry]));
+          enhanceAccordions();
+        } finally {
+          requestPending = false;
+        }
+      }
+      function enhanceAccordions() {
+        document.querySelectorAll(".library-admin-entry").forEach((accordion) => {
+          const editButton = accordion.querySelector("[data-approved-edit]");
+          const entry = entries.get(accordion.dataset.libraryEntryId || editButton?.dataset.approvedEdit);
+          if (!entry || accordion.querySelector("[data-vocabulary-flat-entry]")) return;
+          const body = accordion.querySelector(".library-admin-body");
+          if (body) body.insertAdjacentHTML("afterbegin", flatHtml(entry));
+        });
+      }
+      const results = document.getElementById("libraryAdminResults");
+      new MutationObserver(enhanceAccordions).observe(results, { childList: true });
+      loadEntriesForAccordion().catch(() => { });
+    })();
+  </script>
+  <script>
+    (() => {
+      const apiRoot = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library`;
+      const normalizedPath = location.pathname.replace(/\/+$/u, "");
+      const librarySection = normalizedPath.endsWith("/library/manage") ? "manage" : normalizedPath.endsWith("/library/engagement") ? "engagement" : normalizedPath.endsWith("/library/references") ? "references" : "library";
+      document.querySelectorAll("[data-library-section]").forEach((link) => link.toggleAttribute("aria-current", link.dataset.librarySection === librarySection));
+      const fullLibraryPanel = document.getElementById("libraryAdminFilters")?.closest("section");
+      const managePanel = document.getElementById("libraryQueueTitle")?.closest("section");
+      const engagementPanel = document.getElementById("libraryEngagementTitle")?.closest("section");
+      const referencePanel = document.getElementById("libraryReferenceTitle")?.closest("section");
+      if (librarySection === "manage") { fullLibraryPanel?.classList.add("hidden"); engagementPanel?.classList.add("hidden"); }
+      if (librarySection === "engagement") { fullLibraryPanel?.classList.add("hidden"); managePanel?.classList.add("hidden"); }
+      if (librarySection === "references") { fullLibraryPanel?.classList.add("hidden"); managePanel?.classList.add("hidden"); engagementPanel?.classList.add("hidden"); }
+      if (librarySection === "library") { managePanel?.classList.add("hidden"); engagementPanel?.classList.add("hidden"); referencePanel?.classList.add("hidden"); }
+      if (librarySection !== "references") referencePanel?.classList.add("hidden");
+      const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+      const json = async (path, options = {}) => { const response = await fetch(`${apiRoot}${path}`, { credentials: "include", ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Library request failed"); return data; };
+      let selectedQueueItem = null;
+      async function loadStudents() { const data = await json("/students"); const select = document.getElementById("libraryAssignStudent"); select.innerHTML = `<option value="">Choose student</option>${(data.items || []).map((student) => `<option value="${esc(student.id)}">${esc(student.name)}${student.email ? ` — ${esc(student.email)}` : ""}</option>`).join("")}`; }
+      async function loadQueue() { const data = await json(`/queue?status=${encodeURIComponent(document.getElementById("libraryQueueStatus").value)}`); document.getElementById("libraryQueueStatusText").textContent = `${data.total || 0} queue item(s)`; const submitted = (data.items || []).map((item) => { const payload = item.payloadJson || {}; return `<article class="library-admin-entry"><div class="library-admin-body"><strong>${esc(payload.english || "Untitled")}</strong> <span class="chip">${esc(item.queueType)}</span>${item.potentialDuplicate ? ` <span class="chip chip-warn">potential duplicate</span>` : ""}<div class="library-admin-meta">${esc(payload.partOfSpeech || "-")} · submitted ${esc(new Date(item.submittedAt).toLocaleString())} · by ${esc(item.contributorName)}</div><div class="library-admin-meta">${esc(payload.definition || "No definition")}</div><div class="library-admin-actions"><button type="button" class="portal-button portal-button-affirm" data-library-review="${esc(item.id)}" data-approved="true">Approve</button><button type="button" class="portal-button portal-button-warning" data-library-review="${esc(item.id)}" data-approved="false">Reject</button><button type="button" class="portal-button portal-button-blue-action" data-library-assign="${esc(item.id)}" data-entry-id="${esc(item.entryId || "")}" title="Assign this edit or new entry to a selected student.">Assign</button></div></div></article>`; }); const assigned = (data.assignments || []).map((item) => `<article class="library-admin-entry"><div class="library-admin-body"><strong>${esc(item.entry?.english || "New Library entry")}</strong> <span class="chip">assigned ${esc(item.taskType)}</span><div class="library-admin-meta">Subject: ${esc(item.subject || "-")} · Route: ${esc(item.route || "-")} · due ${esc(item.dueAt || "-")}</div><div class="library-admin-actions"><button type="button" class="portal-button portal-button-blue-action" data-library-notify="${esc(item.id)}" title="Queue the assignment email and create its engagement tracking record.">Email</button></div></div></article>`); document.getElementById("libraryQueueRows").innerHTML = submitted.concat(assigned).join("") || "<p class=\"small\">No Library work is waiting.</p>"; }
+      async function loadEngagement() { const data = await json("/engagement"); document.getElementById("libraryEngagementSummary").textContent = `${data.total || 0} assignment engagement record(s)`; document.getElementById("libraryEngagementRows").innerHTML = `<table class="admin-data-table"><thead><tr><th>Student</th><th>Library task</th><th>Email</th><th>Queued</th><th>Sent</th><th>Delivered</th><th>Open</th><th>Clicked</th><th>Completed</th></tr></thead><tbody>${(data.items || []).map((row) => `<tr><td>${esc(row.studentName)}</td><td>${esc(row.assignmentTitle)}</td><td>${esc(row.recipientEmail)}</td><td>${esc(row.queuedAt || "-")}</td><td>${esc(row.sentAt || "-")}</td><td>${esc(row.deliveredAt || "-")}</td><td>${esc(row.openedAt || "-")}</td><td>${esc(row.clickedAt || "-")}</td><td>${esc(row.completedAt || "-")}</td></tr>`).join("") || `<tr><td colspan="9">No Library assignment emails have been queued.</td></tr>`}</tbody></table>`; }
+      ["libraryQueueStatus"].forEach((id) => document.getElementById(id)?.addEventListener("input", () => loadQueue().catch((error) => { document.getElementById("libraryQueueStatusText").textContent = error.message; })));
+      document.getElementById("libraryEngagementReloadBtn")?.addEventListener("click", () => loadEngagement().catch((error) => { document.getElementById("libraryEngagementSummary").textContent = error.message; }));
+      document.getElementById("libraryQueueRows")?.addEventListener("click", async (event) => { const notify = event.target.closest("[data-library-notify]"); if (notify) { await json(`/assignments/${encodeURIComponent(notify.dataset.libraryNotify)}/notify`, { method: "POST", body: "{}" }); await loadEngagement(); return; } const review = event.target.closest("[data-library-review]"); if (review) { await json(`/contributions/${encodeURIComponent(review.dataset.libraryReview)}/review`, { method: "POST", body: JSON.stringify({ approved: review.dataset.approved === "true" }) }); await loadQueue(); return; } const assign = event.target.closest("[data-library-assign]"); if (!assign) return; const studentRefId = document.getElementById("libraryAssignStudent").value; if (!studentRefId) { window.alert("Choose a student first."); return; } await json("/assignments", { method: "POST", body: JSON.stringify({ studentRefIds: [studentRefId], entryId: assign.dataset.entryId || null, taskType: assign.dataset.entryId ? "edit" : "new_entry", instructions: document.getElementById("libraryAssignInstructions").value, dueAt: document.getElementById("libraryAssignDueAt").value || null }) }); window.alert("Library assignment created."); await loadQueue(); });
+      Promise.all([loadStudents(), loadQueue(), loadEngagement()]).catch((error) => { document.getElementById("libraryQueueStatusText").textContent = error.message; });
+    })();
+  </script>
+  <script>
+    (() => {
+      if (!location.pathname.replace(/\/+$/u, "").endsWith("/library/manage")) return;
+      const apiRoot = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library`;
+      const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+      const json = async (path, options = {}) => { const response = await fetch(`${apiRoot}${path}`, { credentials: "include", ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Library request failed"); return data; };
+      const REVIEW_FIELDS = ["english", "americanEnglish", "britishEnglish", "partOfSpeech", "phraseType", "vietnamese", "syllabication", "syllableCount", "definition"];
+      const SHARED_FIELDS = new Set(["english", "partOfSpeech", "vietnamese", "syllabication", "definition", "etymologyType", "etymology", "originPath", "originReferences", "grammarClassification", "grammarClassification.grammarFamily", "grammarClassification.grammarSubtype", "grammarClassification.grammarDetail", "grammarClassification.grammarNumber", "countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"]);
+      let queueItems = []; let selectedQueueItem = null; let scrollLock = true;
+      const label = (field) => field.split(".").pop().replace(/([A-Z])/g, " $1").replace(/^./u, (c) => c.toUpperCase());
+      const getPath = (payload, path) => path.split(".").reduce((value, key) => value && typeof value === "object" ? value[key] : "", payload);
+      const setPath = (payload, path, value) => { const parts = path.split("."); const last = parts.pop(); let target = payload; parts.forEach((part) => { target[part] ||= {}; target = target[part]; }); target[last] = value; };
+      const fieldsFor = (payload) => [...new Set([...REVIEW_FIELDS, ...Object.keys(payload || {})])].filter((field) => !SHARED_FIELDS.has(field));
+      const fieldPath = (input) => input.dataset.reviewField || input.dataset.vocabularyOriginField || (input.dataset.vocabularyEslField && window.SIS_VOCABULARY_ESL?.grammarFields.includes(input.dataset.vocabularyEslField) ? `grammarClassification.${input.dataset.vocabularyEslField}` : input.dataset.vocabularyEslField);
+      function fieldHtml(payload, field, editable) { const value = getPath(payload, field); const shown = typeof value === "object" ? JSON.stringify(value) : String(value ?? ""); if (!editable) return `<div class="library-review-field"><label>${esc(label(field))}</label><div>${esc(shown || "—")}</div></div>`; if (field === "partOfSpeech") return `<label class="library-review-field"><span>${esc(label(field))}</span><select name="library-review-${esc(field)}" data-review-field="partOfSpeech" data-vocabulary-field="partOfSpeech"><option value="">Select</option>${window.SIS_VOCABULARY_ESL.POS.map((pos) => `<option value="${esc(pos)}"${pos === value ? " selected" : ""}>${esc(pos)}</option>`).join("")}</select></label>`; if (field === "definition") return `<label class="library-review-field library-review-field--wide"><span>${esc(label(field))}</span><textarea name="library-review-${esc(field)}" data-review-field="${esc(field)}">${esc(shown)}</textarea></label>`; return `<label class="library-review-field"><span>${esc(label(field))}</span><input name="library-review-${esc(field)}" data-review-field="${esc(field)}" value="${esc(shown)}"></label>`; }
+      function bindSharedEditorRow(pane) {
+        const row = pane?.querySelector("[data-news-vocabulary-row]");
+        if (!row || row.dataset.sharedEditorBound === "true") return;
+        row.dataset.sharedEditorBound = "true";
+        row.addEventListener("change", (event) => {
+          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) {
+            window.SIS_VOCABULARY_ESL?.sync(row);
+          }
+        });
+      }
+      function hydratePane(pane, payload) { window.SIS_VOCABULARY_ESL?.hydrate(pane, payload); bindSharedEditorRow(pane); window.SIS_VOCABULARY_ESL?.bindLookupButtons(pane); window.SIS_VOCABULARY_ESL?.bindDefinitionAutosize(pane); }
+      function groupFor(item) { const group = item?.duplicateGroup?.length ? [item, ...item.duplicateGroup.filter((candidate) => candidate.id !== item.id)] : [item]; const largestId = item?.largestDuplicateId || ""; const largest = group.find((candidate) => candidate.id === largestId) || group[0]; return group.length > 1 ? [largest, ...group.filter((candidate) => candidate.id !== largest.id)] : group; }
+      function optionsFor(item) { return groupFor(item).map((candidate, index) => `<option value="${esc(candidate.id)}">${String.fromCharCode(65 + index)} · ${esc(candidate.contributorName || "Unknown")} · ${esc(candidate.payloadJson?.english || "Untitled")}</option>`).join(""); }
+      function lockPanes(workspace) { const panes = [...workspace.querySelectorAll("[data-review-pane]")]; let syncing = false; panes.forEach((pane) => pane.addEventListener("scroll", () => { if (!scrollLock || syncing) return; syncing = true; panes.forEach((other) => { if (other !== pane) { other.scrollTop = pane.scrollTop; other.scrollLeft = pane.scrollLeft; } }); requestAnimationFrame(() => { syncing = false; }); })); }
+      function sharedPaneHtml(item, slot, editable, title) {
+        const payload = item?.payloadJson || {};
+        const advanced = fieldsFor(payload).map((field) => fieldHtml(payload, field, editable)).join("");
+        return `<article class="library-review-pane" data-review-pane="${slot}" data-review-source-id="${esc(item?.id || "")}"${editable ? "" : " aria-readonly=\"true\" inert"}><h3>${esc(title || (slot === "a" ? "Largest dupe" : "New canonical"))}${item?.contributorName ? ` · ${esc(item.contributorName)}` : ""}</h3>${window.SIS_VOCABULARY_ESL.editorRowHtml(`review-${slot}`, { includeLdoce: true, includeOxford: true, includeBritannica: true, includeMerriamWebster: true, includeTransitivityTools: true, includeOriginAnalysis: true, originLookupPath: `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library/etymonline`, lookupButtons: ["OE", "BR", "LD", "MW", "GT", "ET", "WH", "TH", "GL"] })}<div class="library-review-advanced-fields"><div class="section-head"><h4>Library metadata</h4><p class="small">Additional fields retained for the reviewed Library record.</p></div><div class="library-review-field-grid">${advanced}</div></div></article>`;
+      }
+      function readSharedPane(pane, original) {
+        const next = structuredClone(original || {});
+        pane.querySelectorAll("[data-review-field], [data-approved-field], [data-vocabulary-field], [data-vocabulary-esl-field], [data-vocabulary-origin-field]").forEach((input) => {
+          const sourceField = input.dataset.reviewField || input.dataset.approvedField || input.dataset.vocabularyField || input.dataset.vocabularyEslField;
+          if (!sourceField) return;
+          const field = window.SIS_VOCABULARY_ESL?.grammarFields.includes(sourceField) ? `grammarClassification.${sourceField}` : sourceField;
+          let value = input.type === "checkbox" ? input.checked : input.value;
+          if (field === "originReferences") { try { value = JSON.parse(value || "[]"); } catch { value = []; } }
+          setPath(next, field, value);
+        });
+        return next;
+      }
+      function renderSavedCanonical(entry, message) { const workspace = document.getElementById("libraryReviewWorkspace"); workspace.innerHTML = `<div class="section-head"><h2 id="libraryReviewTitle">Canonical Library entry saved</h2><p class="small">${esc(message)}</p></div>${window.SIS_VOCABULARY_ESL.flatEntryHtml(entry, { editLabel: null, entryAttributes: 'data-saved-canonical="true"' })}`; }
+      function renderWorkspace(item) { selectedQueueItem = item; const group = groupFor(item); const legacy = Boolean(item.legacyReview || item.legacyGroup); const comparison = legacy || group.length > 1; const largest = group[0]; const canonicalDraft = comparison ? { id: "new-canonical", payloadJson: structuredClone(largest.payloadJson || {}), contributorName: "" } : item; const workspace = document.getElementById("libraryReviewWorkspace"); const sourceTitle = legacy ? "Legacy source" : "Largest dupe"; const panes = comparison ? `${sharedPaneHtml(largest, "a", false, sourceTitle)}${sharedPaneHtml(canonicalDraft, "b", true, "New canonical")}` : sharedPaneHtml(item, "a", true, "Canonical approval"); const canonicalOptions = comparison ? `<label>Canonical source<select name="library-review-canonical" data-canonical-select><option value="${esc(largest.id)}">${esc(sourceTitle)} · ${esc(largest.contributorName || "Unknown")}</option></select></label>` : ""; const title = legacy ? "Canonicalize legacy source" : comparison ? "Canonicalize duplicate contributions" : "Review Library contribution"; const detail = legacy ? "Legacy review: the read-only source remains archived. Edit New canonical, then approve the provisional Library entry." : comparison ? "Full flattened review: the read-only Largest dupe is cloned into New canonical. Edit only the new canonical, then save one canonical entry for the whole contribution group." : "Full flattened review: review the contribution and save one canonical Library entry."; workspace.innerHTML = `<div class="section-head"><h2 id="libraryReviewTitle">${title}</h2><p class="small">${detail}</p></div><div class="library-review-toolbar">${canonicalOptions}<button type="button" class="portal-button portal-button-neutral-action" data-review-view="horizontal"${comparison ? "" : " hidden"}>Horizontal split</button><button type="button" class="portal-button portal-button-neutral-action" data-review-view="vertical"${comparison ? "" : " hidden"}>Vertical split</button><label${comparison ? "" : " hidden"}><input type="checkbox" name="library-review-scroll-lock" data-review-scroll-lock checked> Lock pane scroll</label></div><div class="library-review-compare${comparison ? "" : " is-single"}" data-review-compare>${panes}</div><div class="library-review-actions"><button type="button" class="portal-button portal-button-affirm" data-review-approve>${comparison ? "Save canonical" : "Approve"}</button><button type="button" class="portal-button portal-button-warning" data-review-reject>Reject</button><button type="button" class="portal-button portal-button-blue-action" data-review-assign-merge${comparison ? "" : " hidden"}>Assign merge</button></div><p class="small" data-review-message aria-live="polite"></p>`; const paneList = [...workspace.querySelectorAll("[data-review-pane]")]; hydratePane(paneList[0], largest.payloadJson); if (comparison) hydratePane(paneList[1], canonicalDraft.payloadJson); lockPanes(workspace); workspace.querySelectorAll("[data-review-view]").forEach((button) => button.addEventListener("click", () => workspace.querySelector("[data-review-compare]").classList.toggle("is-vertical", button.dataset.reviewView === "vertical"))); workspace.querySelector("[data-review-scroll-lock]")?.addEventListener("change", (event) => { scrollLock = event.target.checked; }); workspace.querySelector("[data-review-approve]").addEventListener("click", async () => { const canonicalId = comparison ? largest.id : item.id; const sourcePane = comparison ? workspace.querySelector('[data-review-pane="b"]') : workspace.querySelector('[data-review-pane="a"]'); const edited = readSharedPane(sourcePane, comparison ? largest.payloadJson : item.payloadJson); const message = workspace.querySelector("[data-review-message]"); try { const saved = await json(`/contributions/${encodeURIComponent(item.id)}/review`, { method: "POST", body: JSON.stringify({ approved: true, canonicalContributionId: canonicalId, entry: edited }) }); const saveMessage = legacy ? "Legacy source approved as the canonical Library entry." : comparison ? "Canonical Library entry saved and contribution history preserved." : "Approved canonical version and recorded the review."; selectedQueueItem = null; await loadQueue({ selectFirst: false }); renderSavedCanonical(saved.entry, saveMessage); } catch (error) { message.textContent = error.message; } }); workspace.querySelector("[data-review-reject]").addEventListener("click", async () => { const message = workspace.querySelector("[data-review-message]"); try { await json(`/contributions/${encodeURIComponent(item.id)}/review`, { method: "POST", body: JSON.stringify({ approved: false }) }); message.textContent = "Rejected and recorded in the review history."; await loadQueue(); } catch (error) { message.textContent = error.message; } }); workspace.querySelector("[data-review-assign-merge]")?.addEventListener("click", async () => { const studentRefId = document.getElementById("libraryAssignStudent").value; const message = workspace.querySelector("[data-review-message]"); if (!studentRefId) { message.textContent = "Choose a student before assigning a merge task."; return; } try { await json("/assignments", { method: "POST", body: JSON.stringify({ studentRefIds: [studentRefId], entryId: item.entryId || null, taskType: "merge", instructions: document.getElementById("libraryAssignInstructions").value || "Compare the duplicate versions and propose the merge fields.", dueAt: document.getElementById("libraryAssignDueAt").value || null }) }); message.textContent = "Merge task assigned."; await loadQueue(); } catch (error) { message.textContent = error.message; } }); }
+      function renderQueue() { const container = document.getElementById("libraryQueueRows"); container.innerHTML = queueItems.map((item) => { const payload = item.payloadJson || {}; return `<button type="button" class="library-review-item" data-review-id="${esc(item.id)}" aria-current="${selectedQueueItem?.id === item.id}"><strong>${esc(payload.english || "Untitled")}</strong><span>${esc(payload.partOfSpeech || "-")} · ${esc(item.queueType)}${item.legacyReview ? " <span class=\"chip chip-warn\">Legacy</span>" : item.potentialDuplicate ? " · duplicate group" : ""}</span><span class="small">${esc(item.contributorName || "Unknown")} · ${esc(new Date(item.submittedAt).toLocaleString())}</span></button>`; }).join("") || "<p class=\"small\">No Library work is waiting.</p>"; container.querySelectorAll("[data-review-id]").forEach((button) => button.addEventListener("click", () => { const item = queueItems.find((candidate) => candidate.id === button.dataset.reviewId); if (item) { renderWorkspace(item); renderQueue(); } })); }
+      async function loadQueue({ selectFirst = true } = {}) { const data = await json(`/queue?status=${encodeURIComponent(document.getElementById("libraryQueueStatus").value)}`); queueItems = data.items || []; document.getElementById("libraryQueueStatusText").textContent = `${data.total || 0} queue item(s)`; const refreshed = selectedQueueItem && queueItems.find((item) => item.id === selectedQueueItem.id); selectedQueueItem = refreshed || (selectFirst ? queueItems[0] : null) || null; renderQueue(); if (selectedQueueItem) renderWorkspace(selectedQueueItem); else document.getElementById("libraryReviewWorkspace").innerHTML = '<div class="library-review-empty" id="libraryReviewEmpty">Select a queue item to open the full flattened review workspace.</div>'; }
+      loadQueue().catch((error) => { document.getElementById("libraryQueueStatusText").textContent = error.message; });
+    })();
+  </script>
+  <script>
+    (() => {
+      if (!location.pathname.replace(/\/+$/u, "").endsWith("/library")) return;
+      const apiRoot = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library`;
+      const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+      const fields = ["english", "americanEnglish", "britishEnglish", "partOfSpeech", "phraseType", "vietnamese", "syllabication", "syllableCount", "definition", "etymologyType", "etymology"];
+      const coreFields = new Set(["english", "partOfSpeech", "vietnamese", "syllabication", "definition"]);
+      const sharedFields = new Set(["etymologyType", "etymology", "originPath", "originReferences", "grammarClassification", "grammarClassification.grammarFamily", "grammarClassification.grammarSubtype", "grammarClassification.grammarDetail", "grammarClassification.grammarNumber", "countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage", "verbRegularity", "verbTransitivity", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "displayVerbForm"]);
+      const getPath = (payload, path) => path.split(".").reduce((value, key) => value && typeof value === "object" ? value[key] : "", payload);
+      const setPath = (payload, path, value) => { const parts = path.split("."); const last = parts.pop(); let target = payload; parts.forEach((part) => { target[part] ||= {}; target = target[part]; }); target[last] = value; };
+      const label = (field) => field.split(".").pop().replace(/([A-Z])/g, " $1").replace(/^./u, (c) => c.toUpperCase());
+      const json = async (path, options = {}) => { const response = await fetch(`${apiRoot}${path}`, { credentials: "include", ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Library request failed"); return data; };
+      let entries = new Map();
+      const flatHtml = (entry) => window.SIS_VOCABULARY_ESL.flatEntryHtml(entry, { editClass: "library-admin-flat-edit", editAttributes: `data-approved-edit="${esc(entry.id)}"` });
+      function enhanceAccordions() {
+        document.querySelectorAll(".library-admin-entry").forEach((accordion) => {
+          const editButton = accordion.querySelector("[data-approved-edit]");
+          const entry = entries.get(accordion.dataset.libraryEntryId || editButton?.dataset.approvedEdit);
+          if (!entry || accordion.querySelector("[data-vocabulary-flat-entry]")) return;
+          const body = accordion.querySelector(".library-admin-body");
+          if (body) body.insertAdjacentHTML("afterbegin", flatHtml(entry));
+        });
+      }
+      const fieldPath = (input) => input.dataset.vocabularyField || input.dataset.approvedField || input.dataset.vocabularyOriginField || (input.dataset.vocabularyEslField && window.SIS_VOCABULARY_ESL?.grammarFields.includes(input.dataset.vocabularyEslField) ? `grammarClassification.${input.dataset.vocabularyEslField}` : input.dataset.vocabularyEslField);
+      function fieldHtml(payload, field) { const value = getPath(payload, field); const shown = typeof value === "object" ? JSON.stringify(value) : String(value ?? ""); if (field === "partOfSpeech") return `<label class="library-review-field"><span>${esc(label(field))}</span><select name="library-approved-${esc(field)}" data-approved-field="partOfSpeech" data-vocabulary-field="partOfSpeech"><option value="">Select</option>${window.SIS_VOCABULARY_ESL.POS.map((pos) => `<option value="${esc(pos)}"${pos === value ? " selected" : ""}>${esc(pos)}</option>`).join("")}</select></label>`; if (field === "definition") return `<label class="library-review-field library-review-field--wide"><span>${esc(label(field))}</span><textarea name="library-approved-${esc(field)}" data-approved-field="${esc(field)}">${esc(shown)}</textarea></label>`; return `<label class="library-review-field"><span>${esc(label(field))}</span><input name="library-approved-${esc(field)}" data-approved-field="${esc(field)}" value="${esc(shown)}"></label>`; }
+      function editEntry(entry) {
+        const workspace = document.getElementById("libraryApprovedEditor");
+        workspace.hidden = false;
+        workspace.innerHTML = `<div class="section-head"><h2 id="libraryApprovedEditorTitle">Edit ${esc(entry.english)}</h2><p class="small">The core row uses the same New Words editor interface. Library-only metadata stays below it. Saving here updates this entry as the approved canonical version immediately.</p></div><div class="library-review-pane" data-surface-role="card" data-vocabulary-editor data-approved-entry-id="${esc(entry.id)}" data-library-media-assets="${esc(JSON.stringify(entry.mediaAssets || []))}">${window.SIS_VOCABULARY_ESL.editorRowHtml(`library-${entry.id}`, { includeLdoce: true, includeOxford: true, includeBritannica: true, includeMerriamWebster: true, includeTransitivityTools: true, includeOriginAnalysis: true, originLookupPath: `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library/etymonline`, lookupButtons: ["OE", "BR", "LD", "MW", "GT", "ET", "WH", "TH", "GL"] })}<div class="library-review-advanced-fields"><div class="section-head"><h3>Library metadata</h3><p class="small">Additional corpus fields retained for the reviewed Library record.</p></div><div class="library-review-field-grid">${fields.filter((field) => !coreFields.has(field) && !sharedFields.has(field)).map((field) => fieldHtml(entry, field)).join("")}</div></div></div><div class="library-review-actions"><button type="button" class="portal-button portal-button-affirm" data-approved-submit title="Save this complete Library edit as the approved canonical version">Save canonical</button><button type="button" class="portal-button portal-button-neutral-action" data-approved-cancel>Close</button></div><p class="small" data-approved-message aria-live="polite"></p>`;
+        const row = workspace.querySelector("[data-news-vocabulary-row]");
+        ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((field) => {
+          const input = row?.querySelector(`[data-vocabulary-field="${field}"]`);
+          if (input) input.value = String(entry[field] == null ? "" : entry[field]);
+        });
+        window.SIS_VOCABULARY_ESL.hydrate(row, entry);
+        row?.addEventListener("change", (event) => {
+          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) window.SIS_VOCABULARY_ESL.sync(row);
+        });
+        window.SIS_VOCABULARY_ESL.bindLookupButtons(row);
+        window.SIS_VOCABULARY_ESL.bindDefinitionAutosize(row);
+        workspace.querySelector("[data-approved-cancel]").addEventListener("click", () => { workspace.hidden = true; });
+        workspace.querySelector("[data-approved-submit]").addEventListener("click", async () => {
+          const payload = structuredClone(entry);
+          workspace.querySelectorAll("[data-approved-field], [data-vocabulary-field], [data-vocabulary-esl-field], [data-vocabulary-origin-field]").forEach((input) => {
+            const field = fieldPath(input);
+            if (field) { let value = input.type === "checkbox" ? input.checked : input.value; if (field === "syllabication") value = window.SIS_VOCABULARY_ESL.canonicalizeSyllabication(value); if (field === "originReferences") { try { value = JSON.parse(value || "[]"); } catch { value = []; } } setPath(payload, field, value); }
+          });
+          const message = workspace.querySelector("[data-approved-message]");
+          try {
+            const saved = await json(`/entries/${encodeURIComponent(entry.id)}`, { method: "PUT", body: JSON.stringify(payload) });
+            message.textContent = saved.canonicalizedContributions ? `Canonical Library entry saved; ${saved.canonicalizedContributions} A-B contribution(s) finalized.` : "Canonical Library entry saved.";
+            await loadApproved();
+            const refreshed = entries.get(entry.id);
+            if (refreshed) { editEntry(refreshed); workspace.querySelector("[data-approved-message]").textContent = saved.canonicalizedContributions ? `Canonical Library entry saved; ${saved.canonicalizedContributions} A-B contribution(s) finalized.` : "Canonical Library entry saved."; }
+          } catch (error) {
+            message.textContent = error.message;
+          }
+        });
+        workspace.scrollIntoView({ block: "start", behavior: "smooth" });
+      }
+      function renderApprovedPagination(total, pageSize) {
+        const pagination = document.getElementById("libraryAdminPagination");
+        const pageCount = Math.max(1, Math.ceil(total / pageSize));
+        if (!pagination || pageCount <= 1) { if (pagination) pagination.hidden = true; return; }
+        pagination.hidden = false;
+        pagination.innerHTML = `<button type="button" class="portal-button portal-button-neutral-action" data-library-page="${Math.max(1, approvedPage - 1)}"${approvedPage <= 1 ? " disabled" : ""}>Previous</button><span aria-live="polite">Page ${approvedPage} of ${pageCount} · ${total} entries</span><button type="button" class="portal-button portal-button-neutral-action" data-library-page="${Math.min(pageCount, approvedPage + 1)}"${approvedPage >= pageCount ? " disabled" : ""}>Next</button>`;
+        pagination.querySelectorAll("[data-library-page]").forEach((button) => button.addEventListener("click", () => { approvedPage = Number(button.dataset.libraryPage); loadApproved().catch((error) => { document.getElementById("libraryAdminStatus").textContent = error.message; }); }));
+      }
+      async function loadApproved() {
+        const query = new URLSearchParams({ page: String(approvedPage), pageSize: "100", search: document.getElementById("libraryAdminSearch")?.value || "", partOfSpeech: document.getElementById("libraryAdminPos")?.value || "", sortBy: document.getElementById("libraryAdminSort")?.value || "updatedAt", direction: document.getElementById("libraryAdminDirection")?.value || "desc" });
+        const data = await json(`?${query}`);
+        entries = new Map((data.items || []).map((entry) => [entry.id, entry]));
+        const results = document.getElementById("libraryAdminResults");
+        results.innerHTML = (data.items || []).map((entry) => `<details class="library-admin-entry" data-library-entry-id="${esc(entry.id)}"><summary><strong>${esc(entry.english)}</strong>&nbsp; /${esc(entry.syllabication)}/ &nbsp;${esc(entry.partOfSpeech)} | ${esc(entry.vietnamese)}</summary><div class="library-admin-body"><div class="library-admin-meta">Created by ${esc(entry.createdByName)} · last edited by ${esc(entry.lastEditedByName)} · ${new Date(entry.updatedAt).toLocaleString()}</div><div class="library-admin-actions"><button type="button" class="portal-button portal-button-blue-action" data-mw-preview="${esc(entry.id)}" title="Preview only the Merriam-Webster fields that can be authoritative." aria-label="Preview MW data">MW preview</button></div></div></details>`).join("") || "<p class=\"small\">No entries match.</p>";
+        document.getElementById("libraryAdminStatus").textContent = `${data.total || 0} entries`;
+        renderApprovedPagination(data.total || 0, data.pageSize || 100);
+        enhanceAccordions();
+      }
+      document.getElementById("libraryAdminResults")?.addEventListener("click", (event) => { const button = event.target.closest("[data-approved-edit]"); if (button) editEntry(entries.get(button.dataset.approvedEdit)); });
+      document.getElementById("libraryAdminFilters")?.addEventListener("submit", (event) => { event.preventDefault(); approvedPage = 1; loadApproved().catch((error) => { document.getElementById("libraryAdminStatus").textContent = error.message; }); });
+      setTimeout(() => loadApproved().catch(() => { }), 250);
+    })();
+  </script>
+  <script>
+    (() => {
+      if (!location.pathname.replace(/\/+$/u, "").endsWith("/library")) return;
+      const results = document.getElementById("libraryAdminResults");
+      const apiRoot = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library`;
+      const normalizeSummaries = async () => {
+        const accordions = [...(results?.querySelectorAll(".library-admin-entry") || [])];
+        if (!accordions.length) return;
+        const query = new URLSearchParams({ page: "1", pageSize: "100", search: document.getElementById("libraryAdminSearch")?.value || "", partOfSpeech: document.getElementById("libraryAdminPos")?.value || "", sortBy: document.getElementById("libraryAdminSort")?.value || "updatedAt", direction: document.getElementById("libraryAdminDirection")?.value || "desc" });
+        const response = await fetch(`${apiRoot}?${query}`, { credentials: "include" });
+        const data = await response.json();
+        if (!response.ok) return;
+        accordions.forEach((accordion, index) => {
+          const entry = data.items?.[index];
+          const summary = accordion.querySelector(":scope > summary");
+          if (entry && summary) summary.textContent = window.SIS_VOCABULARY_ESL.flatEntrySummaryText(entry);
+        });
+      };
+      let repairingLegacyRender = false;
+      const observer = results && new MutationObserver(() => {
+        normalizeSummaries().catch(() => {});
+        const firstEntry = results.querySelector(".library-admin-entry");
+        const form = document.getElementById("libraryAdminFilters");
+        if (!repairingLegacyRender && firstEntry && !firstEntry.dataset.libraryEntryId && form) {
+          repairingLegacyRender = true;
+          form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+          setTimeout(() => { repairingLegacyRender = false; }, 750);
+        }
+      });
+      observer?.observe(results, { childList: true });
+      setTimeout(() => normalizeSummaries().catch(() => {}), 300);
+    })();
+  </script>
+  <script>
+    (() => {
+      const results = document.getElementById("libraryAdminResults");
+      const normalizeSummaries = () => results?.querySelectorAll(".library-admin-entry").forEach((accordion) => {
+        const article = accordion.querySelector("[data-vocabulary-flat-entry]");
+        const summary = accordion.querySelector(":scope > summary");
+        if (!article || !summary) return;
+        try {
+          const next = window.SIS_VOCABULARY_ESL.flatEntrySummaryText(JSON.parse(article.dataset.vocabularyEntryJson || "{}"));
+          if (summary.textContent.trim() !== next) summary.textContent = next;
+        } catch {
+          summary.textContent = summary.textContent.trim();
+        }
+      });
+      normalizeSummaries();
+      if (results) new MutationObserver(normalizeSummaries).observe(results, { childList: true, subtree: true });
+    })();
+  </script>
+  <script>
+    (() => {
+      if (!location.pathname.replace(/\/+$/u, "").endsWith("/library/references")) return;
+      const root = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library/reference-catalogs`;
+      const catalog = document.getElementById("libraryReferenceCatalog"); const status = document.getElementById("libraryReferenceStatus"); const rows = document.getElementById("libraryReferenceRows"); const file = document.getElementById("libraryReferenceFile"); const esc = (value) => String(value == null ? "" : value).replace(/[&<>\"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char])); let previewed = false;
+      const selected = () => catalog.value;
+      const readRows = async () => { const chosen = file.files?.[0]; if (!chosen) throw new Error("Choose an XLSX, ODS, or CSV file first."); return { fileName: chosen.name, format: chosen.name.split(".").pop(), fileDataBase64: await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onerror = () => reject(new Error("Unable to read import file.")); reader.onload = () => resolve(String(reader.result).split(",")[1] || ""); reader.readAsDataURL(chosen); }) }; };
+      async function load() { const query = new URLSearchParams({ search: document.getElementById("libraryReferenceSearch").value, subtype: document.getElementById("libraryReferenceSubtype").value, pageSize: "100" }); const response = await fetch(`${root}/${encodeURIComponent(selected())}?${query}`, { credentials: "include" }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to load reference list."); status.textContent = `${data.total} ${data.catalog.label} record(s)`; rows.innerHTML = `<table class="admin-data-table"><thead><tr><th>Term</th><th>POS</th><th>Subtype</th><th>Details</th><th>Source</th></tr></thead><tbody>${data.items.map((item) => `<tr><td>${esc(item.term)}</td><td>${esc(item.partOfSpeech || "-")}</td><td>${esc(item.subtype || "-")}</td><td>${esc(Object.values(item.dataJson || {}).filter(Boolean).join(" · "))}</td><td>${item.sourceUrl ? `<a href="${esc(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">${esc(item.sourceLabel || "Source")}</a>` : esc(item.sourceLabel || "-")}</td></tr>`).join("") || "<tr><td colspan=\"5\">No records match.</td></tr>"}</tbody></table>`; }
+      fetch(root, { credentials: "include" }).then((response) => response.json()).then((data) => { if (!data.ok) throw new Error(data.error || "Unable to load catalogs."); catalog.innerHTML = data.items.map((item) => `<option value="${esc(item.key)}">${esc(item.label)}</option>`).join(""); return load(); }).catch((error) => { status.textContent = error.message; });
+      document.getElementById("libraryReferenceFilters").addEventListener("submit", (event) => { event.preventDefault(); load().catch((error) => { status.textContent = error.message; }); }); catalog.addEventListener("change", () => { previewed = false; document.getElementById("libraryReferenceImportBtn").disabled = true; load().catch((error) => { status.textContent = error.message; }); });
+      document.getElementById("libraryReferencePreviewBtn").addEventListener("click", async () => { try { const response = await fetch(`${root}/${encodeURIComponent(selected())}/preview`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(await readRows()) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Preview failed."); previewed = true; document.getElementById("libraryReferenceImportBtn").disabled = false; status.textContent = `Preview passed: ${data.rows} row(s).`; } catch (error) { status.textContent = error.message; } });
+      document.getElementById("libraryReferenceImportBtn").addEventListener("click", async (event) => { if (!previewed) return; try { const response = await fetch(`${root}/${encodeURIComponent(selected())}/import`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(await readRows()) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Import failed."); previewed = false; event.target.disabled = true; status.textContent = `Imported ${data.created} new and ${data.updated} updated records.`; await load(); } catch (error) { status.textContent = error.message; } });
+      [["libraryReferenceExportXlsxBtn", "xlsx"], ["libraryReferenceExportOdsBtn", "ods"], ["libraryReferenceExportCsvBtn", "csv"]].forEach(([id, format]) => document.getElementById(id).addEventListener("click", () => { window.location.assign(`${root}/${encodeURIComponent(selected())}/export?format=${format}`); }));
+    })();
+  </script>
+  <script src="/web-asset/admin/library-review-workbench.js" defer></script>
+  <script src="/web-asset/admin/admin-b612-mono-loader.js" defer></script>
+</body>
+
+</html>

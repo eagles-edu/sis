@@ -27,6 +27,32 @@ test("Library uses a dedicated PostgreSQL schema with immutable audit records", 
   assert.match(cutoverMigration, /DROP TABLE IF EXISTS "library"\."LibraryDuplicateCase"/)
 })
 
+test("MW Dictionary preview falls back to the Collegiate API after browser access fails", async () => {
+  const { previewMerriamWebsterDictionaryEntryWithApiFallback } = await import("../src/modules/admin/library-corpus.mjs")
+  const savedKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  const calls = []
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  try {
+    const result = await previewMerriamWebsterDictionaryEntryWithApiFallback(
+      { english: "average", partOfSpeech: "noun" },
+      async (url) => {
+        calls.push(String(url))
+        if (String(url).includes("dictionaryapi.com")) return { ok: true, json: async () => [{ hwi: { hw: "average" }, fl: "noun", shortdef: ["a value representing a group"] }] }
+        return { ok: false, status: 403, headers: new Headers() }
+      },
+      async () => ({ ok: false, status: 403, message: "Merriam-Webster is protected by an access challenge; no Library data was changed." }),
+    )
+    assert.equal(result.ok, true)
+    assert.equal(result.fallback, "merriam-webster-collegiate-api")
+    assert.equal(result.entries.length, 1)
+    assert.match(result.fields.definition, /value representing a group/u)
+    assert.equal(calls.some((url) => url.includes("dictionaryapi.com")), true)
+  } finally {
+    if (savedKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedKey
+  }
+})
+
 test("canonical duplicate selection and student deadlines are deterministic", async () => {
   const { libraryContributionDeadline, isStudentLibraryContributionEditable, selectLargestDuplicate, selectReviewQueueRepresentatives, selectContributionsForCanonicalEntry, normalizeActiveLibraryPayload, normalizeLibraryEnum } = await import("../src/modules/admin/library-corpus.mjs")
   const first = { id: "b", submittedAt: "2026-08-01T00:00:00.000Z", payloadJson: { definition: "same length" } }

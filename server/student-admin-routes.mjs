@@ -29,6 +29,10 @@ import {
 } from "../src/modules/admin/student-new-words.mjs"
 import {
   applyMerriamWebsterLibraryEntry,
+  applyLdoceLibraryEntry,
+  applyBritannicaLibraryEntry,
+  applyDictionaryBuilderSnapshot,
+  applyMerriamWebsterDictionaryLibraryEntry,
   autoFillLibraryEntryVerbTransitivity,
   assignLibraryWork,
   checkLibraryEntryVerbTransitivity,
@@ -43,11 +47,19 @@ import {
   sendLibraryAssignmentEmail,
   trackLibraryAssignment,
   previewMerriamWebsterLibraryEntry,
+  previewMerriamWebsterDictionaryEntryWithApiFallback,
+  applyOxfordLibraryEntry,
   refreshStudentLibraryContributions,
   reviewLibraryContribution,
   submitLibraryContribution,
   updateLibraryEntry,
 } from "../src/modules/admin/library-corpus.mjs"
+import { getDictionaryBuilderScoringMatrix, previewDictionaryBuilder, readDictionaryBuilderSnapshot, updateDictionaryBuilderScoringSettings } from "../src/modules/admin/dictionary-builder.mjs"
+import { previewLdoceLibraryEntry, sanitizeLdocePreview } from "../src/modules/admin/ldoce-provider.mjs"
+import { previewOxfordLibraryEntry, sanitizeOxfordPreview } from "../src/modules/admin/oxford-provider.mjs"
+import { previewBritannicaLibraryEntry, sanitizeBritannicaPreview } from "../src/modules/admin/britannica-provider.mjs"
+import { sanitizeMerriamWebsterPreview } from "../src/modules/admin/merriam-webster-provider.mjs"
+import { getLibraryMediaAsset } from "../src/modules/admin/library-media.mjs"
 import { fetchEtymonlinePreview } from "../src/modules/admin/library-origin.mjs"
 import { analyzeLibraryOrigin } from "../src/modules/admin/library-origin-analysis.mjs"
 import {
@@ -238,6 +250,7 @@ const ADMIN_LIBRARY_PAGE_PATH = `${ADMIN_PAGE_PATH}/library`
 const ADMIN_LIBRARY_MANAGE_PAGE_PATH = `${ADMIN_LIBRARY_PAGE_PATH}/manage`
 const ADMIN_LIBRARY_ENGAGEMENT_PAGE_PATH = `${ADMIN_LIBRARY_PAGE_PATH}/engagement`
 const ADMIN_LIBRARY_REFERENCES_PAGE_PATH = `${ADMIN_LIBRARY_PAGE_PATH}/references`
+const ADMIN_LIBRARY_DEFINITIONS_PAGE_PATH = `${ADMIN_LIBRARY_PAGE_PATH}/definitions`
 const LEGACY_ADMIN_PAGE_PATH = "/admin/students"
 const LEGACY_PARENT_PORTAL_PAGE_PATH = "/parent/portal"
 const LEGACY_STUDENT_PORTAL_PAGE_PATH = "/student/portal"
@@ -331,11 +344,26 @@ const ADMIN_LIBRARY_ENTRIES_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_A
 const ADMIN_LIBRARY_CONTRIBUTIONS_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/contributions/([^/]+)/review$`)
 const ADMIN_LIBRARY_MW_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/mw-preview$`)
 const ADMIN_LIBRARY_MW_APPLY_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/mw-apply$`)
+const ADMIN_LIBRARY_LDOCE_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/ldoce-preview$`)
+const ADMIN_LIBRARY_LDOCE_APPLY_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/ldoce-apply$`)
+const ADMIN_LIBRARY_OXFORD_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/oxford-preview$`)
+const ADMIN_LIBRARY_OXFORD_APPLY_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/oxford-apply$`)
+const ADMIN_LIBRARY_BRITANNICA_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/britannica-preview$`)
+const ADMIN_LIBRARY_BRITANNICA_APPLY_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/britannica-apply$`)
+const ADMIN_LIBRARY_MERRIAM_WEBSTER_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/merriam-webster-preview$`)
+const ADMIN_LIBRARY_MERRIAM_WEBSTER_APPLY_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/merriam-webster-apply$`)
+const ADMIN_LIBRARY_DICTIONARY_BUILDER_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/dictionary-builder/preview$`)
+const ADMIN_LIBRARY_DICTIONARY_BUILDER_SNAPSHOT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/dictionary-builder/previews/([^/]+)$`)
+const ADMIN_LIBRARY_DICTIONARY_BUILDER_APPLY_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/dictionary-builder/previews/([^/]+)/apply$`)
+const ADMIN_LIBRARY_MEDIA_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/media/([^/]+)$`)
 const ADMIN_LIBRARY_ORIGIN_ANALYSIS_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/origin-analysis$`)
 const ADMIN_LIBRARY_REFERENCE_CATALOG_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/reference-catalogs/([^/]+)$`)
 const ADMIN_LIBRARY_REFERENCE_CATALOG_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/reference-catalogs/([^/]+)/preview$`)
 const ADMIN_LIBRARY_REFERENCE_CATALOG_IMPORT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/reference-catalogs/([^/]+)/import$`)
 const ADMIN_LIBRARY_REFERENCE_CATALOG_EXPORT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/reference-catalogs/([^/]+)/export$`)
+const ADMIN_LIBRARY_DEFINITIONS_MATRIX_PATH = `${ADMIN_LIBRARY_API_PATH}/definitions/matrix`
+const ADMIN_LIBRARY_DEFINITIONS_EXPORT_PATH = `${ADMIN_LIBRARY_API_PATH}/definitions/matrix.xlsx`
+const ADMIN_LIBRARY_DEFINITIONS_SETTINGS_PATH = `${ADMIN_LIBRARY_API_PATH}/definitions/settings`
 const LIBRARY_ASSIGNMENT_CLICK_PATH_RE = /^\/api\/library-assignments\/track\/click\/([^/]+)$/u
 const LIBRARY_ASSIGNMENT_OPEN_PATH_RE = /^\/api\/library-assignments\/track\/open\/([^/]+)$/u
 const STUDENT_REPORT_PAGE_PREFIX = `${STUDENT_PORTAL_PAGE_PATH}/reports`
@@ -403,6 +431,7 @@ const PARENT_LLMS_PATH = path.resolve(process.cwd(), "web-asset/parent/llms.txt"
 const STUDENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/student/student-portal.html")
 const STUDENT_LIBRARY_HTML_PATH = path.resolve(process.cwd(), "web-asset/student/library.html")
 const ADMIN_LIBRARY_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/library-admin.html")
+const ADMIN_LIBRARY_DEFINITIONS_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/library-definitions.html")
 const STUDENT_LLMS_PATH = path.resolve(process.cwd(), "web-asset/student/llms.txt")
 const PORTAL_SETTINGS_HTML_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-settings.html")
 const ADMIN_IMPORT_TEMPLATE_PATH = path.resolve(process.cwd(), "schemas/student-import-template.xlsx")
@@ -6675,6 +6704,7 @@ async function handleApiRequest(request, response, pathname, url) {
 
   const session = await requireAuthenticatedSession(request, response)
   const rolePolicy = enforceRoleAccess(session, method, pathname)
+  const dictionaryBuilderOwnerKey = readSessionIdFromRequest(request)
   if (
     (method === "POST" && pathname === ADMIN_STUDENTS_PREFIX) ||
     (method === "PUT" && ADMIN_STUDENT_PATH_RE.test(pathname))
@@ -6781,9 +6811,69 @@ async function handleApiRequest(request, response, pathname, url) {
     sendJson(response, 201, await assignLibraryWork({ name: session.username, role: session.role }, payload))
     return true
   }
+  if (method === "GET" && pathname === ADMIN_LIBRARY_DEFINITIONS_MATRIX_PATH) {
+    if (!rolePolicy.canRead) { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    sendJson(response, 200, { ok: true, ...(await getDictionaryBuilderScoringMatrix()) })
+    return true
+  }
+  if (method === "PUT" && pathname === ADMIN_LIBRARY_DEFINITIONS_SETTINGS_PATH) {
+    assertCanManageSettings(rolePolicy)
+    const payload = await parseBody(request)
+    sendJson(response, 200, { ok: true, ...(await updateDictionaryBuilderScoringSettings(payload, session.username)) })
+    return true
+  }
+  if (method === "GET" && pathname === ADMIN_LIBRARY_DEFINITIONS_EXPORT_PATH) {
+    if (!rolePolicy.canRead) { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const matrix = await getDictionaryBuilderScoringMatrix()
+    const workbook = XLSX.utils.book_new()
+    for (const source of matrix.sources) {
+      const rows = matrix.partOfSpeech.map((partOfSpeech) => Object.fromEntries(matrix.datums.map((datum) => {
+        const row = matrix.rows.find((item) => item.provider === source.id && item.partOfSpeech === partOfSpeech && item.datum === datum)
+        return [datum, row?.score ?? 0]
+      }).concat([["POS", partOfSpeech]])))
+      const worksheet = XLSX.utils.json_to_sheet(rows, { header: ["POS", ...matrix.datums] })
+      XLSX.utils.book_append_sheet(workbook, worksheet, normalizeWorksheetName(source.label, "Scores"))
+    }
+    const bicRows = matrix.rows.filter((row) => row.supported).sort((left, right) => left.partOfSpeech.localeCompare(right.partOfSpeech) || left.datum.localeCompare(right.datum) || right.score - left.score).map((row) => ({ POS: row.partOfSpeech, Datum: row.datum, Provider: row.label, Score: row.score, Quality: row.quality, Availability: row.availability, Acceptance: row.acceptance, Coverage: row.coverage }))
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(bicRows), "BIC")
+    const componentRows = matrix.rows.map((row) => ({ Source: row.label, Provider: row.provider, POS: row.partOfSpeech, Datum: row.datum, Eligible: row.enabled, Supported: row.supported, Score: row.score, Quality: row.quality, Availability: row.availability, Acceptance: row.acceptance, Coverage: row.coverage, Attempts: row.attempts, Successes: row.successes, Selected: row.selected, QualityPreference: row.qualityOverride ?? "" }))
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(componentRows), "Components")
+    const settingRows = matrix.sources.map((source) => {
+      const setting = matrix.providerSettings.find((item) => item.provider === source.id) || {}
+      return { Source: source.label, Provider: source.id, Enabled: setting.enabled ?? true, TimeoutMs: setting.timeoutMs ?? 8000, MaxConcurrentRequests: setting.maxConcurrentRequests ?? 2, MaxRequestsPerMinute: setting.maxRequestsPerMinute ?? 30 }
+    })
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(settingRows), "Settings")
+    sendXlsx(response, "dictionary-builder-current-matrix.xlsx", XLSX.write(workbook, { bookType: "xlsx", type: "buffer" }))
+    return true
+  }
   const assignmentNotifyMatch = pathname.match(new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/assignments/([^/]+)/notify$`))
   if (assignmentNotifyMatch && method === "POST") {
     sendJson(response, 200, await sendLibraryAssignmentEmail(decodeURIComponent(assignmentNotifyMatch[1]), { name: session.username, role: session.role }))
+    return true
+  }
+  const dictionaryBuilderPreviewMatch = pathname.match(ADMIN_LIBRARY_DICTIONARY_BUILDER_PREVIEW_PATH_RE)
+  if (dictionaryBuilderPreviewMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    const stored = await getLibraryEntry(decodeURIComponent(dictionaryBuilderPreviewMatch[1]))
+    const entry = normalizeText(payload?.entry?.english) ? { ...stored, ...payload.entry, id: stored?.id } : stored
+    if (!entry) { const error = new Error("Library entry was not found"); error.statusCode = 404; throw error }
+    sendJson(response, 200, { ok: true, ...(await previewDictionaryBuilder(entry, { ownerKey: dictionaryBuilderOwnerKey })) })
+    return true
+  }
+  const dictionaryBuilderSnapshotMatch = pathname.match(ADMIN_LIBRARY_DICTIONARY_BUILDER_SNAPSHOT_PATH_RE)
+  if (dictionaryBuilderSnapshotMatch && method === "GET") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const snapshot = readDictionaryBuilderSnapshot(decodeURIComponent(dictionaryBuilderSnapshotMatch[2]), { ownerKey: dictionaryBuilderOwnerKey, entryId: decodeURIComponent(dictionaryBuilderSnapshotMatch[1]) })
+    if (!snapshot) { const error = new Error("Dictionary Builder preview was not found"); error.statusCode = 404; throw error }
+    sendJson(response, 200, { ok: true, ...snapshot })
+    return true
+  }
+  const dictionaryBuilderApplyMatch = pathname.match(ADMIN_LIBRARY_DICTIONARY_BUILDER_APPLY_PATH_RE)
+  if (dictionaryBuilderApplyMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    sendJson(response, 200, await applyDictionaryBuilderSnapshot(decodeURIComponent(dictionaryBuilderApplyMatch[1]), { name: session.username, role: session.role }, { ...payload, snapshotId: decodeURIComponent(dictionaryBuilderApplyMatch[2]) }, { ownerKey: dictionaryBuilderOwnerKey }))
     return true
   }
   const entryMatch = pathname.match(ADMIN_LIBRARY_ENTRIES_PATH_RE)
@@ -6808,6 +6898,50 @@ async function handleApiRequest(request, response, pathname, url) {
     sendJson(response, 200, await previewMerriamWebsterLibraryEntry(entry))
     return true
   }
+  const ldocePreviewMatch = pathname.match(ADMIN_LIBRARY_LDOCE_PREVIEW_PATH_RE)
+  if (ldocePreviewMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    const providedEntry = payload?.entry || payload
+    const entry = normalizeText(providedEntry?.english)
+      ? providedEntry
+      : await getLibraryEntry(decodeURIComponent(ldocePreviewMatch[1]))
+    sendJson(response, 200, sanitizeLdocePreview(await previewLdoceLibraryEntry(entry)))
+    return true
+  }
+  const oxfordPreviewMatch = pathname.match(ADMIN_LIBRARY_OXFORD_PREVIEW_PATH_RE)
+  if (oxfordPreviewMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    const providedEntry = payload?.entry || payload
+    const entry = normalizeText(providedEntry?.english)
+      ? providedEntry
+      : await getLibraryEntry(decodeURIComponent(oxfordPreviewMatch[1]))
+    sendJson(response, 200, sanitizeOxfordPreview(await previewOxfordLibraryEntry(entry)))
+    return true
+  }
+  const britannicaPreviewMatch = pathname.match(ADMIN_LIBRARY_BRITANNICA_PREVIEW_PATH_RE)
+  if (britannicaPreviewMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    const providedEntry = payload?.entry || payload
+    const entry = normalizeText(providedEntry?.english)
+      ? providedEntry
+      : await getLibraryEntry(decodeURIComponent(britannicaPreviewMatch[1]))
+    sendJson(response, 200, sanitizeBritannicaPreview(await previewBritannicaLibraryEntry(entry)))
+    return true
+  }
+  const merriamWebsterPreviewMatch = pathname.match(ADMIN_LIBRARY_MERRIAM_WEBSTER_PREVIEW_PATH_RE)
+  if (merriamWebsterPreviewMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    const providedEntry = payload?.entry || payload
+    const entry = normalizeText(providedEntry?.english)
+      ? providedEntry
+      : await getLibraryEntry(decodeURIComponent(merriamWebsterPreviewMatch[1]))
+    sendJson(response, 200, sanitizeMerriamWebsterPreview(await previewMerriamWebsterDictionaryEntryWithApiFallback(entry)))
+    return true
+  }
   const originAnalysisMatch = pathname.match(ADMIN_LIBRARY_ORIGIN_ANALYSIS_PATH_RE)
   if (originAnalysisMatch && method === "POST") {
     if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
@@ -6823,6 +6957,70 @@ async function handleApiRequest(request, response, pathname, url) {
   if (mwApplyMatch && method === "POST") {
     const payload = await parseBody(request)
     sendJson(response, 200, await applyMerriamWebsterLibraryEntry(decodeURIComponent(mwApplyMatch[1]), { name: session.username, role: session.role }, payload))
+    return true
+  }
+  const ldoceApplyMatch = pathname.match(ADMIN_LIBRARY_LDOCE_APPLY_PATH_RE)
+  if (ldoceApplyMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    sendJson(response, 200, await applyLdoceLibraryEntry(decodeURIComponent(ldoceApplyMatch[1]), { name: session.username, role: session.role }, payload))
+    return true
+  }
+  const oxfordApplyMatch = pathname.match(ADMIN_LIBRARY_OXFORD_APPLY_PATH_RE)
+  if (oxfordApplyMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    sendJson(response, 200, await applyOxfordLibraryEntry(decodeURIComponent(oxfordApplyMatch[1]), { name: session.username, role: session.role }, payload))
+    return true
+  }
+  const britannicaApplyMatch = pathname.match(ADMIN_LIBRARY_BRITANNICA_APPLY_PATH_RE)
+  if (britannicaApplyMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    sendJson(response, 200, await applyBritannicaLibraryEntry(decodeURIComponent(britannicaApplyMatch[1]), { name: session.username, role: session.role }, payload))
+    return true
+  }
+  const merriamWebsterApplyMatch = pathname.match(ADMIN_LIBRARY_MERRIAM_WEBSTER_APPLY_PATH_RE)
+  if (merriamWebsterApplyMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    sendJson(response, 200, await applyMerriamWebsterDictionaryLibraryEntry(decodeURIComponent(merriamWebsterApplyMatch[1]), { name: session.username, role: session.role }, payload))
+    return true
+  }
+
+  const mediaMatch = pathname.match(ADMIN_LIBRARY_MEDIA_PATH_RE)
+  if (mediaMatch) {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    if (method !== "GET") { const error = new Error("Library media is read-only"); error.statusCode = 405; throw error }
+    const asset = await getLibraryMediaAsset(decodeURIComponent(mediaMatch[1]))
+    if (!asset) { const error = new Error("Library media was not found"); error.statusCode = 404; throw error }
+    const stat = await fs.promises.stat(asset.filePath).catch(() => null)
+    if (!stat?.isFile()) { const error = new Error("Library media file was not found"); error.statusCode = 404; throw error }
+    const rangeHeader = normalizeText(request.headers.range)
+    let start = 0
+    let end = stat.size - 1
+    let statusCode = 200
+    if (rangeHeader) {
+      const range = rangeHeader.match(/^bytes=(\d*)-(\d*)$/u)
+      if (!range) { response.writeHead(416, { "Content-Range": `bytes */${stat.size}` }); response.end(); return true }
+      if (range[1]) start = Number.parseInt(range[1], 10)
+      if (range[2]) end = Number.parseInt(range[2], 10)
+      else end = stat.size - 1
+      if (!range[1] && range[2]) { const suffix = Number.parseInt(range[2], 10); start = Math.max(0, stat.size - suffix); end = stat.size - 1 }
+      if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < start || start >= stat.size) { response.writeHead(416, { "Content-Range": `bytes */${stat.size}` }); response.end(); return true }
+      end = Math.min(end, stat.size - 1)
+      statusCode = 206
+    }
+    const headers = {
+      "Accept-Ranges": "bytes",
+      "Cache-Control": "private, no-store",
+      "Content-Length": String(end - start + 1),
+      "Content-Type": asset.mimeType,
+      "X-Content-Type-Options": "nosniff",
+    }
+    if (statusCode === 206) headers["Content-Range"] = `bytes ${start}-${end}/${stat.size}`
+    response.writeHead(statusCode, headers)
+    fs.createReadStream(asset.filePath, { start, end }).pipe(response)
     return true
   }
 
@@ -9615,7 +9813,7 @@ export async function handleStudentAdminRequest(request, response) {
   const pageSlugFromQuery =
     pathname === ADMIN_PAGE_PATH ? resolveAdminPageSlugFromQuery(url.searchParams) : ""
   const pageSlug = pageSlugFromQuery || pageSlugFromPath
-  if (method === "GET" && [ADMIN_LIBRARY_PAGE_PATH, ADMIN_LIBRARY_MANAGE_PAGE_PATH, ADMIN_LIBRARY_ENGAGEMENT_PAGE_PATH, ADMIN_LIBRARY_REFERENCES_PAGE_PATH].includes(pathname)) {
+  if (method === "GET" && [ADMIN_LIBRARY_PAGE_PATH, ADMIN_LIBRARY_MANAGE_PAGE_PATH, ADMIN_LIBRARY_ENGAGEMENT_PAGE_PATH, ADMIN_LIBRARY_REFERENCES_PAGE_PATH, ADMIN_LIBRARY_DEFINITIONS_PAGE_PATH].includes(pathname)) {
     const session = await peekAdminSession(request)
     if (!session) {
       const next = new URL(ADMIN_PAGE_PATH, requestOrigin)
@@ -9625,11 +9823,12 @@ export async function handleStudentAdminRequest(request, response) {
       sendRedirect(response, 302, `${next.pathname}${next.search}`)
       return true
     }
-    if (!fs.existsSync(ADMIN_LIBRARY_HTML_PATH)) {
+    const pagePath = pathname === ADMIN_LIBRARY_DEFINITIONS_PAGE_PATH ? ADMIN_LIBRARY_DEFINITIONS_HTML_PATH : ADMIN_LIBRARY_HTML_PATH
+    if (!fs.existsSync(pagePath)) {
       sendJson(response, 404, { error: "Admin library page not found" })
       return true
     }
-    sendHtml(response, 200, fs.readFileSync(ADMIN_LIBRARY_HTML_PATH, "utf8"), PORTAL_NO_CACHE_HEADERS)
+    sendHtml(response, 200, fs.readFileSync(pagePath, "utf8"), PORTAL_NO_CACHE_HEADERS)
     return true
   }
   if (method === "GET" && pageSlugFromPath && pageSlug !== "enrollment") {

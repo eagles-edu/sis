@@ -40,6 +40,7 @@ const ADMIN_ASSET_TASKS = [
     ["admin/grades-tabulator.css", "admin/grades-tabulator.min.css"],
     ["admin/student-enrollment.css", "admin/student-enrollment.min.css"],
     ["admin/report-card.css", "admin/report-card.min.css"],
+    ["admin/library-definitions.css", "admin/library-definitions.min.css"],
     ["student/student-portal.css", "student/student-portal.min.css"],
     ["parent/parent-portal.css", "parent/parent-portal.min.css"],
   ].map(([source, output]) => ({
@@ -51,6 +52,7 @@ const ADMIN_ASSET_TASKS = [
     ["admin/grades-tabulator.js", "admin/grades-tabulator.min.js"],
     ["admin/student-enrollment.js", "admin/student-enrollment.min.js"],
     ["admin/report-card.js", "admin/report-card.min.js"],
+    ["admin/library-definitions.js", "admin/library-definitions.min.js"],
     ["student/student-portal.js", "student/student-portal.min.js"],
     ["parent/parent-portal.js", "parent/parent-portal.min.js"],
   ].map(([source, output]) => ({

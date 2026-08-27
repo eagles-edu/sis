@@ -2,6 +2,8 @@
 
 > Status: CURRENT. This is the authoritative noun-class schema for every Library editor: New Words, News/Week Set vocabulary, student Library proposals, admin review, and canonical Library editing.
 
+> Dictionary Builder boundary: the Builder may present this structured POS data as a fully expanded editable candidate, but it must preserve this schema's fixed field order and validation. [`PERFECT_DIC_PLAN_V1.5.md`](PERFECT_DIC_PLAN_V1.5.md) controls Builder modal behavior and source fallback, not noun-class meaning.
+
 ## Purpose
 
 Noun classification is a constrained, persisted grammar profile. The editor order is fixed: `Countability -> Quality -> Number -> Classification`.

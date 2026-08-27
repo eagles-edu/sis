@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
+	<style>
+	.s-6alu {
+	  fill: var(--svg-color--e0162b, #e0162b);
+	}
+
+	.w1k99y {
+	  stroke: var(--svg-color--e0162b, #e0162b);
+	  stroke-dasharray: 34;
+	  stroke-linecap: round;
+	  stroke-linejoin: round;
+	  stroke-width: var(--svg-stroke-width--0-5px, 0.5px);
+	}
+
+	</style>
+	<g class="s-6alu">
+		<path fill-opacity="0" d="M4 10h3.5l3.5 -3.5v10.5l-3.5 -3.5h-3.5Z" class="w1k99y">
+			<animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="34;0" />
+			<animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.15s" to="0.15" />
+		</path>
+		<path d="M14 12c0 0 0 0 0 0c0 0 0 0 0 0Z">
+			<animate fill="freeze" attributeName="d" begin="0.4s" dur="0.2s" to="M14 16c1.5 -0.71 2.5 -2.24 2.5 -4c0 -1.77 -1 -3.26 -2.5 -4Z" />
+		</path>
+		<path d="M14 12c0 0 0 0 0 0c0 0 0 0 0 0v0c0 0 0 0 0 0c0 0 0 0 0 0Z">
+			<animate fill="freeze" attributeName="d" begin="0.4s" dur="0.4s" to="M14 3.23c4 0.91 7 4.49 7 8.77c0 4.28 -3 7.86 -7 8.77v-2.07c2.89 -0.86 5 -3.53 5 -6.7c0 -3.17 -2.11 -5.85 -5 -6.71Z" />
+		</path>
+	</g>
+</svg>

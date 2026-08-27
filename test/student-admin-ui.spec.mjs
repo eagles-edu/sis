@@ -442,6 +442,69 @@ test("admin ui login shows invalid credentials errors on the login panel", async
   dom.window.close()
 })
 
+test("admin user edit brings the selected user form into view", async () => {
+  const rolePolicy = schoolSetupAdminRolePolicy()
+  const user = {
+    id: "user-1",
+    username: "teacher-one",
+    role: "teacher",
+    updatedAt: "2026-08-25T00:00:00.000Z",
+  }
+  const dom = await createAdminUiDom(
+    async (resource, init = {}) => {
+      const url = String(resource)
+      const method = init.method || "GET"
+      if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+      if (url.includes("/api/admin/auth/login")) {
+        return jsonResponse(200, {
+          user: { username: "admin", role: "admin" },
+          rolePolicy,
+        })
+      }
+      if (url.includes("/api/admin/users") && method === "GET") {
+        return jsonResponse(200, { items: [user] })
+      }
+      const bootstrapResponse = schoolSetupBootstrapResponses(url, rolePolicy)
+      if (bootstrapResponse) return bootstrapResponse
+      return jsonResponse(200, {})
+    },
+    "http://127.0.0.1/admin/users",
+    {
+      beforeParse(window) {
+        window.HTMLElement.prototype.scrollIntoView = function scrollIntoView(options) {
+          this.__scrollIntoViewOptions = options
+        }
+      },
+    },
+  )
+
+  submitLogin(dom)
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  dom.window.document.getElementById("userRefreshBtn").click()
+  await waitFor(() => {
+    assert.equal(dom.window.document.querySelectorAll("#userRows [data-user-edit]").length, 1)
+  })
+
+  dom.window.document.querySelector("#userRows [data-user-edit]").click()
+
+  const document = dom.window.document
+  assert.equal(document.getElementById("u_id").value, user.id)
+  assert.equal(document.getElementById("u_username").value, user.username)
+  assert.equal(document.getElementById("u_role").value, user.role)
+  assert.equal(document.querySelector("#userRows tr").classList.contains("active"), true)
+  assert.equal(document.getElementById("userForm").__scrollIntoViewOptions.block, "start")
+  assert.equal(document.getElementById("userForm").__scrollIntoViewOptions.behavior, "smooth")
+  assert.equal(document.activeElement?.id, "u_username")
+  assert.match(document.getElementById("status").textContent, /Editing user: teacher-one/)
+
+  document.getElementById("logoutBtn").click()
+  await settleDomAsync(dom, 2, 50)
+  dom.window.close()
+})
+
 test("admin ui warns on login when school setup is unset and links to school setup", async () => {
   const rolePolicy = {
     role: "admin",

@@ -63,15 +63,15 @@ test("New Words and News vocabulary use the same full ESL row payload without st
   assert.match(sharedVocabularyEditor, /const renderList = \(start, indentation\) =>/)
   assert.match(sharedVocabularyEditor, /const alphabetic = line\.match/)
   assert.match(sharedVocabularyEditor, /indent nested items/)
-  for (const label of ["LD", "GT", "WH", "ET", "MW", "TH"]) assert.match(sharedVocabularyEditor, new RegExp(`\\\"${label}\\\"`))
+  for (const label of ["LD", "OA", "OB", "BR", "MW", "ET", "WK", "CA", "TH", "WH", "GT", "GL"]) assert.match(sharedVocabularyEditor, new RegExp(`\\\"${label}\\\"`))
   assert.match(sharedVocabularyEditor, /includeMwFill = false/)
-  for (const label of ["CA", "CL", "GL"]) assert.match(sharedVocabularyEditor, new RegExp(`\\\"${label}\\\"`))
+  for (const label of ["CA", "GL"]) assert.match(sharedVocabularyEditor, new RegExp(`\\\"${label}\\\"`))
   assert.match(sharedVocabularyEditor, /lookupButtons = null/)
-  assert.match(sharedVocabularyEditor, /\["LD", "GT", "WH", "ET", "MW", "TH", "CA", "CL", "GL"\]/)
+  assert.match(sharedVocabularyEditor, /\["LD", "OA", "OB", "BR", "MW", "ET", "WK", "CA", "TH", "WH", "GT", "GL"\]/)
   assert.match(sharedVocabularyEditor, /portal-button-blue-action/)
-  assert.match(portalScript, /lookupButtons: \["LD", "GT", "WH", "ET", "MW", "TH", "CA", "CL", "GL"\]/)
+  assert.match(portalScript, /lookupButtons: \["LD", "OA", "OB", "BR", "MW", "ET", "WK", "CA", "TH", "WH", "GT", "GL"\]/)
   assert.match(sharedVocabularyEditor, /Cambridge English Dictionary/)
-  assert.match(sharedVocabularyEditor, /Collegiate to Learner fallback/)
+  assert.match(sharedVocabularyEditor, /Oxford Learner's Dictionaries British English/)
   assert.match(sharedVocabularyEditor, /Google definition search/)
   assert.doesNotMatch(sharedVocabularyEditor, /<strong>(?:First known use|Etymology):<\/strong>/)
   assert.doesNotMatch(libraryCorpus, /`\*\*(?:First known use|Etymology):\*\*`/)
@@ -152,7 +152,7 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(admin, /shared\/vocabulary-esl-editor\.js/)
   assert.match(admin, /class="panel library-review-workspace"[\s\S]*data-surface-role="panel"/)
   assert.match(admin, /data-surface-role="card" data-vocabulary-editor/)
-  assert.match(admin, /editorRowHtml\(`review-\$\{slot\}`, \{ includeMwFill: true, includeTransitivityTools: true, includeOriginAnalysis: true, originLookupPath:/)
+  assert.match(admin, /editorRowHtml\(`review-\$\{slot\}`, \{ includeDictionaryBuilder: true, includeTransitivityTools: true, includeOriginAnalysis: true, originLookupPath:/)
   assert.match(admin, /const SHARED_FIELDS = new Set\(\["english"[\s\S]*"definition"[\s\S]*"etymologyType", "etymology"/)
   assert.match(admin, /data-review-sidebar-toggle/)
   assert.match(admin, /editorRowHtml\(`library-\$\{entry\.id\}`/)
@@ -268,10 +268,19 @@ test("admin Library editor uses the shared New Words row renderer", () => {
   assert.match(sharedVocabularyEditor, /function editorRowHtml\(rowUid/)
   for (const token of ["news-vocabulary-row", "news-vocabulary-lookups", "vocabularyDefinition-", "includeMwFill", "includeTransitivityTools", "includeOriginAnalysis", "vocabulary-source-actions", "portal-button-amber-info", "data-vocabulary-origin-analysis", "data-vocabulary-field"]) assert.match(sharedVocabularyEditor, new RegExp(token))
   assert.match(sharedVocabularyEditor, /data-vocabulary-lookup="\$\{key\}"/)
-  assert.match(sharedVocabularyEditor, /vocabulary-source-actions">\$\{mwFill\}\$\{originAnalysis\}/)
+  assert.match(sharedVocabularyEditor, /vocabulary-source-actions">\$\{dictionaryBuilder\}\$\{mwFill\}\$\{merriamWebsterFill\}\$\{britannicaFill\}/)
+  assert.match(sharedVocabularyEditor, /data-vocabulary-dictionary-builder/)
+  assert.match(sharedVocabularyEditor, /data-vocabulary-dictionary-builder title="Build one availability-aware, source-attributed Dictionary preview before applying selected data\." aria-label="Open Dictionary Builder definition preview">Definition<\/button>/)
+  assert.match(sharedVocabularyEditor, /\["LD", "OA", "OB", "BR", "MW", "ET", "WK", "CA", "TH", "WH", "GT", "GL"\]/)
+  assert.doesNotMatch(sharedVocabularyEditor, /data-dictionary-builder-source-matrix/)
+  assert.doesNotMatch(admin, /lookupButtons: \[\]/)
+  assert.match(sharedVocabularyEditor, /Britannica Dictionary/)
   assert.match(routes, /ADMIN_LIBRARY_ORIGIN_ANALYSIS_PATH_RE/)
   assert.match(libraryReviewWorkbench, /Origin review is ready\. No entry fields were changed\./)
   assert.match(sharedPortalTheme, /body\.admin-portal-page \.vocabulary-source-actions\s*\{[\s\S]*display:\s*flex/)
+  for (const [label, radius] of [["LD", "var\\(--radius-2\\) 0 0 0"], ["OB", "0 var\\(--radius-2\\) 0 0"], ["WH", "0 0 0 var\\(--radius-2\\)"], ["GL", "0 0 var\\(--radius-2\\) 0"]]) {
+    assert.match(sharedPortalTheme, new RegExp(`data-vocabulary-lookup="${label}"\\]\\s*\\{[\\s\\S]*?border-radius:\\s*${radius}`))
+  }
 })
 
 test("every shared vocabulary editor preserves typed stress case until save", () => {
@@ -408,6 +417,8 @@ test("flattened vocabulary preserves New Words geometry and formats safe definit
   assert.equal((flattenedChairDefinitions.match(/<li>/gu) || []).length, 3)
   assert.match(flattenedChairDefinitions, /to preside as chairperson[\s\S]*to install in office[\s\S]*to carry on the shoulders/)
   assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\nB"), "<p>A<br>B</p>")
+  const synonymsAntonymsTable = context.window.SIS_VOCABULARY_ESL.definitionHtml("| **Synonyms** | **Antonyms** |\n|--------------|--------------|\n| praise | criticize |\n| applaud |  |")
+  assert.equal(synonymsAntonymsTable, '<div class="definition-markdown-table-wrap"><table class="definition-markdown-table"><thead><tr><th><strong>Synonyms</strong></th><th><strong>Antonyms</strong></th></tr></thead><tbody><tr><td>praise</td><td>criticize</td></tr><tr><td>applaud</td><td></td></tr></tbody></table></div>')
   assert.equal(
     context.window.SIS_VOCABULARY_ESL.definitionHtml("**First known use:** 12th century\n\n**Etymology:** mid-12c., a wondrous work of God"),
     "<p><strong>First known use</strong><br>12th century</p><p><strong>Etymology</strong><br>mid-12c., a wondrous work of God</p>",
@@ -418,6 +429,10 @@ test("flattened vocabulary preserves New Words geometry and formats safe definit
     "1. a group or set of 10\n    - It isn't to be done in a day of course, nor yet in a century, nor in a decade of centuries.\n\nsuch as",
   )
   assert.match(nestedExampleHtml, /<ol><li>a group or set of 10<ul><li>It isn&#39;t to be done in a day of course, nor yet in a century, nor in a decade of centuries\.<\/li><\/ul><\/li><\/ol><p>such as<\/p>/)
+  const ldoceDictionaryHtml = context.window.SIS_VOCABULARY_ESL.definitionHtml(
+    "1. *transitive*, CHAIR — to preside over a meeting\n    - She chaired the meeting.\n2. *intransitive*, CHAIR — to act as chairperson\n    - He agreed to chair.",
+  )
+  assert.match(ldoceDictionaryHtml, /<ol><li><em>transitive<\/em>, CHAIR — to preside over a meeting<ul><li>She chaired the meeting\.<\/li><\/ul><\/li><li><em>intransitive<\/em>, CHAIR — to act as chairperson<ul><li>He agreed to chair\.<\/li><\/ul><\/li><\/ol>/)
   const preferredHtml = context.window.SIS_VOCABULARY_ESL.definitionHtml(definitionSpacingSample)
   assert.match(preferredHtml, /<ol><li>to resound with echoes<\/li><li>to produce an echo<ol type="a">/)
   assert.match(preferredHtml, /<ol type="a"><li>repeat, imitate<ul><li>children echoing their teacher&#39;s words<\/li><\/ul>/)
