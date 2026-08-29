@@ -3,9 +3,11 @@ import { existsSync } from "node:fs"
 import { load } from "cheerio"
 
 import { registerDictionaryProvider } from "./dictionary-providers.mjs"
+import { fetchWithExponentialBackoff } from "./provider-http.mjs"
 import { boundedDictionaryResponseText, buildRichDictionaryFields, cleanDictionaryText, uniqueDictionaryText, validateDictionaryPageUrl } from "./rich-dictionary-provider.mjs"
 
 export const BRITANNICA_HOSTNAMES = new Set(["britannica.com", "www.britannica.com"])
+const BRITANNICA_AUDIO_HOSTNAMES = new Set(["media.merriam-webster.com", ...BRITANNICA_HOSTNAMES])
 export const BRITANNICA_BASE_URL = "https://www.britannica.com/dictionary/"
 export const BRITANNICA_MAX_HTML_BYTES = 3 * 1024 * 1024
 const BRITANNICA_BROWSER_TIMEOUT_MS = 15_000
@@ -24,6 +26,18 @@ const BRITANNICA_SENSE_SELECTOR = ".sblocks .sense, .sblock_c .sense, .sense, .d
 
 function hasBritannicaSense(node) {
   return node.find(BRITANNICA_SENSE_SELECTOR).length > 0 || node.find(".def_text, .definition, .def, .dtText, [data-definition]").length > 0
+}
+
+function audioUrl(node) {
+  const value = cleanDictionaryText(node.find("[data-src-mp3], audio source[type='audio/mpeg'], audio source[src], [data-audio-url]").first().attr("data-src-mp3") || node.find("audio source[type='audio/mpeg'], audio source[src], [data-audio-url]").first().attr("src") || node.find("[data-audio-url]").first().attr("data-audio-url"))
+  if (value) {
+    try { const parsed = new URL(value, "https://www.britannica.com"); if (parsed.protocol === "https:" && BRITANNICA_AUDIO_HOSTNAMES.has(parsed.hostname.toLowerCase())) return parsed.toString() } catch {}
+  }
+  const popup = node.find(".play_pron[data-lang='en_us'][data-dir][data-file], [data-lang='en_us'][data-dir][data-file]").first()
+  const language = cleanDictionaryText(popup.attr("data-lang")).replace("_", "/")
+  const directory = cleanDictionaryText(popup.attr("data-dir"))
+  const file = cleanDictionaryText(popup.attr("data-file"))
+  return language && directory && file ? `https://media.merriam-webster.com/audio/prons/${language}/mp3/${directory}/${file}.mp3` : ""
 }
 
 function collectBritannicaEntryScopes($) {
@@ -66,7 +80,7 @@ export async function fetchBritannicaBrowserPage(sourceUrl) {
     const response = await page.goto(sourceUrl, { waitUntil: "domcontentloaded", timeout: BRITANNICA_BROWSER_TIMEOUT_MS })
     const html = await page.content()
     const status = response?.status() || 200
-    if (status >= 400 || isBritannicaAccessChallenge(html)) return { ok: false, status, url: page.url(), html, message: "Britannica is protected by an access challenge; no Library data was changed." }
+    if (status >= 400 || isBritannicaAccessChallenge(html)) return { ok: false, status, robotBlocked: true, url: page.url(), html, message: "Britannica requires robot verification because the source presented an access challenge; open the source page and complete the prompt before retrying." }
     return { ok: true, status, url: page.url(), html }
   } catch (error) {
     return { ok: false, available: false, message: `Britannica browser access failed; no Library data was changed. ${error.message}` }
@@ -97,7 +111,7 @@ function parseEntry(node, sourceUrl, index) {
     const definitions = collectText(node, ".def_text, .definition, .def, .dtText, [data-definition]")
     definitions.forEach((definition, senseIndex) => senses.push({ number: String(senseIndex + 1), labels, definition, examples: [] }))
   }
-  return { headword, partOfSpeech, labels, pronunciation: { us: pronunciation, uk: "" }, inflections, senses, sourceUrl, audio: { us: "", uk: "" } }
+  return { headword, partOfSpeech, labels, pronunciation: { us: pronunciation, uk: "" }, inflections, senses, sourceUrl, audio: { us: audioUrl(node), uk: "" } }
 }
 
 function parseRelatedEntry(node, sourceUrl) {
@@ -129,7 +143,6 @@ export function parseBritannicaHtml(html, { sourceUrl = "", lookupWord = "" } = 
   const idioms = collectText(sourceRoot, ".idioms li, .idiom li, .idiom, [data-idiom]")
   const phrases = collectText(sourceRoot, ".phrases li, .phrase li, .phrase, [data-phrase]")
   const moreExamples = collectText(sourceRoot, ".more-examples li, .extra-examples li, [data-more-example], [data-extra-example]")
-  const recentExamples = collectText(sourceRoot, ".recent-examples-on-the-web li, .recent-examples li, [data-recent-example]")
   if (!parsedEntries.length) return { ok: false, available: true, message: `No Britannica entry was found for ${cleanDictionaryText(lookupWord) || "the requested word"}; no Library data was changed.` }
   const richFields = buildRichDictionaryFields({ provider: "britannica", sourceName: "Britannica Dictionary", sourceUrl: normalizedSourceUrl, word: lookupWord, entries: parsedEntries, etymology, firstKnownUse, synonyms, collocations, idioms, phrases })
   const addSection = (definition, title, values) => {
@@ -140,9 +153,8 @@ export function parseBritannicaHtml(html, { sourceUrl = "", lookupWord = "" } = 
     ["Stems", stems],
     ["Antonyms", antonyms],
     ["More Examples", moreExamples],
-    ["Recent Examples on the Web", recentExamples],
   ].reduce((value, [title, values]) => addSection(value, title, values), richFields.definition)
-  return { ok: true, provider: "britannica", sourceUrl: normalizedSourceUrl, lookupWord: cleanDictionaryText(lookupWord), entries: parsedEntries, fields: { ...richFields, definition, dictionaryMetadata: { ...richFields.dictionaryMetadata, additionalSections: { stems, synonyms, antonyms, moreExamples, recentExamples } } } }
+  return { ok: true, provider: "britannica", sourceUrl: normalizedSourceUrl, lookupWord: cleanDictionaryText(lookupWord), entries: parsedEntries, fields: { ...richFields, definition, dictionaryMetadata: { ...richFields.dictionaryMetadata, additionalSections: { stems, synonyms, antonyms, moreExamples } } } }
 }
 
 export function sanitizeBritannicaPreview(preview) {
@@ -157,20 +169,20 @@ export async function previewBritannicaLibraryEntry(entry, fetchImpl = fetch, br
   if (!lookupWord) return { ok: false, available: true, message: "An English word is required for Britannica preview; no Library data was changed." }
   const sourceUrl = validBritannicaUrl(`${BRITANNICA_BASE_URL}${encodeURIComponent(lookupWord)}`)
   let response
-  try { response = await fetchImpl(sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Britannica-preview/1.0" }, redirect: "follow" }) } catch (error) { return { ok: false, available: false, message: `Britannica is unavailable; no Library data was changed. ${error.message}` } }
+  try { response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Britannica-preview/1.0" }, redirect: "follow" }) } catch (error) { return { ok: false, available: false, message: `Britannica is unavailable; no Library data was changed. ${error.message}` } }
   if (!response.ok) {
     if (response.status !== 403) return { ok: false, available: false, message: `Britannica is unavailable (HTTP ${response.status || 503}); no Library data was changed.` }
     response = await browserFetchImpl(sourceUrl)
-    if (!response?.ok) return { ok: false, available: false, message: response?.message || `Britannica is unavailable (HTTP ${response?.status || 503}); no Library data was changed.` }
+    if (!response?.ok) return { ok: false, status: response?.robotBlocked ? "robot_blocked" : undefined, available: false, message: response?.message || `Britannica is unavailable (HTTP ${response?.status || 503}); no Library data was changed.` }
   }
   let html
   try { html = typeof response.html === "string" ? response.html : await boundedDictionaryResponseText(response, BRITANNICA_MAX_HTML_BYTES) } catch (error) { return { ok: false, available: false, message: `Britannica is unavailable; no Library data was changed. ${error.message}` } }
   const finalUrl = response.url ? (() => { try { return validBritannicaUrl(response.url) } catch { return sourceUrl } })() : sourceUrl
   if (isBritannicaAccessChallenge(html)) {
     response = await browserFetchImpl(sourceUrl)
-    if (!response?.ok) return { ok: false, available: false, message: response?.message || "Britannica is protected by an access challenge; no Library data was changed." }
+    if (!response?.ok) return { ok: false, status: response?.robotBlocked ? "robot_blocked" : undefined, available: false, message: response?.message || "Britannica requires robot verification because the source presented an access challenge; open the source page and complete the prompt before retrying." }
     try { html = typeof response.html === "string" ? response.html : await boundedDictionaryResponseText(response, BRITANNICA_MAX_HTML_BYTES) } catch (error) { return { ok: false, available: false, message: `Britannica is unavailable; no Library data was changed. ${error.message}` } }
-    if (isBritannicaAccessChallenge(html)) return { ok: false, available: false, message: "Britannica is protected by an access challenge; no Library data was changed." }
+    if (isBritannicaAccessChallenge(html)) return { ok: false, status: "robot_blocked", available: false, message: "Britannica requires robot verification because the source presented an access challenge; open the source page and complete the prompt before retrying." }
   }
   const browserFinalUrl = response.url ? (() => { try { return validBritannicaUrl(response.url) } catch { return sourceUrl } })() : sourceUrl
   return parseBritannicaHtml(html, { sourceUrl: browserFinalUrl || finalUrl, lookupWord })

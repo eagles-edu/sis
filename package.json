@@ -28,6 +28,8 @@
     "db:backup": "node tools/db-backup-failsafe.mjs",
     "db:backup:dry": "node tools/db-backup-failsafe.mjs --dry-run",
     "db:backup:no-prune": "node tools/db-backup-failsafe.mjs --no-prune",
+    "library:reference:backfill": "node tools/backfill-library-reference-catalogs.mjs",
+    "library:reference:export-xlsx": "node tools/export-library-reference-xlsx.mjs",
     "backup:files": "node tools/backup-before-edit.mjs",
     "db:restore": "node tools/db-restore-failsafe.mjs",
     "db:restore:verify": "node tools/db-restore-failsafe.mjs --verify-only",

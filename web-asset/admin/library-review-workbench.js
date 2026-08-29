@@ -215,7 +215,7 @@
 
   const dictionaryPreviewConfig = (provider) => ({
     ldoce: {
-      label: "LDOCE", title: "LDOCE dictionary preview", dialogId: "libraryLdocePreviewDialog", formClass: "library-ldoce-preview-form", rootAttribute: "data-vocabulary-ldoce-preview-root", fieldAttribute: "data-ldoce-field", modeAttribute: "data-ldoce-mode", audioAttribute: "data-ldoce-audio", fieldLabels: ldoceFieldLabels, audioDialects: [["uk", "UK"], ["us", "US"]], previewPath: "ldoce-preview", applyPath: "ldoce-apply",
+      label: "LDOCE", title: "LDOCE dictionary preview", dialogId: "libraryLdocePreviewDialog", formClass: "library-ldoce-preview-form", rootAttribute: "data-vocabulary-ldoce-preview-root", fieldAttribute: "data-ldoce-field", modeAttribute: "data-ldoce-mode", audioAttribute: "data-ldoce-audio", fieldLabels: ldoceFieldLabels, audioDialects: [["us", "US"]], previewPath: "ldoce-preview", applyPath: "ldoce-apply",
     },
     oxford: {
       label: "Oxford", title: "Oxford Learner's Dictionaries American English preview", dialogId: "libraryOxfordPreviewDialog", formClass: "library-oxford-preview-form", rootAttribute: "data-vocabulary-oxford-preview-root", fieldAttribute: "data-oxford-field", modeAttribute: "data-oxford-mode", audioAttribute: "data-oxford-audio", fieldLabels: { definition: "Definition and examples", countability: "Noun countability", verbTransitivity: "Verb transitivity", grammarClassification: "Oxford grammar labels" }, audioDialects: [["us", "US"]], previewPath: "oxford-preview", applyPath: "oxford-apply",
@@ -401,31 +401,19 @@
 
   const dictionaryBuilderFields = [
     ["vietnamese", "Vietnamese"], ["syllabication", "Syllable / Stress"], ["syllableCount", "Number of syllables"], ["grammarClassification", "POS Classification"],
-    ["audio", "Audio"], ["definition", "Definition Proper"], ["verbForms", "Verb Forms"], ["stems", "Stems"], ["synonymsAntonyms", "Synonyms / Antonyms"], ["examples", "Examples"], ["recentExamples", "Recent Examples"], ["firstKnownUse", "First known use"], ["originPath", "Origin path"], ["etymology", "Etymology"], ["worksCited", "Works Cited"],
+    ["audio", "Headword Audio"], ["verbFormAudio", "Verb Form Audio"], ["definition", "Definition Proper"], ["verbForms", "Verb Forms"], ["stems", "Stems"], ["synonymsAntonyms", "Synonyms / Antonyms"], ["examples", "Examples"], ["firstKnownUse", "First known use"], ["originPath", "Origin path"], ["etymology", "Etymology"], ["worksCited", "Works Cited"],
   ]
-  const dictionaryBuilderApplyFields = new Set(["vietnamese", "syllabication", "syllableCount", "grammarClassification", "audio", "definition", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "etymology", "originPath", "originReferences", "firstKnownUse", "stems"])
+  const dictionaryBuilderApplyFields = new Set(["vietnamese", "syllabication", "syllableCount", "grammarClassification", "audio", "verbFormAudio", "definition", "verbForms", "stems", "synonymsAntonyms", "examples", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "etymology", "originPath", "originReferences", "firstKnownUse", "worksCited"])
+  const dictionaryBuilderStatusLabel = (status) => ({ not_found: "not found (HTTP 404)", not_provided: "not provided by source", robot_blocked: "robot verification required; run remains active", unavailable: "provider unavailable", not_offered: "not provided by source" }[status] || status)
   const dictionaryBuilderEsc = (value) => String(value == null ? "" : value).replace(/[&<>'"]/gu, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character])
-  const dictionaryBuilderPosClassOptions = Object.freeze({
-    noun: { grammarFamily: ["common", "proper", "concrete", "abstract", "material", "collective", "compound", "possessive"], grammarNumber: ["singular", "plural", "singular and plural"] },
-    verb: { grammarFamily: ["primary", "modal", "action"], grammarSubtype: ["intransitive", "transitive", "monotransitive", "ditransitive", "ambitransitive"] },
-    adjective: { grammarSubtype: ["-ed adjective", "-ing adjective"] },
-    adverb: { grammarSubtype: ["manner", "place", "time", "frequency", "degree", "sentence"] },
-    conjunction: { grammarSubtype: ["coordinating", "subordinating", "correlative"] },
-    preposition: { grammarSubtype: ["simple", "compound", "phrasal"] },
-    determiner: { grammarFamily: ["articles", "possessive", "numbers", "indefinite pronouns"], grammarNumber: ["singular", "plural", "either singular or plural"] },
-    pronoun: { grammarFamily: ["personal", "possessive", "reflexive", "intensive", "indefinite", "demonstrative", "interrogative", "relative", "pronominal adjectives", "archaic"], grammarNumber: ["singular", "plural", "either singular or plural"] },
-    phrase: { grammarFamily: ["grammatical phrases", "verbal phrases", "special phrases"], grammarSubtype: ["noun", "verb", "adjective", "adverb", "prepositional", "infinitive", "gerund", "participial", "absolute", "appositive"] },
-    idiom: { grammarSubtype: ["pure idioms", "binomial idioms", "partial idioms", "prepositional/verb-particle idioms"] },
-    clause: { grammarSubtype: ["dependent", "independent"] },
-  })
   const dictionaryBuilderSourceMatrix = (word) => {
     const encoded = encodeURIComponent(String(word || "").trim())
     const links = [
       ["LD", `https://www.ldoceonline.com/dictionary/${encoded}`], ["OA", `https://www.oxfordlearnersdictionaries.com/definition/american_english/${encoded}`], ["OB", `https://www.oxfordlearnersdictionaries.com/definition/english/${encoded}`], ["BR", `https://www.britannica.com/dictionary/${encoded}`],
-      ["MW API", `https://www.merriam-webster.com/dictionary/${encoded}`], ["MW scrape", `https://www.merriam-webster.com/dictionary/${encoded}`], ["ET", `https://www.etymonline.com/search?q=${encoded}`], ["WK", `https://en.wiktionary.org/w/index.php?search=${encoded}`], ["CA", `https://dictionary.cambridge.org/dictionary/english/${encoded}`],
-      ["TH", `https://www.merriam-webster.com/thesaurus/${encoded}`], ["WH", `https://www.wordhelp.com/syllables/english/?q=${encoded}`], ["GT", `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate`], ["GL", `https://www.google.com/search?q=define%3A${encoded}`],
+      ["MW", `https://www.merriam-webster.com/dictionary/${encoded}`], ["AP", `https://www.merriam-webster.com/dictionary/${encoded}`], ["ET", `https://www.etymonline.com/search?q=${encoded}`], ["WK", `https://en.wiktionary.org/w/index.php?search=${encoded}`],
+      ["CA", `https://dictionary.cambridge.org/dictionary/english/${encoded}`], ["TH", `https://www.merriam-webster.com/thesaurus/${encoded}`], ["WH", `https://www.wordhelp.com/syllables/english/?q=${encoded}`], ["GT", `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate`],
     ]
-    return `<div class="news-vocabulary-lookups dictionary-builder-source-matrix" data-dictionary-builder-source-matrix role="group" aria-label="Thirteen outbound Dictionary Builder source links">${links.map(([label, href]) => `<a class="portal-button portal-button-blue-action news-vocabulary-lookup dictionary-builder-source-link" data-vocabulary-lookup="${label}" href="${href}" target="_blank" rel="noopener noreferrer" title="Open ${label}; this does not apply data.">${label}</a>`).join("")}</div>`
+    return `<div class="news-vocabulary-lookups dictionary-builder-source-matrix" data-dictionary-builder-source-matrix role="group" aria-label="Twelve outbound Dictionary Builder source links">${links.map(([label, href]) => `<a class="portal-button portal-button-blue-action news-vocabulary-lookup dictionary-builder-source-link" data-vocabulary-lookup="${label}" href="${href}" target="_blank" rel="noopener noreferrer" title="Open ${label}; this does not apply data.">${label}</a>`).join("")}</div>`
   }
   const dictionaryBuilderDialog = () => {
     let dialog = document.getElementById("libraryDictionaryBuilderDialog")
@@ -439,38 +427,53 @@
     }
     return dialog
   }
-  const candidatesForDatum = (snapshot, datum) => (snapshot.sources || []).filter((source) => {
-    if (datum === "vietnamese" && source.provider !== "google_translate") return false
-    return source.datumStatus?.[datum]?.status === "available" && source.fields?.[datum] !== undefined
-  }).sort((left, right) => {
+  const candidatesForDatum = (snapshot, datum) => {
+    const sources = snapshot.sources || []
     const order = snapshot.datumSourceOrder?.[datum] || []
-    const leftPosition = order.indexOf(left.provider); const rightPosition = order.indexOf(right.provider)
-    return (leftPosition < 0 ? Number.MAX_SAFE_INTEGER : leftPosition) - (rightPosition < 0 ? Number.MAX_SAFE_INTEGER : rightPosition)
-  }).slice(0, 3)
+    const ordered = sources.filter((source) => {
+      if (datum === "vietnamese" && source.provider !== "google_translate") return false
+      const status = source.datumStatus?.[datum]?.status
+      return status === "robot_blocked" || (status === "available" && source.fields?.[datum] !== undefined)
+    }).sort((left, right) => {
+      const leftPosition = order.indexOf(left.provider); const rightPosition = order.indexOf(right.provider)
+      return (leftPosition < 0 ? Number.MAX_SAFE_INTEGER : leftPosition) - (rightPosition < 0 ? Number.MAX_SAFE_INTEGER : rightPosition)
+    })
+    const mandatory = datum === "synonymsAntonyms" ? "merriam_webster_thesaurus" : datum === "syllabication" ? "wordhelp" : ""
+    const mandatorySource = mandatory ? sources.find((source) => source.provider === mandatory) : null
+    const available = ordered.filter((source) => source.datumStatus?.[datum]?.status === "available").slice(0, 3)
+    const robotBlocked = ordered.filter((source) => source.datumStatus?.[datum]?.status === "robot_blocked")
+    return [ ...(mandatorySource && ordered.includes(mandatorySource) ? [mandatorySource] : []), ...available.filter((source) => source.provider !== mandatory), ...robotBlocked.filter((source) => source.provider !== mandatory) ].filter((source, index, list) => list.indexOf(source) === index)
+  }
   const sizeDictionaryBuilderTextarea = (textarea) => {
     if (!(textarea instanceof HTMLTextAreaElement)) return
     textarea.style.blockSize = "auto"
     textarea.style.blockSize = `${Math.max(textarea.scrollHeight, 54)}px`
   }
   const sizeDictionaryBuilderTextareas = (container) => {
-    const textareas = [...container.querySelectorAll("textarea")]
-    textareas.forEach((textarea) => { textarea.style.blockSize = "auto" })
-    const largest = Math.max(54, ...textareas.map((textarea) => textarea.scrollHeight))
-    textareas.forEach((textarea) => { textarea.style.blockSize = `${largest}px` })
+    const applySize = () => {
+      const textareas = [...container.querySelectorAll("textarea")]
+      textareas.forEach((textarea) => { textarea.style.blockSize = "auto" })
+      const largest = Math.max(54, ...textareas.map((textarea) => textarea.scrollHeight))
+      textareas.forEach((textarea) => { textarea.style.blockSize = `${largest}px` })
+    }
+    applySize()
+    if (typeof window.requestAnimationFrame === "function") window.requestAnimationFrame(applySize)
   }
-  const renderDictionaryBuilder = (snapshot, pane, sourceId) => {
+  const robotHandoffTabs = new Map()
+  const renderDictionaryBuilder = (snapshot, pane, sourceId, previousSelections = {}, activeTab = "vietnamese") => {
     const dialog = dictionaryBuilderDialog()
     const root = dialog.querySelector("[data-dictionary-builder-root]")
     const sourceMatrixSlot = dialog.querySelector("[data-dictionary-builder-source-matrix-slot]")
     const word = pane.querySelector('[data-vocabulary-field="english"]')?.value || ""
     const tabs = dictionaryBuilderFields.map(([datum, label], index) => `<button type="button" class="dictionary-builder-tab" id="dictionary-builder-tab-${datum}" role="tab" aria-controls="dictionary-builder-panel-${datum}" aria-selected="${index === 0}" tabindex="${index === 0 ? 0 : -1}" data-dictionary-builder-tab="${datum}"><span class="dictionary-builder-tab-step">${index + 1}</span><span>${dictionaryBuilderEsc(label)}</span></button>`).join("")
     sourceMatrixSlot.innerHTML = dictionaryBuilderSourceMatrix(word)
-    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply>Apply selected</button></div>`
+    const canApply = sourceId !== "new-canonical"
+    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"${canApply ? "" : " disabled"}><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply${canApply ? "" : " disabled title=\"Save the canonical Library entry before applying Dictionary Builder data.\""}>Apply selected</button></div>`
     const panels = root.querySelector("[data-dictionary-builder-panels]")
-    const selectedCandidates = {}
+    const selectedCandidates = structuredClone(previousSelections)
     const updateTabSelection = (datum) => {
       const tab = root.querySelector(`[data-dictionary-builder-tab="${datum}"]`)
-      tab?.classList.toggle("is-complete", Boolean(selectedCandidates[datum]))
+      tab?.classList.toggle("is-complete", Boolean(selectedCandidates[datum]?.value))
     }
     const show = (datum, focus = false) => {
       root.querySelectorAll("[data-dictionary-builder-tab]").forEach((button) => {
@@ -487,12 +490,15 @@
       const statusSources = statusSourceIds.length
         ? statusSourceIds.map((provider) => sourceById.get(provider)).filter(Boolean)
         : (snapshot.sources || []).filter((source) => source.datumStatus?.[datum]?.status !== "not_offered")
-      const statuses = statusSources.map((source) => `${source.provider}: ${source.datumStatus?.[datum]?.status || "not_offered"}`).join(" · ")
+      const statuses = statusSources.map((source) => `${source.provider}: ${dictionaryBuilderStatusLabel(source.datumStatus?.[datum]?.status || "not_offered")}`).join(" · ")
+      const robotSource = statusSources.find((source) => source.datumStatus?.[datum]?.status === "robot_blocked" || source.status === "robot_blocked")
       const sectionSummary = dialog.querySelector("[data-dictionary-builder-section-summary]")
       const datumLabel = dictionaryBuilderFields.find(([key]) => key === datum)?.[1] || datum
       const tabHeading = dialog.querySelector("[data-dictionary-builder-tab-heading]")
       if (tabHeading) tabHeading.textContent = datumLabel
-      if (sectionSummary) sectionSummary.textContent = `Queried: ${statuses || "no applicable source"}.`
+      if (sectionSummary) sectionSummary.textContent = robotSource
+        ? `Queried: ${statuses || "no applicable source"}. Robot prompt required for ${robotSource.provider}; the run remains active. Complete the prompt in the opened source tab, then close it to retry.`
+        : `Queried: ${statuses || "no applicable source"}.`
       panels.replaceChildren()
       const section = document.createElement("section")
       section.className = "dictionary-builder-candidates"
@@ -510,7 +516,7 @@
       const candidateList = document.createElement("div")
       candidateList.className = "dictionary-builder-candidate-list"
       const appendSourceLink = (container, provider, sourceUrl) => {
-        if (!sourceUrl) return
+        if (!sourceUrl) return null
         const link = document.createElement("a")
         link.className = "dictionary-builder-candidate-source"
         link.href = sourceUrl
@@ -519,32 +525,89 @@
         link.textContent = "View source page"
         link.title = `View the ${provider} source page in a new tab; this does not apply data.`
         container.append(link)
+        return link
       }
       candidates.forEach((candidate) => {
         const label = document.createElement("label")
-        label.className = "dictionary-builder-candidate"
+        const candidateStatus = candidate.datumStatus?.[datum]?.status || "available"
+        label.className = `dictionary-builder-candidate${candidateStatus === "robot_blocked" ? " dictionary-builder-candidate-robot" : ""}`
         const radio = document.createElement("input")
         radio.type = "radio"
         radio.name = `dictionary-builder-${datum}`
         radio.value = candidate.provider
         radio.checked = selectedCandidates[datum]?.provider === candidate.provider
         const title = document.createElement("strong")
-        title.textContent = candidate.provider
+        title.textContent = candidateStatus === "robot_blocked" ? `${candidate.provider} — robot verification required` : candidate.provider
         const input = document.createElement("textarea")
-        const candidateValue = typeof candidate.fields[datum] === "object" ? JSON.stringify(candidate.fields[datum]) : String(candidate.fields[datum] || "")
+        const candidateValue = candidateStatus === "robot_blocked" ? "" : typeof candidate.fields[datum] === "object" ? JSON.stringify(candidate.fields[datum]) : String(candidate.fields[datum] || "")
         input.value = radio.checked ? selectedCandidates[datum].value : candidateValue
+        input.placeholder = candidateStatus === "robot_blocked" ? "Complete the robot prompt, then enter the verified value here." : ""
         input.dataset.dictionaryBuilderCandidateValue = datum
         input.dataset.dictionaryBuilderProvider = candidate.provider
         const saveCandidate = () => {
           if (!radio.checked) return
-          selectedCandidates[datum] = { provider: candidate.provider, value: input.value }
+          selectedCandidates[datum] = { provider: candidate.provider, value: input.value, status: candidateStatus }
           updateTabSelection(datum)
         }
         input.addEventListener("focus", () => { radio.checked = true; saveCandidate() })
         input.addEventListener("input", () => { saveCandidate(); sizeDictionaryBuilderTextareas(candidateList) })
         radio.addEventListener("change", saveCandidate)
         label.append(radio, title)
-        appendSourceLink(label, candidate.provider, candidate.sourceUrl)
+        const sourceLink = appendSourceLink(label, candidate.provider, candidate.sourceUrl)
+        if (candidateStatus === "robot_blocked") {
+          const retry = document.createElement("button")
+          retry.type = "button"
+          retry.className = "portal-button portal-button-blue-action"
+          retry.textContent = "Retry provider"
+          retry.title = `Retry ${candidate.provider} after completing its robot-verification prompt.`
+          retry.setAttribute("aria-label", `Retry ${candidate.provider} after completing its robot-verification prompt`)
+          const retryProvider = async () => {
+            retry.disabled = true
+            retry.textContent = "Retrying..."
+            try {
+              const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshot.id)}/retry`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: candidate.provider, entry: readPayload(pane) }) })
+              const refreshed = await response.json()
+              if (!response.ok || !refreshed.ok) throw new Error(refreshed.error || "Provider retry failed.")
+              renderDictionaryBuilder(refreshed, pane, sourceId, selectedCandidates, datum)
+            } catch (error) {
+              retry.disabled = false
+              retry.textContent = "Retry provider"
+              dialog.querySelector("[data-dictionary-builder-message]").textContent = error.message || "Provider retry failed."
+            }
+          }
+          retry.addEventListener("click", async (event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            await retryProvider()
+          })
+          label.append(retry)
+          const openChallengeTab = () => {
+            const existing = robotHandoffTabs.get(candidate.provider)
+            if (existing && !existing.closed) {
+              existing.focus?.()
+              return existing
+            }
+            const challengeTab = window.open(candidate.sourceUrl, "_blank")
+            if (!challengeTab) {
+              dialog.querySelector("[data-dictionary-builder-message]").textContent = `The ${candidate.provider} source tab was blocked. Open the source link, complete the prompt, close the tab, then choose Retry provider.`
+              return null
+            }
+            robotHandoffTabs.set(candidate.provider, challengeTab)
+            dialog.querySelector("[data-dictionary-builder-message]").textContent = `Complete the ${candidate.provider} robot check in the new tab. Close that tab when finished; Builder will retry the scrape automatically.`
+            const watchTab = window.setInterval(() => {
+              if (!challengeTab.closed) return
+              window.clearInterval(watchTab)
+              robotHandoffTabs.delete(candidate.provider)
+              retryProvider()
+            }, 500)
+            return challengeTab
+          }
+          sourceLink?.addEventListener("click", (event) => {
+            event.preventDefault()
+            openChallengeTab()
+          })
+          window.setTimeout(() => openChallengeTab(), 0)
+        }
         label.append(input)
         candidateList.append(label)
         sizeDictionaryBuilderTextareas(candidateList)
@@ -565,50 +628,40 @@
         const title = document.createElement("strong")
         title.textContent = "Manual POS classes"
         const partOfSpeech = String(pane.querySelector('[data-vocabulary-field="partOfSpeech"]')?.value || "").trim().toLowerCase()
-        const fields = [
-          ["grammarFamily", "POS family"], ["grammarSubtype", "POS subtype"], ["grammarDetail", "POS detail"], ["grammarNumber", "Number"],
-        ]
         const previous = selectedCandidates[datum]?.provider === "manual" ? selectedCandidates[datum].value : ""
         let values = {}
         try { values = previous ? JSON.parse(previous) : {} } catch { values = {} }
         const controls = document.createElement("div")
         controls.className = "dictionary-builder-pos-controls"
-        fields.forEach(([field, fieldLabel]) => {
-          const control = document.createElement("select")
-          control.dataset.dictionaryBuilderPosField = field
-          control.setAttribute("aria-label", fieldLabel)
-          control.innerHTML = `<option value="">${dictionaryBuilderEsc(fieldLabel)}: blank</option>`
-          const options = [...new Set([...(dictionaryBuilderPosClassOptions[partOfSpeech]?.[field] || []), values[field]].filter(Boolean))]
-          options.forEach((option) => control.append(new Option(option, option, false, values[field] === option)))
-          control.addEventListener("focus", () => { radio.checked = true })
-          control.addEventListener("change", () => {
-            radio.checked = true
-            const classification = Object.fromEntries([...controls.querySelectorAll("select")].map((item) => [item.dataset.dictionaryBuilderPosField, item.value]).filter(([, value]) => value))
-            selectedCandidates[datum] = { provider: "manual", value: JSON.stringify(classification) }
-            structuredInput.value = JSON.stringify(classification, null, 2)
-            updateTabSelection(datum)
-          })
-          controls.append(control)
-        })
-        const structuredInput = document.createElement("textarea")
-        structuredInput.placeholder = "Enter POS classification JSON (blank is allowed)"
-        structuredInput.value = previous || ""
-        structuredInput.dataset.dictionaryBuilderCandidateValue = datum
-        structuredInput.dataset.dictionaryBuilderProvider = "manual"
-        structuredInput.addEventListener("focus", () => { radio.checked = true })
-        structuredInput.addEventListener("input", () => {
-          radio.checked = true
-          selectedCandidates[datum] = { provider: "manual", value: structuredInput.value }
-          updateTabSelection(datum)
-          sizeDictionaryBuilderTextareas(candidateList)
-        })
-        radio.addEventListener("change", () => {
-          const classification = Object.fromEntries([...controls.querySelectorAll("select")].map((item) => [item.dataset.dictionaryBuilderPosField, item.value]).filter(([, value]) => value))
+        const syncManualControls = () => {
+          const classification = Object.fromEntries([...controls.querySelectorAll("select, input[data-vocabulary-esl-field]")]
+            .map((item) => [item.dataset.vocabularyEslField, item.type === "checkbox" ? item.checked : item.multiple ? Array.from(item.selectedOptions).map((option) => option.value).filter(Boolean) : item.value])
+            .filter(([, value]) => value !== "" && value !== false))
           selectedCandidates[datum] = { provider: "manual", value: JSON.stringify(classification) }
-          structuredInput.value = JSON.stringify(classification, null, 2)
           updateTabSelection(datum)
-        })
-        label.append(radio, title, controls, structuredInput)
+        }
+        const renderManualControls = (controlValues = {}) => {
+          controls.innerHTML = window.SIS_VOCABULARY_ESL?.posControlsHtml?.(partOfSpeech, `dictionary-builder-${datum}`, controlValues) || ""
+          Object.entries(controlValues).forEach(([field, value]) => {
+            const control = controls.querySelector(`[data-vocabulary-esl-field="${field}"]`)
+            if (!control) return
+            if (control.type === "checkbox") control.checked = Boolean(value)
+            else if (control.multiple) Array.from(control.options).forEach((option) => { option.selected = Array.isArray(value) && value.includes(option.value) })
+            else control.value = String(value ?? "")
+          })
+          controls.querySelectorAll("select, input[data-vocabulary-esl-field]").forEach((control) => {
+            control.addEventListener("focus", () => { radio.checked = true })
+            control.addEventListener("change", () => {
+              radio.checked = true
+              syncManualControls()
+              const nextValues = Object.fromEntries([...controls.querySelectorAll("select, input[data-vocabulary-esl-field]")].map((item) => [item.dataset.vocabularyEslField, item.type === "checkbox" ? item.checked : item.multiple ? Array.from(item.selectedOptions).map((option) => option.value).filter(Boolean) : item.value]))
+              renderManualControls(nextValues)
+            })
+          })
+        }
+        renderManualControls(values)
+        radio.addEventListener("change", syncManualControls)
+        label.append(radio, title, controls)
         candidateList.append(label)
         sizeDictionaryBuilderTextareas(candidateList)
       } else {
@@ -655,21 +708,39 @@
       Object.entries(selectedCandidates).forEach(([datum, selection]) => {
         if (!dictionaryBuilderApplyFields.has(datum)) return
         let value = selection.value || ""
-        if (["grammarClassification", "originReferences"].includes(datum)) { try { value = JSON.parse(value) } catch { return } }
+        if (["grammarClassification", "originReferences", "verbForms"].includes(datum)) { try { value = JSON.parse(value) } catch { return } }
         selections[datum] = { provider: selection.provider, value }
       })
+      const unresolvedRobotDatum = Object.entries(selectedCandidates).find(([, selection]) => selection.status === "robot_blocked" && !String(selection.value || "").trim())
+      if (unresolvedRobotDatum) {
+        dialog.querySelector("[data-dictionary-builder-message]").textContent = `Complete the robot verification for ${unresolvedRobotDatum[1].provider}, then enter the verified ${unresolvedRobotDatum[0]} value before applying.`
+        return
+      }
       const apply = root.querySelector("[data-dictionary-builder-apply]")
       const message = dialog.querySelector("[data-dictionary-builder-message]")
       apply.disabled = true
       try {
-        const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshot.id)}/apply`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: root.querySelector("[data-dictionary-builder-mode]").value, selections }) })
+        const requestBody = { mode: root.querySelector("[data-dictionary-builder-mode]").value, selections }
+        const applySnapshot = (snapshotId) => fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshotId)}/apply`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody) })
+        let response = await applySnapshot(snapshot.id)
+        if (response.status === 404) {
+          if (message) message.textContent = "Preview expired after a runtime restart; rebuilding it with the current selections."
+          const previewResponse = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/preview`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ entry: readPayload(pane) }) })
+          const refreshedSnapshot = await previewResponse.json()
+          if (!previewResponse.ok || !refreshedSnapshot.ok) throw new Error(refreshedSnapshot.error || "Dictionary Builder preview refresh failed.")
+          response = await applySnapshot(refreshedSnapshot.id)
+        }
         const data = await response.json()
         if (!response.ok || !data.ok) throw new Error(data.error || "Dictionary Builder Apply failed.")
         message.textContent = data.appliedFields?.length ? `Applied ${data.appliedFields.join(", ")}.` : "No selected data changed this entry."
         if (typeof dialog.close === "function") dialog.close()
       } catch (error) { message.textContent = error.message || "Dictionary Builder Apply failed." } finally { apply.disabled = false }
     })
-    show("vietnamese")
+    show(activeTab)
+    if (!canApply) {
+      const message = dialog.querySelector("[data-dictionary-builder-message]")
+      if (message) message.textContent = "Preview is available for the unsaved canonical draft. Save the canonical Library entry before applying data."
+    }
     if (typeof dialog.showModal === "function") dialog.showModal()
     else dialog.setAttribute("open", "")
   }
@@ -680,7 +751,7 @@
       const pane = button.closest("[data-review-pane], [data-vocabulary-editor]")
       const word = pane?.querySelector('[data-vocabulary-field="english"]')?.value || ""
       const encoded = encodeURIComponent(word.trim())
-      const sourcePaths = { LD: `https://www.ldoceonline.com/dictionary/${encoded}`, OA: `https://www.oxfordlearnersdictionaries.com/definition/american_english/${encoded}`, OB: `https://www.oxfordlearnersdictionaries.com/definition/english/${encoded}`, BR: `https://www.britannica.com/dictionary/${encoded}`, MW: `https://www.merriam-webster.com/dictionary/${encoded}`, ET: `https://www.etymonline.com/search?q=${encoded}`, WK: `https://en.wiktionary.org/w/index.php?search=${encoded}`, CA: `https://dictionary.cambridge.org/dictionary/english/${encoded}`, TH: `https://www.merriam-webster.com/thesaurus/${encoded}`, WH: `https://www.wordhelp.com/dictionary/${encoded}`, GT: `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate`, GL: `https://www.google.com/search?q=define%3A${encoded}` }
+      const sourcePaths = { LD: `https://www.ldoceonline.com/dictionary/${encoded}`, OA: `https://www.oxfordlearnersdictionaries.com/definition/american_english/${encoded}`, OB: `https://www.oxfordlearnersdictionaries.com/definition/english/${encoded}`, BR: `https://www.britannica.com/dictionary/${encoded}`, MW: `https://www.merriam-webster.com/dictionary/${encoded}`, AP: `https://www.merriam-webster.com/dictionary/${encoded}`, ET: `https://www.etymonline.com/search?q=${encoded}`, WK: `https://en.wiktionary.org/w/index.php?search=${encoded}`, CA: `https://dictionary.cambridge.org/dictionary/english/${encoded}`, TH: `https://www.merriam-webster.com/thesaurus/${encoded}`, WH: `https://www.wordhelp.com/dictionary/${encoded}`, GT: `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate` }
       pane?.querySelectorAll("[data-dictionary-builder-source]").forEach((link) => { link.href = sourcePaths[link.dataset.dictionaryBuilderSource] || link.href })
       button.addEventListener("click", async () => {
         const pane = button.closest("[data-review-pane], [data-vocabulary-editor]")

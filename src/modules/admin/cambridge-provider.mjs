@@ -1,6 +1,7 @@
 import { load } from "cheerio"
 
 import { registerDictionaryProvider } from "./dictionary-providers.mjs"
+import { fetchWithExponentialBackoff } from "./provider-http.mjs"
 
 export const CAMBRIDGE_HOSTNAMES = new Set(["dictionary.cambridge.org"])
 export const CAMBRIDGE_BASE_URL = "https://dictionary.cambridge.org/dictionary/english/"
@@ -63,7 +64,7 @@ export async function previewCambridgeLibraryEntry(entry, fetchImpl = fetch) {
   if (!lookupWord) return { ok: false, available: true, message: "An English word is required for Cambridge preview; no Library data was changed." }
   const sourceUrl = validUrl(`${CAMBRIDGE_BASE_URL}${encodeURIComponent(lookupWord.replace(/\s+/gu, "-"))}`)
   let response
-  try { response = await fetchImpl(sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Cambridge-preview/1.0" }, redirect: "follow" }) } catch (error) { return { ok: false, available: false, message: `Cambridge is unavailable; no Library data was changed. ${error.message}` } }
+  try { response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Cambridge-preview/1.0" }, redirect: "follow" }) } catch (error) { return { ok: false, available: false, message: `Cambridge is unavailable; no Library data was changed. ${error.message}` } }
   if (!response.ok) return { ok: false, available: false, message: `Cambridge is unavailable (HTTP ${response.status || 503}); no Library data was changed.` }
   try { return parseCambridgeHtml(await boundedText(response), { sourceUrl: response.url || sourceUrl, lookupWord, partOfSpeech: text(entry?.partOfSpeech) }) } catch (error) { return { ok: false, available: false, message: `Cambridge is unavailable; no Library data was changed. ${error.message}` } }
 }

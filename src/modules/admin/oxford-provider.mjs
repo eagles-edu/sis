@@ -1,9 +1,11 @@
 import { load } from "cheerio"
 
 import { registerDictionaryProvider } from "./dictionary-providers.mjs"
+import { fetchWithExponentialBackoff } from "./provider-http.mjs"
 
 export const OXFORD_HOSTNAMES = new Set(["oxfordlearnersdictionaries.com", "www.oxfordlearnersdictionaries.com"])
 export const OXFORD_BASE_URL = "https://www.oxfordlearnersdictionaries.com/definition/american_english/"
+export const OXFORD_BRE_BASE_URL = "https://www.oxfordlearnersdictionaries.com/definition/english/"
 export const OXFORD_MAX_HTML_BYTES = 2 * 1024 * 1024
 
 function text(value) { return String(value == null ? "" : value).replace(/\s+/gu, " ").trim() }
@@ -12,7 +14,7 @@ function unique(values) { return [...new Set(values.map(text).filter(Boolean))] 
 function validOxfordUrl(value) {
   const parsed = new URL(value)
   if (parsed.protocol !== "https:" || !OXFORD_HOSTNAMES.has(parsed.hostname.toLowerCase())) throw new Error("Oxford URL host is not allowed")
-  if (!parsed.pathname.startsWith("/definition/american_english/")) throw new Error("Oxford URL path is not allowed")
+  if (!parsed.pathname.startsWith("/definition/american_english/") && !parsed.pathname.startsWith("/definition/english/")) throw new Error("Oxford URL path is not allowed")
   return parsed.toString()
 }
 
@@ -39,14 +41,59 @@ async function boundedResponseText(response) {
   return Buffer.concat(chunks).toString("utf8")
 }
 
-function audioUrl(node) {
-  const value = text(node.find(".sound[data-src-mp3]").first().attr("data-src-mp3"))
+function validAudioUrl(value) {
   if (!value) return ""
   try {
     const parsed = new URL(value)
     if (parsed.protocol !== "https:" || !OXFORD_HOSTNAMES.has(parsed.hostname.toLowerCase())) return ""
     return parsed.toString()
   } catch { return "" }
+}
+
+function audioSources(node) {
+  const sound = node.find(".sound").first()
+  return {
+    mp3: validAudioUrl(text(sound.attr("data-src-mp3"))),
+    ogg: validAudioUrl(text(sound.attr("data-src-ogg"))),
+  }
+}
+
+function audioUrl(node) {
+  return audioSources(node).mp3
+}
+
+function verbFormAudio(node) {
+  const formKeys = { root: "verbV1", thirdps: "verbV5", past: "verbV2", pastpart: "verbV3", prespart: "verbV4" }
+  const result = {}
+  node.find(".verb_forms_table tr.verb_form, [unbox=\"verbforms\"] .vp-g[form]").each((_, child) => {
+    const row = node.find(child)
+    const field = formKeys[text(row.attr("form"))]
+    const americanPronunciation = row.find(".phons_n_am").first()
+    const sources = audioSources(americanPronunciation.length ? americanPronunciation : row)
+    if (field && sources.mp3) result[field] = { us: sources.mp3, ogg: sources.ogg }
+  })
+  if (result.verbV2) {
+    result.verbV3 = {
+      us: result.verbV3?.us || result.verbV2.us,
+      ogg: result.verbV3?.ogg || result.verbV2.ogg,
+    }
+  }
+  return result
+}
+
+function verbForms(node) {
+  const formKeys = { root: "verbV1", thirdps: "verbV5", past: "verbV2", pastpart: "verbV3", prespart: "verbV4" }
+  const result = {}
+  node.find(".verb_forms_table tr.verb_form, [unbox=\"verbforms\"] .vp-g[form]").each((_, child) => {
+    const row = node.find(child)
+    const field = formKeys[text(row.attr("form"))]
+    const cell = row.find("td.verb_form, td.form").first()
+    const form = cell.length
+      ? text(cell.text())
+      : text(row.find(".vp").first().clone().find(".prefix").remove().end().text())
+    if (field && form) result[field] = form
+  })
+  return result
 }
 
 function parsePronunciation(node) {
@@ -73,7 +120,8 @@ function parseEntry(node, sourceUrl) {
     const sense = parseSense(node.find(child), index)
     if (sense.definition || sense.examples.length) senses.push(sense)
   })
-  return { headword, homonym: "", hyphenation: "", partOfSpeech, pronunciation: parsePronunciation(node), inflections: [], relatedTopics: [], audio: { uk: "", us: audioUrl(node) }, senses, sourceUrl }
+  const headwordAudio = audioSources(node)
+  return { headword, homonym: "", hyphenation: "", partOfSpeech, pronunciation: parsePronunciation(node), inflections: [], verbForms: verbForms(node), verbFormAudio: verbFormAudio(node), relatedTopics: [], audio: { uk: "", us: headwordAudio.mp3, ogg: headwordAudio.ogg }, senses, sourceUrl }
 }
 
 function italicizeLabels(value) {
@@ -121,6 +169,16 @@ function oxfordFields(fieldEntries, definitionEntries = fieldEntries) {
     if (transitive && intransitive) fields.verbTransitivity = "ambitransitive"
     else if (transitive) fields.verbTransitivity = "transitive"
     else if (intransitive) fields.verbTransitivity = "intransitive"
+    const forms = definitionEntries.find((entry) => Object.keys(entry.verbForms || {}).length)?.verbForms || {}
+    fields.verbForms = {
+      verbInfinitive: forms.verbV1 ? `to ${forms.verbV1}` : "",
+      verbV1: forms.verbV1 || "",
+      verbV2: forms.verbV2 || "",
+      verbV3: forms.verbV3 || "",
+      verbV4: forms.verbV4 || "",
+      verbV5: forms.verbV5 || "",
+    }
+    if (!Object.values(fields.verbForms).some(Boolean)) delete fields.verbForms
   }
   return fields
 }
@@ -154,14 +212,14 @@ export function parseOxfordHtml(html, { sourceUrl = "", lookupWord = "", partOfS
   return { ok: true, provider: "oxford", sourceUrl: normalizedSourceUrl, lookupWord: text(lookupWord), entries: parsedEntries, selectedEntries, fields: oxfordFields(selectedEntries, parsedEntries) }
 }
 
-export async function previewOxfordLibraryEntry(entry, fetchImpl = fetch) {
+async function previewOxfordByBase(entry, fetchImpl, baseUrl) {
   const lookupWord = text(entry?.english)
   if (!lookupWord) return { ok: false, available: true, message: "An English word is required for Oxford preview; no Library data was changed." }
   const slug = encodeURIComponent(lookupWord.replace(/\s+/gu, "-"))
-  const sourceUrl = validOxfordUrl(`${OXFORD_BASE_URL}${slug}?q=${encodeURIComponent(lookupWord)}`)
+  const sourceUrl = validOxfordUrl(`${baseUrl}${slug}?q=${encodeURIComponent(lookupWord)}`)
   let response
   try {
-    response = await fetchImpl(sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Oxford-preview/1.0" }, redirect: "follow" })
+    response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Oxford-preview/1.0" }, redirect: "follow" })
   } catch (error) { return { ok: false, available: false, message: `Oxford is unavailable; no Library data was changed. ${error.message}` } }
   if (!response.ok) return { ok: false, available: false, message: `Oxford is unavailable (HTTP ${response.status || 503}); no Library data was changed.` }
   let html
@@ -169,6 +227,14 @@ export async function previewOxfordLibraryEntry(entry, fetchImpl = fetch) {
   let finalUrl
   try { finalUrl = response.url ? validOxfordUrl(response.url) : sourceUrl } catch { finalUrl = sourceUrl }
   return parseOxfordHtml(html, { sourceUrl: finalUrl, lookupWord, partOfSpeech: text(entry?.partOfSpeech) })
+}
+
+export async function previewOxfordLibraryEntry(entry, fetchImpl = fetch) {
+  return previewOxfordByBase(entry, fetchImpl, OXFORD_BASE_URL)
+}
+
+export async function previewOxfordBreLibraryEntry(entry, fetchImpl = fetch) {
+  return previewOxfordByBase(entry, fetchImpl, OXFORD_BRE_BASE_URL)
 }
 
 export const oxfordProvider = registerDictionaryProvider({ key: "oxford", preview: previewOxfordLibraryEntry })

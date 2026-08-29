@@ -3,7 +3,8 @@
   const escapeHtml = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character]));
   const safeUid = (value) => String(value || "shared").replace(/[^A-Za-z0-9_-]/gu, "-");
   const option = (value, label = value, attributes = "") => `<option value="${escapeHtml(value)}" ${attributes}>${escapeHtml(label)}</option>`;
-  const select = (field, label, values, attributes = "", rowUid = "shared") => `<label class="vocabulary-pos-control">${escapeHtml(label)}<select name="vocabularyEsl-${escapeHtml(field)}-${safeUid(rowUid)}" data-vocabulary-esl-field="${escapeHtml(field)}" ${attributes}><option value="">Select</option>${values.map((value) => Array.isArray(value) ? option(value[0], value[1], value[2] || "") : option(value)).join("")}</select></label>`;
+  const selectedAttribute = (selected, value) => (Array.isArray(selected) ? selected.includes(value) : selected === value) ? "selected" : "";
+  const select = (field, label, values, attributes = "", rowUid = "shared", selected = "") => `<label class="vocabulary-pos-control">${escapeHtml(label)}<select name="vocabularyEsl-${escapeHtml(field)}-${safeUid(rowUid)}" data-vocabulary-esl-field="${escapeHtml(field)}" ${attributes}><option value="">Select</option>${values.map((value) => Array.isArray(value) ? option(value[0], value[1], `${value[2] || ""} ${selectedAttribute(selected, value[0])}`) : option(value, value, selectedAttribute(selected, value))).join("")}</select></label>`;
   const transitivityHelp = `<p class="vocabulary-transitivity-help"><strong>Types of transitivity</strong><br>Intransitive: no object needed; the thought is complete on its own (e.g., The baby sleeps.).<br>Transitive: takes an object; use this general choice when the exact subtype is not yet known.<br>Monotransitive: takes one direct object answering what? or whom? (e.g., She baked a cake.).<br>Ditransitive: takes both an indirect object and a direct object (e.g., He gave Mary a book.).<br>Ambitransitive: can be either transitive or intransitive depending on the sentence (e.g., He reads a book vs. He reads quietly.).</p>`;
   const grammarFields = ["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber"];
   const nounTypes = [["common", "Common"], ["proper", "Proper"], ["concrete", "Concrete"], ["abstract", "Abstract"], ["material", "Material"], ["collective", "Collective"], ["compound", "Compound"], ["possessive", "Possessive"]];
@@ -118,9 +119,10 @@
     const oxfordFill = includeOxford ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-oxford-fill" data-vocabulary-oxford-preview title="Preview Oxford Learner's Dictionaries American English definitions, grammar labels, and audio before applying selected fields." aria-label="Preview Oxford fields">Oxford</button>` : "";
     const britannicaFill = includeBritannica ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-britannica-fill" data-vocabulary-britannica-preview title="Preview all Britannica Dictionary parts of speech, subtypes, definitions, examples, synonyms, collocations, phrases, history, and APA citation before applying selected fields." aria-label="Preview Britannica fields">BR</button>` : "";
     const merriamWebsterFill = includeMerriamWebster ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-merriam-webster-fill" data-vocabulary-merriam-webster-preview title="Preview all Merriam-Webster.com Dictionary parts of speech, subtypes, definitions, examples, synonyms, collocations, phrases, history, and APA citation before applying selected fields." aria-label="Preview Merriam-Webster fields">MW</button>` : "";
-    const dictionaryBuilder = includeDictionaryBuilder ? `<button type="button" class="portal-button portal-button-blue-action" data-vocabulary-dictionary-builder title="Build one availability-aware, source-attributed Dictionary preview before applying selected data." aria-label="Open Dictionary Builder definition preview">Definition</button><p class="small" data-vocabulary-dictionary-builder-message aria-live="polite"></p>` : "";
+    const dictionaryBuilder = includeDictionaryBuilder ? `<button type="button" class="portal-button portal-button-blue-action" data-vocabulary-dictionary-builder title="Build one availability-aware, source-attributed Dictionary preview before applying selected data." aria-label="Open Dictionary Builder definition preview">Definition</button>` : "";
     const originAnalysis = includeOriginAnalysis ? `<button type="button" class="portal-button portal-button-amber-info" data-vocabulary-origin-analysis title="Review Etymonline and Merriam-Webster etymology evidence. This advisory review does not change any entry fields.">Origin</button>` : "";
-    const sourceActions = mwFill || ldoceFill || oxfordFill || britannicaFill || merriamWebsterFill || dictionaryBuilder || originAnalysis ? `<div class="vocabulary-source-actions">${dictionaryBuilder}${mwFill}${merriamWebsterFill}${britannicaFill}${originAnalysis}${ldoceFill}${oxfordFill}</div><p class="small" data-vocabulary-mw-message aria-live="polite"></p><p class="small" data-vocabulary-ldoce-message aria-live="polite"></p><p class="small" data-vocabulary-oxford-message aria-live="polite"></p><p class="small" data-vocabulary-britannica-message aria-live="polite"></p><p class="small" data-vocabulary-merriam-webster-message aria-live="polite"></p><p class="small" data-vocabulary-origin-analysis-message aria-live="polite"></p>${mwFill ? '<details data-vocabulary-mw-details hidden><summary>View complete MW data</summary><pre data-vocabulary-mw-json></pre></details>' : ""}` : "";
+    const sourceMessages = `<div class="vocabulary-source-messages"><p class="small" data-vocabulary-dictionary-builder-message aria-live="polite"></p><p class="small" data-vocabulary-mw-message aria-live="polite"></p><p class="small" data-vocabulary-ldoce-message aria-live="polite"></p><p class="small" data-vocabulary-oxford-message aria-live="polite"></p><p class="small" data-vocabulary-britannica-message aria-live="polite"></p><p class="small" data-vocabulary-merriam-webster-message aria-live="polite"></p><p class="small" data-vocabulary-origin-analysis-message aria-live="polite"></p></div>`;
+    const sourceActions = mwFill || ldoceFill || oxfordFill || britannicaFill || merriamWebsterFill || dictionaryBuilder || originAnalysis ? `${sourceMessages}<div class="vocabulary-source-actions">${dictionaryBuilder}${mwFill}${merriamWebsterFill}${britannicaFill}${originAnalysis}${ldoceFill}${oxfordFill}</div>${mwFill ? '<details data-vocabulary-mw-details hidden><summary>View complete MW data</summary><pre data-vocabulary-mw-json></pre></details>' : ""}` : "";
     const transitivityTools = includeTransitivityTools ? `<div class="vocabulary-transitivity-check"><button type="button" class="portal-button portal-button-blue-action" data-vocabulary-transitivity-check title="Compare the entered verb forms with the bundled corpus evidence. This check is advisory; saving remains allowed.">Check</button><button type="button" class="portal-button portal-button-blue-action" data-vocabulary-transitivity-autofill title="Suggest transitivity from the bundled corpus list. Review the suggestion before saving.">Auto-fill</button><p class="small" data-vocabulary-transitivity-message aria-live="polite"></p></div>` : "";
     return `<div class="vocabulary-pos-parameters" data-vocabulary-pos-parameters hidden>
       <div class="vocabulary-pos-controls" data-vocabulary-pos-controls></div>
@@ -133,7 +135,7 @@
   }
 
   function controlsFor(pos, rowUid, values = {}) {
-    if (pos === "noun") return [
+    if (pos === "noun" || pos === "proper noun") return [
       select("countability", "1. Countability", [["countable", "Countable"], ["uncountable", "Uncountable"], ["countable_and_uncountable", "Countable and uncountable"]], "", rowUid),
       select("physicalQuality", "2. Quality", [["concrete", "Concrete"], ["material", "Material"], ["abstract", "Abstract"]], "", rowUid),
       select("grammaticalNumber", "3. Number", [
@@ -165,8 +167,8 @@
     if (pos === "idiom") return select("grammarSubtype", "Idiom subtype", ["pure idioms", "binomial idioms", "partial idioms", "prepositional/verb-particle idioms"], "", rowUid);
     if (pos === "clause") return select("grammarSubtype", "Clause subtype", ["dependent", "independent"], "", rowUid);
     if (pos === "phrase") return select("grammarFamily", "Phrase group", ["grammatical phrases", "verbal phrases", "special phrases"], "", rowUid);
-    if (pos === "pronoun") return select("grammarFamily", "Pronoun subtype", ["personal", "possessive", "reflexive", "intensive", "indefinite", "demonstrative", "interrogative", "relative", "pronominal adjectives", "archaic"], "", rowUid);
-    if (pos === "determiner") return select("grammarFamily", "Determiner subtype", ["articles", "possessive", "numbers", "indefinite pronouns"], "", rowUid);
+    if (pos === "pronoun") return select("grammarFamilies", "Pronoun subtypes", ["personal", "possessive", "reflexive", "reciprocal", "intensive", "indefinite", "demonstrative", "interrogative", "relative", "pronominal adjectives", "archaic"], "multiple", rowUid, values.grammarFamilies || values.grammarFamily || []);
+    if (pos === "determiner") return select("grammarFamilies", "Determiner subtypes", ["articles", "possessive", "numbers", "indefinite pronouns", "demonstrative", "distributive", "quantifier", "interrogative", "relative", "ordinal", "cardinal"], "multiple", rowUid, values.grammarFamilies || values.grammarFamily || []);
     return "";
   }
 
@@ -178,10 +180,11 @@
       if (family === "special phrases") return select("grammarSubtype", "Phrase subtype", ["absolute", "appositive"], "", rowUid);
     }
     if (pos === "pronoun") {
-      if (family === "personal") return `${select("grammarSubtype", "Personal role", ["subject", "object"], "", rowUid)}${subtype ? number(["singular", "plural"]) : ""}`;
-      if (family === "possessive") return `${select("grammarSubtype", "Possessive role", ["adjective", "pronoun"], "", rowUid)}${subtype ? number(["singular", "plural"]) : ""}`;
-      if (["reflexive", "intensive", "demonstrative"].includes(family)) return number(["singular", "plural"]);
-      if (["indefinite", "interrogative", "relative", "archaic"].includes(family)) return number();
+      const families = Array.isArray(family) ? family : [family].filter(Boolean);
+      if (families.includes("personal")) return `${select("grammarSubtype", "Personal role", ["subject", "object"], "", rowUid)}${number(["singular", "plural"])}`;
+      if (families.includes("possessive")) return `${select("grammarSubtype", "Possessive role", ["adjective", "pronoun"], "", rowUid)}${number(["singular", "plural"])}`;
+      if (families.some((item) => ["reflexive", "reciprocal", "intensive", "demonstrative"].includes(item))) return number(["singular", "plural"]);
+      if (families.some((item) => ["indefinite", "interrogative", "relative", "archaic"].includes(item))) return number();
       if (family === "pronominal adjectives") {
         const choices = ["possessive adj", "demonstrative", "distributive", "pronominal"];
         const value = subtype;
@@ -190,11 +193,16 @@
       }
     }
     if (pos === "determiner") {
-      if (family === "articles") return number(["singular"]);
-      if (family === "possessive") return `${select("grammarSubtype", "Possessive role", ["pronouns", "adjectives"], "", rowUid)}${subtype ? number() : ""}`;
+      const families = Array.isArray(family) ? family : [family].filter(Boolean);
+      if (families.includes("articles")) return number(["singular"]);
+      if (families.includes("possessive")) return `${select("grammarSubtype", "Possessive role", ["pronouns", "adjectives"], "", rowUid)}${number()}`;
       return number();
     }
     return "";
+  }
+
+  function posControlsHtml(pos, rowUid, values = {}) {
+    return controlsFor(pos, rowUid, values) + dependentControls(pos, values.grammarFamilies || values.grammarFamily, values.grammarSubtype, rowUid);
   }
 
   function sync(row) {
@@ -203,21 +211,31 @@
     const controls = row?.querySelector("[data-vocabulary-pos-controls]");
     const forms = row?.querySelector("[data-vocabulary-verb-forms]");
     if (!surface || !controls) return;
-    const values = Object.fromEntries(grammarFields.concat(["countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "dualCountabilityUsage", "verbRegularity", "verbTransitivity", "displayVerbForm"]).map((field) => [field, row.querySelector(`[data-vocabulary-esl-field="${field}"]`)?.value || ""]));
+    const values = Object.fromEntries(grammarFields.concat(["grammarFamilies", "grammarSubtypes", "countability", "nounType", "nounNumber", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "dualCountabilityUsage", "verbRegularity", "verbTransitivity", "displayVerbForm"]).map((field) => {
+      const input = row.querySelector(`[data-vocabulary-esl-field="${field}"]`);
+      return [field, input?.multiple ? Array.from(input.selectedOptions).map((option) => option.value).filter(Boolean) : input?.value || ""];
+    }));
     values.properNounVariantShift = Boolean(row.querySelector('[data-vocabulary-esl-field="properNounVariantShift"]')?.checked);
-    const normalizedNoun = pos === "noun" ? nounState(values) : values;
+    const normalizedNoun = pos === "noun" || pos === "proper noun" ? nounState(values) : values;
     const rowUid = row?.querySelector('[name^="vocabularyPartOfSpeech-"]')?.name?.replace(/^vocabularyPartOfSpeech-/u, "") || "shared";
     const content = controlsFor(pos, rowUid, normalizedNoun);
     const hasTools = Boolean(surface.querySelector("[data-vocabulary-mw-preview], [data-vocabulary-dictionary-builder], [data-vocabulary-transitivity-check], [data-vocabulary-transitivity-autofill]"));
     surface.hidden = !content && !hasTools;
-    controls.innerHTML = content + dependentControls(pos, values.grammarFamily, values.grammarSubtype, rowUid);
+    controls.innerHTML = content + dependentControls(pos, values.grammarFamilies || values.grammarFamily, values.grammarSubtype, rowUid);
     forms.hidden = pos !== "verb";
     Object.entries(normalizedNoun).forEach(([field, value]) => { const input = row.querySelector(`[data-vocabulary-esl-field="${field}"]`); if (!input) return; if (input.type === "checkbox") input.checked = Boolean(value); else input.value = value; });
     if (pos === "verb" && forms.children.length === 0) forms.innerHTML = parametersHtml("").match(/<div class="vocabulary-verb-forms"[\s\S]*?<\/div>/)?.[0] || "";
   }
 
   function classification(row) {
-    return Object.fromEntries(grammarFields.map((field) => [field, String(row.querySelector(`[data-vocabulary-esl-field="${field}"]`)?.value || "").trim()]).filter(([, value]) => value));
+    const result = {};
+    for (const field of grammarFields.concat(["grammarFamilies", "grammarSubtypes"])) {
+      const input = row.querySelector(`[data-vocabulary-esl-field="${field}"]`);
+      const value = input?.multiple ? Array.from(input.selectedOptions).map((option) => option.value).filter(Boolean) : String(input?.value || "").trim();
+      if ((Array.isArray(value) && value.length) || (!Array.isArray(value) && value)) result[field] = value;
+    }
+    if (!result.grammarFamily && Array.isArray(result.grammarFamilies) && result.grammarFamilies.length) result.grammarFamily = result.grammarFamilies[0];
+    return result;
   }
 
   function originMetadata(row) {
@@ -263,9 +281,10 @@
     const classificationValue = data.grammarClassification || {};
     sync(row);
     const inputFor = (field) => row.querySelector(`[data-vocabulary-esl-field="${field}"], [data-vocabulary-field="${field}"], [data-vocabulary-origin-field="${field}"]`);
-    const set = (field, value) => { const input = inputFor(field); if (!input) return; if (input.type === "checkbox") input.checked = Boolean(value); else input.value = String(value || ""); };
+    const set = (field, value) => { const input = inputFor(field); if (!input) return; if (input.type === "checkbox") input.checked = Boolean(value); else if (input.multiple) Array.from(input.options).forEach((option) => { option.selected = Array.isArray(value) ? value.includes(option.value) : option.value === value; }); else input.value = String(value || ""); };
     set("partOfSpeech", data.partOfSpeech);
     sync(row);
+    set("grammarFamilies", classificationValue.grammarFamilies || (classificationValue.grammarFamily ? [classificationValue.grammarFamily] : []));
     set("grammarFamily", classificationValue.grammarFamily);
     sync(row);
     set("grammarSubtype", classificationValue.grammarSubtype);
@@ -305,9 +324,9 @@
     if (label === "ET") return `https://www.etymonline.com/search?q=${encoded}`;
     if (label === "WK") return `https://en.wiktionary.org/w/index.php?search=${encoded}`;
     if (label === "MW") return `https://www.merriam-webster.com/dictionary/${encoded}`;
+    if (label === "AP") return `https://www.merriam-webster.com/dictionary/${encoded}`;
     if (label === "TH") return `https://www.merriam-webster.com/thesaurus/${encoded}`;
     if (label === "CA") return `https://dictionary.cambridge.org/dictionary/english/${encoded}`;
-    if (label === "GL") return `https://www.google.com/search?q=define+${encoded}`;
     return "";
   };
 
@@ -323,7 +342,7 @@
     WH: { text: "WH", title: "WordHelp syllables", blue: false },
     GT: { text: "GT", title: "Google Translate", blue: false },
     CA: { text: "CA", title: "Cambridge English Dictionary", blue: true },
-    GL: { text: "GL", title: "Google definition search", blue: true },
+    AP: { text: "AP", title: "Merriam-Webster API verb forms", blue: false },
   });
 
   function insertEtymologyDeterministically(definition, paragraph) {
@@ -845,7 +864,7 @@
   function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false, includeLdoce = false, includeOxford = false, includeBritannica = false, includeMerriamWebster = false, includeDictionaryBuilder = false, includeTransitivityTools = false, includeOriginAnalysis = false, originLookupPath = "", lookupButtons = null } = {}) {
     const uid = safeUid(rowUid);
     const options = POS.map((part) => `<option value="${part}">${part}</option>`).join("");
-    const lookupLabels = Array.isArray(lookupButtons) ? lookupButtons : ["LD", "OA", "OB", "BR", "MW", "ET", "WK", "CA", "TH", "WH", "GT", "GL"];
+    const lookupLabels = Array.isArray(lookupButtons) ? lookupButtons : ["LD", "OA", "OB", "BR", "MW", "AP", "ET", "WK", "CA", "TH", "WH", "GT"];
     const lookupHtml = lookupLabels.map((label) => {
       const key = String(label || "").trim();
       const lookup = LOOKUP_BUTTONS[key];
@@ -965,6 +984,7 @@
     htmlToDefinitionText,
     canonicalizeSyllabication,
     parametersHtml,
+    posControlsHtml,
     sync,
     hydrate,
     classification,

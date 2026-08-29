@@ -36,15 +36,24 @@
     try { status.textContent = "Saving provider controls…"; matrix = await request(`${api}/settings`, { method: "PUT", body: JSON.stringify({ providers, datums }) }); render(); status.textContent = "Provider controls saved." } catch (error) { status.textContent = error.message }
   })
   const themeButton = document.querySelector("#adminThemeToggle")
+  const themeIcon = document.querySelector("#adminThemeToggleIcon")
   const syncTheme = (theme) => {
     const dark = theme === "dark"
     themeButton?.setAttribute("aria-pressed", String(dark))
     themeButton?.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme")
-    if (themeButton) themeButton.textContent = dark ? "Light" : "Theme"
+    themeIcon?.setAttribute("name", dark ? "theme-sun" : "theme-moon")
   }
   window.addEventListener("sis-theme-change", (event) => syncTheme(event.detail?.theme || document.documentElement.dataset.theme))
   themeButton?.addEventListener("click", () => syncTheme(window.SIS_PORTAL_THEME?.toggleTheme?.("light") || "light"))
   syncTheme(window.SIS_PORTAL_THEME?.getTheme?.("light") || "light")
+  const zoom = (delta) => {
+    const current = Number.parseInt(document.documentElement.dataset.portalTextZoom || "100", 10) || 100
+    document.documentElement.dataset.portalTextZoom = String(Math.max(85, Math.min(130, current + delta)))
+    document.documentElement.style.fontSize = `${document.documentElement.dataset.portalTextZoom}%`
+  }
+  document.getElementById("adminTextZoomDownBtn")?.addEventListener("click", () => zoom(-5))
+  document.getElementById("adminTextZoomUpBtn")?.addEventListener("click", () => zoom(5))
+  document.getElementById("adminTextZoomResetBtn")?.addEventListener("click", () => { document.documentElement.dataset.portalTextZoom = "100"; document.documentElement.style.fontSize = "" })
   sourceFilter.addEventListener("change", render); posFilter.addEventListener("change", render)
   load().catch((error) => { status.textContent = error.message })
 })()

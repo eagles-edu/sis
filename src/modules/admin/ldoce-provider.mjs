@@ -1,6 +1,7 @@
 import { load } from "cheerio"
 
 import { registerDictionaryProvider } from "./dictionary-providers.mjs"
+import { fetchWithExponentialBackoff } from "./provider-http.mjs"
 
 export const LDOCE_HOSTNAMES = new Set(["ldoceonline.com", "www.ldoceonline.com"])
 export const LDOCE_BASE_URL = "https://www.ldoceonline.com/dictionary/"
@@ -219,7 +220,7 @@ export async function previewLdoceLibraryEntry(entry, fetchImpl = fetch) {
   const sourceUrl = validLdoceUrl(`${LDOCE_BASE_URL}${encodeURIComponent(lookupWord)}`)
   let response
   try {
-    response = await fetchImpl(sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-LDOCE-preview/1.0" }, redirect: "follow" })
+    response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-LDOCE-preview/1.0" }, redirect: "follow" })
   } catch (error) {
     return { ok: false, available: false, message: `LDOCE is unavailable; no Library data was changed. ${error.message}` }
   }

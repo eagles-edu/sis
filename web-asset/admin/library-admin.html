@@ -114,6 +114,25 @@
             title="Create canonical Library entries, preserve provenance, and archive migrated New Words."
             aria-label="Run legacy cutover">Cutover</button></div>
         <p id="libraryAdminStatus" class="small" aria-live="polite">Loading Library…</p>
+        <section class="library-admin-add-surface" aria-labelledby="libraryAdminAddTitle">
+          <div class="section-head">
+            <h2 id="libraryAdminAddTitle">Add Library words</h2>
+            <p class="small">Create one or five complete vocabulary rows, then submit them to the Library review queue.</p>
+          </div>
+          <div id="libraryAdminNewWordsRows" class="news-vocabulary-rows vocabulary-edit-surface"></div>
+          <div class="library-admin-actions library-admin-add-actions">
+            <button id="libraryAdminAddOneBtn" type="button" class="portal-button portal-button-primary"
+              title="Add one complete vocabulary row to the Library submission form"
+              aria-label="Add one complete vocabulary row to the Library submission form">Add Word</button>
+            <button id="libraryAdminAddFiveBtn" type="button" class="portal-button portal-button-primary"
+              title="Add five complete vocabulary rows to the Library submission form"
+              aria-label="Add five complete vocabulary rows to the Library submission form">Add Five</button>
+            <button id="libraryAdminSubmitWordsBtn" type="button" class="portal-button portal-button-affirm"
+              title="Submit completed vocabulary rows to the Library review queue"
+              aria-label="Submit completed vocabulary rows to the Library review queue">Submit to Review</button>
+          </div>
+          <p id="libraryAdminNewWordsStatus" class="small" aria-live="polite"></p>
+        </section>
         <div id="libraryAdminResults" class="library-admin-results"></div>
         <nav id="libraryAdminPagination" class="library-pagination" aria-label="Library pages" hidden></nav>
         <section id="libraryApprovedEditor" class="panel library-review-workspace" data-surface-role="panel"
@@ -169,9 +188,10 @@
       </section>
       <section class="content library-admin-workbench" data-surface-role="content" aria-labelledby="libraryReferenceTitle">
         <div class="section-head"><h2 id="libraryReferenceTitle">Reference lists</h2><p class="small">Admin-managed lists are separate from Library entries.</p></div>
-        <form id="libraryReferenceFilters" class="library-admin-toolbar"><label>List<select id="libraryReferenceCatalog"></select></label><label>Search<input id="libraryReferenceSearch" type="search" placeholder="Term or subtype"></label><label>Subtype<input id="libraryReferenceSubtype" type="search" placeholder="Optional subtype"></label><button type="submit" class="portal-button portal-button-blue-action">Apply</button></form>
+        <form id="libraryReferenceFilters" class="library-admin-toolbar"><label>List<select id="libraryReferenceCatalog"></select></label><label>Search<input id="libraryReferenceSearch" type="search" placeholder="Term or subtype"></label><label>Subtype<input id="libraryReferenceSubtype" type="search" placeholder="Optional subtype"></label><label>Sort by<select id="libraryReferenceSort"></select></label><label>Direction<select id="libraryReferenceDirection"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label><label>Rows per page<select id="libraryReferencePageSize"><option value="10">10</option><option value="25" selected>25</option><option value="50">50</option><option value="100">100</option></select></label><button type="submit" class="portal-button portal-button-blue-action">Apply</button></form>
+        <div id="libraryReferenceFacetFilters" class="library-reference-facet-filters" aria-label="Important column filters"></div>
         <div class="library-admin-actions"><label class="portal-button portal-button-neutral-action">Import<input id="libraryReferenceFile" type="file" accept=".xlsx,.ods,.csv" hidden></label><button id="libraryReferencePreviewBtn" type="button" class="portal-button portal-button-blue-action">Preview</button><button id="libraryReferenceImportBtn" type="button" class="portal-button portal-button-affirm" disabled>Import</button><button id="libraryReferenceExportXlsxBtn" type="button" class="portal-button portal-button-neutral-action">XLSX</button><button id="libraryReferenceExportOdsBtn" type="button" class="portal-button portal-button-neutral-action">ODS</button><button id="libraryReferenceExportCsvBtn" type="button" class="portal-button portal-button-neutral-action">CSV</button></div>
-        <p id="libraryReferenceStatus" class="small" aria-live="polite">Loading reference catalogs…</p><div id="libraryReferenceRows" class="table-scroll-wrap"></div>
+        <p id="libraryReferenceStatus" class="small" aria-live="polite">Loading reference catalogs…</p><div id="libraryReferenceRows" class="table-scroll-wrap"></div><nav id="libraryReferencePagination" class="library-pagination" aria-label="Reference list pages" hidden></nav>
       </section>
     </main>
     <section class="content portal-prefooter" aria-label="Runtime environment"><span class="env-badge"
@@ -318,6 +338,53 @@
       const label = (field) => field.split(".").pop().replace(/([A-Z])/g, " $1").replace(/^./u, (c) => c.toUpperCase());
       const json = async (path, options = {}) => { const response = await fetch(`${apiRoot}${path}`, { credentials: "include", ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Library request failed"); return data; };
       let entries = new Map();
+      let libraryNewWordSequence = 0;
+      const libraryNewWordsRows = document.getElementById("libraryAdminNewWordsRows");
+      const libraryNewWordsStatus = document.getElementById("libraryAdminNewWordsStatus");
+      function bindLibraryNewWordRow(row) {
+        if (!row) return;
+        row.addEventListener("change", (event) => {
+          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) window.SIS_VOCABULARY_ESL.sync(row);
+        });
+        row.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => row.remove());
+        window.SIS_VOCABULARY_ESL.bindLookupButtons(row);
+        window.SIS_VOCABULARY_ESL.bindDefinitionAutosize(row);
+      }
+      function addLibraryNewWords(count = 1) {
+        const amount = Math.max(1, Math.min(5, Number(count) || 1));
+        for (let index = 0; index < amount; index += 1) {
+          libraryNewWordSequence += 1;
+          libraryNewWordsRows.insertAdjacentHTML("beforeend", window.SIS_VOCABULARY_ESL.editorRowHtml(`library-new-${libraryNewWordSequence}`, {
+            index: libraryNewWordSequence,
+            removable: true,
+            includeDictionaryBuilder: true,
+            includeTransitivityTools: true,
+            includeOriginAnalysis: true,
+            originLookupPath: `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library/etymonline`,
+          }));
+          bindLibraryNewWordRow(libraryNewWordsRows.lastElementChild);
+        }
+      }
+      async function submitLibraryNewWords() {
+        const rows = [...libraryNewWordsRows.querySelectorAll("[data-news-vocabulary-row]")];
+        if (!rows.length) { libraryNewWordsStatus.textContent = "Add at least one word first."; return; }
+        const payloads = rows.map((row) => window.SIS_VOCABULARY_ESL.readEditorEntry(row, {}));
+        const incomplete = payloads.findIndex((entry) => !entry.english || !entry.partOfSpeech || !entry.vietnamese || !entry.syllabication || !entry.definition);
+        if (incomplete >= 0) { libraryNewWordsStatus.textContent = `Complete every required field in row ${incomplete + 1} before submitting.`; return; }
+        const submitButton = document.getElementById("libraryAdminSubmitWordsBtn");
+        submitButton.disabled = true;
+        libraryNewWordsStatus.textContent = "Submitting Library words…";
+        try {
+          for (const entry of payloads) await json("/contributions", { method: "POST", body: JSON.stringify({ entry }) });
+          libraryNewWordsRows.replaceChildren();
+          libraryNewWordsStatus.textContent = `${payloads.length} word${payloads.length === 1 ? "" : "s"} submitted to the Library review queue.`;
+          await loadApproved();
+        } catch (error) {
+          libraryNewWordsStatus.textContent = error.message;
+        } finally {
+          submitButton.disabled = false;
+        }
+      }
       const flatHtml = (entry) => window.SIS_VOCABULARY_ESL.flatEntryHtml(entry, { editClass: "library-admin-flat-edit", editAttributes: `data-approved-edit="${esc(entry.id)}"` });
       function enhanceAccordions() {
         document.querySelectorAll(".library-admin-entry").forEach((accordion) => {
@@ -385,6 +452,9 @@
       }
       document.getElementById("libraryAdminResults")?.addEventListener("click", (event) => { const button = event.target.closest("[data-approved-edit]"); if (button) editEntry(entries.get(button.dataset.approvedEdit)); });
       document.getElementById("libraryAdminFilters")?.addEventListener("submit", (event) => { event.preventDefault(); approvedPage = 1; loadApproved().catch((error) => { document.getElementById("libraryAdminStatus").textContent = error.message; }); });
+      document.getElementById("libraryAdminAddOneBtn")?.addEventListener("click", () => addLibraryNewWords(1));
+      document.getElementById("libraryAdminAddFiveBtn")?.addEventListener("click", () => addLibraryNewWords(5));
+      document.getElementById("libraryAdminSubmitWordsBtn")?.addEventListener("click", () => submitLibraryNewWords());
       setTimeout(() => loadApproved().catch(() => { }), 250);
     })();
   </script>
@@ -454,6 +524,7 @@
       [["libraryReferenceExportXlsxBtn", "xlsx"], ["libraryReferenceExportOdsBtn", "ods"], ["libraryReferenceExportCsvBtn", "csv"]].forEach(([id, format]) => document.getElementById(id).addEventListener("click", () => { window.location.assign(`${root}/${encodeURIComponent(selected())}/export?format=${format}`); }));
     })();
   </script>
+  <script src="/web-asset/admin/library-reference-catalogs.js" defer></script>
   <script src="/web-asset/admin/library-review-workbench.js" defer></script>
   <script src="/web-asset/admin/admin-b612-mono-loader.js" defer></script>
 </body>

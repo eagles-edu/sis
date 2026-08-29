@@ -4314,7 +4314,7 @@
           removable,
           actionsHtml: newWordMenuActions,
           originLookupPath: `${STUDENT_API_PREFIX}/library/etymonline`,
-          lookupButtons: ["LD", "OA", "OB", "BR", "MW", "ET", "WK", "CA", "TH", "WH", "GT", "GL"],
+          lookupButtons: ["LD", "OA", "OB", "BR", "MW", "AP", "ET", "WK", "CA", "TH", "WH", "GT"],
         }) || "";
       }
 

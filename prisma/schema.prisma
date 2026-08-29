@@ -754,6 +754,7 @@ model LibraryMediaAsset {
   entry       LibraryEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
   provider    String
   dialect     String
+  slot        String   @default("headword")
   sourceUrl   String
   storagePath String
   mimeType    String
@@ -764,7 +765,7 @@ model LibraryMediaAsset {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  @@unique([entryId, provider, dialect])
+  @@unique([entryId, provider, dialect, slot])
   @@index([provider, dialect, createdAt])
   @@index([sha256])
   @@schema("library")

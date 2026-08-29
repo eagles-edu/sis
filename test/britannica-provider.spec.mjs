@@ -35,7 +35,12 @@ test("Britannica parser extracts the live dictionary HTML shape", () => {
   assert.match(result.fields.definition, /- They threatened the shopkeeper\./u)
   assert.match(result.fields.definition, /\*\*Antonyms:\*\*\n- protect/u)
   assert.match(result.fields.definition, /\*\*More Examples:\*\*\n- She threatened to leave\./u)
-  assert.match(result.fields.definition, /\*\*Recent Examples on the Web:\*\*\n- The storm threatens the coast\./u)
+  assert.doesNotMatch(result.fields.definition, /Recent Examples on the Web/u)
+})
+
+test("Britannica parser resolves the US popup player to its preferred MP3", () => {
+  const result = parseBritannicaHtml(`<!doctype html><main><div class="entry"><div class="hw_d"><span class="hw_txt">transact</span><a class="play_pron" data-lang="en_us" data-dir="t" data-file="transa02"></a><span class="fl">verb</span></div><div class="sense"><span class="def_text">to do business</span></div></div></main>`, { sourceUrl: "https://www.britannica.com/dictionary/transact", lookupWord: "transact" })
+  assert.equal(result.entries[0].audio.us, "https://media.merriam-webster.com/audio/prons/en/us/mp3/t/transa02.mp3")
 })
 
 test("Britannica preview fails closed for an access challenge and redacts metadata", async () => {

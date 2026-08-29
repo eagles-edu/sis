@@ -54,7 +54,7 @@ import {
   submitLibraryContribution,
   updateLibraryEntry,
 } from "../src/modules/admin/library-corpus.mjs"
-import { getDictionaryBuilderScoringMatrix, previewDictionaryBuilder, readDictionaryBuilderSnapshot, updateDictionaryBuilderScoringSettings } from "../src/modules/admin/dictionary-builder.mjs"
+import { getDictionaryBuilderScoringMatrix, previewDictionaryBuilder, readDictionaryBuilderSnapshot, retryDictionaryBuilderSnapshot, updateDictionaryBuilderScoringSettings } from "../src/modules/admin/dictionary-builder.mjs"
 import { previewLdoceLibraryEntry, sanitizeLdocePreview } from "../src/modules/admin/ldoce-provider.mjs"
 import { previewOxfordLibraryEntry, sanitizeOxfordPreview } from "../src/modules/admin/oxford-provider.mjs"
 import { previewBritannicaLibraryEntry, sanitizeBritannicaPreview } from "../src/modules/admin/britannica-provider.mjs"
@@ -354,6 +354,7 @@ const ADMIN_LIBRARY_MERRIAM_WEBSTER_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex
 const ADMIN_LIBRARY_MERRIAM_WEBSTER_APPLY_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/merriam-webster-apply$`)
 const ADMIN_LIBRARY_DICTIONARY_BUILDER_PREVIEW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/dictionary-builder/preview$`)
 const ADMIN_LIBRARY_DICTIONARY_BUILDER_SNAPSHOT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/dictionary-builder/previews/([^/]+)$`)
+const ADMIN_LIBRARY_DICTIONARY_BUILDER_RETRY_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/dictionary-builder/previews/([^/]+)/retry$`)
 const ADMIN_LIBRARY_DICTIONARY_BUILDER_APPLY_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/dictionary-builder/previews/([^/]+)/apply$`)
 const ADMIN_LIBRARY_MEDIA_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/media/([^/]+)$`)
 const ADMIN_LIBRARY_ORIGIN_ANALYSIS_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_LIBRARY_API_PATH)}/entries/([^/]+)/origin-analysis$`)
@@ -2156,14 +2157,20 @@ function buildXlsxFromPayload(payload = {}) {
 
 function sendReferenceCatalogFile(response, catalogKey, rows, requestedFormat = "xlsx") {
   const format = ["xlsx", "ods", "csv"].includes(normalizeLower(requestedFormat)) ? normalizeLower(requestedFormat) : "xlsx"
-  const worksheet = XLSX.utils.json_to_sheet(rows)
+  const catalog = REFERENCE_CATALOGS[catalogKey] || { columns: Object.keys(rows[0] || {}) }
+  const columns = [...new Set(["term", "partOfSpeech", "subtype", ...catalog.columns, "editorialStatus"])].filter((column) => !column.toLowerCase().startsWith("source") && (rows.some((row) => Object.prototype.hasOwnProperty.call(row, column)) || catalog.columns.includes(column)))
+  const labels = columns.map((column) => column.replace(/([A-Z])/gu, " $1").replace(/_/gu, " ").replace(/^./u, (character) => character.toUpperCase()))
+  const worksheet = XLSX.utils.json_to_sheet(rows.map((row) => Object.fromEntries(columns.map((column) => [column, row[column] ?? ""]))), { header: columns })
+  XLSX.utils.sheet_add_aoa(worksheet, [labels], { origin: "A1" })
+  worksheet["!cols"] = labels.map((header, index) => ({ wch: Math.min(42, Math.max(header.length + 2, ...rows.slice(0, 200).map((row) => String(row[columns[index]] ?? "").length + 2))) }))
   const workbook = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(workbook, worksheet, normalizeWorksheetName(catalogKey, "Reference"))
+  XLSX.utils.book_append_sheet(workbook, worksheet, normalizeWorksheetName(catalog.label || catalogKey, "Reference"))
   const buffer = XLSX.write(workbook, { bookType: format, type: "buffer" })
   const contentType = format === "csv" ? "text/csv; charset=utf-8" : format === "ods" ? "application/vnd.oasis.opendocument.spreadsheet" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   response.writeHead(200, { "Content-Type": contentType, "Content-Disposition": `attachment; filename="${catalogKey}.${format}"`, "Cache-Control": "no-store", "Content-Length": String(buffer.length) })
   response.end(buffer)
 }
+
 
 function parseDelimitedRows(text, delimiter) {
   const rows = []
@@ -6855,10 +6862,28 @@ async function handleApiRequest(request, response, pathname, url) {
   if (dictionaryBuilderPreviewMatch && method === "POST") {
     if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
     const payload = await parseBody(request)
-    const stored = await getLibraryEntry(decodeURIComponent(dictionaryBuilderPreviewMatch[1]))
-    const entry = normalizeText(payload?.entry?.english) ? { ...stored, ...payload.entry, id: stored?.id } : stored
+    const sourceId = decodeURIComponent(dictionaryBuilderPreviewMatch[1])
+    const stored = sourceId === "new-canonical" ? null : await getLibraryEntry(sourceId)
+    const entry = normalizeText(payload?.entry?.english) ? { ...(stored || {}), ...payload.entry, id: stored?.id || "" } : stored
     if (!entry) { const error = new Error("Library entry was not found"); error.statusCode = 404; throw error }
     sendJson(response, 200, { ok: true, ...(await previewDictionaryBuilder(entry, { ownerKey: dictionaryBuilderOwnerKey })) })
+    return true
+  }
+  const dictionaryBuilderRetryMatch = pathname.match(ADMIN_LIBRARY_DICTIONARY_BUILDER_RETRY_PATH_RE)
+  if (dictionaryBuilderRetryMatch && method === "POST") {
+    if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const payload = await parseBody(request)
+    const entryId = decodeURIComponent(dictionaryBuilderRetryMatch[1])
+    const stored = entryId === "new-canonical" ? null : await getLibraryEntry(entryId)
+    const entry = normalizeText(payload?.entry?.english) ? { ...(stored || {}), ...payload.entry, id: stored?.id || "" } : stored
+    if (!entry) { const error = new Error("Library entry was not found"); error.statusCode = 404; throw error }
+    const snapshot = await retryDictionaryBuilderSnapshot(
+      decodeURIComponent(dictionaryBuilderRetryMatch[2]),
+      entry,
+      { ownerKey: dictionaryBuilderOwnerKey, provider: payload?.provider },
+    )
+    if (!snapshot) { const error = new Error("Dictionary Builder preview or challenged provider was not found"); error.statusCode = 404; throw error }
+    sendJson(response, 200, { ok: true, ...snapshot })
     return true
   }
   const dictionaryBuilderSnapshotMatch = pathname.match(ADMIN_LIBRARY_DICTIONARY_BUILDER_SNAPSHOT_PATH_RE)
@@ -6872,8 +6897,10 @@ async function handleApiRequest(request, response, pathname, url) {
   const dictionaryBuilderApplyMatch = pathname.match(ADMIN_LIBRARY_DICTIONARY_BUILDER_APPLY_PATH_RE)
   if (dictionaryBuilderApplyMatch && method === "POST") {
     if (normalizeRoleName(session?.role) !== "admin") { const error = new Error("Forbidden"); error.statusCode = 403; throw error }
+    const entryId = decodeURIComponent(dictionaryBuilderApplyMatch[1])
+    if (entryId === "new-canonical") { const error = new Error("Save the canonical Library entry before applying Dictionary Builder data"); error.statusCode = 409; throw error }
     const payload = await parseBody(request)
-    sendJson(response, 200, await applyDictionaryBuilderSnapshot(decodeURIComponent(dictionaryBuilderApplyMatch[1]), { name: session.username, role: session.role }, { ...payload, snapshotId: decodeURIComponent(dictionaryBuilderApplyMatch[2]) }, { ownerKey: dictionaryBuilderOwnerKey }))
+    sendJson(response, 200, await applyDictionaryBuilderSnapshot(entryId, { name: session.username, role: session.role }, { ...payload, snapshotId: decodeURIComponent(dictionaryBuilderApplyMatch[2]) }, { ownerKey: dictionaryBuilderOwnerKey }))
     return true
   }
   const entryMatch = pathname.match(ADMIN_LIBRARY_ENTRIES_PATH_RE)

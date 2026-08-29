@@ -53,6 +53,121 @@ test("MW Dictionary preview falls back to the Collegiate API after browser acces
   }
 })
 
+test("Dictionary Builder Apply maps the selected syllabication into the canonical entry save", async () => {
+  const { DICTIONARY_BUILDER_DATUMS, previewDictionaryBuilder } = await import("../src/modules/admin/dictionary-builder.mjs")
+  const { applyDictionaryBuilderSnapshot } = await import("../src/modules/admin/library-corpus.mjs")
+  const entry = { id: "library-language", english: "language", partOfSpeech: "noun", syllabication: null, definition: "", originReferences: null }
+  const calls = new Map()
+  const preview = (provider, syllabication = null) => {
+    const count = (calls.get(provider) || 0) + 1
+    calls.set(provider, count)
+    const available = syllabication && (provider !== "ldoce" || count > 1)
+    return {
+      provider,
+      status: available ? "available" : "unavailable",
+      sourceUrl: `https://example.test/${provider}`,
+      fields: available ? { syllabication } : {},
+      entries: [],
+      media: [],
+      datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: available && ["syllabication", "syllableCount"].includes(datum) ? "available" : "not_offered" }])),
+    }
+  }
+  const fetcher = {
+    ldoce: async () => preview("ldoce", "lan-guage"),
+    merriam_webster_api: async () => preview("merriam_webster_api"),
+    merriam_webster_thesaurus: async () => preview("merriam_webster_thesaurus"),
+    google_translate: async () => preview("google_translate"),
+    wordhelp: async () => preview("wordhelp", "LAN-guage"),
+  }
+  const rankedSourcesByDatum = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, datum === "syllabication" ? [{ provider: "ldoce", score: 99 }] : []]))
+  const snapshot = await previewDictionaryBuilder(entry, { ownerKey: "save-test", fetcher, rankedSources: [{ provider: "ldoce", score: 99 }], rankedSourcesByDatum })
+  assert.ok(snapshot.sourceOrder.includes("wordhelp"))
+  const updates = []
+  const client = {
+    libraryEntry: {
+      findUnique: async () => entry,
+    },
+    $transaction: async (callback) => callback({
+      libraryEntry: { update: async ({ data }) => { updates.push(data); return { ...entry, ...data } } },
+      libraryEntryRevision: { create: async () => ({}) },
+      dictionaryProviderSuitabilityMetric: { upsert: async () => ({}) },
+    }),
+  }
+  const result = await applyDictionaryBuilderSnapshot(entry.id, { name: "Tester", role: "admin" }, {
+    snapshotId: snapshot.id,
+    mode: "fill_missing",
+    selections: { syllabication: { provider: "wordhelp", value: "LAN-guage" } },
+  }, { ownerKey: "save-test", clientOverride: client })
+  assert.equal(result.ok, true)
+  assert.equal(result.entry.syllabication, "lán-guage")
+  assert.ok(result.appliedFields.includes("syllabication"))
+  assert.equal(updates.length, 1)
+  assert.equal(updates[0].syllabication, "lán-guage")
+})
+
+test("Dictionary Builder Apply carries every formatted definition datum into the canonical entry", async () => {
+  const { DICTIONARY_BUILDER_DATUMS, previewDictionaryBuilder } = await import("../src/modules/admin/dictionary-builder.mjs")
+  const { applyDictionaryBuilderSnapshot } = await import("../src/modules/admin/library-corpus.mjs")
+  const entry = { id: "commend-entry", english: "commend", partOfSpeech: "verb", definition: "", originReferences: null }
+  const fields = {
+    definition: "to praise someone or something, especially publicly",
+    grammarClassification: { grammarFamily: "action", grammarSubtype: "regular", grammarDetail: "transitive (general)" },
+    verbForms: { verbInfinitive: "to commend", verbV1: "commend", verbV2: "commended", verbV3: "commended", verbV4: "commending", verbV5: "commends" },
+    stems: "commend\ncommended\ncommending\ncommends",
+    synonymsAntonyms: "Synonyms:\npraise\napplaud\n\nAntonyms:\ncriticize",
+    examples: "The report commended the team for its careful work.",
+    firstKnownUse: "15th century",
+    originPath: "Middle English, from Latin commendare",
+    etymology: "Middle English, from Latin commendare",
+  }
+  const datumStatus = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: ["definition", "grammarClassification", "verbForms", "stems", "synonymsAntonyms", "examples", "firstKnownUse", "originPath", "etymology", "worksCited"].includes(datum) ? "available" : "not_offered" }]))
+  const fetcher = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, async () => ({ provider: datum, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} })]))
+  const providerPreview = { provider: "britannica", status: "available", sourceUrl: "https://www.britannica.com/dictionary/commend", fields, entries: [], media: [], datumStatus }
+  const providerFetchers = Object.fromEntries(["ldoce", "oxford_ame", "oxford_bre", "britannica", "merriam_webster", "merriam_webster_api", "etymonline", "wiktionary", "cambridge", "merriam_webster_thesaurus", "wordhelp", "google_translate"].map((provider) => [provider, async () => provider === "britannica" ? providerPreview : fetcher[provider]?.() || { provider, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} }]))
+  const rankedSources = [{ provider: "britannica", score: 99 }]
+  const rankedSourcesByDatum = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, ["britannica"]]))
+  const snapshot = await previewDictionaryBuilder(entry, { ownerKey: "apply-all-test", fetcher: providerFetchers, rankedSources, rankedSourcesByDatum })
+  const updates = []
+  const client = {
+    libraryEntry: { findUnique: async () => entry },
+    libraryMediaAsset: { findMany: async () => [] },
+    $transaction: async (callback) => callback({
+      libraryEntry: { update: async ({ data }) => { updates.push(data); return { ...entry, ...data } } },
+      libraryEntryRevision: { create: async () => ({}) },
+      dictionaryProviderSuitabilityMetric: { upsert: async () => ({}) },
+    }),
+  }
+  const result = await applyDictionaryBuilderSnapshot(entry.id, { name: "Tester", role: "admin" }, {
+    snapshotId: snapshot.id,
+    mode: "replace_all",
+    selections: {
+      definition: { provider: "britannica", value: fields.definition },
+      grammarClassification: { provider: "britannica", value: fields.grammarClassification },
+      verbForms: { provider: "britannica", value: fields.verbForms },
+      stems: { provider: "britannica", value: fields.stems },
+      synonymsAntonyms: { provider: "britannica", value: fields.synonymsAntonyms },
+      examples: { provider: "britannica", value: fields.examples },
+      firstKnownUse: { provider: "britannica", value: fields.firstKnownUse },
+      originPath: { provider: "britannica", value: fields.originPath },
+      etymology: { provider: "britannica", value: fields.etymology },
+      worksCited: { provider: "britannica", value: "Britannica" },
+    },
+  }, { ownerKey: "apply-all-test", clientOverride: client })
+  assert.equal(result.ok, true)
+  assert.equal(updates.length, 1)
+  assert.equal(updates[0].verbV1, "commend")
+  assert.equal(updates[0].grammarClassification.grammarFamily, "action")
+  assert.match(updates[0].definition, /\*\*Verb Forms\*\*/u)
+  assert.match(updates[0].definition, /\*\*Stems\*\*/u)
+  assert.match(updates[0].definition, /\| \*\*Synonyms\*\* \| \*\*Antonyms\*\* \|/u)
+  assert.match(updates[0].definition, /\*\*Examples of commend in a Sentence\*\*/u)
+  assert.match(updates[0].definition, /\*\*First known use\*\*/u)
+  assert.match(updates[0].definition, /\*\*Origin path\*\*/u)
+  assert.match(updates[0].definition, /\*\*Etymology\*\*/u)
+  assert.match(updates[0].definition, /\*\*Works Cited\*\*/u)
+  assert.equal(result.appliedFields.includes("definition"), true)
+})
+
 test("canonical duplicate selection and student deadlines are deterministic", async () => {
   const { libraryContributionDeadline, isStudentLibraryContributionEditable, selectLargestDuplicate, selectReviewQueueRepresentatives, selectContributionsForCanonicalEntry, normalizeActiveLibraryPayload, normalizeLibraryEnum } = await import("../src/modules/admin/library-corpus.mjs")
   const first = { id: "b", submittedAt: "2026-08-01T00:00:00.000Z", payloadJson: { definition: "same length" } }
@@ -227,6 +342,23 @@ test("MW preview keeps complete normalized entry data and does not expose provid
     if (savedKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
     else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedKey
     globalThis.fetch = savedFetch
+  }
+})
+
+test("MW preview extracts nested synonym and antonym relations without truncating API rows", async () => {
+  const { previewMerriamWebsterLibraryEntry } = await import("../src/modules/admin/library-corpus.mjs")
+  const savedKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  try {
+    const result = await previewMerriamWebsterLibraryEntry({ english: "commend", partOfSpeech: "verb" }, async () => ({
+      ok: true,
+      json: async () => [{ hwi: { hw: "commend" }, fl: "verb", def: [{ sseq: [["sense", { syns: [["praise", "applaud", "esteem", "laud", "honor"]], ants: [["blame", "criticize", "condemn", "reject", "disparage"]], dt: [["text", "{bc}to praise"]] }]] }], shortdef: ["to praise"] }],
+    }))
+    assert.match(result.fields.synonymsAntonyms, /praise\napplaud\nesteem\nlaud\nhonor/u)
+    assert.match(result.fields.synonymsAntonyms, /blame\ncriticize\ncondemn\nreject\ndisparage/u)
+  } finally {
+    if (savedKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedKey
   }
 })
 

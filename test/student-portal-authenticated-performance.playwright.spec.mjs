@@ -38,7 +38,7 @@ function studentCredentials() {
   try {
     accounts = JSON.parse(ENV_VALUES.STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON || "[]")
   } catch (error) {
-    throw new Error(`Unable to parse student portal accounts from ${ENV_FILE}: ${error.message}`)
+    throw new Error(`Unable to parse student portal accounts from ${ENV_FILE}: ${error.message}`, { cause: error })
   }
   const account = accounts.find((entry) => entry?.eaglesId && entry?.password)
   return { user: account?.eaglesId || "", pass: account?.password || "" }

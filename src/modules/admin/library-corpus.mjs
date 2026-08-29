@@ -93,12 +93,16 @@ function clamp(value, maximum = 240) { return text(value).slice(0, maximum) }
 export function normalizeLibraryDefinition(value) { return normalizeDefinitionText(value).slice(0, LIBRARY_DEFINITION_MAX_LENGTH) }
 function grammarClassification(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null
-  const allowed = ["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber"]
-  const normalized = Object.fromEntries(allowed.map((key) => [key, clamp(value[key], 120)]).filter(([, item]) => item))
+  const memberships = (candidate) => [...new Set((Array.isArray(candidate) ? candidate : candidate ? [candidate] : []).map((item) => clamp(item, 120)).filter(Boolean))]
+  const normalized = Object.fromEntries(["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber"].map((key) => [key, clamp(value[key], 120)]).filter(([, item]) => item))
+  for (const key of ["grammarFamilies", "grammarSubtypes"]) {
+    const items = memberships(value[key] || (key === "grammarFamilies" ? value.grammarFamily : value.grammarSubtype))
+    if (items.length) normalized[key] = items
+  }
   return Object.keys(normalized).length ? normalized : null
 }
 function normalizeNounProfile(value = {}, partOfSpeech = "") {
-  if (partOfSpeech !== "noun") return { physicalQuality: null, grammaticalNumber: null, primaryClassification: null, materialUsage: null, properNounVariantShift: false, dualCountabilityUsage: null }
+  if (!["noun", "proper noun"].includes(partOfSpeech)) return { physicalQuality: null, grammaticalNumber: null, primaryClassification: null, materialUsage: null, properNounVariantShift: false, dualCountabilityUsage: null }
   const countability = normalizeLibraryEnum(value.countability)
   const physicalQuality = normalizeLibraryEnum(value.physicalQuality)
   const grammaticalNumber = normalizeLibraryEnum(value.grammaticalNumber)
@@ -295,7 +299,7 @@ function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
     grammarClassification: grammarClassification(value.grammarClassification), etymologyType: etymologyType || null, etymology: clamp(value.etymology, 4000) || null,
     originPath: clamp(value.originPath, 500) || null, originReferences: normalizeOriginReferences(value.originReferences), vietnamese: clamp(value.vietnamese), syllabication: normalizeVocabularySyllabication(value.syllabication),
     syllableCount: syllableCount(value.syllabication), definition: normalizeLibraryDefinition(value.definition), countability: normalizeLibraryEnum(value.countability) || null,
-    nounType: partOfSpeech === "noun" ? nounType || null : null, nounNumber: partOfSpeech === "noun" ? nounNumber || null : null,
+    nounType: ["noun", "proper noun"].includes(partOfSpeech) ? nounType || null : null, nounNumber: ["noun", "proper noun"].includes(partOfSpeech) ? nounNumber || null : null,
     ...nounProfile,
     verbRegularity: normalizeLibraryEnum(value.verbRegularity) || null, verbTransitivity: normalizeLibraryEnum(value.verbTransitivity) || null,
     verbInfinitive: clamp(value.verbInfinitive) || null, verbV1: clamp(value.verbV1) || null,
@@ -308,7 +312,7 @@ function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
     dictionarySourceUrl: clamp(value.dictionarySourceUrl, 1000) || null,
     dictionaryMetadata: value.dictionaryMetadata && typeof value.dictionaryMetadata === "object" && !Array.isArray(value.dictionaryMetadata) ? value.dictionaryMetadata : null,
   }
-  if (partOfSpeech === "noun" && !allowIncomplete && !NOUN_COUNTABILITY.has(data.countability || "")) throw statusError("Nouns require countable, uncountable, or countable and uncountable")
+  if (["noun", "proper noun"].includes(partOfSpeech) && !allowIncomplete && !NOUN_COUNTABILITY.has(data.countability || "")) throw statusError("Nouns require countable, uncountable, or countable and uncountable")
   if (partOfSpeech === "verb") {
     if (!allowIncomplete && (!data.verbInfinitive || !data.verbV1 || !data.verbV2 || !data.verbV3 || !data.verbV4 || !data.verbV5)) throw statusError("Verbs require infinitive and V1-V5 forms")
     if (!allowIncomplete && !["regular", "irregular"].includes(data.verbRegularity || "")) throw statusError("Verbs require regular or irregular")
@@ -330,7 +334,7 @@ function mapEntry(entry, { now = new Date(), studentRefId = "" } = {}) {
   mapped.grammarClassification = activePayloadValue(mapped.grammarClassification, "grammarClassification")
   mapped.originReferences = Array.isArray(mapped.originReferences) ? activePayloadValue(mapped.originReferences, "originReferences") : []
   mapped.mediaAssets = Array.isArray(entry.mediaAssets)
-    ? entry.mediaAssets.map((asset) => ({ id: asset.id, provider: asset.provider, dialect: asset.dialect, mimeType: asset.mimeType, byteLength: asset.byteLength, sha256: asset.sha256 }))
+    ? entry.mediaAssets.map((asset) => ({ id: asset.id, provider: asset.provider, dialect: asset.dialect, slot: asset.slot || "headword", mimeType: asset.mimeType, byteLength: asset.byteLength, sha256: asset.sha256 }))
     : []
   mapped.editors = [...new Map(revisions.map((revision) => [revision.actorName, { name: revision.actorName || "", at: revision.createdAt || "" }])).values()]
   mapped.isLegacyPending = text(entry.reviewStatus) === LEGACY_PENDING_REVIEW
@@ -371,7 +375,7 @@ export async function listLibraryEntries(query = {}) {
   const direction = lower(query.direction) === "desc" ? "desc" : "asc"
   const entryInclude = {
     revisions: { orderBy: { createdAt: "asc" } },
-    mediaAssets: { select: { id: true, provider: true, dialect: true, mimeType: true, byteLength: true, sha256: true } },
+    mediaAssets: { select: { id: true, provider: true, dialect: true, slot: true, mimeType: true, byteLength: true, sha256: true } },
     ...(studentRefId ? { contributions: { where: { studentRefId }, orderBy: { submittedAt: "desc" }, take: 1 } } : {}),
   }
   const [total, entries] = await client.$transaction([
@@ -412,7 +416,7 @@ export async function getLibraryEntry(id) {
   const entryId = text(id)
   if (!entryId) throw statusError("Library entry id is required")
   const client = await prisma()
-  const entry = await client.libraryEntry.findUnique({ where: { id: entryId }, include: { revisions: { orderBy: { createdAt: "asc" } }, mediaAssets: { select: { id: true, provider: true, dialect: true, mimeType: true, byteLength: true, sha256: true } } } })
+  const entry = await client.libraryEntry.findUnique({ where: { id: entryId }, include: { revisions: { orderBy: { createdAt: "asc" } }, mediaAssets: { select: { id: true, provider: true, dialect: true, slot: true, mimeType: true, byteLength: true, sha256: true } } } })
   if (!entry) throw statusError("Library entry was not found", 404)
   return mapEntry(entry)
 }
@@ -1095,6 +1099,19 @@ function collectFieldValues(value, field, output = []) {
   return output
 }
 
+function collectRelationValues(value, field, output = []) {
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectRelationValues(item, field, output))
+    return output
+  }
+  if (!value || typeof value !== "object") return output
+  Object.entries(value).forEach(([key, child]) => {
+    if (key === field) output.push(child)
+    collectRelationValues(child, field, output)
+  })
+  return output
+}
+
 function normalizePronunciations(value = []) {
   return (Array.isArray(value) ? value : []).map((pronunciation) => ({
     mw: stripMw(pronunciation?.mw),
@@ -1154,8 +1171,8 @@ function normalizeMwEntry(entry, index) {
     definitions: detailedDefinitions.length ? detailedDefinitions : shortDefinitions,
     etymology: uniqueText(collectEtymologyText(entry?.et)),
     firstKnownUse: stripMw(entry?.date).replace(/(century|year|\d)t$/iu, "$1"),
-    synonyms: uniqueText(entry?.meta?.syns || entry?.syns),
-    antonyms: uniqueText(entry?.meta?.ants || entry?.ants),
+    synonyms: uniqueText([entry?.meta?.syns, entry?.syns, ...collectRelationValues(entry?.def, "syns")]),
+    antonyms: uniqueText([entry?.meta?.ants, entry?.ants, ...collectRelationValues(entry?.def, "ants")]),
     table: entry?.table ? { id: stripMw(entry.table.tableid), name: stripMw(entry.table.displayname) } : null,
   }
 }
@@ -1230,7 +1247,6 @@ function mwFields(record) {
   const fields = {
     english: record.headword,
     partOfSpeech: normalizeMwPartOfSpeech(record.partOfSpeech),
-    syllabication: record.syllabication,
     definition: mwDefinition(record),
     stems: record.stems.join("\n"),
     synonymsAntonyms: [record.synonyms.length ? `Synonyms:\n${record.synonyms.join("\n")}` : "", record.antonyms.length ? `Antonyms:\n${record.antonyms.join("\n")}` : ""].filter(Boolean).join("\n\n"),
@@ -1498,22 +1514,28 @@ export async function applyMerriamWebsterDictionaryLibraryEntry(id, actor = {}, 
 
 const DICTIONARY_BUILDER_FIELD_TO_DATUM = Object.freeze({
   vietnamese: "vietnamese", syllabication: "syllabication", syllableCount: "syllableCount", grammarClassification: "grammarClassification", definition: "definition",
-  verbInfinitive: "verbForms", verbV1: "verbForms", verbV2: "verbForms", verbV3: "verbForms", verbV4: "verbForms", verbV5: "verbForms",
-  etymology: "etymology", originPath: "originPath", originReferences: "etymology", firstKnownUse: "firstKnownUse", stems: "stems", audio: "audio",
+  verbForms: "verbForms", verbInfinitive: "verbForms", verbV1: "verbForms", verbV2: "verbForms", verbV3: "verbForms", verbV4: "verbForms", verbV5: "verbForms",
+  etymology: "etymology", originPath: "originPath", originReferences: "etymology", firstKnownUse: "firstKnownUse", stems: "stems", synonymsAntonyms: "synonymsAntonyms", examples: "examples", worksCited: "worksCited", audio: "audio", verbFormAudio: "verbFormAudio",
 })
 const DICTIONARY_BUILDER_ALLOWED_FIELDS = new Set(Object.keys(DICTIONARY_BUILDER_FIELD_TO_DATUM))
+const DICTIONARY_BUILDER_POS_FORM_FIELDS = Object.freeze(["countability", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "dualCountabilityUsage", "properNounVariantShift", "displayVerbForm", "verbRegularity", "verbTransitivity"])
+const DICTIONARY_BUILDER_DEFINITION_FIELDS = new Set(["definition", "verbForms", "stems", "synonymsAntonyms", "examples", "firstKnownUse", "worksCited"])
 
 export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {}, { ownerKey = "", clientOverride = null } = {}) {
-  const { formatDictionaryBuilderDefinition, recordDictionaryBuilderMetrics, takeDictionaryBuilderSnapshot } = await import("./dictionary-builder.mjs")
+  const { formatDictionaryBuilderDefinition, recordDictionaryBuilderMetrics, restoreDictionaryBuilderSnapshot, takeDictionaryBuilderSnapshot } = await import("./dictionary-builder.mjs")
   const snapshot = takeDictionaryBuilderSnapshot(payload?.snapshotId, { ownerKey, entryId: id })
   if (!snapshot) throw dictionaryStatusError("Dictionary Builder preview is unavailable, expired, or belongs to another session", 404)
   const client = clientOverride || await prisma()
   const existing = await client.libraryEntry.findUnique({ where: { id } })
   if (!existing) throw dictionaryStatusError("Library entry was not found", 404)
+  const existingMediaAssets = typeof client.libraryMediaAsset?.findMany === "function"
+    ? await client.libraryMediaAsset.findMany({ where: { entryId: id } })
+    : []
   const mode = dictionaryApplyMode(payload?.mode || "fill_missing", "dictionary builder")
   const selections = payload?.selections && typeof payload.selections === "object" ? payload.selections : {}
   const selectedFields = Object.keys(selections).filter((field) => DICTIONARY_BUILDER_ALLOWED_FIELDS.has(field))
   const proposed = {}
+  const definitionFields = {}
   const claimLedger = []
   const selectedAudio = []
   for (const field of selectedFields) {
@@ -1524,10 +1546,39 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
     const datum = DICTIONARY_BUILDER_FIELD_TO_DATUM[field]
     const manualSelection = provider === "manual"
     if ((!manualSelection && (!source || source?.datumStatus?.[datum]?.status !== "available")) || (manualSelection && !text(value))) continue
-    if (field === "audio") {
+    if (field === "audio" || field === "verbFormAudio") {
       if (manualSelection) continue
-      selectedAudio.push({ provider, media: source.privateMedia || [] })
+      const media = (source.privateMedia || []).filter((item) => field === "audio" ? (item.slot || "headword") === "headword" : item.slot && item.slot !== "headword")
+      selectedAudio.push({ provider, media })
       claimLedger.push({ field, provider, status: "available" })
+      continue
+    }
+    if (field === "verbForms") {
+      const forms = value && typeof value === "object" && !Array.isArray(value) ? value : {}
+      for (const formField of ["verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5"]) {
+        if (!text(forms[formField]) || (mode === "fill_missing" && existing[formField])) continue
+        proposed[formField] = forms[formField]
+        definitionFields[formField] = forms[formField]
+      }
+      claimLedger.push({ field, provider, status: manualSelection ? "manual" : source.datumStatus?.[datum]?.status || "unavailable" })
+      continue
+    }
+    if (field === "grammarClassification" && value && typeof value === "object" && !Array.isArray(value)) {
+      const classification = Object.fromEntries(["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber", "grammarFamilies", "grammarSubtypes"].filter((key) => Object.hasOwn(value, key) && value[key] !== "" && value[key] !== false && (!Array.isArray(value[key]) || value[key].length)).map((key) => [key, value[key]]))
+      if (!Object.keys(classification).length) continue
+      proposed.grammarClassification = classification
+      DICTIONARY_BUILDER_POS_FORM_FIELDS.forEach((posField) => {
+        if (!Object.hasOwn(value, posField)) return
+        if (mode === "fill_missing" && existing[posField]) return
+        proposed[posField] = value[posField]
+      })
+      claimLedger.push({ field, provider, status: manualSelection ? "manual" : source.datumStatus?.[datum]?.status || "unavailable" })
+      continue
+    }
+    if (DICTIONARY_BUILDER_DEFINITION_FIELDS.has(field)) {
+      if (field === "definition" && mode === "fill_missing" && existing.definition) definitionFields.definition = existing.definition
+      else if (field !== "worksCited" && value !== undefined && value !== null && value !== "") definitionFields[field] = value
+      claimLedger.push({ field, provider, status: manualSelection ? "manual" : source.datumStatus?.[datum]?.status || "unavailable" })
       continue
     }
     if (mode === "fill_missing" && existing[field] && field !== "grammarClassification") continue
@@ -1536,7 +1587,8 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
     else proposed[field] = value
     claimLedger.push({ field, provider, status: manualSelection ? "manual" : source.datumStatus?.[datum]?.status || "unavailable" })
   }
-  if (selectedFields.includes("definition")) proposed.definition = formatDictionaryBuilderDefinition({ ...existing, ...proposed }, proposed, snapshot.citations)
+  const definitionWasSelected = Object.keys(definitionFields).length || selectedFields.some((field) => ["originPath", "etymology", "worksCited"].includes(field))
+  if (definitionWasSelected) proposed.definition = formatDictionaryBuilderDefinition({ ...existing, ...proposed }, { definition: existing.definition, ...definitionFields, ...proposed }, snapshot.citations)
   const primarySource = claimLedger.find((claim) => claim.field === "definition")?.provider || claimLedger[0]?.provider || null
   proposed.dictionaryProvider = primarySource || existing.dictionaryProvider || null
   proposed.dictionarySourceUrl = primarySource ? ((snapshot.privateSources || []).find((item) => item.provider === primarySource)?.sourceUrl || null) : existing.dictionarySourceUrl || null
@@ -1553,15 +1605,19 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
   if (capitalizationError) throw dictionaryStatusError(capitalizationError)
   const downloads = []
   const finalized = []
+  const existingMediaKeys = new Set(existingMediaAssets.map((asset) => `${text(asset.provider)}\u0000${text(asset.slot || "headword")}\u0000${text(asset.sourceUrl)}`))
   try {
     for (const selection of selectedAudio) {
       for (const media of selection.media) {
         if (!media?.sourceUrl) continue
-        const download = await downloadLibraryAudio({ sourceUrl: media.sourceUrl, entryId: id, dialect: media.dialect, provider: selection.provider, fetchImpl: fetch })
+        const mediaKey = `${text(selection.provider)}\u0000${text(media.slot || "headword")}\u0000${text(media.sourceUrl)}`
+        if (existingMediaKeys.has(mediaKey)) continue
+        const download = await downloadLibraryAudio({ sourceUrl: media.sourceUrl, entryId: id, dialect: media.dialect || "us", slot: media.slot || "headword", provider: selection.provider, fetchImpl: fetch })
         downloads.push(download)
         finalized.push(await finalizeLibraryAudio(download))
       }
     }
+    if (!Object.keys(data).length && !finalized.length) return { ok: true, entry: mapEntry(existing), appliedFields: [], warnings: snapshot.warnings || [] }
     const updated = await client.$transaction(async (tx) => {
       const value = Object.keys(data).length ? await tx.libraryEntry.update({ where: { id }, data: { ...data, lastEditedByName: clamp(actor.name) } }) : existing
       for (const download of finalized) await upsertLibraryMediaAsset(tx, download, actor)
@@ -1569,8 +1625,9 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
       await recordDictionaryBuilderMetrics(tx, snapshot, [...new Set(selectedFields.map((field) => DICTIONARY_BUILDER_FIELD_TO_DATUM[field]))], existing.partOfSpeech)
       return value
     })
-    return { ok: true, entry: mapEntry(updated), appliedFields: [...Object.keys(data), ...(finalized.length ? ["audio"] : [])], warnings: snapshot.warnings || [] }
+    return { ok: true, entry: mapEntry(updated), appliedFields: [...Object.keys(data), ...(finalized.some((item) => item.slot === "headword") ? ["audio"] : []), ...(finalized.some((item) => item.slot !== "headword") ? ["verbFormAudio"] : [])], warnings: snapshot.warnings || [] }
   } catch (error) {
+    restoreDictionaryBuilderSnapshot(snapshot)
     await Promise.all(downloads.map((download) => discardLibraryAudio(download)))
     await Promise.all(finalized.filter((download) => download.createdFile).map((download) => removeLibraryAudio(download)))
     throw error

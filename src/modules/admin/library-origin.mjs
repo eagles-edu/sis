@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio"
+import { fetchWithExponentialBackoff } from "./provider-http.mjs"
 
 const ETYMONLINE_HOST = "www.etymonline.com"
 const ETYMONLINE_ROOT = `https://${ETYMONLINE_HOST}`
@@ -162,7 +163,7 @@ export async function fetchEtymonlinePreview(word, fetchImpl = fetch) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
   try {
-    const response = await fetchImpl(sourceUrl, { headers: { Accept: "text/html" }, signal: controller.signal })
+    const response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html" }, signal: controller.signal })
     if (!response.ok) throw new Error("Etymonline is unavailable")
     if (response.url) {
       const finalUrl = new URL(response.url)

@@ -3,6 +3,7 @@ import { existsSync } from "node:fs"
 import { load } from "cheerio"
 
 import { registerDictionaryProvider } from "./dictionary-providers.mjs"
+import { fetchWithExponentialBackoff } from "./provider-http.mjs"
 import { boundedDictionaryResponseText, buildRichDictionaryFields, cleanDictionaryText, uniqueDictionaryText, validateDictionaryPageUrl } from "./rich-dictionary-provider.mjs"
 
 export const MERRIAM_WEBSTER_HOSTNAMES = new Set(["merriam-webster.com", "www.merriam-webster.com"])
@@ -14,6 +15,12 @@ const MERRIAM_WEBSTER_BROWSER_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) Appl
 function validMerriamWebsterUrl(value) { return validateDictionaryPageUrl(value, MERRIAM_WEBSTER_HOSTNAMES, "/dictionary/") }
 function collectText(node, selectors) { return uniqueDictionaryText(node.find(selectors).map((_, child) => node.find(child).text()).get()) }
 function isMerriamWebsterAccessChallenge(html) { return /just a moment|enable javascript and cookies|cf-chl-|challenge-platform|access denied/iu.test(String(html || "")) }
+
+function audioUrl(node) {
+  const value = cleanDictionaryText(node.find("[data-src-mp3], audio source[type='audio/mpeg'], audio source[src], [data-audio-url]").first().attr("data-src-mp3") || node.find("audio source[type='audio/mpeg'], audio source[src], [data-audio-url]").first().attr("src") || node.find("[data-audio-url]").first().attr("data-audio-url"))
+  if (!value) return ""
+  try { const parsed = new URL(value, "https://www.merriam-webster.com"); return parsed.protocol === "https:" && MERRIAM_WEBSTER_HOSTNAMES.has(parsed.hostname.toLowerCase()) ? parsed.toString() : "" } catch { return "" }
+}
 
 export async function fetchMerriamWebsterBrowserPage(sourceUrl) {
   let browser
@@ -28,7 +35,7 @@ export async function fetchMerriamWebsterBrowserPage(sourceUrl) {
     const response = await page.goto(sourceUrl, { waitUntil: "domcontentloaded", timeout: MERRIAM_WEBSTER_BROWSER_TIMEOUT_MS })
     const html = await page.content()
     const status = response?.status() || 200
-    if (status >= 400 || isMerriamWebsterAccessChallenge(html)) return { ok: false, status, url: page.url(), html, message: "Merriam-Webster is protected by an access challenge; no Library data was changed." }
+    if (status >= 400 || isMerriamWebsterAccessChallenge(html)) return { ok: false, status, robotBlocked: true, url: page.url(), html, message: "Merriam-Webster requires robot verification because the source presented an access challenge; open the source page and complete the prompt before retrying." }
     return { ok: true, status, url: page.url(), html }
   } catch (error) {
     return { ok: false, available: false, message: `Merriam-Webster browser access failed; no Library data was changed. ${error.message}` }
@@ -53,7 +60,7 @@ function parseEntry(node, sourceUrl, index) {
   if (!senses.length) {
     collectText(node, ".dtText, .def, .definition, [data-definition]").forEach((definition, senseIndex) => senses.push({ number: String(senseIndex + 1), labels, definition: definition.replace(/^:\s*/u, ""), examples: [] }))
   }
-  return { headword, partOfSpeech, labels, senses, sourceUrl, audio: { us: "", uk: "" } }
+  return { headword, partOfSpeech, labels, senses, sourceUrl, audio: { us: audioUrl(node), uk: "" } }
 }
 
 export function parseMerriamWebsterHtml(html, { sourceUrl = "", lookupWord = "" } = {}) {
@@ -84,19 +91,19 @@ export async function previewMerriamWebsterDictionaryEntry(entry, fetchImpl = fe
   if (!lookupWord) return { ok: false, available: true, message: "An English word is required for Merriam-Webster preview; no Library data was changed." }
   const sourceUrl = validMerriamWebsterUrl(`${MERRIAM_WEBSTER_BASE_URL}${encodeURIComponent(lookupWord)}`)
   let response
-  try { response = await fetchImpl(sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Merriam-Webster-preview/1.0" }, redirect: "follow" }) } catch (error) { return { ok: false, available: false, message: `Merriam-Webster is unavailable; no Library data was changed. ${error.message}` } }
+  try { response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Merriam-Webster-preview/1.0" }, redirect: "follow" }) } catch (error) { return { ok: false, available: false, message: `Merriam-Webster is unavailable; no Library data was changed. ${error.message}` } }
   if (!response.ok) {
     if (response.status !== 403) return { ok: false, available: false, message: `Merriam-Webster is unavailable (HTTP ${response.status || 503}); no Library data was changed.` }
     response = await browserFetchImpl(sourceUrl)
-    if (!response?.ok) return { ok: false, available: false, message: response?.message || `Merriam-Webster is unavailable (HTTP ${response?.status || 503}); no Library data was changed.` }
+    if (!response?.ok) return { ok: false, status: response?.robotBlocked ? "robot_blocked" : undefined, available: false, message: response?.message || `Merriam-Webster is unavailable (HTTP ${response?.status || 503}); no Library data was changed.` }
   }
   let html
   try { html = typeof response.html === "string" ? response.html : await boundedDictionaryResponseText(response, MERRIAM_WEBSTER_MAX_HTML_BYTES) } catch (error) { return { ok: false, available: false, message: `Merriam-Webster is unavailable; no Library data was changed. ${error.message}` } }
   if (isMerriamWebsterAccessChallenge(html)) {
     response = await browserFetchImpl(sourceUrl)
-    if (!response?.ok) return { ok: false, available: false, message: response?.message || "Merriam-Webster is protected by an access challenge; no Library data was changed." }
+    if (!response?.ok) return { ok: false, status: response?.robotBlocked ? "robot_blocked" : undefined, available: false, message: response?.message || "Merriam-Webster requires robot verification; open the source page and complete the prompt before retrying." }
     try { html = typeof response.html === "string" ? response.html : await boundedDictionaryResponseText(response, MERRIAM_WEBSTER_MAX_HTML_BYTES) } catch (error) { return { ok: false, available: false, message: `Merriam-Webster is unavailable; no Library data was changed. ${error.message}` } }
-    if (isMerriamWebsterAccessChallenge(html)) return { ok: false, available: false, message: "Merriam-Webster is protected by an access challenge; no Library data was changed." }
+    if (isMerriamWebsterAccessChallenge(html)) return { ok: false, status: "robot_blocked", available: false, message: "Merriam-Webster requires robot verification because the source presented an access challenge; open the source page and complete the prompt before retrying." }
   }
   const finalUrl = response.url ? (() => { try { return validMerriamWebsterUrl(response.url) } catch { return sourceUrl } })() : sourceUrl
   return parseMerriamWebsterHtml(html, { sourceUrl: finalUrl, lookupWord })

@@ -30,6 +30,7 @@ TEST_PUBLIC_ADMIN_DIR="${SIS_TEST_PUBLIC_ADMIN_DIR:-${TEST_PUBLIC_ROOT}/sis-admi
 TEST_PUBLIC_PARENT_DIR="${SIS_TEST_PUBLIC_PARENT_DIR:-${TEST_PUBLIC_ROOT}/sis-parent}"
 TEST_PUBLIC_STUDENT_DIR="${SIS_TEST_PUBLIC_STUDENT_DIR:-${TEST_PUBLIC_ROOT}/sis-student}"
 TEST_PUBLIC_SHARED_DIR="${SIS_TEST_PUBLIC_SHARED_DIR:-${TEST_PUBLIC_ROOT}/web-asset/shared}"
+TEST_LIBRARY_MEDIA_ROOT="${SIS_TEST_LIBRARY_MEDIA_ROOT:-/home/test.eagles.edu.vn/sis-library-media/test}"
 ROUTE_CONTRACT_FILE="${SIS_TEST_ROUTE_CONTRACT_FILE:-${REPO_ROOT}/config/test-route-contract.json}"
 if [[ ! -f "$ROUTE_CONTRACT_FILE" ]]; then
   echo "missing test route contract file: $ROUTE_CONTRACT_FILE" >&2
@@ -410,6 +411,11 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/student-enrollment.html|web-asset/admin/student-enrollment.html"
   "web-asset/admin/portal-hub.html|web-asset/admin/portal-hub.html"
   "web-asset/admin/library-admin.html|web-asset/admin/library-admin.html"
+  "web-asset/admin/library-reference-catalogs.js|web-asset/admin/library-reference-catalogs.js"
+  "web-asset/admin/library-definitions.html|web-asset/admin/library-definitions.html"
+  "web-asset/admin/library-definitions.min.css|web-asset/admin/library-definitions.min.css"
+  "web-asset/admin/library-definitions.min.js|web-asset/admin/library-definitions.min.js"
+  "web-asset/admin/library-definitions.min.js.map|web-asset/admin/library-definitions.min.js.map"
   "web-asset/admin/admin-b612-mono-loader.js|web-asset/admin/admin-b612-mono-loader.js"
   "web-asset/admin/report-card.html|web-asset/admin/report-card.html"
   "web-asset/admin/grades-tabulator.html|web-asset/admin/grades-tabulator.html"
@@ -597,6 +603,11 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/portal-hub.html|sis-admin/portal-hub.html"
   "web-asset/admin/portal-hub.html|index.html"
   "web-asset/admin/library-admin.html|sis-admin/library-admin.html"
+  "web-asset/admin/library-reference-catalogs.js|web-asset/admin/library-reference-catalogs.js"
+  "web-asset/admin/library-definitions.html|sis-admin/library-definitions.html"
+  "web-asset/admin/library-definitions.min.css|web-asset/admin/library-definitions.min.css"
+  "web-asset/admin/library-definitions.min.js|web-asset/admin/library-definitions.min.js"
+  "web-asset/admin/library-definitions.min.js.map|web-asset/admin/library-definitions.min.js.map"
   "web-asset/admin/admin-b612-mono-loader.js|sis-admin/admin-b612-mono-loader.js"
   "web-asset/admin/grades-tabulator.html|sis-admin/grades-tabulator.html"
   "web-asset/admin/grades-tabulator.min.css|web-asset/admin/grades-tabulator.min.css"
@@ -1113,6 +1124,18 @@ cleanup_test_backup_artifacts() {
   find "$TEST_ROOT" -type f -name '*.BAK-*' -delete
 }
 
+ensure_test_library_media_root() {
+  log "ensuring test Library media root ${TEST_LIBRARY_MEDIA_ROOT}"
+  if [[ -d "${TEST_LIBRARY_MEDIA_ROOT}" && -w "${TEST_LIBRARY_MEDIA_ROOT}" ]]; then
+    return 0
+  fi
+  if [[ "${EUID}" -eq 0 ]]; then
+    install -d -o eagles -g eagles -m 0750 "${TEST_LIBRARY_MEDIA_ROOT}"
+  else
+    sudo -n install -d -o eagles -g eagles -m 0750 "${TEST_LIBRARY_MEDIA_ROOT}"
+  fi
+}
+
 sync_test_public_html_index() {
   local source_hub_html="${REPO_ROOT}/web-asset/admin/portal-hub.html"
   local target_public_root="/home/test.eagles.edu.vn/public_html"
@@ -1436,6 +1459,7 @@ main() {
   sync_test_runtime_assets
   verify_local_ui_runtime_parity
   cleanup_test_backup_artifacts
+  ensure_test_library_media_root
   ensure_test_runtime_env_contract
   repair_test_source_redis_env
   align_test_env_from_test_source
