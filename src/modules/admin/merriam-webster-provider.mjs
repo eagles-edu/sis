@@ -7,6 +7,7 @@ import { fetchWithExponentialBackoff } from "./provider-http.mjs"
 import { boundedDictionaryResponseText, buildRichDictionaryFields, cleanDictionaryText, uniqueDictionaryText, validateDictionaryPageUrl } from "./rich-dictionary-provider.mjs"
 
 export const MERRIAM_WEBSTER_HOSTNAMES = new Set(["merriam-webster.com", "www.merriam-webster.com"])
+const MERRIAM_WEBSTER_AUDIO_HOSTNAMES = new Set(["media.merriam-webster.com", ...MERRIAM_WEBSTER_HOSTNAMES])
 export const MERRIAM_WEBSTER_BASE_URL = "https://www.merriam-webster.com/dictionary/"
 export const MERRIAM_WEBSTER_MAX_HTML_BYTES = 3 * 1024 * 1024
 const MERRIAM_WEBSTER_BROWSER_TIMEOUT_MS = 15_000
@@ -17,9 +18,19 @@ function collectText(node, selectors) { return uniqueDictionaryText(node.find(se
 function isMerriamWebsterAccessChallenge(html) { return /just a moment|enable javascript and cookies|cf-chl-|challenge-platform|access denied/iu.test(String(html || "")) }
 
 function audioUrl(node) {
-  const value = cleanDictionaryText(node.find("[data-src-mp3], audio source[type='audio/mpeg'], audio source[src], [data-audio-url]").first().attr("data-src-mp3") || node.find("audio source[type='audio/mpeg'], audio source[src], [data-audio-url]").first().attr("src") || node.find("[data-audio-url]").first().attr("data-audio-url"))
-  if (!value) return ""
-  try { const parsed = new URL(value, "https://www.merriam-webster.com"); return parsed.protocol === "https:" && MERRIAM_WEBSTER_HOSTNAMES.has(parsed.hostname.toLowerCase()) ? parsed.toString() : "" } catch { return "" }
+  const candidates = node.find("[data-src-mp3], audio source[type='audio/mpeg'], audio source[src], [data-audio-url], a[href]").map((_, child) => {
+    const element = node.find(child)
+    return element.attr("data-src-mp3") || element.attr("src") || element.attr("data-audio-url") || element.attr("href") || ""
+  }).get()
+  for (const candidate of candidates) {
+    const value = cleanDictionaryText(candidate)
+    if (!value) continue
+    try {
+      const parsed = new URL(value, "https://www.merriam-webster.com")
+      if (parsed.protocol === "https:" && MERRIAM_WEBSTER_AUDIO_HOSTNAMES.has(parsed.hostname.toLowerCase()) && /\/audio\//iu.test(parsed.pathname) && /\.(?:mp3|ogg|wav)$/iu.test(parsed.pathname)) return parsed.toString()
+    } catch {}
+  }
+  return ""
 }
 
 export async function fetchMerriamWebsterBrowserPage(sourceUrl) {

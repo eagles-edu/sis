@@ -43,6 +43,11 @@ test("Britannica parser resolves the US popup player to its preferred MP3", () =
   assert.equal(result.entries[0].audio.us, "https://media.merriam-webster.com/audio/prons/en/us/mp3/t/transa02.mp3")
 })
 
+test("Britannica parser extracts an MP3 from the pronunciation help anchor", () => {
+  const result = parseBritannicaHtml(`<!doctype html><main><div class="entry"><div class="hw_d"><span class="hw_txt">dispute</span><span class="fl">verb</span></div><div class="ld_a_box_pron"><div class="ld_a_box_pron"><span>/dɪˈspjuːt/</span><p class="box_trouble"><a href="https://media.merriam-webster.com/audio/prons/en/us/mp3/d/disput09.mp3">Click here to listen</a></p></div></div><div class="sense"><span class="def_text">to disagree</span></div></div></main>`, { sourceUrl: "https://www.britannica.com/dictionary/dispute", lookupWord: "dispute" })
+  assert.equal(result.entries[0].audio.us, "https://media.merriam-webster.com/audio/prons/en/us/mp3/d/disput09.mp3")
+})
+
 test("Britannica preview fails closed for an access challenge and redacts metadata", async () => {
   const response = { ok: true, status: 200, url: "https://www.britannica.com/dictionary/average", headers: new Headers(), text: async () => fixture }
   const preview = await previewBritannicaLibraryEntry({ english: "average" }, async () => response)

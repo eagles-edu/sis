@@ -22,6 +22,11 @@ test("Merriam-Webster parser preserves all POS, subtype, content sections, and A
   assert.match(result.fields.originReferences[0].citation, /Merriam-Webster\.com Dictionary\. \(n\.d\.\)\. \*average\*/u)
 })
 
+test("Merriam-Webster parser extracts an MP3 from the pronunciation help anchor", () => {
+  const result = parseMerriamWebsterHtml(`<!doctype html><main><section class="entry-word-section-container"><h2 class="hword">dispute</h2><span class="fl">verb</span><div class="ld_a_box_pron"><a href="https://media.merriam-webster.com/audio/prons/en/us/mp3/d/disput09.mp3">Click here to listen</a></div><div class="sense"><span class="dtText">: to disagree</span></div></section></main>`, { sourceUrl: "https://www.merriam-webster.com/dictionary/dispute", lookupWord: "dispute" })
+  assert.equal(result.entries[0].audio.us, "https://media.merriam-webster.com/audio/prons/en/us/mp3/d/disput09.mp3")
+})
+
 test("Merriam-Webster preview is non-mutating and redacts metadata", async () => {
   const response = { ok: true, status: 200, url: "https://www.merriam-webster.com/dictionary/average", headers: new Headers(), text: async () => fixture }
   const preview = await previewMerriamWebsterDictionaryEntry({ english: "average" }, async () => response)

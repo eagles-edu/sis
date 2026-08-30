@@ -404,7 +404,8 @@
     ["audio", "Headword Audio"], ["verbFormAudio", "Verb Form Audio"], ["definition", "Definition Proper"], ["verbForms", "Verb Forms"], ["stems", "Stems"], ["synonymsAntonyms", "Synonyms / Antonyms"], ["examples", "Examples"], ["firstKnownUse", "First known use"], ["originPath", "Origin path"], ["etymology", "Etymology"], ["worksCited", "Works Cited"],
   ]
   const dictionaryBuilderApplyFields = new Set(["vietnamese", "syllabication", "syllableCount", "grammarClassification", "audio", "verbFormAudio", "definition", "verbForms", "stems", "synonymsAntonyms", "examples", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "etymology", "originPath", "originReferences", "firstKnownUse", "worksCited"])
-  const dictionaryBuilderStatusLabel = (status) => ({ not_found: "not found (HTTP 404)", not_provided: "not provided by source", robot_blocked: "robot verification required; run remains active", unavailable: "provider unavailable", not_offered: "not provided by source" }[status] || status)
+  const dictionaryBuilderStatusLabel = (status) => ({ not_found: "not found (HTTP 404)", not_provided: "not provided by source", robot_blocked: "cookie/robot prompt; datum paused", cookie_prompt: "cookie prompt; datum paused", robot_prompt: "robot prompt; datum paused", paused: "paused pending source resolution", unavailable: "provider unavailable", not_offered: "not provided by source" }[status] || status)
+  const isDictionaryBuilderPromptStatus = (status) => ["robot_blocked", "cookie_prompt", "robot_prompt", "paused"].includes(status)
   const dictionaryBuilderEsc = (value) => String(value == null ? "" : value).replace(/[&<>'"]/gu, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character])
   const dictionaryBuilderSourceMatrix = (word) => {
     const encoded = encodeURIComponent(String(word || "").trim())
@@ -433,15 +434,15 @@
     const ordered = sources.filter((source) => {
       if (datum === "vietnamese" && source.provider !== "google_translate") return false
       const status = source.datumStatus?.[datum]?.status
-      return status === "robot_blocked" || (status === "available" && source.fields?.[datum] !== undefined)
+      return isDictionaryBuilderPromptStatus(status) || (status === "available" && source.fields?.[datum] !== undefined)
     }).sort((left, right) => {
       const leftPosition = order.indexOf(left.provider); const rightPosition = order.indexOf(right.provider)
       return (leftPosition < 0 ? Number.MAX_SAFE_INTEGER : leftPosition) - (rightPosition < 0 ? Number.MAX_SAFE_INTEGER : rightPosition)
     })
-    const mandatory = datum === "synonymsAntonyms" ? "merriam_webster_thesaurus" : datum === "syllabication" ? "wordhelp" : ""
+    const mandatory = datum === "audio" ? "britannica" : datum === "verbFormAudio" ? "oxford_ame" : datum === "synonymsAntonyms" ? "merriam_webster_thesaurus" : datum === "syllabication" ? "wordhelp" : ""
     const mandatorySource = mandatory ? sources.find((source) => source.provider === mandatory) : null
     const available = ordered.filter((source) => source.datumStatus?.[datum]?.status === "available").slice(0, 3)
-    const robotBlocked = ordered.filter((source) => source.datumStatus?.[datum]?.status === "robot_blocked")
+    const robotBlocked = ordered.filter((source) => isDictionaryBuilderPromptStatus(source.datumStatus?.[datum]?.status))
     return [ ...(mandatorySource && ordered.includes(mandatorySource) ? [mandatorySource] : []), ...available.filter((source) => source.provider !== mandatory), ...robotBlocked.filter((source) => source.provider !== mandatory) ].filter((source, index, list) => list.indexOf(source) === index)
   }
   const sizeDictionaryBuilderTextarea = (textarea) => {
@@ -460,6 +461,14 @@
     if (typeof window.requestAnimationFrame === "function") window.requestAnimationFrame(applySize)
   }
   const robotHandoffTabs = new Map()
+  const sourceBrowserTabs = new Map()
+  const INITIAL_SOURCE_GROUP_SIZE = 5
+  const INITIAL_SOURCE_PROVIDER_ORDER = ["britannica", "oxford_ame", "ldoce", "wordhelp", "merriam_webster_thesaurus"]
+  const closeSourceBrowserTabs = () => {
+    sourceBrowserTabs.forEach((tab) => { if (tab && !tab.closed) tab.close() })
+    sourceBrowserTabs.clear()
+    robotHandoffTabs.clear()
+  }
   const renderDictionaryBuilder = (snapshot, pane, sourceId, previousSelections = {}, activeTab = "vietnamese") => {
     const dialog = dictionaryBuilderDialog()
     const root = dialog.querySelector("[data-dictionary-builder-root]")
@@ -468,9 +477,37 @@
     const tabs = dictionaryBuilderFields.map(([datum, label], index) => `<button type="button" class="dictionary-builder-tab" id="dictionary-builder-tab-${datum}" role="tab" aria-controls="dictionary-builder-panel-${datum}" aria-selected="${index === 0}" tabindex="${index === 0 ? 0 : -1}" data-dictionary-builder-tab="${datum}"><span class="dictionary-builder-tab-step">${index + 1}</span><span>${dictionaryBuilderEsc(label)}</span></button>`).join("")
     sourceMatrixSlot.innerHTML = dictionaryBuilderSourceMatrix(word)
     const canApply = sourceId !== "new-canonical"
-    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"${canApply ? "" : " disabled"}><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply${canApply ? "" : " disabled title=\"Save the canonical Library entry before applying Dictionary Builder data.\""}>Apply selected</button></div>`
+    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><button type="button" class="portal-button portal-button-blue-action" data-dictionary-builder-open-all>Open initial source group (BR / OA / LD / WH / TH)</button><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"${canApply ? "" : " disabled"}><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply${canApply ? "" : " disabled title=\"Save the canonical Library entry before applying Dictionary Builder data.\""}>Apply selected</button></div>`
     const panels = root.querySelector("[data-dictionary-builder-panels]")
     const selectedCandidates = structuredClone(previousSelections)
+    dictionaryBuilderFields.forEach(([datum]) => {
+      if (selectedCandidates[datum]) return
+      const candidate = candidatesForDatum(snapshot, datum).find((item) => item.datumStatus?.[datum]?.status === "available")
+      if (!candidate || candidate.fields?.[datum] === undefined || candidate.fields?.[datum] === null || candidate.fields?.[datum] === "") return
+      selectedCandidates[datum] = {
+        provider: candidate.provider,
+        value: typeof candidate.fields[datum] === "object" ? JSON.stringify(candidate.fields[datum]) : String(candidate.fields[datum]),
+        status: candidate.datumStatus?.[datum]?.status || "available",
+      }
+    })
+    root.querySelector("[data-dictionary-builder-open-all]").addEventListener("click", () => {
+      const sourceEntries = (snapshot.sources || []).filter((source) => source.sourceUrl)
+      const initialSourceEntries = [...sourceEntries].sort((left, right) => {
+        const leftPosition = INITIAL_SOURCE_PROVIDER_ORDER.indexOf(left.provider)
+        const rightPosition = INITIAL_SOURCE_PROVIDER_ORDER.indexOf(right.provider)
+        return (leftPosition < 0 ? Number.MAX_SAFE_INTEGER : leftPosition) - (rightPosition < 0 ? Number.MAX_SAFE_INTEGER : rightPosition)
+      }).slice(0, INITIAL_SOURCE_GROUP_SIZE)
+      let opened = 0
+      initialSourceEntries.forEach(({ provider, sourceUrl }) => {
+        const existing = sourceBrowserTabs.get(provider)
+        if (existing && !existing.closed) { existing.focus?.(); return }
+        const tab = window.open(sourceUrl, "_blank")
+        if (tab) { sourceBrowserTabs.set(provider, tab); opened += 1 }
+      })
+      dialog.querySelector("[data-dictionary-builder-message]").textContent = opened === initialSourceEntries.length
+        ? `Initial BR / OA / LD / WH / TH group opened in this browser session. Resolve any cookie/robot prompts; affected datums remain paused until Retry provider. AP remains server-side; other fallback providers stay closed until needed. Cookies remain in the browser's native cookie jar.`
+        : `Opened ${opened} of ${initialSourceEntries.length} initial provider tabs in this browser session; the browser blocked the remainder. Fallback providers stay closed until needed. Use individual View source page links when required.`
+    })
     const updateTabSelection = (datum) => {
       const tab = root.querySelector(`[data-dictionary-builder-tab="${datum}"]`)
       tab?.classList.toggle("is-complete", Boolean(selectedCandidates[datum]?.value))
@@ -491,13 +528,13 @@
         ? statusSourceIds.map((provider) => sourceById.get(provider)).filter(Boolean)
         : (snapshot.sources || []).filter((source) => source.datumStatus?.[datum]?.status !== "not_offered")
       const statuses = statusSources.map((source) => `${source.provider}: ${dictionaryBuilderStatusLabel(source.datumStatus?.[datum]?.status || "not_offered")}`).join(" · ")
-      const robotSource = statusSources.find((source) => source.datumStatus?.[datum]?.status === "robot_blocked" || source.status === "robot_blocked")
+      const robotSource = statusSources.find((source) => isDictionaryBuilderPromptStatus(source.datumStatus?.[datum]?.status) || isDictionaryBuilderPromptStatus(source.status))
       const sectionSummary = dialog.querySelector("[data-dictionary-builder-section-summary]")
       const datumLabel = dictionaryBuilderFields.find(([key]) => key === datum)?.[1] || datum
       const tabHeading = dialog.querySelector("[data-dictionary-builder-tab-heading]")
       if (tabHeading) tabHeading.textContent = datumLabel
       if (sectionSummary) sectionSummary.textContent = robotSource
-        ? `Queried: ${statuses || "no applicable source"}. Robot prompt required for ${robotSource.provider}; the run remains active. Complete the prompt in the opened source tab, then close it to retry.`
+        ? `Queried: ${statuses || "no applicable source"}. Cookie/robot prompt required for ${robotSource.provider}; this datum is paused. Resolve it in the opened source tab, then close that tab to retry.`
         : `Queried: ${statuses || "no applicable source"}.`
       panels.replaceChildren()
       const section = document.createElement("section")
@@ -530,18 +567,28 @@
       candidates.forEach((candidate) => {
         const label = document.createElement("label")
         const candidateStatus = candidate.datumStatus?.[datum]?.status || "available"
-        label.className = `dictionary-builder-candidate${candidateStatus === "robot_blocked" ? " dictionary-builder-candidate-robot" : ""}`
+        label.className = `dictionary-builder-candidate${isDictionaryBuilderPromptStatus(candidateStatus) ? " dictionary-builder-candidate-robot" : ""}`
         const radio = document.createElement("input")
         radio.type = "radio"
         radio.name = `dictionary-builder-${datum}`
         radio.value = candidate.provider
         radio.checked = selectedCandidates[datum]?.provider === candidate.provider
         const title = document.createElement("strong")
-        title.textContent = candidateStatus === "robot_blocked" ? `${candidate.provider} — robot verification required` : candidate.provider
+        title.textContent = isDictionaryBuilderPromptStatus(candidateStatus) ? `${candidate.provider} — cookie/robot prompt; paused` : candidate.provider
+        if (datum === "audio" || datum === "verbFormAudio") {
+          const audioValues = candidate.fields?.[datum]
+          const fileNames = datum === "audio"
+            ? (Array.isArray(audioValues) ? audioValues.map((item) => item?.fileName).filter(Boolean) : [])
+            : (audioValues && typeof audioValues === "object" ? Object.values(audioValues).map((item) => item?.fileName).filter(Boolean) : [])
+          const audioStatus = document.createElement("span")
+          audioStatus.className = "dictionary-builder-audio-file-status"
+          audioStatus.textContent = fileNames.length ? `Live file: ${fileNames.join(", ")}` : "No live file"
+          label.append(title, audioStatus)
+        } else label.append(title)
         const input = document.createElement("textarea")
-        const candidateValue = candidateStatus === "robot_blocked" ? "" : typeof candidate.fields[datum] === "object" ? JSON.stringify(candidate.fields[datum]) : String(candidate.fields[datum] || "")
+        const candidateValue = isDictionaryBuilderPromptStatus(candidateStatus) ? "" : typeof candidate.fields[datum] === "object" ? JSON.stringify(candidate.fields[datum]) : String(candidate.fields[datum] || "")
         input.value = radio.checked ? selectedCandidates[datum].value : candidateValue
-        input.placeholder = candidateStatus === "robot_blocked" ? "Complete the robot prompt, then enter the verified value here." : ""
+        input.placeholder = isDictionaryBuilderPromptStatus(candidateStatus) ? "Resolve the cookie/robot prompt, then enter the verified value here." : ""
         input.dataset.dictionaryBuilderCandidateValue = datum
         input.dataset.dictionaryBuilderProvider = candidate.provider
         const saveCandidate = () => {
@@ -552,15 +599,15 @@
         input.addEventListener("focus", () => { radio.checked = true; saveCandidate() })
         input.addEventListener("input", () => { saveCandidate(); sizeDictionaryBuilderTextareas(candidateList) })
         radio.addEventListener("change", saveCandidate)
-        label.append(radio, title)
+        label.append(radio)
         const sourceLink = appendSourceLink(label, candidate.provider, candidate.sourceUrl)
-        if (candidateStatus === "robot_blocked") {
+        if (isDictionaryBuilderPromptStatus(candidateStatus)) {
           const retry = document.createElement("button")
           retry.type = "button"
           retry.className = "portal-button portal-button-blue-action"
           retry.textContent = "Retry provider"
-          retry.title = `Retry ${candidate.provider} after completing its robot-verification prompt.`
-          retry.setAttribute("aria-label", `Retry ${candidate.provider} after completing its robot-verification prompt`)
+          retry.title = `Retry ${candidate.provider} after resolving its cookie/robot prompt.`
+          retry.setAttribute("aria-label", `Retry ${candidate.provider} after resolving its cookie/robot prompt`)
           const retryProvider = async () => {
             retry.disabled = true
             retry.textContent = "Retrying..."
@@ -593,6 +640,7 @@
               return null
             }
             robotHandoffTabs.set(candidate.provider, challengeTab)
+            sourceBrowserTabs.set(candidate.provider, challengeTab)
             dialog.querySelector("[data-dictionary-builder-message]").textContent = `Complete the ${candidate.provider} robot check in the new tab. Close that tab when finished; Builder will retry the scrape automatically.`
             const watchTab = window.setInterval(() => {
               if (!challengeTab.closed) return
@@ -606,7 +654,6 @@
             event.preventDefault()
             openChallengeTab()
           })
-          window.setTimeout(() => openChallengeTab(), 0)
         }
         label.append(input)
         candidateList.append(label)
@@ -711,7 +758,7 @@
         if (["grammarClassification", "originReferences", "verbForms"].includes(datum)) { try { value = JSON.parse(value) } catch { return } }
         selections[datum] = { provider: selection.provider, value }
       })
-      const unresolvedRobotDatum = Object.entries(selectedCandidates).find(([, selection]) => selection.status === "robot_blocked" && !String(selection.value || "").trim())
+      const unresolvedRobotDatum = Object.entries(selectedCandidates).find(([, selection]) => isDictionaryBuilderPromptStatus(selection.status) && !String(selection.value || "").trim())
       if (unresolvedRobotDatum) {
         dialog.querySelector("[data-dictionary-builder-message]").textContent = `Complete the robot verification for ${unresolvedRobotDatum[1].provider}, then enter the verified ${unresolvedRobotDatum[0]} value before applying.`
         return
@@ -732,7 +779,11 @@
         }
         const data = await response.json()
         if (!response.ok || !data.ok) throw new Error(data.error || "Dictionary Builder Apply failed.")
+        if (data.entry) {
+          window.SIS_VOCABULARY_ESL?.hydrate(pane, data.entry, { preserveSyllabication: true })
+        }
         message.textContent = data.appliedFields?.length ? `Applied ${data.appliedFields.join(", ")}.` : "No selected data changed this entry."
+        closeSourceBrowserTabs()
         if (typeof dialog.close === "function") dialog.close()
       } catch (error) { message.textContent = error.message || "Dictionary Builder Apply failed." } finally { apply.disabled = false }
     })

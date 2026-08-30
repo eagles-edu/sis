@@ -179,6 +179,8 @@ function oxfordFields(fieldEntries, definitionEntries = fieldEntries) {
       verbV5: forms.verbV5 || "",
     }
     if (!Object.values(fields.verbForms).some(Boolean)) delete fields.verbForms
+    const formAudio = definitionEntries.find((entry) => Object.keys(entry.verbFormAudio || {}).length)?.verbFormAudio || {}
+    if (Object.keys(formAudio).length) fields.verbFormAudio = formAudio
   }
   return fields
 }
@@ -212,21 +214,55 @@ export function parseOxfordHtml(html, { sourceUrl = "", lookupWord = "", partOfS
   return { ok: true, provider: "oxford", sourceUrl: normalizedSourceUrl, lookupWord: text(lookupWord), entries: parsedEntries, selectedEntries, fields: oxfordFields(selectedEntries, parsedEntries) }
 }
 
-async function previewOxfordByBase(entry, fetchImpl, baseUrl) {
-  const lookupWord = text(entry?.english)
-  if (!lookupWord) return { ok: false, available: true, message: "An English word is required for Oxford preview; no Library data was changed." }
-  const slug = encodeURIComponent(lookupWord.replace(/\s+/gu, "-"))
-  const sourceUrl = validOxfordUrl(`${baseUrl}${slug}?q=${encodeURIComponent(lookupWord)}`)
+function findOxfordPosUrl(html, lookupWord, partOfSpeech) {
+  const requestedWord = text(lookupWord).toLocaleLowerCase("en-US")
+  const requestedPos = text(partOfSpeech).toLocaleLowerCase("en-US")
+  if (!requestedWord || !requestedPos) return ""
+  const $ = load(String(html || ""))
+  const links = $(".responsive_row.nearby a[href], .nearby a[href], a[href][title]").toArray()
+  for (const node of links) {
+    const link = $(node)
+    const href = link.attr("href") || ""
+    const word = text(link.find("data.hwd, .hwd").first().text() || link.text()).toLocaleLowerCase("en-US")
+    const title = text(link.attr("title")).toLocaleLowerCase("en-US")
+    if (!word.startsWith(requestedWord) || !(title.includes(requestedPos) || text(link.find("pos").first().text()).toLocaleLowerCase("en-US") === requestedPos)) continue
+    try { return validOxfordUrl(new URL(href, OXFORD_BASE_URL).toString()) } catch {}
+  }
+  return ""
+}
+
+async function fetchOxfordPage(fetchImpl, sourceUrl) {
   let response
   try {
     response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Oxford-preview/1.0" }, redirect: "follow" })
   } catch (error) { return { ok: false, available: false, message: `Oxford is unavailable; no Library data was changed. ${error.message}` } }
   if (!response.ok) return { ok: false, available: false, message: `Oxford is unavailable (HTTP ${response.status || 503}); no Library data was changed.` }
-  let html
-  try { html = await boundedResponseText(response) } catch (error) { return { ok: false, available: false, message: `Oxford is unavailable; no Library data was changed. ${error.message}` } }
-  let finalUrl
-  try { finalUrl = response.url ? validOxfordUrl(response.url) : sourceUrl } catch { finalUrl = sourceUrl }
-  return parseOxfordHtml(html, { sourceUrl: finalUrl, lookupWord, partOfSpeech: text(entry?.partOfSpeech) })
+  try {
+    return { ok: true, url: response.url ? validOxfordUrl(response.url) : sourceUrl, html: await boundedResponseText(response) }
+  } catch (error) { return { ok: false, available: false, message: `Oxford is unavailable; no Library data was changed. ${error.message}` } }
+}
+
+async function previewOxfordByBase(entry, fetchImpl, baseUrl) {
+  const lookupWord = text(entry?.english)
+  if (!lookupWord) return { ok: false, available: true, message: "An English word is required for Oxford preview; no Library data was changed." }
+  const slug = encodeURIComponent(lookupWord.replace(/\s+/gu, "-"))
+  const sourceUrl = validOxfordUrl(`${baseUrl}${slug}?q=${encodeURIComponent(lookupWord)}`)
+  const requestedPartOfSpeech = text(entry?.partOfSpeech)
+  const firstPage = await fetchOxfordPage(fetchImpl, sourceUrl)
+  if (!firstPage.ok) return firstPage
+  let page = firstPage
+  let parsed = parseOxfordHtml(page.html, { sourceUrl: page.url, lookupWord, partOfSpeech: requestedPartOfSpeech })
+  if (requestedPartOfSpeech.toLocaleLowerCase("en-US") === "verb" && !parsed.selectedEntries?.length) {
+    const verbUrl = findOxfordPosUrl(page.html, lookupWord, requestedPartOfSpeech)
+    if (verbUrl && verbUrl !== page.url) {
+      const verbPage = await fetchOxfordPage(fetchImpl, verbUrl)
+      if (verbPage.ok) {
+        page = verbPage
+        parsed = parseOxfordHtml(page.html, { sourceUrl: page.url, lookupWord, partOfSpeech: requestedPartOfSpeech })
+      }
+    }
+  }
+  return parsed
 }
 
 export async function previewOxfordLibraryEntry(entry, fetchImpl = fetch) {

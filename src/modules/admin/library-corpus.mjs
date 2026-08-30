@@ -1549,7 +1549,7 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
     if (field === "audio" || field === "verbFormAudio") {
       if (manualSelection) continue
       const media = (source.privateMedia || []).filter((item) => field === "audio" ? (item.slot || "headword") === "headword" : item.slot && item.slot !== "headword")
-      selectedAudio.push({ provider, media })
+      selectedAudio.push({ field, provider, media })
       claimLedger.push({ field, provider, status: "available" })
       continue
     }
@@ -1587,8 +1587,8 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
     else proposed[field] = value
     claimLedger.push({ field, provider, status: manualSelection ? "manual" : source.datumStatus?.[datum]?.status || "unavailable" })
   }
-  const definitionWasSelected = Object.keys(definitionFields).length || selectedFields.some((field) => ["originPath", "etymology", "worksCited"].includes(field))
-  if (definitionWasSelected) proposed.definition = formatDictionaryBuilderDefinition({ ...existing, ...proposed }, { definition: existing.definition, ...definitionFields, ...proposed }, snapshot.citations)
+  const definitionWasSelected = selectedFields.includes("definition")
+  if (definitionWasSelected) proposed.definition = text(definitionFields.definition || existing.definition)
   const primarySource = claimLedger.find((claim) => claim.field === "definition")?.provider || claimLedger[0]?.provider || null
   proposed.dictionaryProvider = primarySource || existing.dictionaryProvider || null
   proposed.dictionarySourceUrl = primarySource ? ((snapshot.privateSources || []).find((item) => item.provider === primarySource)?.sourceUrl || null) : existing.dictionarySourceUrl || null
@@ -1608,6 +1608,7 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
   const existingMediaKeys = new Set(existingMediaAssets.map((asset) => `${text(asset.provider)}\u0000${text(asset.slot || "headword")}\u0000${text(asset.sourceUrl)}`))
   try {
     for (const selection of selectedAudio) {
+      if (!selection.media.length) throw dictionaryStatusError(`Selected ${selection.provider} ${selection.field === "verbFormAudio" ? "verb-form" : "headword"} audio has no downloadable source`, 422)
       for (const media of selection.media) {
         if (!media?.sourceUrl) continue
         const mediaKey = `${text(selection.provider)}\u0000${text(media.slot || "headword")}\u0000${text(media.sourceUrl)}`
@@ -1617,12 +1618,11 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
         finalized.push(await finalizeLibraryAudio(download))
       }
     }
-    if (!Object.keys(data).length && !finalized.length) return { ok: true, entry: mapEntry(existing), appliedFields: [], warnings: snapshot.warnings || [] }
     const updated = await client.$transaction(async (tx) => {
       const value = Object.keys(data).length ? await tx.libraryEntry.update({ where: { id }, data: { ...data, lastEditedByName: clamp(actor.name) } }) : existing
       for (const download of finalized) await upsertLibraryMediaAsset(tx, download, actor)
       if (Object.keys(data).length || finalized.length) await writeRevision(tx, value, "dictionary_builder_apply", actor.name, actor.role || "admin")
-      await recordDictionaryBuilderMetrics(tx, snapshot, [...new Set(selectedFields.map((field) => DICTIONARY_BUILDER_FIELD_TO_DATUM[field]))], existing.partOfSpeech)
+      await recordDictionaryBuilderMetrics(tx, snapshot, selectedFields.map((field) => ({ provider: text(selections[field]?.provider), datum: DICTIONARY_BUILDER_FIELD_TO_DATUM[field] })), existing.partOfSpeech)
       return value
     })
     return { ok: true, entry: mapEntry(updated), appliedFields: [...Object.keys(data), ...(finalized.some((item) => item.slot === "headword") ? ["audio"] : []), ...(finalized.some((item) => item.slot !== "headword") ? ["verbFormAudio"] : [])], warnings: snapshot.warnings || [] }

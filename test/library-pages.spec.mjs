@@ -259,6 +259,7 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(libraryReviewWorkbench, /const mwEtymology = \(data = \{\}\)/)
   assert.match(libraryReviewWorkbench, /\.\.\.current, \.\.\.nonEmptyMwFields, \.\.\.\(etymology \? \{ etymology \} : \{\}\)/)
   assert.match(libraryReviewWorkbench, /window\.SIS_VOCABULARY_ESL\?\.hydrate\(pane, merged, \{ preserveSyllabication: true \}\)/)
+  assert.match(libraryReviewWorkbench, /window\.SIS_VOCABULARY_ESL\?\.hydrate\(pane, data\.entry, \{ preserveSyllabication: true \}\)/)
   assert.match(sharedVocabularyEditor, /data-vocabulary-verb-forms[\s\S]*verbInfinitive[\s\S]*verbV1[\s\S]*verbV2[\s\S]*verbV3[\s\S]*verbV4[\s\S]*verbV5/)
   assert.match(sharedVocabularyEditor, /maxlength="50000"/)
   assert.match(sharedVocabularyEditor, /function normalizeSyllabication\(value\)[\s\S]*replace\(\/\\p\{Z\}\+\/gu, " "\)[\s\S]*input\.value = normalizeSyllabication\(input\.value\)/)

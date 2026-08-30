@@ -13,7 +13,7 @@ import { previewOxfordBreLibraryEntry, previewOxfordLibraryEntry } from "./oxfor
 import { fetchWithExponentialBackoff } from "./provider-http.mjs"
 
 export const DICTIONARY_BUILDER_VERSION = "1.5"
-export const DICTIONARY_BUILDER_DATUM_STATUS = Object.freeze(["available", "not_offered", "not_found", "not_provided", "robot_blocked", "blocked", "malformed", "unavailable", "unsupported", "unselected", "manual", "invalid"])
+export const DICTIONARY_BUILDER_DATUM_STATUS = Object.freeze(["available", "not_offered", "not_found", "not_provided", "robot_blocked", "cookie_prompt", "robot_prompt", "paused", "blocked", "malformed", "unavailable", "unsupported", "unselected", "manual", "invalid"])
 export const DICTIONARY_BUILDER_DATUMS = Object.freeze(["vietnamese", "syllabication", "syllableCount", "grammarClassification", "audio", "verbFormAudio", "definition", "verbForms", "stems", "synonymsAntonyms", "examples", "firstKnownUse", "originPath", "etymology", "worksCited"])
 export const DICTIONARY_BUILDER_SYLLABLE_PROVIDER = "wordhelp"
 
@@ -25,6 +25,13 @@ const snapshots = new Map()
 const datumRoundRobinCursors = new Map()
 const text = (value) => String(value == null ? "" : value).replace(/\s+/gu, " ").trim()
 const lower = (value) => text(value).toLocaleLowerCase("en-US")
+function audioFileName(sourceUrl) {
+  try {
+    const pathname = new URL(sourceUrl).pathname
+    const fileName = decodeURIComponent(pathname.slice(pathname.lastIndexOf("/") + 1))
+    return /^[\w.-]+\.(?:mp3|ogg|wav)$/iu.test(fileName) ? fileName : ""
+  } catch { return "" }
+}
 const nowDate = () => new Date()
 const WORDHELP_BROWSER_TIMEOUT_MS = 30000
 const WORDHELP_BROWSER_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
@@ -99,6 +106,18 @@ export const DICTIONARY_BUILDER_BIC_WEIGHTS = Object.freeze({ completeness: 0.15
 const scoringSourceById = new Map(DICTIONARY_BUILDER_SCORING_SOURCES.map((item) => [item.id, item]))
 const scoringDatumCapability = Object.freeze({ syllableCount: "syllabication", posSpecific: "grammarClassification", historyOrigin: "etymology" })
 const scoringDatumForMetric = Object.freeze({ syllableCount: "syllabication", posSpecific: "grammarClassification", historyOrigin: "etymology" })
+const DICTIONARY_BUILDER_AUDIO_DEFAULT_PROVIDER = "britannica"
+const DICTIONARY_BUILDER_VERB_FORM_AUDIO_DEFAULT_PROVIDER = "oxford_ame"
+export const DICTIONARY_BUILDER_MANDATORY_DATUM_PROVIDERS = Object.freeze({
+  vietnamese: Object.freeze(["google_translate"]),
+  syllabication: Object.freeze(["wordhelp", "ldoce"]),
+  syllableCount: Object.freeze(["wordhelp"]),
+  audio: Object.freeze(["britannica"]),
+  verbFormAudio: Object.freeze(["oxford_ame"]),
+  verbForms: Object.freeze(["merriam_webster_api"]),
+  synonymsAntonyms: Object.freeze(["merriam_webster_thesaurus"]),
+  firstKnownUse: Object.freeze(["merriam_webster_api"]),
+})
 
 function scoringBaseProvider(provider) {
   return scoringSourceById.get(text(provider))?.provider || text(provider)
@@ -241,7 +260,8 @@ export function formatDictionaryBuilderDefinition(entry, fields = {}, citations 
   }
   const lines = [`**${headword}**${partOfSpeech ? ` *${partOfSpeech}*` : ""}`]
   if (definition) lines.push(definition)
-  const forms = ["verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5"].map((key) => [key, text(fields[key])]).filter(([, value]) => value)
+  const formValues = fields.verbForms && typeof fields.verbForms === "object" && !Array.isArray(fields.verbForms) ? fields.verbForms : fields
+  const forms = ["verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5"].map((key) => [key, text(formValues[key])]).filter(([, value]) => value)
   if (forms.length) lines.push(`**Verb Forms**\n${forms.map(([key, value]) => `${key.replace("verb", "").replace("Infinitive", "INF")}: ${value}`).join("\n")}`)
   if (fields.stems) lines.push(`**Stems**\n${listLines(fields.stems)}`)
   const relations = relationRows(fields.synonymsAntonyms)
@@ -339,13 +359,16 @@ export function normalizeProviderPreview(provider, preview, entry) {
   const inflections = Array.isArray(primary?.inflections) ? primary.inflections.map((item) => text(typeof item === "object" ? item.form : item)).filter(Boolean) : []
   const providedForms = fields.verbForms && typeof fields.verbForms === "object" && !Array.isArray(fields.verbForms) ? fields.verbForms : {}
   const forms = ["verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5"].reduce((result, key, index) => ({ ...result, [key]: providedForms[key] || fields[key] || inflections[index] || "" }), {})
-  const audio = ["us", "uk"].flatMap((dialect) => primary?.audio?.[dialect] ? [{ dialect, available: true }] : [])
-  const verbFormAudio = primary?.verbFormAudio && typeof primary.verbFormAudio === "object" ? primary.verbFormAudio : {}
+  const audio = ["us", "uk"].flatMap((dialect) => primary?.audio?.[dialect] ? [{ dialect, available: true, fileName: audioFileName(primary.audio[dialect]) }] : [])
+  const verbFormAudio = primary?.verbFormAudio && typeof primary.verbFormAudio === "object"
+    ? primary.verbFormAudio
+    : fields.verbFormAudio && typeof fields.verbFormAudio === "object" ? fields.verbFormAudio : {}
+  const safeVerbFormAudio = Object.fromEntries(Object.entries(verbFormAudio).map(([slot, values]) => [slot, { us: Boolean(values?.us), fileName: audioFileName(values?.us) }]))
   const privateMedia = [
     ...audio.flatMap(({ dialect }) => [{ dialect, slot: "headword", sourceUrl: primary.audio[dialect] }]),
     ...Object.entries(verbFormAudio).flatMap(([slot, values]) => values?.us ? [{ dialect: "us", slot, sourceUrl: values.us }] : []),
   ]
-  const audioValue = audio.length || Object.keys(verbFormAudio).length ? [...audio, ...Object.keys(verbFormAudio).map((slot) => ({ dialect: "us", slot, available: true }))] : []
+  const audioValue = audio.length || Object.keys(safeVerbFormAudio).length ? [...audio, ...Object.keys(safeVerbFormAudio).map((slot) => ({ dialect: "us", slot, available: true, fileName: safeVerbFormAudio[slot].fileName }))] : []
   const examples = entries.flatMap((item) => Array.isArray(item?.senses) ? item.senses.flatMap((sense) => Array.isArray(sense?.examples) ? sense.examples.map((example) => text(typeof example === "object" ? example.text : example)).filter(Boolean) : []) : [])
   const synonyms = firstDatumValue(fields.synonyms, dictionaryMetadata.synonyms, additionalSections.synonyms)
   const antonyms = firstDatumValue(fields.antonyms, dictionaryMetadata.antonyms, additionalSections.antonyms)
@@ -369,7 +392,7 @@ export function normalizeProviderPreview(provider, preview, entry) {
   const values = {
     grammarClassification: normalizedFields.grammarClassification,
     audio: audioValue.filter((item) => item.slot === undefined || item.slot === "headword"),
-    verbFormAudio,
+    verbFormAudio: safeVerbFormAudio,
     definition: normalizedFields.definition,
     verbForms: normalizedFields.verbForms,
     stems: normalizedFields.stems,
@@ -383,7 +406,7 @@ export function normalizeProviderPreview(provider, preview, entry) {
     worksCited: apaCitation(provider, entry?.english, preview.sourceUrl),
   }
   const headwordAudio = audioValue.filter((item) => item.slot === undefined || item.slot === "headword")
-  return { provider, status: "available", message: "", sourceUrl: text(preview.sourceUrl), fields: { ...normalizedFields, audio: headwordAudio, verbFormAudio }, entries: entries.map((item) => ({ headword: text(item.headword), partOfSpeech: text(item.partOfSpeech), senses: Array.isArray(item.senses) ? item.senses.map((sense) => ({ number: text(sense.number), definition: text(sense.definition), examples: (sense.examples || []).map((example) => text(typeof example === "object" ? example.text : example)).filter(Boolean) })) : [] })), datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, datumStatus(values[datum], offered[datum])])), media: headwordAudio, privateMedia }
+  return { provider, status: "available", message: "", sourceUrl: text(preview.sourceUrl), fields: { ...normalizedFields, audio: headwordAudio, verbFormAudio: safeVerbFormAudio }, entries: entries.map((item) => ({ headword: text(item.headword), partOfSpeech: text(item.partOfSpeech), senses: Array.isArray(item.senses) ? item.senses.map((sense) => ({ number: text(sense.number), definition: text(sense.definition), examples: (sense.examples || []).map((example) => text(typeof example === "object" ? example.text : example)).filter(Boolean) })) : [] })), datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, datumStatus(values[datum], offered[datum])])), media: headwordAudio, privateMedia }
 }
 
 async function previewEtymonlineAdapter(entry) {
@@ -569,11 +592,12 @@ export function dictionaryBuilderBicDatumProviderIds(datum, rankedSources = []) 
     .filter(isConfirmedCandidate)
     .map((item) => text(item?.provider))
     .filter((provider, index, providers) => index === providers.indexOf(provider) && manifestById.get(scoringBaseProvider(provider))?.capabilities?.[datum])
-  if (datum === "firstKnownUse") return eligible.filter((provider) => ["merriam_webster", "merriam_webster_api", "merriam_webster_scrape", "wiktionary"].includes(provider)).slice(0, 3)
-  if (datum === "synonymsAntonyms") return [ ...(eligible.includes("merriam_webster_thesaurus") ? ["merriam_webster_thesaurus"] : []), ...eligible.filter((provider) => provider !== "merriam_webster_thesaurus")].filter((provider, index, providers) => manifestById.has(scoringBaseProvider(provider)) && index < 3 && providers.indexOf(provider) === index)
-  if (datum !== "syllabication") return eligible.slice(0, 3)
-  const independent = eligible.filter((provider) => provider !== DICTIONARY_BUILDER_SYLLABLE_PROVIDER && scoringBaseProvider(provider) === "merriam_webster")
-  return [ ...(eligible.includes(DICTIONARY_BUILDER_SYLLABLE_PROVIDER) ? [DICTIONARY_BUILDER_SYLLABLE_PROVIDER] : []), ...independent].filter((provider, index, providers) => manifestById.has(scoringBaseProvider(provider)) && index < 2 && providers.indexOf(provider) === index)
+  const restricted = datum === "firstKnownUse"
+    ? eligible.filter((provider) => ["merriam_webster", "merriam_webster_api", "merriam_webster_scrape", "wiktionary"].includes(provider))
+    : eligible
+  const mandatory = (DICTIONARY_BUILDER_MANDATORY_DATUM_PROVIDERS[datum] || []).filter((provider) => manifestById.get(scoringBaseProvider(provider))?.capabilities?.[datum])
+  const ordered = [...mandatory, ...restricted.filter((provider) => !mandatory.includes(provider))]
+  return ordered.filter((provider, index, providers) => manifestById.has(scoringBaseProvider(provider)) && providers.indexOf(provider) === index).slice(0, datum === "vietnamese" ? 1 : 3)
 }
 
 function rankedDatumProviderIds(datum, rankedSources = []) {
@@ -660,17 +684,7 @@ export async function previewDictionaryBuilder(entry, { ownerKey, fetcher = adap
   for (const datum of requestedDatums) {
     const rankedForDatum = Array.isArray(rankedSourcesByDatum?.[datum]) ? rankedSourcesByDatum[datum] : await dictionaryBuilderRankDatumSources(entry?.partOfSpeech, datum)
     const rankedOrder = rankedDatumProviderIds(datum, rankedForDatum)
-    const sourceOrder = datum === "verbForms"
-      ? ["merriam_webster_api", "oxford_ame", "oxford_bre"]
-      : datum === "audio"
-      ? ["britannica", "merriam_webster_scrape", "oxford_ame", "oxford_bre", "merriam_webster_thesaurus"]
-      : datum === "verbFormAudio"
-        ? ["oxford_ame", "oxford_bre"]
-      : datum === "syllabication"
-      ? [DICTIONARY_BUILDER_SYLLABLE_PROVIDER, "merriam_webster_api"]
-      : datum === "synonymsAntonyms"
-        ? ["merriam_webster_thesaurus", ...rankedOrder.filter((provider) => provider !== "merriam_webster_thesaurus")].slice(0, 3)
-      : rankedOrder
+    const sourceOrder = dictionaryBuilderBicDatumProviderIds(datum, rankedForDatum)
     const normalizedSourceOrder = sourceOrder.map((provider) => results.find((result) => sameDictionaryProvider(result.provider, provider))?.provider || provider)
     datumSourceOrder[datum] = normalizedSourceOrder
     for (const provider of normalizedSourceOrder) {
@@ -683,9 +697,8 @@ export async function previewDictionaryBuilder(entry, { ownerKey, fetcher = adap
   for (const datum of DICTIONARY_BUILDER_DATUMS) {
     const rankedForDatum = Array.isArray(rankedSourcesByDatum?.[datum]) ? rankedSourcesByDatum[datum] : await dictionaryBuilderRankDatumSources(entry?.partOfSpeech, datum)
     const available = currentAvailableDatumProviders(datum, results, rankedForDatum)
-    const mandatory = datum === "syllabication" ? DICTIONARY_BUILDER_SYLLABLE_PROVIDER : datum === "synonymsAntonyms" ? "merriam_webster_thesaurus" : ""
-    const candidateLimit = datum === "syllabication" || datum === "verbFormAudio" ? 2 : datum === "audio" ? 5 : 3
-    bicTopThreeByDatum[datum] = [ ...(mandatory && available.includes(mandatory) ? [mandatory] : []), ...available.filter((provider) => provider !== mandatory) ].slice(0, candidateLimit)
+    const availableRanked = rankedForDatum.filter((item) => available.includes(text(item?.provider)))
+    bicTopThreeByDatum[datum] = dictionaryBuilderBicDatumProviderIds(datum, availableRanked)
   }
   const snapshotId = crypto.randomUUID()
   const createdAt = nowDate().toISOString()
@@ -757,16 +770,19 @@ export function restoreDictionaryBuilderSnapshot(snapshot) {
 }
 
 export async function recordDictionaryBuilderMetrics(client, snapshot, selectedFields, partOfSpeech) {
-  const selected = new Set(selectedFields)
+  const selected = new Set((Array.isArray(selectedFields) ? selectedFields : []).map((item) => `${text(item?.provider)}\u0000${text(item?.datum)}`))
   for (const result of snapshot.sources || []) {
     for (const datum of DICTIONARY_BUILDER_DATUMS) {
       const status = result.datumStatus?.[datum]?.status
+      const countsTowardAvailability = status === "available" || status === "not_found" || status === "not_offered"
+      if (!countsTowardAvailability) continue
       const available = status === "available"
       const provider = result.provider === "merriam_webster" ? "merriam_webster_api" : result.provider
+      const selectedProviderDatum = selected.has(`${result.provider}\u0000${datum}`) || selected.has(`${provider}\u0000${datum}`)
       await client.dictionaryProviderSuitabilityMetric.upsert({
         where: { provider_partOfSpeech_datum: { provider, partOfSpeech: lower(partOfSpeech) || "any", datum } },
-        create: { provider, partOfSpeech: lower(partOfSpeech) || "any", datum, attemptCount: 1, availableCount: available ? 1 : 0, eligibleApplyCount: available ? 1 : 0, selectedApplyCount: available && selected.has(datum) ? 1 : 0 },
-        update: { attemptCount: { increment: 1 }, availableCount: available ? { increment: 1 } : undefined, eligibleApplyCount: available ? { increment: 1 } : undefined, selectedApplyCount: available && selected.has(datum) ? { increment: 1 } : undefined },
+        create: { provider, partOfSpeech: lower(partOfSpeech) || "any", datum, attemptCount: 1, availableCount: available ? 1 : 0, eligibleApplyCount: available ? 1 : 0, selectedApplyCount: available && selectedProviderDatum ? 1 : 0 },
+        update: { attemptCount: { increment: 1 }, availableCount: available ? { increment: 1 } : undefined, eligibleApplyCount: available ? { increment: 1 } : undefined, selectedApplyCount: available && selectedProviderDatum ? { increment: 1 } : undefined },
       })
     }
   }

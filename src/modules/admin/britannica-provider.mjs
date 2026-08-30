@@ -29,9 +29,17 @@ function hasBritannicaSense(node) {
 }
 
 function audioUrl(node) {
-  const value = cleanDictionaryText(node.find("[data-src-mp3], audio source[type='audio/mpeg'], audio source[src], [data-audio-url]").first().attr("data-src-mp3") || node.find("audio source[type='audio/mpeg'], audio source[src], [data-audio-url]").first().attr("src") || node.find("[data-audio-url]").first().attr("data-audio-url"))
-  if (value) {
-    try { const parsed = new URL(value, "https://www.britannica.com"); if (parsed.protocol === "https:" && BRITANNICA_AUDIO_HOSTNAMES.has(parsed.hostname.toLowerCase())) return parsed.toString() } catch {}
+  const candidates = node.find("[data-src-mp3], audio source[type='audio/mpeg'], audio source[src], [data-audio-url], a[href]").map((_, child) => {
+    const element = node.find(child)
+    return element.attr("data-src-mp3") || element.attr("src") || element.attr("data-audio-url") || element.attr("href") || ""
+  }).get()
+  for (const candidate of candidates) {
+    const value = cleanDictionaryText(candidate)
+    if (!value) continue
+    try {
+      const parsed = new URL(value, "https://www.britannica.com")
+      if (parsed.protocol === "https:" && BRITANNICA_AUDIO_HOSTNAMES.has(parsed.hostname.toLowerCase()) && /\/audio\//iu.test(parsed.pathname) && /\.(?:mp3|ogg|wav)$/iu.test(parsed.pathname)) return parsed.toString()
+    } catch {}
   }
   const popup = node.find(".play_pron[data-lang='en_us'][data-dir][data-file], [data-lang='en_us'][data-dir][data-file]").first()
   const language = cleanDictionaryText(popup.attr("data-lang")).replace("_", "/")

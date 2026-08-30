@@ -25,6 +25,20 @@ test("Oxford parser extracts American audio for verb forms only on verb entries"
   assert.equal(result.entries[0].verbFormAudio.verbV1.us.endsWith("transact__us_1_rr.mp3"), true)
   assert.equal(result.entries[0].verbFormAudio.verbV2.us.endsWith("transacted__us_1.mp3"), true)
   assert.equal(result.entries[0].verbFormAudio.verbV4.us.endsWith("transacting__us_1.mp3"), true)
+  assert.equal(result.fields.verbFormAudio.verbV1.us.endsWith("transact__us_1_rr.mp3"), true)
+})
+
+test("Oxford preview follows Nearby words to the POS-specific verb page", async () => {
+  const nounPage = '<div id="entryContent"><div class="entry"><div class="top-g"><div class="webtop-g"><h2 class="h">debate</h2><span class="pos">noun</span></div></div><span class="sn-g"><span class="def">a discussion</span></span></div></div><div class="responsive_row nearby"><h4>Nearby words</h4><a href="https://www.oxfordlearnersdictionaries.com/definition/american_english/debate_2" title="Definition of debate verb in American English"><data class="hwd">debate <pos>verb</pos></data></a></div>'
+  const verbPage = '<div id="entryContent"><div class="entry"><div class="top-g"><div class="webtop-g"><h2 class="h">debate</h2><span class="pos">verb</span></div></div><span class="unbox" unbox="verbforms"><span class="vp-g" form="past"><span class="vp">debated</span><div class="sound" data-src-mp3="https://www.oxfordlearnersdictionaries.com/media/american_english/d/deb/debat/debated__us_1.mp3"></div></span></span><span class="sn-g"><span class="def">to discuss</span></span></div></div>'
+  const requested = []
+  const preview = await previewOxfordLibraryEntry({ english: "debate", partOfSpeech: "verb" }, async (url) => {
+    requested.push(String(url))
+    return { ok: true, status: 200, url: String(url), headers: new Headers(), text: async () => requested.length === 1 ? nounPage : verbPage }
+  })
+  assert.equal(requested.length, 2)
+  assert.match(requested[1], /debate_2/u)
+  assert.equal(preview.fields.verbFormAudio.verbV2.us.endsWith("debated__us_1.mp3"), true)
 })
 
 test("Oxford parser extracts live Verb Forms audio rows", () => {
