@@ -7,6 +7,15 @@
   const select = (field, label, values, attributes = "", rowUid = "shared", selected = "") => `<label class="vocabulary-pos-control">${escapeHtml(label)}<select name="vocabularyEsl-${escapeHtml(field)}-${safeUid(rowUid)}" data-vocabulary-esl-field="${escapeHtml(field)}" ${attributes}><option value="">Select</option>${values.map((value) => Array.isArray(value) ? option(value[0], value[1], `${value[2] || ""} ${selectedAttribute(selected, value[0])}`) : option(value, value, selectedAttribute(selected, value))).join("")}</select></label>`;
   const transitivityHelp = `<p class="vocabulary-transitivity-help"><strong>Types of transitivity</strong><br>Intransitive: no object needed; the thought is complete on its own (e.g., The baby sleeps.).<br>Transitive: takes an object; use this general choice when the exact subtype is not yet known.<br>Monotransitive: takes one direct object answering what? or whom? (e.g., She baked a cake.).<br>Ditransitive: takes both an indirect object and a direct object (e.g., He gave Mary a book.).<br>Ambitransitive: can be either transitive or intransitive depending on the sentence (e.g., He reads a book vs. He reads quietly.).</p>`;
   const grammarFields = ["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber"];
+  const vocabularyAudioSlots = Object.freeze([
+    ["headword", "Headword"],
+    ["verbInfinitive", "Infinitive"],
+    ["verbV1", "V1 - present"],
+    ["verbV2", "V2 - past"],
+    ["verbV3", "V3 - past participle"],
+    ["verbV4", "V4 - present participle"],
+    ["verbV5", "V5 - -s/-es form"],
+  ]);
   const nounTypes = [["common", "Common"], ["proper", "Proper"], ["concrete", "Concrete"], ["abstract", "Abstract"], ["material", "Material"], ["collective", "Collective"], ["compound", "Compound"], ["possessive", "Possessive"]];
   const nounNumbers = [["singular", "Singular"], ["plural", "Plural"], ["singular and plural", "Singular and Plural"]];
   const etymologyTypes = [["native", "Native English"], ["borrowed", "Borrowed / loanword"], ["derived", "Derived / affixed"], ["compound", "Compound"], ["eponym", "Eponym"], ["onomatopoeic", "Onomatopoeic"], ["unknown", "Unknown"]];
@@ -112,7 +121,15 @@
     </div>`;
   }
 
-  function parametersHtml(rowUid, { includeMwFill = false, includeLdoce = false, includeOxford = false, includeBritannica = false, includeMerriamWebster = false, includeDictionaryBuilder = false, includeTransitivityTools = false, includeOriginAnalysis = false } = {}) {
+  function audioEditorHtml(slot, label, rowUid) {
+    const uid = safeUid(rowUid);
+    const key = escapeHtml(slot);
+    return `<div class="vocabulary-audio-editor" data-vocabulary-audio-editor="${key}">
+      <input type="text" name="vocabularyAudioPath-${key}-${uid}" data-vocabulary-audio-field="${key}.path" placeholder="Audio path" aria-label="${escapeHtml(label)} US audio path">
+    </div>`;
+  }
+
+  function parametersHtml(rowUid, { includeMwFill = false, includeLdoce = false, includeOxford = false, includeBritannica = false, includeMerriamWebster = false, includeDictionaryBuilder = false, includeTransitivityTools = false, includeOriginAnalysis = false, includeAudioFields = false } = {}) {
     const uid = safeUid(rowUid);
     const mwFill = includeMwFill ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-mw-fill" data-vocabulary-mw-preview title="Fill only fields returned authoritatively by Merriam-Webster." aria-label="Fill Merriam-Webster fields">MW fill</button>` : "";
     const ldoceFill = includeLdoce ? `<button type="button" class="portal-button portal-button-blue-action vocabulary-ldoce-fill" data-vocabulary-ldoce-preview title="Preview LDOCE definitions, grammar labels, and protected UK/US audio before applying selected fields." aria-label="Preview LDOCE fields">LDOCE</button>` : "";
@@ -126,8 +143,10 @@
     const transitivityTools = includeTransitivityTools ? `<div class="vocabulary-transitivity-check"><button type="button" class="portal-button portal-button-blue-action" data-vocabulary-transitivity-check title="Compare the entered verb forms with the bundled corpus evidence. This check is advisory; saving remains allowed.">Check</button><button type="button" class="portal-button portal-button-blue-action" data-vocabulary-transitivity-autofill title="Suggest transitivity from the bundled corpus list. Review the suggestion before saving.">Auto-fill</button><p class="small" data-vocabulary-transitivity-message aria-live="polite"></p></div>` : "";
     return `<div class="vocabulary-pos-parameters" data-vocabulary-pos-parameters hidden>
       <div class="vocabulary-pos-controls" data-vocabulary-pos-controls></div>
-      <div class="vocabulary-verb-forms" data-vocabulary-verb-forms hidden>
-        ${[ ["verbInfinitive", "Infinitive"], ["verbV1", "V1 - present"], ["verbV2", "V2 - past"], ["verbV3", "V3 - past participle"], ["verbV4", "V4 - present participle"], ["verbV5", "V5 - -s/-es form"] ].map(([field, placeholder]) => `<input name="vocabularyEsl-${field}-${uid}" data-vocabulary-esl-field="${field}" placeholder="${placeholder}" aria-label="${placeholder}">`).join("")}
+      <div class="vocabulary-verb-forms${includeAudioFields ? " has-audio-fields" : ""}" data-vocabulary-verb-forms data-vocabulary-verb-form-layout="INF|V1|V2|V3|V4|V5" hidden>
+        <strong class="vocabulary-verb-forms-heading">Verb Forms</strong>
+        ${includeAudioFields ? `<div class="vocabulary-verb-form-headings" role="row">${vocabularyAudioSlots.slice(1).map(([field, placeholder]) => `<strong role="columnheader" data-vocabulary-verb-form-heading="${field}">${placeholder.startsWith("Infinitive") ? "INF" : placeholder.split(" ")[0]}</strong>`).join("")}</div>` : ''}
+        ${vocabularyAudioSlots.slice(1).map(([field, placeholder]) => includeAudioFields ? `<div class="vocabulary-verb-form-editor"><input name="vocabularyEsl-${field}-${uid}" data-vocabulary-esl-field="${field}" placeholder="${escapeHtml(placeholder)} text" aria-label="${escapeHtml(placeholder)} text">${audioEditorHtml(field, placeholder, uid)}</div>` : `<input name="vocabularyEsl-${field}-${uid}" data-vocabulary-esl-field="${field}" placeholder="${placeholder}" aria-label="${placeholder}">`).join("")}
       </div>
       ${sourceActions}
       ${transitivityTools}
@@ -274,6 +293,18 @@
     const metadata = originMetadata(row);
     if (Object.prototype.hasOwnProperty.call(metadata, "originPath")) value.originPath = metadata.originPath;
     if (Object.prototype.hasOwnProperty.call(metadata, "originReferences")) value.originReferences = metadata.originReferences;
+    const audioInputs = {};
+    row?.querySelectorAll("[data-vocabulary-audio-editor]").forEach((editor) => {
+      const slot = editor.dataset.vocabularyAudioEditor;
+      const pathInput = editor.querySelector('[data-vocabulary-audio-field$=".path"]');
+      const fileNameInput = editor.querySelector('[data-vocabulary-audio-field$=".fileName"]');
+      const pathValue = String(pathInput?.value || "").trim();
+      const fileName = String(fileNameInput?.value || "").trim();
+      if (slot && (pathValue || fileName)) audioInputs[slot] = { path: pathValue, fileName };
+    });
+    if (Object.keys(audioInputs).length || (fallback.dictionaryMetadata && typeof fallback.dictionaryMetadata === "object")) {
+      value.dictionaryMetadata = { ...(fallback.dictionaryMetadata && typeof fallback.dictionaryMetadata === "object" ? fallback.dictionaryMetadata : {}), audioInputs };
+    }
     return value;
   }
 
@@ -292,6 +323,14 @@
     Object.entries({ ...data, ...classificationValue }).forEach(([field, value]) => {
       if (preserveSyllabication && field === "syllabication") return;
       set(field, value);
+    });
+    const audioInputs = data.dictionaryMetadata?.audioInputs && typeof data.dictionaryMetadata.audioInputs === "object" ? data.dictionaryMetadata.audioInputs : {};
+    row.querySelectorAll("[data-vocabulary-audio-editor]").forEach((editor) => {
+      const values = audioInputs[editor.dataset.vocabularyAudioEditor] || {};
+      const pathInput = editor.querySelector('[data-vocabulary-audio-field$=".path"]');
+      const fileNameInput = editor.querySelector('[data-vocabulary-audio-field$=".fileName"]');
+      if (pathInput) pathInput.value = String(values.path || "");
+      if (fileNameInput) fileNameInput.value = String(values.fileName || "");
     });
     const originReferences = Array.isArray(data.originReferences) ? data.originReferences : [];
     const originReferencesInput = row.querySelector('[data-vocabulary-origin-field="originReferences"]');
@@ -402,12 +441,45 @@
   }
 
   function bindLookupButtons(row) {
+    const showApiPreview = async (button, english) => {
+      let dialog = document.getElementById("vocabularyMerriamWebsterApiDialog")
+      if (!dialog) {
+        dialog = document.createElement("dialog")
+        dialog.id = "vocabularyMerriamWebsterApiDialog"
+        dialog.className = "portal-modal"
+        dialog.innerHTML = `<form method="dialog"><div class="portal-modal-header"><h2>AP · Merriam-Webster API</h2><button type="submit" class="portal-button portal-button-neutral-action" aria-label="Close Merriam-Webster API preview">Close</button></div><p data-vocabulary-api-message></p><pre data-vocabulary-api-result></pre></form>`
+        document.body.append(dialog)
+      }
+      const message = dialog.querySelector("[data-vocabulary-api-message]")
+      const result = dialog.querySelector("[data-vocabulary-api-result]")
+      const sourceId = row.closest("[data-review-pane], [data-vocabulary-editor]")?.dataset.reviewSourceId || row.closest("[data-review-pane], [data-vocabulary-editor]")?.dataset.approvedEntryId
+      if (!sourceId || sourceId === "new-canonical") {
+        message.textContent = "Save the canonical Library entry before requesting the AP preview."
+        result.textContent = ""
+      } else {
+        message.textContent = `Loading AP for ${english}...`
+        result.textContent = ""
+        const entry = Object.fromEntries([...row.querySelectorAll("[data-vocabulary-field]")].map((input) => [input.dataset.vocabularyField, input.type === "checkbox" ? input.checked : input.value]))
+        try {
+          const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/mw-preview`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ entry }) })
+          const data = await response.json()
+          if (!response.ok || !data.ok) throw new Error(data.error || data.message || "Merriam-Webster API is unavailable.")
+          message.textContent = `${english} · server-side AP result; this preview does not apply data.`
+          result.textContent = JSON.stringify({ fields: data.fields || {}, entries: data.details?.entries || [], sourceUrl: data.sourceUrl || "" }, null, 2)
+        } catch (error) {
+          message.textContent = error.message || "Merriam-Webster API is unavailable."
+        }
+      }
+      if (typeof dialog.showModal === "function") dialog.showModal()
+      else dialog.setAttribute("open", "")
+    }
     row?.querySelectorAll("[data-vocabulary-lookup]").forEach((button) => {
       if (button.dataset.lookupBound === "true") return;
       button.dataset.lookupBound = "true";
       button.addEventListener("click", async () => {
       const label = button.getAttribute("data-vocabulary-lookup");
       const english = row.querySelector('[data-vocabulary-field="english"]')?.value;
+      if (label === "AP") { await showApiPreview(button, String(english || "").trim()); return; }
       const url = lookupUrl(label, english);
       if (url) window.open(url, "_blank", "noopener,noreferrer");
       if (label !== "ET") return;
@@ -861,7 +933,7 @@
     return blocks.join("") || "No definition yet.";
   }
 
-  function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false, includeLdoce = false, includeOxford = false, includeBritannica = false, includeMerriamWebster = false, includeDictionaryBuilder = false, includeTransitivityTools = false, includeOriginAnalysis = false, originLookupPath = "", lookupButtons = null } = {}) {
+  function editorRowHtml(rowUid, { index = 0, removable = false, actionsHtml = "", includeMwFill = false, includeLdoce = false, includeOxford = false, includeBritannica = false, includeMerriamWebster = false, includeDictionaryBuilder = false, includeTransitivityTools = false, includeOriginAnalysis = false, includeAudioFields = false, originLookupPath = "", lookupButtons = null } = {}) {
     const uid = safeUid(rowUid);
     const options = POS.map((part) => `<option value="${part}">${part}</option>`).join("");
     const lookupLabels = Array.isArray(lookupButtons) ? lookupButtons : ["LD", "OA", "OB", "BR", "MW", "AP", "ET", "WK", "CA", "TH", "WH", "GT"];
@@ -888,8 +960,9 @@
           <input name="vocabularyEnglish-${uid}" type="text" data-vocabulary-field="english" placeholder="Word/phrase EN" aria-label="Word or phrase in English" autocapitalize="off" required>
           <input name="vocabularyVietnamese-${uid}" type="text" data-vocabulary-field="vietnamese" placeholder="Word/phrase VI" aria-label="Word or phrase in Vietnamese" required>
           <input name="vocabularySyllabication-${uid}" type="text" data-vocabulary-field="syllabication" placeholder="Do: air-strike | Extra: air-con-di-tion-ing" aria-label="Syllabication: keep compounds exact; optionally split multi-syllable compound parts for extra points" required>
+          ${includeAudioFields ? audioEditorHtml("headword", "Headword", uid) : ""}
           ${etymologyHtml(uid)}
-      ${parametersHtml(uid, { includeMwFill, includeLdoce, includeOxford, includeBritannica, includeMerriamWebster, includeDictionaryBuilder, includeTransitivityTools, includeOriginAnalysis })}
+      ${parametersHtml(uid, { includeMwFill, includeLdoce, includeOxford, includeBritannica, includeMerriamWebster, includeDictionaryBuilder, includeTransitivityTools, includeOriginAnalysis, includeAudioFields })}
           <div class="news-vocabulary-definition-row">
             ${lookupHtml ? `<div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">${lookupHtml}<p class="small vocabulary-et-message" data-vocabulary-et-message aria-live="polite"></p></div>` : ""}
             <textarea name="vocabularyDefinition-${uid}" data-vocabulary-field="definition" rows="1" maxlength="50000" placeholder="Definition" title="Up to 50,000 characters. Ctrl+B bold · Ctrl+I italic · Ctrl+U underline · Enter continues -, a., and 1. lists · indent nested items · **Heading** sections" aria-label="Definition, up to 50,000 characters" required></textarea>

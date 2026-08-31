@@ -54,6 +54,24 @@ function resolveTake() {
 }
 
 /**
+ * @returns {string[]}
+ */
+function resolveJobTypes() {
+  const configured = normalizeText(process.env.ASYNC_SIDE_EFFECTS_WORKER_JOB_TYPES)
+  if (!configured) {
+    return [
+      ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
+      ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF,
+      ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION,
+    ]
+  }
+  return configured
+    .split(/[\s,]+/u)
+    .map((value) => normalizeText(value))
+    .filter(Boolean)
+}
+
+/**
  * @returns {boolean}
  */
 function shouldRunOnce() {
@@ -116,11 +134,7 @@ async function runWorkerOnce() {
   return drainAsyncSideEffectJobs({
     workerId: resolveWorkerId(),
     take: resolveTake(),
-    jobTypes: [
-      ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
-      ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF,
-      ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION,
-    ],
+    jobTypes: resolveJobTypes(),
     maxAttempts: 3,
     retryDelayMs: 30 * 1000,
     onJobComplete: async (job, result) => {

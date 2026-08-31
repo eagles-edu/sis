@@ -20,6 +20,8 @@
         runtimeHealth: null,
         runtimeHealthFetchedAt: 0,
         runtimeHealthRequest: null,
+        engagementApiHealth: {},
+        engagementApiHealthRequest: null,
         redisPing: null,
         redisPingRequest: null,
         brevoStatistics: null,
@@ -1914,6 +1916,70 @@
         return "pending";
       }
 
+      const ENGAGEMENT_API_HEALTH_CHECKS = [
+        {
+          key: "profileEngagementApi",
+          label: "Profile Engagement",
+          path: "/api/admin/profile-engagement?take=1",
+        },
+        {
+          key: "assignmentEngagementApi",
+          label: "Assignment Engagement",
+          path: "/api/admin/assignment-reminder-engagement?take=1",
+        },
+        {
+          key: "performanceEngagementApi",
+          label: "RC/Performance",
+          path: "/api/admin/performance-engagement",
+        },
+        {
+          key: "libraryEngagementApi",
+          label: "Library Engagement",
+          path: "/api/admin/library/engagement",
+        },
+      ];
+
+      async function probeEngagementApiHealth({ paint = true } = {}) {
+        if (state.engagementApiHealthRequest) return state.engagementApiHealthRequest;
+        const request = (async () => {
+          const results = await Promise.all(
+            ENGAGEMENT_API_HEALTH_CHECKS.map(async (check) => {
+              const startedAt = monotonicNowMs();
+              try {
+                const response = await fetch(resolveApiUrl(check.path), {
+                  method: "GET",
+                  cache: "no-store",
+                  credentials: "include",
+                });
+                const status = Number(response.status || 0);
+                return [check.key, {
+                  state: response.ok ? "ok" : "error",
+                  status,
+                  latencyMs: Math.round(monotonicNowMs() - startedAt),
+                  detail: response.ok ? `API HTTP ${status}` : `API HTTP ${status}`,
+                }];
+              } catch (error) {
+                return [check.key, {
+                  state: "error",
+                  status: 0,
+                  latencyMs: Math.round(monotonicNowMs() - startedAt),
+                  detail: normalizeText(error?.message) || "API request failed",
+                }];
+              }
+            }),
+          );
+          state.engagementApiHealth = Object.fromEntries(results);
+          if (paint) renderSystemHealthPanel();
+          return state.engagementApiHealth;
+        })();
+        state.engagementApiHealthRequest = request;
+        try {
+          return await request;
+        } finally {
+          if (state.engagementApiHealthRequest === request) state.engagementApiHealthRequest = null;
+        }
+      }
+
       function buildSystemHealthChecks() {
         const checks = [];
         const runtimeHealth =
@@ -2120,6 +2186,16 @@
           label: "Recent Pipeline",
           state: pipelineState,
           detail: `exercise=${describeFlag(runtimeHealth.lastStoreOk)} | intake=${describeFlag(runtimeHealth.lastIntakeStoreOk)} | send=${describeFlag(runtimeHealth.lastSendOk)}`,
+        });
+
+        ENGAGEMENT_API_HEALTH_CHECKS.forEach((check) => {
+          const result = state.engagementApiHealth?.[check.key] || {};
+          checks.push({
+            key: check.key,
+            label: check.label,
+            state: normalizeSystemState(result.state),
+            detail: result.status ? `${result.detail} | latency=${result.latencyMs}ms` : result.detail || "API probe pending",
+          });
         });
 
         if (sisConfigMirrorHealth) {
@@ -2865,6 +2941,7 @@
         // "Checking systems" indefinitely on busy pages.
         void probeHubConnection({ notify: false, paint: true }).catch(() => {});
         void pingRedis({ notify: false }).catch(() => {});
+        void probeEngagementApiHealth({ paint: true }).catch(() => {});
         const scheduleProbe = () => {
           const runWhenIdle = () => runProbe({ paint: false });
           if (typeof window.requestIdleCallback === "function") {

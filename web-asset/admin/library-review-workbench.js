@@ -41,10 +41,10 @@
     if (!root || !row || !sourceUrl) return null
     let button = row.querySelector(`[data-library-audio-trigger="${dialect}"]`)
     if (!button) {
-      button = document.createElement("button")
-      button.type = "button"
+      button = document.createElement("a")
       button.className = "library-audio-play"
       button.dataset.libraryAudioTrigger = dialect
+      button.href = sourceUrl
       button.setAttribute("aria-label", `Play ${label} pronunciation`)
       button.title = `Play ${label} pronunciation`
       const image = document.createElement("img")
@@ -55,6 +55,7 @@
       row.append(button)
     }
     button.dataset.audioUrl = sourceUrl
+    button.href = sourceUrl
     const image = button.querySelector("img")
     let audio = root.querySelector(`[data-library-preview-audio="${dialect}"]`)
     if (!audio) {
@@ -83,7 +84,7 @@
       }
       button.addEventListener("mouseenter", () => restartSpeakerAnimation(image))
       button.addEventListener("focus", () => restartSpeakerAnimation(image))
-      button.addEventListener("click", play)
+      button.addEventListener("click", (event) => { event.preventDefault(); play() })
       audio.addEventListener("ended", () => button.classList.remove("is-playing"))
       audio.addEventListener("pause", () => button.classList.remove("is-playing"))
       audio.addEventListener("error", () => button.classList.remove("is-playing"))
@@ -98,6 +99,35 @@
     } catch {
       return []
     }
+  }
+
+  const hydrateLibraryAudio = (pane) => {
+    if (!pane) return
+    const assets = parseLibraryMediaAssets(pane).filter((asset) => asset?.id && asset.dialect === "us")
+    if (!assets.length) return
+    let root = pane.querySelector("[data-library-applied-audio]")
+    if (!root) {
+      root = document.createElement("fieldset")
+      root.dataset.libraryAppliedAudio = "true"
+      const legend = document.createElement("legend")
+      legend.textContent = "Saved Library audio (US only)"
+      root.append(legend)
+      pane.append(root)
+    }
+    const rows = new Map([...root.querySelectorAll("[data-library-audio-row]")].map((row) => [row.dataset.libraryAudioRow, row]))
+    assets.forEach((asset) => {
+      const key = `${asset.slot || "headword"}:${asset.dialect}`
+      const row = rows.get(key) || document.createElement("div")
+      row.className = "library-audio-row"
+      row.dataset.libraryAudioRow = key
+      if (!row.querySelector("label")) {
+        const label = document.createElement("label")
+        label.textContent = `${asset.slot || "headword"} ${asset.dialect.toUpperCase()}`
+        row.append(label)
+      }
+      bindAudioControl(root, row, asset.dialect, `${asset.slot || "headword"} ${asset.dialect.toUpperCase()}`, `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library/media/${encodeURIComponent(asset.id)}`, { local: true })
+      if (!rows.has(key)) root.append(row)
+    })
   }
 
   const etymologyValues = (value) => {
@@ -342,6 +372,7 @@
         if (message) message.textContent = `${config.label} applied: ${applied}. Selected audio is now served through protected local Library media.`
         const mediaAssets = Array.isArray(result.mediaAssets) ? result.mediaAssets : []
         pane.dataset.libraryMediaAssets = JSON.stringify(mediaAssets)
+        hydrateLibraryAudio(pane)
       } catch (error) {
         const message = pane.querySelector(`[data-vocabulary-${provider}-message]`)
         if (message) message.textContent = error.message || `${config.label} Apply failed; no Library data was changed.`
@@ -414,7 +445,7 @@
       ["MW", `https://www.merriam-webster.com/dictionary/${encoded}`], ["AP", `https://www.merriam-webster.com/dictionary/${encoded}`], ["ET", `https://www.etymonline.com/search?q=${encoded}`], ["WK", `https://en.wiktionary.org/w/index.php?search=${encoded}`],
       ["CA", `https://dictionary.cambridge.org/dictionary/english/${encoded}`], ["TH", `https://www.merriam-webster.com/thesaurus/${encoded}`], ["WH", `https://www.wordhelp.com/syllables/english/?q=${encoded}`], ["GT", `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate`],
     ]
-    return `<div class="news-vocabulary-lookups dictionary-builder-source-matrix" data-dictionary-builder-source-matrix role="group" aria-label="Twelve outbound Dictionary Builder source links">${links.map(([label, href]) => `<a class="portal-button portal-button-blue-action news-vocabulary-lookup dictionary-builder-source-link" data-vocabulary-lookup="${label}" href="${href}" target="_blank" rel="noopener noreferrer" title="Open ${label}; this does not apply data.">${label}</a>`).join("")}</div>`
+    return `<div class="news-vocabulary-lookups dictionary-builder-source-matrix" data-dictionary-builder-source-matrix role="group" aria-label="Twelve outbound Dictionary Builder source links">${links.map(([label, href]) => `<a class="portal-button portal-button-blue-action news-vocabulary-lookup dictionary-builder-source-link" data-vocabulary-lookup="${label}" data-dictionary-builder-source-link="${label}" href="${href}" target="_blank" rel="noopener noreferrer" title="Open ${label}; this does not apply data.">${label}</a>`).join("")}</div>`
   }
   const dictionaryBuilderDialog = () => {
     let dialog = document.getElementById("libraryDictionaryBuilderDialog")
@@ -461,10 +492,13 @@
     if (typeof window.requestAnimationFrame === "function") window.requestAnimationFrame(applySize)
   }
   const robotHandoffTabs = new Map()
+  const promptProbeTimers = new Map()
   const sourceBrowserTabs = new Map()
   const INITIAL_SOURCE_GROUP_SIZE = 5
   const INITIAL_SOURCE_PROVIDER_ORDER = ["britannica", "oxford_ame", "ldoce", "wordhelp", "merriam_webster_thesaurus"]
   const closeSourceBrowserTabs = () => {
+    promptProbeTimers.forEach((timer) => window.clearInterval(timer))
+    promptProbeTimers.clear()
     sourceBrowserTabs.forEach((tab) => { if (tab && !tab.closed) tab.close() })
     sourceBrowserTabs.clear()
     robotHandoffTabs.clear()
@@ -498,12 +532,18 @@
         return (leftPosition < 0 ? Number.MAX_SAFE_INTEGER : leftPosition) - (rightPosition < 0 ? Number.MAX_SAFE_INTEGER : rightPosition)
       }).slice(0, INITIAL_SOURCE_GROUP_SIZE)
       let opened = 0
+      const pendingNavigations = []
       initialSourceEntries.forEach(({ provider, sourceUrl }) => {
         const existing = sourceBrowserTabs.get(provider)
         if (existing && !existing.closed) { existing.focus?.(); return }
-        const tab = window.open(sourceUrl, "_blank")
-        if (tab) { sourceBrowserTabs.set(provider, tab); opened += 1 }
+        const tab = window.open("about:blank", "_blank")
+        if (tab) {
+          sourceBrowserTabs.set(provider, tab)
+          pendingNavigations.push({ tab, sourceUrl })
+          opened += 1
+        }
       })
+      pendingNavigations.forEach(({ tab, sourceUrl }) => { tab.location.href = sourceUrl })
       dialog.querySelector("[data-dictionary-builder-message]").textContent = opened === initialSourceEntries.length
         ? `Initial BR / OA / LD / WH / TH group opened in this browser session. Resolve any cookie/robot prompts; affected datums remain paused until Retry provider. AP remains server-side; other fallback providers stay closed until needed. Cookies remain in the browser's native cookie jar.`
         : `Opened ${opened} of ${initialSourceEntries.length} initial provider tabs in this browser session; the browser blocked the remainder. Fallback providers stay closed until needed. Use individual View source page links when required.`
@@ -527,14 +567,17 @@
       const statusSources = statusSourceIds.length
         ? statusSourceIds.map((provider) => sourceById.get(provider)).filter(Boolean)
         : (snapshot.sources || []).filter((source) => source.datumStatus?.[datum]?.status !== "not_offered")
-      const statuses = statusSources.map((source) => `${source.provider}: ${dictionaryBuilderStatusLabel(source.datumStatus?.[datum]?.status || "not_offered")}`).join(" · ")
-      const robotSource = statusSources.find((source) => isDictionaryBuilderPromptStatus(source.datumStatus?.[datum]?.status) || isDictionaryBuilderPromptStatus(source.status))
+      const visibleStatusSources = datum === "synonymsAntonyms"
+        ? statusSources.filter((source) => source.datumStatus?.[datum]?.status !== "not_provided")
+        : statusSources
+      const statuses = visibleStatusSources.map((source) => `${source.provider}: ${dictionaryBuilderStatusLabel(source.datumStatus?.[datum]?.status || "not_offered")}`).join(" · ")
+      const robotSource = visibleStatusSources.find((source) => isDictionaryBuilderPromptStatus(source.datumStatus?.[datum]?.status) || isDictionaryBuilderPromptStatus(source.status))
       const sectionSummary = dialog.querySelector("[data-dictionary-builder-section-summary]")
       const datumLabel = dictionaryBuilderFields.find(([key]) => key === datum)?.[1] || datum
       const tabHeading = dialog.querySelector("[data-dictionary-builder-tab-heading]")
       if (tabHeading) tabHeading.textContent = datumLabel
       if (sectionSummary) sectionSummary.textContent = robotSource
-        ? `Queried: ${statuses || "no applicable source"}. Cookie/robot prompt required for ${robotSource.provider}; this datum is paused. Resolve it in the opened source tab, then close that tab to retry.`
+        ? `Queried: ${statuses || "no applicable source"}. Cookie/robot prompt required for ${robotSource.provider}; this datum is paused. Resolve it in the opened source tab and leave it open while Builder probes automatically.`
         : `Queried: ${statuses || "no applicable source"}.`
       panels.replaceChildren()
       const section = document.createElement("section")
@@ -608,18 +651,43 @@
           retry.textContent = "Retry provider"
           retry.title = `Retry ${candidate.provider} after resolving its cookie/robot prompt.`
           retry.setAttribute("aria-label", `Retry ${candidate.provider} after resolving its cookie/robot prompt`)
-          const retryProvider = async () => {
-            retry.disabled = true
-            retry.textContent = "Retrying..."
+          const probeKey = `${snapshot.id}:${candidate.provider}:${datum}`
+          let retryInFlight = false
+          const stopPromptProbe = () => {
+            const timer = promptProbeTimers.get(probeKey)
+            if (timer) window.clearInterval(timer)
+            promptProbeTimers.delete(probeKey)
+          }
+          const retryProvider = async ({ automatic = false } = {}) => {
+            if (retryInFlight) return false
+            retryInFlight = true
+            if (!automatic) {
+              retry.disabled = true
+              retry.textContent = "Retrying..."
+            }
             try {
               const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshot.id)}/retry`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: candidate.provider, entry: readPayload(pane) }) })
               const refreshed = await response.json()
               if (!response.ok || !refreshed.ok) throw new Error(refreshed.error || "Provider retry failed.")
+              const refreshedSource = refreshed.sources?.find((source) => source.provider === candidate.provider)
+              const refreshedStatus = refreshedSource?.datumStatus?.[datum]?.status || refreshedSource?.status
+              if (automatic && !["available"].includes(refreshedStatus)) return false
+              stopPromptProbe()
               renderDictionaryBuilder(refreshed, pane, sourceId, selectedCandidates, datum)
+              return true
             } catch (error) {
-              retry.disabled = false
-              retry.textContent = "Retry provider"
-              dialog.querySelector("[data-dictionary-builder-message]").textContent = error.message || "Provider retry failed."
+              if (!automatic) {
+                retry.disabled = false
+                retry.textContent = "Retry provider"
+                dialog.querySelector("[data-dictionary-builder-message]").textContent = error.message || "Provider retry failed."
+              }
+              return false
+            } finally {
+              retryInFlight = false
+              if (!automatic && dialog.querySelector("[data-dictionary-builder-root]")) {
+                retry.disabled = false
+                retry.textContent = "Retry provider"
+              }
             }
           }
           retry.addEventListener("click", async (event) => {
@@ -636,18 +704,21 @@
             }
             const challengeTab = window.open(candidate.sourceUrl, "_blank")
             if (!challengeTab) {
-              dialog.querySelector("[data-dictionary-builder-message]").textContent = `The ${candidate.provider} source tab was blocked. Open the source link, complete the prompt, close the tab, then choose Retry provider.`
+              dialog.querySelector("[data-dictionary-builder-message]").textContent = `The ${candidate.provider} source tab was blocked. Open the source link and use Retry provider as the fallback probe.`
               return null
             }
             robotHandoffTabs.set(candidate.provider, challengeTab)
             sourceBrowserTabs.set(candidate.provider, challengeTab)
-            dialog.querySelector("[data-dictionary-builder-message]").textContent = `Complete the ${candidate.provider} robot check in the new tab. Close that tab when finished; Builder will retry the scrape automatically.`
-            const watchTab = window.setInterval(() => {
-              if (!challengeTab.closed) return
-              window.clearInterval(watchTab)
-              robotHandoffTabs.delete(candidate.provider)
-              retryProvider()
-            }, 500)
+            dialog.querySelector("[data-dictionary-builder-message]").textContent = `Complete the ${candidate.provider} cookie/robot prompt in the new tab. Leave it open; Builder will probe the live page automatically. Retry provider remains available as a fallback.`
+            stopPromptProbe()
+            const probeTimer = window.setInterval(() => {
+              if (challengeTab.closed || !dialog.open) {
+                stopPromptProbe()
+                return
+              }
+              retryProvider({ automatic: true })
+            }, 5000)
+            promptProbeTimers.set(probeKey, probeTimer)
             return challengeTab
           }
           sourceLink?.addEventListener("click", (event) => {
@@ -662,7 +733,7 @@
       if (!candidates.length) {
         const sourceLinks = document.createElement("div")
         sourceLinks.className = "dictionary-builder-candidate-source-list"
-        statusSources.filter((source) => source.datumStatus?.[datum]?.status !== "manual").forEach((source) => appendSourceLink(sourceLinks, source.provider, source.sourceUrl))
+        visibleStatusSources.filter((source) => source.datumStatus?.[datum]?.status !== "manual").forEach((source) => appendSourceLink(sourceLinks, source.provider, source.sourceUrl))
         if (sourceLinks.childElementCount) section.append(sourceLinks)
       }
       if (datum === "grammarClassification") {
@@ -782,6 +853,10 @@
         if (data.entry) {
           window.SIS_VOCABULARY_ESL?.hydrate(pane, data.entry, { preserveSyllabication: true })
         }
+        if (Array.isArray(data.mediaAssets)) {
+          pane.dataset.libraryMediaAssets = JSON.stringify(data.mediaAssets)
+          hydrateLibraryAudio(pane)
+        }
         message.textContent = data.appliedFields?.length ? `Applied ${data.appliedFields.join(", ")}.` : "No selected data changed this entry."
         closeSourceBrowserTabs()
         if (typeof dialog.close === "function") dialog.close()
@@ -800,6 +875,7 @@
       if (button.dataset.dictionaryBuilderBound === "true") return
       button.dataset.dictionaryBuilderBound = "true"
       const pane = button.closest("[data-review-pane], [data-vocabulary-editor]")
+      hydrateLibraryAudio(pane)
       const word = pane?.querySelector('[data-vocabulary-field="english"]')?.value || ""
       const encoded = encodeURIComponent(word.trim())
       const sourcePaths = { LD: `https://www.ldoceonline.com/dictionary/${encoded}`, OA: `https://www.oxfordlearnersdictionaries.com/definition/american_english/${encoded}`, OB: `https://www.oxfordlearnersdictionaries.com/definition/english/${encoded}`, BR: `https://www.britannica.com/dictionary/${encoded}`, MW: `https://www.merriam-webster.com/dictionary/${encoded}`, AP: `https://www.merriam-webster.com/dictionary/${encoded}`, ET: `https://www.etymonline.com/search?q=${encoded}`, WK: `https://en.wiktionary.org/w/index.php?search=${encoded}`, CA: `https://dictionary.cambridge.org/dictionary/english/${encoded}`, TH: `https://www.merriam-webster.com/thesaurus/${encoded}`, WH: `https://www.wordhelp.com/dictionary/${encoded}`, GT: `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate` }

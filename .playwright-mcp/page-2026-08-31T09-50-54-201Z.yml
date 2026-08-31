@@ -1,0 +1,35 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - link "0937‑667‑818" [ref=e4] [cursor=pointer]:
+      - /url: tel:0937667818
+    - link "eagles.edu.vn" [ref=e5] [cursor=pointer]:
+      - /url: https://eagles.edu.vn
+  - generic [ref=e6]:
+    - region "Admin login form" [ref=e7]:
+      - generic [ref=e8]:
+        - heading "Student Admin Login" [level=1] [ref=e9]
+        - generic [ref=e10]:
+          - generic [ref=e11]:
+            - generic [ref=e12]: Username
+            - textbox "Username" [ref=e13]: admin
+          - generic [ref=e14]:
+            - generic [ref=e15]: Password
+            - generic [ref=e16]:
+              - textbox "Password" [ref=e17]
+              - button "Show password" [ref=e18] [cursor=pointer]:
+                - img [ref=e19]
+          - generic [ref=e22]:
+            - button "Login" [ref=e23] [cursor=pointer]
+            - button "Clear" [ref=e24] [cursor=pointer]
+        - generic [ref=e25]:
+          - link "Reset password" [ref=e26] [cursor=pointer]:
+            - /url: mailto:support@eagles.edu.vn?subject=Admin%20password%20reset
+          - link "0937 667 818" [ref=e27] [cursor=pointer]:
+            - /url: tel:0937667818
+        - paragraph [ref=e28]: Session-based secure login is required for all admin API operations.
+        - paragraph
+    - contentinfo "Admin login footer" [ref=e29]:
+      - paragraph [ref=e30]: © 2012–2026 The Eagles American English Club Ltd. All rights reserved.
+      - paragraph [ref=e31]:
+        - link "Về đầu trang" [ref=e32] [cursor=pointer]:
+          - /url: "#top"

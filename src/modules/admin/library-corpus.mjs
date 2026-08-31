@@ -277,6 +277,22 @@ export function autoFillLibraryEntryVerbTransitivity(payload = {}) {
   }
 }
 
+function normalizeAudioInputs(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {}
+  const allowedSlots = new Set(["headword", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5"])
+  const result = {}
+  for (const [slot, item] of Object.entries(source)) {
+    if (!allowedSlots.has(slot) || !item || typeof item !== "object") continue
+    const pathValue = clamp(item.path, 1000)
+    const fileName = clamp(item.fileName, 255).replace(/[\\/]/gu, "")
+    if (!pathValue) continue
+    if (!/^https:\/\//iu.test(pathValue) && !pathValue.startsWith("/")) throw statusError(`${slot} audio path must be an HTTPS URL or an absolute media path`)
+    if (fileName && !/^[\p{L}\p{N}._-]+\.mp3$/iu.test(fileName)) throw statusError(`${slot} audio file name must be an MP3 file name`)
+    result[slot] = fileName ? { path: pathValue, fileName } : { path: pathValue }
+  }
+  return result
+}
+
 function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
   const english = clamp(value.english)
   const partOfSpeech = lower(value.partOfSpeech)
@@ -310,7 +326,7 @@ function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
     awlMemberForm: clamp(value.awlMemberForm) || null, awlSublist: Number.isInteger(Number(value.awlSublist)) ? Number(value.awlSublist) : null,
     dictionaryProvider: clamp(value.dictionaryProvider, 80) || null,
     dictionarySourceUrl: clamp(value.dictionarySourceUrl, 1000) || null,
-    dictionaryMetadata: value.dictionaryMetadata && typeof value.dictionaryMetadata === "object" && !Array.isArray(value.dictionaryMetadata) ? value.dictionaryMetadata : null,
+    dictionaryMetadata: value.dictionaryMetadata && typeof value.dictionaryMetadata === "object" && !Array.isArray(value.dictionaryMetadata) ? { ...value.dictionaryMetadata, audioInputs: normalizeAudioInputs(value.dictionaryMetadata.audioInputs) } : null,
   }
   if (["noun", "proper noun"].includes(partOfSpeech) && !allowIncomplete && !NOUN_COUNTABILITY.has(data.countability || "")) throw statusError("Nouns require countable, uncountable, or countable and uncountable")
   if (partOfSpeech === "verb") {
@@ -654,31 +670,35 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
 }
 
 export async function updateLibraryEntry(id, actor = {}, payload = {}) {
-  const client = await prisma(); const data = normalizeEntry(payload, { allowIncomplete: true })
+  const client = await prisma()
+  const data = normalizeEntry(payload, { allowIncomplete: true })
   const result = await client.$transaction(async (tx) => {
-    const updated = await tx.libraryEntry.update({ where: { id }, data: { ...data, reviewStatus: "approved", lastEditedByName: clamp(actor.name) } })
-    await writeRevision(tx, updated, "approved_edit", actor.name, actor.role || "admin")
-    const openContributions = await tx.libraryContribution.findMany({ where: { status: { in: OPEN_CANONICAL_CONTRIBUTION_STATUSES } } })
-    const matching = openContributions.filter((contribution) => contribution.entryId === updated.id || selectContributionsForCanonicalEntry([contribution], updated).length > 0)
-    const legacy = matching.some((contribution) => isLegacyPending(contribution.status))
-    const canonicalizedAt = new Date()
-    let canonicalizedContributions = 0
-    for (const contribution of matching.filter((candidate) => !isAwaitingLegacyCanonical(candidate.status))) {
-      const dueAt = contribution.studentRefId && !isLegacyPending(contribution.status)
-        ? libraryContributionDeadline(canonicalizedAt)
-        : null
-      const canonicalized = await tx.libraryContribution.update({ where: { id: contribution.id }, data: { entryId: updated.id, status: "canonicalized", reviewedAt: canonicalizedAt, reviewedByName: clamp(actor.name), canonicalizedAt, dueAt } })
-      await writeContributionRevision(tx, canonicalized, "canonicalized_by_admin_edit")
-      canonicalizedContributions += 1
-    }
-    for (const contribution of matching.filter((candidate) => isAwaitingLegacyCanonical(candidate.status))) {
-      const waiting = await tx.libraryContribution.update({ where: { id: contribution.id }, data: { entryId: updated.id, status: PENDING_CANONICAL_REPLACEMENT, dueAt: libraryContributionDeadline(canonicalizedAt), reviewedAt: canonicalizedAt, reviewedByName: clamp(actor.name) } })
-      await writeContributionRevision(tx, waiting, "legacy_canonical_declared_by_admin_edit")
-    }
-    if (legacy) await writeRevision(tx, updated, "canonicalization_by_admin_edit", actor.name, actor.role || "admin")
-    return { entry: updated, canonicalizedContributions }
+      const updated = await tx.libraryEntry.update({ where: { id }, data: { ...data, reviewStatus: "approved", lastEditedByName: clamp(actor.name) } })
+      await writeRevision(tx, updated, "approved_edit", actor.name, actor.role || "admin")
+      const openContributions = await tx.libraryContribution.findMany({ where: { status: { in: OPEN_CANONICAL_CONTRIBUTION_STATUSES } } })
+      const matching = openContributions.filter((contribution) => contribution.entryId === updated.id || selectContributionsForCanonicalEntry([contribution], updated).length > 0)
+      const legacy = matching.some((contribution) => isLegacyPending(contribution.status))
+      const canonicalizedAt = new Date()
+      let canonicalizedContributions = 0
+      for (const contribution of matching.filter((candidate) => !isAwaitingLegacyCanonical(candidate.status))) {
+        const dueAt = contribution.studentRefId && !isLegacyPending(contribution.status)
+          ? libraryContributionDeadline(canonicalizedAt)
+          : null
+        const canonicalized = await tx.libraryContribution.update({ where: { id: contribution.id }, data: { entryId: updated.id, status: "canonicalized", reviewedAt: canonicalizedAt, reviewedByName: clamp(actor.name), canonicalizedAt, dueAt } })
+        await writeContributionRevision(tx, canonicalized, "canonicalized_by_admin_edit")
+        canonicalizedContributions += 1
+      }
+      for (const contribution of matching.filter((candidate) => isAwaitingLegacyCanonical(candidate.status))) {
+        const waiting = await tx.libraryContribution.update({ where: { id: contribution.id }, data: { entryId: updated.id, status: PENDING_CANONICAL_REPLACEMENT, dueAt: libraryContributionDeadline(canonicalizedAt), reviewedAt: canonicalizedAt, reviewedByName: clamp(actor.name) } })
+        await writeContributionRevision(tx, waiting, "legacy_canonical_declared_by_admin_edit")
+      }
+      if (legacy) await writeRevision(tx, updated, "canonicalization_by_admin_edit", actor.name, actor.role || "admin")
+      return { entry: updated, canonicalizedContributions }
   })
-  return { ok: true, entry: mapEntry(result.entry), canonicalizedContributions: result.canonicalizedContributions }
+  const entry = typeof client.libraryMediaAsset?.findMany === "function"
+    ? await client.libraryEntry.findUnique({ where: { id }, include: { mediaAssets: { select: { id: true, provider: true, dialect: true, slot: true, mimeType: true, byteLength: true, sha256: true } } } })
+    : result.entry
+  return { ok: true, entry: mapEntry(entry), canonicalizedContributions: result.canonicalizedContributions }
 }
 
 export async function assignLibraryWork(actor = {}, payload = {}) {
@@ -1522,7 +1542,7 @@ const DICTIONARY_BUILDER_POS_FORM_FIELDS = Object.freeze(["countability", "physi
 const DICTIONARY_BUILDER_DEFINITION_FIELDS = new Set(["definition", "verbForms", "stems", "synonymsAntonyms", "examples", "firstKnownUse", "worksCited"])
 
 export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {}, { ownerKey = "", clientOverride = null } = {}) {
-  const { formatDictionaryBuilderDefinition, recordDictionaryBuilderMetrics, restoreDictionaryBuilderSnapshot, takeDictionaryBuilderSnapshot } = await import("./dictionary-builder.mjs")
+  const { buildSelectedDictionaryBuilderCitations, formatDictionaryBuilderDefinition, recordDictionaryBuilderMetrics, restoreDictionaryBuilderSnapshot, takeDictionaryBuilderSnapshot } = await import("./dictionary-builder.mjs")
   const snapshot = takeDictionaryBuilderSnapshot(payload?.snapshotId, { ownerKey, entryId: id })
   if (!snapshot) throw dictionaryStatusError("Dictionary Builder preview is unavailable, expired, or belongs to another session", 404)
   const client = clientOverride || await prisma()
@@ -1588,8 +1608,12 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
     claimLedger.push({ field, provider, status: manualSelection ? "manual" : source.datumStatus?.[datum]?.status || "unavailable" })
   }
   const definitionWasSelected = selectedFields.includes("definition")
-  if (definitionWasSelected) proposed.definition = text(definitionFields.definition || existing.definition)
+  const formattedDefinitionWasSelected = selectedFields.some((field) => (DICTIONARY_BUILDER_DEFINITION_FIELDS.has(field) && field !== "definition") || ["originPath", "etymology", "originReferences"].includes(field))
+  if (formattedDefinitionWasSelected) {
+    proposed.definition = formatDictionaryBuilderDefinition({ ...existing, ...proposed }, { ...proposed, ...definitionFields }, buildSelectedDictionaryBuilderCitations(existing.english, snapshot.createdAt, claimLedger, snapshot.privateSources || []))
+  } else if (definitionWasSelected) proposed.definition = text(definitionFields.definition || existing.definition)
   const primarySource = claimLedger.find((claim) => claim.field === "definition")?.provider || claimLedger[0]?.provider || null
+  const selectedCitations = buildSelectedDictionaryBuilderCitations(existing.english, snapshot.createdAt, claimLedger, snapshot.privateSources || [])
   proposed.dictionaryProvider = primarySource || existing.dictionaryProvider || null
   proposed.dictionarySourceUrl = primarySource ? ((snapshot.privateSources || []).find((item) => item.provider === primarySource)?.sourceUrl || null) : existing.dictionarySourceUrl || null
   proposed.dictionaryMetadata = {
@@ -1597,7 +1621,7 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
     snapshotId: snapshot.id,
     retrievedAt: snapshot.createdAt,
     claims: claimLedger,
-    citations: snapshot.citations,
+    citations: selectedCitations,
   }
   const normalized = normalizeEntry({ ...existing, ...proposed }, { allowIncomplete: true })
   const data = Object.fromEntries(Object.entries(normalized).filter(([field, value]) => Object.hasOwn(proposed, field) && JSON.stringify(activePayloadValue(existing[field], field)) !== JSON.stringify(activePayloadValue(value, field))))
@@ -1625,7 +1649,16 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
       await recordDictionaryBuilderMetrics(tx, snapshot, selectedFields.map((field) => ({ provider: text(selections[field]?.provider), datum: DICTIONARY_BUILDER_FIELD_TO_DATUM[field] })), existing.partOfSpeech)
       return value
     })
-    return { ok: true, entry: mapEntry(updated), appliedFields: [...Object.keys(data), ...(finalized.some((item) => item.slot === "headword") ? ["audio"] : []), ...(finalized.some((item) => item.slot !== "headword") ? ["verbFormAudio"] : [])], warnings: snapshot.warnings || [] }
+    const mediaAssets = typeof client.libraryMediaAsset?.findMany === "function"
+      ? await client.libraryMediaAsset.findMany({ where: { entryId: id }, orderBy: [{ slot: "asc" }, { dialect: "asc" }, { provider: "asc" }] })
+      : []
+    return {
+      ok: true,
+      entry: mapEntry(updated),
+      appliedFields: [...Object.keys(data), ...(finalized.some((item) => item.slot === "headword") ? ["audio"] : []), ...(finalized.some((item) => item.slot !== "headword") ? ["verbFormAudio"] : [])],
+      mediaAssets: mediaAssets.map((asset) => ({ id: asset.id, provider: asset.provider, dialect: asset.dialect, slot: asset.slot || "headword", mimeType: asset.mimeType, byteLength: asset.byteLength, sha256: asset.sha256 })),
+      warnings: snapshot.warnings || [],
+    }
   } catch (error) {
     restoreDictionaryBuilderSnapshot(snapshot)
     await Promise.all(downloads.map((download) => discardLibraryAudio(download)))

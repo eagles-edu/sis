@@ -1,5 +1,5 @@
 body.library-definitions-page .definitions-layout { display: grid; gap: var(--portal-content-gap); }
-body.library-definitions-page .definitions-toolbar { align-items: end; display: flex; flex-wrap: wrap; gap: var(--portal-content-gap); }
+body.library-definitions-page .definitions-toolbar { align-items: end; background: var(--portal-surface-card); box-shadow: var(--portal-panel-shadow-strong); display: flex; flex-wrap: wrap; gap: var(--portal-content-gap); inset-block-start: 0; position: sticky; z-index: 12; }
 body.library-definitions-page .definitions-toolbar label { display: grid; gap: 6px; min-inline-size: 180px; }
 body.library-definitions-page .definitions-table-wrap { max-inline-size: 100%; overflow: auto; }
 body.library-definitions-page .definitions-table { border-collapse: collapse; min-inline-size: 1240px; inline-size: 100%; }

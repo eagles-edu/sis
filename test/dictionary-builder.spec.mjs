@@ -14,6 +14,7 @@ import {
   DICTIONARY_BUILDER_MANIFEST,
   dictionaryBuilderBicDatumProviderIds,
   buildDictionaryBuilderCitations,
+  buildSelectedDictionaryBuilderCitations,
   dictionaryBuilderRoundRobinDatumSourceOrder,
   formatDictionaryBuilderDefinition,
   normalizeProviderPreview,
@@ -75,10 +76,23 @@ test("Dictionary Builder metrics count only available and 404 or not-offered out
       { provider: "cambridge", datumStatus: { definition: { status: "unavailable" } } },
     ],
   }, [{ provider: "britannica", datum: "definition" }], "noun")
-  assert.deepEqual(calls.map((call) => [call.create.provider, call.create.datum]), [["britannica", "definition"], ["oxford_ame", "definition"], ["merriam_webster_api", "definition"]])
+  assert.deepEqual(calls.map((call) => [call.create.provider, call.create.datum]), [["britannica", "definition"], ["oxford_ame", "definition"], ["merriam_webster_scrape", "definition"]])
   assert.deepEqual(calls[0].create, { provider: "britannica", partOfSpeech: "noun", datum: "definition", attemptCount: 1, availableCount: 1, eligibleApplyCount: 1, selectedApplyCount: 1 })
   assert.deepEqual(calls[1].create, { provider: "oxford_ame", partOfSpeech: "noun", datum: "definition", attemptCount: 1, availableCount: 0, eligibleApplyCount: 0, selectedApplyCount: 0 })
-  assert.deepEqual(calls[2].create, { provider: "merriam_webster_api", partOfSpeech: "noun", datum: "definition", attemptCount: 1, availableCount: 0, eligibleApplyCount: 0, selectedApplyCount: 0 })
+  assert.deepEqual(calls[2].create, { provider: "merriam_webster_scrape", partOfSpeech: "noun", datum: "definition", attemptCount: 1, availableCount: 0, eligibleApplyCount: 0, selectedApplyCount: 0 })
+})
+
+test("Dictionary Builder records MW HTML and API metrics independently", async () => {
+  const calls = []
+  const client = { dictionaryProviderSuitabilityMetric: { upsert: async (args) => calls.push(args) } }
+  await recordDictionaryBuilderMetrics(client, {
+    sources: [
+      { provider: "merriam_webster_scrape", datumStatus: { definition: { status: "available" } } },
+      { provider: "merriam_webster_api", datumStatus: { definition: { status: "available" } } },
+    ],
+  }, [{ provider: "merriam_webster_scrape", datum: "definition" }], "noun")
+  assert.deepEqual(calls.map((call) => call.create.provider), ["merriam_webster_scrape", "merriam_webster_api"])
+  assert.deepEqual(calls.map((call) => call.create.selectedApplyCount), [1, 0])
 })
 
 test("Dictionary Builder preserves mandatory source ordering without fallback substitution", () => {
@@ -99,7 +113,9 @@ test("Dictionary Builder V1.5 exposes all twelve availability-aware source adapt
   assert.deepEqual(DICTIONARY_BUILDER_MANIFEST.filter((source) => source.capabilities.syllabication).map((source) => source.id), ["ldoce", "oxford_ame", "oxford_bre", "britannica", "merriam_webster", "merriam_webster_api", "wiktionary", "cambridge", "wordhelp"])
   const citations = buildDictionaryBuilderCitations("commend", "2026-08-26T00:00:00.000Z")
   assert.equal(citations.length, 12)
-  assert.match(citations[0].citation, /Retrieved 2026-08-26/)
+  assert.deepEqual(citations.map((item) => item.key), ["definition_primary", "definition_related_pos_1", "definition_related_pos_2", "audio_uk", "audio_us", "verb_forms", "stems", "lexical_relations", "sentence_examples", "recent_examples", "first_known_use", "etymology_origin"])
+  const selectedCitations = buildSelectedDictionaryBuilderCitations("commend", "2026-08-26T00:00:00.000Z", [{ field: "definition", provider: "britannica", status: "available" }], [{ provider: "britannica", sourceUrl: "https://www.britannica.com/dictionary/commend" }])
+  assert.match(selectedCitations.find((item) => item.key === "definition_primary").citation, /Retrieved 2026-08-26/)
 })
 
 test("Dictionary Builder exposes normalized provider values under their matching tab datum", () => {
@@ -185,12 +201,12 @@ test("WordHelp 429 robot HTML hands off to browser HTML and parses the verified 
   assert.equal(preview.fields.syllableCount, 2)
 })
 
-test("Dictionary Builder caches a session-bound normalized snapshot without provider URLs", async () => {
+test("Dictionary Builder caches a session-bound normalized snapshot with safe source URLs", async () => {
   const unavailable = (provider) => async () => ({ provider, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: { definition: { status: "unsupported" } } })
   const fetcher = Object.fromEntries(DICTIONARY_BUILDER_MANIFEST.map((source) => [source.id, unavailable(source.id)]))
   fetcher.ldoce = async () => ({ provider: "ldoce", status: "available", sourceUrl: "https://example.invalid/raw-provider-url", fields: { definition: "1. praise publicly" }, entries: [], media: [], datumStatus: { definition: { status: "available" } } })
   const snapshot = await previewDictionaryBuilder({ id: "entry-1", english: "commend", partOfSpeech: "verb" }, { ownerKey: "session-a", fetcher, rankedSources: [{ provider: "ldoce", score: 99 }, { provider: "britannica", score: 98 }, { provider: "merriam_webster", score: 97 }] })
-  assert.equal(snapshot.sources[0].sourceUrl, undefined)
+  assert.equal(snapshot.sources[0].sourceUrl, "https://www.ldoceonline.com/dictionary/commend")
   assert.doesNotMatch(JSON.stringify(snapshot), /raw-provider-url/)
   assert.ok(readDictionaryBuilderSnapshot(snapshot.id, { ownerKey: "session-a", entryId: "entry-1" }))
   assert.equal(readDictionaryBuilderSnapshot(snapshot.id, { ownerKey: "session-b", entryId: "entry-1" }), null)
@@ -289,7 +305,7 @@ test("Dictionary Builder keeps Britannica as the default audio source while scor
     },
   )
   assert.equal(snapshot.datumSourceOrder.audio[0], "britannica")
-  assert.deepEqual(snapshot.datumSourceOrder.audio.slice(0, 3), ["britannica", "merriam_webster_api", "cambridge"])
+  assert.deepEqual(snapshot.datumSourceOrder.audio.slice(0, 3), ["britannica", "merriam_webster_scrape", "cambridge"])
   assert.equal(snapshot.bicTopThreeByDatum.audio[0], "britannica")
 })
 
@@ -421,21 +437,27 @@ test("Dictionary Builder always sources Vietnamese from the automatic Google Tra
   assert.equal(result.datumStatus.definition.status, "not_offered")
 })
 
-test("Dictionary Builder definition keeps safe rules, YTBD, and twelve dynamic citations", () => {
+test("Dictionary Builder definition keeps safe rules, YTBD, and claim-keyed citations", () => {
   const definition = formatDictionaryBuilderDefinition({ english: "commend", partOfSpeech: "verb" }, {
     definition: "1. to praise publicly",
     verbInfinitive: "to commend", verbV1: "commend", verbV2: "commended", verbV3: "commended", verbV4: "commending", verbV5: "commends",
     stems: "commend\ncommended\ncommending\ncommends",
     synonymsAntonyms: "Synonyms:\npraise\napplaud\n\nAntonyms:\ncriticize",
     examples: "The report commended the team for its careful work.",
-  }, buildDictionaryBuilderCitations("commend", "2026-08-26T00:00:00.000Z"))
+  }, buildSelectedDictionaryBuilderCitations("commend", "2026-08-26T00:00:00.000Z", [
+    { field: "definition", provider: "britannica", status: "available" },
+    { field: "verbForms", provider: "britannica", status: "available" },
+    { field: "stems", provider: "britannica", status: "available" },
+    { field: "synonymsAntonyms", provider: "britannica", status: "available" },
+    { field: "examples", provider: "britannica", status: "available" },
+  ], [{ provider: "britannica", sourceUrl: "https://www.britannica.com/dictionary/commend" }]))
   assert.match(definition, /\*\*Verb Forms\*\*[\s\S]*INF: to commend[\s\S]*V5: commends/u)
   assert.match(definition, /\*\*Stems\*\*[\s\S]* {2}- commended/u)
   assert.match(definition, /\| \*\*Synonyms\*\* \| \*\*Antonyms\*\*/u)
   assert.match(definition, /\*\*Examples of commend in a Sentence\*\*/u)
   assert.match(definition, /<hr>/)
   assert.match(definition, /\*\*Origin path\*\*\nYTBD/)
-  assert.equal((definition.match(/Retrieved 2026-08-26/g) || []).length, 12)
+  assert.equal((definition.match(/Retrieved 2026-08-26/g) || []).length, 5)
 })
 
 test("Definition Proper inserts a normalized verbForms object idempotently", () => {
@@ -450,7 +472,7 @@ test("Definition Proper inserts a normalized verbForms object idempotently", () 
   }, []), definition)
 })
 
-test("Dictionary Builder Apply persists verb forms and slot-aware headword/form audio", async () => {
+test("Dictionary Builder Apply persists every declared datum and slot-aware audio", async () => {
   const mediaRoot = await fs.mkdtemp(path.join(os.tmpdir(), "sis-dictionary-builder-apply-"))
   const previousMediaRoot = process.env.SIS_LIBRARY_MEDIA_ROOT
   process.env.SIS_LIBRARY_MEDIA_ROOT = mediaRoot
@@ -461,6 +483,17 @@ test("Dictionary Builder Apply persists verb forms and slot-aware headword/form 
     english: "debate",
     partOfSpeech: "verb",
     definition: "",
+    vietnamese: "",
+    syllabication: "",
+    syllableCount: null,
+    grammarClassification: {},
+    etymology: null,
+    originPath: null,
+    firstKnownUse: null,
+    stems: null,
+    synonymsAntonyms: null,
+    examples: null,
+    dictionaryMetadata: null,
     mediaAssets: [],
   }
   const client = {
@@ -485,11 +518,26 @@ test("Dictionary Builder Apply persists verb forms and slot-aware headword/form 
     verbV5: { us: "https://www.oxfordlearnersdictionaries.com/media/american_english/d/deb/debat/debates__us_1.mp3" },
   }
   const forms = { verbInfinitive: "to debate", verbV1: "debate", verbV2: "debated", verbV3: "debated", verbV4: "debating", verbV5: "debates" }
+  const fields = {
+    vietnamese: "tranh luận",
+    syllabication: "de-BATE",
+    syllableCount: 2,
+    grammarClassification: { grammarFamily: "action", grammarSubtype: "transitive", grammarDetail: "takes an object", verbRegularity: "regular", verbTransitivity: "transitive" },
+    definition: "to discuss a question formally",
+    stems: "debated\ndebating\ndebates",
+    synonymsAntonyms: "Synonyms:\nargue\ndiscuss\n\nAntonyms:\nagree\naccept",
+    examples: "They debated the proposal for an hour.",
+    firstKnownUse: "14th century",
+    originPath: "Latin -> Old French -> English",
+    etymology: "From Latin debattuere.",
+    worksCited: "Britannica Dictionary. (n.d.). *debate*.",
+  }
   const unsupported = (provider) => ({ provider, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} })
   const fetcher = Object.fromEntries(DICTIONARY_BUILDER_MANIFEST.map((item) => [item.id, async () => unsupported(item.id)]))
-  fetcher.britannica = async () => ({ provider: "britannica", status: "available", sourceUrl: "https://www.britannica.com/dictionary/debate", fields: { audio: [{ dialect: "us", available: true, fileName: "debate001.mp3" }] }, entries: [], privateMedia: [{ dialect: "us", slot: "headword", sourceUrl: audioUrl }], datumStatus: { audio: { status: "available" } } })
+  fetcher.britannica = async () => ({ provider: "britannica", status: "available", sourceUrl: "https://www.britannica.com/dictionary/debate", fields: { ...fields, audio: [{ dialect: "us", available: true, fileName: "debate001.mp3" }] }, entries: [], privateMedia: [{ dialect: "us", slot: "headword", sourceUrl: audioUrl }], datumStatus: Object.fromEntries([...Object.keys(fields), "audio"].map((datum) => [datum, { status: "available" }])) })
   fetcher.oxford_ame = async () => ({ provider: "oxford_ame", status: "available", sourceUrl: "https://www.oxfordlearnersdictionaries.com/definition/american_english/debate_2", fields: { verbForms: forms, verbFormAudio: formAudio }, entries: [], privateMedia: Object.entries(formAudio).map(([slot, values]) => ({ dialect: "us", slot, sourceUrl: values.us })), datumStatus: { verbForms: { status: "available" }, verbFormAudio: { status: "available" } } })
   const rankedSourcesByDatum = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, []]))
+  Object.keys(fields).forEach((datum) => { rankedSourcesByDatum[datum] = [{ provider: "britannica", score: 99, confirmedAvailable: true }] })
   rankedSourcesByDatum.audio = [{ provider: "britannica", score: 99, confirmedAvailable: true }]
   rankedSourcesByDatum.verbForms = [{ provider: "oxford_ame", score: 99, confirmedAvailable: true }]
   rankedSourcesByDatum.verbFormAudio = [{ provider: "oxford_ame", score: 99, confirmedAvailable: true }]
@@ -500,16 +548,44 @@ test("Dictionary Builder Apply persists verb forms and slot-aware headword/form 
     const result = await applyDictionaryBuilderSnapshot(current.id, { name: "tester", role: "admin" }, {
       snapshotId: snapshot.id,
       selections: {
+        vietnamese: { provider: "britannica", value: fields.vietnamese },
+        syllabication: { provider: "britannica", value: fields.syllabication },
+        syllableCount: { provider: "britannica", value: fields.syllableCount },
+        grammarClassification: { provider: "britannica", value: fields.grammarClassification },
         audio: { provider: "britannica", value: JSON.stringify([{ dialect: "us", fileName: "debate001.mp3" }]) },
         verbForms: { provider: "oxford_ame", value: forms },
         verbFormAudio: { provider: "oxford_ame", value: JSON.stringify(formAudio) },
+        definition: { provider: "britannica", value: fields.definition },
+        stems: { provider: "britannica", value: fields.stems },
+        synonymsAntonyms: { provider: "britannica", value: fields.synonymsAntonyms },
+        examples: { provider: "britannica", value: fields.examples },
+        firstKnownUse: { provider: "britannica", value: fields.firstKnownUse },
+        originPath: { provider: "britannica", value: fields.originPath },
+        etymology: { provider: "britannica", value: fields.etymology },
+        worksCited: { provider: "britannica", value: fields.worksCited },
       },
     }, { ownerKey: "apply-session", clientOverride: client })
+    assert.equal(current.vietnamese, fields.vietnamese)
+    assert.equal(current.syllabication, "de-báte")
+    assert.equal(current.syllableCount, fields.syllableCount)
+    assert.deepEqual(current.grammarClassification, { grammarFamily: "action", grammarSubtype: "transitive", grammarDetail: "takes an object", grammarFamilies: ["action"], grammarSubtypes: ["transitive"] })
+    assert.equal(current.verbRegularity, "regular")
+    assert.equal(current.verbTransitivity, "transitive")
+    assert.match(current.definition, /\*\*debate\*\*[\s\S]*to discuss a question formally/u)
+    assert.match(current.definition, /\*\*Verb Forms\*\*/u)
+    assert.match(current.definition, /\*\*Stems\*\*/u)
+    assert.match(current.definition, /\*\*Works Cited\*\*/u)
     assert.deepEqual(Object.fromEntries(Object.entries(forms).map(([key]) => [key, current[key]])), forms)
+    for (const datum of ["stems", "synonymsAntonyms", "examples", "firstKnownUse", "originPath", "etymology", "worksCited"]) assert.equal(current.dictionaryMetadata.claims.filter((claim) => claim.field === datum).length, 1, datum)
+    assert.ok(current.dictionaryMetadata.citations.some((citation) => citation.citation.startsWith("Britannica Dictionary")))
     assert.equal(assets.filter((asset) => asset.slot === "headword").length, 1)
     assert.deepEqual(assets.filter((asset) => asset.slot !== "headword").map((asset) => asset.slot).sort(), Object.keys(formAudio).sort())
+    assert.deepEqual(result.mediaAssets.filter((asset) => asset.dialect === "us").map((asset) => asset.slot).sort(), ["headword", ...Object.keys(formAudio)].sort())
+    assert.ok(result.mediaAssets.every((asset) => asset.id && asset.mimeType === "audio/mpeg" && asset.byteLength > 0 && /^[a-f0-9]{64}$/u.test(asset.sha256)))
     assert.ok(result.appliedFields.includes("audio"))
     assert.ok(result.appliedFields.includes("verbFormAudio"))
+    const appliedDatums = new Set(current.dictionaryMetadata.claims.map((claim) => claim.field === "verbForms" ? "verbForms" : claim.field))
+    for (const datum of DICTIONARY_BUILDER_DATUMS) assert.ok(appliedDatums.has(datum) || result.appliedFields.includes(datum), datum)
   } finally {
     globalThis.fetch = previousFetch
     if (previousMediaRoot === undefined) delete process.env.SIS_LIBRARY_MEDIA_ROOT

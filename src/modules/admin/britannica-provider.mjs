@@ -98,7 +98,7 @@ export async function fetchBritannicaBrowserPage(sourceUrl) {
 }
 
 function parseEntry(node, sourceUrl, index) {
-  const headword = cleanDictionaryText(node.find(".hw_txt, .headword, .hword, [data-headword], h1, h2").first().text())
+  const headword = cleanDictionaryText(node.find(".hw_txt, .headword, .hword, [data-headword], h1, h2").first().text()).replace(/^\d+\s+/u, "")
   const partOfSpeech = cleanDictionaryText(node.find(".fl, .part-of-speech, .pos, [data-part-of-speech]").first().text()).toLowerCase()
   const labels = collectText(node, ".label, .usage, .grammar, .gram, .subtype, .register, .style, .sl, .sgram")
   const pronunciation = cleanDictionaryText(node.find(".hpron_word, .pron_w, [data-pronunciation]").first().text())
@@ -152,7 +152,7 @@ export function parseBritannicaHtml(html, { sourceUrl = "", lookupWord = "" } = 
   const phrases = collectText(sourceRoot, ".phrases li, .phrase li, .phrase, [data-phrase]")
   const moreExamples = collectText(sourceRoot, ".more-examples li, .extra-examples li, [data-more-example], [data-extra-example]")
   if (!parsedEntries.length) return { ok: false, available: true, message: `No Britannica entry was found for ${cleanDictionaryText(lookupWord) || "the requested word"}; no Library data was changed.` }
-  const richFields = buildRichDictionaryFields({ provider: "britannica", sourceName: "Britannica Dictionary", sourceUrl: normalizedSourceUrl, word: lookupWord, entries: parsedEntries, etymology, firstKnownUse, synonyms, collocations, idioms, phrases })
+  const richFields = buildRichDictionaryFields({ provider: "britannica", sourceName: "Britannica Dictionary", sourceUrl: normalizedSourceUrl, word: lookupWord, entries: parsedEntries, etymology, firstKnownUse, synonyms, collocations, idioms, phrases, includePartOfSpeechHeadings: true })
   const addSection = (definition, title, values) => {
     const items = uniqueDictionaryText(values)
     return items.length ? `${definition}\n\n**${title}:**\n${items.map((item) => `- ${item}`).join("\n")}` : definition

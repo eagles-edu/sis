@@ -291,3 +291,11 @@ test("student identity is immutable on update", () => {
   assert.equal(writeImportSource.includes('"eaglesId is immutable and cannot be changed"'), true)
   assert.equal(writeImportSource.includes('"studentNumber is immutable and cannot be changed"'), true)
 })
+
+test("existing profile saves repair a missing portal account from legacy password data", () => {
+  const writeImportSource = fs.readFileSync("src/modules/admin/student-write-import.mjs", "utf8")
+
+  assert.match(writeImportSource, /rawFormPayload:\s*true,\s*normalizedFormPayload:\s*true/)
+  assert.match(writeImportSource, /if \(!portalPasswordHash\) \{[\s\S]*?existingProfile\?\.rawFormPayload\?\.password[\s\S]*?existingProfile\?\.normalizedFormPayload\?\.password/)
+  assert.match(writeImportSource, /portalPasswordHash = hashScryptPassword\(assertPortalPasswordPolicy\(legacyPassword\)\)/)
+})

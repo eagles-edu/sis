@@ -123,6 +123,10 @@ function scoringBaseProvider(provider) {
   return scoringSourceById.get(text(provider))?.provider || text(provider)
 }
 
+function canonicalDictionaryProviderId(provider) {
+  return text(provider) === "merriam_webster" ? "merriam_webster_scrape" : text(provider)
+}
+
 function isConfirmedCandidate(item) {
   return Number(item?.score) > 0 && !["manual", "not_provided", "not_found", "unavailable", "robot_blocked", "blocked", "unsupported", "unverified", "invalid"].includes(text(item?.status || item?.availabilityStatus)) && item?.confirmedAvailable !== false
 }
@@ -164,7 +168,7 @@ export async function getDictionaryBuilderScoringMatrix() {
   ])
   const providerById = new Map(providerSettings.map((item) => [item.provider, item]))
   const datumByKey = new Map(datumSettings.map((item) => [settingKey(item.provider, item.partOfSpeech, item.datum), item]))
-  const metricByKey = new Map(metrics.map((item) => [settingKey(item.provider === "merriam_webster" ? "merriam_webster_api" : item.provider, item.partOfSpeech, item.datum), item]))
+  const metricByKey = new Map(metrics.map((item) => [settingKey(canonicalDictionaryProviderId(item.provider), item.partOfSpeech, item.datum), item]))
   const rows = []
   for (const partOfSpeech of DICTIONARY_BUILDER_SCORING_POS) {
     for (const datum of DICTIONARY_BUILDER_SCORING_DATUMS) {
@@ -232,15 +236,59 @@ function datumStatus(value, supported) {
     : { status: "available" }
 }
 
+const DICTIONARY_BUILDER_CITATION_NAMES = Object.freeze({
+  ldoce: "Longman Dictionary of Contemporary English",
+  oxford_ame: "Oxford Learner's Dictionaries — American English",
+  oxford_bre: "Oxford Learner's Dictionaries — English/British",
+  britannica: "Britannica Dictionary",
+  merriam_webster: "Merriam-Webster.com Dictionary",
+  merriam_webster_scrape: "Merriam-Webster.com Dictionary",
+  merriam_webster_api: "Merriam-Webster Collegiate Dictionary API",
+  etymonline: "Online Etymology Dictionary",
+  wiktionary: "Wiktionary — English entry",
+  cambridge: "Cambridge Dictionary",
+  merriam_webster_thesaurus: "Merriam-Webster Thesaurus",
+  wordhelp: "WordHelp",
+  google_translate: "Google Translate",
+})
+
 function apaCitation(provider, word, url = "", retrievedAt = nowDate()) {
-  const sourceItem = manifestById.get(provider)
-  const name = sourceItem?.label || provider
+  const name = DICTIONARY_BUILDER_CITATION_NAMES[provider] || provider
   const date = new Date(retrievedAt).toISOString().slice(0, 10)
   return `${name}. (n.d.). *${text(word)}*. Retrieved ${date}, from ${url || `{${provider}_url}`}`
 }
 
 export function buildDictionaryBuilderCitations(word, retrievedAt = nowDate()) {
-  return DICTIONARY_BUILDER_MANIFEST.map((item) => ({ provider: item.id, citation: apaCitation(item.id, word, item.searchUrl(text(word)), retrievedAt) }))
+  const recordKeys = ["definition_primary", "definition_related_pos_1", "definition_related_pos_2", "audio_uk", "audio_us", "verb_forms", "stems", "lexical_relations", "sentence_examples", "recent_examples", "first_known_use", "etymology_origin"]
+  return recordKeys.map((key) => ({ key, provider: null, datum: key, populated: false, citation: "" }))
+}
+
+const DICTIONARY_BUILDER_CITATION_KEY_BY_DATUM = Object.freeze({
+  definition: "definition_primary",
+  verbForms: "verb_forms",
+  verbFormAudio: "verb_forms",
+  stems: "stems",
+  synonymsAntonyms: "lexical_relations",
+  examples: "sentence_examples",
+  firstKnownUse: "first_known_use",
+  originPath: "etymology_origin",
+  etymology: "etymology_origin",
+  worksCited: "etymology_origin",
+})
+
+export function buildSelectedDictionaryBuilderCitations(word, retrievedAt, claims = [], sources = []) {
+  const sourceByProvider = new Map(sources.map((item) => [canonicalDictionaryProviderId(item?.provider), item]))
+  const records = buildDictionaryBuilderCitations(word, retrievedAt)
+  const populated = new Map()
+  for (const claim of claims) {
+    const key = DICTIONARY_BUILDER_CITATION_KEY_BY_DATUM[claim?.field]
+    if (!key || populated.has(key)) continue
+    const provider = canonicalDictionaryProviderId(claim.provider)
+    const source = sourceByProvider.get(provider)
+    if (!source?.sourceUrl || claim.status === "manual") continue
+    populated.set(key, { key, provider, datum: claim.field, populated: true, citation: apaCitation(provider, word, source.sourceUrl, retrievedAt) })
+  }
+  return records.map((record) => populated.get(record.key) || record)
 }
 
 export function formatDictionaryBuilderDefinition(entry, fields = {}, citations = []) {
@@ -274,7 +322,8 @@ export function formatDictionaryBuilderDefinition(entry, fields = {}, citations 
   if (fields.firstKnownUse) lines.push(`<hr>\n\n**First known use**\n${text(fields.firstKnownUse)}`)
   lines.push(`**Origin path**\n${text(fields.originPath) || "YTBD"}`)
   if (fields.etymology) lines.push(`**Etymology**\n${text(fields.etymology)}`)
-  lines.push(`<hr>\n\n**Works Cited**\n${citations.map((item) => item.citation).join("\n")}`)
+  const cited = citations.filter((item) => item?.populated !== false && item?.citation)
+  lines.push(`<hr>\n\n**Works Cited**${cited.length ? `\n${cited.map((item) => item.citation).join("\n")}` : ""}`)
   return lines.filter(Boolean).join("\n\n")
 }
 
@@ -325,6 +374,17 @@ export function normalizeProviderPreview(provider, preview, entry) {
   delete fields.dictionaryMetadata
   delete fields.dictionarySourceUrl
   const entries = Array.isArray(preview.entries) ? preview.entries : []
+  const structuredDefinition = entries.map((item) => {
+    const heading = text(item?.partOfSpeech) ? `**${text(item?.headword) || text(entry?.english)}** *${text(item.partOfSpeech)}*` : ""
+    const senses = (Array.isArray(item?.senses) ? item.senses : []).map((sense, index) => {
+      const number = text(sense?.number) || String(index + 1)
+      const labels = Array.isArray(sense?.labels) ? sense.labels.map(text).filter(Boolean).join(", ") : ""
+      const body = [labels ? `*${labels}*` : "", text(sense?.definition)].filter(Boolean).join(" — ")
+      const examples = (Array.isArray(sense?.examples) ? sense.examples : []).map((example) => `   - ${text(typeof example === "object" ? example.text : example)}`).filter((line) => line !== "   - ")
+      return [`${number}. ${body}`.trim(), ...examples].filter(Boolean).join("\n")
+    })
+    return [heading, ...senses].filter(Boolean).join("\n\n")
+  }).filter(Boolean).join("\n\n")
   const primary = entries.find((item) => lower(item?.partOfSpeech) === lower(entry?.partOfSpeech)) || entries[0] || {}
   const labels = [...new Set([...(Array.isArray(primary?.labels) ? primary.labels : []), ...(Array.isArray(primary?.grammarLabels) ? primary.grammarLabels : []), ...(Array.isArray(primary?.tags) ? primary.tags : [])].map((item) => lower(item)).filter(Boolean))]
   const labelValue = (choices) => choices.find((choice) => labels.includes(choice)) || ""
@@ -359,7 +419,7 @@ export function normalizeProviderPreview(provider, preview, entry) {
   const inflections = Array.isArray(primary?.inflections) ? primary.inflections.map((item) => text(typeof item === "object" ? item.form : item)).filter(Boolean) : []
   const providedForms = fields.verbForms && typeof fields.verbForms === "object" && !Array.isArray(fields.verbForms) ? fields.verbForms : {}
   const forms = ["verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5"].reduce((result, key, index) => ({ ...result, [key]: providedForms[key] || fields[key] || inflections[index] || "" }), {})
-  const audio = ["us", "uk"].flatMap((dialect) => primary?.audio?.[dialect] ? [{ dialect, available: true, fileName: audioFileName(primary.audio[dialect]) }] : [])
+  const audio = ["us"].flatMap((dialect) => primary?.audio?.[dialect] ? [{ dialect, available: true, fileName: audioFileName(primary.audio[dialect]) }] : [])
   const verbFormAudio = primary?.verbFormAudio && typeof primary.verbFormAudio === "object"
     ? primary.verbFormAudio
     : fields.verbFormAudio && typeof fields.verbFormAudio === "object" ? fields.verbFormAudio : {}
@@ -393,7 +453,7 @@ export function normalizeProviderPreview(provider, preview, entry) {
     grammarClassification: normalizedFields.grammarClassification,
     audio: audioValue.filter((item) => item.slot === undefined || item.slot === "headword"),
     verbFormAudio: safeVerbFormAudio,
-    definition: normalizedFields.definition,
+    definition: structuredDefinition || normalizedFields.definition,
     verbForms: normalizedFields.verbForms,
     stems: normalizedFields.stems,
     synonymsAntonyms: normalizedFields.synonymsAntonyms,
@@ -406,7 +466,7 @@ export function normalizeProviderPreview(provider, preview, entry) {
     worksCited: apaCitation(provider, entry?.english, preview.sourceUrl),
   }
   const headwordAudio = audioValue.filter((item) => item.slot === undefined || item.slot === "headword")
-  return { provider, status: "available", message: "", sourceUrl: text(preview.sourceUrl), fields: { ...normalizedFields, audio: headwordAudio, verbFormAudio: safeVerbFormAudio }, entries: entries.map((item) => ({ headword: text(item.headword), partOfSpeech: text(item.partOfSpeech), senses: Array.isArray(item.senses) ? item.senses.map((sense) => ({ number: text(sense.number), definition: text(sense.definition), examples: (sense.examples || []).map((example) => text(typeof example === "object" ? example.text : example)).filter(Boolean) })) : [] })), datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, datumStatus(values[datum], offered[datum])])), media: headwordAudio, privateMedia }
+  return { provider, status: "available", message: "", sourceUrl: text(preview.sourceUrl), fields: { ...normalizedFields, definition: structuredDefinition || normalizedFields.definition, audio: headwordAudio, verbFormAudio: safeVerbFormAudio }, entries: entries.map((item) => ({ headword: text(item.headword), partOfSpeech: text(item.partOfSpeech), senses: Array.isArray(item.senses) ? item.senses.map((sense) => ({ number: text(sense.number), definition: text(sense.definition), examples: (sense.examples || []).map((example) => text(typeof example === "object" ? example.text : example)).filter(Boolean) })) : [] })), datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, datumStatus(values[datum], offered[datum])] )), media: headwordAudio, privateMedia }
 }
 
 async function previewEtymonlineAdapter(entry) {
@@ -641,7 +701,7 @@ function dictionaryBuilderAdapter(fetcher, provider) {
 }
 
 function sameDictionaryProvider(left, right) {
-  return scoringBaseProvider(left) === scoringBaseProvider(right)
+  return canonicalDictionaryProviderId(left) === canonicalDictionaryProviderId(right)
 }
 
 function nextDatumRoundRobinOffset(partOfSpeech, datum) {
@@ -666,6 +726,11 @@ function cleanCache() {
 function publicSnapshot(snapshot) {
   const { ownerKey, bytes, privateSources, ...safe } = snapshot
   return safe
+}
+
+function publicSourceUrl(provider, word) {
+  const item = manifestById.get(provider) || manifestById.get(scoringBaseProvider(provider))
+  return item?.searchUrl?.(text(word)) || ""
 }
 
 export async function previewDictionaryBuilder(entry, { ownerKey, fetcher = adapters, rankedSources = null, rankedSourcesByDatum = {}, datumRoundRobinOffsets = {} } = {}) {
@@ -702,7 +767,7 @@ export async function previewDictionaryBuilder(entry, { ownerKey, fetcher = adap
   }
   const snapshotId = crypto.randomUUID()
   const createdAt = nowDate().toISOString()
-  const snapshot = { id: snapshotId, version: DICTIONARY_BUILDER_VERSION, entryId: text(entry?.id), ownerKey: owner, createdAt, expiresAtMs: Date.now() + TTL_MS, sourceOrder: results.map((result) => result.provider), datumSourceOrder, bicTopThreeByDatum, privateSources: results, sources: results.map(({ sourceUrl, privateMedia, ...result }) => result), citations: buildDictionaryBuilderCitations(entry?.english, createdAt), warnings: missing.map((datum) => `No selected source offered ${datum}; apply remains available.`) }
+  const snapshot = { id: snapshotId, version: DICTIONARY_BUILDER_VERSION, entryId: text(entry?.id), ownerKey: owner, createdAt, expiresAtMs: Date.now() + TTL_MS, sourceOrder: results.map((result) => result.provider), datumSourceOrder, bicTopThreeByDatum, privateSources: results, sources: results.map(({ sourceUrl, privateMedia, ...result }) => ({ ...result, sourceUrl: publicSourceUrl(result.provider, entry?.english) })), citations: buildDictionaryBuilderCitations(entry?.english, createdAt), warnings: missing.map((datum) => `No selected source offered ${datum}; apply remains available.`) }
   snapshot.bytes = Buffer.byteLength(JSON.stringify(snapshot))
   snapshots.set(snapshotId, snapshot)
   cleanCache()
@@ -725,7 +790,7 @@ export async function retryDictionaryBuilderSnapshot(snapshotId, entry, { ownerK
   }
   const refreshedSources = snapshot.privateSources.map((result) => result.provider === providerId ? refreshed : result)
   snapshot.privateSources = refreshedSources
-  snapshot.sources = refreshedSources.map(({ sourceUrl, privateMedia, ...result }) => result)
+  snapshot.sources = refreshedSources.map(({ sourceUrl, privateMedia, ...result }) => ({ ...result, sourceUrl: publicSourceUrl(result.provider, entry?.english) }))
   snapshot.sourceOrder = refreshedSources.map((result) => result.provider)
   snapshot.warnings = DICTIONARY_BUILDER_DATUMS
     .filter((datum) => !refreshedSources.some((result) => result.datumStatus?.[datum]?.status === "available"))
@@ -777,7 +842,7 @@ export async function recordDictionaryBuilderMetrics(client, snapshot, selectedF
       const countsTowardAvailability = status === "available" || status === "not_found" || status === "not_offered"
       if (!countsTowardAvailability) continue
       const available = status === "available"
-      const provider = result.provider === "merriam_webster" ? "merriam_webster_api" : result.provider
+      const provider = canonicalDictionaryProviderId(result.provider)
       const selectedProviderDatum = selected.has(`${result.provider}\u0000${datum}`) || selected.has(`${provider}\u0000${datum}`)
       await client.dictionaryProviderSuitabilityMetric.upsert({
         where: { provider_partOfSpeech_datum: { provider, partOfSpeech: lower(partOfSpeech) || "any", datum } },

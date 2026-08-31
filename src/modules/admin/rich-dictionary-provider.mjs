@@ -88,8 +88,13 @@ export function deriveDictionaryEslFields(entries, provider) {
   return fields
 }
 
-export function buildRichDictionaryFields({ provider, sourceName, sourceUrl, word, entries, etymology = [], firstKnownUse = [], synonyms = [], collocations = [], idioms = [], phrases = [] }) {
-  const sections = senseDefinitionBlocks(entries)
+export function buildRichDictionaryFields({ provider, sourceName, sourceUrl, word, entries, etymology = [], firstKnownUse = [], synonyms = [], collocations = [], idioms = [], phrases = [], includePartOfSpeechHeadings = false }) {
+  const sections = includePartOfSpeechHeadings
+    ? entries.flatMap((entry) => {
+      const heading = cleanDictionaryText(entry?.partOfSpeech)
+      return [heading ? `**${cleanDictionaryText(entry?.headword) || cleanDictionaryText(word)}** *${heading}*` : "", ...senseDefinitionBlocks([entry])].filter(Boolean)
+    })
+    : senseDefinitionBlocks(entries)
   const addList = (title, values) => {
     const items = uniqueDictionaryText(values)
     if (items.length) sections.push(`**${title}:**\n${items.map((item) => `- ${item}`).join("\n")}`)

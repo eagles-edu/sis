@@ -38,6 +38,13 @@ test("Britannica parser extracts the live dictionary HTML shape", () => {
   assert.doesNotMatch(result.fields.definition, /Recent Examples on the Web/u)
 })
 
+test("Britannica parser removes live entry ordinals from POS headings", () => {
+  const result = parseBritannicaHtml(`<!doctype html><main><div class="entry"><div class="hw_d"><span class="hw_txt">1 retreat</span><span class="fl">noun</span></div><div class="sense"><span class="snum">1</span><span class="def_text">movement away</span></div></div><div class="entry"><div class="hw_d"><span class="hw_txt">2 retreat</span><span class="fl">verb</span></div><div class="sense"><span class="snum">1</span><span class="def_text">to move away</span></div></div></main>`, { sourceUrl: "https://www.britannica.com/dictionary/retreat", lookupWord: "retreat" })
+  assert.deepEqual(result.entries.map((entry) => entry.headword), ["retreat", "retreat"])
+  assert.match(result.fields.definition, /\*\*retreat\*\* \*noun\*[\s\S]*\*\*retreat\*\* \*verb\*/u)
+  assert.doesNotMatch(result.fields.definition, /\*\*1 retreat\*\*|\*\*2 retreat\*\*/u)
+})
+
 test("Britannica parser resolves the US popup player to its preferred MP3", () => {
   const result = parseBritannicaHtml(`<!doctype html><main><div class="entry"><div class="hw_d"><span class="hw_txt">transact</span><a class="play_pron" data-lang="en_us" data-dir="t" data-file="transa02"></a><span class="fl">verb</span></div><div class="sense"><span class="def_text">to do business</span></div></div></main>`, { sourceUrl: "https://www.britannica.com/dictionary/transact", lookupWord: "transact" })
   assert.equal(result.entries[0].audio.us, "https://media.merriam-webster.com/audio/prons/en/us/mp3/t/transa02.mp3")

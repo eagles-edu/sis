@@ -435,6 +435,18 @@ test("admin systems health includes a non-secret Redis health card", () => {
   assert.doesNotMatch(source, /redis\.url/)
 })
 
+test("admin systems health probes every engagement API surface", () => {
+  const source = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
+  assert.match(source, /const ENGAGEMENT_API_HEALTH_CHECKS = \[/u)
+  assert.match(source, /key: "profileEngagementApi"[\s\S]*?path: "\/api\/admin\/profile-engagement\?take=1"/u)
+  assert.match(source, /key: "assignmentEngagementApi"[\s\S]*?path: "\/api\/admin\/assignment-reminder-engagement\?take=1"/u)
+  assert.match(source, /key: "performanceEngagementApi"[\s\S]*?path: "\/api\/admin\/performance-engagement"/u)
+  assert.match(source, /key: "libraryEngagementApi"[\s\S]*?path: "\/api\/admin\/library\/engagement"/u)
+  assert.match(source, /credentials: "include"/u)
+  assert.match(source, /label: "RC\/Performance"/u)
+  assert.match(source, /API HTTP \$\{status\}/u)
+})
+
 test("admin attendance restores only the selected level and always derives the current date context", () => {
   const source = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
   assert.match(source, /const ATTENDANCE_FORM_STORAGE_KEY = "sis\.admin\.attendance\.form\.v1"/)

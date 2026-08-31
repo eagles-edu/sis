@@ -8,6 +8,7 @@ const student = fs.readFileSync(new URL("../web-asset/student/library.html", imp
 const admin = fs.readFileSync(new URL("../web-asset/admin/library-admin.html", import.meta.url), "utf8")
 const definitions = fs.readFileSync(new URL("../web-asset/admin/library-definitions.html", import.meta.url), "utf8")
 const definitionsScript = fs.readFileSync(new URL("../web-asset/admin/library-definitions.js", import.meta.url), "utf8")
+const definitionsCss = fs.readFileSync(new URL("../web-asset/admin/library-definitions.css", import.meta.url), "utf8")
 const studentPortal = fs.readFileSync(new URL("../web-asset/student/student-portal.html", import.meta.url), "utf8")
 const adminPortal = fs.readFileSync(new URL("../web-asset/admin/student-admin.html", import.meta.url), "utf8")
 const adminPortalScript = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
@@ -261,6 +262,8 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(libraryReviewWorkbench, /window\.SIS_VOCABULARY_ESL\?\.hydrate\(pane, merged, \{ preserveSyllabication: true \}\)/)
   assert.match(libraryReviewWorkbench, /window\.SIS_VOCABULARY_ESL\?\.hydrate\(pane, data\.entry, \{ preserveSyllabication: true \}\)/)
   assert.match(sharedVocabularyEditor, /data-vocabulary-verb-forms[\s\S]*verbInfinitive[\s\S]*verbV1[\s\S]*verbV2[\s\S]*verbV3[\s\S]*verbV4[\s\S]*verbV5/)
+  assert.match(sharedVocabularyEditor, /data-vocabulary-verb-form-layout="INF\|V1\|V2\|V3\|V4\|V5"/)
+  assert.match(sharedVocabularyEditor, /data-vocabulary-verb-form-heading="\$\{field\}"[\s\S]*placeholder\.startsWith\("Infinitive"\) \? "INF"/)
   assert.match(sharedVocabularyEditor, /maxlength="50000"/)
   assert.match(sharedVocabularyEditor, /function normalizeSyllabication\(value\)[\s\S]*replace\(\/\\p\{Z\}\+\/gu, " "\)[\s\S]*input\.value = normalizeSyllabication\(input\.value\)/)
   assert.match(sharedVocabularyEditor, /function canonicalizeSyllabication\(value\)[\s\S]*syllabicationVowels/)
@@ -282,6 +285,9 @@ test("admin Library Definitions uses the complete shared header", () => {
   assert.match(definitionsScript, /adminTextZoomDownBtn/)
   assert.match(definitionsScript, /adminTextZoomUpBtn/)
   assert.match(definitionsScript, /adminTextZoomResetBtn/)
+  assert.match(definitions, /class="panel definitions-toolbar"/)
+  assert.match(definitionsCss, /\.definitions-toolbar \{[^}]*position: sticky;[^}]*z-index: 12;/s)
+  assert.match(definitionsCss, /\.definitions-toolbar \{[^}]*inset-block-start: 0;/s)
 })
 
 test("admin Library editor uses the shared New Words row renderer", () => {
@@ -305,6 +311,16 @@ test("admin Library editor uses the shared New Words row renderer", () => {
   for (const [label, radius] of [["LD", "var\\(--radius-2\\) 0 0 0"], ["OB", "0 var\\(--radius-2\\) 0 0"], ["TH", "0 0 0 var\\(--radius-2\\)"], ["GT", "0 0 var\\(--radius-2\\) 0"]]) {
     assert.match(sharedPortalTheme, new RegExp(`data-vocabulary-lookup="${label}"\\]\\s*\\{[\\s\\S]*?border-radius:\\s*${radius}`))
   }
+})
+
+test("admin verb editor keeps headword audio on row two and six exact verb-form columns", () => {
+  assert.match(sharedVocabularyEditor, /includeAudioFields \? audioEditorHtml\("headword", "Headword", uid\) : ""/)
+  assert.match(sharedVocabularyEditor, /data-vocabulary-verb-form-layout="INF\|V1\|V2\|V3\|V4\|V5"/)
+  assert.match(sharedVocabularyEditor, /data-vocabulary-verb-form-heading="\$\{field\}"/)
+  assert.match(sharedVocabularyEditor, /vocabulary-verb-form-editor[\s\S]*vocabulary-audio-editor/)
+  assert.match(sharedPortalTheme, /\.news-vocabulary-row > \.vocabulary-audio-editor\[data-vocabulary-audio-editor="headword"\][\s\S]*grid-column: 1 \/ -1/)
+  assert.match(sharedPortalTheme, /\.vocabulary-verb-forms\.has-audio-fields\s*\{[\s\S]*grid-template-columns: repeat\(6, minmax\(0, 1fr\)/)
+  assert.doesNotMatch(sharedPortalTheme, /\.vocabulary-verb-form-editor \.vocabulary-audio-editor\s*\{[\s\S]*display: contents/)
 })
 
 test("every shared vocabulary editor preserves typed stress case until save", () => {

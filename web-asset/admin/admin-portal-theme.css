@@ -6246,6 +6246,10 @@ body.admin-portal-page .news-vocabulary-row > [data-vocabulary-field="syllabicat
   grid-column: 4;
 }
 
+body.admin-portal-page .news-vocabulary-row > .vocabulary-audio-editor[data-vocabulary-audio-editor="headword"] {
+  grid-column: 1 / -1;
+}
+
 body.admin-portal-page .news-vocabulary-row > .vocabulary-etymology-fields {
   display: flex;
   flex-wrap: wrap;
@@ -6317,6 +6321,49 @@ body.admin-portal-page .vocabulary-verb-forms {
 
 body.admin-portal-page .vocabulary-verb-forms input {
   min-width: 0;
+}
+
+body.admin-portal-page .vocabulary-verb-forms.has-audio-fields {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+body.admin-portal-page .vocabulary-audio-editor {
+  align-items: end;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+
+body.admin-portal-page .vocabulary-audio-editor input {
+  box-sizing: border-box;
+  max-inline-size: none;
+  min-height: 40px;
+  min-width: 0;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+body.admin-portal-page .vocabulary-verb-form-editor {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+
+body.admin-portal-page .vocabulary-verb-forms-heading {
+  grid-column: 1 / -1;
+}
+
+body.admin-portal-page .vocabulary-verb-form-headings {
+  display: grid;
+  gap: 8px;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+body.admin-portal-page .vocabulary-verb-form-editor .vocabulary-audio-editor {
+  grid-column: auto;
 }
 
 body.admin-portal-page .news-vocabulary-row select[data-vocabulary-field="partOfSpeech"] {
@@ -8624,7 +8671,7 @@ body.admin-portal-page .library-review-pane .library-definition-audio-options > 
   gap: 6px;
 }
 
-button.library-audio-play {
+a.library-audio-play {
   align-items: center;
   background: transparent;
   border: 0;
@@ -8637,20 +8684,20 @@ button.library-audio-play {
   padding: 4px;
 }
 
-button.library-audio-play img {
+a.library-audio-play img {
   display: block;
   height: 48px;
   transition: transform 160ms ease;
   width: 48px;
 }
 
-button.library-audio-play:hover img,
-button.library-audio-play:focus-visible img,
-button.library-audio-play.is-playing img {
+a.library-audio-play:hover img,
+a.library-audio-play:focus-visible img,
+a.library-audio-play.is-playing img {
   transform: scale(1.1);
 }
 
-button.library-audio-play:focus-visible {
+a.library-audio-play:focus-visible {
   box-shadow: var(--portal-button-shadow-focus);
   outline: none;
 }

@@ -976,7 +976,7 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
   delete normalizedFormPayload.password
   profilePayload.rawFormPayload = rawFormPayload
   profilePayload.normalizedFormPayload = normalizedFormPayload
-  const portalPasswordHash = portalPassword
+  let portalPasswordHash = portalPassword
     ? hashScryptPassword(assertPortalPasswordPolicy(portalPassword))
     : ""
   const profileEmail = profilePayload.studentEmail || null
@@ -1019,8 +1019,21 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
     assertWithStatus(Boolean(existing), 404, "Student not found")
     const existingProfile = await client.studentProfile.findUnique({
       where: { studentRefId: requestedId },
-      select: { parentsId: true },
+      select: {
+        parentsId: true,
+        rawFormPayload: true,
+        normalizedFormPayload: true,
+      },
     })
+    if (!portalPasswordHash) {
+      const legacyPassword =
+        existingProfile?.rawFormPayload?.password ??
+        existingProfile?.normalizedFormPayload?.password ??
+        ""
+      if (legacyPassword) {
+        portalPasswordHash = hashScryptPassword(assertPortalPasswordPolicy(legacyPassword))
+      }
+    }
     await assertParentEmailFamilyBoundary(client, {
       email: profilePayload.motherEmail,
       familyId: profilePayload.familyId,
