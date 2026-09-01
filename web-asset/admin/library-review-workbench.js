@@ -39,11 +39,15 @@
 
   const bindAudioControl = (root, row, dialect, label, sourceUrl, { local = false } = {}) => {
     if (!root || !row || !sourceUrl) return null
-    let button = row.querySelector(`[data-library-audio-trigger="${dialect}"]`)
+    const controlKey = row.dataset.libraryAudioRow || dialect
+    const AUDIO_END_ANIMATION_GRACE_MS = 0.25
+    const ICON_ANIMATION_CYCLE_MS = 1000
+    let button = row.querySelector("[data-library-audio-trigger]")
     if (!button) {
       button = document.createElement("a")
       button.className = "library-audio-play"
       button.dataset.libraryAudioTrigger = dialect
+      button.dataset.libraryAudioKey = controlKey
       button.href = sourceUrl
       button.setAttribute("aria-label", `Play ${label} pronunciation`)
       button.title = `Play ${label} pronunciation`
@@ -57,12 +61,12 @@
     button.dataset.audioUrl = sourceUrl
     button.href = sourceUrl
     const image = button.querySelector("img")
-    let audio = root.querySelector(`[data-library-preview-audio="${dialect}"]`)
+    let audio = [...root.querySelectorAll("[data-library-preview-audio]")].find((candidate) => candidate.dataset.libraryPreviewAudio === controlKey)
     if (!audio) {
       audio = document.createElement("audio")
       audio.preload = "none"
       audio.hidden = true
-      audio.dataset.libraryPreviewAudio = dialect
+      audio.dataset.libraryPreviewAudio = controlKey
       root.append(audio)
     }
     audio.src = sourceUrl
@@ -71,23 +75,42 @@
     if (typeof audio.load === "function") audio.load()
     if (button.dataset.audioBound !== "true") {
       button.dataset.audioBound = "true"
-      const play = () => {
+      let animationLoopTimer = null
+      let animationEndTimer = null
+      const stopAnimationLoop = () => {
+        if (animationLoopTimer !== null) window.clearInterval(animationLoopTimer)
+        if (animationEndTimer !== null) window.clearTimeout(animationEndTimer)
+        animationLoopTimer = null
+        animationEndTimer = null
+        button.classList.remove("is-playing")
+      }
+      const startAnimationLoop = () => {
+        if (animationLoopTimer !== null) window.clearInterval(animationLoopTimer)
+        if (animationEndTimer !== null) window.clearTimeout(animationEndTimer)
+        animationEndTimer = null
         restartSpeakerAnimation(image)
+        animationLoopTimer = window.setInterval(() => restartSpeakerAnimation(image), ICON_ANIMATION_CYCLE_MS)
+      }
+      const play = () => {
         button.classList.add("is-playing")
+        startAnimationLoop()
         audio.currentTime = 0
         try {
           const playback = audio.play()
-          if (playback?.catch) playback.catch(() => button.classList.remove("is-playing"))
+          if (playback?.catch) playback.catch(() => stopAnimationLoop())
         } catch {
-          button.classList.remove("is-playing")
+          stopAnimationLoop()
         }
       }
-      button.addEventListener("mouseenter", () => restartSpeakerAnimation(image))
+      button.addEventListener("mouseenter", () => { if (animationLoopTimer === null) restartSpeakerAnimation(image) })
       button.addEventListener("focus", () => restartSpeakerAnimation(image))
       button.addEventListener("click", (event) => { event.preventDefault(); play() })
-      audio.addEventListener("ended", () => button.classList.remove("is-playing"))
-      audio.addEventListener("pause", () => button.classList.remove("is-playing"))
-      audio.addEventListener("error", () => button.classList.remove("is-playing"))
+      audio.addEventListener("ended", () => {
+        if (animationEndTimer !== null) window.clearTimeout(animationEndTimer)
+        animationEndTimer = window.setTimeout(stopAnimationLoop, AUDIO_END_ANIMATION_GRACE_MS)
+      })
+      audio.addEventListener("pause", () => { if (!audio.ended) stopAnimationLoop() })
+      audio.addEventListener("error", stopAnimationLoop)
     }
     return { button, audio }
   }
@@ -127,6 +150,15 @@
       }
       bindAudioControl(root, row, asset.dialect, `${asset.slot || "headword"} ${asset.dialect.toUpperCase()}`, `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library/media/${encodeURIComponent(asset.id)}`, { local: true })
       if (!rows.has(key)) root.append(row)
+    })
+    pane.querySelectorAll("[data-vocabulary-audio-editor]").forEach((editor) => {
+      const asset = assets.find((candidate) => (candidate.slot || "headword") === editor.dataset.vocabularyAudioEditor)
+      if (!asset) return
+      const mediaUrl = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library/media/${encodeURIComponent(asset.id)}`
+      const pathInput = editor.querySelector('[data-vocabulary-audio-field$=".path"]')
+      if (pathInput) pathInput.value = mediaUrl
+      editor.dataset.libraryAudioRow = `${asset.slot || "headword"}:${asset.dialect}`
+      bindAudioControl(pane, editor, asset.dialect, `${asset.slot || "headword"} ${asset.dialect.toUpperCase()}`, mediaUrl, { local: true })
     })
   }
 
@@ -607,6 +639,43 @@
         container.append(link)
         return link
       }
+      const relationParts = (value) => {
+        const parts = { synonyms: [], antonyms: [] }
+        let section = "synonyms"
+        String(value == null ? "" : value).split(/\r?\n/u).forEach((line) => {
+          const clean = line.trim()
+          const heading = clean.replace(/[:*]/gu, "").toLocaleLowerCase("en-US")
+          if (heading === "synonyms" || heading === "antonyms") { section = heading; return }
+          const item = clean.replace(/^[-*]\s+/u, "").trim()
+          if (item) parts[section].push(item)
+        })
+        return parts
+      }
+      const relationValue = (fields) => [
+        fields.synonyms.trim() ? `Synonyms:\n${fields.synonyms.trim()}` : "",
+        fields.antonyms.trim() ? `Antonyms:\n${fields.antonyms.trim()}` : "",
+      ].filter(Boolean).join("\n\n")
+      const relationInputs = (value, provider, onChange) => {
+        const fields = document.createElement("div")
+        fields.className = "dictionary-builder-relation-fields"
+        const initial = relationParts(value)
+        const inputs = {}
+        ;[["synonyms", "Synonyms"], ["antonyms", "Antonyms"]].forEach(([key, label]) => {
+          const wrapper = document.createElement("label")
+          wrapper.textContent = label
+          const input = document.createElement("textarea")
+          input.dataset.dictionaryBuilderRelation = key
+          input.dataset.dictionaryBuilderProvider = provider
+          input.placeholder = `Paste ${label.toLocaleLowerCase("en-US")} separated by new lines`
+          input.value = initial[key].join("\n")
+          input.addEventListener("focus", onChange)
+          input.addEventListener("input", onChange)
+          wrapper.append(input)
+          fields.append(wrapper)
+          inputs[key] = input
+        })
+        return { fields, value: () => relationValue({ synonyms: inputs.synonyms.value, antonyms: inputs.antonyms.value }) }
+      }
       candidates.forEach((candidate) => {
         const label = document.createElement("label")
         const candidateStatus = candidate.datumStatus?.[datum]?.status || "available"
@@ -628,21 +697,33 @@
           audioStatus.textContent = fileNames.length ? `Live file: ${fileNames.join(", ")}` : "No live file"
           label.append(title, audioStatus)
         } else label.append(title)
-        const input = document.createElement("textarea")
         const candidateValue = isDictionaryBuilderPromptStatus(candidateStatus) ? "" : typeof candidate.fields[datum] === "object" ? JSON.stringify(candidate.fields[datum]) : String(candidate.fields[datum] || "")
-        input.value = radio.checked ? selectedCandidates[datum].value : candidateValue
-        input.placeholder = isDictionaryBuilderPromptStatus(candidateStatus) ? "Resolve the cookie/robot prompt, then enter the verified value here." : ""
-        input.dataset.dictionaryBuilderCandidateValue = datum
-        input.dataset.dictionaryBuilderProvider = candidate.provider
-        const saveCandidate = () => {
-          if (!radio.checked) return
-          selectedCandidates[datum] = { provider: candidate.provider, value: input.value, status: candidateStatus }
-          updateTabSelection(datum)
-        }
-        input.addEventListener("focus", () => { radio.checked = true; saveCandidate() })
-        input.addEventListener("input", () => { saveCandidate(); sizeDictionaryBuilderTextareas(candidateList) })
-        radio.addEventListener("change", saveCandidate)
         label.append(radio)
+        if (datum === "synonymsAntonyms") {
+          const relation = relationInputs(radio.checked ? selectedCandidates[datum].value : candidateValue, candidate.provider, () => {
+            radio.checked = true
+            selectedCandidates[datum] = { provider: candidate.provider, value: relation.value(), status: candidateStatus }
+            updateTabSelection(datum)
+            sizeDictionaryBuilderTextareas(candidateList)
+          })
+          label.append(relation.fields)
+          radio.addEventListener("change", () => { selectedCandidates[datum] = { provider: candidate.provider, value: relation.value(), status: candidateStatus }; updateTabSelection(datum) })
+        } else {
+          const input = document.createElement("textarea")
+          input.value = radio.checked ? selectedCandidates[datum].value : candidateValue
+          input.placeholder = isDictionaryBuilderPromptStatus(candidateStatus) ? "Resolve the cookie/robot prompt, then enter the verified value here." : ""
+          input.dataset.dictionaryBuilderCandidateValue = datum
+          input.dataset.dictionaryBuilderProvider = candidate.provider
+          const saveCandidate = () => {
+            if (!radio.checked) return
+            selectedCandidates[datum] = { provider: candidate.provider, value: input.value, status: candidateStatus }
+            updateTabSelection(datum)
+          }
+          input.addEventListener("focus", () => { radio.checked = true; saveCandidate() })
+          input.addEventListener("input", () => { saveCandidate(); sizeDictionaryBuilderTextareas(candidateList) })
+          radio.addEventListener("change", saveCandidate)
+          label.append(input)
+        }
         const sourceLink = appendSourceLink(label, candidate.provider, candidate.sourceUrl)
         if (isDictionaryBuilderPromptStatus(candidateStatus)) {
           const retry = document.createElement("button")
@@ -726,7 +807,6 @@
             openChallengeTab()
           })
         }
-        label.append(input)
         candidateList.append(label)
         sizeDictionaryBuilderTextareas(candidateList)
       })
@@ -791,19 +871,31 @@
         radio.value = "manual"
         const title = document.createElement("strong")
         title.textContent = "Manual"
-        const input = document.createElement("textarea")
-        input.placeholder = `Enter ${datumLabel} (blank is allowed)`
-        input.dataset.dictionaryBuilderCandidateValue = datum
-        input.dataset.dictionaryBuilderProvider = "manual"
-        const saveCandidate = () => {
-          if (!radio.checked) return
-          selectedCandidates[datum] = { provider: "manual", value: input.value }
-          updateTabSelection(datum)
+        label.append(radio, title)
+        if (datum === "synonymsAntonyms") {
+          const relation = relationInputs(selectedCandidates[datum]?.provider === "manual" ? selectedCandidates[datum].value : "", "manual", () => {
+            radio.checked = true
+            selectedCandidates[datum] = { provider: "manual", value: relation.value() }
+            updateTabSelection(datum)
+            sizeDictionaryBuilderTextareas(candidateList)
+          })
+          label.append(relation.fields)
+          radio.addEventListener("change", () => { selectedCandidates[datum] = { provider: "manual", value: relation.value() }; updateTabSelection(datum) })
+        } else {
+          const input = document.createElement("textarea")
+          input.placeholder = `Enter ${datumLabel} (blank is allowed)`
+          input.dataset.dictionaryBuilderCandidateValue = datum
+          input.dataset.dictionaryBuilderProvider = "manual"
+          const saveCandidate = () => {
+            if (!radio.checked) return
+            selectedCandidates[datum] = { provider: "manual", value: input.value }
+            updateTabSelection(datum)
+          }
+          input.addEventListener("focus", () => { radio.checked = true; saveCandidate() })
+          input.addEventListener("input", () => { saveCandidate(); sizeDictionaryBuilderTextareas(candidateList) })
+          radio.addEventListener("change", saveCandidate)
+          label.append(input)
         }
-        input.addEventListener("focus", () => { radio.checked = true; saveCandidate() })
-        input.addEventListener("input", () => { saveCandidate(); sizeDictionaryBuilderTextareas(candidateList) })
-        radio.addEventListener("change", saveCandidate)
-        label.append(radio, title, input)
         candidateList.append(label)
         sizeDictionaryBuilderTextareas(candidateList)
       }

@@ -3522,6 +3522,23 @@ body.admin-portal-page .dictionary-builder-candidate input[type="radio"] {
   vertical-align: top;
 }
 
+body.admin-portal-page .dictionary-builder-relation-fields {
+  display: grid;
+  gap: var(--dictionary-builder-compact-gap);
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.admin-portal-page .dictionary-builder-relation-fields label {
+  display: grid;
+  gap: 6px;
+}
+
+body.admin-portal-page .dictionary-builder-relation-fields textarea {
+  grid-column: auto;
+  min-block-size: 140px;
+}
+
 :where(body.admin-portal-page) .dictionary-builder-pos-controls {
   display: grid;
   gap: var(--dictionary-builder-compact-gap);
@@ -6331,7 +6348,7 @@ body.admin-portal-page .vocabulary-audio-editor {
   align-items: end;
   display: grid;
   gap: 8px;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) max-content;
   min-width: 0;
 }
 
@@ -8675,9 +8692,12 @@ a.library-audio-play {
   align-items: center;
   background: transparent;
   border: 0;
+  box-sizing: border-box;
   border-radius: var(--radius-2);
   cursor: pointer;
   display: inline-flex;
+  height: 48px;
+  inline-size: 48px;
   justify-content: center;
   min-block-size: 48px;
   min-inline-size: 48px;

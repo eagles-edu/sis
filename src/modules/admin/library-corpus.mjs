@@ -1617,6 +1617,7 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
   proposed.dictionaryProvider = primarySource || existing.dictionaryProvider || null
   proposed.dictionarySourceUrl = primarySource ? ((snapshot.privateSources || []).find((item) => item.provider === primarySource)?.sourceUrl || null) : existing.dictionarySourceUrl || null
   proposed.dictionaryMetadata = {
+    ...(existing.dictionaryMetadata && typeof existing.dictionaryMetadata === "object" && !Array.isArray(existing.dictionaryMetadata) ? existing.dictionaryMetadata : {}),
     version: "1.5",
     snapshotId: snapshot.id,
     retrievedAt: snapshot.createdAt,
@@ -1644,7 +1645,18 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
     }
     const updated = await client.$transaction(async (tx) => {
       const value = Object.keys(data).length ? await tx.libraryEntry.update({ where: { id }, data: { ...data, lastEditedByName: clamp(actor.name) } }) : existing
-      for (const download of finalized) await upsertLibraryMediaAsset(tx, download, actor)
+      const persistedAssets = []
+      for (const download of finalized) persistedAssets.push(await upsertLibraryMediaAsset(tx, download, actor))
+      const mediaRows = typeof tx.libraryMediaAsset?.findMany === "function"
+        ? await tx.libraryMediaAsset.findMany({ where: { entryId: id }, select: { id: true, dialect: true, slot: true } })
+        : [...existingMediaAssets, ...persistedAssets]
+      const audioInputs = Object.fromEntries(mediaRows
+        .filter((asset) => asset?.id && asset.dialect === "us")
+        .map((asset) => [asset.slot || "headword", { path: `/api/admin/library/media/${encodeURIComponent(asset.id)}` }]))
+      if (Object.keys(audioInputs).length) {
+        const dictionaryMetadata = { ...(value.dictionaryMetadata && typeof value.dictionaryMetadata === "object" ? value.dictionaryMetadata : {}), audioInputs }
+        Object.assign(value, await tx.libraryEntry.update({ where: { id }, data: { dictionaryMetadata } }))
+      }
       if (Object.keys(data).length || finalized.length) await writeRevision(tx, value, "dictionary_builder_apply", actor.name, actor.role || "admin")
       await recordDictionaryBuilderMetrics(tx, snapshot, selectedFields.map((field) => ({ provider: text(selections[field]?.provider), datum: DICTIONARY_BUILDER_FIELD_TO_DATUM[field] })), existing.partOfSpeech)
       return value

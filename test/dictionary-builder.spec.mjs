@@ -582,6 +582,7 @@ test("Dictionary Builder Apply persists every declared datum and slot-aware audi
     assert.deepEqual(assets.filter((asset) => asset.slot !== "headword").map((asset) => asset.slot).sort(), Object.keys(formAudio).sort())
     assert.deepEqual(result.mediaAssets.filter((asset) => asset.dialect === "us").map((asset) => asset.slot).sort(), ["headword", ...Object.keys(formAudio)].sort())
     assert.ok(result.mediaAssets.every((asset) => asset.id && asset.mimeType === "audio/mpeg" && asset.byteLength > 0 && /^[a-f0-9]{64}$/u.test(asset.sha256)))
+    assert.deepEqual(Object.fromEntries(Object.entries(current.dictionaryMetadata.audioInputs).map(([slot, value]) => [slot, value.path])), Object.fromEntries(assets.filter((asset) => asset.dialect === "us").map((asset) => [asset.slot || "headword", `/api/admin/library/media/${encodeURIComponent(asset.id)}`])))
     assert.ok(result.appliedFields.includes("audio"))
     assert.ok(result.appliedFields.includes("verbFormAudio"))
     const appliedDatums = new Set(current.dictionaryMetadata.claims.map((claim) => claim.field === "verbForms" ? "verbForms" : claim.field))
