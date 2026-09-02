@@ -3359,6 +3359,149 @@ body.admin-portal-page [data-dictionary-builder-source-matrix-slot] {
   justify-self: end;
 }
 
+body.admin-portal-page .dictionary-builder-source-startup-row {
+  align-items: center;
+  display: flex;
+  flex: 1 1 520px;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-inline-size: 0;
+}
+
+body.admin-portal-page .vocabulary-source-control-layout {
+  align-items: start;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(280px, 326px) minmax(120px, 138px) minmax(0, 1fr);
+  min-inline-size: 0;
+}
+
+body.admin-portal-page .vocabulary-source-control-layout .dictionary-builder-source-startup-row {
+  display: contents;
+}
+
+body.admin-portal-page .vocabulary-source-control-layout .dictionary-builder-source-startup {
+  align-self: start;
+  inline-size: 100%;
+}
+
+body.admin-portal-page .vocabulary-source-control-layout .dictionary-builder-source-status-block {
+  align-self: start;
+  box-sizing: border-box;
+  min-height: 0;
+  padding: 0;
+}
+
+body.admin-portal-page .dictionary-builder-source-startup {
+  flex: 0 0 auto;
+  min-block-size: 36px;
+  min-height: 36px;
+  padding-block: 6px;
+}
+
+body.admin-portal-page .dictionary-builder-source-status-block {
+  display: grid;
+  gap: 3px;
+  min-inline-size: 0;
+}
+
+body.admin-portal-page .dictionary-builder-source-leds {
+  align-items: center;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--radius-2);
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 52px;
+  min-inline-size: 0;
+  overflow: hidden;
+  padding: 2px 8px;
+}
+
+body.admin-portal-page .dictionary-builder-source-led {
+  align-items: center;
+  background: #8b949e;
+  border: 2px solid color-mix(in srgb, #8b949e 72%, #1f2937 28%);
+  border-radius: 4px;
+  box-sizing: border-box;
+  color: #fff;
+  display: inline-flex;
+  flex: 0 0 48px;
+  font-size: .7rem;
+  font-weight: 800;
+  height: 48px;
+  justify-content: center;
+  letter-spacing: .02em;
+  width: 48px;
+}
+
+body.admin-portal-page .dictionary-builder-source-led[data-source-status="not-found"] {
+  background: #d32f2f;
+  border-color: #8f1d1d;
+}
+
+body.admin-portal-page .dictionary-builder-source-led[data-source-status="opening"] {
+  background: #d28a00;
+  border-color: #8a5800;
+}
+
+body.admin-portal-page .dictionary-builder-source-led[data-source-status="popup-blocking"] {
+  background: #7c3aed;
+  border-color: #4c1d95;
+}
+
+body.admin-portal-page .dictionary-builder-source-led[data-source-status="success"] {
+  background: #1f8a4c;
+  border-color: #12552f;
+}
+
+body.admin-portal-page .dictionary-builder-source-led-legend {
+  align-items: center;
+  color: var(--portal-text-soft);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: .82rem;
+  gap: 10px;
+  line-height: 1.3;
+}
+
+body.admin-portal-page .dictionary-builder-source-led-legend span {
+  align-items: center;
+  display: inline-flex;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+body.admin-portal-page .dictionary-builder-source-led-legend i {
+  background: #8b949e;
+  border: 1px solid color-mix(in srgb, #8b949e 72%, #1f2937 28%);
+  border-radius: 2px;
+  display: inline-block;
+  height: 8px;
+  width: 8px;
+}
+
+body.admin-portal-page .dictionary-builder-source-led-legend i[data-led-legend="not-found"] {
+  background: #d32f2f;
+  border-color: #8f1d1d;
+}
+
+body.admin-portal-page .dictionary-builder-source-led-legend i[data-led-legend="opening"] {
+  background: #d28a00;
+  border-color: #8a5800;
+}
+
+body.admin-portal-page .dictionary-builder-source-led-legend i[data-led-legend="popup-blocking"] {
+  background: #7c3aed;
+  border-color: #4c1d95;
+}
+
+body.admin-portal-page .dictionary-builder-source-led-legend i[data-led-legend="success"] {
+  background: #1f8a4c;
+  border-color: #12552f;
+}
+
 body.admin-portal-page .news-vocabulary-lookups.dictionary-builder-source-matrix {
   display: grid;
   gap: 0;
@@ -7726,6 +7869,27 @@ body.admin-portal-page .vocabulary-source-actions {
   gap: var(--portal-button-gap);
 }
 
+body.admin-portal-page .vocabulary-source-control-layout .vocabulary-source-actions {
+  display: grid;
+  gap: 12px 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.admin-portal-page .vocabulary-source-control-layout .vocabulary-source-actions .vocabulary-transitivity-check {
+  display: contents;
+}
+
+body.admin-portal-page .vocabulary-source-control-layout .vocabulary-source-actions .vocabulary-transitivity-check > p {
+  grid-column: 1 / -1;
+}
+
+body.admin-portal-page .vocabulary-source-control-layout .vocabulary-source-actions .portal-button-compact,
+body.admin-portal-page .vocabulary-transitivity-check > .portal-button-compact {
+  min-block-size: 36px;
+  min-height: 36px;
+  padding-block: 6px;
+}
+
 body.admin-portal-page .vocabulary-source-messages {
   display: grid;
   gap: 6px;
@@ -7734,6 +7898,26 @@ body.admin-portal-page .vocabulary-source-messages {
 
 body.admin-portal-page .vocabulary-source-messages > p {
   margin: 0;
+}
+
+@media (max-width: 900px) {
+  body.admin-portal-page .vocabulary-source-control-layout {
+    grid-template-columns: minmax(0, 326px) minmax(120px, 138px);
+  }
+
+  body.admin-portal-page .vocabulary-source-control-layout .dictionary-builder-source-status-block {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  body.admin-portal-page .vocabulary-source-control-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.admin-portal-page .vocabulary-source-control-layout .dictionary-builder-source-status-block {
+    grid-column: auto;
+  }
 }
 
 body.admin-portal-page .vocabulary-transitivity-check {

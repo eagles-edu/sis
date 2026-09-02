@@ -8,7 +8,7 @@ import { previewCambridgeLibraryEntry } from "./cambridge-provider.mjs"
 import { previewLdoceLibraryEntry } from "./ldoce-provider.mjs"
 import { fetchEtymonlinePreview } from "./library-origin.mjs"
 import { previewMerriamWebsterLibraryEntry } from "./library-corpus.mjs"
-import { previewMerriamWebsterDictionaryEntry } from "./merriam-webster-provider.mjs"
+import { fetchMerriamWebsterBrowserPage, previewMerriamWebsterDictionaryEntry } from "./merriam-webster-provider.mjs"
 import { previewOxfordBreLibraryEntry, previewOxfordLibraryEntry } from "./oxford-provider.mjs"
 import { fetchWithExponentialBackoff } from "./provider-http.mjs"
 
@@ -120,6 +120,25 @@ export const DICTIONARY_BUILDER_MANDATORY_DATUM_PROVIDERS = Object.freeze({
   synonymsAntonyms: Object.freeze(["merriam_webster_thesaurus"]),
   firstKnownUse: Object.freeze(["merriam_webster_api"]),
 })
+
+export const DICTIONARY_BUILDER_PREFERRED_DATUM_PROVIDERS = Object.freeze({
+  vietnamese: Object.freeze(["google_translate"]),
+  syllabication: Object.freeze(["wordhelp", "ldoce"]),
+  syllableCount: Object.freeze(["wordhelp"]),
+  grammarClassification: Object.freeze(["merriam_webster_api", "merriam_webster_scrape"]),
+  audio: Object.freeze(["britannica", "ldoce", "oxford_ame"]),
+  verbFormAudio: Object.freeze(["oxford_ame", "oxford_bre"]),
+  definition: Object.freeze(["britannica", "ldoce", "oxford_ame"]),
+  verbForms: Object.freeze(["merriam_webster_api", "oxford_ame"]),
+  stems: Object.freeze(["merriam_webster_api", "merriam_webster_scrape"]),
+  synonymsAntonyms: Object.freeze(["merriam_webster_thesaurus", "merriam_webster_scrape"]),
+  examples: Object.freeze(["britannica", "ldoce", "oxford_ame"]),
+  firstKnownUse: Object.freeze(["merriam_webster_api", "merriam_webster_scrape"]),
+  originPath: Object.freeze(["merriam_webster_api", "merriam_webster_scrape", "wiktionary"]),
+  etymology: Object.freeze(["etymonline", "merriam_webster_api", "wiktionary"]),
+})
+
+export const DICTIONARY_BUILDER_INITIAL_SERVER_PROVIDERS = Object.freeze(["ldoce", "oxford_ame", "merriam_webster_thesaurus", "britannica", "merriam_webster_scrape", "merriam_webster_api", "wordhelp"])
 
 function scoringBaseProvider(provider) {
   return scoringSourceById.get(text(provider))?.provider || text(provider)
@@ -299,7 +318,7 @@ function localAudioMarkup(asset) {
   const slot = text(asset?.slot || "headword")
   if (!id || !["us", "uk"].includes(dialect) || !/^[a-z0-9_-]+$/iu.test(id)) return ""
   const mediaUrl = `/api/admin/library/media/${encodeURIComponent(id)}`
-  const iconPath = dialect === "uk" ? "/web-asset/icons/svg/speaker-blue-uk.svg" : "/web-asset/icons/svg/speaker-red-usa.svg"
+  const iconPath = "/web-asset/icons/svg/speaker-red-usa.svg"
   const label = `${slot} ${dialect.toUpperCase()}`
   const key = `${slot}:${dialect}`
   return `<a class="library-audio-play" data-library-audio-trigger="${dialect}" data-library-audio-key="${key}" href="${mediaUrl}" aria-label="Play ${label} pronunciation" title="Play ${label} pronunciation"><img src="${iconPath}" alt="${label} speaker"></a><audio preload="none" hidden data-library-preview-audio="${key}" data-local-library-media="true" src="${mediaUrl}"></audio>`
@@ -638,6 +657,10 @@ export async function previewHtmlAdapter(provider, entry, fetchImpl = fetch, bro
           throw new Error(`HTTP ${response.status}`)
         }
       }
+      if (provider === "merriam_webster_thesaurus" && response.status === 403) {
+        response = await browserFetchImpl(sourceUrl)
+        if (!response?.ok) return { provider, status: response?.robotBlocked ? "robot_blocked" : "unavailable", message: response?.message || `${item.label} browser access failed`, sourceUrl, fields: {}, entries: [], media: [], datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: item.capabilities[datum] ? response?.robotBlocked ? "robot_blocked" : "unavailable" : "not_offered" }])) }
+      }
       if (response.status === 404) return { provider, status: "not_found", message: `${item.label} returned HTTP 404; no matching entry was provided.`, sourceUrl, fields: {}, entries: [], media: [], datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: item.capabilities[datum] ? "not_found" : "not_offered" }])) }
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
     }
@@ -712,7 +735,7 @@ const adapters = Object.freeze({
   etymonline: previewEtymonlineAdapter,
   wiktionary: (entry) => previewHtmlAdapter("wiktionary", entry),
   cambridge: async (entry) => normalizeProviderPreview("cambridge", await previewCambridgeLibraryEntry(entry), entry),
-  merriam_webster_thesaurus: (entry) => previewHtmlAdapter("merriam_webster_thesaurus", entry),
+  merriam_webster_thesaurus: (entry) => previewHtmlAdapter("merriam_webster_thesaurus", entry, fetch, fetchMerriamWebsterBrowserPage),
   wordhelp: (entry) => previewHtmlAdapter("wordhelp", entry),
   google_translate: previewGoogleTranslateAdapter,
 })
@@ -796,7 +819,9 @@ export function dictionaryBuilderRoundRobinDatumSourceOrder(datum, rankedSources
 }
 
 function dictionaryBuilderAdapter(fetcher, provider) {
-  return fetcher[provider] || fetcher[provider === "merriam_webster" ? "merriam_webster_api" : scoringBaseProvider(provider)]
+  const adapter = fetcher[provider] || fetcher[provider === "merriam_webster" ? "merriam_webster_api" : scoringBaseProvider(provider)]
+  if (provider !== "merriam_webster_scrape" || !adapter) return adapter
+  return async (...args) => ({ ...await adapter(...args), provider })
 }
 
 async function runDictionaryBuilderProvider(adapter, entry, provider, timeoutMs = DICTIONARY_BUILDER_PROVIDER_TIMEOUT_MS, parentSignal = null) {
@@ -810,10 +835,11 @@ async function runDictionaryBuilderProvider(adapter, entry, provider, timeoutMs 
   const providerFetch = (url, options = {}) => fetch(url, { ...options, signal: controller.signal })
   let timer
   try {
-    return await Promise.race([
+    const result = await Promise.race([
       provider === "google_translate" ? adapter(entry, { fetchImpl: providerFetch }) : adapter(entry, providerFetch),
       new Promise((_, reject) => { timer = setTimeout(() => { controller.abort(Object.assign(new Error(`${provider} preview timed out; waiting for input.`), { code: "DICTIONARY_BUILDER_PROVIDER_TIMEOUT" })); reject(controller.signal.reason) }, timeoutMs) }),
     ])
+    return { ...result, provider }
   } catch (error) {
     const timedOut = ["DICTIONARY_BUILDER_PROVIDER_TIMEOUT", "DICTIONARY_BUILDER_PREVIEW_TIMEOUT"].includes(error?.code)
     return { provider, status: timedOut ? "waiting_for_input" : "unavailable", message: text(error?.message) || `${provider} preview is unavailable.`, fields: {}, entries: [], media: [], datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: timedOut ? "waiting_for_input" : "unavailable" }])) }
@@ -871,18 +897,60 @@ function publicSourceUrl(provider, word) {
   return item?.searchUrl?.(text(word)) || ""
 }
 
+function sourceLabel(provider) {
+  return manifestById.get(provider)?.label || scoringSourceById.get(provider)?.label || provider
+}
+
+function datumStatusLabel(status) {
+  return text(status || "not attempted").replaceAll("_", " ")
+}
+
+export function buildDictionaryBuilderAcquisitionLog(entry, results = [], { initialProviders = DICTIONARY_BUILDER_INITIAL_SERVER_PROVIDERS } = {}) {
+  const sourceByProvider = new Map(results.map((result) => [result.provider, result]))
+  const lines = [
+    "Dictionary Builder acquisition log",
+    `Word: ${text(entry?.english) || "(missing)"} | POS: ${text(entry?.partOfSpeech) || "(missing)"}`,
+    "",
+    "Initial source connections:",
+  ]
+  initialProviders.forEach((provider) => {
+    const result = sourceByProvider.get(provider)
+    lines.push(`- ${sourceLabel(provider)}: ${result ? `completed (${result.status || "unknown"})` : "not pulled"}${result?.message ? ` — ${text(result.message)}` : ""}`)
+  })
+  lines.push("", "Pertinent datum availability and primary/secondary pulls:")
+  Object.entries(DICTIONARY_BUILDER_PREFERRED_DATUM_PROVIDERS).forEach(([datum, providers]) => {
+    const details = providers.map((provider, index) => {
+      const result = sourceByProvider.get(provider)
+      const status = result?.datumStatus?.[datum]?.status || (result ? result.status : "not pulled")
+      return `${index === 0 ? "primary" : "secondary"} ${sourceLabel(provider)}=${datumStatusLabel(status)}`
+    })
+    const successful = providers.filter((provider) => sourceByProvider.get(provider)?.datumStatus?.[datum]?.status === "available")
+    lines.push(`- ${datum}: ${details.join("; ")} | ${successful.length ? `successful pull: ${successful.map(sourceLabel).join(", ")}` : "waiting for confirmed source data"}`)
+  })
+  const issues = results.flatMap((result) => {
+    const sourceIssues = result.message ? [`${sourceLabel(result.provider)}: ${text(result.message)}`] : []
+    const datumIssues = Object.entries(result.datumStatus || {}).filter(([, state]) => state?.status && state.status !== "available" && state.status !== "not_offered").map(([datum, state]) => `${sourceLabel(result.provider)} / ${datum}: ${datumStatusLabel(state.status)}`)
+    return [...sourceIssues, ...datumIssues]
+  })
+  lines.push("", issues.length ? "Issues affecting acquisition:" : "Issues affecting acquisition: none reported")
+  issues.forEach((issue) => lines.push(`- ${issue}`))
+  return lines.join("\n")
+}
+
 export async function previewDictionaryBuilder(entry, { ownerKey, fetcher = adapters, rankedSources = null, rankedSourcesByDatum = {}, datumRoundRobinOffsets = {} } = {}) {
   const owner = text(ownerKey)
   if (!owner) throw new Error("Dictionary Builder requires an authenticated session binding")
   const ranked = Array.isArray(rankedSources) ? rankedSources : await dictionaryBuilderRankDatumSources(entry?.partOfSpeech, "definition")
-  const selected = [...rankedDatumProviderIds("definition", ranked), "merriam_webster_api", "merriam_webster_thesaurus", "google_translate", DICTIONARY_BUILDER_SYLLABLE_PROVIDER]
-    .filter((provider, index, providers) => index === providers.findIndex((candidate) => scoringBaseProvider(candidate) === scoringBaseProvider(provider)))
+  const initialProviderBases = new Set(DICTIONARY_BUILDER_INITIAL_SERVER_PROVIDERS.map((provider) => scoringBaseProvider(provider)))
+  const rankedInitialExtras = rankedDatumProviderIds("definition", ranked).filter((provider) => !initialProviderBases.has(scoringBaseProvider(provider)))
+  const selected = [...DICTIONARY_BUILDER_INITIAL_SERVER_PROVIDERS, ...rankedInitialExtras, "merriam_webster_thesaurus", "google_translate", DICTIONARY_BUILDER_SYLLABLE_PROVIDER]
+    .filter((provider, index, providers) => index === providers.indexOf(provider))
   const results = await runDictionaryBuilderPreview(
     (signal) => Promise.all(selected.map((provider) => runDictionaryBuilderProvider(dictionaryBuilderAdapter(fetcher, provider), entry, provider, DICTIONARY_BUILDER_PROVIDER_TIMEOUT_MS, signal))),
   ).catch((error) => selected.map((provider) => ({ provider, status: "waiting_for_input", message: text(error?.message) || "Dictionary Builder preview timed out; waiting for input.", fields: {}, entries: [], media: [], datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: "waiting_for_input" }])) })))
   const previewTimedOut = results.some((result) => result?.status === "waiting_for_input" || Object.values(result?.datumStatus || {}).some((datum) => datum?.status === "waiting_for_input"))
   const missing = DICTIONARY_BUILDER_DATUMS.filter((datum) => !results.some((result) => result.datumStatus?.[datum]?.status === "available"))
-  const requestedDatums = [...new Set([...missing, "audio", ...(lower(entry?.partOfSpeech) === "verb" ? ["verbFormAudio"] : [])])]
+  const requestedDatums = [...new Set([...DICTIONARY_BUILDER_DATUMS, ...missing, "audio", ...(lower(entry?.partOfSpeech) === "verb" ? ["verbFormAudio"] : [])])]
   const datumSourceOrder = {}
   for (const datum of requestedDatums) {
     const rankedForDatum = Array.isArray(rankedSourcesByDatum?.[datum]) ? rankedSourcesByDatum[datum] : await dictionaryBuilderRankDatumSources(entry?.partOfSpeech, datum)
@@ -907,19 +975,20 @@ export async function previewDictionaryBuilder(entry, { ownerKey, fetcher = adap
   const snapshotId = crypto.randomUUID()
   const createdAt = nowDate().toISOString()
   const snapshot = { id: snapshotId, version: DICTIONARY_BUILDER_VERSION, entryId: text(entry?.id), ownerKey: owner, createdAt, expiresAtMs: Date.now() + TTL_MS, sourceOrder: results.map((result) => result.provider), datumSourceOrder, bicTopThreeByDatum, privateSources: results, sources: results.map(({ sourceUrl, privateMedia, ...result }) => ({ ...result, sourceUrl: publicSourceUrl(result.provider, entry?.english) })), citations: buildDictionaryBuilderCitations(entry?.english, createdAt), warnings: missing.map((datum) => `No selected source offered ${datum}; apply remains available.`) }
+  snapshot.acquisitionLog = buildDictionaryBuilderAcquisitionLog(entry, results)
   snapshot.bytes = Buffer.byteLength(JSON.stringify(snapshot))
   snapshots.set(snapshotId, snapshot)
   cleanCache()
   return publicSnapshot(snapshot)
 }
 
-export async function retryDictionaryBuilderSnapshot(snapshotId, entry, { ownerKey, provider, fetcher = adapters } = {}) {
+export async function retryDictionaryBuilderSnapshot(snapshotId, entry, { ownerKey, provider, datum = "", fetcher = adapters } = {}) {
   cleanCache()
   const snapshot = snapshots.get(text(snapshotId))
   if (!snapshot || snapshot.ownerKey !== text(ownerKey) || snapshot.entryId !== text(entry?.id)) return null
   const providerId = text(provider)
   const previous = snapshot.privateSources.find((result) => result.provider === providerId)
-  if (!previous) return null
+  if (!manifestById.has(scoringBaseProvider(providerId))) return null
   const adapter = dictionaryBuilderAdapter(fetcher, providerId)
   let refreshed
   try {
@@ -927,10 +996,14 @@ export async function retryDictionaryBuilderSnapshot(snapshotId, entry, { ownerK
   } catch (error) {
     refreshed = { provider: providerId, status: "unavailable", message: text(error.message), fields: {}, entries: [], media: [], datumStatus: {} }
   }
-  const refreshedSources = snapshot.privateSources.map((result) => result.provider === providerId ? refreshed : result)
+  const refreshedSources = previous
+    ? snapshot.privateSources.map((result) => result.provider === providerId ? refreshed : result)
+    : [...snapshot.privateSources, refreshed]
   snapshot.privateSources = refreshedSources
   snapshot.sources = refreshedSources.map(({ sourceUrl, privateMedia, ...result }) => ({ ...result, sourceUrl: publicSourceUrl(result.provider, entry?.english) }))
   snapshot.sourceOrder = refreshedSources.map((result) => result.provider)
+  if (datum && !snapshot.datumSourceOrder[datum]?.includes(providerId)) snapshot.datumSourceOrder[datum] = [providerId, ...(snapshot.datumSourceOrder[datum] || [])]
+  snapshot.acquisitionLog = buildDictionaryBuilderAcquisitionLog(entry, refreshedSources)
   snapshot.warnings = DICTIONARY_BUILDER_DATUMS
     .filter((datum) => !refreshedSources.some((result) => result.datumStatus?.[datum]?.status === "available"))
     .map((datum) => `No selected source offered ${datum}; apply remains available.`)

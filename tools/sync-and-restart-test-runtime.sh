@@ -518,6 +518,7 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/icons/web-component/svgs/joggling-triangles.svg|web-asset/icons/web-component/svgs/joggling-triangles.svg"
   "web-asset/icons/web-component/svgs/spiral.svg|web-asset/icons/web-component/svgs/spiral.svg"
   "web-asset/icons/svg/water-ripples.svg|web-asset/icons/svg/water-ripples.svg"
+  "web-asset/icons/svg/speaker-red-usa.svg|web-asset/icons/svg/speaker-red-usa.svg"
   "web-asset/vendor/fullcalendar/index.global.min.js|web-asset/vendor/fullcalendar/index.global.min.js"
   "web-asset/vendor/tabulatorz/tabulator.min.css|web-asset/vendor/tabulatorz/tabulator.min.css"
   "web-asset/vendor/tabulatorz/tabulator.min.css.map|web-asset/vendor/tabulatorz/tabulator.min.css.map"
@@ -698,6 +699,7 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/icons/web-component/svgs/joggling-triangles.svg|web-asset/icons/web-component/svgs/joggling-triangles.svg"
   "web-asset/icons/web-component/svgs/spiral.svg|web-asset/icons/web-component/svgs/spiral.svg"
   "web-asset/icons/svg/water-ripples.svg|web-asset/icons/svg/water-ripples.svg"
+  "web-asset/icons/svg/speaker-red-usa.svg|web-asset/icons/svg/speaker-red-usa.svg"
   "web-asset/vendor/fullcalendar/index.global.min.js|web-asset/vendor/fullcalendar/index.global.min.js"
   "web-asset/vendor/tabulatorz/tabulator.min.css|web-asset/vendor/tabulatorz/tabulator.min.css"
   "web-asset/vendor/tabulatorz/tabulator.min.css.map|web-asset/vendor/tabulatorz/tabulator.min.css.map"
@@ -1293,6 +1295,7 @@ verify_test_public_assets() {
     "${target_public_root}/web-asset/icons/web-component/svgs/joggling-triangles.svg"
     "${target_public_root}/web-asset/icons/web-component/svgs/spiral.svg"
     "${target_public_root}/web-asset/icons/svg/water-ripples.svg"
+    "${target_public_root}/web-asset/icons/svg/speaker-red-usa.svg"
     "${target_public_root}/web-asset/vendor/fullcalendar/index.global.min.js"
   )
 

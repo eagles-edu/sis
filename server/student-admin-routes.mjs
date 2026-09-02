@@ -6884,7 +6884,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const snapshot = await retryDictionaryBuilderSnapshot(
       decodeURIComponent(dictionaryBuilderRetryMatch[2]),
       entry,
-      { ownerKey: dictionaryBuilderOwnerKey, provider: payload?.provider },
+      { ownerKey: dictionaryBuilderOwnerKey, provider: payload?.provider, datum: payload?.datum },
     )
     if (!snapshot) { const error = new Error("Dictionary Builder preview or challenged provider was not found"); error.statusCode = 404; throw error }
     sendJson(response, 200, { ok: true, ...snapshot })

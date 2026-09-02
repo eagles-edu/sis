@@ -10,6 +10,7 @@ import {
   DICTIONARY_BUILDER_DATUM_STATUS,
   DICTIONARY_BUILDER_DATUMS,
   DICTIONARY_BUILDER_MANDATORY_DATUM_PROVIDERS,
+  DICTIONARY_BUILDER_INITIAL_SERVER_PROVIDERS,
   DICTIONARY_BUILDER_BIC_WEIGHTS,
   DICTIONARY_BUILDER_MANIFEST,
   dictionaryBuilderBicDatumProviderIds,
@@ -77,6 +78,10 @@ test("Dictionary Builder uses mandatory datum sources and a universal top-three 
   assert.deepEqual(dictionaryBuilderBicDatumProviderIds("audio", ranked), ["britannica", "ldoce", "oxford_ame"])
   assert.deepEqual(dictionaryBuilderBicDatumProviderIds("vietnamese", ranked), ["google_translate"])
   assert.ok(dictionaryBuilderBicDatumProviderIds("definition", ranked).every((provider) => provider !== "google_translate"))
+})
+
+test("Dictionary Builder always pulls the locked seven initial sources", () => {
+  assert.deepEqual(DICTIONARY_BUILDER_INITIAL_SERVER_PROVIDERS, ["ldoce", "oxford_ame", "merriam_webster_thesaurus", "britannica", "merriam_webster_scrape", "merriam_webster_api", "wordhelp"])
 })
 
 test("Dictionary Builder metrics count only available and 404 or not-offered outcomes", async () => {
@@ -255,7 +260,7 @@ test("Dictionary Builder retries only the challenged provider in its existing sn
   assert.equal(await retryDictionaryBuilderSnapshot(snapshot.id, { id: "other-entry" }, { ownerKey: "session-retry", provider: "ldoce", fetcher }), null)
 })
 
-test("Dictionary Builder first pass uses two Definition Proper sources, MW API, TH, GT, and WH", async () => {
+test("Dictionary Builder first pass uses the locked initial sources plus GT", async () => {
   const calls = []
   const available = (provider) => async () => {
     calls.push(provider)
@@ -273,9 +278,9 @@ test("Dictionary Builder first pass uses two Definition Proper sources, MW API, 
     { id: "entry-2", english: "commend", partOfSpeech: "verb" },
     { ownerKey: "session-a", fetcher, rankedSources: [{ provider: "ldoce", score: 99 }, { provider: "britannica", score: 98 }, { provider: "merriam_webster", score: 97 }] },
   )
-  assert.deepEqual(snapshot.sourceOrder, ["ldoce", "britannica", "merriam_webster", "merriam_webster_thesaurus", "google_translate", "wordhelp", "oxford_ame"])
-  assert.deepEqual(calls, snapshot.sourceOrder)
-  assert.equal(snapshot.sources.length, 7)
+  assert.deepEqual(snapshot.sourceOrder.map((provider) => provider === "merriam_webster_scrape" ? "merriam_webster" : provider), ["ldoce", "oxford_ame", "merriam_webster_thesaurus", "britannica", "merriam_webster", "merriam_webster_api", "wordhelp", "google_translate"])
+  assert.deepEqual(calls.map((provider) => provider === "merriam_webster" ? "merriam_webster_scrape" : provider), snapshot.sourceOrder)
+  assert.equal(snapshot.sources.length, 8)
 })
 
 test("Dictionary Builder queries the complete ranked datum set without fallback substitution", async () => {
@@ -358,7 +363,7 @@ test("Syllable / Stress uses WordHelp and MW API only", async () => {
       datumRoundRobinOffsets: { syllabication: 1 },
     },
   )
-  assert.deepEqual(snapshot.datumSourceOrder.syllabication, ["wordhelp", "ldoce", "merriam_webster"])
+  assert.deepEqual(snapshot.datumSourceOrder.syllabication, ["wordhelp", "ldoce", "merriam_webster_scrape"])
   assert.equal(new Set(snapshot.datumSourceOrder.syllabication).size, 3)
   for (const provider of ["wordhelp", "ldoce", "merriam_webster"]) assert.ok(calls.includes(provider))
   for (const provider of ["wordhelp", "ldoce", "merriam_webster"]) assert.equal(calls.filter((called) => called === provider).length, 1)

@@ -179,6 +179,7 @@ LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/icons/web-component/svgs/joggling-triangles.svg|web-asset/icons/web-component/svgs/joggling-triangles.svg"
   "web-asset/icons/web-component/svgs/spiral.svg|web-asset/icons/web-component/svgs/spiral.svg"
   "web-asset/icons/svg/water-ripples.svg|web-asset/icons/svg/water-ripples.svg"
+  "web-asset/icons/svg/speaker-red-usa.svg|web-asset/icons/svg/speaker-red-usa.svg"
   "web-asset/vendor/fullcalendar/index.global.min.js|web-asset/vendor/fullcalendar/index.global.min.js"
   "web-asset/vendor/tabulatorz/tabulator.min.css|web-asset/vendor/tabulatorz/tabulator.min.css"
   "web-asset/vendor/tabulatorz/tabulator.min.css.map|web-asset/vendor/tabulatorz/tabulator.min.css.map"
@@ -366,6 +367,7 @@ LIVE_PUBLIC_WEBFILE_MAP=(
   "web-asset/images/favicon.png|favicon.png"
   "web-asset/images/favicon.svg|favicon.svg"
   "web-asset/icons/svg/water-ripples.svg|web-asset/icons/svg/water-ripples.svg"
+  "web-asset/icons/svg/speaker-red-usa.svg|web-asset/icons/svg/speaker-red-usa.svg"
 )
 
 LIVE_ROUTE_MATRIX=(

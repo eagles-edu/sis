@@ -3069,7 +3069,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1148
+              "height": 1779
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3081,7 +3081,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1100
+              "height": 1731
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3093,7 +3093,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 912
+              "height": 1647
             },
             ".panel": {
               "selector": ".panel",
@@ -4147,9 +4147,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "",
-            "bgImage": "",
-            "color": ""
+            "bg": "rgba(0, 0, 0, 0)",
+            "bgImage": "none",
+            "color": "rgb(0, 0, 0)"
           }
         }
       ]
@@ -4613,7 +4613,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1498
+              "height": 1479
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -7643,7 +7643,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1451
+              "height": 1741
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7655,7 +7655,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1451
+              "height": 1741
             },
             ".app-shell": null,
             ".panel": {
@@ -8313,7 +8313,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1803
+              "height": 1624
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8325,7 +8325,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1755
+              "height": 1576
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8337,7 +8337,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1671
+              "height": 1492
             },
             ".panel": {
               "selector": ".panel",
@@ -9837,9 +9837,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "",
-            "bgImage": "",
-            "color": ""
+            "bg": "rgb(82, 82, 82)",
+            "bgImage": "none",
+            "color": "rgb(229, 245, 255)"
           }
         }
       ]

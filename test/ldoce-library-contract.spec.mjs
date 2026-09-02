@@ -10,7 +10,6 @@ const editor = fs.readFileSync(new URL("../web-asset/shared/vocabulary-esl-edito
 const adminLibrary = fs.readFileSync(new URL("../web-asset/admin/library-admin.html", import.meta.url), "utf8")
 const workbench = fs.readFileSync(new URL("../web-asset/admin/library-review-workbench.js", import.meta.url), "utf8")
 const sharedTheme = fs.readFileSync(new URL("../web-asset/shared/portal-theme.css", import.meta.url), "utf8")
-const speakerUk = fs.readFileSync(new URL("../web-asset/icons/svg/speaker-blue-uk.svg", import.meta.url), "utf8")
 const speakerUs = fs.readFileSync(new URL("../web-asset/icons/svg/speaker-red-usa.svg", import.meta.url), "utf8")
 
 test("dictionary scraper integrations preserve protected media and audit contracts", () => {
@@ -50,13 +49,21 @@ test("dictionary scraper integrations preserve protected media and audit contrac
   assert.match(workbench, /isDictionaryBuilderPromptStatus\(status\) \|\| \(status === "available" && source\.fields\?\.\[datum\] !== undefined\)/)
   assert.match(workbench, /const mandatory = datum === "audio" \? "britannica" : datum === "verbFormAudio" \? "oxford_ame" : datum === "synonymsAntonyms" \? "merriam_webster_thesaurus" : datum === "syllabication" \? "wordhelp"/)
   assert.match(workbench, /const robotBlocked = ordered\.filter\(\(source\) => isDictionaryBuilderPromptStatus\(source\.datumStatus\?\.\[datum\]\?\.status\)\)/)
-  for (const token of ["Open initial source group (BR / OA / LD / WH / TH)", "INITIAL_SOURCE_GROUP_SIZE = 5", "sourceBrowserTabs", "closeSourceBrowserTabs", "cookie/robot prompt", "this datum is paused", "Retry provider", "provider tabs", "native cookie jar", "Fallback providers stay closed until needed"]) assert.ok(workbench.includes(token), `missing workbench contract: ${token}`)
+  for (const token of ["Open initial source group (LD / OA / TH / BR / MW / AP / WH)", "INITIAL_SOURCE_GROUP_SIZE = 7", "INITIAL_SOURCE_LED_ORDER", "dictionary-builder-source-leds", "dictionary-builder-source-led-legend", "data-dictionary-builder-open-sources", "bindEditorSourceStartup", "sourceLedOverrides", "sourceBrowserTabs", "closeSourceBrowserTabs", "cookie/robot prompt", "this datum is paused", "Retry provider", "provider tabs", "native cookie jar"]) assert.ok(workbench.includes(token), `missing workbench contract: ${token}`)
+  assert.doesNotMatch(workbench, /led\.title\s*=/)
+  assert.match(editor, /portal-button-compact" data-vocabulary-dictionary-builder/)
+  assert.match(editor, /portal-button-compact" data-vocabulary-origin-analysis/)
+  assert.match(editor, /portal-button-compact" data-vocabulary-transitivity-check/)
+  assert.match(editor, /portal-button-compact" data-vocabulary-transitivity-autofill/)
   assert.match(workbench, /const initialSourceEntries = INITIAL_SOURCE_PROVIDER_ORDER\.map\(\(provider\) => \(\{[\s\S]*?initialSourceUrl\(provider, word\)/)
-  assert.match(workbench, /INITIAL_SOURCE_PROVIDER_ORDER = \["britannica", "oxford_ame", "ldoce", "wordhelp", "merriam_webster_thesaurus"\]/)
+  assert.match(workbench, /INITIAL_SOURCE_PROVIDER_ORDER = \["ldoce", "oxford_ame", "merriam_webster_thesaurus", "britannica", "merriam_webster_scrape", "merriam_webster_api", "wordhelp"\]/)
+  assert.doesNotMatch(workbench, /SOURCE_BROWSER_WINDOW_FEATURES|popup=yes/)
   assert.match(workbench, /const openProviderTabDuringGesture = \(provider\) => \{[\s\S]*?window\.open\("about:blank", target\)/)
+  assert.match(workbench, /window\.open\(candidate\.sourceUrl, providerTabName\(candidate\.provider\)\)/)
+  assert.match(workbench, /const reservation = reserveInitialSourceTabs\(word\)[\s\S]*?navigateInitialSourceTabs\(reservation\)/)
   assert.match(workbench, /const openInitialSourceGroup = \(\) => \{/)
   assert.match(workbench, /root\.querySelector\("\[data-dictionary-builder-open-all\]"\)\.addEventListener\("click", openInitialSourceGroup\)/)
-  assert.match(workbench, /const initialReservation = reserveInitialSourceTabs\(word\)/)
+  assert.ok(workbench.includes("const initialReservation = { reserved: new Map([...sourceBrowserTabs.entries()"), "manual source-browser initialization should reuse open tabs")
   assert.doesNotMatch(workbench, /const sourceUrls = \[\.\.\.new Set\(\(snapshot\.sources \|\| \[\]\)\.map\(\(source\) => source\.sourceUrl\)/)
   assert.doesNotMatch(workbench, /library-definition-audio|bindLibraryDefinitionAudio/)
   assert.match(sharedTheme, /#libraryDictionaryBuilderDialog\s*\{[\s\S]*?block-size:\s*fit-content[\s\S]*?inline-size:\s*min\(1440px/)
@@ -79,18 +86,18 @@ test("dictionary scraper integrations preserve protected media and audit contrac
 
 test("dictionary MP3 controls keep the requested speaker icons and playback wiring", () => {
   for (const token of [
-    "/web-asset/icons/svg/speaker-blue-uk.svg",
     "/web-asset/icons/svg/speaker-red-usa.svg",
     "data-library-audio-trigger",
     "data-library-preview-audio",
     "mouseenter",
     "audio.play()",
+    "button.dataset.audioBound === \"true\"",
+    "event.preventDefault()",
     "is-playing",
   ]) assert.match(workbench, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")))
   assert.match(sharedTheme, /\.library-audio-row\s*\{[\s\S]*?min-block-size:\s*48px/)
   assert.match(sharedTheme, /a\.library-audio-play:hover img,[\s\S]*?a\.library-audio-play\.is-playing img[\s\S]*?transform:\s*scale\(1\.1\)/)
   assert.match(workbench, /button = document\.createElement\("a"\)[\s\S]*button\.href = sourceUrl/)
-  assert.match(speakerUk, /#002786/)
   assert.match(speakerUs, /#e0162b/)
 })
 
