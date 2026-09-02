@@ -101,7 +101,7 @@ function grammarClassification(value) {
   }
   return Object.keys(normalized).length ? normalized : null
 }
-function normalizeNounProfile(value = {}, partOfSpeech = "") {
+function normalizeNounProfile(value = {}, partOfSpeech = "", { allowIncomplete = false } = {}) {
   if (!["noun", "proper noun"].includes(partOfSpeech)) return { physicalQuality: null, grammaticalNumber: null, primaryClassification: null, materialUsage: null, properNounVariantShift: false, dualCountabilityUsage: null }
   const countability = normalizeLibraryEnum(value.countability)
   const physicalQuality = normalizeLibraryEnum(value.physicalQuality)
@@ -112,7 +112,11 @@ function normalizeNounProfile(value = {}, partOfSpeech = "") {
   const dualCountabilityUsage = normalizeLibraryEnum(value.dualCountabilityUsage)
   const provided = [physicalQuality, grammaticalNumber, primaryClassification, materialUsage, dualCountabilityUsage].some(Boolean) || properNounVariantShift
   if (!provided) return { physicalQuality: null, grammaticalNumber: null, primaryClassification: null, materialUsage: null, properNounVariantShift: false, dualCountabilityUsage: null }
-  if (!NOUN_COUNTABILITY.has(countability) || !NOUN_QUALITIES.has(physicalQuality) || !NOUN_NUMBERS_V2.has(grammaticalNumber) || !NOUN_PRIMARY_CLASSIFICATIONS.has(primaryClassification)) throw statusError("Nouns require a complete supported noun-class profile")
+  const complete = NOUN_COUNTABILITY.has(countability) && NOUN_QUALITIES.has(physicalQuality) && NOUN_NUMBERS_V2.has(grammaticalNumber) && NOUN_PRIMARY_CLASSIFICATIONS.has(primaryClassification)
+  if (!complete) {
+    if (allowIncomplete) return { physicalQuality: physicalQuality || null, grammaticalNumber: grammaticalNumber || null, primaryClassification: primaryClassification || null, materialUsage: materialUsage || null, properNounVariantShift, dualCountabilityUsage: dualCountabilityUsage || null }
+    throw statusError("Nouns require a complete supported noun-class profile")
+  }
   if (countability === "uncountable" && grammaticalNumber !== "singular") throw statusError("Uncountable nouns must be singular")
   if (countability === "countable_and_uncountable" && grammaticalNumber !== "singular_and_plural") throw statusError("Dual-countability nouns require singular and plural")
   if (countability === "countable_and_uncountable" && !NOUN_DUAL_USAGES.has(dualCountabilityUsage)) throw statusError("Dual-countability nouns require a usage classification")
@@ -308,7 +312,7 @@ function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
   if (etymologyType && !ETYMOLOGY_TYPES.has(etymologyType)) throw statusError("Unsupported etymology type")
   if (nounType && !NOUN_TYPES.has(nounType)) throw statusError("Unsupported noun type")
   if (nounNumber && !NOUN_NUMBERS.has(nounNumber)) throw statusError("Unsupported noun number")
-  const nounProfile = normalizeNounProfile(value, partOfSpeech)
+  const nounProfile = normalizeNounProfile(value, partOfSpeech, { allowIncomplete })
   const data = {
     normalizedKey: normalizeKey(english), english, americanEnglish: clamp(value.americanEnglish) || null,
     britishEnglish: clamp(value.britishEnglish) || null, partOfSpeech, phraseType: phraseType || null,
@@ -1650,6 +1654,15 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
       const mediaRows = typeof tx.libraryMediaAsset?.findMany === "function"
         ? await tx.libraryMediaAsset.findMany({ where: { entryId: id }, select: { id: true, dialect: true, slot: true } })
         : [...existingMediaAssets, ...persistedAssets]
+      if (selectedAudio.length && mediaRows.length) {
+        const definitionWithAudio = formatDictionaryBuilderDefinition(
+          value,
+          { ...value, definition: value.definition },
+          selectedCitations,
+          mediaRows,
+        )
+        if (definitionWithAudio !== value.definition) Object.assign(value, await tx.libraryEntry.update({ where: { id }, data: { definition: definitionWithAudio } }))
+      }
       const audioInputs = Object.fromEntries(mediaRows
         .filter((asset) => asset?.id && asset.dialect === "us")
         .map((asset) => [asset.slot || "headword", { path: `/api/admin/library/media/${encodeURIComponent(asset.id)}` }]))

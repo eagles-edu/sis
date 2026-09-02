@@ -6157,6 +6157,25 @@ body.admin-portal-page .dictionary-builder-candidate-source-list {
   gap: 10px;
 }
 
+body.admin-portal-page [data-dictionary-builder-popup-fallbacks]:not([hidden]) {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-block-start: 12px;
+  padding: 8px 12px;
+}
+
+body.admin-portal-page [data-dictionary-builder-popup-fallbacks] span {
+  flex-basis: 100%;
+  font-size: .9rem;
+}
+
+body.admin-portal-page [data-dictionary-builder-popup-fallbacks] a {
+  font-size: .9rem;
+  text-decoration: underline;
+}
+
 body.admin-portal-page .dictionary-builder-candidate :is(strong, input[type="radio"]) {
   font-size: 1.08rem;
 }
@@ -11641,10 +11660,6 @@ body.admin-portal-page .news-vocabulary-row > [data-vocabulary-field="syllabicat
   grid-column: 4;
 }
 
-body.admin-portal-page .news-vocabulary-row > .vocabulary-audio-editor[data-vocabulary-audio-editor="headword"] {
-  grid-column: 1 / -1;
-}
-
 body.admin-portal-page .news-vocabulary-row > .vocabulary-etymology-fields {
   display: flex;
   flex-wrap: wrap;
@@ -13072,6 +13087,20 @@ body.admin-portal-page .library-review-pane .news-vocabulary-definition-row text
   padding: 12px 14px;
   resize: vertical;
   width: 100%;
+}
+
+body.admin-portal-page .library-review-pane .news-vocabulary-definition-row > .vocabulary-definition-audio {
+  grid-column: 2;
+  min-block-size: 48px;
+  min-width: 0;
+}
+
+body.admin-portal-page .library-review-pane .news-vocabulary-definition-row > .vocabulary-definition-audio .vocabulary-audio-editor {
+  min-block-size: 48px;
+}
+
+body.admin-portal-page .library-review-pane .news-vocabulary-definition-row > textarea[data-vocabulary-field="definition"] {
+  grid-column: 2;
 }
 
 body.student-portal-page .news-vocabulary-definition-row textarea,

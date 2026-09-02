@@ -261,7 +261,8 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(libraryReviewWorkbench, /\.\.\.current, \.\.\.nonEmptyMwFields, \.\.\.\(etymology \? \{ etymology \} : \{\}\)/)
   assert.match(libraryReviewWorkbench, /window\.SIS_VOCABULARY_ESL\?\.hydrate\(pane, merged, \{ preserveSyllabication: true \}\)/)
   assert.match(libraryReviewWorkbench, /window\.SIS_VOCABULARY_ESL\?\.hydrate\(pane, data\.entry, \{ preserveSyllabication: true \}\)/)
-  assert.match(libraryReviewWorkbench, /assets\.find\(\(candidate\) => \(candidate\.slot \|\| "headword"\) === editor\.dataset\.vocabularyAudioEditor\)/)
+  assert.match(libraryReviewWorkbench, /data-vocabulary-audio-editor=.{0,20}CSS\.escape\(slot\)/u)
+  assert.doesNotMatch(libraryReviewWorkbench, /data-library-applied-audio/)
   assert.match(libraryReviewWorkbench, /input\.dataset\.dictionaryBuilderRelation = key/u)
   assert.match(libraryReviewWorkbench, /relationValue = \(fields\) =>/)
   assert.match(sharedPortalTheme, /dictionary-builder-relation-fields[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)/)
@@ -272,6 +273,11 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(libraryReviewWorkbench, /AUDIO_END_ANIMATION_GRACE_MS = 0\.25/)
   assert.match(libraryReviewWorkbench, /window\.setInterval\(\(\) => restartSpeakerAnimation\(image\), ICON_ANIMATION_CYCLE_MS\)/)
   assert.match(libraryReviewWorkbench, /animationEndTimer = window\.setTimeout\(stopAnimationLoop, AUDIO_END_ANIMATION_GRACE_MS\)/)
+  assert.match(libraryReviewWorkbench, /reserveInitialSourceTabs\(word\)/)
+  assert.match(libraryReviewWorkbench, /sis-dictionary-builder-\$\{provider\}/)
+  assert.match(libraryReviewWorkbench, /DICTIONARY_BUILDER_PREVIEW_TIMEOUT_MS|waiting_for_input/u)
+  assert.match(sharedVocabularyEditor, /data-vocabulary-definition-audio[\s\S]*audioEditorHtml\("headword"[\s\S]*data-vocabulary-field="definition"/)
+  assert.doesNotMatch(sharedVocabularyEditor, /includeAudioFields \? audioEditorHtml\("headword"/)
   assert.match(sharedVocabularyEditor, /data-vocabulary-verb-forms[\s\S]*verbInfinitive[\s\S]*verbV1[\s\S]*verbV2[\s\S]*verbV3[\s\S]*verbV4[\s\S]*verbV5/)
   assert.match(sharedVocabularyEditor, /data-vocabulary-verb-form-layout="INF\|V1\|V2\|V3\|V4\|V5"/)
   assert.match(sharedVocabularyEditor, /data-vocabulary-verb-form-heading="\$\{field\}"[\s\S]*placeholder\.startsWith\("Infinitive"\) \? "INF"/)
@@ -325,11 +331,12 @@ test("admin Library editor uses the shared New Words row renderer", () => {
 })
 
 test("admin verb editor keeps headword audio on row two and six exact verb-form columns", () => {
-  assert.match(sharedVocabularyEditor, /includeAudioFields \? audioEditorHtml\("headword", "Headword", uid\) : ""/)
+  assert.match(sharedVocabularyEditor, /data-vocabulary-definition-audio[\s\S]*audioEditorHtml\("headword", "Headword", uid\)/)
+  assert.match(sharedVocabularyEditor, /data-vocabulary-definition-audio[\s\S]*data-vocabulary-field="definition"/)
   assert.match(sharedVocabularyEditor, /data-vocabulary-verb-form-layout="INF\|V1\|V2\|V3\|V4\|V5"/)
   assert.match(sharedVocabularyEditor, /data-vocabulary-verb-form-heading="\$\{field\}"/)
   assert.match(sharedVocabularyEditor, /vocabulary-verb-form-editor[\s\S]*vocabulary-audio-editor/)
-  assert.match(sharedPortalTheme, /\.news-vocabulary-row > \.vocabulary-audio-editor\[data-vocabulary-audio-editor="headword"\][\s\S]*grid-column: 1 \/ -1/)
+  assert.match(sharedPortalTheme, /\.news-vocabulary-definition-row > \.vocabulary-definition-audio[\s\S]*grid-column: 2/)
   assert.match(sharedPortalTheme, /body\.admin-portal-page \.vocabulary-audio-editor[\s\S]*grid-template-columns: minmax\(0, 1fr\) max-content/u)
   assert.match(sharedPortalTheme, /a\.library-audio-play[\s\S]*background: transparent[\s\S]*border: 0[\s\S]*inline-size: 48px/u)
   assert.match(sharedPortalTheme, /\.vocabulary-verb-forms\.has-audio-fields\s*\{[\s\S]*grid-template-columns: repeat\(6, minmax\(0, 1fr\)/)
@@ -579,7 +586,7 @@ test("definition paste preserves clipboard emphasis, lists, indentation, and par
   assert.equal(context.window.SIS_VOCABULARY_ESL.htmlToDefinitionText("", "A\r\n\r\nB\n"), "A\n\nB\n")
 })
 
-test("unheaded Etymonline prose after Stems is restored to Etymology after First known use and before Stems", () => {
+test("unheaded Etymonline prose after Stems is restored to the documented section order", () => {
   const context = { window: {}, document: {} }
   vm.runInNewContext(sharedVocabularyEditor, context)
   const html = context.window.SIS_VOCABULARY_ESL.flatEntryHtml({
@@ -587,9 +594,9 @@ test("unheaded Etymonline prose after Stems is restored to Etymology after First
     partOfSpeech: "noun",
     definition: "**First known use:** 12th century\n\n**Stems:**\n- wildfire\n- wildfires\n\nlate Old English *wilde fyr* \"destructive fire, raging conflagration\" (perhaps originally one caused by lightning); also \"erysipelas, spreading skin disease;\" see wild (adj.) + fire (n.).",
   })
-  const order = ["new-word-entry-etymology", "new-word-entry-first-use", "new-word-entry-stems"].map((className) => html.indexOf(`class="${className}"`))
+  const order = ["new-word-entry-stems", "new-word-entry-first-use", "new-word-entry-etymology"].map((className) => html.indexOf(`class="${className}"`))
   assert.ok(order.every((index) => index >= 0), "all restored definition sections must render")
-  assert.ok(order[1] < order[0] && order[0] < order[2], "First known use must precede Etymology, then Stems")
+  assert.ok(order[0] < order[1] && order[1] < order[2], "Stems must precede First known use, then Etymology")
   assert.match(html, /<section class="new-word-entry-etymology">[\s\S]*late Old English <em>wilde fyr<\/em>[\s\S]*<\/section>/)
   assert.doesNotMatch(html, /new-word-entry-stems[\s\S]*late Old English \*wilde fyr\*/)
   const inserted = context.window.SIS_VOCABULARY_ESL.insertEtymologyDeterministically(
@@ -631,9 +638,9 @@ test("unheaded Etymonline prose after Stems is restored to Etymology after First
     verbV4: "threatening",
     verbV5: "threatens",
   })
-  const verbOrder = ["new-word-entry-first-use", "new-word-entry-etymology", "vocabulary-verb-forms-display", "new-word-entry-stems", "vocabulary-origin-references"].map((className) => verbHtml.indexOf(`class="${className}"`))
+  const verbOrder = ["vocabulary-verb-forms-display", "new-word-entry-stems", "new-word-entry-first-use", "new-word-entry-etymology", "vocabulary-origin-references"].map((className) => verbHtml.indexOf(`class="${className}"`))
   assert.ok(verbOrder.every((index) => index >= 0), "verb entry sections must render")
-  assert.ok(verbOrder.every((index, position) => position === 0 || verbOrder[position - 1] < index), "verb forms must remain between Etymology and Stems")
+  assert.ok(verbOrder.every((index, position) => position === 0 || verbOrder[position - 1] < index), "verb entry sections must follow the documented order")
 })
 
 test("flattened vocabulary keeps the established header format for every POS", () => {
@@ -662,6 +669,46 @@ test("flattened vocabulary keeps the established header format for every POS", (
     assert.match(context.window.SIS_VOCABULARY_ESL.flatEntrySummaryText(entry), new RegExp(pattern, "s"), `${entry.partOfSpeech} summary`)
     assert.equal((html.match(/class="vocabulary-flat-entry-separator"/g) || []).length, 2, entry.partOfSpeech)
   }
+})
+
+test("rendered verb forms retain saved local audio controls idempotently", () => {
+  const context = { window: {}, document: {} }
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const entry = {
+    english: "go",
+    partOfSpeech: "verb",
+    definition: "to move\n\n**Verb Forms**\nINF: to go\nV1: go\nV2: went\nV3: gone\nV4: going\nV5: goes",
+    verbInfinitive: "to go",
+    verbV1: "go",
+    verbV2: "went",
+    verbV3: "gone",
+    verbV4: "going",
+    verbV5: "goes",
+    dictionaryMetadata: { audioInputs: { verbV2: { path: "/api/admin/library/media/media-v2" } } },
+  }
+  const html = context.window.SIS_VOCABULARY_ESL.flatEntryHtml(entry)
+  assert.match(html, /V2<\/strong>: went <a class="library-audio-play"[\s\S]*data-library-audio-key="verbV2:us"[\s\S]*\/api\/admin\/library\/media\/media-v2/u)
+  assert.equal((html.match(/data-library-audio-key="verbV2:us"/gu) || []).length, 1)
+  assert.equal(context.window.SIS_VOCABULARY_ESL.flatEntryHtml(entry), html)
+})
+
+test("rendered entries repair marked heading, spacing, and etymology formatting", () => {
+  const context = { window: {}, document: {} }
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const entry = {
+    english: "retreat",
+    partOfSpeech: "verb",
+    definition: "to move back\n\n**Stems**\n- retreat\n\n*Examples of retreat in a Sentence**\n- The forces are now in (full) retreat.\n\n**First known use**\n15th century\n\n**Origin path**\nOld French → Latin → English\n\n**Etymology**\n<hr>\n\nFrom Old French via Latin.\n\nFrom Old French via Latin.",
+    etymology: "From Old French via Latin.",
+    verbInfinitive: "to retreat",
+  }
+  const html = context.window.SIS_VOCABULARY_ESL.flatEntryHtml(entry)
+  assert.match(html, /<section class="new-word-entry-examples"><strong>Examples of retreat in a Sentence<\/strong>/u)
+  assert.match(html, /new-word-entry-examples[\s\S]*<ul><li>The forces are now in \(full\) retreat\.<\/li><\/ul>/u)
+  const etymologySection = html.match(/<section class="new-word-entry-etymology">[\s\S]*?<\/section>/u)?.[0] || ""
+  assert.equal((etymologySection.match(/From Old French via Latin\./gu) || []).length, 1)
+  assert.doesNotMatch(html, /new-word-entry-etymology"><strong>Etymology<\/strong><div><hr/u)
+  assert.equal(context.window.SIS_VOCABULARY_ESL.flatEntryHtml(entry), html)
 })
 
 test("flattened headers ignore object metadata and keep noun traits together", () => {

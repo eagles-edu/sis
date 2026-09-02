@@ -25,6 +25,21 @@ import {
   readDictionaryBuilderSnapshot,
   retryDictionaryBuilderSnapshot,
 } from "../src/modules/admin/dictionary-builder.mjs"
+import { fetchWithExponentialBackoff } from "../src/modules/admin/provider-http.mjs"
+
+test("provider backoff stops immediately when its request is aborted", async () => {
+  const controller = new AbortController()
+  let calls = 0
+  const request = fetchWithExponentialBackoff(async (_url, options) => {
+    calls += 1
+    await new Promise((resolve, reject) => {
+      options.signal.addEventListener("abort", () => reject(options.signal.reason), { once: true })
+    })
+  }, "https://provider.invalid/entry", { signal: controller.signal })
+  controller.abort(new Error("preview timed out"))
+  await assert.rejects(request, /preview timed out/)
+  assert.equal(calls, 1)
+})
 
 test("Dictionary Builder uses the locked BIC weights and hard availability gate", () => {
   assert.deepEqual(DICTIONARY_BUILDER_BIC_WEIGHTS, { completeness: 0.15, quality: 0.40, availability: 0.15, acceptance: 0.30 })
@@ -457,7 +472,39 @@ test("Dictionary Builder definition keeps safe rules, YTBD, and claim-keyed cita
   assert.match(definition, /\*\*Examples of commend in a Sentence\*\*/u)
   assert.match(definition, /<hr>/)
   assert.match(definition, /\*\*Origin path\*\*\nYTBD/)
-  assert.equal((definition.match(/Retrieved 2026-08-26/g) || []).length, 5)
+  assert.equal((definition.match(/Retrieved 2026-08-26/g) || []).length, 1)
+  assert.equal((definition.match(/<hr>/g) || []).length, 2)
+  assert.equal((definition.match(/\*\*Origin path\*\*/g) || []).length, 1)
+})
+
+test("Dictionary Builder normalizes a raw Definition Proper block before ordered assembly", () => {
+  const definition = formatDictionaryBuilderDefinition({ english: "commend", partOfSpeech: "verb" }, {
+    definition: "**commend** *verb*\n1. to praise publicly\n\n**Origin path**\nLatin > English\n\n**Etymology**\nFrom Latin.",
+    verbForms: { verbInfinitive: "to commend", verbV1: "commend" },
+    stems: "commend\ncommended",
+    firstKnownUse: "14th century",
+    originPath: "Latin > English",
+    etymology: "From Latin.",
+  }, [])
+  assert.equal((definition.match(/\*\*Origin path\*\*/g) || []).length, 1)
+  assert.equal((definition.match(/\*\*Etymology\*\*/g) || []).length, 1)
+  assert.ok(definition.indexOf("**Verb Forms**") < definition.indexOf("**Stems**"))
+  assert.ok(definition.indexOf("**Stems**") < definition.indexOf("**First known use**"))
+  assert.equal((definition.match(/<hr>/g) || []).length, 2)
+})
+
+test("Definition Proper repairs marked section formatting idempotently", () => {
+  const definition = formatDictionaryBuilderDefinition({ english: "retreat", partOfSpeech: "verb" }, {
+    definition: "to move back\n\n**Verb Forms**\nINF: to retreat\nV1: retreat\nV2: retreated\nV3: retreated\nV4: retreating\nV5: retreats\n\n**Stems**\nretreat\nretreated\nretreater\nretreaters\nretreating\nretreats\n\n| **Synonyms** | **Antonyms** |\n|--------------|--------------|\n| withdrawal | advance |\n\n*Examples of retreat in a Sentence**\n- The forces are now in (full) retreat.\n\n**First known use**\n15th century\n\n**Origin path**\nOld French → Latin → English\n\n**Etymology**\n<hr>\n\nFrom Old French via Latin.\n\nFrom Old French via Latin.",
+    etymology: "From Old French via Latin.",
+  }, [])
+  assert.match(definition, /\*\*Verb Forms\*\*[\s\S]*INF: to retreat[\s\S]*V5: retreats/u)
+  assert.match(definition, /\*\*Stems\*\*[\s\S]*retreaters/u)
+  assert.match(definition, /\| \*\*Synonyms\*\* \| \*\*Antonyms\*\* \|[\s\S]*\| withdrawal \| advance \|/u)
+  assert.match(definition, /\*\*Examples of retreat in a Sentence\*\*/u)
+  assert.equal((definition.match(/From Old French via Latin\./gu) || []).length, 1)
+  assert.doesNotMatch(definition, /\*\*Etymology\*\*\n<hr>/u)
+  assert.equal(formatDictionaryBuilderDefinition({ english: "retreat", partOfSpeech: "verb" }, { definition }, []), definition)
 })
 
 test("Definition Proper inserts a normalized verbForms object idempotently", () => {
@@ -470,6 +517,25 @@ test("Definition Proper inserts a normalized verbForms object idempotently", () 
     definition: "to move from one place to another",
     verbForms: { verbInfinitive: "to go", verbV1: "go", verbV2: "went", verbV3: "gone", verbV4: "going", verbV5: "goes" },
   }, []), definition)
+})
+
+test("Definition Proper embeds authenticated local audio markup at headword and form positions", () => {
+  const definition = formatDictionaryBuilderDefinition({ english: "go", partOfSpeech: "verb" }, {
+    definition: "to move from one place to another",
+    verbForms: { verbInfinitive: "to go", verbV1: "go" },
+  }, [], [
+    { id: "media-headword", slot: "headword", dialect: "us" },
+    { id: "media-v1", slot: "verbV1", dialect: "us" },
+  ])
+  assert.match(definition, /^<a class="library-audio-play"[\s\S]*data-library-audio-key="headword:us"[\s\S]*<audio[\s\S]*src="\/api\/admin\/library\/media\/media-headword"><\/audio>\n\n\*\*go\*\*/u)
+  assert.match(definition, /V1: go <a class="library-audio-play"[\s\S]*data-library-audio-key="verbV1:us"[\s\S]*data-library-preview-audio="verbV1:us"/u)
+  assert.doesNotMatch(definition, /https:\/\//u)
+  const reapplied = formatDictionaryBuilderDefinition({ english: "go", partOfSpeech: "verb" }, { definition, verbForms: { verbInfinitive: "to go", verbV1: "go" } }, [], [
+    { id: "media-headword", slot: "headword", dialect: "us" },
+    { id: "media-v1", slot: "verbV1", dialect: "us" },
+  ])
+  assert.equal((reapplied.match(/data-library-audio-key="headword:us"/gu) || []).length, 1)
+  assert.equal((reapplied.match(/data-library-audio-key="verbV1:us"/gu) || []).length, 1)
 })
 
 test("Dictionary Builder Apply persists every declared datum and slot-aware audio", async () => {
@@ -575,6 +641,8 @@ test("Dictionary Builder Apply persists every declared datum and slot-aware audi
     assert.match(current.definition, /\*\*Verb Forms\*\*/u)
     assert.match(current.definition, /\*\*Stems\*\*/u)
     assert.match(current.definition, /\*\*Works Cited\*\*/u)
+    assert.match(current.definition, /data-library-audio-key="headword:us"[\s\S]*\/api\/admin\/library\/media\/asset-1/u)
+    assert.match(current.definition, /V1: debate[\s\S]*data-library-audio-key="verbV1:us"/u)
     assert.deepEqual(Object.fromEntries(Object.entries(forms).map(([key]) => [key, current[key]])), forms)
     for (const datum of ["stems", "synonymsAntonyms", "examples", "firstKnownUse", "originPath", "etymology", "worksCited"]) assert.equal(current.dictionaryMetadata.claims.filter((claim) => claim.field === datum).length, 1, datum)
     assert.ok(current.dictionaryMetadata.citations.some((citation) => citation.citation.startsWith("Britannica Dictionary")))

@@ -6710,6 +6710,10 @@ async function handleApiRequest(request, response, pathname, url) {
   }
 
   const session = await requireAuthenticatedSession(request, response)
+  // Repair a missing or stale SIS config file before any authenticated admin
+  // route reads the synchronous snapshot used by school setup and dashboard
+  // payloads. Development still keeps file precedence after this repair.
+  await ensureSisConfigLoaded()
   const rolePolicy = enforceRoleAccess(session, method, pathname)
   const dictionaryBuilderOwnerKey = readSessionIdFromRequest(request)
   if (

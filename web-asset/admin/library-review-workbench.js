@@ -128,37 +128,15 @@
     if (!pane) return
     const assets = parseLibraryMediaAssets(pane).filter((asset) => asset?.id && asset.dialect === "us")
     if (!assets.length) return
-    let root = pane.querySelector("[data-library-applied-audio]")
-    if (!root) {
-      root = document.createElement("fieldset")
-      root.dataset.libraryAppliedAudio = "true"
-      const legend = document.createElement("legend")
-      legend.textContent = "Saved Library audio (US only)"
-      root.append(legend)
-      pane.append(root)
-    }
-    const rows = new Map([...root.querySelectorAll("[data-library-audio-row]")].map((row) => [row.dataset.libraryAudioRow, row]))
     assets.forEach((asset) => {
-      const key = `${asset.slot || "headword"}:${asset.dialect}`
-      const row = rows.get(key) || document.createElement("div")
-      row.className = "library-audio-row"
-      row.dataset.libraryAudioRow = key
-      if (!row.querySelector("label")) {
-        const label = document.createElement("label")
-        label.textContent = `${asset.slot || "headword"} ${asset.dialect.toUpperCase()}`
-        row.append(label)
-      }
-      bindAudioControl(root, row, asset.dialect, `${asset.slot || "headword"} ${asset.dialect.toUpperCase()}`, `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library/media/${encodeURIComponent(asset.id)}`, { local: true })
-      if (!rows.has(key)) root.append(row)
-    })
-    pane.querySelectorAll("[data-vocabulary-audio-editor]").forEach((editor) => {
-      const asset = assets.find((candidate) => (candidate.slot || "headword") === editor.dataset.vocabularyAudioEditor)
-      if (!asset) return
+      const slot = asset.slot || "headword"
+      const editor = pane.querySelector(`[data-vocabulary-audio-editor="${CSS.escape(slot)}"]`)
+      if (!editor) return
       const mediaUrl = `${window.__SIS_ADMIN_API_PREFIX || "/api/admin"}/library/media/${encodeURIComponent(asset.id)}`
       const pathInput = editor.querySelector('[data-vocabulary-audio-field$=".path"]')
       if (pathInput) pathInput.value = mediaUrl
-      editor.dataset.libraryAudioRow = `${asset.slot || "headword"}:${asset.dialect}`
-      bindAudioControl(pane, editor, asset.dialect, `${asset.slot || "headword"} ${asset.dialect.toUpperCase()}`, mediaUrl, { local: true })
+      editor.dataset.libraryAudioRow = `${slot}:${asset.dialect}`
+      bindAudioControl(pane, editor, asset.dialect, `${slot} ${asset.dialect.toUpperCase()}`, mediaUrl, { local: true })
     })
   }
 
@@ -467,8 +445,8 @@
     ["audio", "Headword Audio"], ["verbFormAudio", "Verb Form Audio"], ["definition", "Definition Proper"], ["verbForms", "Verb Forms"], ["stems", "Stems"], ["synonymsAntonyms", "Synonyms / Antonyms"], ["examples", "Examples"], ["firstKnownUse", "First known use"], ["originPath", "Origin path"], ["etymology", "Etymology"], ["worksCited", "Works Cited"],
   ]
   const dictionaryBuilderApplyFields = new Set(["vietnamese", "syllabication", "syllableCount", "grammarClassification", "audio", "verbFormAudio", "definition", "verbForms", "stems", "synonymsAntonyms", "examples", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "etymology", "originPath", "originReferences", "firstKnownUse", "worksCited"])
-  const dictionaryBuilderStatusLabel = (status) => ({ not_found: "not found (HTTP 404)", not_provided: "not provided by source", robot_blocked: "cookie/robot prompt; datum paused", cookie_prompt: "cookie prompt; datum paused", robot_prompt: "robot prompt; datum paused", paused: "paused pending source resolution", unavailable: "provider unavailable", not_offered: "not provided by source" }[status] || status)
-  const isDictionaryBuilderPromptStatus = (status) => ["robot_blocked", "cookie_prompt", "robot_prompt", "paused"].includes(status)
+  const dictionaryBuilderStatusLabel = (status) => ({ not_found: "not found (HTTP 404)", not_provided: "not provided by source", robot_blocked: "cookie/robot prompt; datum paused", cookie_prompt: "cookie prompt; datum paused", robot_prompt: "robot prompt; datum paused", paused: "paused pending source resolution", waiting_for_input: "waiting for input", unavailable: "provider unavailable", not_offered: "not provided by source" }[status] || status)
+  const isDictionaryBuilderPromptStatus = (status) => ["robot_blocked", "cookie_prompt", "robot_prompt", "paused", "waiting_for_input"].includes(status)
   const dictionaryBuilderEsc = (value) => String(value == null ? "" : value).replace(/[&<>'"]/gu, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character])
   const dictionaryBuilderSourceMatrix = (word) => {
     const encoded = encodeURIComponent(String(word || "").trim())
@@ -528,6 +506,45 @@
   const sourceBrowserTabs = new Map()
   const INITIAL_SOURCE_GROUP_SIZE = 5
   const INITIAL_SOURCE_PROVIDER_ORDER = ["britannica", "oxford_ame", "ldoce", "wordhelp", "merriam_webster_thesaurus"]
+  const initialSourceUrl = (provider, word) => {
+    const encoded = encodeURIComponent(String(word || "").trim())
+    const paths = {
+      britannica: `https://www.britannica.com/dictionary/${encoded}`,
+      oxford_ame: `https://www.oxfordlearnersdictionaries.com/definition/american_english/${encoded}`,
+      ldoce: `https://www.ldoceonline.com/dictionary/${encoded}`,
+      wordhelp: `https://www.wordhelp.com/syllables/english/?q=${encoded}`,
+      merriam_webster_thesaurus: `https://www.merriam-webster.com/thesaurus/${encoded}`,
+    }
+    return paths[provider] || ""
+  }
+  const providerTabName = (provider) => `sis-dictionary-builder-${provider}`
+  const openProviderTabDuringGesture = (provider) => {
+    const target = providerTabName(provider)
+    return window.open("about:blank", target)
+  }
+  const reserveInitialSourceTabs = (word) => {
+    const reserved = new Map()
+    const blocked = []
+    INITIAL_SOURCE_PROVIDER_ORDER.forEach((provider) => {
+      const existing = sourceBrowserTabs.get(provider)
+      if (existing && !existing.closed) { reserved.set(provider, existing); return }
+      const tab = openProviderTabDuringGesture(provider)
+      if (tab) { sourceBrowserTabs.set(provider, tab); reserved.set(provider, tab) }
+      else blocked.push(provider)
+    })
+    return { reserved, blocked, word }
+  }
+  const navigateInitialSourceTabs = (reservation, sources = []) => {
+    const sourceByProvider = new Map(sources.map((source) => [source.provider, source.sourceUrl]).filter(([, sourceUrl]) => sourceUrl))
+    const navigations = []
+    reservation?.reserved?.forEach((tab, provider) => {
+      const sourceUrl = sourceByProvider.get(provider) || initialSourceUrl(provider, reservation.word)
+      if (sourceUrl && tab) navigations.push({ tab, sourceUrl })
+    })
+    navigations.forEach(({ tab, sourceUrl }, index) => {
+      window.setTimeout(() => { if (!tab.closed) tab.location.href = sourceUrl }, index * 1000)
+    })
+  }
   const closeSourceBrowserTabs = () => {
     promptProbeTimers.forEach((timer) => window.clearInterval(timer))
     promptProbeTimers.clear()
@@ -535,7 +552,7 @@
     sourceBrowserTabs.clear()
     robotHandoffTabs.clear()
   }
-  const renderDictionaryBuilder = (snapshot, pane, sourceId, previousSelections = {}, activeTab = "vietnamese") => {
+  const renderDictionaryBuilder = (snapshot, pane, sourceId, previousSelections = {}, activeTab = "vietnamese", initialReservation = null) => {
     const dialog = dictionaryBuilderDialog()
     const root = dialog.querySelector("[data-dictionary-builder-root]")
     const sourceMatrixSlot = dialog.querySelector("[data-dictionary-builder-source-matrix-slot]")
@@ -543,7 +560,7 @@
     const tabs = dictionaryBuilderFields.map(([datum, label], index) => `<button type="button" class="dictionary-builder-tab" id="dictionary-builder-tab-${datum}" role="tab" aria-controls="dictionary-builder-panel-${datum}" aria-selected="${index === 0}" tabindex="${index === 0 ? 0 : -1}" data-dictionary-builder-tab="${datum}"><span class="dictionary-builder-tab-step">${index + 1}</span><span>${dictionaryBuilderEsc(label)}</span></button>`).join("")
     sourceMatrixSlot.innerHTML = dictionaryBuilderSourceMatrix(word)
     const canApply = sourceId !== "new-canonical"
-    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><button type="button" class="portal-button portal-button-blue-action" data-dictionary-builder-open-all>Open initial source group (BR / OA / LD / WH / TH)</button><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"${canApply ? "" : " disabled"}><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply${canApply ? "" : " disabled title=\"Save the canonical Library entry before applying Dictionary Builder data.\""}>Apply selected</button></div>`
+    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><button type="button" class="portal-button portal-button-blue-action" data-dictionary-builder-open-all>Open initial source group (BR / OA / LD / WH / TH)</button><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"${canApply ? "" : " disabled"}><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply${canApply ? "" : " disabled title=\"Save the canonical Library entry before applying Dictionary Builder data.\""}>Apply selected</button></div><div data-dictionary-builder-popup-fallbacks hidden></div>`
     const panels = root.querySelector("[data-dictionary-builder-panels]")
     const selectedCandidates = structuredClone(previousSelections)
     dictionaryBuilderFields.forEach(([datum]) => {
@@ -556,19 +573,38 @@
         status: candidate.datumStatus?.[datum]?.status || "available",
       }
     })
-    root.querySelector("[data-dictionary-builder-open-all]").addEventListener("click", () => {
-      const sourceEntries = (snapshot.sources || []).filter((source) => source.sourceUrl)
-      const initialSourceEntries = [...sourceEntries].sort((left, right) => {
-        const leftPosition = INITIAL_SOURCE_PROVIDER_ORDER.indexOf(left.provider)
-        const rightPosition = INITIAL_SOURCE_PROVIDER_ORDER.indexOf(right.provider)
-        return (leftPosition < 0 ? Number.MAX_SAFE_INTEGER : leftPosition) - (rightPosition < 0 ? Number.MAX_SAFE_INTEGER : rightPosition)
-      }).slice(0, INITIAL_SOURCE_GROUP_SIZE)
+    const showPopupFallbackLinks = (blockedProviders, sourceByProvider) => {
+      const fallback = root.querySelector("[data-dictionary-builder-popup-fallbacks]")
+      if (!fallback) return
+      fallback.replaceChildren()
+      if (!blockedProviders.length) { fallback.hidden = true; return }
+      fallback.hidden = false
+      const label = document.createElement("span")
+      label.textContent = "Popup blocked; open manually:"
+      fallback.append(label)
+      blockedProviders.forEach((provider) => {
+        const link = document.createElement("a")
+        link.className = "dictionary-builder-candidate-source"
+        link.href = sourceByProvider.get(provider)?.sourceUrl || initialSourceUrl(provider, word)
+        link.target = "_blank"
+        link.rel = "noopener noreferrer"
+        link.textContent = provider
+        link.title = `Open the ${provider} source page manually; this does not apply data.`
+        fallback.append(link)
+      })
+    }
+    const openInitialSourceGroup = () => {
+      const sourceByProvider = new Map((snapshot.sources || []).map((source) => [source.provider, source]))
+      const initialSourceEntries = INITIAL_SOURCE_PROVIDER_ORDER.map((provider) => ({
+        provider,
+        sourceUrl: sourceByProvider.get(provider)?.sourceUrl || initialSourceUrl(provider, word),
+      })).filter(({ sourceUrl }) => sourceUrl)
       let opened = 0
       const pendingNavigations = []
       initialSourceEntries.forEach(({ provider, sourceUrl }) => {
         const existing = sourceBrowserTabs.get(provider)
-        if (existing && !existing.closed) { existing.focus?.(); return }
-        const tab = window.open("about:blank", "_blank")
+        if (existing && !existing.closed) { existing.focus?.(); opened += 1; return }
+        const tab = openProviderTabDuringGesture(provider)
         if (tab) {
           sourceBrowserTabs.set(provider, tab)
           pendingNavigations.push({ tab, sourceUrl })
@@ -576,10 +612,21 @@
         }
       })
       pendingNavigations.forEach(({ tab, sourceUrl }) => { tab.location.href = sourceUrl })
+      const blockedProviders = initialSourceEntries.filter(({ provider }) => !sourceBrowserTabs.has(provider)).map(({ provider }) => provider)
+      showPopupFallbackLinks(blockedProviders, sourceByProvider)
       dialog.querySelector("[data-dictionary-builder-message]").textContent = opened === initialSourceEntries.length
         ? `Initial BR / OA / LD / WH / TH group opened in this browser session. Resolve any cookie/robot prompts; affected datums remain paused until Retry provider. AP remains server-side; other fallback providers stay closed until needed. Cookies remain in the browser's native cookie jar.`
-        : `Opened ${opened} of ${initialSourceEntries.length} initial provider tabs in this browser session; the browser blocked the remainder. Fallback providers stay closed until needed. Use individual View source page links when required.`
-    })
+        : `Opened ${opened} of ${initialSourceEntries.length} initial provider tabs in this browser session; blocked providers: ${blockedProviders.join(", ") || "unknown"}. Use the manual links below. Fallback providers stay closed until needed.`
+    }
+    root.querySelector("[data-dictionary-builder-open-all]").addEventListener("click", openInitialSourceGroup)
+    if (initialReservation) {
+      navigateInitialSourceTabs(initialReservation, snapshot.sources || [])
+      const reservationMessage = dialog.querySelector("[data-dictionary-builder-message]")
+      if (reservationMessage) reservationMessage.textContent = initialReservation.blocked.length
+        ? `Opened ${initialReservation.reserved.size} of ${INITIAL_SOURCE_GROUP_SIZE} initial provider tabs; blocked providers: ${initialReservation.blocked.join(", ")}. Use the manual links below; affected datums remain waiting for input.`
+        : `Opened ${initialReservation.reserved.size} of ${INITIAL_SOURCE_GROUP_SIZE} initial provider tabs in order BR / OA / LD / WH / TH. Resolve cookie/robot prompts in those tabs; cookies remain active for this Builder session.`
+      showPopupFallbackLinks(initialReservation.blocked, new Map((snapshot.sources || []).map((source) => [source.provider, source])))
+    }
     const updateTabSelection = (datum) => {
       const tab = root.querySelector(`[data-dictionary-builder-tab="${datum}"]`)
       tab?.classList.toggle("is-complete", Boolean(selectedCandidates[datum]?.value))
@@ -977,13 +1024,15 @@
         const sourceId = pane?.dataset.reviewSourceId || pane?.dataset.approvedEntryId
         const message = pane?.querySelector("[data-vocabulary-dictionary-builder-message]")
         if (!pane || !sourceId) return
+        const word = pane.querySelector('[data-vocabulary-field="english"]')?.value || ""
+        const initialReservation = reserveInitialSourceTabs(word)
         button.disabled = true
         try {
           if (message) message.textContent = "Building availability-aware preview; no data or audio changes now."
           const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/preview`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ entry: readPayload(pane) }) })
           const snapshot = await response.json()
           if (!response.ok || !snapshot.ok) throw new Error(snapshot.error || "Dictionary Builder preview failed.")
-          renderDictionaryBuilder(snapshot, pane, sourceId)
+          renderDictionaryBuilder(snapshot, pane, sourceId, {}, "vietnamese", initialReservation)
           if (message) message.textContent = "Dictionary Builder preview ready."
         } catch (error) { if (message) message.textContent = error.message || "Dictionary Builder preview failed." } finally { button.disabled = false }
       })

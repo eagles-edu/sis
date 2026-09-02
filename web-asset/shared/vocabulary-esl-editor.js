@@ -736,19 +736,69 @@
   }
 
   function definitionInlineHtml(value) {
-    return escapeHtml(value)
+    const audioMarkup = [];
+    const source = String(value == null ? "" : value).replace(/<a class="library-audio-play" data-library-audio-trigger="(?:us|uk)" data-library-audio-key="([a-z0-9_-]+:(?:us|uk))" href="(\/api\/admin\/library\/media\/[a-z0-9_%.-]+)" aria-label="Play [^"]+ pronunciation" title="Play [^"]+ pronunciation"><img src="\/web-asset\/icons\/svg\/speaker-(?:red-usa|blue-uk)\.svg" alt="[^"]+ speaker"><\/a><audio preload="none" hidden data-library-preview-audio="\1" data-local-library-media="true" src="\2"><\/audio>/giu, (markup) => {
+      const index = audioMarkup.push(markup) - 1;
+      return `[[[SIS_LIBRARY_AUDIO_${index}]]]`;
+    });
+    return escapeHtml(source)
       .replace(/\[u\]([^\n]*?)\[\/u\]/giu, "<u>$1</u>")
       .replace(/\*\*([^\n]*?)\*\*/gu, "<strong>$1</strong>")
       .replace(/__([^\n]*?)__/gu, "<u>$1</u>")
-      .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/gu, "<em>$1</em>");
+      .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/gu, "<em>$1</em>")
+      .replace(/\[\[\[SIS_LIBRARY_AUDIO_(\d+)\]\]\]/gu, (_, index) => audioMarkup[Number(index)] || "");
   }
+
+  const localLibraryAudioPath = /^\/api\/admin\/library\/media\/[a-z0-9_%.-]+$/iu;
+  const localLibraryAudioMarkup = (slot, audioInput) => {
+    const path = typeof audioInput === "string" ? audioInput : audioInput?.path;
+    if (!localLibraryAudioPath.test(String(path || "").trim())) return "";
+    const normalizedSlot = String(slot || "").trim();
+    if (!/^[a-z0-9_-]+$/iu.test(normalizedSlot)) return "";
+    const dialect = String(audioInput?.dialect || "us").toLocaleLowerCase("en-US") === "uk" ? "uk" : "us";
+    const key = `${normalizedSlot}:${dialect}`;
+    const label = `${normalizedSlot} ${dialect.toUpperCase()}`;
+    const iconPath = dialect === "uk" ? "/web-asset/icons/svg/speaker-blue-uk.svg" : "/web-asset/icons/svg/speaker-red-usa.svg";
+    const safePath = escapeHtml(String(path).trim());
+    return `<a class="library-audio-play" data-library-audio-trigger="${dialect}" data-library-audio-key="${key}" href="${safePath}" aria-label="Play ${label} pronunciation" title="Play ${label} pronunciation"><img src="${iconPath}" alt="${label} speaker"></a><audio preload="none" hidden data-library-preview-audio="${key}" data-local-library-media="true" src="${safePath}"></audio>`;
+  };
+
+  const savedLibraryAudioMarkup = (verbForms, slot) => {
+    const labels = { verbInfinitive: "INF", verbV1: "V1", verbV2: "V2", verbV3: "V3", verbV4: "V4", verbV5: "V5" };
+    const line = String(verbForms || "").split("\n").find((candidate) => candidate.trimStart().startsWith(`${labels[slot] || ""}:`));
+    if (!line) return "";
+    const rendered = definitionInlineHtml(line);
+    const start = rendered.indexOf('<a class="library-audio-play"');
+    const end = rendered.indexOf("</audio>", start);
+    const key = `${slot}:us`;
+    if (start < 0 || end < 0 || !rendered.includes(`data-library-audio-key="${key}"`)) return "";
+    return rendered.slice(start, end + "</audio>".length);
+  };
+
+  const uniqueDefinitionBlocks = (values, { removeRules = false } = {}) => {
+    const seen = new Set();
+    const blocks = [];
+    for (const value of values) {
+      const lines = String(value == null ? "" : value).replace(/\r\n?/gu, "\n").split(/\n{2,}/u);
+      for (const rawBlock of lines) {
+        const block = rawBlock.split("\n").filter((line) => !(removeRules && line.trim() === "<hr>")).join("\n").trim();
+        const normalized = block.replace(/\s+/gu, " ").trim().toLocaleLowerCase("en-US");
+        if (!normalized || seen.has(normalized)) continue;
+        seen.add(normalized);
+        blocks.push(block);
+      }
+    }
+    return blocks.join("\n\n");
+  };
 
   function definitionHtml(value) {
     const source = String(value == null ? "" : value).replace(/\r\n?/gu, "\n").trim();
     if (!source) return "No definition yet.";
     const lines = source.split("\n").flatMap((line) => {
       const section = String(line).match(/^\*\*(First known use|Etymology):?\*\*:?[\t ]+(.+)$/iu);
-      return section ? [`**${section[1]}**`, section[2]] : [line];
+      if (section) return [`**${section[1]}**`, section[2]];
+      const examplesHeading = String(line).match(/^\*{1,2}Examples of ([^*\n]+)\*{2}\*?[\t ]*(?:\([^\n]*\))?[\t ]*$/iu);
+      return examplesHeading ? [`**Examples of ${examplesHeading[1]}**`] : [line];
     });
     const listItemFromLine = (line) => {
       const match = String(line).match(/^([\t ]*)(?:(\d+)[.)]|([a-z])[.)]|[-+*])\s+(.+)$/iu);
@@ -866,7 +916,7 @@
   }
 
   function definitionSections(value) {
-    const sections = { body: [], firstKnownUse: [], stems: [], synonyms: [], antonyms: [], worksCited: [], etymology: [], originPath: [], verbForms: [] };
+    const sections = { body: [], firstKnownUse: [], stems: [], synonyms: [], antonyms: [], worksCited: [], etymology: [], originPath: [], verbForms: [], examples: [] };
     const labels = {
       "first known use": "firstKnownUse",
       etymology: "etymology",
@@ -876,10 +926,14 @@
       synonyms: "synonyms",
       antonyms: "antonyms",
       "works cited": "worksCited",
+      examples: "examples",
     };
     const headingFromLine = (line) => {
       const bold = String(line).match(/^\*\*(First known use|Etymology|Origin path|Verb Forms|Stems|Synonyms|Antonyms|Works Cited):?\*\*:?\s*(.*)$/iu);
       if (bold) return { key: labels[bold[1].toLowerCase()], content: bold[2] };
+      const examplesHeading = String(line).match(/^\*{1,2}Examples of ([^*\n]+)\*{2}\*?[\t ]*(?:\([^\n]*\))?[\t ]*$/iu);
+      if (examplesHeading) return { key: "examples", content: "" };
+      if (/^\|\s*\*\*Synonyms\*\*\s*\|\s*\*\*Antonyms\*\*\s*\|\s*$/iu.test(String(line))) return { key: "synonyms", content: line };
       const plain = String(line).match(/^(First known use|Etymology|Origin path|Verb Forms|Stems|Synonyms|Antonyms|Works Cited)\s*:?[\t ]*$/iu);
       return plain ? { key: labels[plain[1].toLowerCase()], content: "" } : null;
     };
@@ -892,11 +946,12 @@
         if (heading.content) sections[section].push(heading.content);
         return;
       }
+      if (line.trim() === "<hr>") return;
       // Stems are list-only. Legacy Etymonline payloads sometimes omit the Etymology heading and append prose after the stems list.
       if (section === "stems" && line.trim() && !stemListItem.test(line)) section = "etymology";
       sections[section]?.push(line);
     });
-    return Object.fromEntries(Object.entries(sections).map(([key, lines]) => [key, lines.join("\n").trim()]));
+    return Object.fromEntries(Object.entries(sections).map(([key, lines]) => [key, key === "etymology" ? uniqueDefinitionBlocks([lines.join("\n")], { removeRules: true }) : lines.join("\n").trim()]));
   }
 
   function referenceCitation(reference) {
@@ -910,20 +965,25 @@
     const sections = definitionSections(value("definition"));
     const blocks = [];
     if (sections.body) blocks.push(`<div class="new-word-entry-definition-body">${definitionHtml(sections.body)}</div>`);
-    if (sections.firstKnownUse) blocks.push(`<section class="new-word-entry-first-use"><strong>First known use</strong><div>${definitionHtml(sections.firstKnownUse)}</div></section>`);
-    const originType = originTypeText(value("etymologyType"));
-    const etymologyProse = [sections.etymology, value("etymology")].filter(Boolean).join("\n\n");
-    const etymology = [originType ? `*${originType}*` : "", etymologyProse].filter(Boolean).join("; ");
-    if (etymology) blocks.push(`<section class="new-word-entry-etymology"><strong>Etymology</strong><div>${definitionHtml(etymology)}</div></section>`);
-    const originPath = [sections.originPath, value("originPath")].filter(Boolean).join("\n").trim();
-    if (originPath) blocks.push(`<section class="new-word-entry-origin-path"><strong>Origin path</strong><div>${definitionHtml(originPath)}</div></section>`);
     if (value("partOfSpeech") === "verb" && ["verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5"].some((field) => value(field))) {
       const labels = ["INF", "V1", "V2", "V3", "V4", "V5"];
-      blocks.push(`<section class="vocabulary-verb-forms-display"><strong>Verb Forms</strong>${labels.map((label, index) => `<div><strong>${label}</strong>: ${escapeHtml(value(index === 0 ? "verbInfinitive" : `verbV${index}`))}</div>`).join("")}</section>`);
+      const dictionaryMetadata = source?.dictionaryMetadata && typeof source.dictionaryMetadata === "object" ? source.dictionaryMetadata : source?.esl?.dictionaryMetadata && typeof source.esl.dictionaryMetadata === "object" ? source.esl.dictionaryMetadata : {};
+      const audioInputs = dictionaryMetadata.audioInputs && typeof dictionaryMetadata.audioInputs === "object" ? dictionaryMetadata.audioInputs : {};
+      const audioForSlot = (slot) => localLibraryAudioMarkup(slot, audioInputs[slot]) || savedLibraryAudioMarkup(sections.verbForms, slot);
+      blocks.push(`<section class="vocabulary-verb-forms-display"><strong>Verb Forms</strong>${labels.map((label, index) => { const slot = index === 0 ? "verbInfinitive" : `verbV${index}`; const form = escapeHtml(value(slot)); const audio = form ? audioForSlot(slot) : ""; return `<div><strong>${label}</strong>: ${form}${audio ? ` ${audio}` : ""}</div>`; }).join("")}</section>`);
     } else if (sections.verbForms) blocks.push(`<section class="vocabulary-verb-forms-display"><strong>Verb Forms</strong><div>${definitionHtml(sections.verbForms)}</div></section>`);
     if (sections.stems) blocks.push(`<section class="new-word-entry-stems"><strong>Stems</strong><div>${definitionHtml(sections.stems)}</div></section>`);
     if (sections.synonyms) blocks.push(`<section class="new-word-entry-synonyms"><strong>Synonyms</strong><div>${definitionHtml(sections.synonyms)}</div></section>`);
     if (sections.antonyms) blocks.push(`<section class="new-word-entry-antonyms"><strong>Antonyms</strong><div>${definitionHtml(sections.antonyms)}</div></section>`);
+    if (sections.examples) blocks.push(`<section class="new-word-entry-examples"><strong>Examples of ${escapeHtml(value("english") || source?.english || "the word")} in a Sentence</strong><div>${definitionHtml(sections.examples)}</div></section>`);
+    const firstKnownUse = sections.firstKnownUse || value("firstKnownUse");
+    const originType = originTypeText(value("etymologyType"));
+    const etymologyProse = uniqueDefinitionBlocks([sections.etymology, value("etymology")], { removeRules: true });
+    const etymology = [originType ? `*${originType}*` : "", etymologyProse].filter(Boolean).join("; ");
+    const originPath = sections.originPath || value("originPath");
+    if (firstKnownUse) blocks.push(`<section class="new-word-entry-first-use"><strong>First known use</strong><div>${definitionHtml(firstKnownUse)}</div></section>`);
+    if (originPath) blocks.push(`<section class="new-word-entry-origin-path"><strong>Origin path</strong><div>${definitionHtml(originPath)}</div></section>`);
+    if (etymology) blocks.push(`<section class="new-word-entry-etymology"><strong>Etymology</strong><div>${definitionHtml(etymology)}</div></section>`);
     const references = Array.isArray(value("originReferences")) ? value("originReferences") : [];
     const cited = [...references.map(referenceCitation), ...String(sections.worksCited || "").split("\n")]
       .map((citation) => String(citation).replace(/^\s*[-+*]\s+/u, "").replace(/\s+<--\s+dupe\s*$/iu, "").trim())
@@ -960,11 +1020,11 @@
           <input name="vocabularyEnglish-${uid}" type="text" data-vocabulary-field="english" placeholder="Word/phrase EN" aria-label="Word or phrase in English" autocapitalize="off" required>
           <input name="vocabularyVietnamese-${uid}" type="text" data-vocabulary-field="vietnamese" placeholder="Word/phrase VI" aria-label="Word or phrase in Vietnamese" required>
           <input name="vocabularySyllabication-${uid}" type="text" data-vocabulary-field="syllabication" placeholder="Do: air-strike | Extra: air-con-di-tion-ing" aria-label="Syllabication: keep compounds exact; optionally split multi-syllable compound parts for extra points" required>
-          ${includeAudioFields ? audioEditorHtml("headword", "Headword", uid) : ""}
           ${etymologyHtml(uid)}
       ${parametersHtml(uid, { includeMwFill, includeLdoce, includeOxford, includeBritannica, includeMerriamWebster, includeDictionaryBuilder, includeTransitivityTools, includeOriginAnalysis, includeAudioFields })}
           <div class="news-vocabulary-definition-row">
             ${lookupHtml ? `<div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">${lookupHtml}<p class="small vocabulary-et-message" data-vocabulary-et-message aria-live="polite"></p></div>` : ""}
+            ${includeAudioFields ? `<div class="vocabulary-definition-audio" data-vocabulary-definition-audio>${audioEditorHtml("headword", "Headword", uid)}</div>` : ""}
             <textarea name="vocabularyDefinition-${uid}" data-vocabulary-field="definition" rows="1" maxlength="50000" placeholder="Definition" title="Up to 50,000 characters. Ctrl+B bold · Ctrl+I italic · Ctrl+U underline · Enter continues -, a., and 1. lists · indent nested items · **Heading** sections" aria-label="Definition, up to 50,000 characters" required></textarea>
             ${rowActions}
           </div>

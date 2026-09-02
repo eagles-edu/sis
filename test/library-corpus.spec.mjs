@@ -105,6 +105,34 @@ test("Dictionary Builder Apply maps the selected syllabication into the canonica
   assert.equal(updates[0].syllabication, "lán-guage")
 })
 
+test("Dictionary Builder Apply keeps unrelated incomplete noun profiles from blocking a datum", async () => {
+  const { DICTIONARY_BUILDER_DATUMS, previewDictionaryBuilder } = await import("../src/modules/admin/dictionary-builder.mjs")
+  const { applyDictionaryBuilderSnapshot } = await import("../src/modules/admin/library-corpus.mjs")
+  const entry = { id: "library-partial-noun", english: "air strike", partOfSpeech: "noun", countability: "countable", nounType: "compound", definition: "", originReferences: null }
+  const datumStatus = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: datum === "vietnamese" ? "available" : "not_offered" }]))
+  const providerFetchers = {
+    google_translate: async () => ({ provider: "google_translate", status: "available", sourceUrl: "https://translate.google.com/?q=air%20strike", fields: { vietnamese: "cuộc không kích" }, entries: [], media: [], datumStatus }),
+  }
+  const snapshot = await previewDictionaryBuilder(entry, { ownerKey: "partial-noun-test", fetcher: providerFetchers, rankedSources: [], rankedSourcesByDatum: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, []])) })
+  const updates = []
+  const client = {
+    libraryEntry: { findUnique: async () => entry },
+    $transaction: async (callback) => callback({
+      libraryEntry: { update: async ({ data }) => { updates.push(data); return { ...entry, ...data } } },
+      libraryEntryRevision: { create: async () => ({}) },
+      dictionaryProviderSuitabilityMetric: { upsert: async () => ({}) },
+    }),
+  }
+  const result = await applyDictionaryBuilderSnapshot(entry.id, { name: "Tester", role: "admin" }, {
+    snapshotId: snapshot.id,
+    mode: "replace_all",
+    selections: { vietnamese: { provider: "google_translate", value: "cuộc không kích" } },
+  }, { ownerKey: "partial-noun-test", clientOverride: client })
+  assert.equal(result.ok, true)
+  assert.equal(result.entry.vietnamese, "cuộc không kích")
+  assert.equal(updates[0].vietnamese, "cuộc không kích")
+})
+
 test("Dictionary Builder Apply carries every formatted definition datum into the canonical entry", async () => {
   const { DICTIONARY_BUILDER_DATUMS, previewDictionaryBuilder } = await import("../src/modules/admin/dictionary-builder.mjs")
   const { applyDictionaryBuilderSnapshot } = await import("../src/modules/admin/library-corpus.mjs")
