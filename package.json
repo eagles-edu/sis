@@ -156,7 +156,7 @@
     "pdfkit": "^0.19.1",
     "pg": "^8.22.0",
     "postcss": "^8.5.25",
-    "redis": "^5.12.1",
+    "redis": "^6.2.1",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "overrides": {
