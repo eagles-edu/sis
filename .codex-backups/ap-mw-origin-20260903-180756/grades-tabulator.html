@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="vi-VN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+  <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+  <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
+  <title>The Eagles Club SIS Grades Table</title>
+  <link rel="stylesheet" href="/web-asset/vendor/tabulatorz/tabulator.min.css">
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script src="/web-asset/shared/portal-action-feedback.js"></script>
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
+
+    if (!customElements.get("svg-icon")) {
+      svgIcon({
+        defaultSize: 28,
+        path: "/web-asset/icons/web-component/svgs/",
+      });
+    }
+  </script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <!-- Route-owned CSS stays blocking and follows shared tokens so standalone overrides retain their established cascade. -->
+  <link rel="stylesheet" href="/web-asset/admin/grades-tabulator.min.css">
+  <script>
+    (() => {
+      window.SIS_PORTAL_THEME?.initTheme("light");
+    })();
+  </script>
+
+</head>
+
+<body class="admin-portal-page page grades-tabulator-page" id="top" data-surface-role="page">
+  <button id="floatingMenuBtn" type="button" class="floating-menu-btn portal-button portal-button-immutable-chrome"
+    aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
+    <span class="floating-menu-icon" aria-hidden="true"></span>
+  </button>
+  <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
+  <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation">
+    <div class="sidebar-logo-wrap" id="sidebarLogoWrap">
+      <img src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+    </div>
+    <h2>Navigation</h2>
+    <nav class="menu-groups" id="navMenu">
+      <a href="/admin" class="menu-link menu-link-top" data-page-link="overview">DASHBOARD</a>
+      <a href="/admin/queue-hub" class="menu-link menu-link-top" data-page-link="queue-hub">QUEUE HUB</a>
+      <div class="menu-group" data-menu-group="students">
+        <button type="button" class="menu-group-btn" data-menu-toggle="students" aria-expanded="false">STUDENTS</button>
+        <div class="menu-group-links">
+          <a href="/admin/profile" class="menu-link" data-page-link="profile">Student Profile</a>
+          <a href="/admin/profile-engagement" class="menu-link menu-sublink" data-page-link="profile-engagement">Profile
+            engagement</a>
+        </div>
+      </div>
+      <div class="menu-group expanded" data-menu-group="tracking">
+        <button type="button" class="menu-group-btn" data-menu-toggle="tracking" aria-expanded="true">TRACKING</button>
+        <div class="menu-group-links">
+          <a href="/admin/attendance" class="menu-link" data-page-link="attendance">Attendance</a>
+          <div id="attendanceAdminSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+            <a href="/admin/attendance-admin" class="menu-link menu-sublink" data-page-link="attendance-admin"
+              data-admin-submenu="tracking-data">Attendance data</a>
+          </div>
+          <a href="/admin/assignments" class="menu-link" data-page-link="assignments">Assignments</a>
+          <div id="assignmentDataSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+            <a href="/admin/assignments-data" class="menu-link menu-sublink" data-page-link="assignments-data"
+              data-admin-submenu="tracking-data">Assignments data</a>
+            <a href="/admin/assignment-engagement" class="menu-link menu-sublink" data-page-link="assignment-engagement"
+              data-admin-submenu="tracking-data">Assignment engagement</a>
+          </div>
+          <a href="/admin/grades" class="menu-link" data-page-link="grades">Grades</a>
+          <div id="gradesDataSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+            <a href="/admin/grades-data" class="menu-link menu-sublink" data-page-link="grades-data"
+              data-admin-submenu="tracking-data">Grades data</a>
+            <a href="/admin/grades-tabulator" id="gradeTableMenuLink" class="menu-link menu-sublink active"
+              data-page-link="grades-tabulator" data-admin-submenu="tracking-data" aria-current="page">Grade table</a>
+          </div>
+          <a href="/admin/parent-tracking" class="menu-link" data-page-link="parent-tracking">Performance</a>
+          <div id="performanceDataSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+            <a href="/admin/performance-data" class="menu-link menu-sublink" data-page-link="performance-data"
+              data-admin-submenu="tracking-data">Performance data</a>
+            <a href="/admin/performance-engagement" class="menu-link menu-sublink"
+              data-page-link="performance-engagement" data-admin-submenu="tracking-data">RC engagement</a>
+          </div>
+          <a href="/admin/news-reports" class="menu-link" data-page-link="news-reports">News Reports</a>
+          <a href="/admin/reports" class="menu-link" data-page-link="reports">All Reports</a>
+        </div>
+      </div>
+      <div class="menu-group" data-menu-group="support">
+        <button type="button" class="menu-group-btn" data-menu-toggle="support" aria-expanded="false">SUPPORT</button>
+        <div class="menu-group-links">
+          <a href="/admin/family" class="menu-link" data-page-link="family">Family Lookup</a>
+        </div>
+      </div>
+      <div class="menu-group" data-menu-group="admin">
+        <button type="button" class="menu-group-btn" data-menu-toggle="admin" aria-expanded="false">ADMINISTRATION</button>
+        <div class="menu-group-links">
+          <a href="/admin/enrollment" class="menu-link" data-page-link="enrollment">Enrollment</a>
+          <a href="/admin/student-admin" class="menu-link" data-page-link="student-admin">Student Admin</a>
+          <a href="/admin/school-setup" class="menu-link" data-page-link="school-setup">School Setup</a>
+          <a href="/admin/users" class="menu-link" data-page-link="users">Users</a>
+          <a href="/admin/permissions" class="menu-link" data-page-link="permissions">Permissions</a>
+          <a href="/admin/settings" class="menu-link" data-page-link="settings">Settings</a>
+          <div class="menu-group menu-group-nested" data-menu-group="library">
+            <button type="button" class="menu-group-btn" data-menu-toggle="library" aria-expanded="false">Library</button>
+            <div class="menu-group-links">
+              <a href="/admin/library" class="menu-link menu-sublink" data-library-nav="library">Library</a>
+              <a href="/admin/library/manage" class="menu-link menu-sublink" data-library-nav="manage">Manage</a>
+              <a href="/admin/library/engagement" class="menu-link menu-sublink" data-library-nav="engagement">Engagement</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </aside>
+  <div class="wrap">
+    <div class="header-bar portal-login-header" data-surface-role="content">
+      <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+      <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+    </div>
+    <main class="section-stack" id="appMain" data-surface-role="content">
+      <section class="content topbar" data-surface-role="content">
+        <div class="topbar-head">
+          <div class="brand-head">
+            <a class="brand-logo-wrap brand-logo-wrap--sm" href="/admin" aria-label="Go to student home">
+              <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+            </a>
+            <h1>THE EAGLES CLUB</h1>
+          </div>
+          <div class="header-actions">
+            <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle"
+              type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
+              <span class="portal-theme-toggle__icon" aria-hidden="true">
+                <svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon>
+              </span>
+            </button>
+            <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
+              <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt"
+                title="Giảm cỡ chữ">A-</button>
+              <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt"
+                title="Tăng cỡ chữ">A+</button>
+              <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning"
+                title="Đặt lại cỡ chữ">Reset</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <p class="status is-warn hidden" id="schoolSetupWarning"></p>
+      <div class="runtime-self-heal-panel">
+        <button id="overviewRuntimeRestartBtn" type="button" class="portal-button portal-button-primary hidden"
+          title="Restart the local runtime after a safe health check"
+          aria-label="Restart the local runtime after a safe health check">Self-Heal Runtime</button>
+      </div>
+
+      <div class="content" data-surface-role="content">
+        <div class="app-brand-copy">
+          <h1 class="section-title">Grades Table</h1>
+          <p class="section-note">
+            Inspect grades and stats across exercises classes, students, and the school-wide cohort.
+          </p>
+        </div>
+        <section class="control-card portal-theme-panel">
+          <div class="periods" id="periodButtons" role="toolbar" aria-label="Period range">
+            <button type="button" class="period-btn portal-button portal-button-alt" data-period="week"
+              title="Show grades for the selected week set"
+              aria-label="Show grades for the selected week set">Week</button>
+            <button type="button" class="period-btn portal-button portal-button-alt" data-period="quarter"
+              title="Show grades for the selected quarter"
+              aria-label="Show grades for the selected quarter">Quarter</button>
+            <button type="button" class="period-btn portal-button portal-button-alt" data-period="qtd"
+              title="Show quarter-to-date grades" aria-label="Show quarter-to-date grades">QTD</button>
+            <button type="button" class="period-btn portal-button portal-button-alt" data-period="sytd"
+              title="Show school-year-to-date grades" aria-label="Show school-year-to-date grades">SYTD</button>
+            <button type="button" class="period-btn portal-button portal-button-alt" data-period="archive"
+              title="Show archived grade records" aria-label="Show archived grade records">Archive</button>
+            <button type="button" class="period-btn portal-button portal-button-alt" data-period="custom"
+              title="Choose a custom grade date range" aria-label="Choose a custom grade date range">Custom</button>
+          </div>
+          <div class="control-grid">
+            <div class="field">
+              <label for="schoolYear">School year</label>
+              <select id="schoolYear">
+                <option value="2026-2027">2026-2027</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="quarter">Quarter</label>
+              <select id="quarter">
+                <option value="q1">Q1</option>
+                <option value="q2">Q2</option>
+                <option value="q3">Q3</option>
+                <option value="q4">Q4</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="classFilter">Class level</label>
+              <select id="classFilter">
+                <option value="all">All class levels</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="studentFilter">Student</label>
+              <select id="studentFilter">
+                <option value="all">All students</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="schoolFilter">School</label>
+              <select id="schoolFilter">
+                <option value="The Eagles Club">The Eagles Club</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="customFrom">Custom from</label>
+              <input id="customFrom" type="date">
+            </div>
+            <div class="field">
+              <label for="customTo">Custom to</label>
+              <input id="customTo" type="date">
+            </div>
+            <div class="field">
+              <label for="searchInput">Search</label>
+              <input id="searchInput" type="search" placeholder="student, class, assignment">
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="content" data-surface-role="content">
+        <section class="metrics" aria-label="Grade data snapshot">
+          <article class="metric-card portal-theme-card">
+            <h2>Rows</h2>
+            <p id="metricRows">0</p>
+          </article>
+          <article class="metric-card portal-theme-card">
+            <h2>Students</h2>
+            <p id="metricStudents">0</p>
+          </article>
+          <article class="metric-card portal-theme-card">
+            <h2>Classes</h2>
+            <p id="metricClasses">0</p>
+          </article>
+          <article class="metric-card portal-theme-card">
+            <h2>Avg Score %</h2>
+            <p id="metricAvgPercent">n/a</p>
+          </article>
+          <article class="metric-card portal-theme-card">
+            <h2>HW Completion</h2>
+            <p id="metricCompletion">n/a</p>
+          </article>
+        </section>
+        <p class="status" id="statusLine">Booting grade interface...</p>
+      </div>
+
+      <div class="content" data-surface-role="content">
+        <section id="gradeGridCard" class="grid-card portal-theme-card">
+          <div class="grid-head">
+            <p class="grid-title">Interactive Matrix</p>
+            <div class="grid-actions">
+              <button class="btn subtle portal-button portal-button-info" id="tableModalBtn" type="button"
+                title="Open the full grade table in a separate view"
+                aria-label="Open the full grade table in a separate view">Table</button>
+              <button class="btn subtle portal-button portal-button-alt" id="toggleCompactBtn" type="button"
+                title="Switch between comfortable and dense table rows"
+                aria-label="Switch between comfortable and dense table rows">Dense: Off</button>
+              <button class="btn subtle portal-button portal-button-warning" id="resetColumnsBtn" type="button"
+                title="Restore the default grade table columns"
+                aria-label="Restore the default grade table columns">Reset columns</button>
+            </div>
+          </div>
+          <div id="gradeGrid" class="portal-theme-table-shell"></div>
+          <p class="dim" id="rangeHint"></p>
+        </section>
+      </div>
+      <section class="content portal-prefooter" aria-label="Runtime environment" data-surface-role="content">
+        <span id="envBadge" class="env-badge" data-environment-prefooter aria-live="polite"></span>
+      </section>
+      <footer class="hub-footer" aria-label="Site footer">
+        <p class="hub-footer__copy">
+          © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights
+          reserved.
+        </p>
+        <p class="hub-footer__action">
+          <a href="#top" id="back-top" aria-label="Về đầu trang">Về đầu trang</a>
+        </p>
+      </footer>
+    </main>
+  </div>
+
+  <button id="tableModalBackdrop" class="table-modal-backdrop portal-theme-overlay-strong" type="button" hidden
+    data-close-table-modal="true" aria-label="Close table modal"></button>
+
+  <div id="distributionModal" class="distribution-modal" hidden>
+    <div class="distribution-modal-backdrop portal-theme-overlay" data-close-distribution-modal="true"></div>
+    <section id="distributionDialog" class="distribution-dialog portal-theme-dialog" role="dialog" aria-modal="true"
+      aria-labelledby="distributionModalTitle">
+      <div class="distribution-dialog-head">
+        <h2 id="distributionModalTitle">Grade Distribution Detail</h2>
+        <div class="distribution-dialog-actions">
+          <button id="distributionModalExpand" class="distribution-expand portal-button portal-button-alt" type="button"
+            aria-label="Toggle full screen chart modal">Full screen</button>
+          <button id="distributionModalClose" class="distribution-close portal-button portal-button-warning"
+            type="button" aria-label="Close distribution chart">Close</button>
+        </div>
+      </div>
+      <p id="distributionModalMeta" class="distribution-dialog-meta">Hover points to inspect each label and count.</p>
+      <div class="distribution-toolbar" role="toolbar" aria-label="Distribution chart zoom controls">
+        <button id="distributionZoomOut"
+          class="distribution-zoom-btn portal-button portal-button-alt portal-button-alt-nav" type="button"
+          aria-label="Zoom out chart">-</button>
+        <button id="distributionZoomIn"
+          class="distribution-zoom-btn portal-button portal-button-alt portal-button-alt-nav" type="button"
+          aria-label="Zoom in chart">+</button>
+        <button id="distributionZoomReset" class="distribution-zoom-btn portal-button portal-button-warning"
+          type="button" aria-label="Reset chart zoom">Reset</button>
+        <input id="distributionZoomRange" class="distribution-zoom-range" type="range" min="1" max="6" step="0.1"
+          value="1" aria-label="Chart zoom level">
+        <span id="distributionZoomLabel" class="distribution-zoom-label">100%</span>
+      </div>
+      <div id="distributionChartShell" class="distribution-chart-shell portal-theme-soft-card">
+        <div id="distributionChartScroll" class="distribution-chart-scroll">
+          <svg id="distributionModalChart" class="distribution-modal-chart" viewBox="0 0 760 360"
+            preserveAspectRatio="none"></svg>
+        </div>
+        <div id="distributionModalHover" class="distribution-hover portal-theme-tooltip" hidden></div>
+      </div>
+      <p class="distribution-dialog-hint">Hover points for values. Use slider, +/- buttons, or mouse wheel to zoom.</p>
+    </section>
+  </div>
+
+  <!--
+    Runtime source-contract markers for the external grades app:
+    /api/admin/auth/me counts?.gradeRecords detail?.student normalizeText(detail.id)
+    pagination: false const scoreValues = cells formatQRightStat(mean) schoolSetup?.letterGradeRanges
+    const localSettingsSchoolYear = schoolYearFromUiSettings(loadUiSettingsFromLocalStorage())
+    if (isSchoolYearKey(localSettingsSchoolYear)) return localSettingsSchoolYear
+    function refreshSystemCurrentSchoolYear() {}
+    schoolYear: normalizeSchoolYearFilter(input.schoolYear)
+    function filterQueryOverridesFromLocation() { const hasQuarterParam = params.has("quarter") }
+    state.filters = normalizedFiltersSnapshot({}) applyFilterQueryOverrides()
+    function applyCurrentSchoolYearDefault() {} applyCurrentSchoolYearDefault({ force: true })
+    function schoolSetupQuarterForIsoDate() {} function quarterForSchoolYear() {}
+    requestedSchoolYearCurrent studentDisplay: "Mean" studentDisplay: "Grade distribution"
+    configuredSchoolName singleSchoolMode 2026-2027
+    #gradeGrid { resize: vertical; overflow-x: auto; } .grid-head {} .tabulator .tabulator-tableholder { overflow-x: auto; }
+    body.table-modal-open { overflow: hidden; } .grid-card.is-table-modal { } .wrap > * { min-width: 0; }
+    .wrap { margin: 0 auto; } .tabulator-tooltip { font-size: 1rem; }
+    function renderDistributionMiniCell() {} function openDistributionModal() {}
+    function setTableModalOpen() {} function bindTableModalControls() {}
+    function setDistributionDialogFullscreen() {} function applyDistributionChartZoom() {}
+    responsiveLayout: false function buildCoreHeaderCard() {} function buildHeaderActionButtons() {}
+    function handleHeaderActionClick() {} title: buildCoreHeaderCard("Class Level", "Class", "Grouping")
+    title: buildCoreHeaderCard("Student", "eaglesId", "") title: buildCoreHeaderCard("Student Number", "Roster", "ID")
+    cssClass: "assignment-col core-col" cssClass: "assignment-col core-col student-number-col"
+    function formatStudentNumberForWrap() {} function studentColumnMinWidthForResize() {} function coreColumnDataWidth() {}
+    function assignmentColumnDataWidth() {} coreColumnDataWidth(studentRows, "studentDisplay")
+    data-header-action=\"pin\" data-header-action=\"hide\" columnDefaults: { headerClick: handleHeaderActionClick } data-header-label=\"
+    headerTooltip: () => "Student | eaglesId" headerTooltip: () => `${fullTitle} | Q: ${questionLabel} | Due: ${dueLabel}`
+    const TABLE_PERSISTENCE_ID = "sis-grades-tabulator-v1" const UI_PREFS_KEY = "sis.grades-tabulator.ui-prefs.v1"
+    const TABLE_UI_STATE_KEY = "sis.grades-tabulator.table-state.v1" const TABLE_UI_STATE_SCHEMA_VERSION = 2
+    const AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX = "auto-imported exercise score"
+    const GRADE_RECORD_SOURCE_ASSIGNMENT = "assignment" const GRADE_RECORD_SOURCE_MANUAL = "manual" const GRADE_RECORD_SOURCE_AUTO_IMPORT = "auto-import"
+    const GRADE_RECORD_SOURCES_VISIBLE_IN_MATRIX = new Set() function normalizeGradeRecordSource() {}
+    const rawScorePercent = toNumber(record?.scorePercent) const effectiveScore = rawScore
+    function scoreCellRank() {} function scoreCellPercentValue() {} function shouldReplaceScoreCell() {}
+    if (nextPercent !== existingPercent) return nextPercent > existingPercent
+    if (shouldReplaceScoreCell(currentCell, nextCell)) function isStandaloneAutoImportedExerciseRow() {}
+    function canonicalizeStandaloneAutoImportedTitle() {} function normalizedAssignmentTitleForRow() {}
+    source: rowSource, source: GRADE_RECORD_SOURCE_ASSIGNMENT, if (!GRADE_RECORD_SOURCES_VISIBLE_IN_MATRIX.has(rowSource)) return false
+    assignment-head elective id: `student-${studentRefId}`
+    <span class=\"exercise-cell\"><span></span><span></span></span>
+    const status = ["ontime", "late"].includes(value.status) ? value.status : (isCompleted ? "ontime" : "")
+    includeWidth: !shouldResetPersistedWidths schemaVersion: TABLE_UI_STATE_SCHEMA_VERSION
+    field: "studentDisplay" minWidth: studentColumnMinWidth width: studentColumnWidth frozen: true
+    field: meta.key width: assignmentColumnWidth function applyTableHeight() {} function observeTableHeightResize() {}
+  -->
+  <script src="/web-asset/vendor/tabulatorz/tabulator.min.js"></script>
+  <script src="/web-asset/shared/portal-preferences.js"></script>
+  <script src="/web-asset/admin/grades-tabulator.min.js"></script>
+  <script src="/web-asset/shared/portal-environment.js"></script>
+  <script src="/web-asset/admin/admin-b612-mono-loader.js" defer></script>
+</body>
+
+</html>

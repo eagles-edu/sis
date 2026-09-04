@@ -1054,22 +1054,23 @@ function senseListPrefix(value) {
   return { indentation: "", level: 0, marker: `${match[1]}.` }
 }
 
-function collectEtymologyText(value, output = []) {
-  if (typeof value === "string") {
-    output.push(value)
-    return output
-  }
+function firstNonEmptyEtymology(value) {
+  if (typeof value === "string") return stripMw(value).trim()
   if (Array.isArray(value)) {
-    if (typeof value[0] === "string" && ["text", "t"].includes(value[0])) output.push(value[1])
-    else value.forEach((item) => collectEtymologyText(item, output))
-    return output
+    if (typeof value[0] === "string" && ["text", "t", "et_snote", "etymology"].includes(value[0])) return firstNonEmptyEtymology(value[1])
+    for (const item of value) {
+      const candidate = firstNonEmptyEtymology(item)
+      if (candidate) return candidate
+    }
+    return ""
   }
-  if (!value || typeof value !== "object") return output
-  Object.entries(value).forEach(([key, child]) => {
-    if (["et", "etymology", "text", "t"].includes(key) && typeof child === "string") output.push(child)
-    else collectEtymologyText(child, output)
-  })
-  return output
+  if (!value || typeof value !== "object") return ""
+  for (const key of ["et", "etymology", "etymology1", "etymology2", "etymology3", "text", "t", "et_snote"]) {
+    if (!Object.hasOwn(value, key)) continue
+    const candidate = firstNonEmptyEtymology(value[key])
+    if (candidate) return candidate
+  }
+  return ""
 }
 
 function collectDefinitionBlocks(value, output = []) {
@@ -1193,7 +1194,7 @@ function normalizeMwEntry(entry, index) {
     stems: uniqueText(entry?.meta?.stems),
     shortDefinitions,
     definitions: detailedDefinitions.length ? detailedDefinitions : shortDefinitions,
-    etymology: uniqueText(collectEtymologyText(entry?.et)),
+    etymology: [firstNonEmptyEtymology(entry?.et)].filter(Boolean),
     firstKnownUse: stripMw(entry?.date).replace(/(century|year|\d)t$/iu, "$1"),
     synonyms: uniqueText([entry?.meta?.syns, entry?.syns, ...collectRelationValues(entry?.def, "syns")]),
     antonyms: uniqueText([entry?.meta?.ants, entry?.ants, ...collectRelationValues(entry?.def, "ants")]),
@@ -1276,6 +1277,7 @@ function mwFields(record) {
     synonymsAntonyms: [record.synonyms.length ? `Synonyms:\n${record.synonyms.join("\n")}` : "", record.antonyms.length ? `Antonyms:\n${record.antonyms.join("\n")}` : ""].filter(Boolean).join("\n\n"),
     firstKnownUse: record.firstKnownUse,
     etymology: record.etymology.join("\n"),
+    originPath: record.etymology.join("\n"),
     originReferences: record.etymology.length ? [buildOriginReference({
       source: "Merriam-Webster Collegiate",
       url: `https://www.merriam-webster.com/dictionary/${encodeURIComponent(record.headword)}`,
@@ -1356,7 +1358,7 @@ function verbLookupCandidates(entry = {}) {
   return candidates
 }
 
-export async function previewMerriamWebsterLibraryEntry(entry, fetchImpl = fetch) {
+export async function previewMerriamWebsterLibraryEntry(entry, fetchImpl = fetch, wordHistoryFallback = previewMerriamWebsterDictionaryEntry) {
   const word = clamp(entry?.english); const key = text(process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY)
   if (!word || !key) return { ok: false, available: false, message: "Merriam-Webster Collegiate is unavailable; no Library data was changed." }
   const requestedPartOfSpeech = normalizeMwPartOfSpeech(entry?.partOfSpeech)
@@ -1390,7 +1392,19 @@ export async function previewMerriamWebsterLibraryEntry(entry, fetchImpl = fetch
   const details = { source: "Merriam-Webster Collegiate", query: word, lookupQuery: selectedQuery, requestedPartOfSpeech: requestedPartOfSpeech || null, selectedEntryCount: selectedRecords.length, entryCount: uniqueRecords.length, entries: uniqueRecords }
   if (!selectedRecords.length) return { ok: false, available: true, message: `No Merriam-Webster ${requestedPartOfSpeech} entry was found; no Library data was changed.`, details }
   const primary = mergeMwRecords(selectedRecords)
-  return { ok: true, available: true, fields: mwFields(primary), details }
+  const fields = mwFields(primary)
+  if (!fields.etymology) {
+    try {
+      const fallback = await wordHistoryFallback(entry, fetchImpl)
+      const fallbackEtymology = text(fallback?.fields?.etymology)
+      if (fallback?.ok && fallbackEtymology) {
+        fields.etymology = fallbackEtymology
+        fields.originPath = text(fallback?.fields?.originPath) || fallbackEtymology
+        if (fallback.fields.originReferences) fields.originReferences = fallback.fields.originReferences
+      }
+    } catch {}
+  }
+  return { ok: true, available: true, fields, details }
 }
 
 export async function previewMerriamWebsterDictionaryEntryWithApiFallback(entry, fetchImpl = fetch, browserFetchImpl = fetchMerriamWebsterBrowserPage) {
@@ -1539,11 +1553,11 @@ export async function applyMerriamWebsterDictionaryLibraryEntry(id, actor = {}, 
 const DICTIONARY_BUILDER_FIELD_TO_DATUM = Object.freeze({
   vietnamese: "vietnamese", syllabication: "syllabication", syllableCount: "syllableCount", grammarClassification: "grammarClassification", definition: "definition",
   verbForms: "verbForms", verbInfinitive: "verbForms", verbV1: "verbForms", verbV2: "verbForms", verbV3: "verbForms", verbV4: "verbForms", verbV5: "verbForms",
-  etymology: "etymology", originPath: "originPath", originReferences: "etymology", firstKnownUse: "firstKnownUse", stems: "stems", synonymsAntonyms: "synonymsAntonyms", examples: "examples", worksCited: "worksCited", audio: "audio", verbFormAudio: "verbFormAudio",
+  etymology: "etymology", originPath: "originPath", originReferences: "etymology", firstKnownUse: "firstKnownUse", stems: "stems", synonymsAntonyms: "synonymsAntonyms", examples: "examples", audio: "audio", verbFormAudio: "verbFormAudio",
 })
 const DICTIONARY_BUILDER_ALLOWED_FIELDS = new Set(Object.keys(DICTIONARY_BUILDER_FIELD_TO_DATUM))
 const DICTIONARY_BUILDER_POS_FORM_FIELDS = Object.freeze(["countability", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "dualCountabilityUsage", "properNounVariantShift", "displayVerbForm", "verbRegularity", "verbTransitivity"])
-const DICTIONARY_BUILDER_DEFINITION_FIELDS = new Set(["definition", "verbForms", "stems", "synonymsAntonyms", "examples", "firstKnownUse", "worksCited"])
+const DICTIONARY_BUILDER_DEFINITION_FIELDS = new Set(["definition", "verbForms", "stems", "synonymsAntonyms", "examples", "firstKnownUse"])
 
 export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {}, { ownerKey = "", clientOverride = null } = {}) {
   const { buildSelectedDictionaryBuilderCitations, formatDictionaryBuilderDefinition, recordDictionaryBuilderMetrics, restoreDictionaryBuilderSnapshot, takeDictionaryBuilderSnapshot } = await import("./dictionary-builder.mjs")
@@ -1563,6 +1577,7 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
   const claimLedger = []
   const selectedAudio = []
   for (const field of selectedFields) {
+    if (["verbForms", "verbFormAudio"].includes(DICTIONARY_BUILDER_FIELD_TO_DATUM[field]) && lower(existing.partOfSpeech) !== "verb") continue
     const selection = selections[field]
     const provider = text(selection && typeof selection === "object" ? selection.provider : selection)
     const source = (snapshot.privateSources || []).find((item) => item.provider === provider)
@@ -1601,7 +1616,7 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
     }
     if (DICTIONARY_BUILDER_DEFINITION_FIELDS.has(field)) {
       if (field === "definition" && mode === "fill_missing" && existing.definition) definitionFields.definition = existing.definition
-      else if (field !== "worksCited" && value !== undefined && value !== null && value !== "") definitionFields[field] = value
+      else if (value !== undefined && value !== null && value !== "") definitionFields[field] = value
       claimLedger.push({ field, provider, status: manualSelection ? "manual" : source.datumStatus?.[datum]?.status || "unavailable" })
       continue
     }

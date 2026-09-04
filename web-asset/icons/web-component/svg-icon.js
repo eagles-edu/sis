@@ -56,8 +56,9 @@ export default function (opts) {
         }
         disconnectedCallback() {
             try {
-                this.abortSignal.abort();
+                this.abortController.abort();
             } catch (ignore) {}
+            this.abortController = null;
         }
         render() {
             let name = this.getAttribute("name");
@@ -71,9 +72,14 @@ export default function (opts) {
             }
             src = src + name + ".svg";
             try {
-                this.abortSignal.abort();
+                this.abortController.abort();
             } catch (ignore) {}
-            this.fetchSvg(src).then((svg) => {
+            const controller = new AbortController();
+            this.abortController = controller;
+            this.fetchSvg(src, controller.signal).then((svg) => {
+                if (controller.signal.aborted || this.abortController !== controller) {
+                    return;
+                }
                 let div = document.createElement("div");
                 let style;
                 div.innerHTML = svg;
@@ -102,9 +108,8 @@ export default function (opts) {
                 }
             }
         }
-        fetchSvg(src) {
-            this.abortSignal = (new AbortController()).signal;
-            return fetch(src, this.abortSignal).then(function (result) {
+        fetchSvg(src, signal) {
+            return fetch(src, {signal}).then(function (result) {
                 if (result.status === 200) {
                     return result.text();
                 }

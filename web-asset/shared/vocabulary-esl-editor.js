@@ -114,9 +114,8 @@
     const uid = safeUid(rowUid);
     return `<div class="vocabulary-etymology-fields" data-vocabulary-etymology-fields>
       ${select("etymologyType", "Origin type (optional)", etymologyTypes, "", uid)}
-      <p class="vocabulary-origin-help">Choose the lexical relationship supported by the authoritative source. <a href="https://www.etymonline.com/" target="_blank" rel="noopener noreferrer">Etymonline</a> is primary; <a href="https://www.merriam-webster.com/" target="_blank" rel="noopener noreferrer">Merriam-Webster</a> is supplemental. This is not Works Cited or provenance; an uncertain origin path stays blank.</p>
-      <label class="vocabulary-pos-control">Etymology / word origin (optional)<input name="vocabularyEsl-etymology-${uid}" data-vocabulary-esl-field="etymology" placeholder="Borrowed from French; formed with ..." aria-label="Etymology or word origin, optional"></label>
-      <input type="hidden" name="vocabularyOriginPath-${uid}" data-vocabulary-origin-field="originPath">
+      <label class="vocabulary-pos-control">Etymology (optional)<input name="vocabularyEsl-etymology-${uid}" data-vocabulary-esl-field="etymology" placeholder="Borrowed from French; formed with ..." aria-label="Etymology, optional"></label>
+      <label class="vocabulary-pos-control">Origin path (optional)<input name="vocabularyOriginPath-${uid}" data-vocabulary-origin-field="originPath" placeholder="Latin → Old French → English" aria-label="Origin path, optional"></label>
       <input type="hidden" name="vocabularyOriginReferences-${uid}" data-vocabulary-origin-field="originReferences">
     </div>`;
   }
@@ -494,30 +493,9 @@
         const response = await fetch(`${endpoint}?word=${encodeURIComponent(String(english).trim())}`, { credentials: "include", headers: { Accept: "application/json" } });
         const preview = await response.json();
         if (!response.ok || !preview.ok) throw new Error(preview.error || preview.message || "Etymonline is unavailable.");
-        const textarea = row.querySelector('[data-vocabulary-field="definition"]');
-        const current = normalizeDefinitionText(textarea.value);
-        const paragraph = String(preview.paragraph || "").trim();
-        if (paragraph) { textarea.value = insertEtymologyDeterministically(current, paragraph); dispatchDefinitionInput(textarea); }
-        if (preview.citation && !textarea.value.includes(preview.citation)) {
-          const worksCitedHeading = /^\*\*Works Cited:?\*\*:?[\t ]*$/imu;
-          const worksCitedIndex = textarea.value.search(worksCitedHeading);
-          if (worksCitedIndex >= 0) {
-            const relativeEnd = textarea.value.slice(worksCitedIndex).indexOf("\n");
-            const insertAt = relativeEnd >= 0 ? worksCitedIndex + relativeEnd + 1 : textarea.value.length;
-            textarea.value = `${textarea.value.slice(0, insertAt)}- ${preview.citation}\n${textarea.value.slice(insertAt)}`;
-          } else {
-            textarea.value = `${textarea.value.trimEnd()}\n\n**Works Cited:**\n- ${preview.citation}`;
-          }
-          dispatchDefinitionInput(textarea);
-        }
-        const pathInput = row.querySelector('[data-vocabulary-origin-field="originPath"]');
-        if (pathInput && preview.originPath) pathInput.value = preview.originPath;
-        const referencesInput = row.querySelector('[data-vocabulary-origin-field="originReferences"]');
-        const references = referencesInput?.value ? JSON.parse(referencesInput.value) : [];
-        const incoming = preview.reference ? [...references, preview.reference] : references;
-        const deduped = [...new Map(incoming.filter((item) => item?.url).map((item) => [item.url, item])).values()];
-        if (referencesInput) referencesInput.value = deduped.length ? JSON.stringify(deduped) : "";
-        if (message) message.textContent = "ET paragraph and source metadata added.";
+        if (message) message.textContent = preview.originPath
+          ? "ET preview ready; choose the Origin path datum in Dictionary Builder to apply its selected path."
+          : "ET preview ready; choose the Etymology datum in Dictionary Builder to apply its selected prose.";
       } catch (error) {
         if (message) message.textContent = error.message || "Etymonline is unavailable.";
       }

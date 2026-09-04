@@ -23,6 +23,7 @@ const libraryCorpus = fs.readFileSync(new URL("../src/modules/admin/library-corp
 const portalScript = fs.readFileSync(new URL("../web-asset/student/student-portal.js", import.meta.url), "utf8")
 const sharedVocabularyEditor = fs.readFileSync(new URL("../web-asset/shared/vocabulary-esl-editor.js", import.meta.url), "utf8")
 const libraryReviewWorkbench = fs.readFileSync(new URL("../web-asset/admin/library-review-workbench.js", import.meta.url), "utf8")
+const svgIcon = fs.readFileSync(new URL("../web-asset/icons/web-component/svg-icon.js", import.meta.url), "utf8")
 const sharedPortalTheme = fs.readFileSync(new URL("../web-asset/shared/portal-theme.css", import.meta.url), "utf8")
 const definitionDocumentation = fs.readFileSync(new URL("../docs/defspace-1.md", import.meta.url), "utf8")
 const definitionSpacingSample = fs.readFileSync(new URL("../docs/defspace-1.md", import.meta.url), "utf8").split("==================================================================")[0].replace(/^preferredformat as:\s*/u, "").trim()
@@ -59,7 +60,7 @@ test("student Library is a protected physical page with shared chrome and studen
 test("New Words and News vocabulary use the same full ESL row payload without student MW fill", () => {
   for (const token of ["VOCABULARY_ESL_FIELDS", "verbInfinitive", "verbV5", "grammarClassification", "readVocabularyRows", "syncVocabularyEslRow", "SIS_VOCABULARY_ESL"]) assert.match(portalScript, new RegExp(token))
   assert.doesNotMatch(portalScript, /data-vocabulary-mw-preview|mw-preview/)
-  for (const token of ["countable", "uncountable", "countable_and_uncountable", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage", "1. Countability", "2. Quality", "3. Number", "4. Classification", "Common", "Proper", "Concrete", "Abstract", "Material", "Collective", "Compound", "Possessive", "primary", "modal", "action", "intransitive", "transitive", "monotransitive", "ditransitive", "ambitransitive", "Types of transitivity", "optional", "etymologyType", "Etymology / word origin", "vocabulary-verb-forms", "hydrate", "name=\"vocabularyPartOfSpeech-", "flatEntryHtml", "definitionHtml", "<strong>", "<em>", "<u>"]) assert.match(sharedVocabularyEditor, new RegExp(token))
+  for (const token of ["countable", "uncountable", "countable_and_uncountable", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "properNounVariantShift", "dualCountabilityUsage", "1. Countability", "2. Quality", "3. Number", "4. Classification", "Common", "Proper", "Concrete", "Abstract", "Material", "Collective", "Compound", "Possessive", "primary", "modal", "action", "intransitive", "transitive", "monotransitive", "ditransitive", "ambitransitive", "Types of transitivity", "optional", "Etymology", "Origin path", "vocabulary-verb-forms", "hydrate", "name=\"vocabularyPartOfSpeech-", "flatEntryHtml", "definitionHtml", "<strong>", "<em>", "<u>"]) assert.match(sharedVocabularyEditor, new RegExp(token))
   assert.match(sharedVocabularyEditor, /function nounState/)
   assert.match(portalScript, /VOCABULARY_ESL_FIELDS = \[[^\]]*physicalQuality[^\]]*dualCountabilityUsage/)
   for (const surface of ["newWordsRows", "newsVocabularyRows", "newsWeekSetModalVocabularyRows"]) assert.match(studentPortal, new RegExp(surface))
@@ -91,6 +92,29 @@ test("New Words and News vocabulary use the same full ESL row payload without st
   assert.match(portalScript, /function refreshNewWords\(/)
 })
 
+test("SVG icon rendering cancels stale transports before replacing animated markup", () => {
+  assert.match(svgIcon, /this\.abortController\.abort\(\)/)
+  assert.match(svgIcon, /this\.fetchSvg\(src, controller\.signal\)/)
+  assert.match(svgIcon, /fetch\(src, \{signal\}\)/)
+  assert.match(svgIcon, /this\.abortController !== controller/)
+  assert.match(svgIcon, /this\.shadowRoot\.replaceChildren\(style, svg\)/)
+})
+
+test("Dictionary Builder keeps origin metadata and selections on retry while preferring every datum source", () => {
+  assert.match(libraryReviewWorkbench, /input\.dataset\.vocabularyOriginField/)
+  assert.doesNotMatch(libraryReviewWorkbench, /worksCited: \["etymonline"\]/)
+  assert.match(libraryReviewWorkbench, /datum !== "originPath" \|\| preferred\.includes\(source\.provider\)/)
+  assert.match(libraryReviewWorkbench, /structuredClone\(selectedCandidates\), datum, null, \{ autoRetry: false \}/)
+  assert.match(libraryReviewWorkbench, /window\.setTimeout\(\(\) => retryMissingPreferredDatums\(\), 5000\)/)
+  assert.match(libraryReviewWorkbench, /retryPreferred\.textContent = "Retry preferred"/)
+  assert.match(libraryReviewWorkbench, /retryPreferred\.setAttribute\("aria-label", `Retry preferred sources for \$\{datum\}`\)/)
+  assert.match(libraryReviewWorkbench, /data-dictionary-builder-open-all[^>]+title="Open the initial source group: LD \/ OA \/ TH \/ BR \/ MW \/ AP \/ WH\.[^>]+>Open sources</)
+  assert.match(libraryReviewWorkbench, /dictionaryBuilderVerbOnlyDatums/)
+  assert.match(libraryReviewWorkbench, /visibleDictionaryBuilderFields/)
+  assert.match(libraryReviewWorkbench, /visibleDictionaryBuilderDatums/)
+  assert.match(libraryReviewWorkbench, /if \(!isVerbEntry && dictionaryBuilderVerbOnlyDatums\.has\(datum\)\) return/)
+})
+
 test("Student Library saves the complete shared editor payload without dropping legacy fields", () => {
   const dom = new JSDOM("<!doctype html><body></body>")
   const context = { window: dom.window, document: dom.window.document, Event: dom.window.Event, HTMLTextAreaElement: dom.window.HTMLTextAreaElement }
@@ -109,8 +133,36 @@ test("Student Library saves the complete shared editor payload without dropping 
   assert.equal(payload.nounType, "common")
   assert.equal(payload.nounNumber, "singular")
   assert.equal(payload.etymology, "From Old English.")
+  assert.equal(payload.originPath, "Old English → English")
   assert.deepEqual(JSON.parse(JSON.stringify(payload.originReferences)), existing.originReferences)
   assert.match(student, /readEditorEntry\(row, entry\)/)
+  dom.window.close()
+})
+
+test("Etymonline lookup never overwrites editor fields before a modal datum is selected", async () => {
+  const dom = new JSDOM("<!doctype html><body></body>")
+  const context = {
+    window: dom.window,
+    document: dom.window.document,
+    Event: dom.window.Event,
+    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
+    fetch: async () => ({ ok: true, json: async () => ({ ok: true, paragraph: "ET prose", originPath: "Latin → English", citation: "ET citation", reference: { url: "https://www.etymonline.com/word/test" } }) }),
+  }
+  dom.window.fetch = context.fetch
+  dom.window.open = () => ({})
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const row = dom.window.document.createElement("div")
+  row.innerHTML = context.window.SIS_VOCABULARY_ESL.editorRowHtml("et-read-only", { lookupButtons: ["ET"], originLookupPath: "/api/admin/library/etymonline" })
+  row.querySelector('[data-vocabulary-field="english"]').value = "test"
+  row.querySelector('[data-vocabulary-field="definition"]').value = "Existing definition"
+  row.querySelector('[data-vocabulary-origin-field="originPath"]').value = "Selected path"
+  context.window.SIS_VOCABULARY_ESL.bindLookupButtons(row)
+  row.querySelector('[data-vocabulary-lookup="ET"]').click()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.equal(row.querySelector('[data-vocabulary-field="definition"]').value, "Existing definition")
+  assert.equal(row.querySelector('[data-vocabulary-esl-field="etymology"]').value, "")
+  assert.equal(row.querySelector('[data-vocabulary-origin-field="originPath"]').value, "Selected path")
+  assert.equal(row.querySelector('[data-vocabulary-origin-field="originReferences"]').value, "")
   dom.window.close()
 })
 

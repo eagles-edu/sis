@@ -148,7 +148,7 @@ test("Dictionary Builder Apply carries every formatted definition datum into the
     originPath: "Middle English, from Latin commendare",
     etymology: "Middle English, from Latin commendare",
   }
-  const datumStatus = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: ["definition", "grammarClassification", "verbForms", "stems", "synonymsAntonyms", "examples", "firstKnownUse", "originPath", "etymology", "worksCited"].includes(datum) ? "available" : "not_offered" }]))
+  const datumStatus = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: ["definition", "grammarClassification", "verbForms", "stems", "synonymsAntonyms", "examples", "firstKnownUse", "originPath", "etymology"].includes(datum) ? "available" : "not_offered" }]))
   const fetcher = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, async () => ({ provider: datum, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} })]))
   const providerPreview = { provider: "britannica", status: "available", sourceUrl: "https://www.britannica.com/dictionary/commend", fields, entries: [], media: [], datumStatus }
   const providerFetchers = Object.fromEntries(["ldoce", "oxford_ame", "oxford_bre", "britannica", "merriam_webster", "merriam_webster_api", "etymonline", "wiktionary", "cambridge", "merriam_webster_thesaurus", "wordhelp", "google_translate"].map((provider) => [provider, async () => provider === "britannica" ? providerPreview : fetcher[provider]?.() || { provider, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} }]))
@@ -178,7 +178,6 @@ test("Dictionary Builder Apply carries every formatted definition datum into the
       firstKnownUse: { provider: "britannica", value: fields.firstKnownUse },
       originPath: { provider: "britannica", value: fields.originPath },
       etymology: { provider: "britannica", value: fields.etymology },
-      worksCited: { provider: "britannica", value: "Britannica" },
     },
   }, { ownerKey: "apply-all-test", clientOverride: client })
   assert.equal(result.ok, true)
@@ -193,6 +192,7 @@ test("Dictionary Builder Apply carries every formatted definition datum into the
   assert.match(updates[0].definition, /\*\*Origin path\*\*/u)
   assert.match(updates[0].definition, /\*\*Etymology\*\*/u)
   assert.match(updates[0].definition, /\*\*Works Cited\*\*/u)
+  assert.equal(updates[0].originPath, fields.originPath)
   assert.equal(result.appliedFields.includes("definition"), true)
 })
 
@@ -225,16 +225,17 @@ test("canonical duplicate selection and student deadlines are deterministic", as
   assert.equal(normalizeLibraryEnum("countable"), "countable")
 })
 
-test("MW etymology extraction accepts nested etymology payloads", async () => {
+test("MW etymology selects the first non-empty AP etymology field", async () => {
   const { previewMerriamWebsterLibraryEntry } = await import("../src/modules/admin/library-corpus.mjs")
   const savedKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
   const savedFetch = globalThis.fetch
   process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
-  globalThis.fetch = async () => ({ ok: true, json: async () => [{ hwi: { hw: "give" }, fl: "verb", et: { etymology: [{ text: "Middle English" }, { et_snote: { t: "from Old English" } }] }, shortdef: ["to make a present of"] }] })
+  globalThis.fetch = async () => ({ ok: true, json: async () => [{ hwi: { hw: "give" }, fl: "verb", et: { etymology1: "", etymology2: "from Old English", etymology3: "from Latin" }, shortdef: ["to make a present of"] }] })
   try {
     const result = await previewMerriamWebsterLibraryEntry({ english: "give", partOfSpeech: "verb" })
     assert.equal(result.ok, true)
-    assert.equal(result.fields.etymology, "Middle English\nfrom Old English")
+    assert.equal(result.fields.etymology, "from Old English")
+    assert.equal(result.fields.originPath, "from Old English")
   } finally {
     if (savedKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
     else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedKey
@@ -352,6 +353,7 @@ test("MW preview keeps complete normalized entry data and does not expose provid
     assert.match(result.details.entries[0].definitions.join(" "), /to make a present of/)
     assert.match(result.details.entries[0].etymology.join(" "), /Middle English given/)
     assert.match(result.fields.etymology, /Middle English given/)
+    assert.equal(result.fields.originPath, result.fields.etymology)
     assert.equal(result.details.entries[0].firstKnownUse, "before 12th century")
     assert.equal(Object.hasOwn(result, "raw"), false)
     globalThis.fetch = async () => ({
@@ -370,6 +372,31 @@ test("MW preview keeps complete normalized entry data and does not expose provid
     if (savedKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
     else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedKey
     globalThis.fetch = savedFetch
+  }
+})
+
+test("MW API preview falls back to Word History etymology when AP has no origin field", async () => {
+  const { previewMerriamWebsterLibraryEntry } = await import("../src/modules/admin/library-corpus.mjs")
+  const savedKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  let fallbackCalls = 0
+  try {
+    const result = await previewMerriamWebsterLibraryEntry(
+      { english: "chair", partOfSpeech: "noun" },
+      async () => ({ ok: true, json: async () => [{ hwi: { hw: "chair" }, fl: "noun", shortdef: ["a seat"] }] }),
+      async () => {
+        fallbackCalls += 1
+        return { ok: true, fields: { etymology: "Middle English chaiere", originReferences: [{ citation: "MW" }] } }
+      },
+    )
+    assert.equal(result.ok, true)
+    assert.equal(fallbackCalls, 1)
+    assert.equal(result.fields.etymology, "Middle English chaiere")
+    assert.equal(result.fields.originPath, "Middle English chaiere")
+    assert.deepEqual(result.fields.originReferences, [{ citation: "MW" }])
+  } finally {
+    if (savedKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = savedKey
   }
 })
 

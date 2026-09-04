@@ -1,0 +1,563 @@
+<!-- @format -->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIS Report Template</title>
+  <link rel="icon" href="/web-asset/images/favicon.ico?=v2" type="image/x-icon">
+  <link rel="icon" href="/web-asset/images/favicon.png?=v2" type="image/png">
+  <link rel="icon" href="/web-asset/images/favicon.svg?=v2" type="image/svg+xml">
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script src="/web-asset/shared/portal-action-feedback.js"></script>
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
+
+    if (!customElements.get("svg-icon")) {
+      svgIcon({
+        defaultSize: 28,
+        path: "/web-asset/icons/web-component/svgs/",
+      });
+    }
+  </script>
+  <script>
+    window.SIS_PORTAL_THEME?.initTheme("light")
+  </script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <!-- Route-owned CSS stays blocking and follows shared tokens so standalone overrides retain their established cascade. -->
+  <link rel="stylesheet" href="/web-asset/admin/report-card.min.css">
+
+</head>
+<body class="admin-portal-page page report-template-page" id="top" data-surface-role="page">
+  <button id="floatingMenuBtn" type="button" class="floating-menu-btn portal-button portal-button-immutable-chrome" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
+    <span class="floating-menu-icon" aria-hidden="true"></span>
+  </button>
+  <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
+  <div class="wrap">
+    <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation" data-surface-role="panel">
+      <nav class="menu-groups admin-mobile-menu" id="navMenu" aria-label="Admin navigation">
+        <a href="/admin" class="menu-link menu-link-top" data-page-link="overview">DASHBOARD</a>
+        <a href="/admin/queue-hub" class="menu-link menu-link-top" data-page-link="queue-hub">QUEUE HUB</a>
+        <div class="menu-group" data-menu-group="students">
+          <button type="button" class="menu-group-btn" data-menu-toggle="students" aria-expanded="false">STUDENTS</button>
+          <div class="menu-group-links">
+            <a href="/admin/profile" class="menu-link" data-page-link="profile">Student Profile</a>
+            <a href="/admin/profile-engagement" class="menu-link menu-sublink" data-page-link="profile-engagement">Profile engagement</a>
+          </div>
+        </div>
+        <div class="menu-group expanded" data-menu-group="tracking">
+          <button type="button" class="menu-group-btn" data-menu-toggle="tracking" aria-expanded="true">TRACKING</button>
+          <div class="menu-group-links">
+            <a href="/admin/attendance" class="menu-link" data-page-link="attendance">Attendance</a>
+            <div class="menu-sub-links" data-admin-submenu-group="tracking-data">
+              <a href="/admin/attendance-admin" class="menu-link menu-sublink" data-page-link="attendance-admin" data-admin-submenu="tracking-data">Attendance data</a>
+            </div>
+            <a href="/admin/assignments" class="menu-link" data-page-link="assignments">Assignments</a>
+            <div class="menu-sub-links" data-admin-submenu-group="tracking-data">
+              <a href="/admin/assignments-data" class="menu-link menu-sublink" data-page-link="assignments-data" data-admin-submenu="tracking-data">Assignments data</a>
+              <a href="/admin/assignment-engagement" class="menu-link menu-sublink" data-page-link="assignment-engagement" data-admin-submenu="tracking-data">Assignment engagement</a>
+            </div>
+            <a href="/admin/grades" class="menu-link" data-page-link="grades">Grades</a>
+            <div class="menu-sub-links" data-admin-submenu-group="tracking-data">
+              <a href="/admin/grades-data" class="menu-link menu-sublink" data-page-link="grades-data" data-admin-submenu="tracking-data">Grades data</a>
+              <a href="/admin/grades-tabulator" class="menu-link menu-sublink" data-page-link="grades-tabulator" data-admin-submenu="tracking-data">Grade table</a>
+            </div>
+            <a href="/admin/parent-tracking" class="menu-link" data-page-link="parent-tracking">Performance</a>
+            <div class="menu-sub-links" data-admin-submenu-group="tracking-data">
+              <a href="/admin/performance-data" class="menu-link menu-sublink" data-page-link="performance-data" data-admin-submenu="tracking-data">Performance data</a>
+              <a href="/admin/performance-engagement" class="menu-link menu-sublink" data-page-link="performance-engagement" data-admin-submenu="tracking-data">RC engagement</a>
+            </div>
+            <a href="/admin/news-reports" class="menu-link" data-page-link="news-reports">News Reports</a>
+            <a href="/admin/reports" class="menu-link" data-page-link="reports">All Reports</a>
+          </div>
+        </div>
+        <div class="menu-group expanded" data-menu-group="support">
+          <button type="button" class="menu-group-btn" data-menu-toggle="support" aria-expanded="true">SUPPORT</button>
+          <div class="menu-group-links">
+            <a href="/admin/family" class="menu-link" data-page-link="family">Family Lookup</a>
+          </div>
+        </div>
+        <div class="menu-group expanded" data-menu-group="admin">
+          <button type="button" class="menu-group-btn" data-menu-toggle="admin" aria-expanded="true">ADMINISTRATION</button>
+          <div class="menu-group-links">
+            <a href="/admin/enrollment" class="menu-link" data-page-link="enrollment">Enrollment</a>
+            <a href="/admin/student-admin" class="menu-link" data-page-link="student-admin">Student Admin</a>
+            <a href="/admin/school-setup" class="menu-link" data-page-link="school-setup">School Setup</a>
+            <a href="/admin/users" class="menu-link" data-page-link="users">Users</a>
+            <a href="/admin/permissions" class="menu-link" data-page-link="permissions">Permissions</a>
+            <a href="/admin/settings" class="menu-link" data-page-link="settings">Settings</a>
+            <div class="menu-group menu-group-nested" data-menu-group="library">
+              <button type="button" class="menu-group-btn" data-menu-toggle="library" aria-expanded="false">Library</button>
+              <div class="menu-group-links">
+                <a href="/admin/library" class="menu-link menu-sublink" data-library-nav="library">Library</a>
+                <a href="/admin/library/manage" class="menu-link menu-sublink" data-library-nav="manage">Manage</a>
+                <a href="/admin/library/engagement" class="menu-link menu-sublink" data-library-nav="engagement">Engagement</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <h2 class="sidebar-title">Report Menu</h2>
+      <p class="sidebar-subtitle">Jump to any section in the report.</p>
+      <nav class="sidebar-links report-section-menu" aria-label="Report section links">
+        <a class="sidebar-link card" href="#report-identity" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Identity</span>
+            <span class="sidebar-link-note">Student and control details</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#summary-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Attendance</span>
+            <span class="sidebar-link-note">Summary metrics</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#current-homework-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Current Homework</span>
+            <span class="sidebar-link-note">Active assignments</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#past-due-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Past Due</span>
+            <span class="sidebar-link-note">Outstanding work</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#metrics-note-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Rubric</span>
+            <span class="sidebar-link-note">How to read the report</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#metrics-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Detailed Results</span>
+            <span class="sidebar-link-note">Full rubric table</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#review-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Parent Review</span>
+            <span class="sidebar-link-note">Confirmation details</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#student-review-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Student Review</span>
+            <span class="sidebar-link-note">Student confirmation</span>
+          </span>
+        </a>
+      </nav>
+    </aside>
+    <div class="header-bar portal-login-header" data-surface-role="content">
+      <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+      <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+    </div>
+
+  <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle portal-button portal-button-immutable-chrome" title="Show or hide the admin navigation menu" aria-label="Show or hide the admin navigation menu">Hide Menu</button>
+  <main class="section-stack" id="appMain" data-surface-role="content">
+    <section class="content topbar" data-surface-role="content">
+      <div class="topbar-head">
+        <div class="brand-head">
+          <a class="brand-logo-wrap brand-logo-wrap--sm" href="/admin" aria-label="Go to student home">
+            <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+          </a>
+          <h1>THE EAGLES CLUB</h1>
+        </div>
+        <div class="header-actions">
+          <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle" type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
+            <span class="portal-theme-toggle__icon" aria-hidden="true">
+              <svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon>
+            </span>
+          </button>
+          <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
+            <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" title="Giảm cỡ chữ">A-</button>
+            <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" title="Tăng cỡ chữ">A+</button>
+            <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" title="Đặt lại cỡ chữ">Reset</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="runtime-self-heal-panel">
+      <button id="overviewRuntimeRestartBtn" type="button" class="portal-button portal-button-primary hidden" title="Restart the local runtime after a safe health check" aria-label="Restart the local runtime after a safe health check">Self-Heal Runtime</button>
+    </div>
+
+    <section class="content report-identity-section" id="report-identity" data-surface-role="content">
+      <p class="section-note report-control-line">
+        Control number: <strong data-field="control-number">[[control number]]</strong>
+        · Snapshot ID: <strong data-field="snapshot-id">[[snapshot id]]</strong>
+        · Captured at: <strong data-field="snapshot-captured-at">[[full timestamp]]</strong>
+      </p>
+      <div>
+        <p class="section-note">ID row</p>
+        <div class="report-meta">
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">Full name</span>
+            <span class="meta-value" data-field="student-name">[[full name]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">eaglesId</span>
+            <span class="meta-value" data-field="eagles-id">[[eaglesId]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">English name</span>
+            <span class="meta-value" data-field="english-name">[[English name]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">Day date</span>
+            <span class="meta-value" data-field="day-date">[[day date]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">Class</span>
+            <span class="meta-value" data-field="scope-class-name">[[class]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">School year</span>
+            <span class="meta-value" data-field="scope-school-year">[[school year]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">Quarter</span>
+            <span class="meta-value" data-field="scope-quarter">[[quarter]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">Snapshot source</span>
+            <span class="meta-value" data-field="snapshot-source">[[snapshot source]]</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content report-section" aria-labelledby="metric-snapshot-title" data-surface-role="content">
+      <div class="section-head">
+        <div>
+          <h2 id="metric-snapshot-title" class="section-title">Metric snapshot</h2>
+          <p class="section-note">Immutable performance metrics captured for this report card snapshot.</p>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <article class="summary-card panel" data-surface-role="panel">
+          <p class="summary-label">Homework completion %</p>
+          <p class="summary-value" data-field="metric-homework-completion">[[0]]</p>
+          <p class="summary-subtitle">Saved completion rate for this report snapshot.</p>
+        </article>
+        <article class="summary-card panel" data-surface-role="panel">
+          <p class="summary-label">Homework on-time %</p>
+          <p class="summary-value" data-field="metric-homework-on-time">[[0]]</p>
+          <p class="summary-subtitle">Saved timeliness rate for this report snapshot.</p>
+        </article>
+        <article class="summary-card panel" data-surface-role="panel">
+          <p class="summary-label">Behavior</p>
+          <p class="summary-value" data-field="metric-behavior">[[0]]</p>
+          <p class="summary-subtitle">Saved behavior score for this report snapshot.</p>
+        </article>
+        <article class="summary-card panel" data-surface-role="panel">
+          <p class="summary-label">Skills</p>
+          <p class="summary-value" data-field="metric-participation">[[0]]</p>
+          <p class="summary-subtitle">Saved skills score for this report snapshot.</p>
+        </article>
+        <article class="summary-card panel" data-surface-role="panel">
+          <p class="summary-label">Academic</p>
+          <p class="summary-value" data-field="metric-in-class">[[0]]</p>
+          <p class="summary-subtitle">Saved academic / in-class score for this report snapshot.</p>
+        </article>
+        <article class="summary-card panel" data-surface-role="panel">
+          <p class="summary-label">Participation points</p>
+          <p class="summary-value" data-field="metric-participation-points">[[0]]</p>
+          <p class="summary-subtitle">Saved participation points for this report snapshot.</p>
+        </article>
+      </div>
+      <div class="detail-card panel" data-surface-role="panel">
+        <h3>Teacher snapshot</h3>
+        <p class="item-body" data-field="metric-teacher-summary">[[Teacher summary]]</p>
+      </div>
+    </section>
+
+    <section class="content report-section" aria-labelledby="summary-title" data-surface-role="content">
+      <div class="section-head">
+        <div>
+          <h2 id="summary-title" class="section-title">Attendance summary</h2>
+        </div>
+      </div>
+
+      <p class="section-note">Short, scan-friendly metrics for the main report signals.</p>
+
+      <div class="summary-grid">
+        <article class="summary-card panel" data-report-summary="attendance" data-surface-role="panel">
+          <p class="summary-label">Attendance</p>
+          <p class="summary-value" data-field="attendance-rate">[[--%]]</p>
+          <p class="summary-subtitle">A quick view of participation and follow-through.</p>
+        </article>
+        <article class="summary-card panel" data-report-summary="absences" data-surface-role="panel">
+          <p class="summary-label">Absences</p>
+          <p class="summary-value" data-field="absence-count">[[0]]</p>
+          <p class="summary-subtitle">Total missed sessions in the report window.</p>
+        </article>
+        <article class="summary-card panel" data-report-summary="tardy" data-surface-role="panel">
+          <p class="summary-label">Tardy</p>
+          <p class="summary-value" data-field="tardy-count">[[0]]</p>
+          <p class="summary-subtitle">Late arrivals or incomplete on-time check-ins.</p>
+        </article>
+        <article class="summary-card panel" data-report-summary="attendance-percent" data-surface-role="panel">
+          <p class="summary-label">Attendance %</p>
+          <p class="summary-value" data-field="attendance-percent">[[--%]]</p>
+          <p class="summary-subtitle">Overall attendance rate for the current window.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="content report-section" aria-labelledby="current-homework-title" data-surface-role="content">
+      <div class="section-head">
+        <div>
+          <h2 id="current-homework-title" class="section-title">Current homework</h2>
+          <p class="section-note">Assignments currently active for the student.</p>
+        </div>
+      </div>
+
+      <div class="assignment-layout">
+        <div class="assignment-summary-stack">
+          <article class="assignment-square-card panel" data-surface-role="panel">
+            <p class="assignment-square-label">Assignments</p>
+            <p class="assignment-square-value is-good" id="current-assignment-count">[[1]]</p>
+            <p class="assignment-square-subtitle">Active assignments in the current window.</p>
+          </article>
+          <article class="assignment-square-card panel" data-surface-role="panel">
+            <p class="assignment-square-label">Exercises</p>
+            <p class="assignment-square-value" id="current-exercise-count">[[8]]</p>
+            <p class="assignment-square-subtitle">Exercises attached to the active assignment.</p>
+          </article>
+        </div>
+
+        <div class="assignment-detail-stack">
+          <article class="assignment-detail-card panel" data-report-homework="current" data-surface-role="panel">
+            <h3 data-report-homework-title>[[Current assignment title]]</h3>
+            <p class="item-meta" data-report-homework-meta>[[Subject]] · [[Teacher]]</p>
+            <p class="item-body" data-report-homework-note>[[Short note about the assignment and expectations.]]</p>
+            <ul class="exercise-list" data-report-homework-exercises="current">
+              <li class="exercise-item">
+                <div class="exercise-head">
+                  <p class="exercise-title">[[Exercise title]]</p>
+                  <span class="report-chip">Assigned</span>
+                </div>
+                <p class="exercise-meta">[[Exercise detail or instruction.]]</p>
+              </li>
+              <li class="exercise-item">
+                <div class="exercise-head">
+                  <p class="exercise-title">[[Exercise title]]</p>
+                  <span class="report-chip">Pending</span>
+                </div>
+                <p class="exercise-meta">[[Exercise detail or instruction.]]</p>
+              </li>
+              <li class="exercise-item">
+                <div class="exercise-head">
+                  <p class="exercise-title">[[Exercise title]]</p>
+                  <span class="report-chip">Submitted</span>
+                </div>
+                <p class="exercise-meta">[[Exercise detail or instruction.]]</p>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="content report-section" aria-labelledby="past-due-title" data-surface-role="content">
+      <div class="section-head">
+        <div>
+          <h2 id="past-due-title" class="section-title">Past due homework</h2>
+          <p class="section-note">Assignments that still need attention.</p>
+        </div>
+      </div>
+
+      <div class="assignment-layout">
+        <div class="assignment-summary-stack">
+          <article class="assignment-square-card panel" data-surface-role="panel">
+            <p class="assignment-square-label">Assignments</p>
+            <p class="assignment-square-value is-warning" id="past-assignment-count">[[2]]</p>
+            <p class="assignment-square-subtitle">Outstanding assignment groups still open.</p>
+          </article>
+          <article class="assignment-square-card panel" data-surface-role="panel">
+            <p class="assignment-square-label">Exercises</p>
+            <p class="assignment-square-value is-warning" id="past-exercise-count">[[6]]</p>
+            <p class="assignment-square-subtitle">Exercises still pending or needing resubmission.</p>
+          </article>
+        </div>
+
+        <div class="assignment-detail-stack">
+          <article class="assignment-detail-card panel" data-report-homework="past-due" data-surface-role="panel">
+            <h3 data-report-homework-title>[[Past due assignment title]]</h3>
+            <p class="item-meta" data-report-homework-meta>[[Subject]] · [[Teacher]]</p>
+            <p class="item-body" data-report-homework-note>[[What is missing, plus any follow-up note.]]</p>
+            <ul class="exercise-list" data-report-homework-exercises="past-due">
+              <li class="exercise-item">
+                <div class="exercise-head">
+                  <p class="exercise-title">[[Exercise title]]</p>
+                  <span class="report-chip">Pending</span>
+                </div>
+                <p class="exercise-meta">[[Exercise detail or instruction.]]</p>
+              </li>
+              <li class="exercise-item">
+                <div class="exercise-head">
+                  <p class="exercise-title">[[Exercise title]]</p>
+                  <span class="report-chip">Submitted</span>
+                </div>
+                <p class="exercise-meta">[[Exercise detail or instruction.]]</p>
+              </li>
+              <li class="exercise-item">
+                <div class="exercise-head">
+                  <p class="exercise-title">[[Exercise title]]</p>
+                  <span class="report-chip">Assigned</span>
+                </div>
+                <p class="exercise-meta">[[Exercise detail or instruction.]]</p>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="content report-section" aria-labelledby="metrics-note-title" data-surface-role="content">
+      <div class="section-head">
+        <div>
+          <h2 id="metrics-note-title" class="section-title">Rubric explanation</h2>
+          <p class="section-note" data-report-rubric-note>Scoring interpretation for the rubric rows below.</p>
+        </div>
+      </div>
+
+      <div class="detail-card panel" data-surface-role="panel">
+        <h3 data-report-rubric-title>How to read the rubric</h3>
+        <p class="item-body" data-report-rubric-body>
+          This template renders the immutable rubric snapshot from the saved report payload. Each row carries the prompt, the score with its explanation, and any recommendation for success.
+        </p>
+      </div>
+    </section>
+
+    <section class="content report-section" aria-labelledby="metrics-title" data-surface-role="content">
+      <div class="section-head">
+        <div>
+          <h2 id="metrics-title" class="section-title">Detailed results</h2>
+          <p class="section-note">Use this table for the rubric prompt, the result score plus explanation, and the recommendation block.</p>
+        </div>
+      </div>
+
+      <div class="metric-table-wrap card" data-surface-role="card">
+        <table class="metric-table" aria-describedby="metrics-note">
+          <thead>
+            <tr>
+              <th scope="col">Rubric prompt</th>
+              <th scope="col">Result score and explanation</th>
+              <th scope="col">Comment / recommendations for success</th>
+            </tr>
+          </thead>
+          <tbody id="report-rubric-body">
+            <tr>
+              <td>
+                <p class="metric-title">Uses computer or phone daily to read international news</p>
+                <p class="metric-text">Flyers and above only.</p>
+              </td>
+              <td>[[Yes / No / N/A]] · [[Short evaluation sentence.]]</td>
+              <td>[[Suggested parent follow-up or teacher note.]]</td>
+            </tr>
+            <tr>
+              <td>
+                <p class="metric-title">Exhibits skill</p>
+                <p class="metric-text">Target threshold is below 50 percent.</p>
+              </td>
+              <td>[[Below / At / Above]] · [[Short evaluation sentence.]]</td>
+              <td>[[Suggested support step.]]</td>
+            </tr>
+            <tr>
+              <td>
+                <p class="metric-title">Attendance and participation</p>
+                <p class="metric-text">General follow-through across the report window.</p>
+              </td>
+              <td>[[Short value]] · [[Short evaluation sentence.]]</td>
+              <td>[[Suggested support step.]]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="metrics-note" class="wire-note">
+        These rows are populated from the immutable saved report snapshot.
+      </p>
+    </section>
+
+    <div class="review-grid">
+      <section class="content report-section" aria-labelledby="review-title" data-surface-role="content">
+        <div class="section-head">
+          <div>
+            <h2 id="review-title" class="section-title">Parent review</h2>
+            <p class="section-note">Records date and time when a parent or guardian confirms review.</p>
+          </div>
+        </div>
+
+        <div class="review-panel panel" data-surface-role="panel">
+          <div class="review-lines">
+            <div class="review-line">
+              <span class="review-label">Reviewed by</span>
+              <div class="review-field card" data-field="parent-reviewed-by" data-surface-role="card">[[parent name or reviewer]]</div>
+            </div>
+            <div class="review-line">
+              <span class="review-label">Reviewed at</span>
+              <div class="review-field card" data-field="parent-reviewed-at" data-surface-role="card">[[date and time]]</div>
+            </div>
+          </div>
+          <div class="review-actions">
+            <label class="review-toggle">
+              <input type="checkbox" name="parentReviewed">
+              Mark reviewed
+            </label>
+              <button id="parentReviewActionBtn" type="button" class="portal-button portal-button-affirm" title="Save that the parent has reviewed this report" aria-label="Save that the parent has reviewed this report">Record review</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="content report-section" aria-labelledby="student-review-title" data-surface-role="content">
+        <div class="section-head">
+          <div>
+            <h2 id="student-review-title" class="section-title">Student review</h2>
+            <p class="section-note">Records date and time when the student confirms review.</p>
+          </div>
+        </div>
+
+        <div class="review-panel panel" data-surface-role="panel">
+          <div class="review-lines">
+            <div class="review-line">
+              <span class="review-label">Reviewed by</span>
+              <div class="review-field card" data-field="student-reviewed-by" data-surface-role="card">[[student name or reviewer]]</div>
+            </div>
+            <div class="review-line">
+              <span class="review-label">Reviewed at</span>
+              <div class="review-field card" data-field="student-reviewed-at" data-surface-role="card">[[date and time]]</div>
+            </div>
+          </div>
+          <div class="review-actions">
+            <label class="review-toggle">
+              <input type="checkbox" name="studentReviewed">
+              Mark reviewed
+            </label>
+              <button id="studentReviewActionBtn" type="button" class="portal-button portal-button-affirm" title="Save that the student has reviewed this report" aria-label="Save that the student has reviewed this report">Record review</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="/web-asset/shared/portal-preferences.js"></script>
+  <script src="/web-asset/admin/report-card.min.js"></script>
+  <script src="/web-asset/admin/admin-b612-mono-loader.js" defer></script>
+    <section class="content portal-prefooter" aria-label="Runtime environment" data-surface-role="content">
+      <span id="envBadge" class="env-badge" data-environment-prefooter aria-live="polite"></span>
+    </section>
+    <footer class="hub-footer" aria-label="Site footer">
+      <p class="hub-footer__copy">
+        © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
+      </p>
+      <p class="hub-footer__action">
+        <a href="#top" id="back-top" aria-label="Về đầu trang">Về đầu trang</a>
+      </p>
+    </footer>
+  </div>
+  <script src="/web-asset/shared/portal-environment.js"></script>
+</body>
+</html>

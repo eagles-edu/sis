@@ -13,6 +13,8 @@ import {
   DICTIONARY_BUILDER_INITIAL_SERVER_PROVIDERS,
   DICTIONARY_BUILDER_BIC_WEIGHTS,
   DICTIONARY_BUILDER_MANIFEST,
+  DICTIONARY_BUILDER_APA_CITATION_TEMPLATES,
+  DICTIONARY_BUILDER_PREFERRED_DATUM_PROVIDERS,
   dictionaryBuilderBicDatumProviderIds,
   buildDictionaryBuilderCitations,
   buildSelectedDictionaryBuilderCitations,
@@ -127,15 +129,50 @@ test("Dictionary Builder preserves mandatory source ordering without fallback su
   ]), ["merriam_webster_thesaurus", "britannica"])
 })
 
-test("Dictionary Builder V1.5 exposes all twelve availability-aware source adapters", () => {
+test("Dictionary Builder V1.5 exposes twelve source adapters and premade APA templates", () => {
   assert.equal(DICTIONARY_BUILDER_MANIFEST.length, 12)
   assert.deepEqual(DICTIONARY_BUILDER_MANIFEST.map((source) => source.label), ["LD", "OA", "OB", "BR", "MW", "AP", "ET", "WK", "CA", "TH", "WH", "GT"])
   assert.deepEqual(DICTIONARY_BUILDER_MANIFEST.filter((source) => source.capabilities.syllabication).map((source) => source.id), ["ldoce", "oxford_ame", "oxford_bre", "britannica", "merriam_webster", "merriam_webster_api", "wiktionary", "cambridge", "wordhelp"])
   const citations = buildDictionaryBuilderCitations("commend", "2026-08-26T00:00:00.000Z")
   assert.equal(citations.length, 12)
-  assert.deepEqual(citations.map((item) => item.key), ["definition_primary", "definition_related_pos_1", "definition_related_pos_2", "audio_uk", "audio_us", "verb_forms", "stems", "lexical_relations", "sentence_examples", "recent_examples", "first_known_use", "etymology_origin"])
+  assert.deepEqual(citations.map((item) => item.provider), DICTIONARY_BUILDER_APA_CITATION_TEMPLATES.map((item) => item.provider))
+  assert.ok(citations.every((item) => item.populated && item.sourceUrl && item.citation.includes("Retrieved 2026-08-26")))
+  const sourcedCitations = buildDictionaryBuilderCitations("commend", "2026-08-26T00:00:00.000Z", DICTIONARY_BUILDER_MANIFEST.map((source) => ({ provider: source.id, sourceUrl: source.searchUrl("commend") })))
+  assert.equal(sourcedCitations.length, 12)
+  assert.ok(sourcedCitations.every((item) => item.populated && item.sourceUrl && item.citation.includes("Retrieved 2026-08-26")))
   const selectedCitations = buildSelectedDictionaryBuilderCitations("commend", "2026-08-26T00:00:00.000Z", [{ field: "definition", provider: "britannica", status: "available" }], [{ provider: "britannica", sourceUrl: "https://www.britannica.com/dictionary/commend" }])
-  assert.match(selectedCitations.find((item) => item.key === "definition_primary").citation, /Retrieved 2026-08-26/)
+  assert.equal(selectedCitations.length, 1)
+  assert.deepEqual(selectedCitations[0].datums, ["definition"])
+  assert.match(selectedCitations[0].citation, /Retrieved 2026-08-26/)
+})
+
+test("Dictionary Builder deduplicates Works Cited by selected source and records every selected datum", () => {
+  const citations = buildSelectedDictionaryBuilderCitations("commend", "2026-08-26T00:00:00.000Z", [
+    { field: "definition", provider: "britannica", status: "available" },
+    { field: "examples", provider: "britannica", status: "available" },
+    { field: "etymology", provider: "etymonline", status: "available" },
+    { field: "originPath", provider: "manual", status: "manual" },
+  ], [
+    { provider: "britannica", sourceUrl: "https://www.britannica.com/dictionary/commend" },
+    { provider: "etymonline", sourceUrl: "https://www.etymonline.com/search?q=commend" },
+  ])
+  assert.equal(citations.length, 2)
+  assert.deepEqual(citations[0].datums, ["definition", "examples"])
+  assert.deepEqual(citations[1].datums, ["etymology"])
+  assert.equal(new Set(citations.map((item) => item.citation)).size, citations.length)
+  assert.ok(citations.every((item) => item.sourceUrl && item.citation.includes("Retrieved 2026-08-26")))
+})
+
+test("every Dictionary Builder datum has an integrated preferred manifest source", () => {
+  const providers = new Map(DICTIONARY_BUILDER_MANIFEST.map((source) => [source.id, source]))
+  for (const [datum, preferredProviders] of Object.entries(DICTIONARY_BUILDER_PREFERRED_DATUM_PROVIDERS)) {
+    assert.ok(preferredProviders.length, `${datum} must have a preferred source`)
+    for (const provider of preferredProviders) {
+      const source = providers.get(provider) || providers.get(provider === "merriam_webster_scrape" ? "merriam_webster" : provider)
+      assert.ok(source, `${datum} preferred source ${provider} must be in the manifest`)
+      assert.ok(source.capabilities[datum], `${datum} preferred source ${provider} must advertise ${datum}`)
+    }
+  }
 })
 
 test("Dictionary Builder exposes normalized provider values under their matching tab datum", () => {
@@ -146,6 +183,7 @@ test("Dictionary Builder exposes normalized provider values under their matching
       sourceUrl: "https://www.britannica.com/dictionary/commend",
       fields: {
         definition: "to praise",
+        worksCited: "Provider-scraped citation prose must be ignored",
         dictionaryMetadata: {
           additionalSections: {
             stems: ["commend", "commended"],
@@ -170,6 +208,7 @@ test("Dictionary Builder exposes normalized provider values under their matching
   assert.match(preview.fields.synonymsAntonyms, /Synonyms:\npraise/)
   assert.match(preview.fields.synonymsAntonyms, /Antonyms:\ncriticize/)
   assert.equal(preview.fields.examples, "They commended her work.")
+  assert.equal(preview.fields.worksCited, undefined)
   for (const datum of ["syllabication", "stems", "synonymsAntonyms", "examples"]) assert.equal(preview.datumStatus[datum].status, "available")
   assert.equal(preview.datumStatus.verbForms.status, "not_offered")
 })
@@ -428,20 +467,27 @@ test("Synonyms / Antonyms excludes not-provided Britannica while keeping MW API 
 })
 
 test("MW Thesaurus keeps only the top four rows in each relation category", async () => {
-  const result = await previewHtmlAdapter("merriam_webster_thesaurus", { english: "commend" }, async () => ({
+  const result = await previewHtmlAdapter("merriam_webster_thesaurus", { english: "commend", partOfSpeech: "verb" }, async () => ({
     ok: true,
     url: "https://www.merriam-webster.com/thesaurus/commend",
-    text: async () => '<main><section class="synonym-list"><ul><li>praise</li><li>applaud</li><li>esteem</li><li>laud</li><li>honor</li></ul></section><section class="antonym-list"><ul><li>blame</li><li>criticize</li><li>condemn</li><li>reject</li><li>disparage</li></ul></section></main>',
+    text: async () => '<main><section class="thesaurus-pos"><h2>verb</h2><section class="synonym-list"><ul><li>praise</li><li>applaud</li><li>esteem</li><li>laud</li><li>honor</li></ul></section><section class="antonym-list"><ul><li>blame</li><li>criticize</li><li>condemn</li><li>reject</li><li>disparage</li></ul></section></section></main>',
   }))
   assert.equal(result.datumStatus.synonymsAntonyms.status, "available")
   assert.equal(result.fields.synonymsAntonyms, "Synonyms:\npraise\napplaud\nesteem\nlaud\n\nAntonyms:\nblame\ncriticize\ncondemn\nreject")
 
-  const wordLimited = await previewHtmlAdapter("merriam_webster_thesaurus", { english: "approve" }, async () => ({
+  const wordLimited = await previewHtmlAdapter("merriam_webster_thesaurus", { english: "approve", partOfSpeech: "verb" }, async () => ({
     ok: true,
     url: "https://www.merriam-webster.com/thesaurus/approve",
-    text: async () => '<main><section class="synonym-list"><ul><li>one two three four</li><li>five six seven eight</li><li>nine ten eleven twelve</li><li>thirteen</li></ul></section></main>',
+    text: async () => '<main><section class="thesaurus-pos"><h2>verb</h2><section class="synonym-list"><ul><li>one two three four</li><li>five six seven eight</li><li>nine ten eleven twelve</li><li>thirteen</li></ul></section></section></main>',
   }))
   assert.equal(wordLimited.fields.synonymsAntonyms, "Synonyms:\none two three four\nfive six seven eight\nnine ten eleven twelve")
+
+  const nested = await previewHtmlAdapter("merriam_webster_thesaurus", { english: "commend", partOfSpeech: "verb" }, async () => ({
+    ok: true,
+    url: "https://www.merriam-webster.com/thesaurus/commend",
+    text: async () => '<main><section class="thesaurus-pos"><h2>verb</h2><section class="synonyms-and-antonyms"><div class="synonyms-and-antonyms__list--synonyms"><ul><li>praise</li><li>honor</li></ul></div><div class="synonyms-and-antonyms__list--antonyms"><ul><li>blame</li><li>rebuke</li></ul></div></section></section></main>',
+  }))
+  assert.equal(nested.fields.synonymsAntonyms, "Synonyms:\npraise\nhonor\n\nAntonyms:\nblame\nrebuke")
 })
 
 test("Dictionary Builder always sources Vietnamese from the automatic Google Translate adapter", async () => {
@@ -601,7 +647,6 @@ test("Dictionary Builder Apply persists every declared datum and slot-aware audi
     firstKnownUse: "14th century",
     originPath: "Latin -> Old French -> English",
     etymology: "From Latin debattuere.",
-    worksCited: "Britannica Dictionary. (n.d.). *debate*.",
   }
   const unsupported = (provider) => ({ provider, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} })
   const fetcher = Object.fromEntries(DICTIONARY_BUILDER_MANIFEST.map((item) => [item.id, async () => unsupported(item.id)]))
@@ -633,7 +678,6 @@ test("Dictionary Builder Apply persists every declared datum and slot-aware audi
         firstKnownUse: { provider: "britannica", value: fields.firstKnownUse },
         originPath: { provider: "britannica", value: fields.originPath },
         etymology: { provider: "britannica", value: fields.etymology },
-        worksCited: { provider: "britannica", value: fields.worksCited },
       },
     }, { ownerKey: "apply-session", clientOverride: client })
     assert.equal(current.vietnamese, fields.vietnamese)
@@ -649,8 +693,9 @@ test("Dictionary Builder Apply persists every declared datum and slot-aware audi
     assert.match(current.definition, /data-library-audio-key="headword:us"[\s\S]*\/api\/admin\/library\/media\/asset-1/u)
     assert.match(current.definition, /V1: debate[\s\S]*data-library-audio-key="verbV1:us"/u)
     assert.deepEqual(Object.fromEntries(Object.entries(forms).map(([key]) => [key, current[key]])), forms)
-    for (const datum of ["stems", "synonymsAntonyms", "examples", "firstKnownUse", "originPath", "etymology", "worksCited"]) assert.equal(current.dictionaryMetadata.claims.filter((claim) => claim.field === datum).length, 1, datum)
-    assert.ok(current.dictionaryMetadata.citations.some((citation) => citation.citation.startsWith("Britannica Dictionary")))
+    for (const datum of ["stems", "synonymsAntonyms", "examples", "firstKnownUse", "originPath", "etymology"]) assert.equal(current.dictionaryMetadata.claims.filter((claim) => claim.field === datum).length, 1, datum)
+    assert.equal(current.dictionaryMetadata.citations.length, 2)
+    assert.ok(current.dictionaryMetadata.citations.some((citation) => citation.citation.startsWith("Britannica Dictionary") && citation.datums.includes("definition")))
     assert.equal(assets.filter((asset) => asset.slot === "headword").length, 1)
     assert.deepEqual(assets.filter((asset) => asset.slot !== "headword").map((asset) => asset.slot).sort(), Object.keys(formAudio).sort())
     assert.deepEqual(result.mediaAssets.filter((asset) => asset.dialect === "us").map((asset) => asset.slot).sort(), ["headword", ...Object.keys(formAudio)].sort())

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import fs from "node:fs"
 import test from "node:test"
 
 import { parseMerriamWebsterHtml, previewMerriamWebsterDictionaryEntry, sanitizeMerriamWebsterPreview } from "../src/modules/admin/merriam-webster-provider.mjs"
@@ -25,6 +26,15 @@ test("Merriam-Webster parser preserves all POS, subtype, content sections, and A
 test("Merriam-Webster parser extracts an MP3 from the pronunciation help anchor", () => {
   const result = parseMerriamWebsterHtml(`<!doctype html><main><section class="entry-word-section-container"><h2 class="hword">dispute</h2><span class="fl">verb</span><div class="ld_a_box_pron"><a href="https://media.merriam-webster.com/audio/prons/en/us/mp3/d/disput09.mp3">Click here to listen</a></div><div class="sense"><span class="dtText">: to disagree</span></div></section></main>`, { sourceUrl: "https://www.merriam-webster.com/dictionary/dispute", lookupWord: "dispute" })
   assert.equal(result.entries[0].audio.us, "https://media.merriam-webster.com/audio/prons/en/us/mp3/d/disput09.mp3")
+})
+
+test("Merriam-Webster parser accepts the Word History etymology section", () => {
+  const html = fs.readFileSync(new URL("../docs/mw-etym-1.html", import.meta.url), "utf8")
+  const result = parseMerriamWebsterHtml(html, { sourceUrl: "https://www.merriam-webster.com/dictionary/chair", lookupWord: "chair" })
+  assert.equal(result.ok, true)
+  assert.equal(result.entries.length, 0)
+  assert.match(result.fields.etymology, /Middle English chaiere/u)
+  assert.equal(result.fields.originReferences.length, 1)
 })
 
 test("Merriam-Webster preview is non-mutating and redacts metadata", async () => {

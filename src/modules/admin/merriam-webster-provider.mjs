@@ -80,13 +80,15 @@ export function parseMerriamWebsterHtml(html, { sourceUrl = "", lookupWord = "" 
   const containers = $(".entry-word-section-container, .entry-word-section, [data-dictionary-entry], .dict-entry, .entry").filter((_, node) => $(node).find(".fl, .part-of-speech, .pos, [data-part-of-speech]").length || $(node).find(".dtText, .def, .definition, [data-definition]").length)
   const parsedEntries = containers.map((index, node) => parseEntry($(node), normalizedSourceUrl, index)).get().filter((entry) => entry.senses.length)
   const sourceRoot = $("body")
-  const etymology = collectText(sourceRoot, ".word-history .et, .word-history .etymology, .etymology, .et, [data-etymology]")
+  const wordHistoryRoot = $("#word-history, .word-history").first()
+  const etymologyRoot = wordHistoryRoot.length ? wordHistoryRoot : sourceRoot
+  const etymology = collectText(etymologyRoot, ".etymology-content-section .et, .etymology-content-section .etymology, [data-etymology], .etymology, .et")
   const firstKnownUse = collectText(sourceRoot, ".first-known-use, .date-box, [data-first-known-use]")
   const synonyms = collectText(sourceRoot, ".synonyms li, .synonym, .syns li, [data-synonym]")
   const collocations = collectText(sourceRoot, ".collocations li, .collocation, [data-collocation]")
   const idioms = collectText(sourceRoot, ".idioms li, .idiom, [data-idiom]")
   const phrases = collectText(sourceRoot, ".phrases li, .phrase, .phrase-block, [data-phrase]")
-  if (!parsedEntries.length) return { ok: false, available: true, message: `No Merriam-Webster entry was found for ${cleanDictionaryText(lookupWord) || "the requested word"}; no Library data was changed.` }
+  if (!parsedEntries.length && !etymology.length) return { ok: false, available: true, message: `No Merriam-Webster entry was found for ${cleanDictionaryText(lookupWord) || "the requested word"}; no Library data was changed.` }
   return { ok: true, provider: "merriam-webster", sourceUrl: normalizedSourceUrl, lookupWord: cleanDictionaryText(lookupWord), entries: parsedEntries, fields: buildRichDictionaryFields({ provider: "merriam-webster", sourceName: "Merriam-Webster.com Dictionary", sourceUrl: normalizedSourceUrl, word: lookupWord, entries: parsedEntries, etymology, firstKnownUse, synonyms, collocations, idioms, phrases }) }
 }
 

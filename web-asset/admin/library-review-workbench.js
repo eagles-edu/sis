@@ -204,7 +204,7 @@
   const readPayload = (pane) => {
     const payload = {}
     pane.querySelectorAll("[data-review-field], [data-approved-field], [data-vocabulary-field], [data-vocabulary-esl-field], [data-vocabulary-origin-field]").forEach((input) => {
-      const sourceField = input.dataset.reviewField || input.dataset.approvedField || input.dataset.vocabularyField || input.dataset.vocabularyEslField
+      const sourceField = input.dataset.reviewField || input.dataset.approvedField || input.dataset.vocabularyField || input.dataset.vocabularyEslField || input.dataset.vocabularyOriginField
       if (!sourceField) return
       const field = window.SIS_VOCABULARY_ESL?.grammarFields.includes(sourceField) ? `grammarClassification.${sourceField}` : sourceField
       const parts = field.split(".")
@@ -239,8 +239,8 @@
           const current = readPayload(pane)
           const mergedReferences = [...new Map([...(Array.isArray(current.originReferences) ? current.originReferences : []), ...(Array.isArray(data.fields?.originReferences) ? data.fields.originReferences : [])].filter((item) => item?.url).map((item) => [item.url, item])).values()]
           const etymology = mwEtymology(data)
-          const nonEmptyMwFields = Object.fromEntries(Object.entries(data.fields || {}).filter(([field, value]) => field !== "originReferences" && value !== null && value !== undefined && (typeof value !== "string" || value.trim())))
-          const merged = { ...current, ...nonEmptyMwFields, ...(etymology ? { etymology } : {}), originPath: current.originPath || data.fields?.originPath || "", originReferences: mergedReferences }
+          const nonEmptyMwFields = Object.fromEntries(Object.entries(data.fields || {}).filter(([field, value]) => !["originReferences", "originPath"].includes(field) && value !== null && value !== undefined && (typeof value !== "string" || value.trim())))
+          const merged = { ...current, ...nonEmptyMwFields, ...(etymology ? { etymology } : {}), originPath: current.originPath || "", originReferences: mergedReferences }
           window.SIS_VOCABULARY_ESL?.hydrate(pane, merged, { preserveSyllabication: true })
           const appliedFields = Object.keys(nonEmptyMwFields).join(", ") || "none"
           button.title = `Filled authoritative Merriam-Webster fields: ${appliedFields}.`
@@ -455,15 +455,16 @@
 
   const dictionaryBuilderFields = [
     ["vietnamese", "Vietnamese"], ["syllabication", "Syllable / Stress"], ["syllableCount", "Number of syllables"], ["grammarClassification", "POS Classification"],
-    ["audio", "Headword Audio"], ["verbFormAudio", "Verb Form Audio"], ["definition", "Definition Proper"], ["verbForms", "Verb Forms"], ["stems", "Stems"], ["synonymsAntonyms", "Synonyms / Antonyms"], ["examples", "Examples"], ["firstKnownUse", "First known use"], ["originPath", "Origin path"], ["etymology", "Etymology"], ["worksCited", "Works Cited"],
+    ["audio", "Headword Audio"], ["verbFormAudio", "Verb Form Audio"], ["definition", "Definition Proper"], ["verbForms", "Verb Forms"], ["stems", "Stems"], ["synonymsAntonyms", "Synonyms / Antonyms"], ["examples", "Examples"], ["firstKnownUse", "First known use"], ["originPath", "Origin path"], ["etymology", "Etymology"],
   ]
+  const dictionaryBuilderVerbOnlyDatums = new Set(["verbForms", "verbFormAudio"])
   const dictionaryBuilderPreferredProviders = Object.freeze({
     vietnamese: ["google_translate"], syllabication: ["wordhelp", "ldoce"], syllableCount: ["wordhelp"], grammarClassification: ["merriam_webster_api", "merriam_webster_scrape"],
     audio: ["britannica", "ldoce", "oxford_ame"], verbFormAudio: ["oxford_ame", "oxford_bre"], definition: ["britannica", "ldoce", "oxford_ame"], verbForms: ["merriam_webster_api", "oxford_ame"],
     stems: ["merriam_webster_api", "merriam_webster_scrape"], synonymsAntonyms: ["merriam_webster_thesaurus", "merriam_webster_scrape"], examples: ["britannica", "ldoce", "oxford_ame"],
-    firstKnownUse: ["merriam_webster_api", "merriam_webster_scrape"], originPath: ["merriam_webster_api", "merriam_webster_scrape", "wiktionary"], etymology: ["etymonline", "merriam_webster_api", "wiktionary"],
+    firstKnownUse: ["merriam_webster_api", "merriam_webster_scrape"], originPath: ["merriam_webster_api", "merriam_webster_scrape"], etymology: ["etymonline", "merriam_webster_api", "wiktionary"],
   })
-  const dictionaryBuilderApplyFields = new Set(["vietnamese", "syllabication", "syllableCount", "grammarClassification", "audio", "verbFormAudio", "definition", "verbForms", "stems", "synonymsAntonyms", "examples", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "etymology", "originPath", "originReferences", "firstKnownUse", "worksCited"])
+  const dictionaryBuilderApplyFields = new Set(["vietnamese", "syllabication", "syllableCount", "grammarClassification", "audio", "verbFormAudio", "definition", "verbForms", "stems", "synonymsAntonyms", "examples", "verbInfinitive", "verbV1", "verbV2", "verbV3", "verbV4", "verbV5", "etymology", "originPath", "originReferences", "firstKnownUse"])
   const dictionaryBuilderStatusLabel = (status) => ({ not_found: "not found (HTTP 404)", not_provided: "not provided by source", robot_blocked: "cookie/robot prompt; datum paused", cookie_prompt: "cookie prompt; datum paused", robot_prompt: "robot prompt; datum paused", paused: "paused pending source resolution", waiting_for_input: "waiting for input", unavailable: "provider unavailable", not_offered: "not provided by source" }[status] || status)
   const isDictionaryBuilderPromptStatus = (status) => ["robot_blocked", "cookie_prompt", "robot_prompt", "paused", "waiting_for_input"].includes(status)
   const dictionaryBuilderEsc = (value) => String(value == null ? "" : value).replace(/[&<>'"]/gu, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character])
@@ -488,13 +489,19 @@
     }
     return dialog
   }
+  const hasDictionaryBuilderValue = (value) => {
+    if (Array.isArray(value)) return value.some(hasDictionaryBuilderValue)
+    if (value && typeof value === "object") return Object.values(value).some(hasDictionaryBuilderValue)
+    return value !== undefined && value !== null && String(value).trim() !== ""
+  }
   const candidatesForDatum = (snapshot, datum) => {
-    const sources = snapshot.sources || []
-    const order = snapshot.datumSourceOrder?.[datum] || []
+    const preferred = dictionaryBuilderPreferredProviders[datum] || []
+    const sources = (snapshot.sources || []).filter((source) => datum !== "originPath" || preferred.includes(source.provider))
+    const order = [...preferred, ...(snapshot.datumSourceOrder?.[datum] || [])].filter((provider, index, providers) => providers.indexOf(provider) === index)
     const ordered = sources.filter((source) => {
       if (datum === "vietnamese" && source.provider !== "google_translate") return false
       const status = source.datumStatus?.[datum]?.status
-      return isDictionaryBuilderPromptStatus(status) || (status === "available" && source.fields?.[datum] !== undefined)
+      return isDictionaryBuilderPromptStatus(status) || (status === "available" && hasDictionaryBuilderValue(source.fields?.[datum]))
     }).sort((left, right) => {
       const leftPosition = order.indexOf(left.provider); const rightPosition = order.indexOf(right.provider)
       return (leftPosition < 0 ? Number.MAX_SAFE_INTEGER : leftPosition) - (rightPosition < 0 ? Number.MAX_SAFE_INTEGER : rightPosition)
@@ -624,25 +631,29 @@
       })
     })
   }
-  const renderDictionaryBuilder = (snapshot, pane, sourceId, previousSelections = {}, activeTab = "vietnamese", initialReservation = null) => {
+  const renderDictionaryBuilder = (snapshot, pane, sourceId, previousSelections = {}, activeTab = "vietnamese", initialReservation = null, { autoRetry = true } = {}) => {
     const dialog = dictionaryBuilderDialog()
     const root = dialog.querySelector("[data-dictionary-builder-root]")
     const sourceMatrixSlot = dialog.querySelector("[data-dictionary-builder-source-matrix-slot]")
     const acquisitionLog = dialog.querySelector("[data-dictionary-builder-log]")
     const word = pane.querySelector('[data-vocabulary-field="english"]')?.value || ""
-    const tabs = dictionaryBuilderFields.map(([datum, label], index) => `<button type="button" class="dictionary-builder-tab" id="dictionary-builder-tab-${datum}" role="tab" aria-controls="dictionary-builder-panel-${datum}" aria-selected="${index === 0}" tabindex="${index === 0 ? 0 : -1}" data-dictionary-builder-tab="${datum}"><span class="dictionary-builder-tab-step">${index + 1}</span><span>${dictionaryBuilderEsc(label)}</span></button>`).join("")
+    const isVerbEntry = String(pane.querySelector('[data-vocabulary-field="partOfSpeech"]')?.value || "").trim().toLowerCase() === "verb"
+    const visibleDictionaryBuilderFields = dictionaryBuilderFields.filter(([datum]) => isVerbEntry || !dictionaryBuilderVerbOnlyDatums.has(datum))
+    const visibleDictionaryBuilderDatums = new Set(visibleDictionaryBuilderFields.map(([datum]) => datum))
+    const selectedTab = visibleDictionaryBuilderDatums.has(activeTab) ? activeTab : visibleDictionaryBuilderFields[0]?.[0] || "vietnamese"
+    const tabs = visibleDictionaryBuilderFields.map(([datum, label], index) => `<button type="button" class="dictionary-builder-tab" id="dictionary-builder-tab-${datum}" role="tab" aria-controls="dictionary-builder-panel-${datum}" aria-selected="${datum === selectedTab}" tabindex="${datum === selectedTab ? 0 : -1}" data-dictionary-builder-tab="${datum}"><span class="dictionary-builder-tab-step">${index + 1}</span><span>${dictionaryBuilderEsc(label)}</span></button>`).join("")
     sourceMatrixSlot.innerHTML = dictionaryBuilderSourceMatrix(word)
     const canApply = sourceId !== "new-canonical"
     if (acquisitionLog) acquisitionLog.textContent = snapshot.acquisitionLog || "No acquisition log was returned."
-    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><div class="dictionary-builder-source-startup-row"><button type="button" class="portal-button portal-button-blue-action portal-button-compact dictionary-builder-source-startup" data-dictionary-builder-open-all>Open initial source group (LD / OA / TH / BR / MW / AP / WH)</button><div class="dictionary-builder-source-status-block"><div class="dictionary-builder-source-leds" data-dictionary-builder-source-leds role="group" aria-label="Initial source status LEDs"></div><div class="dictionary-builder-source-led-legend" aria-label="Source LED legend"><span><i data-led-legend="default" aria-hidden="true"></i>Default</span><span><i data-led-legend="not-found" aria-hidden="true"></i>404</span><span><i data-led-legend="opening" aria-hidden="true"></i>Opening</span><span><i data-led-legend="popup-blocking" aria-hidden="true"></i>Popup blocked</span><span><i data-led-legend="success" aria-hidden="true"></i>Full scrape</span></div></div></div><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"${canApply ? "" : " disabled"}><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply${canApply ? "" : " disabled title=\"Save the canonical Library entry before applying Dictionary Builder data.\""}>Apply selected</button></div><div data-dictionary-builder-popup-fallbacks hidden></div>`
+    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><div class="dictionary-builder-source-startup-row"><button type="button" class="portal-button portal-button-blue-action portal-button-compact dictionary-builder-source-startup" data-dictionary-builder-open-all title="Open the initial source group: LD / OA / TH / BR / MW / AP / WH." aria-label="Open initial source group">Open sources</button><div class="dictionary-builder-source-status-block"><div class="dictionary-builder-source-leds" data-dictionary-builder-source-leds role="group" aria-label="Initial source status LEDs"></div><div class="dictionary-builder-source-led-legend" aria-label="Source LED legend"><span><i data-led-legend="default" aria-hidden="true"></i>Default</span><span><i data-led-legend="not-found" aria-hidden="true"></i>404</span><span><i data-led-legend="opening" aria-hidden="true"></i>Opening</span><span><i data-led-legend="popup-blocking" aria-hidden="true"></i>Popup blocked</span><span><i data-led-legend="success" aria-hidden="true"></i>Full scrape</span></div></div></div><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"${canApply ? "" : " disabled"}><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply${canApply ? "" : " disabled title=\"Save the canonical Library entry before applying Dictionary Builder data.\""}>Apply selected</button></div><div data-dictionary-builder-popup-fallbacks hidden></div>`
     const sourceLedContainer = root.querySelector("[data-dictionary-builder-source-leds]")
     renderSourceLeds(snapshot, sourceLedContainer)
     const panels = root.querySelector("[data-dictionary-builder-panels]")
-    const selectedCandidates = structuredClone(previousSelections)
-    dictionaryBuilderFields.forEach(([datum]) => {
+    const selectedCandidates = Object.fromEntries(Object.entries(structuredClone(previousSelections)).filter(([datum]) => visibleDictionaryBuilderDatums.has(datum)))
+    visibleDictionaryBuilderFields.forEach(([datum]) => {
       if (selectedCandidates[datum]) return
       const candidate = candidatesForDatum(snapshot, datum).find((item) => item.datumStatus?.[datum]?.status === "available")
-      if (!candidate || candidate.fields?.[datum] === undefined || candidate.fields?.[datum] === null || candidate.fields?.[datum] === "") return
+      if (!candidate || !hasDictionaryBuilderValue(candidate.fields?.[datum])) return
       selectedCandidates[datum] = {
         provider: candidate.provider,
         value: typeof candidate.fields[datum] === "object" ? JSON.stringify(candidate.fields[datum]) : String(candidate.fields[datum]),
@@ -715,6 +726,33 @@
       const tab = root.querySelector(`[data-dictionary-builder-tab="${datum}"]`)
       tab?.classList.toggle("is-complete", Boolean(selectedCandidates[datum]?.value))
     }
+    const hasAvailablePreferredDatum = (currentSnapshot, datum) => (dictionaryBuilderPreferredProviders[datum] || []).some((provider) => {
+      const source = (currentSnapshot.sources || []).find((candidate) => candidate.provider === provider)
+      const value = source?.fields?.[datum]
+      return source?.datumStatus?.[datum]?.status === "available" && hasDictionaryBuilderValue(value)
+    })
+    const retryMissingPreferredDatums = async () => {
+      if (sourceId === "new-canonical" || !dialog.open) return
+      let refreshed = snapshot
+      let changed = false
+      const applicableDatums = visibleDictionaryBuilderFields.map(([datum]) => datum)
+      for (const datum of applicableDatums) {
+        if (hasAvailablePreferredDatum(refreshed, datum)) continue
+        for (const provider of dictionaryBuilderPreferredProviders[datum] || []) {
+          if (!dialog.open) return
+          try {
+            const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(refreshed.id)}/retry`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider, datum, entry: readPayload(pane) }) })
+            const next = await response.json()
+            if (!response.ok || !next.ok) continue
+            refreshed = next
+            changed = true
+            if (hasAvailablePreferredDatum(refreshed, datum)) break
+          } catch {}
+        }
+      }
+      const currentActiveTab = root.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || activeTab
+      if (changed && dialog.open) renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), currentActiveTab, null, { autoRetry: false })
+    }
     const show = (datum, focus = false) => {
       root.querySelectorAll("[data-dictionary-builder-tab]").forEach((button) => {
         const active = button.dataset.dictionaryBuilderTab === datum
@@ -736,7 +774,7 @@
       const statuses = visibleStatusSources.map((source) => `${source.provider}: ${dictionaryBuilderStatusLabel(source.datumStatus?.[datum]?.status || "not_offered")}`).join(" · ")
       const robotSource = visibleStatusSources.find((source) => isDictionaryBuilderPromptStatus(source.datumStatus?.[datum]?.status) || isDictionaryBuilderPromptStatus(source.status))
       const sectionSummary = dialog.querySelector("[data-dictionary-builder-section-summary]")
-      const datumLabel = dictionaryBuilderFields.find(([key]) => key === datum)?.[1] || datum
+      const datumLabel = visibleDictionaryBuilderFields.find(([key]) => key === datum)?.[1] || datum
       const tabHeading = dialog.querySelector("[data-dictionary-builder-tab-heading]")
       if (tabHeading) tabHeading.textContent = datumLabel
       if (sectionSummary) sectionSummary.textContent = robotSource
@@ -752,7 +790,7 @@
       const retryPreferred = document.createElement("button")
       retryPreferred.type = "button"
       retryPreferred.className = "portal-button portal-button-blue-action"
-      retryPreferred.textContent = "Retry preferred sources"
+      retryPreferred.textContent = "Retry preferred"
       retryPreferred.title = `Wait 5 seconds, then check the saved snapshot first and retry ${preferredProviders.join(", ")} for ${datum}.`
       retryPreferred.setAttribute("aria-label", `Retry preferred sources for ${datum}`)
       retryPreferred.addEventListener("click", async () => {
@@ -766,12 +804,12 @@
             const data = await response.json()
             if (response.ok && data.ok) refreshed = data
           }
-          renderDictionaryBuilder(refreshed, pane, sourceId, selectedCandidates, datum)
+          renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
         } catch (error) {
           dialog.querySelector("[data-dictionary-builder-message]").textContent = error.message || "Preferred source retry failed."
         } finally {
           retryPreferred.disabled = false
-          retryPreferred.textContent = "Retry preferred sources"
+          retryPreferred.textContent = "Retry preferred"
         }
       })
       section.append(retryPreferred)
@@ -894,7 +932,7 @@
           let retryInFlight = false
           const stopPromptProbe = () => {
             const timer = promptProbeTimers.get(probeKey)
-            if (timer) window.clearTimeout(timer)
+            if (timer) window.clearInterval(timer)
             promptProbeTimers.delete(probeKey)
           }
           const retryProvider = async ({ automatic = false } = {}) => {
@@ -905,14 +943,16 @@
               retry.textContent = "Retrying..."
             }
             try {
-              const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshot.id)}/retry`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: candidate.provider, entry: readPayload(pane) }) })
+              const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshot.id)}/retry`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: candidate.provider, datum, entry: readPayload(pane) }) })
               const refreshed = await response.json()
               if (!response.ok || !refreshed.ok) throw new Error(refreshed.error || "Provider retry failed.")
               const refreshedSource = refreshed.sources?.find((source) => source.provider === candidate.provider)
               const refreshedStatus = refreshedSource?.datumStatus?.[datum]?.status || refreshedSource?.status
-              if (automatic && !["available"].includes(refreshedStatus)) return false
+              const refreshedValue = refreshedSource?.fields?.[datum]
+              const datumReady = refreshedStatus === "available" && hasDictionaryBuilderValue(refreshedValue)
+              if (automatic && !datumReady) return false
               stopPromptProbe()
-              renderDictionaryBuilder(refreshed, pane, sourceId, selectedCandidates, datum)
+              renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
               return true
             } catch (error) {
               if (!automatic) {
@@ -936,21 +976,24 @@
           })
           label.append(retry)
           const openChallengeTab = () => {
-            const existing = robotHandoffTabs.get(candidate.provider)
+            const existing = robotHandoffTabs.get(candidate.provider) || sourceBrowserTabs.get(candidate.provider)
             if (existing && !existing.closed) {
+              robotHandoffTabs.set(candidate.provider, existing)
+              sourceBrowserTabs.set(candidate.provider, existing)
               existing.focus?.()
-              return existing
+            } else {
+              const challengeTab = window.open(candidate.sourceUrl, providerTabName(candidate.provider))
+              if (!challengeTab) {
+                dialog.querySelector("[data-dictionary-builder-message]").textContent = `The ${candidate.provider} source tab was blocked. Open the source link and use Retry provider as the fallback probe.`
+                return null
+              }
+              robotHandoffTabs.set(candidate.provider, challengeTab)
+              sourceBrowserTabs.set(candidate.provider, challengeTab)
             }
-            const challengeTab = window.open(candidate.sourceUrl, providerTabName(candidate.provider))
-            if (!challengeTab) {
-              dialog.querySelector("[data-dictionary-builder-message]").textContent = `The ${candidate.provider} source tab was blocked. Open the source link and use Retry provider as the fallback probe.`
-              return null
-            }
-            robotHandoffTabs.set(candidate.provider, challengeTab)
-            sourceBrowserTabs.set(candidate.provider, challengeTab)
             dialog.querySelector("[data-dictionary-builder-message]").textContent = `Complete the ${candidate.provider} cookie/robot prompt in the new tab. Leave it open; Builder will probe the live page automatically. Retry provider remains available as a fallback.`
             stopPromptProbe()
-            const probeTimer = window.setTimeout(() => {
+            const challengeTab = robotHandoffTabs.get(candidate.provider)
+            const probeTimer = window.setInterval(() => {
               if (challengeTab.closed || !dialog.open) {
                 stopPromptProbe()
                 return
@@ -1074,6 +1117,7 @@
     root.querySelector("[data-dictionary-builder-apply]").addEventListener("click", async () => {
       const selections = {}
       Object.entries(selectedCandidates).forEach(([datum, selection]) => {
+        if (!isVerbEntry && dictionaryBuilderVerbOnlyDatums.has(datum)) return
         if (!dictionaryBuilderApplyFields.has(datum)) return
         let value = selection.value || ""
         if (["grammarClassification", "originReferences", "verbForms"].includes(datum)) { try { value = JSON.parse(value) } catch { return } }
@@ -1117,7 +1161,12 @@
         if (typeof dialog.close === "function") dialog.close()
       } catch (error) { message.textContent = error.message || "Dictionary Builder Apply failed." } finally { apply.disabled = false }
     })
-    show(activeTab)
+    show(selectedTab)
+    if (autoRetry) {
+      const autoRetryTimer = window.setTimeout(() => retryMissingPreferredDatums(), 5000)
+      const cancelAutoRetry = () => window.clearTimeout(autoRetryTimer)
+      dialog.addEventListener("close", cancelAutoRetry, { once: true })
+    }
     if (!canApply) {
       const message = dialog.querySelector("[data-dictionary-builder-message]")
       if (message) message.textContent = "Preview is available for the unsaved canonical draft. Save the canonical Library entry before applying data."

@@ -146,7 +146,7 @@ Header/footer structure is shared even when visible labels or home paths differ.
 | `btn-refresh` / teal refresh | reload/probe/refresh | submit or status display |
 | `immutable-chrome` | theme/menu/modal/header chrome | workflow actions |
 
-Button labels should be one or two words where possible. Put consequences and longer instructions in TOOL-TIPS `ARIA-`, AND `title`, accessible names, or nearby text. Do not create a new button skin when the semantic family exists.
+Button labels must be one or two concise words. Overflow handling is prohibited as a label strategy: do not use ellipsis, clipping, horizontal scrolling, shrinking text, or wrapped instructional copy. Put consequences and longer instructions in the shared tooltip, `aria-label`, accessible description, or nearby text. Do not create a new button skin when the semantic family exists.
 
 ## 9. Chip semantics
 

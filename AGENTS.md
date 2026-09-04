@@ -81,6 +81,7 @@ The following words are hard constraints, not emphasis: `all`, `every`, `everyth
 - Standard spacing is mandatory for visible portal content: use the shared spacing tokens for vertical gaps, non-zero vertical padding for visible buttons and fields, and wrapping or responsive layout when controls can exceed the available width. Do not add `margin-bottom: 0`, `padding: 0`, or equivalent zero vertical spacing to visible content, controls, headings, action groups, or pagination. Zero-spacing resets are allowed only for structural overlays, native reset normalization, or controls whose spacing is supplied by an explicit parent gap; add a contract test for any such exception.
 
 - Button labels must be compact: use one or two words whenever possible. Put longer explanations, consequences, and workflow detail in the control's `title` tooltip and accessible name/description; never pack instructional sentences into a button label.
+- Button labels must be exactly one or two concise words for shared portal actions. Overflow handling is a worst practice and is prohibited: never use ellipsis, clipping, horizontal scrolling, shrinking text, or wrapped instructional labels to compensate for a long button copy. Rename the visible action and put its complete explanation in the shared tooltip plus accessible name/description.
 
 - Do not recolor buttons unless the user explicitly asks for button recoloring.
 - Do not recolor chips or button-like controls in dark mode unless the user explicitly asks for recoloring.
