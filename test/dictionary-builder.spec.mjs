@@ -6,6 +6,8 @@ import test from "node:test"
 
 import { applyDictionaryBuilderSnapshot } from "../src/modules/admin/library-corpus.mjs"
 
+const antonymsFixture = await fs.readFile(new URL("../docs/antonyms.html", import.meta.url), "utf8")
+
 import {
   DICTIONARY_BUILDER_DATUM_STATUS,
   DICTIONARY_BUILDER_DATUMS,
@@ -488,6 +490,13 @@ test("MW Thesaurus keeps only the top four rows in each relation category", asyn
     text: async () => '<main><section class="thesaurus-pos"><h2>verb</h2><section class="synonyms-and-antonyms"><div class="synonyms-and-antonyms__list--synonyms"><ul><li>praise</li><li>honor</li></ul></div><div class="synonyms-and-antonyms__list--antonyms"><ul><li>blame</li><li>rebuke</li></ul></div></section></section></main>',
   }))
   assert.equal(nested.fields.synonymsAntonyms, "Synonyms:\npraise\nhonor\n\nAntonyms:\nblame\nrebuke")
+
+  const mwHeader = await previewHtmlAdapter("merriam_webster_thesaurus", { english: "scarce", partOfSpeech: "adjective" }, async () => ({
+    ok: true,
+    url: "https://www.merriam-webster.com/thesaurus/scarce",
+    text: async () => `<main><section class="thesaurus-pos"><h2>adjective</h2>${antonymsFixture}</section></main>`,
+  }))
+  assert.equal(mwHeader.fields.synonymsAntonyms, "Antonyms:\nabundant\nplentiful\nsufficient\nadequate")
 })
 
 test("Dictionary Builder always sources Vietnamese from the automatic Google Translate adapter", async () => {

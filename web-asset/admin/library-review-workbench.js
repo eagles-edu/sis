@@ -530,11 +530,12 @@
   const robotHandoffTabs = new Map()
   const promptProbeTimers = new Map()
   const sourceBrowserTabs = new Map()
-  const INITIAL_SOURCE_GROUP_SIZE = 7
-  const INITIAL_SOURCE_PROVIDER_ORDER = ["ldoce", "oxford_ame", "merriam_webster_thesaurus", "britannica", "merriam_webster_scrape", "merriam_webster_api", "wordhelp"]
-  const INITIAL_SOURCE_LED_ORDER = ["ldoce", "oxford_ame", "merriam_webster_thesaurus", "britannica", "merriam_webster_scrape", "merriam_webster_api", "wordhelp"]
-  const INITIAL_SOURCE_LED_LABELS = Object.freeze({ ldoce: "LD", oxford_ame: "OA", merriam_webster_thesaurus: "TH", britannica: "BR", merriam_webster_scrape: "MW", merriam_webster_api: "AP", wordhelp: "WH" })
-  const sourceLedOverrides = new Map()
+  const INITIAL_SOURCE_GROUP_SIZE = 6
+  const INITIAL_SOURCE_PROVIDER_ORDER = ["britannica", "ldoce", "wordhelp", "etymonline", "merriam_webster_thesaurus", "oxford_ame"]
+  const INITIAL_SOURCE_LED_ORDER = ["britannica", "ldoce", "wordhelp", "etymonline", "merriam_webster_thesaurus", "oxford_ame"]
+  const INITIAL_SOURCE_LED_LABELS = Object.freeze({ britannica: "BR", ldoce: "LD", wordhelp: "WH", etymonline: "ET", merriam_webster_thesaurus: "TH", oxford_ame: "OA" })
+  const sourceLedOverrides = new WeakMap()
+  const dictionaryBuilderPreloadStates = new WeakMap()
   const initialSourceUrl = (provider, word) => {
     const encoded = encodeURIComponent(String(word || "").trim())
     const paths = {
@@ -542,6 +543,7 @@
       oxford_ame: `https://www.oxfordlearnersdictionaries.com/definition/american_english/${encoded}`,
       ldoce: `https://www.ldoceonline.com/dictionary/${encoded}`,
       wordhelp: `https://www.wordhelp.com/syllables/english/?q=${encoded}`,
+      etymonline: `https://www.etymonline.com/search?q=${encoded}`,
       merriam_webster_thesaurus: `https://www.merriam-webster.com/thesaurus/${encoded}`,
       merriam_webster_scrape: `https://www.merriam-webster.com/dictionary/${encoded}`,
       merriam_webster_api: `https://www.merriam-webster.com/dictionary/${encoded}`,
@@ -549,9 +551,9 @@
     return paths[provider] || ""
   }
   const providerTabName = (provider) => `sis-dictionary-builder-${provider}`
-  const openProviderTabDuringGesture = (provider) => {
+  const openProviderTabDuringGesture = (provider, sourceUrl = "about:blank") => {
     const target = providerTabName(provider)
-    return window.open("about:blank", target)
+    return window.open(sourceUrl, target)
   }
   const reserveInitialSourceTabs = (word) => {
     const reserved = new Map()
@@ -559,7 +561,7 @@
     INITIAL_SOURCE_PROVIDER_ORDER.forEach((provider) => {
       const existing = sourceBrowserTabs.get(provider)
       if (existing && !existing.closed) { reserved.set(provider, existing); return }
-      const tab = openProviderTabDuringGesture(provider)
+      const tab = openProviderTabDuringGesture(provider, initialSourceUrl(provider, word))
       if (tab) { sourceBrowserTabs.set(provider, tab); reserved.set(provider, tab) }
       else blocked.push(provider)
     })
@@ -583,32 +585,82 @@
     sourceBrowserTabs.clear()
     robotHandoffTabs.clear()
   }
-  const sourceStatusForLed = (provider, snapshot) => {
-    const override = sourceLedOverrides.get(provider)
-    if (override) return override
+  const sourceLedOverridesFor = (container) => {
+    if (!container) return null
+    let overrides = sourceLedOverrides.get(container)
+    if (!overrides) {
+      overrides = new Map()
+      sourceLedOverrides.set(container, overrides)
+    }
+    return overrides
+  }
+  const sourceStatusForSnapshot = (provider, snapshot) => {
+    if (!snapshot) return "default"
     const source = (snapshot?.sources || []).find((candidate) => candidate.provider === provider || (provider === "merriam_webster_scrape" && candidate.provider === "merriam_webster"))
     const status = source?.status || source?.datumStatus && Object.values(source.datumStatus).find((datum) => datum?.status && datum.status !== "not_offered")?.status
     if (status === "available") return "success"
-    if (status === "not_found") return "not-found"
-    if (["robot_blocked", "cookie_prompt", "robot_prompt", "blocked"].includes(status)) return "popup-blocking"
-    return "default"
+    if (["waiting_for_input", "manual", "robot_blocked", "cookie_prompt", "robot_prompt", "blocked"].includes(status)) return "popup-blocking"
+    if (["not_found", "unavailable", "unsupported", "invalid"].includes(status)) return "not-found"
+    return "not-found"
+  }
+  const sourceStatusForLed = (provider, snapshot, container) => {
+    const override = sourceLedOverrides.get(container)?.get(provider)
+    return override || sourceStatusForSnapshot(provider, snapshot)
   }
   const renderSourceLeds = (snapshot, container) => {
     if (!container) return
     container.replaceChildren(...INITIAL_SOURCE_LED_ORDER.map((provider) => {
       const led = document.createElement("span")
-      const status = sourceStatusForLed(provider, snapshot)
+      const status = sourceStatusForLed(provider, snapshot, container)
       led.className = "dictionary-builder-source-led"
       led.dataset.sourceProvider = provider
       led.dataset.sourceStatus = status
       led.textContent = INITIAL_SOURCE_LED_LABELS[provider]
-      led.setAttribute("aria-label", `${INITIAL_SOURCE_LED_LABELS[provider]} status: ${status === "success" ? "full scrape succeeded" : status === "not-found" ? "404 not found" : status === "popup-blocking" ? "popup or source blocked" : status === "opening" ? "opening" : "default"}`)
+      led.setAttribute("aria-label", `${INITIAL_SOURCE_LED_LABELS[provider]} status: ${status === "success" ? "ready" : status === "not-found" ? "404, not found, or unavailable" : status === "popup-blocking" ? "awaiting user input" : status === "opening" ? "opening" : "not checked"}`)
       return led
     }))
   }
   const setSourceLedStatus = (provider, status, snapshot, container) => {
-    sourceLedOverrides.set(provider, status)
+    sourceLedOverridesFor(container)?.set(provider, status)
     renderSourceLeds(snapshot, container)
+  }
+  const clearSourceLedOverrides = (container) => {
+    sourceLedOverrides.get(container)?.clear()
+  }
+  const applySourceSnapshotToLeds = (snapshot, container, blockedProviders = []) => {
+    if (!container) return
+    const blocked = new Set(blockedProviders)
+    INITIAL_SOURCE_LED_ORDER.forEach((provider) => {
+      const status = blocked.has(provider) ? "popup-blocking" : sourceStatusForSnapshot(provider, snapshot)
+      setSourceLedStatus(provider, status, snapshot, container)
+    })
+  }
+  const previewDictionaryBuilderForEditor = async (pane, container, sourceId, word, blockedProviders) => {
+    const previous = dictionaryBuilderPreloadStates.get(pane)
+    if (previous?.sourceId === sourceId && previous.word === word && previous.promise && !previous.settled) return previous.promise
+    const token = Symbol("dictionary-builder-preload")
+    const state = { sourceId, word, token, promise: null, snapshot: null }
+    dictionaryBuilderPreloadStates.set(pane, state)
+    state.promise = (async () => {
+      try {
+        if (!sourceId) throw new Error("Save the canonical Library entry before preloading source status.")
+        const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/preview`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ entry: readPayload(pane) }) })
+        const snapshot = await response.json()
+        if (!response.ok || !snapshot.ok) throw new Error(snapshot.error || "Dictionary Builder source status is unavailable.")
+        if (dictionaryBuilderPreloadStates.get(pane)?.token !== token) return snapshot
+        state.snapshot = snapshot
+        applySourceSnapshotToLeds(snapshot, container, blockedProviders)
+        return snapshot
+      } catch (error) {
+        if (dictionaryBuilderPreloadStates.get(pane)?.token === token) {
+          INITIAL_SOURCE_LED_ORDER.forEach((provider) => setSourceLedStatus(provider, "not-found", null, container))
+        }
+        throw error
+      } finally {
+        state.settled = true
+      }
+    })()
+    return state.promise
   }
   const bindEditorSourceStartup = (pane) => {
     const startup = pane?.querySelector("[data-dictionary-builder-open-sources]")
@@ -616,19 +668,27 @@
     if (!startup || startup.dataset.dictionaryBuilderSourcesBound === "true") return
     startup.dataset.dictionaryBuilderSourcesBound = "true"
     renderSourceLeds(null, container)
-    startup.addEventListener("click", () => {
+    startup.addEventListener("click", async () => {
       const word = pane.querySelector('[data-vocabulary-field="english"]')?.value || ""
+      const sourceId = pane.dataset.reviewSourceId || pane.dataset.approvedEntryId
+      const message = pane.querySelector("[data-vocabulary-dictionary-builder-message]")
+      clearSourceLedOverrides(container)
       INITIAL_SOURCE_PROVIDER_ORDER.forEach((provider) => setSourceLedStatus(provider, "opening", null, container))
       const reservation = reserveInitialSourceTabs(word)
       navigateInitialSourceTabs(reservation)
       reservation.blocked.forEach((provider) => setSourceLedStatus(provider, "popup-blocking", null, container))
-      reservation.reserved.forEach((tab, provider) => {
-        if (!tab || tab.closed) return
-        window.setTimeout(() => {
-          sourceLedOverrides.delete(provider)
-          renderSourceLeds(null, container)
-        }, 1200)
-      })
+      startup.disabled = true
+      startup.setAttribute("aria-busy", "true")
+      if (message) message.textContent = "Preloading source status; LEDs remain amber until each provider resolves."
+      try {
+        await previewDictionaryBuilderForEditor(pane, container, sourceId, word, reservation.blocked)
+        if (message) message.textContent = "Source status ready."
+      } catch (error) {
+        if (message) message.textContent = error.message || "Source status unavailable."
+      } finally {
+        startup.disabled = false
+        startup.removeAttribute("aria-busy")
+      }
     })
   }
   const renderDictionaryBuilder = (snapshot, pane, sourceId, previousSelections = {}, activeTab = "vietnamese", initialReservation = null, { autoRetry = true } = {}) => {
@@ -645,7 +705,7 @@
     sourceMatrixSlot.innerHTML = dictionaryBuilderSourceMatrix(word)
     const canApply = sourceId !== "new-canonical"
     if (acquisitionLog) acquisitionLog.textContent = snapshot.acquisitionLog || "No acquisition log was returned."
-    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><div class="dictionary-builder-source-startup-row"><button type="button" class="portal-button portal-button-blue-action portal-button-compact dictionary-builder-source-startup" data-dictionary-builder-open-all title="Open the initial source group: LD / OA / TH / BR / MW / AP / WH." aria-label="Open initial source group">Open sources</button><div class="dictionary-builder-source-status-block"><div class="dictionary-builder-source-leds" data-dictionary-builder-source-leds role="group" aria-label="Initial source status LEDs"></div><div class="dictionary-builder-source-led-legend" aria-label="Source LED legend"><span><i data-led-legend="default" aria-hidden="true"></i>Default</span><span><i data-led-legend="not-found" aria-hidden="true"></i>404</span><span><i data-led-legend="opening" aria-hidden="true"></i>Opening</span><span><i data-led-legend="popup-blocking" aria-hidden="true"></i>Popup blocked</span><span><i data-led-legend="success" aria-hidden="true"></i>Full scrape</span></div></div></div><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"${canApply ? "" : " disabled"}><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply${canApply ? "" : " disabled title=\"Save the canonical Library entry before applying Dictionary Builder data.\""}>Apply selected</button></div><div data-dictionary-builder-popup-fallbacks hidden></div>`
+    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><div class="dictionary-builder-source-startup-row"><button type="button" class="portal-button portal-button-blue-action portal-button-compact dictionary-builder-source-startup" data-dictionary-builder-open-sources title="Open the initial source group: BR / AP / LD / WH / ET / TH / OA. AP is API-only and remains closed." aria-label="Open initial source group">Open sources</button><div class="dictionary-builder-source-status-block"><div class="dictionary-builder-source-leds" data-dictionary-builder-source-leds role="group" aria-label="Initial source status LEDs"></div><div class="dictionary-builder-source-led-legend" aria-label="Source LED legend"><span><i data-led-legend="default" aria-hidden="true"></i>Not checked</span><span><i data-led-legend="not-found" aria-hidden="true"></i>404 / unavailable</span><span><i data-led-legend="opening" aria-hidden="true"></i>Opening</span><span><i data-led-legend="popup-blocking" aria-hidden="true"></i>Awaiting input</span><span><i data-led-legend="success" aria-hidden="true"></i>Ready</span></div></div></div><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"${canApply ? "" : " disabled"}><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply${canApply ? "" : " disabled title=\"Save the canonical Library entry before applying Dictionary Builder data.\""}>Apply selected</button></div><div data-dictionary-builder-popup-fallbacks hidden></div>`
     const sourceLedContainer = root.querySelector("[data-dictionary-builder-source-leds]")
     renderSourceLeds(snapshot, sourceLedContainer)
     const panels = root.querySelector("[data-dictionary-builder-panels]")
@@ -692,7 +752,7 @@
       initialSourceEntries.forEach(({ provider, sourceUrl }) => {
         const existing = sourceBrowserTabs.get(provider)
         if (existing && !existing.closed) { existing.focus?.(); opened += 1; return }
-        const tab = openProviderTabDuringGesture(provider)
+        const tab = openProviderTabDuringGesture(provider, sourceUrl)
         if (tab) {
           sourceBrowserTabs.set(provider, tab)
           pendingNavigations.push({ tab, sourceUrl })
@@ -704,22 +764,22 @@
       blockedProviders.forEach((provider) => setSourceLedStatus(provider, "popup-blocking", snapshot, sourceLedContainer))
       initialSourceEntries.filter(({ provider }) => !blockedProviders.includes(provider)).forEach(({ provider }) => {
         window.setTimeout(() => {
-          sourceLedOverrides.delete(provider)
+          sourceLedOverrides.get(sourceLedContainer)?.delete(provider)
           renderSourceLeds(snapshot, sourceLedContainer)
         }, 1200)
       })
       showPopupFallbackLinks(blockedProviders, sourceByProvider)
       dialog.querySelector("[data-dictionary-builder-message]").textContent = opened === initialSourceEntries.length
-        ? `Initial LD / OA / TH / BR / MW / AP / WH group opened as named tabs in this browser session. Resolve any cookie/robot prompts; affected datums remain paused until Retry provider. Cookies remain in the browser's native cookie jar.`
-        : `Opened ${opened} of ${initialSourceEntries.length} initial provider tabs in this browser session; blocked providers: ${blockedProviders.join(", ") || "unknown"}. Use the manual links below. Fallback providers stay closed until needed.`
+        ? `Initial BR / AP / LD / WH / ET / TH / OA group opened as named tabs in this browser session. AP is API-only and remains closed. Resolve any cookie/robot prompts; affected datums remain paused until Retry provider. Cookies remain in the browser's native cookie jar.`
+        : `Opened ${opened} of ${initialSourceEntries.length} initial provider tabs in this browser session; blocked providers: ${blockedProviders.join(", ") || "unknown"}. Use the manual links below. AP is API-only; fallback providers stay closed until needed.`
     }
-    root.querySelector("[data-dictionary-builder-open-all]").addEventListener("click", openInitialSourceGroup)
+    root.querySelector("[data-dictionary-builder-open-sources]").addEventListener("click", openInitialSourceGroup)
     if (initialReservation) {
       navigateInitialSourceTabs(initialReservation, snapshot.sources || [])
       const reservationMessage = dialog.querySelector("[data-dictionary-builder-message]")
       if (reservationMessage) reservationMessage.textContent = initialReservation.blocked.length
         ? `Opened ${initialReservation.reserved.size} of ${INITIAL_SOURCE_GROUP_SIZE} initial provider tabs; blocked providers: ${initialReservation.blocked.join(", ")}. Use the manual links below; affected datums remain waiting for input.`
-        : `Opened ${initialReservation.reserved.size} of ${INITIAL_SOURCE_GROUP_SIZE} initial provider tabs in order LD / OA / TH / BR / MW / AP / WH. Resolve cookie/robot prompts in those tabs; cookies remain active for this Builder session.`
+        : `Opened ${initialReservation.reserved.size} of ${INITIAL_SOURCE_GROUP_SIZE} initial provider tabs in order BR / AP / LD / WH / ET / TH / OA. AP is API-only; resolve cookie/robot prompts in those tabs; cookies remain active for this Builder session.`
       showPopupFallbackLinks(initialReservation.blocked, new Map((snapshot.sources || []).map((source) => [source.provider, source])))
     }
     const updateTabSelection = (datum) => {

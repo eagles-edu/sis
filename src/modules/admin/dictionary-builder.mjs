@@ -759,6 +759,10 @@ export async function previewHtmlAdapter(provider, entry, fetchImpl = fetch, bro
     if (["wiktionary", "merriam_webster_thesaurus"].includes(provider)) fields.definition = definition
     if (provider === "merriam_webster_thesaurus") {
       const relationKind = (node) => {
+        const thesaurusList = $(node).closest(".thes-list")
+        const thesaurusHeading = text(thesaurusList.find(".thes-list-header h2, .thes-list-header h3, .thes-list-header h4, .thes-list-header h5, .thes-list-header .function-label").first().text()).toLocaleLowerCase("en-US").replace(/[&/]/gu, " ").replace(/\s+/gu, " ").trim()
+        if (thesaurusHeading.startsWith("synonyms")) return "synonyms"
+        if (thesaurusHeading.startsWith("antonyms")) return "antonyms"
         let current = node
         while (current) {
           const element = $(current)
@@ -776,9 +780,9 @@ export async function previewHtmlAdapter(provider, entry, fetchImpl = fetch, bro
           }
           if (hasSynonym && !hasAntonym) return "synonyms"
           if (hasAntonym && !hasSynonym) return "antonyms"
-          const heading = text(element.find("h2, h3, h4, h5").first().text()).toLocaleLowerCase("en-US").replace(/[&/]/gu, " ").replace(/\s+/gu, " ").trim()
-          if (heading === "synonyms") return "synonyms"
-          if (heading === "antonyms") return "antonyms"
+          const heading = text(element.find("h2, h3, h4, h5, .function-label").first().text()).toLocaleLowerCase("en-US").replace(/[&/]/gu, " ").replace(/\s+/gu, " ").trim()
+          if (heading.startsWith("synonyms")) return "synonyms"
+          if (heading.startsWith("antonyms")) return "antonyms"
           current = current.parent
         }
         return ""
@@ -786,8 +790,8 @@ export async function previewHtmlAdapter(provider, entry, fetchImpl = fetch, bro
       const relationRows = (kind, selectors) => $(selectors)
         .filter((_, node) => relationKind(node) === kind && relationNodeMatchesPartOfSpeech($, node, entry?.partOfSpeech))
         .map((_, node) => text($(node).text())).get().filter(Boolean)
-      const synonyms = relationRows("synonyms", "[class*='synonym'] li, [data-synonym]")
-      const antonyms = relationRows("antonyms", "[class*='antonym'] li, [data-antonym]")
+      const synonyms = relationRows("synonyms", "[class*='synonym'] li, [data-synonym], .thes-list li")
+      const antonyms = relationRows("antonyms", "[class*='antonym'] li, [data-antonym], .thes-list li")
       fields.synonymsAntonyms = topSynonymsAntonymsRows([
         synonyms.length ? `Synonyms:\n${synonyms.join("\n")}` : "",
         antonyms.length ? `Antonyms:\n${antonyms.join("\n")}` : "",

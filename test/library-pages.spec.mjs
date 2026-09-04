@@ -108,7 +108,7 @@ test("Dictionary Builder keeps origin metadata and selections on retry while pre
   assert.match(libraryReviewWorkbench, /window\.setTimeout\(\(\) => retryMissingPreferredDatums\(\), 5000\)/)
   assert.match(libraryReviewWorkbench, /retryPreferred\.textContent = "Retry preferred"/)
   assert.match(libraryReviewWorkbench, /retryPreferred\.setAttribute\("aria-label", `Retry preferred sources for \$\{datum\}`\)/)
-  assert.match(libraryReviewWorkbench, /data-dictionary-builder-open-all[^>]+title="Open the initial source group: LD \/ OA \/ TH \/ BR \/ MW \/ AP \/ WH\.[^>]+>Open sources</)
+  assert.match(libraryReviewWorkbench, /data-dictionary-builder-open-sources[^>]+title="Open the initial source group: BR \/ AP \/ LD \/ WH \/ ET \/ TH \/ OA\.[^>]+>Open sources</)
   assert.match(libraryReviewWorkbench, /dictionaryBuilderVerbOnlyDatums/)
   assert.match(libraryReviewWorkbench, /visibleDictionaryBuilderFields/)
   assert.match(libraryReviewWorkbench, /visibleDictionaryBuilderDatums/)
@@ -163,6 +163,55 @@ test("Etymonline lookup never overwrites editor fields before a modal datum is s
   assert.equal(row.querySelector('[data-vocabulary-esl-field="etymology"]').value, "")
   assert.equal(row.querySelector('[data-vocabulary-origin-field="originPath"]').value, "Selected path")
   assert.equal(row.querySelector('[data-vocabulary-origin-field="originReferences"]').value, "")
+  dom.window.close()
+})
+
+test("Dictionary Builder preload keeps LEDs amber until the provider snapshot resolves", async () => {
+  const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor data-review-source-id=entry-1><input data-vocabulary-field=english value=commend><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
+  let resolvePreview
+  const previewResponse = new Promise((resolve) => { resolvePreview = resolve })
+  const context = {
+    window: dom.window,
+    document: dom.window.document,
+    location: dom.window.location,
+    Event: dom.window.Event,
+    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
+    MutationObserver: dom.window.MutationObserver,
+    fetch: async () => previewResponse,
+    setTimeout,
+  }
+  context.window.SIS_VOCABULARY_ESL = { grammarFields: [] }
+  context.window.fetch = context.fetch
+  context.window.setTimeout = (callback, delay = 0) => delay > 1200 ? 0 : setTimeout(callback, delay)
+  context.window.clearTimeout = clearTimeout
+  context.window.open = () => ({ closed: false, location: {} })
+  vm.runInNewContext(libraryReviewWorkbench, context)
+
+  const pane = dom.window.document.querySelector("[data-vocabulary-editor]")
+  const startup = pane.querySelector("[data-dictionary-builder-open-sources]")
+  const leds = () => [...pane.querySelectorAll(".dictionary-builder-source-led")].map((led) => led.dataset.sourceStatus)
+  startup.click()
+  assert.deepEqual(leds(), ["opening", "opening", "opening", "opening", "opening", "opening"])
+  resolvePreview({
+    ok: true,
+    json: async () => ({
+      ok: true,
+      sources: [
+        { provider: "britannica", status: "available" },
+        { provider: "ldoce", status: "waiting_for_input" },
+        { provider: "wordhelp", status: "not_found" },
+        { provider: "etymonline", status: "unavailable" },
+        { provider: "merriam_webster_thesaurus", status: "robot_blocked" },
+        { provider: "oxford_ame", status: "available" },
+      ],
+    }),
+  })
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.deepEqual(leds(), ["success", "popup-blocking", "not-found", "not-found", "popup-blocking", "success"])
+  await new Promise((resolve) => setTimeout(resolve, 1250))
+  assert.deepEqual(leds(), ["success", "popup-blocking", "not-found", "not-found", "popup-blocking", "success"])
+  assert.equal(startup.disabled, false)
+  assert.equal(startup.getAttribute("aria-busy"), null)
   dom.window.close()
 })
 
