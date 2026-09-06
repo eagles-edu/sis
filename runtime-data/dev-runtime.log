@@ -1,4 +1,2 @@
-◇ injected env (51) from .env.dev // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (51) from .env.dev // tip: ◈ secrets for agents [www.dotenvx.com]
 exercise-mailer listening on 127.0.0.1:8788 at /api/exercise-submission and /api/student-intake-submission (health: /healthz)
-(node:953947) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
-(Use `node --trace-deprecation ...` to show where the warning was created)

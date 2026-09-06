@@ -14,7 +14,7 @@ test("Prisma environment loading is explicit and fail-closed", () => {
   assert.match(config, /must identify the same file/u)
   assert.match(config, /expectedNodeEnvironment/u)
   assert.match(config, /Use only \.env\.dev, \.env\.test, or \.env/u)
-  assert.match(agents, /every Prisma command must receive `SIS_ENV_FILE` and `DOTENV_CONFIG_PATH`/u)
+  assert.match(agents, /every Prisma command must receive `SIS_ENV_FILE` and `DOTENV_CONFIG_PATH`/iu)
   assert.match(sop, /`prisma\.config\.ts` rejects missing, mismatched, unsupported, or cross-environment values/u)
 })
 

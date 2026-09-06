@@ -496,7 +496,7 @@
   --theme-footer-text: var(--secondary-color);
   --warn: #a46000;
 
-  --bright-gold-1: #ffd700;
+  --bright-gold-1: #F4C45F;
   --bright-gold-2: #fdd017;
   --portal-page-bg-wash:
     radial-gradient(920px 420px at -15% -20%, rgba(87, 114, 132, 0.24) 0%, transparent 62%),
@@ -5831,14 +5831,15 @@ body.student-portal-page .new-words-empty {
   padding: 12px 14px;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head {
-  align-items: flex-end;
-  display: flex;
+  display: flow-root;
   font-family: "B612 Mono", monospace;
-  flex-wrap: wrap;
-  gap: 6px;
   letter-spacing: normal;
   line-height: normal;
   margin-bottom: 1rem;
+}
+:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > :not(.new-word-edit, .library-admin-flat-edit) {
+  display: inline;
+  vertical-align: text-bottom;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .vocabulary-flat-entry-status {
   margin-block-end: 6px;
@@ -5846,14 +5847,19 @@ body.student-portal-page .new-words-empty {
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head strong {
   color: #B50010;
   font-family: "B612 Mono", monospace;
-  font-size: 1.38rem;
+  font-size: calc(1.38rem + 2px);
   letter-spacing: normal;
   line-height: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  word-break: normal;
 }
 html[data-theme="dark"] body.student-portal-page .new-word-entry-head strong,
 html[data-theme="dark"] :where(body.admin-portal-page, body.parent-portal-page) .new-word-entry-head strong {
-  color: #EDB144;
+  color: #F4C45F;
+}
+html:not([data-theme="dark"]) :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head strong {
+  color: #000000;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > span {
   color: var(--portal-text-muted);
@@ -5876,12 +5882,12 @@ html[data-theme="dark"] :where(body.admin-portal-page, body.parent-portal-page) 
 }
 html:not([data-theme="dark"]) :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > strong.new-word-entry-part-of-speech {
   color: #212121!important;
-  font-size: 1.28rem!important;
+  font-size: calc(1.28rem + 2px)!important;
   font-weight: 800!important;
 }
 html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > strong.new-word-entry-part-of-speech {
   color: #fbffff!important;
-  font-size: 1.28rem!important;
+  font-size: calc(1.28rem + 2px)!important;
   font-weight: 800!important;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .new-word-entry-plural em {
@@ -5890,12 +5896,14 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .new-word-entry-vietnamese {
   margin-inline-end: 0;
 }
-:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head .new-word-edit {
+:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head :is(.new-word-edit, .library-admin-flat-edit) {
   --portal-button-max-inline: 72px;
   --portal-button-min-block: 36px;
   --portal-button-min-inline: 72px;
   block-size: 36px;
-  margin-inline-start: auto;
+  float: right;
+  margin-inline-start: var(--portal-content-gap);
+  vertical-align: text-bottom;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition {
   display: flow-root;
@@ -6433,14 +6441,7 @@ body.admin-portal-page .library-dictionary-preview-actions select {
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-pos-details {
   color: var(--portal-text-soft);
-  white-space: nowrap;
-}
-
-@media (min-width: 901px) {
-  :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-  }
+  white-space: normal;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .vocabulary-verb-forms-display,
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .vocabulary-origin-references {
@@ -12809,6 +12810,8 @@ body.admin-portal-page.library-admin-page .library-pagination > span {
 
 .library-admin-entry summary {
   background: #CDE0FF;
+  color: var(--portal-text);
+  font-weight: 400;
 }
 
 .library-admin-entry summary {
@@ -12833,6 +12836,62 @@ html[data-theme="dark"] .library-admin-entry summary {
   content: "+";
   font-size: 1.25rem;
   font-weight: 700;
+}
+
+body.admin-portal-page.library-admin-page .library-admin-entry summary > .library-entry-word,
+body:is(.student-portal-page, .admin-portal-page) .library-entry-accordion-summary > .library-entry-word {
+  color: #F4C45F;
+  font-weight: 800;
+}
+
+html:not([data-theme="dark"]) body.admin-portal-page.library-admin-page .library-admin-entry summary > .library-entry-word,
+html:not([data-theme="dark"]) body:is(.student-portal-page, .admin-portal-page) .library-entry-accordion-summary > .library-entry-word {
+  color: #000000;
+}
+
+body.admin-portal-page.library-admin-page .library-admin-entry summary > .library-entry-pos,
+body:is(.student-portal-page, .admin-portal-page) .library-entry-accordion-summary > .library-entry-pos {
+  font-weight: 800;
+}
+
+body:is(.student-portal-page, .admin-portal-page) .library-entry-accordion-summary {
+  color: var(--portal-text);
+  display: flow-root;
+  font-weight: 400;
+}
+
+html[data-theme="dark"] body.admin-portal-page.library-admin-page :is(
+  .section-head > h1,
+  .section-head > h2,
+  .section-head > h3,
+  .section-head > h4,
+  .library-review-pane > h3,
+  .library-review-pane > h4,
+  .library-review-sidebar-heading > h3
+) {
+  color: #F4C45F !important;
+  font-weight: 800;
+}
+
+html:not([data-theme="dark"]) body.admin-portal-page.library-admin-page :is(
+  .section-head > h1,
+  .section-head > h2,
+  .section-head > h3,
+  .section-head > h4,
+  .library-review-pane > h3,
+  .library-review-pane > h4,
+  .library-review-sidebar-heading > h3
+) {
+  color: #000000 !important;
+}
+
+html[data-theme="dark"] body:is(.student-portal-page, .admin-portal-page) .new-word-entry-definition > section > strong {
+  color: #F4C45F !important;
+  font-weight: 800;
+}
+
+html:not([data-theme="dark"]) body:is(.student-portal-page, .admin-portal-page) .new-word-entry-definition > section > strong {
+  color: #000000 !important;
 }
 
 .library-admin-entry[open] summary::before {

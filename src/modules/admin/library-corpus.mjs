@@ -1559,9 +1559,9 @@ const DICTIONARY_BUILDER_ALLOWED_FIELDS = new Set(Object.keys(DICTIONARY_BUILDER
 const DICTIONARY_BUILDER_POS_FORM_FIELDS = Object.freeze(["countability", "physicalQuality", "grammaticalNumber", "primaryClassification", "materialUsage", "dualCountabilityUsage", "properNounVariantShift", "displayVerbForm", "verbRegularity", "verbTransitivity"])
 const DICTIONARY_BUILDER_DEFINITION_FIELDS = new Set(["definition", "verbForms", "stems", "synonymsAntonyms", "examples", "firstKnownUse"])
 
-export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {}, { ownerKey = "", clientOverride = null } = {}) {
+export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {}, { ownerKey = "", clientOverride = null, snapshotEntryId = id } = {}) {
   const { buildSelectedDictionaryBuilderCitations, formatDictionaryBuilderDefinition, recordDictionaryBuilderMetrics, restoreDictionaryBuilderSnapshot, takeDictionaryBuilderSnapshot } = await import("./dictionary-builder.mjs")
-  const snapshot = takeDictionaryBuilderSnapshot(payload?.snapshotId, { ownerKey, entryId: id })
+  const snapshot = takeDictionaryBuilderSnapshot(payload?.snapshotId, { ownerKey, entryId: snapshotEntryId || id })
   if (!snapshot) throw dictionaryStatusError("Dictionary Builder preview is unavailable, expired, or belongs to another session", 404)
   const client = clientOverride || await prisma()
   const existing = await client.libraryEntry.findUnique({ where: { id } })
@@ -1576,6 +1576,13 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
   const definitionFields = {}
   const claimLedger = []
   const selectedAudio = []
+  const hasSelectionValue = (candidate) => {
+    if (candidate === undefined || candidate === null) return false
+    if (typeof candidate === "string") return Boolean(text(candidate))
+    if (Array.isArray(candidate)) return candidate.length > 0
+    if (typeof candidate === "object") return Object.keys(candidate).length > 0
+    return Boolean(text(candidate))
+  }
   for (const field of selectedFields) {
     if (["verbForms", "verbFormAudio"].includes(DICTIONARY_BUILDER_FIELD_TO_DATUM[field]) && lower(existing.partOfSpeech) !== "verb") continue
     const selection = selections[field]
@@ -1584,9 +1591,11 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
     const value = selection && typeof selection === "object" && Object.hasOwn(selection, "value") ? selection.value : source?.fields?.[field]
     const datum = DICTIONARY_BUILDER_FIELD_TO_DATUM[field]
     const manualSelection = provider === "manual"
-    if ((!manualSelection && (!source || source?.datumStatus?.[datum]?.status !== "available")) || (manualSelection && !text(value))) continue
+    const sourceDatumAvailable = source?.datumStatus?.[datum]?.status === "available"
+    const pausedSourceOverride = Boolean(source) && !sourceDatumAvailable && hasSelectionValue(value)
+    if ((!sourceDatumAvailable && !manualSelection && !pausedSourceOverride) || (manualSelection && !hasSelectionValue(value))) continue
     if (field === "audio" || field === "verbFormAudio") {
-      if (manualSelection) continue
+      if (manualSelection || !sourceDatumAvailable) continue
       const media = (source.privateMedia || []).filter((item) => field === "audio" ? (item.slot || "headword") === "headword" : item.slot && item.slot !== "headword")
       selectedAudio.push({ field, provider, media })
       claimLedger.push({ field, provider, status: "available" })

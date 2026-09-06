@@ -33,24 +33,30 @@ function audioUrl(node) {
   return ""
 }
 
-export async function fetchMerriamWebsterBrowserPage(sourceUrl) {
+export async function fetchMerriamWebsterBrowserPage(sourceUrl, { signal } = {}) {
   let browser
+  const abortBrowser = () => { void browser?.close() }
   try {
+    if (signal?.aborted) throw signal.reason || new Error("Merriam-Webster browser access aborted")
     const { chromium } = await import("playwright")
     const launchOptions = { headless: true, args: ["--no-sandbox"] }
     const executablePath = process.env.MERRIAM_WEBSTER_BROWSER_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
     if (existsSync(executablePath)) launchOptions.executablePath = executablePath
     browser = await chromium.launch(launchOptions)
+    signal?.addEventListener("abort", abortBrowser, { once: true })
     const context = await browser.newContext({ userAgent: MERRIAM_WEBSTER_BROWSER_USER_AGENT })
     const page = await context.newPage()
     const response = await page.goto(sourceUrl, { waitUntil: "domcontentloaded", timeout: MERRIAM_WEBSTER_BROWSER_TIMEOUT_MS })
     const html = await page.content()
     const status = response?.status() || 200
-    if (status >= 400 || isMerriamWebsterAccessChallenge(html)) return { ok: false, status, robotBlocked: true, url: page.url(), html, message: "Merriam-Webster requires robot verification because the source presented an access challenge; open the source page and complete the prompt before retrying." }
+    if (isMerriamWebsterAccessChallenge(html) || status === 403) return { ok: false, status, robotBlocked: true, url: page.url(), html, message: "Merriam-Webster requires robot verification because the source presented an access challenge; open the source page and complete the prompt before retrying." }
+    if (status >= 400) return { ok: false, status, available: true, url: page.url(), html, message: `Merriam-Webster returned HTTP ${status}; no Library data was changed.` }
     return { ok: true, status, url: page.url(), html }
   } catch (error) {
+    if (signal?.aborted) throw signal.reason || error
     return { ok: false, available: false, message: `Merriam-Webster browser access failed; no Library data was changed. ${error.message}` }
   } finally {
+    signal?.removeEventListener("abort", abortBrowser)
     await browser?.close().catch(() => {})
   }
 }

@@ -133,6 +133,71 @@ test("Dictionary Builder Apply keeps unrelated incomplete noun profiles from blo
   assert.equal(updates[0].vietnamese, "cuộc không kích")
 })
 
+test("Dictionary Builder Apply accepts manual and paused datum values independently", async () => {
+  const { DICTIONARY_BUILDER_DATUMS, DICTIONARY_BUILDER_MANIFEST, previewDictionaryBuilder } = await import("../src/modules/admin/dictionary-builder.mjs")
+  const { applyDictionaryBuilderSnapshot } = await import("../src/modules/admin/library-corpus.mjs")
+  const entry = { id: "double-decker-entry", english: "double-decker", partOfSpeech: "noun", definition: "", originReferences: null }
+  const unavailable = (provider) => ({ provider, status: "unavailable", fields: {}, entries: [], media: [], datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: "not_offered" }])) })
+  const fetcher = Object.fromEntries(DICTIONARY_BUILDER_MANIFEST.map(({ id }) => [id, async () => unavailable(id)]))
+  fetcher.merriam_webster_thesaurus = async () => ({
+    provider: "merriam_webster_thesaurus",
+    status: "robot_blocked",
+    sourceUrl: "https://www.merriam-webster.com/thesaurus/double-decker",
+    fields: {},
+    entries: [],
+    media: [],
+    datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: datum === "synonymsAntonyms" ? "robot_blocked" : "not_offered" }])),
+  })
+  fetcher.etymonline = async () => ({
+    provider: "etymonline",
+    status: "cookie_prompt",
+    sourceUrl: "https://www.etymonline.com/search?q=double-decker",
+    fields: {},
+    entries: [],
+    media: [],
+    datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: datum === "etymology" ? "cookie_prompt" : "not_offered" }])),
+  })
+  fetcher.google_translate = async () => ({
+    provider: "google_translate",
+    status: "available",
+    sourceUrl: "https://translate.google.com/?sl=en&tl=vi&text=double-decker&op=translate",
+    fields: { vietnamese: "xe buýt hai tầng" },
+    entries: [],
+    media: [],
+    datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: datum === "vietnamese" ? "available" : "not_offered" }])),
+  })
+  const rankedSourcesByDatum = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, []]))
+  const snapshot = await previewDictionaryBuilder(entry, { ownerKey: "manual-paused-test", fetcher, rankedSources: [], rankedSourcesByDatum })
+  const updates = []
+  const client = {
+    libraryEntry: { findUnique: async () => entry },
+    $transaction: async (callback) => callback({
+      libraryEntry: { update: async ({ data }) => { updates.push(data); return { ...entry, ...data } } },
+      libraryEntryRevision: { create: async () => ({}) },
+      dictionaryProviderSuitabilityMetric: { upsert: async () => ({}) },
+    }),
+  }
+  const result = await applyDictionaryBuilderSnapshot(entry.id, { name: "Tester", role: "admin" }, {
+    snapshotId: snapshot.id,
+    mode: "replace_all",
+    selections: {
+      vietnamese: { provider: "manual", value: "xe buýt hai tầng" },
+      synonymsAntonyms: { provider: "merriam_webster_thesaurus", value: "Synonyms:\nbus\ncoach" },
+      etymology: { provider: "etymonline", value: "From the history of double-decker buses." },
+      examples: { provider: "merriam_webster_thesaurus", value: "" },
+    },
+  }, { ownerKey: "manual-paused-test", clientOverride: client })
+  assert.equal(result.ok, true)
+  assert.equal(result.entry.vietnamese, "xe buýt hai tầng")
+  assert.equal(result.entry.etymology, "From the history of double-decker buses.")
+  assert.ok(result.appliedFields.includes("vietnamese"))
+  assert.ok(result.appliedFields.includes("etymology"))
+  assert.ok(result.appliedFields.includes("definition"))
+  assert.equal(updates.length, 1)
+  assert.equal(updates[0].vietnamese, "xe buýt hai tầng")
+  assert.equal(result.entry.dictionaryMetadata.claims.find((claim) => claim.field === "synonymsAntonyms").status, "robot_blocked")
+})
+
 test("Dictionary Builder Apply carries every formatted definition datum into the canonical entry", async () => {
   const { DICTIONARY_BUILDER_DATUMS, previewDictionaryBuilder } = await import("../src/modules/admin/dictionary-builder.mjs")
   const { applyDictionaryBuilderSnapshot } = await import("../src/modules/admin/library-corpus.mjs")

@@ -255,7 +255,7 @@ test("WordHelp 429 robot HTML hands off to browser HTML and parses the verified 
       return { ok: true, status: 200, url: "https://www.wordhelp.com/syllables/english/?q=many", html: "<main><li>Divide many into syllables: MAN-y</li><li>Stressed syllable in many: MAN</li><li>2 syllables</li></main>" }
     },
   )
-  assert.equal(fetchCalls, 3)
+  assert.equal(fetchCalls, 1)
   assert.equal(browserCalls, 1)
   assert.equal(preview.status, "available")
   assert.equal(preview.fields.syllabication, "MAN-y")
@@ -298,7 +298,57 @@ test("Dictionary Builder retries only the challenged provider in its existing sn
   assert.equal(retried.sources.find((source) => source.provider === "ldoce")?.status, "available")
   assert.equal(retried.sources.find((source) => source.provider === "ldoce")?.fields.definition, "to praise")
   assert.deepEqual(calls, ["ldoce", "ldoce"])
+  const retriedAgain = await retryDictionaryBuilderSnapshot(snapshot.id, { id: "entry-retry", english: "commend", partOfSpeech: "verb" }, { ownerKey: "session-retry", provider: "ldoce", fetcher })
+  assert.equal(retriedAgain.sources.filter((source) => source.provider === "ldoce").length, 1)
+  assert.equal(retriedAgain.sources.find((source) => source.provider === "ldoce")?.status, "available")
+  assert.deepEqual(calls, ["ldoce", "ldoce", "ldoce"])
   assert.equal(await retryDictionaryBuilderSnapshot(snapshot.id, { id: "other-entry" }, { ownerKey: "session-retry", provider: "ldoce", fetcher }), null)
+})
+
+test("Dictionary Builder continues datum fallback pulls after an initial provider waits", async () => {
+  const calls = []
+  const unavailable = (provider) => async () => ({ provider, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} })
+  const fetcher = Object.fromEntries(DICTIONARY_BUILDER_MANIFEST.map((source) => [source.id, unavailable(source.id)]))
+  fetcher.wordhelp = async () => {
+    calls.push("wordhelp")
+    return { provider: "wordhelp", status: "waiting_for_input", fields: {}, entries: [], media: [], datumStatus: { syllabication: { status: "waiting_for_input" }, syllableCount: { status: "waiting_for_input" } } }
+  }
+  fetcher.etymonline = async () => {
+    calls.push("etymonline")
+    return { provider: "etymonline", status: "available", fields: { etymology: "From Old English." }, entries: [], media: [], datumStatus: { etymology: { status: "available" } } }
+  }
+  const rankedSourcesByDatum = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, []]))
+  const snapshot = await previewDictionaryBuilder(
+    { id: "entry-fallback", english: "funny", partOfSpeech: "adjective" },
+    { ownerKey: "session-fallback", fetcher, rankedSources: [{ provider: "ldoce", score: 99 }], rankedSourcesByDatum },
+  )
+  assert.deepEqual(calls, ["wordhelp", "etymonline"])
+  assert.equal(snapshot.sources.filter((source) => source.provider === "etymonline").length, 1)
+  assert.equal(snapshot.sources.find((source) => source.provider === "etymonline")?.datumStatus?.etymology?.status, "available")
+})
+
+test("Dictionary Builder always pulls Etymonline for the first etymology preview", async () => {
+  const calls = []
+  const available = (provider) => async () => {
+    calls.push(provider)
+    return {
+      provider,
+      status: "available",
+      fields: provider === "merriam_webster_api" ? { etymology: "From MW." } : provider === "etymonline" ? { etymology: "From ET." } : {},
+      entries: [],
+      media: [],
+      datumStatus: provider === "merriam_webster_api" || provider === "etymonline" ? { etymology: { status: "available" } } : {},
+    }
+  }
+  const fetcher = Object.fromEntries(DICTIONARY_BUILDER_MANIFEST.map(({ id }) => [id, available(id)]))
+  const rankedSourcesByDatum = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, []]))
+  const snapshot = await previewDictionaryBuilder(
+    { id: "entry-etymology-first", english: "commend", partOfSpeech: "verb" },
+    { ownerKey: "session-etymology-first", fetcher, rankedSources: [{ provider: "merriam_webster_api", score: 99 }], rankedSourcesByDatum },
+  )
+  assert.ok(calls.includes("etymonline"))
+  assert.equal(snapshot.sources.find((source) => source.provider === "etymonline")?.fields?.etymology, "From ET.")
+  assert.equal(snapshot.datumSourceOrder.etymology[0], "etymonline")
 })
 
 test("Dictionary Builder first pass uses the locked initial sources plus GT", async () => {
@@ -319,9 +369,9 @@ test("Dictionary Builder first pass uses the locked initial sources plus GT", as
     { id: "entry-2", english: "commend", partOfSpeech: "verb" },
     { ownerKey: "session-a", fetcher, rankedSources: [{ provider: "ldoce", score: 99 }, { provider: "britannica", score: 98 }, { provider: "merriam_webster", score: 97 }] },
   )
-  assert.deepEqual(snapshot.sourceOrder.map((provider) => provider === "merriam_webster_scrape" ? "merriam_webster" : provider), ["ldoce", "oxford_ame", "merriam_webster_thesaurus", "britannica", "merriam_webster", "merriam_webster_api", "wordhelp", "google_translate"])
+  assert.deepEqual(snapshot.sourceOrder.map((provider) => provider === "merriam_webster_scrape" ? "merriam_webster" : provider), ["ldoce", "oxford_ame", "merriam_webster_thesaurus", "britannica", "merriam_webster", "merriam_webster_api", "wordhelp", "google_translate", "etymonline"])
   assert.deepEqual(calls.map((provider) => provider === "merriam_webster" ? "merriam_webster_scrape" : provider), snapshot.sourceOrder)
-  assert.equal(snapshot.sources.length, 8)
+  assert.equal(snapshot.sources.length, 9)
 })
 
 test("Dictionary Builder queries the complete ranked datum set without fallback substitution", async () => {
@@ -473,6 +523,11 @@ test("MW Thesaurus keeps only the top four rows in each relation category", asyn
     ok: true,
     url: "https://www.merriam-webster.com/thesaurus/commend",
     text: async () => '<main><section class="thesaurus-pos"><h2>verb</h2><section class="synonym-list"><ul><li>praise</li><li>applaud</li><li>esteem</li><li>laud</li><li>honor</li></ul></section><section class="antonym-list"><ul><li>blame</li><li>criticize</li><li>condemn</li><li>reject</li><li>disparage</li></ul></section></section></main>',
+  }), async (url) => ({
+    ok: true,
+    status: 200,
+    url,
+    html: '<main><section class="thesaurus-pos"><h2>verb</h2><section class="synonym-list"><ul><li>praise</li><li>applaud</li><li>esteem</li><li>laud</li><li>honor</li></ul></section><section class="antonym-list"><ul><li>blame</li><li>criticize</li><li>condemn</li><li>reject</li><li>disparage</li></ul></section></section></main>',
   }))
   assert.equal(result.datumStatus.synonymsAntonyms.status, "available")
   assert.equal(result.fields.synonymsAntonyms, "Synonyms:\npraise\napplaud\nesteem\nlaud\n\nAntonyms:\nblame\ncriticize\ncondemn\nreject")
@@ -481,6 +536,11 @@ test("MW Thesaurus keeps only the top four rows in each relation category", asyn
     ok: true,
     url: "https://www.merriam-webster.com/thesaurus/approve",
     text: async () => '<main><section class="thesaurus-pos"><h2>verb</h2><section class="synonym-list"><ul><li>one two three four</li><li>five six seven eight</li><li>nine ten eleven twelve</li><li>thirteen</li></ul></section></section></main>',
+  }), async (url) => ({
+    ok: true,
+    status: 200,
+    url,
+    html: '<main><section class="thesaurus-pos"><h2>verb</h2><section class="synonym-list"><ul><li>one two three four</li><li>five six seven eight</li><li>nine ten eleven twelve</li><li>thirteen</li></ul></section></section></main>',
   }))
   assert.equal(wordLimited.fields.synonymsAntonyms, "Synonyms:\none two three four\nfive six seven eight\nnine ten eleven twelve")
 
@@ -488,6 +548,11 @@ test("MW Thesaurus keeps only the top four rows in each relation category", asyn
     ok: true,
     url: "https://www.merriam-webster.com/thesaurus/commend",
     text: async () => '<main><section class="thesaurus-pos"><h2>verb</h2><section class="synonyms-and-antonyms"><div class="synonyms-and-antonyms__list--synonyms"><ul><li>praise</li><li>honor</li></ul></div><div class="synonyms-and-antonyms__list--antonyms"><ul><li>blame</li><li>rebuke</li></ul></div></section></section></main>',
+  }), async (url) => ({
+    ok: true,
+    status: 200,
+    url,
+    html: '<main><section class="thesaurus-pos"><h2>verb</h2><section class="synonyms-and-antonyms"><div class="synonyms-and-antonyms__list--synonyms"><ul><li>praise</li><li>honor</li></ul></div><div class="synonyms-and-antonyms__list--antonyms"><ul><li>blame</li><li>rebuke</li></ul></div></section></section></main>',
   }))
   assert.equal(nested.fields.synonymsAntonyms, "Synonyms:\npraise\nhonor\n\nAntonyms:\nblame\nrebuke")
 
@@ -495,8 +560,49 @@ test("MW Thesaurus keeps only the top four rows in each relation category", asyn
     ok: true,
     url: "https://www.merriam-webster.com/thesaurus/scarce",
     text: async () => `<main><section class="thesaurus-pos"><h2>adjective</h2>${antonymsFixture}</section></main>`,
+  }), async (url) => ({
+    ok: true,
+    status: 200,
+    url,
+    html: `<main><section class="thesaurus-pos"><h2>adjective</h2>${antonymsFixture}</section></main>`,
   }))
   assert.equal(mwHeader.fields.synonymsAntonyms, "Antonyms:\nabundant\nplentiful\nsufficient\nadequate")
+})
+
+test("MW Thesaurus uses browser access before challenge-prone direct HTTP", async () => {
+  const calls = []
+  const result = await previewHtmlAdapter(
+    "merriam_webster_thesaurus",
+    { english: "commend", partOfSpeech: "verb" },
+    async () => {
+      calls.push("http")
+      return { ok: false, status: 403, text: async () => "challenge" }
+    },
+    async (_url, options) => {
+      calls.push(["browser", options.signal instanceof AbortSignal])
+      return {
+        ok: true,
+        status: 200,
+        url: "https://www.merriam-webster.com/thesaurus/commend",
+        html: '<main><section class="thesaurus-pos"><h2>verb</h2><section class="synonym-list"><ul><li>praise</li></ul></section></section></main>',
+      }
+    },
+  )
+  assert.deepEqual(calls, [["browser", false]])
+  assert.equal(result.status, "available")
+  assert.equal(result.datumStatus.synonymsAntonyms.status, "available")
+  assert.equal(result.fields.synonymsAntonyms, "Synonyms:\npraise")
+})
+
+test("MW Thesaurus keeps browser 404s as not found rather than robot prompts", async () => {
+  const result = await previewHtmlAdapter(
+    "merriam_webster_thesaurus",
+    { english: "air strike", partOfSpeech: "noun" },
+    async () => ({ ok: false, status: 403, text: async () => "challenge" }),
+    async (url) => ({ ok: false, status: 404, available: true, url, html: "<main>Not found</main>" }),
+  )
+  assert.equal(result.status, "not_found")
+  assert.equal(result.datumStatus.synonymsAntonyms.status, "not_found")
 })
 
 test("Dictionary Builder always sources Vietnamese from the automatic Google Translate adapter", async () => {

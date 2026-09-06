@@ -76,7 +76,104 @@
       .join("");
   }
 
+  const LIBRARY_AUDIO_ICON_PATH = "/web-asset/icons/svg/speaker-red-usa.svg";
+  let libraryAudioAnimationId = 0;
+
+  function restartLibraryAudioAnimation(image) {
+    if (!image) return;
+    const currentPath = image.dataset.libraryIconPath || String(image.getAttribute("src") || "").split("?")[0];
+    if (!currentPath) return;
+    image.dataset.libraryIconPath = currentPath;
+    libraryAudioAnimationId += 1;
+    image.setAttribute("src", `${currentPath}?animation=${libraryAudioAnimationId}`);
+  }
+
+  function bindLibraryAudioControl(button, audio) {
+    if (!button || !audio) return null;
+    if (button.__sisLibraryAudioControl) return button.__sisLibraryAudioControl;
+    const image = button.querySelector?.("img");
+    if (!image) return null;
+    const animationEndGraceMs = 250;
+    const animationCycleMs = 1000;
+    let animationLoopTimer = null;
+    let animationEndTimer = null;
+    const stopAnimation = () => {
+      if (animationLoopTimer !== null) window.clearInterval(animationLoopTimer);
+      if (animationEndTimer !== null) window.clearTimeout(animationEndTimer);
+      animationLoopTimer = null;
+      animationEndTimer = null;
+      button.classList.remove("is-playing");
+    };
+    const startAnimation = () => {
+      if (animationLoopTimer !== null) window.clearInterval(animationLoopTimer);
+      if (animationEndTimer !== null) window.clearTimeout(animationEndTimer);
+      animationEndTimer = null;
+      restartLibraryAudioAnimation(image);
+      animationLoopTimer = window.setInterval(() => restartLibraryAudioAnimation(image), animationCycleMs);
+    };
+    const play = () => {
+      button.classList.add("is-playing");
+      startAnimation();
+      audio.currentTime = 0;
+      try {
+        const playback = audio.play();
+        if (playback?.catch) playback.catch(() => stopAnimation());
+      } catch {
+        stopAnimation();
+      }
+    };
+    const click = (event) => {
+      if (event.defaultPrevented) return;
+      event.preventDefault();
+      play();
+    };
+    button.addEventListener("mouseenter", () => { if (animationLoopTimer === null) restartLibraryAudioAnimation(image); });
+    button.addEventListener("focus", () => restartLibraryAudioAnimation(image));
+    button.addEventListener("click", click);
+    audio.addEventListener("ended", () => {
+      if (animationEndTimer !== null) window.clearTimeout(animationEndTimer);
+      animationEndTimer = window.setTimeout(stopAnimation, animationEndGraceMs);
+    });
+    audio.addEventListener("pause", () => { if (!audio.ended) stopAnimation(); });
+    audio.addEventListener("error", stopAnimation);
+    const control = { play, stop: stopAnimation, preview: () => restartLibraryAudioAnimation(image) };
+    button.__sisLibraryAudioControl = control;
+    button.dataset.audioBound = "true";
+    return control;
+  }
+
+  function libraryAudioRoot(button) {
+    return button.closest?.("[data-vocabulary-flat-entry], [data-review-pane], [data-vocabulary-editor], [data-approved-editor]") || document;
+  }
+
+  function libraryAudioControlFor(button) {
+    const audioKey = button?.dataset?.libraryAudioKey;
+    if (!audioKey) return null;
+    const root = libraryAudioRoot(button);
+    const audio = [...root.querySelectorAll("[data-library-preview-audio]")].find((candidate) => candidate.dataset.libraryPreviewAudio === audioKey);
+    if (!audio) return null;
+    return { audio, control: bindLibraryAudioControl(button, audio) };
+  }
+
+  function handleLibraryAudioClick(event) {
+    const button = event.target?.closest?.("[data-library-audio-trigger]");
+    if (!button || button.dataset.audioBound === "true") return;
+    const resolved = libraryAudioControlFor(button);
+    if (!resolved?.control) return;
+    event.preventDefault();
+    resolved.control.play();
+  }
+
+  function handleLibraryAudioHover(event) {
+    const button = event.target?.closest?.("[data-library-audio-trigger]");
+    if (!button || button.dataset.audioBound === "true" || (event.relatedTarget && button.contains(event.relatedTarget))) return;
+    const resolved = libraryAudioControlFor(button);
+    resolved?.control?.preview();
+  }
+
   if (typeof document?.addEventListener === "function") {
+    document.addEventListener("click", handleLibraryAudioClick, true);
+    document.addEventListener("mouseover", handleLibraryAudioHover, true);
     document.addEventListener("input", (event) => {
       const input = event?.target;
       if (input?.matches?.('[data-vocabulary-field="syllabication"]')) input.value = normalizeSyllabication(input.value);
@@ -1056,6 +1153,17 @@
     return `${primary} | vi: ${model.vietnamese} |${model.secondaryMetadata ? ` ${model.secondaryMetadata}` : ""}`;
   }
 
+  function flatEntrySummaryHtml(entry = {}) {
+    const model = flatEntryHeaderModel(entry);
+    const primary = [
+      `<strong class="library-entry-word">${escapeHtml(model.english)}</strong>`,
+      `<span class="library-entry-pronunciation">/${escapeHtml(model.pronunciation)}/</span>`,
+      model.partOfSpeech ? `<strong class="library-entry-pos">${escapeHtml(model.partOfSpeech)}</strong>` : "",
+      model.primaryMetadata ? `<span class="library-entry-subtype">${escapeHtml(model.primaryMetadata)}</span>` : "",
+    ].filter(Boolean).join(" ");
+    return `${primary} | vi: ${escapeHtml(model.vietnamese)} |${model.secondaryMetadata ? ` ${escapeHtml(model.secondaryMetadata)}` : ""}`;
+  }
+
   function flatEntryHtml(entry = {}, { index = "", editClass = "vocabulary-flat-edit", editLabel = "Edit", editAttributes = "", entryAttributes = "", extraHtml = "", accordion = false } = {}) {
     const source = entry && typeof entry === "object" ? entry : {};
     const model = flatEntryHeaderModel(source);
@@ -1065,9 +1173,9 @@
     const editButton = editLabel === null ? "" : `<button type="button" class="portal-button portal-button-primary ${escapeHtml(editClass)}" ${editAttributes} title="Edit this vocabulary entry" aria-label="Edit this vocabulary entry">${escapeHtml(editLabel)}</button>`;
     const headerSeparator = `<span class="vocabulary-flat-entry-separator" aria-hidden="true">|</span>`;
     const header = `${accordion && model.legacyPending ? `<span class="vocabulary-flat-entry-status"><span class="chip chip-warn">Legacy</span></span>` : ""}
-        <strong>${escapeHtml(model.english)}</strong>
+        <strong class="library-entry-word">${escapeHtml(model.english)}</strong>
         <span class="new-word-entry-pronunciation">/${escapeHtml(model.pronunciation)}/</span>
-        <strong class="new-word-entry-part-of-speech">${escapeHtml(model.partOfSpeech)}</strong>
+        <strong class="new-word-entry-part-of-speech library-entry-pos">${escapeHtml(model.partOfSpeech)}</strong>
         ${model.primaryMetadata ? `<span class="vocabulary-flat-entry-subtype">${escapeHtml(model.primaryMetadata)}</span>` : ""}
         ${headerSeparator}
         <span class="new-word-entry-vietnamese">vi: ${escapeHtml(model.vietnamese)}</span>
@@ -1097,6 +1205,9 @@
     normalizeDefinitionText,
     htmlToDefinitionText,
     canonicalizeSyllabication,
+    bindLibraryAudioControl,
+    libraryAudioControlFor,
+    libraryAudioIconPath: LIBRARY_AUDIO_ICON_PATH,
     parametersHtml,
     posControlsHtml,
     sync,
@@ -1107,6 +1218,7 @@
     grammarFields,
     editorRowHtml,
     flatEntrySummaryText,
+    flatEntrySummaryHtml,
     flatEntryHtml,
     definitionHtml,
     insertEtymologyDeterministically,

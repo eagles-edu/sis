@@ -96,6 +96,11 @@ export default function (opts) {
                 style = document.createElement("style");
                 style.textContent = styleText;
                 this.shadowRoot.replaceChildren(style, svg);
+            }).catch((error) => {
+                if (controller.signal.aborted || error?.name === "AbortError") {
+                    return;
+                }
+                console.error(`Unable to load SVG icon: ${src}`, error);
             });
         }
         attributeChangedCallback(name, oldValue, newValue) {

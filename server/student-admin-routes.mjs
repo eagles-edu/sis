@@ -6868,7 +6868,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const sourceId = decodeURIComponent(dictionaryBuilderPreviewMatch[1])
     const stored = sourceId === "new-canonical" ? null : await getLibraryEntry(sourceId)
-    const entry = normalizeText(payload?.entry?.english) ? { ...(stored || {}), ...payload.entry, id: stored?.id || "" } : stored
+    const entry = normalizeText(payload?.entry?.english) ? { ...(stored || {}), ...payload.entry, id: sourceId === "new-canonical" ? sourceId : stored?.id || "" } : stored
     if (!entry) { const error = new Error("Library entry was not found"); error.statusCode = 404; throw error }
     sendJson(response, 200, { ok: true, ...(await previewDictionaryBuilder(entry, { ownerKey: dictionaryBuilderOwnerKey })) })
     return true
@@ -6879,7 +6879,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const entryId = decodeURIComponent(dictionaryBuilderRetryMatch[1])
     const stored = entryId === "new-canonical" ? null : await getLibraryEntry(entryId)
-    const entry = normalizeText(payload?.entry?.english) ? { ...(stored || {}), ...payload.entry, id: stored?.id || "" } : stored
+    const entry = normalizeText(payload?.entry?.english) ? { ...(stored || {}), ...payload.entry, id: entryId === "new-canonical" ? entryId : stored?.id || "" } : stored
     if (!entry) { const error = new Error("Library entry was not found"); error.statusCode = 404; throw error }
     const snapshot = await retryDictionaryBuilderSnapshot(
       decodeURIComponent(dictionaryBuilderRetryMatch[2]),
@@ -6904,7 +6904,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const entryId = decodeURIComponent(dictionaryBuilderApplyMatch[1])
     if (entryId === "new-canonical") { const error = new Error("Save the canonical Library entry before applying Dictionary Builder data"); error.statusCode = 409; throw error }
     const payload = await parseBody(request)
-    sendJson(response, 200, await applyDictionaryBuilderSnapshot(entryId, { name: session.username, role: session.role }, { ...payload, snapshotId: decodeURIComponent(dictionaryBuilderApplyMatch[2]) }, { ownerKey: dictionaryBuilderOwnerKey }))
+    sendJson(response, 200, await applyDictionaryBuilderSnapshot(entryId, { name: session.username, role: session.role }, { ...payload, snapshotId: decodeURIComponent(dictionaryBuilderApplyMatch[2]) }, { ownerKey: dictionaryBuilderOwnerKey, snapshotEntryId: normalizeText(payload?.snapshotEntryId) || entryId }))
     return true
   }
   const entryMatch = pathname.match(ADMIN_LIBRARY_ENTRIES_PATH_RE)

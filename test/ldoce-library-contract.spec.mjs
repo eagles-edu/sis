@@ -29,7 +29,12 @@ test("dictionary scraper integrations preserve protected media and audit contrac
   assert.doesNotMatch(adminLibrary, /includeLdoce: true|includeOxford: true|includeBritannica: true|includeMerriamWebster: true/)
   for (const token of ["dictionary-builder/preview", "dictionary-builder/previews", "applyDictionaryBuilderSnapshot", "previewDictionaryBuilder", "readDictionaryBuilderSnapshot"]) assert.match(routes, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")))
   assert.match(routes, /sourceId === "new-canonical" \? null : await getLibraryEntry\(sourceId\)/)
+  assert.match(routes, /id: sourceId === "new-canonical" \? sourceId : stored\?\.id \|\| ""/)
+  assert.match(routes, /id: entryId === "new-canonical" \? entryId : stored\?\.id \|\| ""/)
   assert.match(routes, /entryId === "new-canonical".*statusCode = 409/)
+  assert.match(routes, /snapshotEntryId: normalizeText\(payload\?\.snapshotEntryId\) \|\| entryId/)
+  assert.match(corpus, /snapshotEntryId = id/)
+  assert.match(corpus, /entryId: snapshotEntryId \|\| id/)
   for (const token of ["DictionaryProviderSuitabilityMetric", "attemptCount", "availableCount", "selectedApplyCount"]) assert.match(schema, new RegExp(token))
   for (const token of ["data-vocabulary-dictionary-builder", "safe-rule"]) assert.match(editor, new RegExp(token))
   assert.doesNotMatch(editor, /data-dictionary-builder-source-matrix/)
@@ -42,8 +47,12 @@ test("dictionary scraper integrations preserve protected media and audit contrac
   assert.match(workbench, /datum === "vietnamese" && source\.provider !== "google_translate"/)
   assert.match(workbench, /const statusSourceIds = datum === "vietnamese"/)
   assert.match(workbench, /snapshot\.datumSourceOrder\?\.\[datum\] \|\| \[\]/)
-  assert.match(workbench, /const canApply = sourceId !== "new-canonical"/)
-  assert.match(workbench, /Save the canonical Library entry before applying Dictionary Builder data\./)
+  assert.match(workbench, /const draftOnly = sourceId === "new-canonical"/)
+  assert.match(workbench, /Apply selected data to this editable draft; save the canonical entry to persist it\./)
+  assert.match(workbench, /applyDictionaryBuilderDraftSelections/)
+  assert.match(workbench, /dictionaryBuilderPending/)
+  assert.match(workbench, /selected media/)
+  assert.doesNotMatch(workbench, /requires a saved canonical entry and was not downloaded/)
   assert.match(workbench, /wordhelp\.com\/syllables\/english\/\?q=/)
   assert.match(workbench, /const status = source\.datumStatus\?\.\[datum\]\?\.status/)
   assert.match(workbench, /isDictionaryBuilderPromptStatus\(status\) \|\| \(status === "available" && hasDictionaryBuilderValue\(source\.fields\?\.\[datum\]\)\)/)
@@ -93,6 +102,7 @@ test("dictionary MP3 controls keep the requested speaker icons and playback wiri
     "audio.play()",
     "button.dataset.audioBound === \"true\"",
     "event.preventDefault()",
+    "AUDIO_END_ANIMATION_GRACE_MS = 250",
     "is-playing",
   ]) assert.match(workbench, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")))
   assert.match(sharedTheme, /\.library-audio-row\s*\{[\s\S]*?min-block-size:\s*48px/)

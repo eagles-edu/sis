@@ -23,6 +23,7 @@ const MAX_SNAPSHOT_BYTES = 10 * 1024 * 1024
 const GOOGLE_TRANSLATE_TIMEOUT_MS = 8000
 const DICTIONARY_BUILDER_PROVIDER_TIMEOUT_MS = 12000
 const DICTIONARY_BUILDER_PREVIEW_TIMEOUT_MS = 45000
+const WORDHELP_PROVIDER_TIMEOUT_MS = 30000
 const snapshots = new Map()
 const datumRoundRobinCursors = new Map()
 const text = (value) => String(value == null ? "" : value).replace(/\s+/gu, " ").trim()
@@ -41,14 +42,17 @@ function isWordHelpRobotPrompt(html) {
   return /not a robot|<h1[^>]*>[^<]*robot[^<]*<\/h1>|captcha-card|id=["']solveBtn["']|pow_init|pow_verify/iu.test(String(html || ""))
 }
 
-export async function fetchWordHelpBrowserPage(sourceUrl) {
+export async function fetchWordHelpBrowserPage(sourceUrl, { signal } = {}) {
   let browser
+  const abortBrowser = () => { void browser?.close() }
   try {
+    if (signal?.aborted) throw signal.reason || new Error("WordHelp browser access aborted")
     const { chromium } = await import("playwright")
     const launchOptions = { headless: true, args: ["--no-sandbox"] }
     const executablePath = process.env.WORDHELP_BROWSER_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
     if (existsSync(executablePath)) launchOptions.executablePath = executablePath
     browser = await chromium.launch(launchOptions)
+    signal?.addEventListener("abort", abortBrowser, { once: true })
     const context = await browser.newContext({ userAgent: WORDHELP_BROWSER_USER_AGENT })
     const page = await context.newPage()
     const response = await page.goto(sourceUrl, { waitUntil: "domcontentloaded", timeout: WORDHELP_BROWSER_TIMEOUT_MS })
@@ -66,6 +70,7 @@ export async function fetchWordHelpBrowserPage(sourceUrl) {
   } catch (error) {
     return { ok: false, available: false, message: `WordHelp browser access failed: ${error.message}` }
   } finally {
+    signal?.removeEventListener("abort", abortBrowser)
     await browser?.close().catch(() => {})
   }
 }
@@ -653,9 +658,9 @@ export function normalizeProviderPreview(provider, preview, entry) {
   return { provider, status: "available", message: "", sourceUrl: text(preview.sourceUrl), fields: { ...normalizedFields, definition: structuredDefinition || normalizedFields.definition, audio: headwordAudio, verbFormAudio: safeVerbFormAudio }, entries: entries.map((item) => ({ headword: text(item.headword), partOfSpeech: text(item.partOfSpeech), senses: Array.isArray(item.senses) ? item.senses.map((sense) => ({ number: text(sense.number), definition: text(sense.definition), examples: (sense.examples || []).map((example) => text(typeof example === "object" ? example.text : example)).filter(Boolean) })) : [] })), datumStatus: normalizedDatumStatus, media: headwordAudio, privateMedia }
 }
 
-async function previewEtymonlineAdapter(entry) {
+async function previewEtymonlineAdapter(entry, fetchImpl = fetch) {
   try {
-    const preview = await fetchEtymonlinePreview(entry?.english)
+    const preview = await fetchEtymonlinePreview(entry?.english, fetchImpl)
     const fields = { etymology: preview.paragraph || "", originPath: preview.originPath || "", originReferences: preview.reference ? [preview.reference] : {} }
     return normalizeProviderPreview("etymonline", { ok: true, fields, sourceUrl: preview.sourceUrl }, entry)
   } catch (error) {
@@ -712,19 +717,36 @@ export async function previewHtmlAdapter(provider, entry, fetchImpl = fetch, bro
   if (!word) return { provider, status: "unavailable", message: "An English word is required.", sourceUrl: item.searchUrl(""), fields: {}, entries: [], media: [], datumStatus: {} }
   const sourceUrl = item.searchUrl(word)
   try {
-    let response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Dictionary-Builder/1.0" }, redirect: "follow" })
+    const requestOptions = { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Dictionary-Builder/1.0" }, redirect: "follow" }
+    let browserFailure = null
+    let response
+    if (provider === "merriam_webster_thesaurus") {
+      response = await browserFetchImpl(sourceUrl, { signal: fetchImpl.signal })
+      if (!response?.ok && !response?.robotBlocked && response?.available === false) {
+        browserFailure = response
+        response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, requestOptions)
+      }
+    } else {
+      response = provider === "wordhelp"
+        ? await fetchImpl(sourceUrl, requestOptions)
+        : await fetchWithExponentialBackoff(fetchImpl, sourceUrl, requestOptions)
+    }
     if (!response.ok) {
       if (provider === "wordhelp" && response.status === 429) {
         const challengeHtml = await response.text().catch(() => "")
         if (isWordHelpRobotPrompt(challengeHtml)) {
-          response = await browserFetchImpl(sourceUrl)
+          response = await browserFetchImpl(sourceUrl, { signal: fetchImpl.signal })
           if (!response?.ok) return { provider, status: response?.robotBlocked ? "robot_blocked" : "unavailable", message: response?.message || `${item.label} browser access failed`, sourceUrl, fields: {}, entries: [], media: [], datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: item.capabilities[datum] ? response?.robotBlocked ? "robot_blocked" : "unavailable" : "not_offered" }])) }
         } else {
           throw new Error(`HTTP ${response.status}`)
         }
       }
+      if (provider === "merriam_webster_thesaurus" && response.robotBlocked) {
+        return { provider, status: "robot_blocked", message: response.message || `${item.label} requires robot verification; open the source page and complete the prompt before retrying.`, sourceUrl: response.url || sourceUrl, fields: {}, entries: [], media: [], datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: item.capabilities[datum] ? "robot_blocked" : "not_offered" }])) }
+      }
       if (provider === "merriam_webster_thesaurus" && response.status === 403) {
-        response = await browserFetchImpl(sourceUrl)
+        if (browserFailure) return { provider, status: "unavailable", message: browserFailure.message || `${item.label} browser access failed`, sourceUrl, fields: {}, entries: [], media: [], datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: item.capabilities[datum] ? "unavailable" : "not_offered" }])) }
+        response = await browserFetchImpl(sourceUrl, { signal: fetchImpl.signal })
         if (!response?.ok) return { provider, status: response?.robotBlocked ? "robot_blocked" : "unavailable", message: response?.message || `${item.label} browser access failed`, sourceUrl, fields: {}, entries: [], media: [], datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: item.capabilities[datum] ? response?.robotBlocked ? "robot_blocked" : "unavailable" : "not_offered" }])) }
       }
       if (response.status === 404) return { provider, status: "not_found", message: `${item.label} returned HTTP 404; no matching entry was provided.`, sourceUrl, fields: {}, entries: [], media: [], datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: item.capabilities[datum] ? "not_found" : "not_offered" }])) }
@@ -832,8 +854,8 @@ const adapters = Object.freeze({
   etymonline: previewEtymonlineAdapter,
   wiktionary: (entry) => previewHtmlAdapter("wiktionary", entry),
   cambridge: async (entry) => normalizeProviderPreview("cambridge", await previewCambridgeLibraryEntry(entry), entry),
-  merriam_webster_thesaurus: (entry) => previewHtmlAdapter("merriam_webster_thesaurus", entry, fetch, fetchMerriamWebsterBrowserPage),
-  wordhelp: (entry) => previewHtmlAdapter("wordhelp", entry),
+  merriam_webster_thesaurus: (entry, fetchImpl) => previewHtmlAdapter("merriam_webster_thesaurus", entry, fetchImpl, fetchMerriamWebsterBrowserPage),
+  wordhelp: (entry, fetchImpl) => previewHtmlAdapter("wordhelp", entry, fetchImpl),
   google_translate: previewGoogleTranslateAdapter,
 })
 
@@ -930,11 +952,13 @@ async function runDictionaryBuilderProvider(adapter, entry, provider, timeoutMs 
     else parentSignal.addEventListener("abort", abortFromParent, { once: true })
   }
   const providerFetch = (url, options = {}) => fetch(url, { ...options, signal: controller.signal })
+  providerFetch.signal = controller.signal
   let timer
+  const providerTimeoutMs = provider === "wordhelp" ? Math.max(timeoutMs, WORDHELP_PROVIDER_TIMEOUT_MS) : timeoutMs
   try {
     const result = await Promise.race([
       provider === "google_translate" ? adapter(entry, { fetchImpl: providerFetch }) : adapter(entry, providerFetch),
-      new Promise((_, reject) => { timer = setTimeout(() => { controller.abort(Object.assign(new Error(`${provider} preview timed out; waiting for input.`), { code: "DICTIONARY_BUILDER_PROVIDER_TIMEOUT" })); reject(controller.signal.reason) }, timeoutMs) }),
+      new Promise((_, reject) => { timer = setTimeout(() => { controller.abort(Object.assign(new Error(`${provider} preview timed out; waiting for input.`), { code: "DICTIONARY_BUILDER_PROVIDER_TIMEOUT" })); reject(controller.signal.reason) }, providerTimeoutMs) }),
     ])
     return { ...result, provider }
   } catch (error) {
@@ -1045,26 +1069,34 @@ export async function previewDictionaryBuilder(entry, { ownerKey, fetcher = adap
   const rankedInitialExtras = rankedDatumProviderIds("definition", ranked).filter((provider) => !initialProviderBases.has(scoringBaseProvider(provider)))
   const selected = [...DICTIONARY_BUILDER_INITIAL_SERVER_PROVIDERS, ...rankedInitialExtras, "merriam_webster_thesaurus", "google_translate", DICTIONARY_BUILDER_SYLLABLE_PROVIDER]
     .filter((provider, index, providers) => index === providers.indexOf(provider))
+  let previewGloballyTimedOut = false
   const results = await runDictionaryBuilderPreview(
     (signal) => Promise.all(selected.map((provider) => runDictionaryBuilderProvider(dictionaryBuilderAdapter(fetcher, provider), entry, provider, DICTIONARY_BUILDER_PROVIDER_TIMEOUT_MS, signal))),
-  ).catch((error) => selected.map((provider) => ({ provider, status: "waiting_for_input", message: text(error?.message) || "Dictionary Builder preview timed out; waiting for input.", fields: {}, entries: [], media: [], datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: "waiting_for_input" }])) })))
-  const previewTimedOut = results.some((result) => result?.status === "waiting_for_input" || Object.values(result?.datumStatus || {}).some((datum) => datum?.status === "waiting_for_input"))
+  ).catch((error) => {
+    previewGloballyTimedOut = true
+    return selected.map((provider) => ({ provider, status: "waiting_for_input", message: text(error?.message) || "Dictionary Builder preview timed out; waiting for input.", fields: {}, entries: [], media: [], datumStatus: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: "waiting_for_input" }])) }))
+  })
   const missing = applicableDatums.filter((datum) => !results.some((result) => result.datumStatus?.[datum]?.status === "available"))
   const requestedDatums = [...new Set([...applicableDatums, ...missing, "audio"])]
   const datumSourceOrder = {}
   for (const datum of requestedDatums) {
     const rankedForDatum = Array.isArray(rankedSourcesByDatum?.[datum]) ? rankedSourcesByDatum[datum] : await dictionaryBuilderRankDatumSources(entry?.partOfSpeech, datum)
     const rankedOrder = rankedDatumProviderIds(datum, rankedForDatum)
-    const sourceOrder = datum === "originPath"
-      ? DICTIONARY_BUILDER_PREFERRED_DATUM_PROVIDERS.originPath
+    const sourceOrder = datum === "originPath" || datum === "etymology"
+      ? DICTIONARY_BUILDER_PREFERRED_DATUM_PROVIDERS[datum]
       : dictionaryBuilderBicDatumProviderIds(datum, rankedForDatum)
     const normalizedSourceOrder = sourceOrder.map((provider) => results.find((result) => sameDictionaryProvider(result.provider, provider))?.provider || provider)
     datumSourceOrder[datum] = normalizedSourceOrder
-    if (previewTimedOut) continue
+    if (previewGloballyTimedOut) continue
     for (const provider of normalizedSourceOrder) {
       if (results.some((result) => sameDictionaryProvider(result.provider, provider))) continue
       const adapter = dictionaryBuilderAdapter(fetcher, provider)
-      results.push(await runDictionaryBuilderProvider(adapter, entry, provider))
+      const result = await runDictionaryBuilderProvider(adapter, entry, provider)
+      results.push(result)
+      if (datum === "etymology" && result.provider === "etymonline" && (
+        result.datumStatus?.etymology?.status === "available"
+        || results.some((item) => DICTIONARY_BUILDER_PREFERRED_DATUM_PROVIDERS.etymology.includes(item.provider) && item.datumStatus?.etymology?.status === "available")
+      )) break
     }
   }
   const bicTopThreeByDatum = {}
@@ -1093,12 +1125,7 @@ export async function retryDictionaryBuilderSnapshot(snapshotId, entry, { ownerK
   const previous = snapshot.privateSources.find((result) => result.provider === providerId)
   if (!manifestById.has(scoringBaseProvider(providerId))) return null
   const adapter = dictionaryBuilderAdapter(fetcher, providerId)
-  let refreshed
-  try {
-    refreshed = await adapter(entry)
-  } catch (error) {
-    refreshed = { provider: providerId, status: "unavailable", message: text(error.message), fields: {}, entries: [], media: [], datumStatus: {} }
-  }
+  const refreshed = await runDictionaryBuilderProvider(adapter, entry, providerId)
   const refreshedSources = previous
     ? snapshot.privateSources.map((result) => result.provider === providerId ? refreshed : result)
     : [...snapshot.privateSources, refreshed]

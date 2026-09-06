@@ -98,6 +98,34 @@ test("SVG icon rendering cancels stale transports before replacing animated mark
   assert.match(svgIcon, /fetch\(src, \{signal\}\)/)
   assert.match(svgIcon, /this\.abortController !== controller/)
   assert.match(svgIcon, /this\.shadowRoot\.replaceChildren\(style, svg\)/)
+  assert.match(svgIcon, /\.catch\(\(error\) => \{[\s\S]*controller\.signal\.aborted[\s\S]*AbortError/)
+})
+
+test("rendered Library audio controls restart the animated speaker SVG when played", async () => {
+  const dom = new JSDOM(`<!doctype html><body class="student-portal-page"><article data-vocabulary-flat-entry><a class="library-audio-play" data-library-audio-trigger="us" data-library-audio-key="headword:us" href="/api/admin/library/media/media-1"><img src="/web-asset/icons/svg/speaker-red-usa.svg" alt="headword speaker"></a><audio preload="none" hidden data-library-preview-audio="headword:us" src="/api/admin/library/media/media-1"></audio></article></body>`, { url: "http://127.0.0.1/student/library.html" })
+  const audio = dom.window.document.querySelector("audio")
+  let playCalls = 0
+  audio.play = () => { playCalls += 1; return Promise.resolve() }
+  const context = { window: dom.window, document: dom.window.document }
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const button = dom.window.document.querySelector("[data-library-audio-trigger]")
+  const image = button.querySelector("img")
+  const initialSrc = image.getAttribute("src")
+  button.dispatchEvent(new dom.window.MouseEvent("mouseover", { bubbles: true, cancelable: true, relatedTarget: null }))
+  assert.match(image.getAttribute("src"), /speaker-red-usa\.svg\?animation=\d+/u)
+  const hoverSrc = image.getAttribute("src")
+  button.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, cancelable: true }))
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.equal(playCalls, 1)
+  assert.equal(button.dataset.audioBound, "true")
+  assert.equal(button.classList.contains("is-playing"), true)
+  assert.match(image.getAttribute("src"), /speaker-red-usa\.svg\?animation=\d+/u)
+  assert.notEqual(hoverSrc, initialSrc)
+  assert.notEqual(image.getAttribute("src"), hoverSrc)
+  audio.dispatchEvent(new dom.window.Event("ended"))
+  await new Promise((resolve) => setTimeout(resolve, 300))
+  assert.equal(button.classList.contains("is-playing"), false)
+  dom.window.close()
 })
 
 test("Dictionary Builder keeps origin metadata and selections on retry while preferring every datum source", () => {
@@ -169,6 +197,8 @@ test("Etymonline lookup never overwrites editor fields before a modal datum is s
 test("Dictionary Builder preload keeps LEDs amber until the provider snapshot resolves", async () => {
   const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor data-review-source-id=entry-1><input data-vocabulary-field=english value=commend><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
   let resolvePreview
+  let fetchCalls = 0
+  let openCalls = 0
   const previewResponse = new Promise((resolve) => { resolvePreview = resolve })
   const context = {
     window: dom.window,
@@ -177,14 +207,14 @@ test("Dictionary Builder preload keeps LEDs amber until the provider snapshot re
     Event: dom.window.Event,
     HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
     MutationObserver: dom.window.MutationObserver,
-    fetch: async () => previewResponse,
+    fetch: async () => { fetchCalls += 1; return previewResponse },
     setTimeout,
   }
   context.window.SIS_VOCABULARY_ESL = { grammarFields: [] }
   context.window.fetch = context.fetch
   context.window.setTimeout = (callback, delay = 0) => delay > 1200 ? 0 : setTimeout(callback, delay)
   context.window.clearTimeout = clearTimeout
-  context.window.open = () => ({ closed: false, location: {} })
+  context.window.open = () => { openCalls += 1; return { closed: false, location: {} } }
   vm.runInNewContext(libraryReviewWorkbench, context)
 
   const pane = dom.window.document.querySelector("[data-vocabulary-editor]")
@@ -212,6 +242,11 @@ test("Dictionary Builder preload keeps LEDs amber until the provider snapshot re
   assert.deepEqual(leds(), ["success", "popup-blocking", "not-found", "not-found", "popup-blocking", "success"])
   assert.equal(startup.disabled, false)
   assert.equal(startup.getAttribute("aria-busy"), null)
+  startup.click()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.equal(fetchCalls, 1)
+  assert.equal(openCalls, 6)
+  assert.deepEqual(leds(), ["success", "popup-blocking", "not-found", "not-found", "popup-blocking", "success"])
   dom.window.close()
 })
 
@@ -283,7 +318,7 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(libraryCorpus, /canonicalized_by_admin_edit/)
   assert.match(libraryCorpus, /canonicalEntryForContribution\(tx, submitted, actor, \{ allowIncomplete: true \}\)/)
   assert.match(libraryCorpus, /const sourceEntryIds = new Set\(\[contribution\.entryId, canonicalContribution\.entryId\]/)
-  assert.match(admin, /selectedQueueItem = null; await loadQueue\(\{ selectFirst: false \}\); renderSavedCanonical\(saved\.entry/)
+  assert.match(admin, /selectedQueueItem = null; await loadQueue\(\{ selectFirst: false \}\); renderSavedCanonical\(savedEntry/)
   assert.match(admin, /json\(`\/entries\/\$\{encodeURIComponent\(entry\.id\)\}`, \{ method: "PUT"/)
   assert.doesNotMatch(admin, /window\.location\.assign\(`\$\{location\.origin\}\/admin\/library\/manage/)
   assert.match(admin, /editAttributes: `data-approved-edit="\$\{esc\(entry\.id\)\}"`/)
@@ -315,7 +350,8 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(admin, /library-review-workbench\.js/)
   assert.doesNotMatch(admin, /classList\.toggle\("open"/)
   assert.match(admin, /parentElement\?\.classList\.toggle\("expanded", expanded\)/)
-  for (const token of ["Full flattened review", "Largest dupe", "Legacy source", "open_review", "New canonical", "Horizontal split", "Vertical split", "Lock pane scroll", "Save canonical", "Assign merge", "data-review-field", "data-vocabulary-field", "data-canonical-select"]) assert.match(admin, new RegExp(token))
+  for (const token of ["Full flattened review", "Largest dupe", "Legacy source", "open_review", "New canonical", "Horizontal split", "Vertical split", "Lock pane scroll", "Save canonical", "Assign merge", "data-review-field", "data-vocabulary-field", "data-canonical-select", "dictionaryBuilderPending", "snapshotEntryId", "local Library media"]) assert.match(admin, new RegExp(token))
+  assert.match(admin, /library-review-compare\$\{comparison \? " is-vertical" : " is-single"\}/)
   assert.match(sharedVocabularyEditor, /<span class="chip chip-warn">Legacy<\/span>/)
   assert.match(admin, /selectedQueueItem = refreshed \|\| \(selectFirst \? queueItems\[0\] : null\) \|\| null/)
   assert.match(libraryReviewWorkbench, /is-sidebar-collapsed/)
@@ -326,6 +362,24 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(admin, /library-review-sidebar-body/)
   assert.match(sharedPortalTheme, /library-review-shell\.is-sidebar-collapsed/)
   assert.match(sharedPortalTheme, /\.library-admin-entry summary\s*\{[\s\S]*?background:\s*#CDE0FF/)
+  assert.match(sharedPortalTheme, /\.library-admin-entry summary\s*\{[\s\S]*?font-weight:\s*800/)
+  assert.match(sharedPortalTheme, /library-admin-entry summary > \.library-entry-word[\s\S]*?color:\s*#FFD700[\s\S]*?font-weight:\s*800/)
+  assert.match(sharedPortalTheme, /library-entry-accordion-summary > \.library-entry-word[\s\S]*?color:\s*#FFD700[\s\S]*?font-weight:\s*800/)
+  assert.match(sharedPortalTheme, /html:not\(\[data-theme="dark"\]\) body\.admin-portal-page\.library-admin-page \.library-admin-entry summary > \.library-entry-word[\s\S]*?color:\s*#000000/)
+  assert.match(sharedPortalTheme, /html:not\(\[data-theme="dark"\]\) body:is\(\.student-portal-page, \.admin-portal-page\) \.library-entry-accordion-summary > \.library-entry-word[\s\S]*?color:\s*#000000/)
+  assert.match(sharedPortalTheme, /library-admin-entry summary > \.library-entry-pos[\s\S]*?font-weight:\s*800/)
+  assert.match(sharedPortalTheme, /library-entry-accordion-summary > \.library-entry-pos[\s\S]*?font-weight:\s*800/)
+  assert.match(sharedPortalTheme, /html\[data-theme="dark"\] body\.admin-portal-page\.library-admin-page :is\([\s\S]*?\.section-head > h1[\s\S]*?\.library-review-sidebar-heading > h3[\s\S]*?color:\s*#FFD700 !important[\s\S]*?font-weight:\s*800/)
+  assert.match(sharedPortalTheme, /html:not\(\[data-theme="dark"\]\) body\.admin-portal-page\.library-admin-page :is\([\s\S]*?\.section-head > h1[\s\S]*?\.library-review-sidebar-heading > h3[\s\S]*?color:\s*#000000 !important/)
+  assert.match(sharedPortalTheme, /html\[data-theme="dark"\] body:is\(\.student-portal-page, \.admin-portal-page\) \.new-word-entry-definition > section > strong[\s\S]*?color:\s*#FFD700 !important/)
+  assert.match(sharedPortalTheme, /html:not\(\[data-theme="dark"\]\) body:is\(\.student-portal-page, \.admin-portal-page\) \.new-word-entry-definition > section > strong[\s\S]*?color:\s*#000000 !important/)
+  assert.match(sharedPortalTheme, /:where\(body\.student-portal-page, body\.admin-portal-page, body\.parent-portal-page\) \.new-word-entry-head\s*\{[\s\S]*?display:\s*flow-root;[\s\S]*?margin-bottom:\s*1rem;/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-head > :not\(\.new-word-edit, \.library-admin-flat-edit\)\s*\{[\s\S]*?display:\s*inline;[\s\S]*?vertical-align:\s*text-bottom;/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-head strong\s*\{[\s\S]*?font-size:\s*calc\(1\.38rem \+ 2px\);[\s\S]*?overflow-wrap:\s*normal;[\s\S]*?white-space:\s*nowrap;[\s\S]*?word-break:\s*normal;/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-head :is\(\.new-word-edit, \.library-admin-flat-edit\)\s*\{[\s\S]*?block-size:\s*36px;[\s\S]*?float:\s*right;[\s\S]*?vertical-align:\s*text-bottom;/)
+  assert.match(sharedVocabularyEditor, /function flatEntrySummaryHtml\(entry = \{\}\)/)
+  assert.match(sharedVocabularyEditor, /class="library-entry-word"/)
+  assert.match(sharedVocabularyEditor, /class="library-entry-pos"/)
   assert.match(sharedPortalTheme, /html\[data-theme="dark"\] \.library-admin-entry summary\s*\{[\s\S]*?background:\s*#212121/)
   assert.match(sharedPortalTheme, /\.library-review-list\s*\{[\s\S]*?background:\s*var\(--portal-surface-panel\)/)
   assert.match(sharedPortalTheme, /\.library-review-item\s*\{[\s\S]*?background:\s*#CDE0FF !important[\s\S]*?color:\s*#173962 !important/)
@@ -374,7 +428,7 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(admin, /data-vocabulary-audio-field\$="\.path"/u)
   assert.match(libraryReviewWorkbench, /button\.dataset\.libraryAudioKey = controlKey/)
   assert.match(libraryReviewWorkbench, /candidate\.dataset\.libraryPreviewAudio === controlKey/)
-  assert.match(libraryReviewWorkbench, /AUDIO_END_ANIMATION_GRACE_MS = 0\.25/)
+  assert.match(libraryReviewWorkbench, /AUDIO_END_ANIMATION_GRACE_MS = 250/)
   assert.match(libraryReviewWorkbench, /window\.setInterval\(\(\) => restartSpeakerAnimation\(image\), ICON_ANIMATION_CYCLE_MS\)/)
   assert.match(libraryReviewWorkbench, /animationEndTimer = window\.setTimeout\(stopAnimationLoop, AUDIO_END_ANIMATION_GRACE_MS\)/)
   assert.match(libraryReviewWorkbench, /reserveInitialSourceTabs\(word\)/)
@@ -782,6 +836,10 @@ test("flattened vocabulary keeps the established header format for every POS", (
     const html = context.window.SIS_VOCABULARY_ESL.flatEntryHtml(entry)
     assert.match(html, new RegExp(pattern, "s"), entry.partOfSpeech)
     assert.match(context.window.SIS_VOCABULARY_ESL.flatEntrySummaryText(entry), new RegExp(pattern, "s"), `${entry.partOfSpeech} summary`)
+    const summaryHtml = context.window.SIS_VOCABULARY_ESL.flatEntrySummaryHtml(entry)
+    assert.match(summaryHtml, /class="library-entry-word"/)
+    assert.match(summaryHtml, /class="library-entry-pos"/)
+    assert.match(summaryHtml, new RegExp(`${entry.english}[\\s\\S]*${entry.partOfSpeech}`), `${entry.partOfSpeech} summary HTML`)
     assert.equal((html.match(/class="vocabulary-flat-entry-separator"/g) || []).length, 2, entry.partOfSpeech)
   }
 })
@@ -841,6 +899,17 @@ test("flattened headers ignore object metadata and keep noun traits together", (
   })
   assert.doesNotMatch(html, /\[object Object\]/)
   assert.match(html, /abstract, singular/)
-  assert.match(sharedPortalTheme, /\.new-word-entry-pos-details \{[\s\S]*white-space: nowrap;/)
-  assert.match(sharedPortalTheme, /@media \(min-width: 901px\)[\s\S]*\.new-word-entry-head \{[\s\S]*flex-wrap: nowrap;/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-pos-details \{[\s\S]*white-space: normal;/)
+  assert.doesNotMatch(sharedPortalTheme, /@media \(min-width: 901px\)[^{}]*\{[^{}]*\.new-word-entry-head\s*\{[^{}]*flex-wrap:\s*nowrap;/)
+  assert.doesNotMatch(sharedPortalTheme, /:where\(body\.student-portal-page, body\.admin-portal-page, body\.parent-portal-page\) \.new-word-entry-head\s*\{[^{}]*overflow-x:\s*auto;/)
+})
+
+test("Library entry headers stay contiguous, naturally wrapping, and bottom-aligned", () => {
+  assert.match(sharedPortalTheme, /:where\(body\.student-portal-page, body\.admin-portal-page, body\.parent-portal-page\) \.new-word-entry-head\s*\{[\s\S]*?display:\s*flow-root;/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-head > :not\(\.new-word-edit, \.library-admin-flat-edit\)\s*\{[\s\S]*?display:\s*inline;[\s\S]*?vertical-align:\s*text-bottom;/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-head strong\s*\{[\s\S]*?font-size:\s*calc\(1\.38rem \+ 2px\);[\s\S]*?overflow-wrap:\s*normal;[\s\S]*?white-space:\s*nowrap;[\s\S]*?word-break:\s*normal;/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-head > strong\.new-word-entry-part-of-speech\s*\{[\s\S]*?font-size:\s*calc\(1\.28rem \+ 2px\)!important;/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-head :is\(\.new-word-edit, \.library-admin-flat-edit\)\s*\{[\s\S]*?block-size:\s*36px;[\s\S]*?float:\s*right;/)
+  assert.match(sharedPortalTheme, /\.new-word-entry-pos-details\s*\{[\s\S]*?white-space:\s*normal;/)
+  assert.doesNotMatch(sharedPortalTheme, /@media \(min-width: 901px\)[^{}]*\{[^{}]*\.new-word-entry-head\s*\{[^{}]*flex-wrap:\s*nowrap;/)
 })
