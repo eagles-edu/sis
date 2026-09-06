@@ -117,7 +117,7 @@
   "homepage": "",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@prisma/client": "^7.9.1",
+    "@prisma/client": "^7.10.0",
     "@redocly/cli": "^2.43.2",
     "@types/node": "^20.19.43",
     "axe-core": "^4.12.1",
@@ -139,8 +139,8 @@
     "uglify-js": "^3.19.3"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
     "archiver": "^8.0.0",
     "argparse": "^2.0.1",
     "cheerio": "^1.2.0",
@@ -149,13 +149,13 @@
     "cssnano": "^7.1.9",
     "dom-serializer": "^2.0.0",
     "dotenv": "^17.4.2",
-    "fast-xml-parser": "^5.10.0",
+    "fast-xml-parser": "^5.11.1",
     "glob": ">=11.1.0",
     "js-yaml": "^4.3.1",
-    "nodemailer": "^9.0.3",
-    "pdfkit": "^0.19.1",
-    "pg": "^8.22.0",
-    "postcss": "^8.5.25",
+    "nodemailer": "^9.1.1",
+    "pdfkit": "^0.20.2",
+    "pg": "^8.23.0",
+    "postcss": "^8.5.27",
     "redis": "^5.12.1",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
