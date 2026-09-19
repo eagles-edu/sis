@@ -57,6 +57,27 @@
     return "";
   }
 
+  function vocabularySyllabicationFormatAndSpellingError(row = {}) {
+    const english = normalizeVocabularyEnglishText(row.english);
+    const capitalizationError = vocabularyEnglishCapitalizationError(row);
+    if (capitalizationError) return capitalizationError;
+    const value = normalizeSyllabication(row.syllabication);
+    const renderedWords = value.split(/\s+/u).filter(Boolean);
+    if (!renderedWords.length) return "Add syllabication.";
+    for (const renderedWord of renderedWords) {
+      const syllables = renderedWord.split("-").filter(Boolean);
+      if (!syllables.length || syllables.some((syllable) => !/^\p{L}+$/u.test(syllable))) return "Use letters, spaces, and hyphens only in syllabication.";
+      const partialCapital = syllables.find((syllable) => /[A-Z]/u.test(syllable) && Array.from(syllable).length > 1 && syllable !== syllable.toLocaleUpperCase("en-US"));
+      if (partialCapital) return `Capitalize the complete stressed syllable "${partialCapital}"; do not capitalize only one character.`;
+      const stressIndexes = syllables.map((syllable, index) => /[A-Z]/u.test(syllable) || /[aeiouy]\p{M}+/iu.test(syllable.normalize("NFD")) ? index : -1).filter((index) => index >= 0);
+      if (stressIndexes.some((index) => Array.from(syllables[index]).length === 1 && index !== 0)) return "A single-character stressed syllable is allowed only as the first syllable.";
+    }
+    if (!english) return "";
+    const lettersOnly = (valueToNormalize) => String(valueToNormalize == null ? "" : valueToNormalize).normalize("NFD").replace(/\p{M}+/gu, "").replace(/[^\p{L}]/gu, "").toLocaleLowerCase("en-US");
+    if (lettersOnly(english) !== lettersOnly(value)) return "Syllabication spelling must match the English word or phrase.";
+    return "";
+  }
+
   function normalizeDefinitionText(value) {
     return String(value == null ? "" : value).replace(/\r\n?/gu, "\n");
   }
@@ -546,7 +567,12 @@
         dialog = document.createElement("dialog")
         dialog.id = "vocabularyMerriamWebsterApiDialog"
         dialog.className = "portal-modal"
-        dialog.innerHTML = `<form method="dialog"><div class="portal-modal-header"><h2>AP · Merriam-Webster API</h2><button type="submit" class="portal-button portal-button-neutral-action" aria-label="Close Merriam-Webster API preview">Close</button></div><p data-vocabulary-api-message></p><pre data-vocabulary-api-result></pre></form>`
+        dialog.innerHTML = `<form method="dialog"><div class="portal-modal-header"><h2>AP · Merriam-Webster API</h2><button type="button" class="portal-button portal-button-neutral-action" data-vocabulary-api-close aria-label="Close Merriam-Webster API preview">Close</button></div><p data-vocabulary-api-message></p><pre data-vocabulary-api-result></pre></form>`
+        dialog.querySelector("[data-vocabulary-api-close]")?.addEventListener("click", (event) => {
+          event.preventDefault()
+          if (typeof dialog.close === "function" && dialog.open) dialog.close()
+          else dialog.removeAttribute("open")
+        })
         document.body.append(dialog)
       }
       const message = dialog.querySelector("[data-vocabulary-api-message]")
@@ -1202,6 +1228,7 @@
     normalizeVocabularyEnglishText,
     isProperNounVocabularyEntry,
     vocabularyEnglishCapitalizationError,
+    vocabularySyllabicationFormatAndSpellingError,
     normalizeDefinitionText,
     htmlToDefinitionText,
     canonicalizeSyllabication,

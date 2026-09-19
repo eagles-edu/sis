@@ -684,6 +684,136 @@ test("ensureSisConfigLoaded falls back to the default snapshot when the SIS conf
   }
 })
 
+test("ensureSisConfigLoaded recreates a deleted SIS config from the database after a cached default", async () => {
+  const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
+  const priorNodeEnv = process.env.NODE_ENV
+  const priorSisConfigFile = process.env.SIS_CONFIG_FILE
+  const priorDatabaseUrl = process.env.DATABASE_URL
+  const devEnvRaw = fs.readFileSync(path.resolve(process.cwd(), ".env.dev"), "utf8")
+  const devDatabaseUrl = devEnvRaw.match(/^DATABASE_URL=(.*)$/m)?.[1]?.trim() || ""
+  let prisma = null
+  let originalMirror = null
+
+  try {
+    process.env.NODE_ENV = "development"
+    process.env.SIS_CONFIG_FILE = sisConfigPath
+    process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
+    process.env.DATABASE_URL = devDatabaseUrl
+
+    const prismaModule = await freshImport(path.resolve("src/infra/db/prisma-client.mjs"))
+    prisma = await prismaModule.getSharedPrismaClient()
+    originalMirror = await prisma.sisConfigMirror.findUnique({ where: { id: "sis-config" } })
+    assert.ok(originalMirror)
+
+    const mod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
+    const cachedDefault = mod.getSisConfigSnapshotSync()
+    assert.equal(cachedDefault.source, "default")
+    assert.equal(fs.existsSync(sisConfigPath), false)
+
+    const restored = await mod.ensureSisConfigLoaded()
+    assert.equal(restored.source, "database")
+    assert.equal(fs.existsSync(sisConfigPath), true)
+    assert.equal(restored.updatedAt, originalMirror.updatedAt.toISOString())
+
+    const restoredJson = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))
+    assert.equal(restoredJson.updatedAt, originalMirror.updatedAt.toISOString())
+    assert.equal(restoredJson.uiSettings.schoolSetup.schoolYear, originalMirror.payloadJson.uiSettings.schoolSetup.schoolYear)
+    const mirrorHealth = await mod.getSisConfigMirrorHealthSnapshot()
+    assert.equal(mirrorHealth.synced, true)
+    assert.equal(mirrorHealth.state, "ok")
+    assert.match(mirrorHealth.detail, /json=present \| db=present \| sync=in-sync/)
+  } finally {
+    if (prisma && originalMirror) {
+      await prisma.sisConfigMirror.update({
+        where: { id: "sis-config" },
+        data: {
+          payloadJson: originalMirror.payloadJson,
+          updatedBy: originalMirror.updatedBy,
+        },
+      })
+      await prisma.$executeRaw`
+        UPDATE "SisConfigMirror"
+        SET "updatedAt" = ${originalMirror.updatedAt}
+        WHERE "id" = 'sis-config'
+      `
+    }
+    if (prisma) await prisma.$disconnect()
+    fs.rmSync(tempDir, { recursive: true, force: true })
+    if (priorNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = priorNodeEnv
+    if (priorSisConfigFile === undefined) delete process.env.SIS_CONFIG_FILE
+    else process.env.SIS_CONFIG_FILE = priorSisConfigFile
+    if (priorDatabaseUrl === undefined) delete process.env.DATABASE_URL
+    else process.env.DATABASE_URL = priorDatabaseUrl
+    delete process.env.STUDENT_ADMIN_UI_SETTINGS_FILE
+  }
+})
+
+test("ensureSisConfigLoaded recreates a missing database mirror from SIS config JSON", async () => {
+  const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
+  const priorNodeEnv = process.env.NODE_ENV
+  const priorSisConfigFile = process.env.SIS_CONFIG_FILE
+  const priorDatabaseUrl = process.env.DATABASE_URL
+  const devEnvRaw = fs.readFileSync(path.resolve(process.cwd(), ".env.dev"), "utf8")
+  const devDatabaseUrl = devEnvRaw.match(/^DATABASE_URL=(.*)$/m)?.[1]?.trim() || ""
+  let prisma = null
+  let originalMirror = null
+
+  try {
+    process.env.NODE_ENV = "development"
+    process.env.SIS_CONFIG_FILE = sisConfigPath
+    process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
+    process.env.DATABASE_URL = devDatabaseUrl
+    writeRichSisConfigFixture(sisConfigPath, {
+      updatedAt: "2026-09-06T00:00:00.000Z",
+      updatedBy: "json-regression",
+    })
+
+    const prismaModule = await freshImport(path.resolve("src/infra/db/prisma-client.mjs"))
+    prisma = await prismaModule.getSharedPrismaClient()
+    originalMirror = await prisma.sisConfigMirror.findUnique({ where: { id: "sis-config" } })
+    assert.ok(originalMirror)
+    await prisma.sisConfigMirror.delete({ where: { id: "sis-config" } })
+
+    const mod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
+    const restored = await mod.ensureSisConfigLoaded({ refresh: true })
+    assert.equal(restored.source, "file")
+
+    const restoredMirror = await prisma.sisConfigMirror.findUnique({ where: { id: "sis-config" } })
+    assert.ok(restoredMirror)
+    assert.equal(restoredMirror.payloadJson.updatedBy, "json-regression")
+    assert.equal(restoredMirror.payloadJson.uiSettings.schoolProfile.schoolName, "The Eagles Club")
+    const mirrorHealth = await mod.getSisConfigMirrorHealthSnapshot()
+    assert.equal(mirrorHealth.synced, true)
+    assert.equal(mirrorHealth.state, "ok")
+    assert.match(mirrorHealth.detail, /json=present \| db=present \| sync=in-sync/)
+  } finally {
+    if (prisma && originalMirror) {
+      await prisma.sisConfigMirror.update({
+        where: { id: "sis-config" },
+        data: {
+          payloadJson: originalMirror.payloadJson,
+          updatedBy: originalMirror.updatedBy,
+        },
+      })
+      await prisma.$executeRaw`
+        UPDATE "SisConfigMirror"
+        SET "updatedAt" = ${originalMirror.updatedAt}
+        WHERE "id" = 'sis-config'
+      `
+    }
+    if (prisma) await prisma.$disconnect()
+    fs.rmSync(tempDir, { recursive: true, force: true })
+    if (priorNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = priorNodeEnv
+    if (priorSisConfigFile === undefined) delete process.env.SIS_CONFIG_FILE
+    else process.env.SIS_CONFIG_FILE = priorSisConfigFile
+    if (priorDatabaseUrl === undefined) delete process.env.DATABASE_URL
+    else process.env.DATABASE_URL = priorDatabaseUrl
+    delete process.env.STUDENT_ADMIN_UI_SETTINGS_FILE
+  }
+})
+
 test("ensureSisConfigLoaded leaves a missing legacy mirror missing while loading SIS config", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   process.env.SIS_CONFIG_FILE = sisConfigPath

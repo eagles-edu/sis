@@ -472,6 +472,7 @@ const PARENT_CHILD_PROFILE_DRAFT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHI
 const PARENT_CHILD_PROFILE_SUBMIT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-submit$`)
 const PARENT_PROFILE_INVITATION_PATH_RE = new RegExp(`^${escapeRegex(PARENT_PORTAL_PAGE_PATH)}/profile-invitations/([^/]+)$`)
 const PARENT_PROFILE_INVITATION_OPEN_PATH_RE = new RegExp(`^${escapeRegex(PARENT_API_PREFIX)}/profile-invitations/([^/]+)/open\\.gif$`)
+const ADMIN_PARENT_PROFILE_INVITATION_PATH = `${ADMIN_API_PREFIX}/parent-profile-invitations`
 const ADMIN_PARENT_PROFILE_INVITATION_RESEND_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_API_PREFIX)}/parent-profile-invitations/([^/]+)/resend$`)
 const PARENT_SET_PASSWORD_PATH = `${PARENT_AUTH_PREFIX}/set-password`
 const PARENT_ACTIVATION_EXCHANGE_PATH = `${PARENT_AUTH_PREFIX}/activation/exchange`
@@ -8187,7 +8188,20 @@ async function handleApiRequest(request, response, pathname, url) {
     return true
   }
 
-  if (method === "GET" && pathname === `${ADMIN_API_PREFIX}/parent-profile-invitations`) {
+  if (method === "POST" && pathname === ADMIN_PARENT_PROFILE_INVITATION_PATH) {
+    assertCanManageUsers(rolePolicy)
+    const payload = await parseBody(request)
+    const invitation = await createParentProfileInvitation({
+      studentRefId: payload?.studentRefId,
+      queuedBy: session?.username,
+      sendEmail: false,
+      includeUrl: true,
+    })
+    sendJson(response, 200, { ok: true, invitation })
+    return true
+  }
+
+  if (method === "GET" && pathname === ADMIN_PARENT_PROFILE_INVITATION_PATH) {
     assertCanManageUsers(rolePolicy)
     const items = await listParentProfileInvitations({
       studentRefId: url.searchParams.get("studentRefId") || "",

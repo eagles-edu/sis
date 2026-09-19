@@ -20,7 +20,7 @@ import {
   stripAwaitingReReviewMarker,
   updateStudentNewsValidationIssues,
 } from "./student-news-compliance.mjs"
-import { normalizeVocabularySyllabication, validateVocabularyEntry, vocabularyEnglishCapitalizationError } from "./vocabulary-syllabication.mjs"
+import { normalizeVocabularySyllabication, vocabularyEnglishCapitalizationError, vocabularySyllabicationFormatAndSpellingError } from "./vocabulary-syllabication.mjs"
 import {
   isStudentNewsReportSchemaUnavailableError,
   isStudentNewsReviewSchemaUnavailableError,
@@ -1185,17 +1185,16 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
         continue
       }
       if (!normalizeText(row?.syllabication)) continue
-      const result = await validateVocabularyEntry(row)
-      if (result.message) {
+      const formatError = vocabularySyllabicationFormatAndSpellingError(row)
+      if (formatError) {
         draftVocabularyWarnings.push({
           index,
           english: normalizeText(row?.english),
-          message: `Entry ${index + 1} has invalid syllabication: ${result.message}`,
+          message: `Entry ${index + 1} has invalid syllabication: ${formatError}`,
           fields: ["syllabication"],
         })
         continue
       }
-      if (result.warning) draftVocabularyWarnings.push({ index, english: normalizeText(row?.english), message: result.warning, fields: ["syllabication"] })
     }
   }
   const minimumRequirements = mode === "draft"

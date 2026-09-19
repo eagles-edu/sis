@@ -1748,7 +1748,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 <div class="profile-info-toolbar">
                   <h3>Student Info</h3>
                   <p class="small profile-info-toolbar-note" id="profileInfoToolbarNote"></p>
-                  <div class="actions actions-3">
+                  <div class="actions actions-4">
                     <button id="profileEditInfoBtn" type="button" class="portal-button portal-button-info">
                       Edit Info
                     </button>
@@ -1757,6 +1757,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     </button>
                     <button id="profileRefreshInfoBtn" type="button" class="portal-button portal-button-teal-refresh">
                       Refresh Info
+                    </button>
+                    <button id="profileCopyParentLinkBtn" type="button" class="portal-button portal-button-primary"
+                      title="Create a new one-time parent profile link and copy it to the clipboard"
+                      aria-label="Create and copy parent profile link">
+                      Copy Link
                     </button>
                   </div>
                 </div>
@@ -5081,7 +5086,7 @@ No family lookup yet.</pre>
           if (adminAppLoaded) return
           adminAppLoaded = true
           const script = document.createElement("script")
-          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-052f0e26ec641502"
+          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-1cdbdae7cf218524"
           script.defer = true
           if (replaySubmit || replayClick || replayPage) {
             script.addEventListener("load", () => {

@@ -53,6 +53,7 @@
         globalTextZoomPercent: 100,
         currentStudent: null,
         studentSaveBusy: false,
+        profileCopyParentLinkBusy: false,
         studentRosterRequestId: 0,
         familyIds: [],
         familyOptions: [],
@@ -11295,6 +11296,25 @@
         return data;
       }
 
+      async function copyTextToClipboard(value = "") {
+        const text = normalizeText(value);
+        if (!text) throw new Error("Parent profile link was not returned.");
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "true");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        const copied = typeof document.execCommand === "function" && document.execCommand("copy");
+        textarea.remove();
+        if (!copied) throw new Error("Clipboard access is unavailable. Copy the link from a secure browser session.");
+      }
+
       function showApp() {
         // The session is valid now, so release the boot gate immediately and
         // let the app shell paint instead of leaving a blank reload frame.
@@ -19304,8 +19324,10 @@
 
         const editBtn = document.getElementById("profileEditInfoBtn");
         const refreshBtn = document.getElementById("profileRefreshInfoBtn");
+        const copyParentLinkBtn = document.getElementById("profileCopyParentLinkBtn");
         if (editBtn) editBtn.disabled = !state.currentStudent?.id || !canWriteData();
         if (refreshBtn) refreshBtn.disabled = !state.currentStudent?.id;
+        if (copyParentLinkBtn) copyParentLinkBtn.disabled = !state.currentStudent?.id || !canManageUsers();
       }
 
       function setProfileLayoutStatus(message, isError = false) {
@@ -20777,6 +20799,35 @@
           state.studentSaveBusy = false;
           if (saveBtn instanceof HTMLButtonElement)
             saveBtn.disabled = !canWriteData();
+        }
+      }
+
+      async function copyParentProfileLink() {
+        if (state.profileCopyParentLinkBusy) return;
+        if (!state.currentStudent?.id) {
+          setStatus("Select a student first to create a parent link.", true);
+          return;
+        }
+        if (!canManageUsers()) {
+          setStatus("Only an admin can create a parent link.", true);
+          return;
+        }
+        const button = document.getElementById("profileCopyParentLinkBtn");
+        state.profileCopyParentLinkBusy = true;
+        if (button instanceof HTMLButtonElement) button.disabled = true;
+        try {
+          const result = await api("/api/admin/parent-profile-invitations", {
+            method: "POST",
+            body: { studentRefId: state.currentStudent.id },
+          });
+          await copyTextToClipboard(result?.invitation?.url);
+          const expiresOn = formatDate(result?.invitation?.expiresAt) || "the configured expiry date";
+          setStatus(`Parent profile link copied. It expires on ${expiresOn} and can be used once.`);
+        } finally {
+          state.profileCopyParentLinkBusy = false;
+          if (button instanceof HTMLButtonElement) {
+            button.disabled = !state.currentStudent?.id || !canManageUsers();
+          }
         }
       }
 
@@ -23130,6 +23181,7 @@
         });
         bindById("saveBtn", "click", () => saveStudent().catch(handleError));
         bindById("deleteBtn", "click", () => deleteCurrentStudent().catch(handleError));
+        bindById("profileCopyParentLinkBtn", "click", () => copyParentProfileLink().catch(handleError));
         document.getElementById("profileEditInfoBtn")?.addEventListener("click", () => {
           if (!state.currentStudent?.id) {
             setStatus("Select a student first to edit.", true);
@@ -23221,6 +23273,9 @@
                   return;
                 }
                 loadStudentDetail(state.currentStudent.id).catch(handleError);
+              },
+              onProfileCopyParentLink() {
+                copyParentProfileLink().catch(handleError);
               },
               onProfileBackToInfo() {
                 if (state.currentStudent?.id) fillStudentForm(state.currentStudent);

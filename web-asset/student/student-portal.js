@@ -4222,6 +4222,25 @@
         return "";
       }
 
+      function studentNewsVocabularyEntryError(row = {}) {
+        const sharedError = window.SIS_VOCABULARY_ESL?.vocabularySyllabicationFormatAndSpellingError?.(row);
+        if (typeof sharedError === "string") return sharedError;
+        const value = normalizeSyllabication(row.syllabication);
+        const renderedWords = value.split(/\s+/u).filter(Boolean);
+        if (!renderedWords.length) return "Add syllabication.";
+        for (const renderedWord of renderedWords) {
+          const syllables = renderedWord.split("-").filter(Boolean);
+          if (!syllables.length || syllables.some((syllable) => !/^\p{L}+$/u.test(syllable))) return "Use letters, spaces, and hyphens only in syllabication.";
+          const partialCapital = syllables.find((syllable) => /[A-Z]/u.test(syllable) && Array.from(syllable).length > 1 && syllable !== syllable.toLocaleUpperCase("en-US"));
+          if (partialCapital) return `Capitalize the complete stressed syllable "${partialCapital}"; do not capitalize only one character.`;
+          const stressIndexes = syllables.map((syllable, index) => /[A-Z]/u.test(syllable) || /[aeiouy]\p{M}+/iu.test(syllable.normalize("NFD")) ? index : -1).filter((index) => index >= 0);
+          if (stressIndexes.some((index) => Array.from(syllables[index]).length === 1 && index !== 0)) return "A single-character stressed syllable is allowed only as the first syllable.";
+        }
+        if (!t(row.english)) return "";
+        const lettersOnly = (valueToNormalize) => String(valueToNormalize == null ? "" : valueToNormalize).normalize("NFD").replace(/\p{M}+/gu, "").replace(/[^\p{L}]/gu, "").toLocaleLowerCase("en-US");
+        return lettersOnly(row.english) === lettersOnly(value) ? "" : "Syllabication spelling must match the English word or phrase.";
+      }
+
       function showVocabularyEntryErrors(container) {
         let firstMessage = "";
         Array.from(container?.querySelectorAll("[data-news-vocabulary-row]") || []).forEach((rowEl) => {
@@ -4234,7 +4253,9 @@
           // Blank minimum-row placeholders are not entries. The server keeps
           // ownership of required-row and completeness validation.
           if (!row.english && !row.syllabication) return;
-          const message = vocabularyEntryError(row);
+          const message = container === field("newWordsRows")
+            ? vocabularyEntryError(row)
+            : studentNewsVocabularyEntryError(row);
           if (message) {
             firstMessage ||= message;
             rowEl.querySelector('[data-vocabulary-field="english"]')?.classList.add("is-invalid");

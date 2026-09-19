@@ -7,6 +7,9 @@ import { resolveParentPortalAccountIdentity } from "../src/modules/admin/parent-
 const rootDir = process.cwd()
 const invitations = fs.readFileSync(path.resolve(rootDir, "src/modules/admin/parent-profile-invitations.mjs"), "utf8")
 const routes = fs.readFileSync(path.resolve(rootDir, "server/student-admin-routes.mjs"), "utf8")
+const adminHtml = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.html"), "utf8")
+const adminJs = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.js"), "utf8")
+const profileIsland = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/profile-island.mjs"), "utf8")
 
 test("parent invitation emails use a tracker-safe route and one-click activation", () => {
   assert.match(invitations, /function invitationUrl\(token\) \{ return `\$\{publicOrigin\(\)\}\/parent\/profile-invitations\/\$\{encodeURIComponent\(token\)\}` \}/)
@@ -19,6 +22,18 @@ test("parent invitation emails use a tracker-safe route and one-click activation
   assert.match(routes, /next\.searchParams\.set\("activate", decodeURIComponent\(invitationLinkMatch\[1\]\)\)/)
   assert.match(routes, /await consumeParentProfileInvitation\(decodeURIComponent\(invitationLinkMatch\[1\]\), \{ mark: "clicked" \}\)/)
   assert.match(routes, /PARENT_ACTIVATION_RECOVERY_PATH/)
+})
+
+test("admin student profiles can create and copy a one-time parent link without sending another email", () => {
+  assert.match(invitations, /sendEmail = true, includeUrl = false/u)
+  assert.match(invitations, /const email = lower\(recipientEmail \|\| student\.profile\?\.motherEmail \|\| student\.profile\?\.studentEmail\)/u)
+  assert.match(invitations, /if \(sendEmail\) \{[\s\S]*enqueueAsyncSideEffectJob/u)
+  assert.match(invitations, /\.\.\.\(includeUrl \? \{ url: invitationUrl\(token\) \} : \{\}\)/u)
+  assert.match(routes, /if \(method === "POST" && pathname === ADMIN_PARENT_PROFILE_INVITATION_PATH\) \{[\s\S]*sendEmail: false[\s\S]*includeUrl: true/u)
+  assert.match(adminHtml, /id="profileCopyParentLinkBtn"[\s\S]*>\s*Copy Link/u)
+  assert.match(adminJs, /api\("\/api\/admin\/parent-profile-invitations", \{[\s\S]*method: "POST"[\s\S]*studentRefId: state\.currentStudent\.id/u)
+  assert.match(adminJs, /await copyTextToClipboard\(result\?\.invitation\?\.url\)/u)
+  assert.match(profileIsland, /onProfileCopyParentLink/u)
 })
 
 test("setting a parent password does not complete an unsaved profile invitation", () => {

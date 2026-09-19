@@ -89,6 +89,40 @@ export function vocabularyEntryError(row = {}) {
   return vocabularySyllabicationError(english, row?.syllabication)
 }
 
+export function vocabularySyllabicationFormatAndSpellingError(row = {}) {
+  const english = normalizeVocabularyEnglishText(row?.english)
+  const capitalizationError = vocabularyEnglishCapitalizationError(row)
+  if (capitalizationError) return capitalizationError
+  const value = normalizeSyllabicationText(row?.syllabication)
+  const renderedWords = value.split(/\s+/u).filter(Boolean)
+  if (!renderedWords.length) return "Add syllabication."
+  for (const renderedWord of renderedWords) {
+    const syllables = renderedWord.split("-").filter(Boolean)
+    if (!syllables.length || syllables.some((syllable) => !/^\p{L}+$/u.test(syllable))) {
+      return "Use letters, spaces, and hyphens only in syllabication."
+    }
+    const partialCapital = syllables.find((syllable) =>
+      /[A-Z]/u.test(syllable)
+      && Array.from(syllable).length > 1
+      && syllable !== syllable.toLocaleUpperCase("en-US")
+    )
+    if (partialCapital) {
+      return `Capitalize the complete stressed syllable "${partialCapital}"; do not capitalize only one character.`
+    }
+    const stressIndexes = syllables
+      .map((syllable, index) => (/[A-Z]/u.test(syllable) || hasAccentStress(syllable) ? index : -1))
+      .filter((index) => index >= 0)
+  if (stressIndexes.some((index) => Array.from(syllables[index]).length === 1 && index !== 0)) {
+      return "A single-character stressed syllable is allowed only as the first syllable."
+    }
+  }
+  if (!english) return ""
+  if (lettersOnly(english) !== lettersOnly(value)) {
+    return "Syllabication spelling must match the English word or phrase."
+  }
+  return ""
+}
+
 function lettersOnly(value) {
   return text(value)
     .normalize("NFD")

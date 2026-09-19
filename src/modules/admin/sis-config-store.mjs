@@ -676,9 +676,10 @@ function backupCorruptJsonFileIfNeeded(filePath, snapshot) {
 function writeJsonFileAtomic(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
   const encoded = JSON.stringify(value, null, 2)
-  const tmpPath = `${filePath}.tmp-${process.pid}-${Date.now()}`
-  fs.writeFileSync(tmpPath, encoded, "utf8")
-  fs.renameSync(tmpPath, filePath)
+  // The protected System Config file is writable by the runtime but its
+  // parent directory prevents replacement/deletion. Write the existing inode
+  // directly so recovery and normal persistence do not require rename access.
+  fs.writeFileSync(filePath, encoded, "utf8")
 }
 
 function compareIsoValues(left = "", right = "") {
@@ -729,6 +730,7 @@ function cachedSnapshotMatchesFiles(cached = null) {
   if (!cached || typeof cached !== "object") return false
   const filePath = resolveSisConfigFilePath()
   const fileSnapshot = parseJsonFile(filePath)
+  if (!fileSnapshot.exists || !fileSnapshot.parsed) return false
   return (
     normalizeText(cached.filePath) === filePath &&
     normalizeText(cached.fileMtimeIso) === normalizeText(fileSnapshot.mtimeIso)

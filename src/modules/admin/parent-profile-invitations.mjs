@@ -166,13 +166,13 @@ async function sendInvitationEmail({ invitationId, recipientEmail, student, toke
   return { providerMessageId: text(result.messageId), provider: "smtp", subject: message.subject }
 }
 
-export async function createParentProfileInvitation({ studentRefId, recipientEmail, queuedBy = "" } = {}) {
+export async function createParentProfileInvitation({ studentRefId, recipientEmail = "", queuedBy = "", sendEmail = true, includeUrl = false } = {}) {
   const prisma = await getSharedPrismaClient()
   if (!prisma?.parentProfileInvitation) throw Object.assign(new Error("Parent profile invitation persistence is unavailable"), { statusCode: 503 })
-  const email = lower(recipientEmail)
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Object.assign(new Error("A valid parent/adult student email is required"), { statusCode: 400 })
   const student = await prisma.student.findUnique({ where: { id: text(studentRefId) }, include: { profile: true } })
   if (!student) throw Object.assign(new Error("Student not found"), { statusCode: 404 })
+  const email = lower(recipientEmail || student.profile?.motherEmail || student.profile?.studentEmail)
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Object.assign(new Error("A valid parent/adult student email is required"), { statusCode: 400 })
   const account = await ensureParentPortalAccount(prisma, student, email)
   const token = crypto.randomBytes(32).toString("base64url")
   const expiresAt = new Date(Date.now() + invitationExpiryDays() * 24 * 60 * 60 * 1000)
@@ -180,8 +180,16 @@ export async function createParentProfileInvitation({ studentRefId, recipientEma
     await tx.parentProfileInvitation.updateMany({ where: { studentRefId: student.id, status: { in: ["queued", "sent", "clicked"] } }, data: { status: "expired", lastError: "Superseded by a newer invitation" } })
     return tx.parentProfileInvitation.create({ data: { tokenHash: tokenHash(token), recipientEmail: email, studentRefId: student.id, parentAccountId: account.account.id, status: "queued", expiresAt, batchId: `profile-invite-${student.id}-${Date.now().toString(36)}` } })
   })
-  await enqueueAsyncSideEffectJob(ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION, { invitationId: invitation.id, token, queuedBy, parentId: account.account.parentsId, mustChangePassword: Boolean(account.account.mustChangePassword) }, { dedupeKey: invitation.id })
-  return { id: invitation.id, status: invitation.status, recipientEmail: email, expiresAt: invitation.expiresAt.toISOString() }
+  if (sendEmail) {
+    await enqueueAsyncSideEffectJob(ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION, { invitationId: invitation.id, token, queuedBy, parentId: account.account.parentsId, mustChangePassword: Boolean(account.account.mustChangePassword) }, { dedupeKey: invitation.id })
+  }
+  return {
+    id: invitation.id,
+    status: invitation.status,
+    recipientEmail: email,
+    expiresAt: invitation.expiresAt.toISOString(),
+    ...(includeUrl ? { url: invitationUrl(token) } : {}),
+  }
 }
 
 export async function resendParentProfileInvitation({ invitationId, queuedBy = "" } = {}) {

@@ -7,6 +7,7 @@ export function initProfileIsland({
   onProfileEditInfo,
   onProfileCreateInfo,
   onProfileRefreshInfo,
+  onProfileCopyParentLink,
   onProfileBackToInfo,
   onProfileCurrentGradeChange,
   onProfileEditorSubmit,
@@ -38,6 +39,9 @@ export function initProfileIsland({
   });
   document?.getElementById("profileRefreshInfoBtn")?.addEventListener("click", () => {
     if (typeof onProfileRefreshInfo === "function") onProfileRefreshInfo();
+  });
+  document?.getElementById("profileCopyParentLinkBtn")?.addEventListener("click", () => {
+    if (typeof onProfileCopyParentLink === "function") onProfileCopyParentLink();
   });
   document?.getElementById("profileBackToInfoBtn")?.addEventListener("click", () => {
     if (typeof onProfileBackToInfo === "function") onProfileBackToInfo();

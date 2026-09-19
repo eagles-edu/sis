@@ -12,6 +12,7 @@ import {
   validateVocabularyEntry,
   vocabularyEnglishCapitalizationError,
   vocabularyEntryError,
+  vocabularySyllabicationFormatAndSpellingError,
 } from "../src/modules/admin/vocabulary-syllabication.mjs"
 import { isCheckedNewsReport } from "../src/modules/admin/student-new-words.mjs"
 import {
@@ -119,14 +120,14 @@ test("student news vocabulary reports the offending entry", async () => {
       partOfSpeech: "phrase",
       english: "in the morning",
       vietnamese: "vào buổi sáng",
-      syllabication: "in the morn-ing",
+      syllabication: "in the mornin-ing",
       definition: "During the morning.",
     },
   ])
   assert.equal(result.passed, false)
   assert.match(result.message, /in the morning/)
   assert.equal(result.rowErrors[0].index, 0)
-  assert.match(result.rowErrors[0].message, /exactly one stressed syllable/)
+  assert.match(result.rowErrors[0].message, /spelling must match/)
 })
 
 test("student News assigns English capitalization failures to the English field", async () => {
@@ -285,17 +286,62 @@ test("air-strike never receives a false syllabication warning", async () => {
   assert.equal(result.warningFields.vocabulary, undefined)
 })
 
-test("syllabication rejects partial capitalization and missing stress", () => {
+test("Student News syllabication checks spelling and format without requiring stress", () => {
   assert.equal(isValidStudentNewsSyllabication("po-tá-to", "potato"), true)
   assert.equal(isValidStudentNewsSyllabication("po-TA-to", "potato"), true)
-  assert.equal(isValidStudentNewsSyllabication("po-ta-to", "potato"), false)
+  assert.equal(isValidStudentNewsSyllabication("po-ta-to", "potato"), true)
   assert.equal(isValidStudentNewsSyllabication("pO-ta-to", "potato"), false)
   assert.equal(isValidStudentNewsSyllabication("word"), true)
   assert.equal(isValidStudentNewsSyllabication("air strike"), true)
   assert.equal(isValidStudentNewsSyllabication("air-strike", "air-strike"), true)
   assert.equal(isValidStudentNewsSyllabication("in the MÓRN-ing", "in the morning"), true)
   assert.equal(isValidStudentNewsSyllabication("potato"), true)
-  assert.equal(isValidStudentNewsSyllabication("in the morn-ing", "in the morning"), false)
+  assert.equal(isValidStudentNewsSyllabication("in the morn-ing", "in the morning"), true)
+  assert.equal(isValidStudentNewsSyllabication("in the mornin-ing", "in the morning"), false)
+})
+
+test("Student News checks vocabulary format and spelling without dictionary syllable validation", async () => {
+  assert.equal(vocabularySyllabicationFormatAndSpellingError({ english: "syllable", syllabication: "SYL-la-ble" }), "")
+  assert.equal(vocabularySyllabicationFormatAndSpellingError({ english: "syllable", syllabication: "syl-la-ble" }), "")
+  assert.equal(vocabularySyllabicationFormatAndSpellingError({ english: "syllable", syllabication: "SYL-lable" }), "")
+  assert.match(vocabularySyllabicationFormatAndSpellingError({ english: "syllable", syllabication: "SYL-la-bl" }), /spelling must match/)
+  const result = await evaluateStudentNewsVocabulary([{
+    partOfSpeech: "noun",
+    english: "syllable",
+    vietnamese: "âm tiết",
+    syllabication: "SYL-la-ble",
+    definition: "A unit of spoken language.",
+  }], { minimumWords: 1 })
+  assert.equal(result.passed, true)
+  assert.deepEqual(result.rowWarnings, [])
+})
+
+test("Student News admin guidance records the format-and-spelling scope", async () => {
+  const { buildStudentNewsComplianceBlock, evaluateStudentNewsMinimumRequirements, updateStudentNewsValidationIssues } = await import("../src/modules/admin/student-news-compliance.mjs")
+  const validation = await evaluateStudentNewsMinimumRequirements({
+    sourceLink: "https://www.bbc.com/news/articles/example",
+    articleTitle: "Example",
+    byline: "BBC",
+    articleDateline: "today",
+    leadSynopsis: "Example.",
+    actionActor: "BBC",
+    actionAffected: "readers",
+    actionWhere: "London",
+    actionWhat: "BBC published an example.",
+    actionWhy: "The example explains the lesson.",
+    biasAssessment: "The wording is neutral.",
+    vocabulary: [{
+      partOfSpeech: "noun",
+      english: "syllable",
+      vietnamese: "âm tiết",
+      syllabication: "SYL-la-bl",
+      definition: "A unit of spoken language.",
+    }],
+  }, { validationConfig: { vocabularyMinimumWords: 1 } })
+  const issues = updateStudentNewsValidationIssues({}, validation)
+  const note = buildStudentNewsComplianceBlock(issues.issues)
+  assert.match(note, /format and spelling only/)
+  assert.match(note, /syllable/)
 })
 
 test("vocabulary guard accepts uppercase or accented stress and preserves canonical accented entry", () => {
@@ -437,6 +483,8 @@ test("all student vocabulary save and check surfaces run the same client guard",
   assert.match(STUDENT_JS, /English word\/phrase must be lowercase unless it is a proper noun/)
   assert.doesNotMatch(STUDENT_JS, /function normalizeVocabularyEnglishEntry\(event\) \{[\s\S]*?data-vocabulary-field="syllabication"[\s\S]*?input\.value\s*=\s*normalizeSyllabication\(input\.value\)/)
   assert.match(STUDENT_JS, /function validateVocabularyEntrySurface\(container, onInvalid\)/)
+  assert.match(STUDENT_JS, /container === field\("newWordsRows"\)/)
+  assert.match(SHARED_THEME, /news-vocabulary-row \[data-vocabulary-field\]\.is-invalid/)
   assert.match(STUDENT_JS, /if \(!row\.english && !row\.syllabication\) return;/)
   assert.equal((STUDENT_JS.match(/validateVocabularyEntrySurface\(field\("newsVocabularyRows"\)/g) || []).length, 2)
   assert.equal((STUDENT_JS.match(/validateVocabularyEntrySurface\(field\("newsWeekSetModalVocabularyRows"\)/g) || []).length, 2)

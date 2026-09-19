@@ -5,7 +5,7 @@ import { checkTextWithLanguageTool } from "./student-news-language-tool.mjs"
 import { normalizeDefinitionText } from "./library-origin.mjs"
 import { parseStudentNewsSentence } from "./student-news-parser.mjs"
 import { checkVerbTransitivity } from "./verb-transitivity.mjs"
-import { validateVocabularyEntry, vocabularyEnglishCapitalizationError, vocabularyEntryError } from "./vocabulary-syllabication.mjs"
+import { vocabularyEnglishCapitalizationError, vocabularySyllabicationFormatAndSpellingError } from "./vocabulary-syllabication.mjs"
 
 /**
  * @param {unknown} value
@@ -195,10 +195,10 @@ function normalizeStudentNewsVocabulary(value) {
 }
 
 function isValidStudentNewsSyllabication(value, english = "") {
-  return !vocabularyEntryError({ english, syllabication: value })
+  return !vocabularySyllabicationFormatAndSpellingError({ english, syllabication: value })
 }
 
-async function studentNewsVocabularyRowError(row, index, dictionaryValidation = null) {
+function studentNewsVocabularyRowError(row, index) {
   const missing = []
   if (!STUDENT_NEWS_VOCABULARY_PARTS_OF_SPEECH.includes(row.partOfSpeech)) missing.push("part of speech")
   if (!row.english) missing.push("English")
@@ -214,23 +214,13 @@ async function studentNewsVocabularyRowError(row, index, dictionaryValidation = 
   }
   if (!row.vietnamese) missing.push("Vietnamese")
   if (!row.syllabication) missing.push("syllabication")
-  else if (vocabularyEntryError(row)) {
+  else if (vocabularySyllabicationFormatAndSpellingError(row)) {
     const entryLabel = row.english ? `\"${row.english}\"` : "this entry"
     return {
       index,
       english: row.english,
       fields: ["syllabication"],
-      message: `Entry ${index + 1} (${entryLabel}) has invalid syllabication: ${vocabularyEntryError(row)}`,
-    }
-  }
-  const resolvedDictionaryValidation = dictionaryValidation || await validateVocabularyEntry(row)
-  if (resolvedDictionaryValidation.message) {
-    const entryLabel = row.english ? `\"${row.english}\"` : "this entry"
-    return {
-      index,
-      english: row.english,
-      fields: ["syllabication"],
-      message: `Entry ${index + 1} (${entryLabel}) has invalid syllabication: ${resolvedDictionaryValidation.message}`,
+      message: `Entry ${index + 1} (${entryLabel}) has invalid syllabication: ${vocabularySyllabicationFormatAndSpellingError(row)}`,
     }
   }
   if (!row.definition) missing.push("definition")
@@ -317,19 +307,12 @@ async function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEW
   const populated = rows
     .map((row, index) => ({ row, index }))
     .filter(({ row }) => Object.values(row).some(Boolean))
-  const validatedRows = await Promise.all(populated.map(async ({ row, index }) => {
-    const dictionaryValidation = await validateVocabularyEntry(row)
-    return {
-      row,
-      index,
-      dictionaryValidation,
-      error: await studentNewsVocabularyRowError(row, index, dictionaryValidation),
-    }
+  const validatedRows = populated.map(({ row, index }) => ({
+    row,
+    index,
+    error: studentNewsVocabularyRowError(row, index),
   }))
   const rowErrors = validatedRows.map((entry) => entry.error).filter(Boolean)
-  const rowWarnings = validatedRows
-    .filter((entry) => !entry.error && entry.dictionaryValidation.warning)
-    .map((entry) => ({ index: entry.index, english: entry.row.english, message: entry.dictionaryValidation.warning, fields: ["syllabication"] }))
   const minimum = Math.max(1, Math.min(100, Math.trunc(Number(minimumWords)) || STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM))
   if (rowErrors.length || populated.length < minimum) {
     return {
@@ -339,12 +322,12 @@ async function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEW
         : `At least ${minimum} complete vocabulary rows are required.`,
       count: populated.length,
       rowErrors,
-      rowWarnings,
+      rowWarnings: [],
       transitivityAttemptCount: transitivityAttempts.length,
       transitivityAttempts,
     }
   }
-  return { passed: true, message: "", count: populated.length, rowErrors: [], rowWarnings, transitivityAttemptCount: transitivityAttempts.length, transitivityAttempts }
+  return { passed: true, message: "", count: populated.length, rowErrors: [], rowWarnings: [], transitivityAttemptCount: transitivityAttempts.length, transitivityAttempts }
 }
 
 /**
@@ -1551,10 +1534,10 @@ function buildStudentNewsFieldRevisionTask(fieldKey = "", context = {}) {
       label: "Vocabulary",
       steps: [
         "Complete every vocabulary row with part of speech, English, Vietnamese, syllabication, and definition.",
-        "Do mark one stress only when a space-separated phrase contains a hyphenated multi-syllable word, such as in the MÓRN-ing; do not add stress to one-syllable phrases or compound words such as air-strike.",
+        "Use letters, spaces, and hyphens, and make the syllabication letters spell the English word or phrase; stress correctness is not checked in Student News.",
         "Save again after correcting the named entry and its highlighted field.",
       ],
-      criterion: "Every vocabulary row must be complete and use valid syllabication.",
+      criterion: "Every vocabulary row must be complete and use syllabication with valid format and spelling only; Student News does not check dictionary syllable boundaries or primary stress.",
     }
   }
   return {
