@@ -6,6 +6,7 @@ process.env.STUDENT_ADMIN_STORE_ENABLED = "false"
 process.env.DATABASE_URL = ""
 
 import {
+  buildAssignmentTemplateBundle,
   buildAssignmentDashboardSlices,
   deleteAssignmentTemplateById,
   getAssignmentTemplateById,
@@ -44,6 +45,21 @@ test("saveAssignmentTemplate normalizes and round-trips assignment template reco
   const loaded = await getAssignmentTemplateById(result.item.id)
   assert.equal(loaded?.id, result.item.id)
   assert.equal(loaded?.items.length, 2)
+})
+
+test("assignment template normalization preserves canonical exercise item IDs", () => {
+  const bundle = buildAssignmentTemplateBundle({
+    id: "template-items",
+    level: "A1 Movers",
+    assignmentTitle: "Three items",
+    assignedAt: "2026-03-09",
+    dueAt: "2026-03-12",
+    items: [
+      { assignmentTemplateItemId: "item-read", title: "Read", url: "https://example.com/read" },
+      { assignmentTemplateItemId: "item-write", title: "Write", url: "https://example.com/write" },
+    ],
+  })
+  assert.deepEqual(bundle.items.map((item) => item.assignmentTemplateItemId), ["item-read", "item-write"])
 })
 
 test("importAssignmentTemplates upserts by id and keeps list ordering stable", async () => {

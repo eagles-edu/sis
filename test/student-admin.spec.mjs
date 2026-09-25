@@ -435,6 +435,12 @@ test("admin systems health includes a non-secret Redis health card", () => {
   assert.doesNotMatch(source, /redis\.url/)
 })
 
+test("assignment form permits level-wide bundles without a selected student", () => {
+  const source = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
+  assert.match(source, /if \(!form\.level\) throw new Error\("Select a class level before saving\."\)/u)
+  assert.doesNotMatch(source, /if \(!form\.eaglesId\) throw new Error\("Select a student before saving this assignment\."\)/u)
+})
+
 test("admin systems health probes every engagement API surface", () => {
   const source = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
   assert.match(source, /const ENGAGEMENT_API_HEALTH_CHECKS = \[/u)
@@ -1010,7 +1016,7 @@ test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinishe
     level: "A1 Movers",
     assignmentTitle: "Current Quarter Bundle",
     assignedAt: currentQuarterStart,
-    dueAt: currentQuarterEnd,
+    dueAt: currentQuarterStart,
     items: [
       { assignmentTemplateItemId: "bundle-current-item-1", title: "Read current passage", url: "https://example.com/current/read" },
     ],
@@ -1084,7 +1090,7 @@ test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinishe
           schoolYear: `${year}-${year + 1}`,
           quarter: "q1",
           assignmentName: "Current Quarter Bundle",
-          dueAt: currentQuarterEnd,
+          dueAt: currentQuarterStart,
           submittedAt: null,
           homeworkCompleted: false,
           homeworkOnTime: false,
@@ -1104,8 +1110,8 @@ test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinishe
           submittedAt: `${year}-${month}-${String(Math.max(today.getDate(), 2)).padStart(2, "0")}T09:00:00.000Z`,
           homeworkCompleted: true,
           homeworkOnTime: false,
-          score: 8,
-          maxScore: 10,
+          score: 90,
+          maxScore: 100,
           comments: "Submitted after the quarter closed.",
           assignmentBundleJson: pastBundle,
         },
@@ -1137,6 +1143,7 @@ test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinishe
           completed: false,
         },
       ],
+      now: new Date(`${currentQuarterStart}T12:00:00.000Z`),
     })
 
     assert.equal(snapshot.details.unfinishedCurrentQuarterAssignments.length, 1)
@@ -1145,8 +1152,12 @@ test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinishe
     assert.equal(snapshot.details.unfinishedCurrentQuarterAssignments[0].itemLinks[0].url, "https://example.com/current/read")
     assert.match(snapshot.details.unfinishedCurrentQuarterAssignments[0].meta || "", /Assigned/i)
     assert.match(snapshot.details.unfinishedCurrentQuarterAssignments[0].note || "", /exercise link/i)
+    assert.equal(snapshot.details.unfinishedCurrentQuarterAssignments[0].status, "late")
+    assert.equal(snapshot.details.unfinishedCurrentQuarterAssignments[0].progressLabel, "0/1 exercises above 82%")
     assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].href, "https://example.com/past/write")
-    assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].tone, "good")
+    assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].tone, "good", JSON.stringify(snapshot.details.pastQuartersUnfinishedAssignments[0]))
+    assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].completed, true)
+    assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].lateCompleted, true)
     assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].countsTowardQuarter, false)
     assert.match(snapshot.details.pastQuartersUnfinishedAssignments[0].note || "", /progress tracking only/i)
   } finally {

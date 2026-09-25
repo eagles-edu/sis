@@ -219,7 +219,7 @@ function normalizeAssignmentItem(source = {}, index = 0) {
   const title = normalizeText(item.title || item.exerciseTitle || item.name || item.label)
   const url = normalizeText(item.url || item.link || item.href || item.exerciseUrl)
   const done = Boolean(item.done || item.completed || item.checked)
-  const id = normalizeText(item.id) || `assignment-item-${index + 1}`
+  const id = normalizeText(item.assignmentTemplateItemId || item.id) || `assignment-item-${index + 1}`
   if (!title && !url) return null
   return {
     id,

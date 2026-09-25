@@ -834,7 +834,17 @@ function buildAssignmentBundleFromSubmission(submission = {}) {
     : submission?.assignmentProvenanceJson && typeof submission.assignmentProvenanceJson === "object" ?
       submission.assignmentProvenanceJson
     : null
-  if (directBundle) return directBundle
+  if (directBundle) {
+    const assignmentTemplateId = normalizeString(directBundle.assignmentTemplateId || submission?.assignmentTemplateId)
+    const submittedItemId = normalizeString(submission?.assignmentTemplateItemId || directBundle.submittedItemId)
+    const dueAt = normalizeString(directBundle.dueAt || submission?.dueAt)
+    return {
+      ...directBundle,
+      ...(assignmentTemplateId ? { assignmentTemplateId } : {}),
+      ...(submittedItemId ? { submittedItemId } : {}),
+      ...(dueAt ? { dueAt } : {}),
+    }
+  }
 
   const assignmentTemplateId = normalizeString(submission?.assignmentTemplateId)
   const assignmentTemplateItemId = normalizeString(submission?.assignmentTemplateItemId)
@@ -878,6 +888,7 @@ function buildAssignmentBundleFromSubmission(submission = {}) {
         url: exerciseUrl,
       },
     ],
+    submittedItemId: assignmentTemplateItemId,
     itemTitles: [itemTitle],
     exerciseUrls: [exerciseUrl],
   }
@@ -894,6 +905,8 @@ function buildExerciseGradeRecordData(student, submission, summary) {
     ? `${AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX} (${correctCount}/${totalQuestions} correct).`
     : `${AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX}.`
   const assignmentBundleJson = buildAssignmentBundleFromSubmission(submission)
+  const submittedAt = completedAt
+  const dueAt = parseCompletedAt(assignmentBundleJson?.dueAt || submission.dueAt) || completedAt
 
   const schoolYear = resolveCurrentSchoolYear(completedAt)
   const weekNumber = courseWeekNumberForSchoolSetupDate(
@@ -908,13 +921,13 @@ function buildExerciseGradeRecordData(student, submission, summary) {
     schoolYear,
     quarter: quarterFromDate(completedAt, schoolYear),
     assignmentName: className,
-    dueAt: completedAt,
+    dueAt,
     weekNumber,
-    submittedAt: completedAt,
+    submittedAt,
     score: scorePercent,
     maxScore: 100,
     homeworkCompleted: true,
-    homeworkOnTime: true,
+    homeworkOnTime: !dueAt || submittedAt <= dueAt,
     comments,
     sourceSystem: normalizeSourceSystem(submission.sourceSystem),
     sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),

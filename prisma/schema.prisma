@@ -1152,7 +1152,7 @@ model ParentProfileInvitation {
   id                String   @id @default(cuid())
   tokenHash         String   @unique
   activationCodeHash String? @unique
-  recipientEmail    String
+  recipientEmail    String?
   studentRefId      String
   student            Student  @relation(fields: [studentRefId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   parentAccountId   String?

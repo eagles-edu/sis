@@ -1759,7 +1759,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       Refresh Info
                     </button>
                     <button id="profileCopyParentLinkBtn" type="button" class="portal-button portal-button-primary"
-                      title="Create a new one-time parent profile link and copy it to the clipboard"
+                      title="Create a new one-time parent profile link to share by phone, text, or Zalo"
                       aria-label="Create and copy parent profile link">
                       Copy Link
                     </button>
@@ -5086,7 +5086,7 @@ No family lookup yet.</pre>
           if (adminAppLoaded) return
           adminAppLoaded = true
           const script = document.createElement("script")
-          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-1cdbdae7cf218524"
+          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-7905bf256f1aa9de"
           script.defer = true
           if (replaySubmit || replayClick || replayPage) {
             script.addEventListener("load", () => {

@@ -25,6 +25,8 @@ test("dictionary scraper integrations preserve protected media and audit contrac
   assert.match(editor, /vocabularyMerriamWebsterApiDialog/)
   assert.match(editor, /data-vocabulary-api-close/)
   assert.match(editor, /dialog\.close\(\)[\s\S]*?dialog\.removeAttribute\("open"\)/)
+  assert.match(editor, /const sourceId = [\s\S]*?\|\| "new-canonical"/)
+  assert.match(editor, /dialog\.showModal\(\)[\s\S]*?fetch\(`\/api\/admin\/library\/entries\//)
   assert.match(editor, /label === "AP"\) { await showApiPreview/)
   assert.match(adminLibrary, /data-library-media-assets=/)
   assert.match(adminLibrary, /includeDictionaryBuilder: true/)

@@ -334,6 +334,47 @@ test("persistExerciseSubmission records directly when student account is matched
   assert.equal(prisma.state.gradeRecordCreateCalls.length, 1)
 })
 
+test("exercise grading preserves the assignment deadline and records the submitted exercise item", async () => {
+  const prisma = makePersistPrisma({
+    matchedStudent: {
+      id: "student-1",
+      eaglesId: "S001",
+      email: "student@example.com",
+      profile: { currentGrade: "A1 Movers" },
+    },
+  })
+  const templateDueAt = "2026-03-01T08:00:00.000Z"
+  await persistExerciseSubmission(nativeExercisePayload({
+    completedAt: "2026-03-01T09:00:00.000Z",
+    correctCount: 9,
+    pendingCount: 0,
+    incorrectCount: 1,
+    totalQuestions: 10,
+    scorePercent: 90,
+    assignmentTemplateItemId: "bundle-item-2",
+    assignmentBundleJson: {
+      assignmentTemplateId: "bundle-1",
+      eaglesId: "S001",
+      level: "A1 Movers",
+      assignmentTitle: "Three exercises",
+      assignedAt: "2026-02-20T00:00:00.000Z",
+      dueAt: templateDueAt,
+      items: [
+        { assignmentTemplateItemId: "bundle-item-1", title: "Read", url: "https://example.test/read" },
+        { assignmentTemplateItemId: "bundle-item-2", title: "Write", url: "https://example.test/write" },
+        { assignmentTemplateItemId: "bundle-item-3", title: "Listen", url: "https://example.test/listen" },
+      ],
+    },
+  }), { prisma })
+
+  const grade = prisma.state.gradeRecordCreateCalls[0]?.data
+  assert.equal(grade.dueAt.toISOString(), templateDueAt)
+  assert.equal(grade.submittedAt.toISOString(), "2026-03-01T09:00:00.000Z")
+  assert.equal(grade.homeworkOnTime, false)
+  assert.equal(grade.assignmentBundleJson.submittedItemId, "bundle-item-2")
+  assert.equal(grade.score, 90)
+})
+
 test("persistExerciseSubmission canonicalizes noisy pageTitle for auto-import grade keys", async () => {
   const prisma = makePersistPrisma({
     matchedStudent: {

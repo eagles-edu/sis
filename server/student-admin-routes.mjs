@@ -55,6 +55,7 @@ import {
   updateLibraryEntry,
 } from "../src/modules/admin/library-corpus.mjs"
 import { getDictionaryBuilderScoringMatrix, previewDictionaryBuilder, readDictionaryBuilderSnapshot, retryDictionaryBuilderSnapshot, updateDictionaryBuilderScoringSettings } from "../src/modules/admin/dictionary-builder.mjs"
+import { assignmentProgress } from "../src/modules/admin/assignment-progress.mjs"
 import { previewLdoceLibraryEntry, sanitizeLdocePreview } from "../src/modules/admin/ldoce-provider.mjs"
 import { previewOxfordLibraryEntry, sanitizeOxfordPreview } from "../src/modules/admin/oxford-provider.mjs"
 import { previewBritannicaLibraryEntry, sanitizeBritannicaPreview } from "../src/modules/admin/britannica-provider.mjs"
@@ -336,6 +337,7 @@ const STUDENT_NEWS_CHECK_UNAUTHORIZED_MESSAGE =
 const STUDENT_NEWS_CALENDAR_PATH = `${STUDENT_API_PREFIX}/news-reports/calendar`
 const STUDENT_NEW_WORDS_PATH = `${STUDENT_API_PREFIX}/new-words`
 const STUDENT_LIBRARY_API_PATH = `${STUDENT_API_PREFIX}/library`
+const STUDENT_LIBRARY_MW_PREVIEW_PATH = `${STUDENT_LIBRARY_API_PATH}/mw-preview`
 const STUDENT_LIBRARY_ASSIGNMENTS_PATH = `${STUDENT_LIBRARY_API_PATH}/assignments`
 const STUDENT_LIBRARY_SUBMISSIONS_PATH = `${STUDENT_LIBRARY_API_PATH}/submissions`
 const ADMIN_LIBRARY_API_PATH = `${ADMIN_API_PREFIX}/library`
@@ -4948,6 +4950,7 @@ export function buildChildDashboardSnapshot({
   reportRows = [],
   assignmentTemplates = [],
   schoolSetup = null,
+  now = new Date(),
 } = {}) {
   const resolvedSchoolSetup = normalizeSchoolSetupSnapshot(
     schoolSetup || readPersistedUiSettings()?.uiSettings?.schoolSetup
@@ -4959,6 +4962,7 @@ export function buildChildDashboardSnapshot({
     reportRows,
     assignmentTemplates,
     schoolSetup: resolvedSchoolSetup,
+    now,
   })
   const attendance = {
     total: attendanceRows.length,
@@ -4970,7 +4974,6 @@ export function buildChildDashboardSnapshot({
     late: attendanceRows.filter((row) => normalizeLower(row?.status) === "late").length,
     excused: attendanceRows.filter((row) => normalizeLower(row?.status) === "excused").length,
   }
-  const now = new Date()
   const assignments = {
     total: gradeRows.length,
     completed: gradeRows.filter((row) => row?.homeworkCompleted === true || Boolean(row?.submittedAt)).length,
@@ -5924,21 +5927,21 @@ function buildStudentAssignmentDetailRows({
     })
     .filter(Boolean)
 
-  const gradeBundleByKey = new Map()
-  for (const row of Array.isArray(gradeRows) ? gradeRows : []) {
-    const bundle = normalizeAssignmentBundleRecord(row?.assignmentBundleJson)
-    if (!bundle) continue
-    const key = buildAssignmentBundleKey(bundle)
-    if (!key || gradeBundleByKey.has(key)) continue
-    gradeBundleByKey.set(key, row)
-  }
-
   const currentQuarterRows = []
   const pastQuarterRows = []
 
   templateBundles.forEach((bundle) => {
     const key = buildAssignmentBundleKey(bundle)
-    const matchedGradeRow = key ? gradeBundleByKey.get(key) || null : null
+    const matchedGradeRows = (Array.isArray(gradeRows) ? gradeRows : []).filter((row) => {
+      const gradeBundle = row?.assignmentBundleJson && typeof row.assignmentBundleJson === "object"
+        ? row.assignmentBundleJson
+        : {}
+      return normalizeText(gradeBundle.assignmentTemplateId) === bundle.assignmentTemplateId
+    })
+    const matchedGradeRow = matchedGradeRows
+      .slice()
+      .sort((left, right) => (parseIsoDateTime(right?.submittedAt)?.getTime?.() || 0) - (parseIsoDateTime(left?.submittedAt)?.getTime?.() || 0))[0] || null
+    const progress = assignmentProgress(bundle, matchedGradeRows)
     const dueAt = parseIsoDateTime(bundle.dueAt)
     if (!dueAt) return
     const explicitQuarter = normalizeLower(matchedGradeRow?.quarter || matchedGradeRow?.quarterCode || matchedGradeRow?.quarterLabel)
@@ -5956,9 +5959,10 @@ function buildStudentAssignmentDetailRows({
       return
     }
     const quarterDeadline = normalizeText(quarterInfo?.endDate || bundle.dueAt)
-    const completed = Boolean(matchedGradeRow?.homeworkCompleted === true || matchedGradeRow?.submittedAt)
-    const submittedAt = parseIsoDateTime(matchedGradeRow?.submittedAt)
+    const completed = progress.isComplete
+    const submittedAt = progress.completedAt
     const lateCompleted = Boolean(completed && submittedAt && submittedAt > dueAt)
+    const late = Boolean(!completed && parseIsoDateTime(now)?.getTime?.() > dueAt.getTime())
     const itemLinks = bundle.items.map((item, index) => ({
       id: `${bundle.assignmentTemplateId}:${item.assignmentTemplateItemId}`,
       title: item.title || bundle.assignmentTitle || `Exercise ${index + 1}`,
@@ -5973,7 +5977,7 @@ function buildStudentAssignmentDetailRows({
       itemLinks,
       href: itemLinks[0]?.url || "",
       title: bundle.assignmentTitle || itemLinks[0]?.title || "Assignment",
-      meta: `Assigned ${formatPortalDate(bundle.assignedAt)} | Due ${formatPortalDate(bundle.dueAt)} | Deadline ${formatPortalDate(quarterDeadline)}`,
+      meta: `Assigned ${formatPortalDate(bundle.assignedAt)} | Due ${formatPortalDate(bundle.dueAt)} | Deadline ${formatPortalDate(quarterDeadline)} | Progress ${progress.completed}/${progress.required} above 82% | ${completed ? (lateCompleted ? "Completed late" : "Completed") : late ? "Late" : "Open"}`,
       note: bundle.items.length > 1 ?
         "Open the exercise links below to finish this assignment." :
         "Open the exercise link below to finish this assignment.",
@@ -5982,9 +5986,12 @@ function buildStudentAssignmentDetailRows({
       assignedAt: bundle.assignedAt,
       dueAt: bundle.dueAt,
       completed,
+      late,
       lateCompleted,
-      status: completed ? "completed" : "open",
-      gradeDisposition: quarterCode === currentQuarterCode ? (completed ? "current-completed" : "current-open") : (completed ? "past-completed" : "past-open"),
+      progress: { completed: progress.completed, required: progress.required, passingScore: 82 },
+      progressLabel: `${progress.completed}/${progress.required} exercises above 82%`,
+      status: completed ? "completed" : late ? "late" : "open",
+      gradeDisposition: quarterCode === currentQuarterCode ? (completed ? "current-completed" : late ? "current-late" : "current-open") : (completed ? "past-completed" : late ? "past-late" : "past-open"),
       countsTowardQuarter: quarterCode === currentQuarterCode && !completed,
       tone: completed ? "good" : "warn",
     }
@@ -6036,15 +6043,16 @@ function buildChildDashboardDetails({
   reportRows = [],
   assignmentTemplates = [],
   schoolSetup = null,
+  now = new Date(),
 } = {}) {
-  const assignmentHistory = serializeGradeRows(gradeRows, new Date())
+  const assignmentHistory = serializeGradeRows(gradeRows, now)
   const gradeHistory = assignmentHistory.filter((row) => row.status === "completed" || row.scorePercent !== null)
   const assignmentFocus = buildStudentAssignmentDetailRows({
     child,
     assignmentTemplates,
     gradeRows,
     schoolSetup,
-    now: new Date(),
+    now,
   })
   return {
     attendanceHistory: serializeAttendanceRows(attendanceRows).slice(0, 90),
@@ -8196,6 +8204,7 @@ async function handleApiRequest(request, response, pathname, url) {
       queuedBy: session?.username,
       sendEmail: false,
       includeUrl: true,
+      allowProfileEmail: false,
     })
     sendJson(response, 200, { ok: true, invitation })
     return true
@@ -8255,11 +8264,25 @@ async function handleApiRequest(request, response, pathname, url) {
     assertStoreEnabled()
     const prisma = await getSharedPrismaClient()
     const students = await prisma.student.findMany({
-      where: { parentProfileInvitations: { some: { sentAt: { not: null } } } },
+      where: {
+        parentProfileInvitations: {
+          some: {
+            OR: [
+              { sentAt: { not: null } },
+              { recipientEmail: null, status: { in: ["queued", "clicked", "activated", "completed"] } },
+            ],
+          },
+        },
+      },
       include: {
         profile: true,
         parentProfileInvitations: {
-          where: { sentAt: { not: null } },
+          where: {
+            OR: [
+              { sentAt: { not: null } },
+              { recipientEmail: null, status: { in: ["queued", "clicked", "activated", "completed"] } },
+            ],
+          },
           orderBy: { createdAt: "desc" },
           take: 1,
         },
@@ -8370,7 +8393,7 @@ async function handleApiRequest(request, response, pathname, url) {
     sendJson(response, 200, {
       ok: true,
       rows: rows.filter((row) => isEngagementVisible({
-        sentAt: row.invitationSentAt,
+        sentAt: row.invitationSentAt || row.invitationQueuedAt,
         completedAt: row.invitationCompletedAt,
       })),
     })
@@ -8776,7 +8799,12 @@ async function handleParentApiRequest(request, response, pathname, url) {
     })
     sendJson(response, 200, {
       ok: true,
-      invitation: { status: invitation.status, expiresAt: invitation.expiresAt },
+      invitation: {
+        status: invitation.status,
+        expiresAt: invitation.expiresAt,
+        ...(invitation.deliveryMethod ? { deliveryMethod: invitation.deliveryMethod } : {}),
+        ...(invitation.url ? { url: invitation.url } : {}),
+      },
     })
     return true
   }
@@ -9161,6 +9189,17 @@ async function handleStudentApiRequest(request, response, pathname, url) {
       ...Object.fromEntries(url.searchParams.entries()),
       studentRefId,
     }))
+    return true
+  }
+
+  if (method === "POST" && pathname === STUDENT_LIBRARY_MW_PREVIEW_PATH) {
+    const payload = await parseBody(request)
+    const entry = payload?.entry || payload
+    if (!normalizeText(entry?.english)) {
+      sendJson(response, 400, { ok: false, message: "Enter an English word before requesting the AP preview." })
+      return true
+    }
+    sendJson(response, 200, await previewMerriamWebsterLibraryEntry(entry))
     return true
   }
 

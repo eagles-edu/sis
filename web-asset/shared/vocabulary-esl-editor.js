@@ -570,6 +570,7 @@
         dialog.innerHTML = `<form method="dialog"><div class="portal-modal-header"><h2>AP · Merriam-Webster API</h2><button type="button" class="portal-button portal-button-neutral-action" data-vocabulary-api-close aria-label="Close Merriam-Webster API preview">Close</button></div><p data-vocabulary-api-message></p><pre data-vocabulary-api-result></pre></form>`
         dialog.querySelector("[data-vocabulary-api-close]")?.addEventListener("click", (event) => {
           event.preventDefault()
+          dialog.dataset.previewRequestId = String(Number(dialog.dataset.previewRequestId || 0) + 1)
           if (typeof dialog.close === "function" && dialog.open) dialog.close()
           else dialog.removeAttribute("open")
         })
@@ -577,26 +578,34 @@
       }
       const message = dialog.querySelector("[data-vocabulary-api-message]")
       const result = dialog.querySelector("[data-vocabulary-api-result]")
-      const sourceId = row.closest("[data-review-pane], [data-vocabulary-editor]")?.dataset.reviewSourceId || row.closest("[data-review-pane], [data-vocabulary-editor]")?.dataset.approvedEntryId
-      if (!sourceId || sourceId === "new-canonical") {
-        message.textContent = "Save the canonical Library entry before requesting the AP preview."
+      const sourceId = row.closest("[data-review-pane], [data-vocabulary-editor]")?.dataset.reviewSourceId || row.closest("[data-review-pane], [data-vocabulary-editor]")?.dataset.approvedEntryId || "new-canonical"
+      const entry = Object.fromEntries([...row.querySelectorAll("[data-vocabulary-field]")].map((input) => [input.dataset.vocabularyField, input.type === "checkbox" ? input.checked : input.value]))
+      const requestId = Number(dialog.dataset.previewRequestId || 0) + 1
+      dialog.dataset.previewRequestId = String(requestId)
+      if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal()
+      else dialog.setAttribute("open", "")
+      if (!String(english || "").trim()) {
+        message.textContent = "Enter an English word before requesting the AP preview."
         result.textContent = ""
       } else {
         message.textContent = `Loading AP for ${english}...`
         result.textContent = ""
-        const entry = Object.fromEntries([...row.querySelectorAll("[data-vocabulary-field]")].map((input) => [input.dataset.vocabularyField, input.type === "checkbox" ? input.checked : input.value]))
         try {
-          const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/mw-preview`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ entry }) })
+          const studentApiPrefix = String(window.__SIS_STUDENT_API_PREFIX || "").replace(/\/+$/u, "")
+          const previewPath = studentApiPrefix
+            ? `${studentApiPrefix}/library/mw-preview`
+            : `/api/admin/library/entries/${encodeURIComponent(sourceId)}/mw-preview`
+          const response = await fetch(previewPath, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ entry }) })
           const data = await response.json()
+          if (Number(dialog.dataset.previewRequestId) !== requestId || !dialog.open) return
           if (!response.ok || !data.ok) throw new Error(data.error || data.message || "Merriam-Webster API is unavailable.")
           message.textContent = `${english} · server-side AP result; this preview does not apply data.`
           result.textContent = JSON.stringify({ fields: data.fields || {}, entries: data.details?.entries || [], sourceUrl: data.sourceUrl || "" }, null, 2)
         } catch (error) {
+          if (Number(dialog.dataset.previewRequestId) !== requestId || !dialog.open) return
           message.textContent = error.message || "Merriam-Webster API is unavailable."
         }
       }
-      if (typeof dialog.showModal === "function") dialog.showModal()
-      else dialog.setAttribute("open", "")
     }
     row?.querySelectorAll("[data-vocabulary-lookup]").forEach((button) => {
       if (button.dataset.lookupBound === "true") return;

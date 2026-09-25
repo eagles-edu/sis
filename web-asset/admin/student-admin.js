@@ -12401,7 +12401,6 @@
       async function saveAssignmentTemplate() {
         const form = collectAssignmentForm();
         if (!form.level) throw new Error("Select a class level before saving.");
-        if (!form.eaglesId) throw new Error("Select a student before saving this assignment.");
         if (!form.items.length)
           throw new Error("Add at least one assignment item before saving.");
         if (form.items.some((item) => !normalizeText(item.title) || !normalizeText(item.url))) {
@@ -20822,7 +20821,7 @@
           });
           await copyTextToClipboard(result?.invitation?.url);
           const expiresOn = formatDate(result?.invitation?.expiresAt) || "the configured expiry date";
-          setStatus(`Parent profile link copied. It expires on ${expiresOn} and can be used once.`);
+          setStatus(`Parent profile link copied for phone, text, or Zalo. It expires on ${expiresOn} and can be used once.`);
         } finally {
           state.profileCopyParentLinkBusy = false;
           if (button instanceof HTMLButtonElement) {

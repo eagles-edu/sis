@@ -30,3 +30,16 @@ test("sync-and-restart-live-runtime keeps Prisma deploy in the live wrapper cont
   assert.match(wrapper, /env SIS_ENV_FILE=\.env DOTENV_CONFIG_PATH=\.env NODE_ENV=production npm run db:migrate:deploy/)
   assert.match(wrapper, /npm run db:migrate:deploy/)
 })
+
+test("full live sync precompresses the runtime and public admin assets", () => {
+  assert.match(wrapper, /precompress_live_assets\(\)/)
+  assert.match(wrapper, /tools\/precompress-web-assets\.sh admin/)
+  assert.match(wrapper, /sync_live_public_html_index\s+precompress_live_assets/)
+  assert.match(wrapper, /precompress_live_assets\s+else/)
+  assert.match(wrapper, /verify_live_sync_whitelist\(\)/)
+})
+
+test("live Lighthouse is enabled by default and can only be explicitly disabled", () => {
+  assert.match(wrapper, /LIVE_LIGHTHOUSE_ENABLED="\$\{SIS_LIVE_LIGHTHOUSE_ENABLED:-1\}"/)
+  assert.match(wrapper, /SIS_LIVE_LIGHTHOUSE_ENABLED=\$\{LIVE_LIGHTHOUSE_ENABLED\}/)
+})

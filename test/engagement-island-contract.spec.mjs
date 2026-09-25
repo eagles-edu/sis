@@ -33,7 +33,7 @@ test("engagement pages remain wired to the shared matrix and their own data endp
   assert.match(read("web-asset/admin/engagement-matrix.mjs"), /if \(profileMode\) \{[\s\S]*?table\.destroy\(\)[\s\S]*?return renderEngagementMatrix\(element, rows/u)
   assert.match(profile, /\[row\.parentsId, row\.familyId, row\.eaglesIds, row\.learners, row\.parentName, row\.parentEmail\]/u)
   assert.match(read("server/student-admin-routes.mjs"), /invitationQueuedAt: row\.invitation\?\.queuedAt/u)
-  assert.match(read("server/student-admin-routes.mjs"), /parentProfileInvitations: \{ some: \{ sentAt: \{ not: null \} \} \}/u)
+  assert.match(read("server/student-admin-routes.mjs"), /parentProfileInvitations: \{\s*some: \{\s*OR: \[[\s\S]*?sentAt: \{ not: null \}[\s\S]*?recipientEmail: null, status: \{ in: \["queued", "clicked", "activated", "completed"\] \}/u)
   assert.match(read("server/student-admin-routes.mjs"), /assignmentReminderEngagement\.findMany\(\{[\s\S]*?sentAt: \{ not: null \}[\s\S]*?actionCompletedAt/u)
   assert.match(read("src/modules/admin/performance-engagement.mjs"), /isEngagementVisible\(/u)
   assert.match(read("src/modules/admin/library-corpus.mjs"), /libraryAssignmentEngagement\.findMany\(\{[\s\S]*?sentAt: \{ not: null \}[\s\S]*?completedAt/u)

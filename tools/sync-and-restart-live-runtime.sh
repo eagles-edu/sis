@@ -17,7 +17,7 @@ SOURCE_ROOT="${SIS_SOURCE_ROOT:-${REPO_ROOT}}"
 LIVE_ROOT="${SIS_LIVE_ROOT:-/home/admin.eagles.edu.vn/sis}"
 PUBLIC_ROOT="${SIS_LIVE_PUBLIC_ROOT:-/home/admin.eagles.edu.vn/public_html}"
 LIVE_ORIGIN="${SIS_LIVE_PRIMARY_ORIGIN:-https://admin.eagles.edu.vn}"
-LIVE_LIGHTHOUSE_ENABLED="${SIS_LIVE_LIGHTHOUSE_ENABLED:-0}"
+LIVE_LIGHTHOUSE_ENABLED="${SIS_LIVE_LIGHTHOUSE_ENABLED:-1}"
 LIVE_LIGHTHOUSE_THRESHOLD="${SIS_SYNC_LIGHTHOUSE_THRESHOLD:-100}"
 LIVE_RUNTIME_ENV="${SIS_LIVE_RUNTIME_ENV:-production}"
 LIVE_SERVICE="${SIS_LIVE_SERVICE:-exercise-mailer.service}"
@@ -1338,9 +1338,14 @@ verify_live_routes() {
   done
 }
 
+precompress_live_assets() {
+  log "precompressing and verifying live admin mirror"
+  (cd "${REPO_ROOT}" && tools/precompress-web-assets.sh admin)
+}
+
 verify_lighthouse_performance() {
   if [[ "${LIVE_LIGHTHOUSE_ENABLED}" != "1" ]]; then
-    log "skip Lighthouse portal gate (SIS_SYNC_LIGHTHOUSE_ENABLED=${LIVE_LIGHTHOUSE_ENABLED})"
+    log "skip Lighthouse portal gate (SIS_LIVE_LIGHTHOUSE_ENABLED=${LIVE_LIGHTHOUSE_ENABLED})"
     return 0
   fi
   log "verifying Lighthouse performance on ${LIVE_ORIGIN}"
@@ -1384,6 +1389,7 @@ run_apply() {
     if [[ "${MODE}" != "boot-prep" ]]; then
       sync_live_public_assets
       sync_live_public_html_index
+      precompress_live_assets
     else
       log "skip public_html sync for mode=boot-prep"
       log "skip public web asset sync for mode=boot-prep"

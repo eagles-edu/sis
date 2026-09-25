@@ -73,6 +73,28 @@
           <p class="small">A shared, reviewed vocabulary corpus. Creator and editor history remains visible on every
             entry.</p>
         </div>
+        <section class="panel student-library-add-surface" aria-labelledby="studentLibraryAddTitle">
+          <div class="section-head">
+            <h2 id="studentLibraryAddTitle">Add words to Library</h2>
+            <p class="small">Add one or five complete vocabulary rows, save them to New Words, and submit them for Library review.</p>
+          </div>
+          <div id="studentLibraryNewWordsRows" class="news-vocabulary-rows vocabulary-edit-surface"></div>
+          <div class="new-words-add-actions">
+            <button id="studentLibraryAddOneBtn" type="button" class="portal-button portal-button-primary"
+              title="Add one vocabulary row to your New Words list"
+              aria-label="Add one vocabulary row to your New Words list">Add Word</button>
+            <button id="studentLibraryAddFiveBtn" type="button" class="portal-button portal-button-primary"
+              title="Add five vocabulary rows to your New Words list"
+              aria-label="Add five vocabulary rows to your New Words list">Add Five</button>
+            <button id="studentLibrarySaveWordsBtn" type="button" class="portal-button portal-button-affirm"
+              title="Save the completed vocabulary rows to your New Words list"
+              aria-label="Save the completed vocabulary rows to your New Words list">Save Changes</button>
+            <button id="studentLibrarySubmitWordsBtn" type="button" class="portal-button portal-button-affirm"
+              title="Submit the completed vocabulary rows to Library Admin for review"
+              aria-label="Submit the completed vocabulary rows to Library Admin for review">Submit to Review</button>
+          </div>
+          <p id="studentLibraryNewWordsStatus" class="small" aria-live="polite"></p>
+        </section>
         <form id="libraryFilters" class="library-toolbar"><label>Search<input id="librarySearch" type="search"
               placeholder="English, Vietnamese, or definition"></label><label>Part of speech<select
               id="libraryPos">
@@ -125,8 +147,80 @@
       document.querySelectorAll("[data-copyright-year]").forEach((element) => { element.textContent = String(new Date().getFullYear()); });
       const zoom = (delta) => { const current = Number.parseInt(document.documentElement.dataset.portalTextZoom || "100", 10) || 100; document.documentElement.dataset.portalTextZoom = String(Math.max(85, Math.min(130, current + delta))); document.documentElement.style.fontSize = `${document.documentElement.dataset.portalTextZoom}%`; };
       document.getElementById("studentTextZoomDownBtn")?.addEventListener("click", () => zoom(-5)); document.getElementById("studentTextZoomUpBtn")?.addEventListener("click", () => zoom(5)); document.getElementById("studentTextZoomResetBtn")?.addEventListener("click", () => { document.documentElement.dataset.portalTextZoom = "100"; document.documentElement.style.fontSize = ""; });
-      const libraryApi = `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library`; const libraryPageSize = 25; let libraryPage = 1; let libraryTotal = 0; let libraryItems = new Map();
+      const libraryApi = `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library`; const studentNewWordsApi = window.__SIS_STUDENT_NEW_WORDS_PATH || "/api/student/new-words"; const libraryPageSize = 25; let libraryPage = 1; let libraryTotal = 0; let libraryItems = new Map(); let studentNewWords = []; let studentNewWordsLoadPromise = null; let libraryNewWordSequence = 0;
       const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+      const text = (value) => String(value == null ? "" : value).trim();
+      const studentLibraryNewWordsRows = document.getElementById("studentLibraryNewWordsRows");
+      const studentLibraryNewWordsStatus = document.getElementById("studentLibraryNewWordsStatus");
+      function bindStudentLibraryNewWordRow(row) {
+        if (!row) return;
+        row.addEventListener("change", (event) => {
+          if (event.target?.matches('[data-vocabulary-field="partOfSpeech"], [data-vocabulary-esl-field]')) window.SIS_VOCABULARY_ESL?.sync(row);
+        });
+        row.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => row.remove());
+        window.SIS_VOCABULARY_ESL?.bindLookupButtons(row);
+        window.SIS_VOCABULARY_ESL?.bindDefinitionAutosize(row);
+      }
+      function addStudentLibraryNewWords(count = 1) {
+        const amount = Math.max(1, Math.min(5, Number(count) || 1));
+        for (let index = 0; index < amount; index += 1) {
+          libraryNewWordSequence += 1;
+          studentLibraryNewWordsRows?.insertAdjacentHTML("beforeend", window.SIS_VOCABULARY_ESL.editorRowHtml(`student-library-new-${libraryNewWordSequence}`, { removable: true, includeDictionaryBuilder: true, includeTransitivityTools: true, includeOriginAnalysis: true, originLookupPath: `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library/etymonline` }));
+          bindStudentLibraryNewWordRow(studentLibraryNewWordsRows?.lastElementChild);
+        }
+      }
+      function readStudentLibraryNewWordRows() {
+        return [...studentLibraryNewWordsRows?.querySelectorAll("[data-news-vocabulary-row]") || []].map((row) => window.SIS_VOCABULARY_ESL.readEditorEntry(row, {}));
+      }
+      function loadStudentNewWords() {
+        if (!studentLibraryNewWordsStatus) return Promise.resolve();
+        if (studentNewWordsLoadPromise) return studentNewWordsLoadPromise;
+        studentNewWordsLoadPromise = (async () => {
+          const response = await fetch(studentNewWordsApi, { credentials: "include" });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Unable to load New Words");
+          studentNewWords = Array.isArray(data.items) ? data.items : [];
+        })().catch((error) => {
+          studentLibraryNewWordsStatus.textContent = error.message || "Unable to load New Words";
+        }).finally(() => {
+          studentNewWordsLoadPromise = null;
+        });
+        return studentNewWordsLoadPromise;
+      }
+      async function saveStudentLibraryNewWords({ submit = false } = {}) {
+        await loadStudentNewWords();
+        const rows = readStudentLibraryNewWordRows();
+        if (!rows.length) { studentLibraryNewWordsStatus.textContent = "Add at least one word first."; return; }
+        const incomplete = rows.findIndex((entry) => !text(entry.partOfSpeech) || !text(entry.english) || !text(entry.vietnamese) || !text(entry.syllabication) || !text(entry.definition));
+        if (incomplete >= 0) { studentLibraryNewWordsStatus.textContent = `Complete every required field in row ${incomplete + 1} before saving.`; return; }
+        const saveButton = document.getElementById("studentLibrarySaveWordsBtn");
+        const submitButton = document.getElementById("studentLibrarySubmitWordsBtn");
+        if (saveButton) saveButton.disabled = true;
+        if (submitButton) submitButton.disabled = true;
+        try {
+          const response = await fetch(studentNewWordsApi, { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: [...studentNewWords, ...rows] }) });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.error || data.message || `New Words save failed (HTTP ${response.status})`);
+          const savedItems = Array.isArray(data.items) ? data.items : [];
+          const added = rows.map((entry) => savedItems.find((item) => text(item.english).toLocaleLowerCase() === text(entry.english).toLocaleLowerCase()) || entry);
+          studentNewWords = savedItems;
+          if (submit) {
+            for (const entry of added) {
+              await fetch(`${libraryApi}/submissions`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sourceId: entry.id || "", entry }) }).then(async (submissionResponse) => { const submission = await submissionResponse.json().catch(() => ({})); if (!submissionResponse.ok) throw new Error(submission.error || submission.message || `Library submission failed (HTTP ${submissionResponse.status})`); });
+            }
+            studentLibraryNewWordsStatus.textContent = `${added.length} word${added.length === 1 ? "" : "s"} submitted to Library for review.`;
+          } else {
+            studentLibraryNewWordsStatus.textContent = `${added.length} word${added.length === 1 ? "" : "s"} saved to New Words.`;
+          }
+          studentLibraryNewWordsRows?.replaceChildren();
+          await loadLibrary();
+        } catch (error) {
+          studentLibraryNewWordsStatus.textContent = error.message || "New Words save failed";
+        } finally {
+          if (saveButton) saveButton.disabled = false;
+          if (submitButton) submitButton.disabled = false;
+        }
+      }
       async function loadLibrary() {
         const status = document.getElementById("libraryStatus");
         const query = new URLSearchParams({ page: String(libraryPage), pageSize: String(libraryPageSize), search: document.getElementById("librarySearch").value, partOfSpeech: document.getElementById("libraryPos").value, sortBy: document.getElementById("librarySort").value, myWords: document.getElementById("libraryMyWords").checked ? "true" : "" });
@@ -201,8 +295,12 @@
       const initialQuery = new URLSearchParams(window.location.search);
       document.getElementById("libraryMyWords").checked = ["1", "true", "yes"].includes((initialQuery.get("myWords") || "").toLowerCase());
       document.getElementById("libraryResults")?.addEventListener("click", (event) => { const button = event.target.closest("[data-entry-id]"); const entry = libraryItems.get(button?.dataset.entryId); if (!entry) return; event.preventDefault(); event.stopPropagation(); openLibraryEdit(entry); });
+      document.getElementById("studentLibraryAddOneBtn")?.addEventListener("click", () => addStudentLibraryNewWords(1));
+      document.getElementById("studentLibraryAddFiveBtn")?.addEventListener("click", () => addStudentLibraryNewWords(5));
+      document.getElementById("studentLibrarySaveWordsBtn")?.addEventListener("click", () => saveStudentLibraryNewWords().catch((error) => { studentLibraryNewWordsStatus.textContent = error.message || "New Words save failed"; }));
+      document.getElementById("studentLibrarySubmitWordsBtn")?.addEventListener("click", () => saveStudentLibraryNewWords({ submit: true }).catch((error) => { studentLibraryNewWordsStatus.textContent = error.message || "Library submission failed"; }));
       document.getElementById("libraryFilters")?.addEventListener("submit", (event) => { event.preventDefault(); libraryPage = 1; loadLibrary(); });
-      document.getElementById("libraryFilters")?.addEventListener("input", () => { libraryPage = 1; loadLibrary(); }); document.getElementById("libraryPrevious")?.addEventListener("click", () => { libraryPage = Math.max(1, libraryPage - 1); loadLibrary(); }); document.getElementById("libraryNext")?.addEventListener("click", () => { libraryPage += 1; loadLibrary(); }); window.setTimeout(loadLibrary, 500);
+      document.getElementById("libraryFilters")?.addEventListener("input", () => { libraryPage = 1; loadLibrary(); }); document.getElementById("libraryPrevious")?.addEventListener("click", () => { libraryPage = Math.max(1, libraryPage - 1); loadLibrary(); }); document.getElementById("libraryNext")?.addEventListener("click", () => { libraryPage += 1; loadLibrary(); }); window.setTimeout(() => { loadLibrary(); loadStudentNewWords(); }, 500);
     })();
   </script>
 </body>

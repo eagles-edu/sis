@@ -703,6 +703,8 @@ test("student Library replaces the standalone New Words page with My Words filte
   assert.match(STUDENT_HTML, /portal-button-primary new-word-edit/)
   assert.match(STUDENT_HTML, /newsVocabularyRows" class="news-vocabulary-rows vocabulary-edit-surface"/)
   assert.match(STUDENT_HTML, /addNewsVocabularyRowBtn" type="button" class="portal-button portal-button-affirm"/)
+  assert.match(STUDENT_HTML, /id="addFiveNewsVocabularyRowsBtn"[^>]*>Add Five<\/button>/)
+  assert.match(STUDENT_JS, /addFiveNewsVocabularyRowsBtn[\s\S]*for \(let index = 0; index < 5; index \+= 1\)/)
   assert.match(SHARED_THEME, /new-word-entry-head :is\(\.new-word-edit, \.library-admin-flat-edit\)[\s\S]*--portal-button-min-block: 36px/)
   assert.match(SHARED_THEME, /new-words-intro[\s\S]*background: var\(--portal-surface-panel\)/)
   assert.match(SHARED_THEME, /new-word-entry \{[\s\S]*background: var\(--portal-surface-panel\)/)

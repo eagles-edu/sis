@@ -12,6 +12,7 @@ const INVITATION_EXPIRY_DEFAULT_DAYS = 7
 const INVITATION_EXPIRY_MAX_DAYS = 30
 const ACTIVATION_RATE_WINDOW_MS = 15 * 60 * 1000
 const ACTIVATION_RATE_MAX_ATTEMPTS = 8
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u
 const activationAttemptsBySource = new Map()
 const invitationRecoveryById = new Map()
 
@@ -67,7 +68,7 @@ function initialPassword() {
   return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("")
 }
 
-export async function resolveParentPortalAccountIdentity(prisma, student, recipientEmail = "") {
+export async function resolveParentPortalAccountIdentity(prisma, student, recipientEmail = "", { allowProfileEmail = true } = {}) {
   if (!prisma?.parentPortalAccount) {
     throw Object.assign(new Error("Parent portal persistence is unavailable"), { statusCode: 503 })
   }
@@ -76,7 +77,7 @@ export async function resolveParentPortalAccountIdentity(prisma, student, recipi
   const requestedParentsId = text(profile.parentsId)
   const defaultParentsId = eaglesId ? `cm${eaglesId}` : `cm${text(student?.studentNumber)}`
   const parentsId = requestedParentsId || defaultParentsId
-  const email = lower(profile.motherEmail || profile.studentEmail || recipientEmail)
+  const email = lower(allowProfileEmail ? (profile.motherEmail || profile.studentEmail || recipientEmail) : recipientEmail)
   const accountByParentsId = await prisma.parentPortalAccount.findUnique({ where: { parentsId } })
   const accountByEmail = email
     ? await prisma.parentPortalAccount.findUnique({ where: { email } })
@@ -92,11 +93,11 @@ export async function resolveParentPortalAccountIdentity(prisma, student, recipi
   return { parentsId, email, accountByParentsId, accountByEmail }
 }
 
-export async function ensureParentPortalAccount(prisma, student, recipientEmail = "") {
+export async function ensureParentPortalAccount(prisma, student, recipientEmail = "", options = {}) {
   if (!prisma?.parentPortalAccount || !prisma?.parentPortalStudentLink) {
     throw Object.assign(new Error("Parent portal persistence is unavailable"), { statusCode: 503 })
   }
-  const { parentsId, email, accountByParentsId, accountByEmail } = await resolveParentPortalAccountIdentity(prisma, student, recipientEmail)
+  const { parentsId, email, accountByParentsId, accountByEmail } = await resolveParentPortalAccountIdentity(prisma, student, recipientEmail, options)
   let account = accountByParentsId || accountByEmail
   let firstPassword = ""
   if (!account) {
@@ -166,19 +167,20 @@ async function sendInvitationEmail({ invitationId, recipientEmail, student, toke
   return { providerMessageId: text(result.messageId), provider: "smtp", subject: message.subject }
 }
 
-export async function createParentProfileInvitation({ studentRefId, recipientEmail = "", queuedBy = "", sendEmail = true, includeUrl = false } = {}) {
+export async function createParentProfileInvitation({ studentRefId, recipientEmail = "", queuedBy = "", sendEmail = true, includeUrl = false, allowProfileEmail = true } = {}) {
   const prisma = await getSharedPrismaClient()
   if (!prisma?.parentProfileInvitation) throw Object.assign(new Error("Parent profile invitation persistence is unavailable"), { statusCode: 503 })
   const student = await prisma.student.findUnique({ where: { id: text(studentRefId) }, include: { profile: true } })
   if (!student) throw Object.assign(new Error("Student not found"), { statusCode: 404 })
-  const email = lower(recipientEmail || student.profile?.motherEmail || student.profile?.studentEmail)
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Object.assign(new Error("A valid parent/adult student email is required"), { statusCode: 400 })
-  const account = await ensureParentPortalAccount(prisma, student, email)
+  const email = lower(recipientEmail || (allowProfileEmail ? student.profile?.motherEmail || student.profile?.studentEmail : ""))
+  if (email && !EMAIL_PATTERN.test(email)) throw Object.assign(new Error("A valid parent/adult student email is required"), { statusCode: 400 })
+  if (sendEmail && !email) throw Object.assign(new Error("A valid parent/adult student email is required for email delivery"), { statusCode: 400 })
+  const account = await ensureParentPortalAccount(prisma, student, email, { allowProfileEmail })
   const token = crypto.randomBytes(32).toString("base64url")
   const expiresAt = new Date(Date.now() + invitationExpiryDays() * 24 * 60 * 60 * 1000)
   const invitation = await prisma.$transaction(async (tx) => {
     await tx.parentProfileInvitation.updateMany({ where: { studentRefId: student.id, status: { in: ["queued", "sent", "clicked"] } }, data: { status: "expired", lastError: "Superseded by a newer invitation" } })
-    return tx.parentProfileInvitation.create({ data: { tokenHash: tokenHash(token), recipientEmail: email, studentRefId: student.id, parentAccountId: account.account.id, status: "queued", expiresAt, batchId: `profile-invite-${student.id}-${Date.now().toString(36)}` } })
+    return tx.parentProfileInvitation.create({ data: { tokenHash: tokenHash(token), recipientEmail: email || null, studentRefId: student.id, parentAccountId: account.account.id, status: "queued", expiresAt, batchId: `profile-invite-${student.id}-${Date.now().toString(36)}` } })
   })
   if (sendEmail) {
     await enqueueAsyncSideEffectJob(ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION, { invitationId: invitation.id, token, queuedBy, parentId: account.account.parentsId, mustChangePassword: Boolean(account.account.mustChangePassword) }, { dedupeKey: invitation.id })
@@ -186,7 +188,8 @@ export async function createParentProfileInvitation({ studentRefId, recipientEma
   return {
     id: invitation.id,
     status: invitation.status,
-    recipientEmail: email,
+    recipientEmail: email || null,
+    deliveryMethod: sendEmail ? "email" : "phone-text-zalo",
     expiresAt: invitation.expiresAt.toISOString(),
     ...(includeUrl ? { url: invitationUrl(token) } : {}),
   }
@@ -196,7 +199,15 @@ export async function resendParentProfileInvitation({ invitationId, queuedBy = "
   const prisma = await getSharedPrismaClient()
   const previous = await prisma.parentProfileInvitation.findUnique({ where: { id: text(invitationId) } })
   if (!previous) throw Object.assign(new Error("Parent profile invitation not found"), { statusCode: 404 })
-  return createParentProfileInvitation({ studentRefId: previous.studentRefId, recipientEmail: previous.recipientEmail, queuedBy })
+  const manualDelivery = !text(previous.recipientEmail)
+  return createParentProfileInvitation({
+    studentRefId: previous.studentRefId,
+    recipientEmail: previous.recipientEmail,
+    queuedBy,
+    sendEmail: !manualDelivery,
+    includeUrl: manualDelivery,
+    allowProfileEmail: !manualDelivery,
+  })
 }
 
 export async function processParentProfileInvitationJob(job = {}) {

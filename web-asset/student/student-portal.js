@@ -5910,6 +5910,10 @@
             addVocabularyRow(field("newsVocabularyRows"));
             markNewsDraftDirty();
           });
+          field("addFiveNewsVocabularyRowsBtn")?.addEventListener("click", () => {
+            for (let index = 0; index < 5; index += 1) addVocabularyRow(field("newsVocabularyRows"));
+            markNewsDraftDirty();
+          });
           field("newsVocabularyRows")?.addEventListener("input", (event) => {
             normalizeVocabularyEnglishEntry(event);
             markNewsDraftDirty();

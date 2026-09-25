@@ -10,6 +10,7 @@ import {
   sendAllQueuedAnnouncements,
 } from "./notification-queue.mjs"
 import { parentProctorEmails, studentProctorSelectionIsExplicit } from "./proctor-recipient-routing.mjs"
+import { assignmentProgress } from "./assignment-progress.mjs"
 
 const FIXED_OFFSET_MS = 7 * 60 * 60 * 1000
 const WEDNESDAY_START_MINUTE = 9 * 60
@@ -122,11 +123,15 @@ function buildTrackedActionUrl(url, token) {
 }
 
 /**
- * @param {{ completed: boolean, assignmentTitle: string, dueAt: string, level: string, studentName: string, actionUrl: string, audience: string, mmr?: { completed: number, required: number, remaining: number, daysRemaining: number, warning: boolean } }} input
+ * @param {{ completed: boolean, late?: boolean, assignmentTitle: string, dueAt: string, level: string, studentName: string, actionUrl: string, audience: string, mmr?: { completed: number, required: number, remaining: number, daysRemaining: number, warning: boolean } }} input
  * @returns {string}
  */
 export function buildAssignmentReminderMessage(input) {
-  const status = input.completed ? "Trạng thái: đã hoàn thành." : "Trạng thái: chưa hoàn thành."
+  const status = input.completed
+    ? "Trạng thái: đã hoàn thành."
+    : input.late
+      ? "Trạng thái: quá hạn, chưa hoàn thành."
+      : "Trạng thái: chưa hoàn thành."
   const lines = [
     `Bài tập: ${input.assignmentTitle}`,
     `Lớp: ${input.level}`,
@@ -146,16 +151,6 @@ export function buildAssignmentReminderMessage(input) {
   }
   lines.push("", "Đây là thông báo nhắc việc. Vui lòng liên hệ nhà trường nếu liên kết bài tập hoặc thông tin tài khoản chưa chính xác.")
   return lines.join("\n")
-}
-
-function assignmentCompleted(studentId, templateId, grades) {
-  return grades.some((grade) => {
-    if (text(grade.studentRefId) !== text(studentId)) return false
-    const bundle = grade.assignmentBundleJson && typeof grade.assignmentBundleJson === "object"
-      ? grade.assignmentBundleJson
-      : {}
-    return text(bundle.assignmentTemplateId) === text(templateId)
-  })
 }
 
 function mmrMetrics(reports, now = new Date()) {
@@ -220,6 +215,7 @@ async function queueOneReminder({ prisma, template, student, audience, kind, now
   const trackedActionUrl = buildTrackedActionUrl(actionUrl, token)
   const message = buildAssignmentReminderMessage({
     completed: student.completed,
+    late: student.late,
     assignmentTitle: text(template.assignmentTitle),
     dueAt: text(template.dueAt),
     level: text(template.level),
@@ -264,12 +260,13 @@ async function queueOneReminder({ prisma, template, student, audience, kind, now
   }
 }
 
-function reminderKinds(now) {
+export function reminderKinds(now) {
   const kinds = []
   const day = localDay(now)
   const minute = localMinute(now)
-  if (day === 3) kinds.push("wednesday")
-  if (day === 5 && minute >= 18 * 60) kinds.push("friday")
+  if (day === 1 && minute >= 18 * 60) kinds.push("assignment-monday")
+  if (day === 3) kinds.push("assignment-wednesday")
+  if (day === 5 && minute >= 18 * 60) kinds.push("assignment-friday")
   if (day >= 1 && day <= 6 && minute >= 18 * 60) kinds.push("mmr-daily")
   if (day === 0 && minute >= 18 * 60) kinds.push("mmr-daily")
   return kinds
@@ -277,7 +274,7 @@ function reminderKinds(now) {
 
 function kindIsDue(kind, level, now) {
   const minute = localMinute(now)
-  if (kind === "wednesday") return minute >= wednesdayBusinessSlotMinute(level, now)
+  if (kind.endsWith("wednesday")) return minute >= wednesdayBusinessSlotMinute(level, now)
   return true
 }
 
@@ -304,7 +301,7 @@ export async function runAssignmentReminderDispatcher(options = {}) {
     },
   })
   const ids = students.map((student) => student.id)
-  const grades = await prisma.studentGradeRecord.findMany({ where: { studentRefId: { in: ids } }, select: { studentRefId: true, assignmentBundleJson: true } })
+  const grades = await prisma.studentGradeRecord.findMany({ where: { studentRefId: { in: ids } }, select: { studentRefId: true, assignmentBundleJson: true, score: true, submittedAt: true } })
   const weekStart = startOfLocalWeek(now)
   const weekEnd = endOfLocalSunday(now)
   const mmrStudents = students.filter((student) => NEWS_MMR_LEVELS.some((level) => lower(student.profile?.currentGrade) === lower(level)))
@@ -320,10 +317,12 @@ export async function runAssignmentReminderDispatcher(options = {}) {
     const assignedAt = parseDate(template.assignedAt)
     const dueAt = parseDate(template.dueAt)
     if (!assignmentCreatedTemplateId && assignedAt && now < assignedAt) continue
-    if (!assignmentCreatedTemplateId && dueAt && now > dueAt) continue
     const levelStudents = students.filter((student) => lower(student.profile?.currentGrade) === lower(template.level))
     for (const baseStudent of levelStudents) {
-      const completed = assignmentCompleted(baseStudent.id, template.id, grades)
+      const studentGrades = grades.filter((grade) => text(grade.studentRefId) === text(baseStudent.id))
+      const progress = assignmentProgress(template, studentGrades)
+      const completed = progress.isComplete
+      const late = Boolean(dueAt && now > dueAt && !completed)
       const hasNewsMmr = NEWS_MMR_LEVELS.some((level) => lower(template.level) === lower(level))
       const mmr = hasNewsMmr ? mmrMetrics(Array(reportsByStudent.get(baseStudent.id) || 0).fill({}), now) : undefined
       const profileParentEmails = parentProctorEmails(baseStudent.profile || {})
@@ -337,14 +336,20 @@ export async function runAssignmentReminderDispatcher(options = {}) {
       const student = {
         ...baseStudent,
         completed,
+        late,
         parentEmails,
         englishName: baseStudent.profile?.englishName,
         fullName: baseStudent.profile?.fullName,
       }
-      for (const kind of kinds) {
-        if (!kindIsDue(kind, text(template.level), now)) continue
-        if (kind === "friday" && completed) continue
-        if (kind === "mmr-daily" && (!hasNewsMmr || !mmr?.remaining || mmr.daysRemaining > mmr.remaining)) continue
+      for (const scheduledKind of kinds) {
+        if (!kindIsDue(scheduledKind, text(template.level), now)) continue
+        if (scheduledKind === "mmr-daily" && (!hasNewsMmr || !mmr?.remaining || mmr.daysRemaining > mmr.remaining)) continue
+        if (scheduledKind === "mmr-daily" && dueAt && now > dueAt) continue
+        if (scheduledKind !== "mmr-daily" && scheduledKind !== "assignment-created" && completed) continue
+        if (scheduledKind === "assignment-monday" && !late) continue
+        const kind = scheduledKind.startsWith("assignment-") && late
+          ? `late-${scheduledKind}`
+          : scheduledKind
         const audiences = ["student"]
         if (kind !== "mmr-daily" || mmr?.warning) audiences.push("parent")
         for (const audience of audiences) {
@@ -374,18 +379,18 @@ export async function dispatchAssignmentCreated(assignmentTemplateId, options = 
   })
 }
 
-/** @param {string} queueId @param {boolean} [sent] */
-export async function markAssignmentReminderEngagementSent(queueId, sent = true) {
+/** @param {string} queueId @param {boolean} [sent] @param {{prisma?: Record<string, any>, now?: () => Date}} [dependencies] */
+export async function markAssignmentReminderEngagementSent(queueId, sent = true, dependencies = {}) {
   const id = text(queueId)
   if (!id) return null
-  const prisma = await getSharedPrismaClient().catch(() => null)
+  const prisma = dependencies.prisma || await getSharedPrismaClient().catch(() => null)
   if (!prisma?.assignmentReminderEngagement) return null
   const queue = await prisma.adminNotificationQueue.findUnique({ where: { id }, select: { payloadJson: true } })
   const payload = queue?.payloadJson && typeof queue.payloadJson === "object" ? queue.payloadJson : {}
   const token = text(payload.reminderEngagementToken)
   if (!token) return null
   return prisma.assignmentReminderEngagement.updateMany({
-    where: { trackingToken: token },
-    data: sent ? { sentAt: new Date() } : {},
+    where: { trackingToken: token, ...(sent ? { sentAt: null } : {}) },
+    data: sent ? { sentAt: (dependencies.now || (() => new Date()))() } : {},
   })
 }

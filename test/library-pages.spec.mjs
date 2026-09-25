@@ -42,6 +42,10 @@ test("student Library is a protected physical page with shared chrome and studen
   assert.match(routes, /const STUDENT_LIBRARY_PAGE_PATH = `\$\{STUDENT_PORTAL_PAGE_PATH\}\/library\.html`/)
   assert.match(student, /id="libraryFilters"/)
   assert.match(student, /id="libraryMyWords"[^>]*type="checkbox"/)
+  assert.match(student, /id="studentLibraryAddOneBtn"[^>]*>Add Word<\/button>/)
+  assert.match(student, /id="studentLibraryAddFiveBtn"[^>]*>Add Five<\/button>/)
+  assert.match(student, /studentNewWordsApi[\s\S]*PUT/)
+  assert.match(student, /studentLibrarySubmitWordsBtn[\s\S]*libraryApi\}\/submissions/)
   assert.match(student, /myWords: document\.getElementById\("libraryMyWords"\)\.checked \? "true" : ""/)
   assert.match(student, /libraryFilters.*addEventListener\("submit"/s)
   assert.match(student, /class="library-results"/)
@@ -82,7 +86,11 @@ test("New Words and News vocabulary use the same full ESL row payload without st
   assert.doesNotMatch(libraryCorpus, /`\*\*(?:First known use|Etymology):\*\*`/)
   assert.doesNotMatch(studentPortal, /data-vocabulary-origin-analysis|origin-analysis/)
   assert.match(sharedVocabularyEditor, /const output = \[`<\$\{listType\}\$\{typeAttribute\}>`\]/)
-  assert.doesNotMatch(routes, /STUDENT_LIBRARY_API_PATH\}\/mw-preview/)
+  assert.match(routes, /const STUDENT_LIBRARY_MW_PREVIEW_PATH = `\$\{STUDENT_LIBRARY_API_PATH\}\/mw-preview`/)
+  assert.match(routes, /method === "POST" && pathname === STUDENT_LIBRARY_MW_PREVIEW_PATH[\s\S]*previewMerriamWebsterLibraryEntry\(entry\)/)
+  assert.doesNotMatch(routes, /STUDENT_LIBRARY_API_PATH\}\/mw-apply/)
+  assert.match(sharedVocabularyEditor, /window\.__SIS_STUDENT_API_PREFIX[\s\S]*library\/mw-preview/)
+  assert.match(sharedVocabularyEditor, /\/api\/admin\/library\/entries\/\$\{encodeURIComponent\(sourceId\)\}\/mw-preview/)
   assert.match(student, /vocabulary-esl-editor\.js/)
   assert.match(student, /entry\.isContribution === true \|\| entry\.studentCanEdit === true/)
   assert.match(student, /entry\.isContribution === true[\s\S]*?contributionId: entry\.contributionId/)
@@ -192,6 +200,52 @@ test("Etymonline lookup never overwrites editor fields before a modal datum is s
   assert.equal(row.querySelector('[data-vocabulary-origin-field="originPath"]').value, "Selected path")
   assert.equal(row.querySelector('[data-vocabulary-origin-field="originReferences"]').value, "")
   dom.window.close()
+})
+
+test("AP preview dialog closes without results and stays closed when an in-flight result arrives", async () => {
+  const dom = new JSDOM("<!doctype html><body></body>", { url: "http://127.0.0.1/student/library.html" })
+  let resolvePreview
+  const previewResponse = new Promise((resolve) => { resolvePreview = resolve })
+  const context = {
+    window: dom.window,
+    document: dom.window.document,
+    Event: dom.window.Event,
+    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
+    fetch: () => previewResponse,
+  }
+  dom.window.fetch = context.fetch
+  vm.runInNewContext(sharedVocabularyEditor, context)
+
+  const emptyRow = dom.window.document.createElement("div")
+  emptyRow.innerHTML = context.window.SIS_VOCABULARY_ESL.editorRowHtml("ap-empty", { lookupButtons: ["AP"] })
+  context.window.SIS_VOCABULARY_ESL.bindLookupButtons(emptyRow)
+  emptyRow.querySelector('[data-vocabulary-lookup="AP"]').click()
+  let dialog = dom.window.document.getElementById("vocabularyMerriamWebsterApiDialog")
+  assert.equal(dialog.open, true)
+  assert.match(dialog.querySelector("[data-vocabulary-api-message]").textContent, /Enter an English word/u)
+  dialog.querySelector("[data-vocabulary-api-close]").click()
+  assert.equal(dialog.open, false)
+
+  const pendingRow = dom.window.document.createElement("div")
+  pendingRow.innerHTML = context.window.SIS_VOCABULARY_ESL.editorRowHtml("ap-pending", { lookupButtons: ["AP"] })
+  pendingRow.querySelector('[data-vocabulary-field="english"]').value = "apple"
+  context.window.SIS_VOCABULARY_ESL.bindLookupButtons(pendingRow)
+  pendingRow.querySelector('[data-vocabulary-lookup="AP"]').click()
+  dialog = dom.window.document.getElementById("vocabularyMerriamWebsterApiDialog")
+  assert.equal(dialog.open, true)
+  dialog.querySelector("[data-vocabulary-api-close]").click()
+  assert.equal(dialog.open, false)
+  resolvePreview({ ok: true, json: async () => ({ ok: true, fields: { english: "apple" } }) })
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.equal(dialog.open, false)
+  dom.window.close()
+})
+
+test("AP preview dialog keeps result and status text comfortably readable", () => {
+  const selector = /body:is\(\.student-portal-page, \.admin-portal-page\) #vocabularyMerriamWebsterApiDialog/u
+  assert.match(sharedPortalTheme, new RegExp(`${selector.source}[\\s\\S]*?font-size: 1\\.125rem;[\\s\\S]*?padding: 24px;`, "u"))
+  assert.match(sharedPortalTheme, new RegExp(`${selector.source} \\[data-vocabulary-api-message\\][\\s\\S]*?font-size: 1\\.25rem;`, "u"))
+  assert.match(sharedPortalTheme, new RegExp(`${selector.source} \\[data-vocabulary-api-result\\][\\s\\S]*?font-size: 1\\.125rem;[\\s\\S]*?overflow-wrap: anywhere;[\\s\\S]*?white-space: pre-wrap;`, "u"))
 })
 
 test("Dictionary Builder preload keeps LEDs amber until the provider snapshot resolves", async () => {
