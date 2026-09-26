@@ -3847,6 +3847,9 @@ body:is(.student-portal-page, .admin-portal-page) #vocabularyMerriamWebsterApiDi
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
+body:is(.student-portal-page, .admin-portal-page) #vocabularyMerriamWebsterApiDialog:not([open]) {
+  display: none;
+}
 body.admin-portal-page .news-review-viewer-actions,
 body.portal-hub-page .hub-prefooter__links,
 body.button-chip-proof-page .proof-state-row,

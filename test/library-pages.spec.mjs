@@ -222,6 +222,7 @@ test("AP preview dialog closes without results and stays closed when an in-fligh
   emptyRow.querySelector('[data-vocabulary-lookup="AP"]').click()
   let dialog = dom.window.document.getElementById("vocabularyMerriamWebsterApiDialog")
   assert.equal(dialog.open, true)
+  assert.equal(dialog.querySelector("[data-vocabulary-api-close]").type, "submit")
   assert.match(dialog.querySelector("[data-vocabulary-api-message]").textContent, /Enter an English word/u)
   dialog.querySelector("[data-vocabulary-api-close]").click()
   assert.equal(dialog.open, false)
@@ -246,6 +247,7 @@ test("AP preview dialog keeps result and status text comfortably readable", () =
   assert.match(sharedPortalTheme, new RegExp(`${selector.source}[\\s\\S]*?font-size: 1\\.125rem;[\\s\\S]*?padding: 24px;`, "u"))
   assert.match(sharedPortalTheme, new RegExp(`${selector.source} \\[data-vocabulary-api-message\\][\\s\\S]*?font-size: 1\\.25rem;`, "u"))
   assert.match(sharedPortalTheme, new RegExp(`${selector.source} \\[data-vocabulary-api-result\\][\\s\\S]*?font-size: 1\\.125rem;[\\s\\S]*?overflow-wrap: anywhere;[\\s\\S]*?white-space: pre-wrap;`, "u"))
+  assert.match(sharedPortalTheme, /#vocabularyMerriamWebsterApiDialog:not\(\[open\]\)\s*\{\s*display: none;/u)
 })
 
 test("Dictionary Builder preload keeps LEDs amber until the provider snapshot resolves", async () => {

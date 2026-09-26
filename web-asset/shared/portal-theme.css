@@ -6600,6 +6600,9 @@ body:is(.student-portal-page, .admin-portal-page) #vocabularyMerriamWebsterApiDi
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
+body:is(.student-portal-page, .admin-portal-page) #vocabularyMerriamWebsterApiDialog:not([open]) {
+  display: none;
+}
 body.student-portal-page .library-edit-dialog::backdrop {
   background: rgba(0, 0, 0, .48);
 }

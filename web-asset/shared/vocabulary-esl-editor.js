@@ -567,7 +567,7 @@
         dialog = document.createElement("dialog")
         dialog.id = "vocabularyMerriamWebsterApiDialog"
         dialog.className = "portal-modal"
-        dialog.innerHTML = `<form method="dialog"><div class="portal-modal-header"><h2>AP · Merriam-Webster API</h2><button type="button" class="portal-button portal-button-neutral-action" data-vocabulary-api-close aria-label="Close Merriam-Webster API preview">Close</button></div><p data-vocabulary-api-message></p><pre data-vocabulary-api-result></pre></form>`
+        dialog.innerHTML = `<form method="dialog"><div class="portal-modal-header"><h2>AP · Merriam-Webster API</h2><button type="submit" class="portal-button portal-button-neutral-action" data-vocabulary-api-close aria-label="Close Merriam-Webster API preview">Close</button></div><p data-vocabulary-api-message></p><pre data-vocabulary-api-result></pre></form>`
         dialog.querySelector("[data-vocabulary-api-close]")?.addEventListener("click", (event) => {
           event.preventDefault()
           dialog.dataset.previewRequestId = String(Number(dialog.dataset.previewRequestId || 0) + 1)
