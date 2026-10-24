@@ -517,14 +517,20 @@
     pane.dataset.dictionaryBuilderDraft = JSON.stringify(next)
     return { changed: [...new Set(changed)], deferred: [...new Set(deferred)] }
   }
-  const dictionaryBuilderStatusLabel = (status) => ({ not_found: "not found (HTTP 404)", not_provided: "not provided by source", robot_blocked: "cookie/robot prompt; datum paused", cookie_prompt: "cookie prompt; datum paused", robot_prompt: "robot prompt; datum paused", paused: "paused pending source resolution", waiting_for_input: "waiting for input", unavailable: "provider unavailable", not_offered: "not provided by source" }[status] || status)
+  const dictionaryBuilderStatusLabel = (status) => ({ opening: "scrape pending; polling", not_found: "not found (HTTP 404)", not_provided: "not provided by source", robot_blocked: "cookie/robot prompt; datum paused", cookie_prompt: "cookie prompt; datum paused", robot_prompt: "robot prompt; datum paused", paused: "paused pending source resolution", waiting_for_input: "waiting for input", unavailable: "provider unavailable", not_offered: "not provided by source" }[status] || status)
   const isDictionaryBuilderPromptStatus = (status) => ["robot_blocked", "cookie_prompt", "robot_prompt", "paused", "waiting_for_input"].includes(status)
+  const isDictionaryBuilderRetryableStatus = (status) => isDictionaryBuilderPromptStatus(status) || ["unavailable", "not_found", "unsupported", "invalid", "malformed"].includes(status)
   const dictionaryBuilderDatumSourceStatus = (source, datum) => {
     const datumStatus = source?.datumStatus?.[datum]?.status
     if (isDictionaryBuilderPromptStatus(datumStatus) || datumStatus === "available") return datumStatus
     if (!["not_offered", "not_provided"].includes(datumStatus) && isDictionaryBuilderPromptStatus(source?.status)) return source.status
     if (["unavailable", "not_found", "unsupported", "invalid"].includes(source?.status)) return source.status
     return datumStatus || source?.status || "not_offered"
+  }
+  const dictionaryBuilderDisplayedDatumStatus = (source, datum) => {
+    const status = dictionaryBuilderDatumSourceStatus(source, datum)
+    const tab = sourceBrowserTabs.get(source?.provider)
+    return ["unavailable", "unsupported", "invalid", "malformed"].includes(status) && tab && !tab.closed ? "opening" : status
   }
   const dictionaryBuilderEsc = (value) => String(value == null ? "" : value).replace(/[&<>'"]/gu, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character])
   const dictionaryBuilderSourceMatrix = (word) => {
@@ -586,8 +592,6 @@
     applySize()
     if (typeof window.requestAnimationFrame === "function") window.requestAnimationFrame(applySize)
   }
-  const robotHandoffTabs = new Map()
-  const promptProbeTimers = new Map()
   const sourceBrowserTabs = new Map()
   const openSourceProbeTimers = new Map()
   const providerRetryInFlight = new Set()
@@ -645,7 +649,6 @@
     stopProviderProbeTimers()
     sourceBrowserTabs.forEach((tab) => { if (tab && !tab.closed) tab.close() })
     sourceBrowserTabs.clear()
-    robotHandoffTabs.clear()
   }
   const sourceLedOverridesFor = (container) => {
     if (!container) return null
@@ -681,7 +684,9 @@
   }
   const sourceStatusForLed = (provider, snapshot, container) => {
     const override = sourceLedOverrides.get(container)?.get(provider)
-    return override || sourceStatusForSnapshot(provider, snapshot)
+    const status = override || sourceStatusForSnapshot(provider, snapshot)
+    const tab = sourceBrowserTabs.get(provider)
+    return status === "unavailable" && tab && !tab.closed ? "opening" : status
   }
   const renderSourceLeds = (snapshot, container) => {
     if (!container) return
@@ -704,8 +709,6 @@
     sourceLedOverrides.get(container)?.clear()
   }
   const stopProviderProbeTimers = () => {
-    promptProbeTimers.forEach((timer) => window.clearInterval(timer))
-    promptProbeTimers.clear()
     openSourceProbeTimers.forEach((timer) => window.clearTimeout(timer))
     openSourceProbeTimers.clear()
   }
@@ -773,7 +776,7 @@
           const ledContainer = dialog.querySelector("[data-dictionary-builder-source-leds]")
           sourceLedOverrides.get(ledContainer)?.delete(provider)
           renderSourceLeds(latestSnapshot, ledContainer)
-          const refreshedStatus = sourceStatusForSnapshot(provider, latestSnapshot)
+          const refreshedStatus = sourceStatusForLed(provider, latestSnapshot, ledContainer)
           const message = dialog.querySelector("[data-dictionary-builder-message]")
           if (message) message.textContent = providerStatusMessage(provider, refreshedStatus, refreshedSource)
           renderUpdatedBuilder = JSON.stringify(previousSource || null) !== JSON.stringify(refreshedSource || null)
@@ -964,6 +967,24 @@
       if (opened) scheduleOpenSourcePolling(snapshot, pane, sourceId, dialog, selectedCandidates, activeTab, 0, 5000)
     }
     root.querySelector("[data-dictionary-builder-open-sources]").addEventListener("click", openInitialSourceGroup)
+    const openTrackedSourceTab = (provider, sourceUrl, datum) => {
+      const existing = sourceBrowserTabs.get(provider)
+      const tab = existing && !existing.closed ? existing : openProviderTabDuringGesture(provider, sourceUrl || initialSourceUrl(provider, word))
+      if (!tab) {
+        dialog.querySelector("[data-dictionary-builder-message]").textContent = `The ${provider} source tab was blocked. Allow popups, then retry the provider check.`
+        return null
+      }
+      sourceBrowserTabs.set(provider, tab)
+      tab.focus?.()
+      renderSourceLeds(snapshot, sourceLedContainer)
+      const source = snapshot.sources?.find((candidate) => candidate.provider === provider)
+      const status = sourceStatusForLed(provider, snapshot, sourceLedContainer)
+      dialog.querySelector("[data-dictionary-builder-message]").textContent = isDictionaryBuilderPromptStatus(source?.datumStatus?.[datum]?.status || source?.status)
+        ? `${INITIAL_SOURCE_LED_LABELS[provider] || provider} has a cookie/robot challenge. Inspect the open tab; SIS will keep retrying from its server context and cannot use that tab's cookies.`
+        : providerStatusMessage(provider, status, source)
+      scheduleOpenSourcePolling(snapshot, pane, sourceId, dialog, dialog.dictionaryBuilderSelections || selectedCandidates, datum, INITIAL_SOURCE_PROVIDER_ORDER.indexOf(provider) + 1, 5000)
+      return tab
+    }
     if (initialReservation) {
       navigateInitialSourceTabs(initialReservation, snapshot.sources || [])
       const reservationMessage = dialog.querySelector("[data-dictionary-builder-message]")
@@ -1036,15 +1057,18 @@
       const visibleStatusSources = datum === "synonymsAntonyms"
         ? statusSources.filter((source) => source.datumStatus?.[datum]?.status !== "not_provided")
         : statusSources
-      const statuses = visibleStatusSources.map((source) => `${source.provider}: ${dictionaryBuilderStatusLabel(dictionaryBuilderDatumSourceStatus(source, datum))}`).join(" · ")
+      const statuses = visibleStatusSources.map((source) => `${source.provider}: ${dictionaryBuilderStatusLabel(dictionaryBuilderDisplayedDatumStatus(source, datum))}`).join(" · ")
       const robotSource = visibleStatusSources.find((source) => isDictionaryBuilderPromptStatus(dictionaryBuilderDatumSourceStatus(source, datum)))
-      const unavailableSources = visibleStatusSources.filter((source) => ["unavailable", "not_found", "unsupported", "invalid"].includes(dictionaryBuilderDatumSourceStatus(source, datum)))
+      const unavailableSources = visibleStatusSources.filter((source) => ["unavailable", "not_found", "unsupported", "invalid", "malformed"].includes(dictionaryBuilderDisplayedDatumStatus(source, datum)))
+      const openedPendingSources = visibleStatusSources.filter((source) => dictionaryBuilderDisplayedDatumStatus(source, datum) === "opening" && dictionaryBuilderDatumSourceStatus(source, datum) !== "available")
       const sectionSummary = dialog.querySelector("[data-dictionary-builder-section-summary]")
       const datumLabel = visibleDictionaryBuilderFields.find(([key]) => key === datum)?.[1] || datum
       const tabHeading = dialog.querySelector("[data-dictionary-builder-tab-heading]")
       if (tabHeading) tabHeading.textContent = datumLabel
       if (sectionSummary) sectionSummary.textContent = robotSource
         ? `Queried: ${statuses || "no applicable source"}. ${robotSource.provider} returned a cookie/robot challenge. Inspect the source tab, then retry; SIS probes from its server context and cannot use that tab's cookies.`
+        : openedPendingSources.length
+          ? `Queried: ${statuses || "no applicable source"}. ${openedPendingSources.map((source) => source.provider).join(", ")} source page${openedPendingSources.length === 1 ? " is" : "s are"} open; SIS is retrying until the scrape data arrives.`
         : visibleStatusSources.some((source) => INITIAL_SOURCE_REQUIRED_DATUMS[source.provider] === datum && source.status === "available" && source.datumStatus?.[datum]?.status !== "available")
           ? `Queried: ${statuses || "no applicable source"}. The source page is reachable, but its ${datumLabel} data has not arrived yet. SIS will keep polling while the source tab remains open.`
         : unavailableSources.length
@@ -1151,6 +1175,58 @@
         container.append(link)
         return link
       }
+      const representedProviders = new Set(candidates.map((candidate) => candidate.provider))
+      const retryableSources = visibleStatusSources.filter((source) => isDictionaryBuilderRetryableStatus(dictionaryBuilderDatumSourceStatus(source, datum)) && !representedProviders.has(source.provider))
+      if (retryableSources.length) {
+        const retrySourceActions = document.createElement("div")
+        retrySourceActions.className = "dictionary-builder-candidate-source-list"
+        retryableSources.forEach((source) => {
+          const status = document.createElement("span")
+          status.textContent = `${INITIAL_SOURCE_LED_LABELS[source.provider] || source.provider}: ${dictionaryBuilderStatusLabel(dictionaryBuilderDisplayedDatumStatus(source, datum))}`
+          const retryButton = document.createElement("button")
+          retryButton.type = "button"
+          retryButton.className = "portal-button portal-button-blue-action portal-button-compact"
+          retryButton.textContent = "Retry provider"
+          retryButton.title = `Run another server-side scrape for ${source.provider} and update this preview.`
+          retryButton.setAttribute("aria-label", `Retry ${source.provider} provider`)
+          retryButton.dataset.dictionaryBuilderRetryProvider = source.provider
+          retryButton.addEventListener("click", async () => {
+            const retryKey = `${snapshot.id}:${source.provider}`
+            if (providerRetryInFlight.has(retryKey)) {
+              dialog.querySelector("[data-dictionary-builder-message]").textContent = `${INITIAL_SOURCE_LED_LABELS[source.provider] || source.provider} already has a probe running. The current check will finish before another retry can start.`
+              return
+            }
+            providerRetryInFlight.add(retryKey)
+            retryButton.disabled = true
+            retryButton.textContent = "Retrying..."
+            try {
+              const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshot.id)}/retry`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: source.provider, datum, entry: readPayload(pane) }) })
+              const refreshed = await response.json()
+              if (!response.ok || !refreshed.ok) throw new Error(refreshed.error || `Retry failed for ${source.provider}.`)
+              renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
+              const refreshedSource = refreshed.sources?.find((candidate) => candidate.provider === source.provider)
+              const currentLedContainer = dialog.querySelector("[data-dictionary-builder-source-leds]")
+              dialog.querySelector("[data-dictionary-builder-message]").textContent = providerStatusMessage(source.provider, sourceStatusForLed(source.provider, refreshed, currentLedContainer), refreshedSource)
+              scheduleOpenSourcePolling(refreshed, pane, sourceId, dialog, dialog.dictionaryBuilderSelections || selectedCandidates, datum, INITIAL_SOURCE_PROVIDER_ORDER.indexOf(source.provider) + 1)
+            } catch (error) {
+              const ledContainer = dialog.querySelector("[data-dictionary-builder-source-leds]")
+              setSourceLedStatus(source.provider, sourceStatusForSnapshot(source.provider, snapshot), snapshot, ledContainer)
+              dialog.querySelector("[data-dictionary-builder-message]").textContent = error.message || `Retry failed for ${source.provider}.`
+            } finally {
+              providerRetryInFlight.delete(retryKey)
+              retryButton.disabled = false
+              retryButton.textContent = "Retry provider"
+            }
+          })
+          retrySourceActions.append(status, retryButton)
+          const sourceLink = appendSourceLink(retrySourceActions, source.provider, source.sourceUrl || initialSourceUrl(source.provider, word))
+          sourceLink?.addEventListener("click", (event) => {
+            event.preventDefault()
+            openTrackedSourceTab(source.provider, source.sourceUrl, datum)
+          })
+        })
+        section.append(retrySourceActions)
+      }
       const relationParts = (value) => {
         const parts = { synonyms: [], antonyms: [] }
         let section = "synonyms"
@@ -1237,21 +1313,21 @@
           label.append(input)
         }
         const sourceLink = appendSourceLink(label, candidate.provider, candidate.sourceUrl)
-        if (isDictionaryBuilderPromptStatus(candidateStatus)) {
+        if (isDictionaryBuilderRetryableStatus(candidateStatus)) {
+          sourceLink?.addEventListener("click", (event) => {
+            event.preventDefault()
+            openTrackedSourceTab(candidate.provider, candidate.sourceUrl, datum)
+          })
           const retry = document.createElement("button")
           retry.type = "button"
           retry.className = "portal-button portal-button-blue-action"
           retry.textContent = "Retry provider"
-          retry.title = `Retry ${candidate.provider} after resolving its cookie/robot prompt.`
-          retry.setAttribute("aria-label", `Retry ${candidate.provider} after resolving its cookie/robot prompt`)
-          const probeKey = `${snapshot.id}:${candidate.provider}:${datum}`
+          retry.title = isDictionaryBuilderPromptStatus(candidateStatus)
+            ? `Retry ${candidate.provider} after checking its cookie/robot prompt. A successful probe will update this preview.`
+            : `Run another server-side scrape for ${candidate.provider} and update this preview.`
+          retry.setAttribute("aria-label", `Retry ${candidate.provider} provider`)
           let retryInFlight = false
-          const stopPromptProbe = () => {
-            const timer = promptProbeTimers.get(probeKey)
-            if (timer) window.clearInterval(timer)
-            promptProbeTimers.delete(probeKey)
-          }
-          const retryProvider = async ({ automatic = false } = {}) => {
+          const retryProvider = async () => {
             const retryKey = `${snapshot.id}:${candidate.provider}`
             if (retryInFlight) return false
             if (providerRetryInFlight.has(retryKey)) {
@@ -1265,10 +1341,8 @@
             }
             retryInFlight = true
             providerRetryInFlight.add(retryKey)
-            if (!automatic) {
-              retry.disabled = true
-              retry.textContent = "Retrying..."
-            }
+            retry.disabled = true
+            retry.textContent = "Retrying..."
             try {
               const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshot.id)}/retry`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: candidate.provider, datum, entry: readPayload(pane) }) })
               const refreshed = await response.json()
@@ -1282,32 +1356,22 @@
               renderSourceLeds(refreshed, ledContainer)
               if (!datumReady) {
                 const message = dialog.querySelector("[data-dictionary-builder-message]")
-                if (message) message.textContent = providerStatusMessage(candidate.provider, sourceStatusForSnapshot(candidate.provider, refreshed), refreshedSource)
-                if (automatic) return false
-                return true
+                if (message) message.textContent = providerStatusMessage(candidate.provider, sourceStatusForLed(candidate.provider, refreshed, ledContainer), refreshedSource)
+                return false
               }
-              stopPromptProbe()
               renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
+              scheduleOpenSourcePolling(refreshed, pane, sourceId, dialog, dialog.dictionaryBuilderSelections || selectedCandidates, datum, INITIAL_SOURCE_PROVIDER_ORDER.indexOf(candidate.provider) + 1)
               return true
             } catch (error) {
               const ledContainer = dialog.querySelector("[data-dictionary-builder-source-leds]")
               setSourceLedStatus(candidate.provider, sourceStatusForSnapshot(candidate.provider, snapshot), snapshot, ledContainer)
-              if (!automatic) {
-                retry.disabled = false
-                retry.textContent = "Retry provider"
-                dialog.querySelector("[data-dictionary-builder-message]").textContent = error.message || "Provider retry failed."
-              } else {
-                const message = dialog.querySelector("[data-dictionary-builder-message]")
-                if (message) message.textContent = `${INITIAL_SOURCE_LED_LABELS[candidate.provider] || candidate.provider} could not be reached during its SIS probe: ${error.message || "provider check failed"}.`
-              }
+              dialog.querySelector("[data-dictionary-builder-message]").textContent = error.message || "Provider retry failed."
               return false
             } finally {
               retryInFlight = false
               providerRetryInFlight.delete(retryKey)
-              if (!automatic && dialog.querySelector("[data-dictionary-builder-root]")) {
-                retry.disabled = false
-                retry.textContent = "Retry provider"
-              }
+              retry.disabled = false
+              retry.textContent = "Retry provider"
             }
           }
           retry.addEventListener("click", async (event) => {
@@ -1316,38 +1380,6 @@
             await retryProvider()
           })
           label.append(retry)
-          const openChallengeTab = () => {
-            const existing = robotHandoffTabs.get(candidate.provider) || sourceBrowserTabs.get(candidate.provider)
-            if (existing && !existing.closed) {
-              robotHandoffTabs.set(candidate.provider, existing)
-              sourceBrowserTabs.set(candidate.provider, existing)
-              existing.focus?.()
-            } else {
-              const challengeTab = window.open(candidate.sourceUrl, providerTabName(candidate.provider))
-              if (!challengeTab) {
-                dialog.querySelector("[data-dictionary-builder-message]").textContent = `The ${candidate.provider} source tab was blocked. Open the source link and use Retry provider as the fallback probe.`
-                return null
-              }
-              robotHandoffTabs.set(candidate.provider, challengeTab)
-              sourceBrowserTabs.set(candidate.provider, challengeTab)
-            }
-            dialog.querySelector("[data-dictionary-builder-message]").textContent = `Inspect the ${candidate.provider} source tab. SIS retries use its server context and cannot read this tab's page or cookies; use Retry provider to run another server-side probe.`
-            stopPromptProbe()
-            const challengeTab = robotHandoffTabs.get(candidate.provider)
-            const probeTimer = window.setInterval(() => {
-              if (challengeTab.closed || !dialog.open) {
-                stopPromptProbe()
-                return
-              }
-              retryProvider({ automatic: true })
-            }, 10000)
-            promptProbeTimers.set(probeKey, probeTimer)
-            return challengeTab
-          }
-          sourceLink?.addEventListener("click", (event) => {
-            event.preventDefault()
-            openChallengeTab()
-          })
         }
         candidateList.append(label)
         sizeDictionaryBuilderTextareas(candidateList)
