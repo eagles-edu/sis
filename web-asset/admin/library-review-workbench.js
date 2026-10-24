@@ -730,7 +730,7 @@
       return `${label} is ready.`
     }
     if (status === "opening") return `${label} is being checked by SIS. This preview keeps polling the provider until usable scrape data arrives.`
-    if (status === "popup-blocking") return `${label} is challenged. SIS keeps retrying from its server context; opening the source is only for inspection because browser cookies cannot be transferred.`
+    if (status === "popup-blocking") return `${label} is challenged. Complete the check in its open source tab and leave it open; SIS keeps retrying this preview automatically.`
     if (status === "unavailable") return `${label} is unavailable to SIS right now. SIS keeps this provider queued for a server retry; opening the source is only for inspection because browser-held cookies cannot be transferred.`
     if (status === "not-found") return `${label} returned no matching entry (HTTP 404). SIS keeps the source in the purple retry/manual-review state.`
     return `${label} status is not yet confirmed.`
@@ -985,9 +985,12 @@
       renderSourceLeds(snapshot, sourceLedContainer)
       const source = snapshot.sources?.find((candidate) => candidate.provider === provider)
       const status = sourceStatusForLed(provider, snapshot, sourceLedContainer)
-      dialog.querySelector("[data-dictionary-builder-message]").textContent = isDictionaryBuilderPromptStatus(source?.datumStatus?.[datum]?.status || source?.status)
-        ? `${INITIAL_SOURCE_LED_LABELS[provider] || provider} has a cookie/robot challenge. Inspect the open tab; SIS will keep retrying from its server context and cannot use that tab's cookies.`
-        : providerStatusMessage(provider, status, source)
+      const isRobotChallenge = isDictionaryBuilderPromptStatus(source?.datumStatus?.[datum]?.status || source?.status)
+      if (isRobotChallenge) {
+        dialog.querySelector("[data-dictionary-builder-message]").textContent = `Complete the ${INITIAL_SOURCE_LED_LABELS[provider] || provider} robot check in the opened tab. Leave it open; SIS retries this preview automatically.`
+      } else {
+        dialog.querySelector("[data-dictionary-builder-message]").textContent = providerStatusMessage(provider, status, source)
+      }
       scheduleDictionaryBuilderPolling(snapshot, pane, sourceId, dialog, dialog.dictionaryBuilderSelections || selectedCandidates, datum, INITIAL_SOURCE_PROVIDER_ORDER.indexOf(provider) + 1, 5000)
       return tab
     }
@@ -1030,7 +1033,7 @@
       const tabHeading = dialog.querySelector("[data-dictionary-builder-tab-heading]")
       if (tabHeading) tabHeading.textContent = datumLabel
       if (sectionSummary) sectionSummary.textContent = robotSource
-        ? `Queried: ${statuses || "no applicable source"}. ${robotSource.provider} returned a cookie/robot challenge. Inspect the source tab, then retry; SIS probes from its server context and cannot use that tab's cookies.`
+        ? `Queried: ${statuses || "no applicable source"}. ${robotSource.provider} returned a cookie/robot challenge. Complete it in the opened source tab and leave that tab open; SIS keeps retrying this preview automatically.`
         : openedPendingSources.length
           ? `Queried: ${statuses || "no applicable source"}. ${openedPendingSources.map((source) => source.provider).join(", ")} source page${openedPendingSources.length === 1 ? " is" : "s are"} open; SIS is retrying until the scrape data arrives.`
         : visibleStatusSources.some((source) => INITIAL_SOURCE_REQUIRED_DATUMS[source.provider] === datum && source.status === "available" && source.datumStatus?.[datum]?.status !== "available")
@@ -1263,7 +1266,7 @@
         } else {
           const input = document.createElement("textarea")
           input.value = radio.checked ? selectedCandidates[datum].value : candidateValue
-          input.placeholder = isDictionaryBuilderPromptStatus(candidateStatus) ? "Resolve the cookie/robot prompt, then enter the verified value here." : ""
+          input.placeholder = isDictionaryBuilderPromptStatus(candidateStatus) ? "Complete the robot check in the source tab; SIS will populate this candidate automatically." : ""
           input.dataset.dictionaryBuilderCandidateValue = datum
           input.dataset.dictionaryBuilderProvider = candidate.provider
           const saveCandidate = () => {
@@ -1278,10 +1281,6 @@
         }
         const sourceLink = appendSourceLink(label, candidate.provider, candidate.sourceUrl)
         if (isDictionaryBuilderRetryableStatus(candidateStatus)) {
-          sourceLink?.addEventListener("click", (event) => {
-            event.preventDefault()
-            openTrackedSourceTab(candidate.provider, candidate.sourceUrl, datum)
-          })
           const retry = document.createElement("button")
           retry.type = "button"
           retry.className = "portal-button portal-button-blue-action"
@@ -1342,6 +1341,10 @@
             event.preventDefault()
             event.stopPropagation()
             await retryProvider()
+          })
+          sourceLink?.addEventListener("click", (event) => {
+            event.preventDefault()
+            openTrackedSourceTab(candidate.provider, candidate.sourceUrl, datum)
           })
           label.append(retry)
         }
