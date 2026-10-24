@@ -80,3 +80,14 @@ test("Britannica preview uses a standard browser-rendered page after a server-si
   assert.equal(preview.provider, "britannica")
   assert.match(preview.fields.definition, /class average was high/u)
 })
+
+test("Britannica preview keeps a valid dictionary page when a challenge marker occurs in unrelated markup", async () => {
+  const browserHtml = `${realBritannicaShapeFixture}<script>window.__cf_chl_opt = { marker: true }</script>`
+  const preview = await previewBritannicaLibraryEntry(
+    { english: "threaten" },
+    async () => ({ ok: false, status: 403, headers: new Headers() }),
+    async (sourceUrl) => ({ ok: true, status: 200, url: sourceUrl, html: browserHtml }),
+  )
+  assert.equal(preview.ok, true)
+  assert.match(preview.fields.definition, /to say that you will cause harm/u)
+})

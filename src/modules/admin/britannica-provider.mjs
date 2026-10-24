@@ -18,7 +18,14 @@ function collectText(node, selectors) {
   const matches = node.find(selectors)
   return uniqueDictionaryText(matches.map((index) => matches.eq(index).text()).get())
 }
-function isBritannicaAccessChallenge(html) { return /just a moment|enable javascript and cookies|cf-chl-|challenge-platform|access denied/iu.test(String(html || "")) }
+function isBritannicaAccessChallenge(html) {
+  const documentHtml = String(html || "")
+  const challengeMarker = /just a moment|enable javascript and cookies|cf-chl-|challenge-platform|access denied/iu.test(documentHtml)
+  if (!challengeMarker) return false
+  const hasDictionaryEntry = /(?:data-dictionary-entry|class=["'][^"']*\b(?:hw_d|dict-entry|dictionary-entry)\b[^"']*["'])/iu.test(documentHtml)
+  const hasDictionaryContent = /(?:class=["'][^"']*\b(?:def_text|definition|sense|sblocks)\b[^"']*["']|data-definition)/iu.test(documentHtml)
+  return !(hasDictionaryEntry && hasDictionaryContent)
+}
 
 const BRITANNICA_ENTRY_SELECTOR = "[data-dictionary-entry], .dict-entry, .dictionary-entry, .entry, .entry-word, .entry-content"
 const BRITANNICA_HEADER_SELECTOR = ".hw_d, .headword, .hword, [data-headword], h1, h2"

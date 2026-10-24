@@ -141,7 +141,7 @@ test("Dictionary Builder keeps origin metadata and selections on retry while pre
   assert.doesNotMatch(libraryReviewWorkbench, /worksCited: \["etymonline"\]/)
   assert.match(libraryReviewWorkbench, /datum !== "originPath" \|\| preferred\.includes\(source\.provider\)/)
   assert.match(libraryReviewWorkbench, /structuredClone\(selectedCandidates\), datum, null, \{ autoRetry: false \}/)
-  assert.match(libraryReviewWorkbench, /window\.setTimeout\(\(\) => retryMissingPreferredDatums\(\), 5000\)/)
+  assert.match(libraryReviewWorkbench, /scheduleDictionaryBuilderPolling\(snapshot, pane, sourceId, dialog, selectedCandidates, selectedTab, 0, 2000\)/)
   assert.match(libraryReviewWorkbench, /retryPreferred\.textContent = "Retry preferred"/)
   assert.match(libraryReviewWorkbench, /retryPreferred\.setAttribute\("aria-label", `Retry preferred sources for \$\{datum\}`\)/)
   assert.match(libraryReviewWorkbench, /const INITIAL_SOURCE_GROUP_SIZE = 7/u)
@@ -432,7 +432,7 @@ test("Dictionary Builder opens and retries from an unsaved Library draft", async
   dom.window.close()
 })
 
-test("Dictionary Builder re-probes open provider tabs once and updates their status", async () => {
+test("Dictionary Builder retries pending providers server-side and updates their status", async () => {
   const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor data-review-source-id=entry-2><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=verb><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
   const timerCallbacks = new Map()
   const retryCalls = []
@@ -441,7 +441,7 @@ test("Dictionary Builder re-probes open provider tabs once and updates their sta
   const providerStatuses = {
     britannica: "unavailable",
     ldoce: "robot_blocked",
-    wordhelp: "not_found",
+    wordhelp: "manual",
     etymonline: "robot_blocked",
     merriam_webster_thesaurus: "available",
     oxford_ame: "unavailable",
@@ -518,35 +518,18 @@ test("Dictionary Builder re-probes open provider tabs once and updates their sta
 
   const dialog = dom.window.document.querySelector("#libraryDictionaryBuilderDialog")
   const pollTimers = () => [...timerCallbacks.entries()].filter(([, timer]) => timer.callback.toString().includes("providerRetryInFlight"))
-  assert.equal(dialog.querySelector('[data-source-provider="britannica"]').dataset.sourceStatus, "unavailable", "a failed provider probe stays red until its source page is opened")
+  assert.equal(dialog.querySelector('[data-source-provider="britannica"]').dataset.sourceStatus, "unavailable", "a failed provider probe is visible before the server retry")
   assert.equal(dialog.querySelector('[data-source-provider="ldoce"]').dataset.sourceStatus, "popup-blocking", "a challenge is purple and waits for user action")
+  assert.equal(dialog.querySelector('[data-source-provider="wordhelp"]').dataset.sourceStatus, "popup-blocking", "a manual source remains purple rather than a failed scrape")
   assert.equal(dialog.querySelector('[data-source-provider="etymonline"]').dataset.sourceStatus, "popup-blocking", "ET challenge status stays purple until its scrape succeeds")
   assert.equal(dialog.querySelector('[data-source-provider="merriam_webster_thesaurus"]').dataset.sourceStatus, "opening", "TH remains amber until its synonym scrape data arrives")
-
-  dialog.querySelector('[data-dictionary-builder-tab="definition"]').click()
-  const retryBritannica = dialog.querySelector('#dictionary-builder-panel-definition [data-dictionary-builder-retry-provider="britannica"]')
-  assert.ok(retryBritannica, "an unavailable source has an explicit retry action")
-  retryBritannica.click()
-  await new Promise((resolve) => setTimeout(resolve, 0))
-  assert.equal(retryCalls[0], "britannica", "the retry action calls the provider retry endpoint")
-  assert.equal(dialog.querySelector('[data-source-provider="britannica"]').dataset.sourceStatus, "unavailable", "the retry keeps the failed state until the page is available in the browser")
-
-  const retrySourceLink = dialog.querySelector('#dictionary-builder-panel-definition [data-dictionary-builder-retry-provider="britannica"] + a')
-  retrySourceLink.click()
-  assert.equal(dialog.querySelector('[data-source-provider="britannica"]').dataset.sourceStatus, "opening", "opening BR changes its LED to polling amber")
-  assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /BR is reachable; SIS is still waiting/u)
-  assert.equal(pollTimers().length, 1, "opening an unavailable provider schedules a poll")
-  const modalOpenSources = dialog.querySelector("[data-dictionary-builder-open-sources]")
-  modalOpenSources.click()
-  modalOpenSources.click()
-  assert.equal(pollTimers().length, 1, "reopening the same source group does not add another poll timer")
+  assert.equal(pollTimers().length, 1, "the server retry loop starts without opening a source tab")
 
   const [pollId, poll] = pollTimers()[0]
   timerCallbacks.delete(pollId)
   await poll.callback()
-  assert.deepEqual(retryCalls, ["britannica", "ldoce"])
-  assert.equal(dialog.querySelector('[data-source-provider="ldoce"]').dataset.sourceStatus, "success")
-  assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /LD is ready/u)
+  assert.deepEqual(retryCalls, ["britannica"])
+  assert.equal(dialog.querySelector('[data-source-provider="britannica"]').dataset.sourceStatus, "unavailable", "a failed server retry remains queued without requiring a source tab")
   assert.equal(pollTimers().length, 1, "the next probe is scheduled only after the current probe completes")
 
   const runNextProviderPoll = async (provider, expectedStatus = "success") => {
@@ -556,9 +539,9 @@ test("Dictionary Builder re-probes open provider tabs once and updates their sta
     assert.equal(retryCalls.at(-1), provider)
     assert.equal(dialog.querySelector(`[data-source-provider="${provider}"]`).dataset.sourceStatus, expectedStatus, `${provider} reports ${expectedStatus} after its latest scrape`)
   }
-  await runNextProviderPoll("wordhelp")
+  await runNextProviderPoll("ldoce")
   await runNextProviderPoll("etymonline", "opening")
-  assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /ET is reachable/u)
+  assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /ET is being checked by SIS/u)
   await runNextProviderPoll("merriam_webster_thesaurus", "success")
   assert.equal(snapshot().sources.find((source) => source.provider === "merriam_webster_thesaurus").datumStatus.synonymsAntonyms.status, "available")
   assert.equal(snapshot().sources.find((source) => source.provider === "merriam_webster_thesaurus").fields.synonymsAntonyms, "Synonyms:\npraise\ncommend")
@@ -574,7 +557,7 @@ test("Dictionary Builder re-probes open provider tabs once and updates their sta
   dialog.querySelector('[data-dictionary-builder-tab="etymology"]').click()
   assert.equal(dialog.querySelector('[data-dictionary-builder-candidate-value="etymology"][data-dictionary-builder-provider="etymonline"]').value, "from Old French via Latin", "ET scrape data is returned to the Builder")
   assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /ET is ready/u)
-  assert.deepEqual(retryCalls, ["britannica", "ldoce", "wordhelp", "etymonline", "merriam_webster_thesaurus", "oxford_ame", "google_translate", "britannica", "etymonline"])
+  assert.deepEqual(retryCalls, ["britannica", "ldoce", "etymonline", "merriam_webster_thesaurus", "oxford_ame", "google_translate", "britannica", "etymonline"])
   assert.ok([...dialog.querySelectorAll("[data-source-provider]")].every((led) => ["success", "popup-blocking"].includes(led.dataset.sourceStatus)), "successful scrapes are green and provider challenges are purple; no source is red")
 
   dialog.querySelector('[data-dictionary-builder-tab="vietnamese"]').click()
