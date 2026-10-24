@@ -25,6 +25,7 @@ const DICTIONARY_BUILDER_PROVIDER_TIMEOUT_MS = 12000
 const DICTIONARY_BUILDER_PREVIEW_TIMEOUT_MS = 45000
 const WORDHELP_PROVIDER_TIMEOUT_MS = 30000
 const snapshots = new Map()
+const providerRetryOperations = new Map()
 const datumRoundRobinCursors = new Map()
 const text = (value) => String(value == null ? "" : value).replace(/\s+/gu, " ").trim()
 const lower = (value) => text(value).toLocaleLowerCase("en-US")
@@ -1137,22 +1138,41 @@ export async function retryDictionaryBuilderSnapshot(snapshotId, entry, { ownerK
   const snapshot = snapshots.get(text(snapshotId))
   if (!snapshot || snapshot.ownerKey !== text(ownerKey) || snapshot.entryId !== text(entry?.id)) return null
   const providerId = text(provider)
-  const previous = snapshot.privateSources.find((result) => result.provider === providerId)
   if (!manifestById.has(scoringBaseProvider(providerId))) return null
-  const adapter = dictionaryBuilderAdapter(fetcher, providerId)
-  const refreshed = await runDictionaryBuilderProvider(adapter, entry, providerId)
-  const refreshedSources = previous
-    ? snapshot.privateSources.map((result) => result.provider === providerId ? refreshed : result)
-    : [...snapshot.privateSources, refreshed]
-  snapshot.privateSources = refreshedSources
-  snapshot.sources = refreshedSources.map(({ sourceUrl, privateMedia, ...result }) => ({ ...result, sourceUrl: publicSourceUrl(result.provider, entry?.english) }))
-  snapshot.citations = buildDictionaryBuilderCitations(entry?.english, snapshot.createdAt, snapshot.sources)
-  snapshot.sourceOrder = refreshedSources.map((result) => result.provider)
+  const retryKey = `${snapshot.id}:${providerId}`
+  const requestFingerprint = JSON.stringify([lower(entry?.english), lower(entry?.partOfSpeech)])
+  let operation = providerRetryOperations.get(retryKey)
+  if (operation && operation.fingerprint !== requestFingerprint) {
+    await operation.promise
+    return retryDictionaryBuilderSnapshot(snapshotId, entry, { ownerKey, provider: providerId, datum, fetcher })
+  }
+  if (!operation) {
+    const promise = (async () => {
+      const previous = snapshot.privateSources.find((result) => result.provider === providerId)
+      const adapter = dictionaryBuilderAdapter(fetcher, providerId)
+      const refreshed = await runDictionaryBuilderProvider(adapter, entry, providerId)
+      const refreshedSources = previous
+        ? snapshot.privateSources.map((result) => result.provider === providerId ? refreshed : result)
+        : [...snapshot.privateSources, refreshed]
+      snapshot.privateSources = refreshedSources
+      snapshot.sources = refreshedSources.map(({ sourceUrl, privateMedia, ...result }) => ({ ...result, sourceUrl: publicSourceUrl(result.provider, entry?.english) }))
+      snapshot.citations = buildDictionaryBuilderCitations(entry?.english, snapshot.createdAt, snapshot.sources)
+      snapshot.sourceOrder = refreshedSources.map((result) => result.provider)
+      snapshot.acquisitionLog = buildDictionaryBuilderAcquisitionLog(entry, refreshedSources)
+      return true
+    })()
+    operation = { fingerprint: requestFingerprint, promise }
+    providerRetryOperations.set(retryKey, operation)
+  }
+  try {
+    await operation.promise
+  } finally {
+    if (providerRetryOperations.get(retryKey) === operation) providerRetryOperations.delete(retryKey)
+  }
   if (datum && !snapshot.datumSourceOrder[datum]?.includes(providerId)) snapshot.datumSourceOrder[datum] = [providerId, ...(snapshot.datumSourceOrder[datum] || [])]
-  snapshot.acquisitionLog = buildDictionaryBuilderAcquisitionLog(entry, refreshedSources)
   snapshot.warnings = DICTIONARY_BUILDER_DATUMS
-    .filter((datum) => !refreshedSources.some((result) => result.datumStatus?.[datum]?.status === "available"))
-    .map((datum) => `No selected source offered ${datum}; apply remains available.`)
+    .filter((requestedDatum) => !snapshot.privateSources.some((result) => result.datumStatus?.[requestedDatum]?.status === "available"))
+    .map((requestedDatum) => `No selected source offered ${requestedDatum}; apply remains available.`)
   snapshot.bytes = Buffer.byteLength(JSON.stringify(snapshot))
   snapshots.set(snapshot.id, snapshot)
   cleanCache()

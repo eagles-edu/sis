@@ -305,6 +305,29 @@ test("Dictionary Builder retries only the challenged provider in its existing sn
   assert.equal(await retryDictionaryBuilderSnapshot(snapshot.id, { id: "other-entry" }, { ownerKey: "session-retry", provider: "ldoce", fetcher }), null)
 })
 
+test("Dictionary Builder coalesces concurrent retries for one snapshot provider", async () => {
+  let calls = 0
+  const fetcher = Object.fromEntries(DICTIONARY_BUILDER_MANIFEST.map((source) => [source.id, async () => ({ provider: source.id, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} })]))
+  fetcher.ldoce = async () => {
+    calls += 1
+    if (calls === 1) return { provider: "ldoce", status: "robot_blocked", fields: {}, entries: [], media: [], datumStatus: { definition: { status: "robot_blocked" } } }
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    return { provider: "ldoce", status: "available", fields: { definition: "to praise" }, entries: [], media: [], datumStatus: { definition: { status: "available" } } }
+  }
+  const entry = { id: "entry-retry-single-flight", english: "commend", partOfSpeech: "verb" }
+  const snapshot = await previewDictionaryBuilder(entry, { ownerKey: "session-retry-single-flight", fetcher, rankedSources: [{ provider: "ldoce", score: 99 }] })
+  const results = await Promise.all([
+    retryDictionaryBuilderSnapshot(snapshot.id, entry, { ownerKey: "session-retry-single-flight", provider: "ldoce", datum: "definition", fetcher }),
+    retryDictionaryBuilderSnapshot(snapshot.id, entry, { ownerKey: "session-retry-single-flight", provider: "ldoce", datum: "definition", fetcher }),
+  ])
+  assert.equal(calls, 2, "parallel requests share one provider scrape after the initial preview")
+  for (const result of results) {
+    assert.equal(result.sources.filter((source) => source.provider === "ldoce").length, 1)
+    assert.equal(result.sources.find((source) => source.provider === "ldoce")?.fields.definition, "to praise")
+    assert.deepEqual(result.datumSourceOrder.definition, ["ldoce"])
+  }
+})
+
 test("Dictionary Builder continues datum fallback pulls after an initial provider waits", async () => {
   const calls = []
   const unavailable = (provider) => async () => ({ provider, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} })

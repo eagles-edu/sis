@@ -6,7 +6,8 @@
 
   const workspace = document.getElementById("libraryReviewWorkspace")
   const approvedEditor = document.getElementById("libraryApprovedEditor")
-  if (!workspace && !approvedEditor) return
+  const newWordsRows = document.getElementById("libraryAdminNewWordsRows")
+  if (!workspace && !approvedEditor && !newWordsRows) return
 
   const reviewDocsHtml = `<section class="library-review-docs" data-entry-review-docs aria-label="Entry review documents">
     <div class="section-head"><h3>Entry review documents</h3><p class="small">Use these project contracts while checking every Library entry and recording the review decision.</p></div>
@@ -594,6 +595,7 @@
   const INITIAL_SOURCE_PROVIDER_ORDER = ["britannica", "ldoce", "wordhelp", "etymonline", "merriam_webster_thesaurus", "oxford_ame", "google_translate"]
   const INITIAL_SOURCE_LED_ORDER = ["britannica", "ldoce", "wordhelp", "etymonline", "merriam_webster_thesaurus", "oxford_ame", "google_translate"]
   const INITIAL_SOURCE_LED_LABELS = Object.freeze({ britannica: "BR", ldoce: "LD", wordhelp: "WH", etymonline: "ET", merriam_webster_thesaurus: "TH", oxford_ame: "OA", google_translate: "GT" })
+  const INITIAL_SOURCE_REQUIRED_DATUMS = Object.freeze({ britannica: "definition", ldoce: "definition", wordhelp: "syllabication", etymonline: "etymology", merriam_webster_thesaurus: "synonymsAntonyms", oxford_ame: "definition", google_translate: "vietnamese" })
   const sourceLedOverrides = new WeakMap()
   const dictionaryBuilderPreloadStates = new WeakMap()
   const initialSourceUrl = (provider, word) => {
@@ -658,14 +660,14 @@
     if (!snapshot) return "default"
     const source = (snapshot?.sources || []).find((candidate) => candidate.provider === provider || (provider === "merriam_webster_scrape" && candidate.provider === "merriam_webster"))
     if (!source) return "default"
-    if (provider === "merriam_webster_thesaurus" && source.status === "available" && hasDictionaryBuilderValue(source.fields?.definition)) return "success"
-    const requiredDatum = { etymonline: "etymology" }[provider]
+    const requiredDatum = INITIAL_SOURCE_REQUIRED_DATUMS[provider]
     if (requiredDatum) {
       const datumStatus = source.datumStatus?.[requiredDatum]?.status
       const datumValue = source.fields?.[requiredDatum]
-      if (datumStatus === "available" && hasDictionaryBuilderValue(datumValue)) return "success"
       if (isDictionaryBuilderPromptStatus(datumStatus) || isDictionaryBuilderPromptStatus(source.status)) return "popup-blocking"
+      if (datumStatus === "available" && hasDictionaryBuilderValue(datumValue)) return "success"
       if (datumStatus === "not_found" || source.status === "not_found") return "not-found"
+      if (source.status === "available") return "opening"
       if (["unavailable", "unsupported", "invalid", "malformed", "not_provided", "not_offered"].includes(datumStatus)) return "unavailable"
       if (["unavailable", "unsupported", "invalid", "malformed"].includes(source.status)) return "unavailable"
       return "unavailable"
@@ -718,19 +720,21 @@
   const providerStatusMessage = (provider, status) => {
     const label = INITIAL_SOURCE_LED_LABELS[provider] || provider
     if (status === "success") return `${label} is ready.`
-    if (status === "popup-blocking") return `${label} needs user action in its open source tab; the affected datum remains paused.`
-    if (status === "unavailable") return `${label} is unreachable from SIS right now; attention is needed. The source tab is open, but its cross-origin page cannot be inspected directly.`
+    if (status === "opening") return `${label} is reachable; SIS is still waiting for its scrape data and will keep checking while the source tab remains open.`
+    if (status === "popup-blocking") return `${label} is challenged. Inspect the source tab, then retry; SIS probes from its server context and cannot use that tab's cookies.`
+    if (status === "unavailable") return `${label} is unavailable to SIS right now; attention is needed. You can open the source page to inspect it, but SIS cannot read its cross-origin page or browser-held cookies.`
     if (status === "not-found") return `${label} returned no matching entry (HTTP 404).`
     return `${label} status is not yet confirmed.`
   }
   const summarizeProviderStatuses = (snapshot) => {
-    const grouped = { success: [], "popup-blocking": [], unavailable: [], "not-found": [] }
+    const grouped = { success: [], opening: [], "popup-blocking": [], unavailable: [], "not-found": [] }
     INITIAL_SOURCE_LED_ORDER.forEach((provider) => {
       const status = sourceStatusForSnapshot(provider, snapshot)
       if (grouped[status]) grouped[status].push(INITIAL_SOURCE_LED_LABELS[provider])
     })
     const parts = []
     if (grouped.success.length) parts.push(`ready: ${grouped.success.join(", ")}`)
+    if (grouped.opening.length) parts.push(`scrape in progress: ${grouped.opening.join(", ")}`)
     if (grouped["popup-blocking"].length) parts.push(`user action needed (purple): ${grouped["popup-blocking"].join(", ")}`)
     const unreachable = [...grouped.unavailable, ...grouped["not-found"]]
     if (unreachable.length) parts.push(`attention needed (red): ${unreachable.join(", ")}`)
@@ -743,12 +747,13 @@
       if (!dialog.open) return
       const openProviders = INITIAL_SOURCE_PROVIDER_ORDER.filter((provider) => {
         const tab = sourceBrowserTabs.get(provider)
-        if (tab && !tab.closed) return true
+        if (tab && !tab.closed) return sourceStatusForSnapshot(provider, snapshot) !== "success"
         if (tab?.closed) sourceBrowserTabs.delete(provider)
         return false
       })
       if (!openProviders.length) return
-      const provider = openProviders[providerIndex % openProviders.length]
+      const provider = [...INITIAL_SOURCE_PROVIDER_ORDER.slice(providerIndex % INITIAL_SOURCE_PROVIDER_ORDER.length), ...INITIAL_SOURCE_PROVIDER_ORDER.slice(0, providerIndex % INITIAL_SOURCE_PROVIDER_ORDER.length)].find((candidate) => openProviders.includes(candidate))
+      if (!provider) return
       const retryKey = `${snapshot.id}:${provider}`
       let latestSnapshot = snapshot
       let renderUpdatedBuilder = false
@@ -782,7 +787,7 @@
         const currentActiveTab = dialog.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || activeTab
         renderDictionaryBuilder(latestSnapshot, pane, sourceId, structuredClone(selectedCandidates), currentActiveTab, null, { autoRetry: false })
       }
-      scheduleOpenSourcePolling(latestSnapshot, pane, sourceId, dialog, dialog.dictionaryBuilderSelections || selectedCandidates, dialog.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || activeTab, providerIndex + 1)
+      scheduleOpenSourcePolling(latestSnapshot, pane, sourceId, dialog, dialog.dictionaryBuilderSelections || selectedCandidates, dialog.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || activeTab, INITIAL_SOURCE_PROVIDER_ORDER.indexOf(provider) + 1)
     }, delay)
     openSourceProbeTimers.set(snapshot.id, timer)
   }
@@ -1035,7 +1040,9 @@
       const tabHeading = dialog.querySelector("[data-dictionary-builder-tab-heading]")
       if (tabHeading) tabHeading.textContent = datumLabel
       if (sectionSummary) sectionSummary.textContent = robotSource
-        ? `Queried: ${statuses || "no applicable source"}. Cookie/robot prompt required for ${robotSource.provider}; this datum is paused. Resolve it in the opened source tab and leave it open while Builder probes automatically.`
+        ? `Queried: ${statuses || "no applicable source"}. ${robotSource.provider} returned a cookie/robot challenge. Inspect the source tab, then retry; SIS probes from its server context and cannot use that tab's cookies.`
+        : visibleStatusSources.some((source) => INITIAL_SOURCE_REQUIRED_DATUMS[source.provider] === datum && source.status === "available" && source.datumStatus?.[datum]?.status !== "available")
+          ? `Queried: ${statuses || "no applicable source"}. The source page is reachable, but its ${datumLabel} data has not arrived yet. SIS will keep polling while the source tab remains open.`
         : unavailableSources.length
           ? `Queried: ${statuses || "no applicable source"}. Provider attention needed (red): ${unavailableSources.map((source) => source.provider).join(", ")}.`
           : `Queried: ${statuses || "no applicable source"}.`
@@ -1060,13 +1067,17 @@
         retryPreferred.textContent = "Waiting..."
         await new Promise((resolve) => window.setTimeout(resolve, 5000))
         let refreshed = snapshot
-        const skippedProviders = []
         try {
           for (const provider of preferredProviders) {
             const retryKey = `${snapshot.id}:${provider}`
             if (providerRetryInFlight.has(retryKey)) {
-              skippedProviders.push(provider)
-              continue
+              await new Promise((resolve) => {
+                const waitForCurrentProbe = () => providerRetryInFlight.has(retryKey)
+                  ? window.setTimeout(waitForCurrentProbe, 50)
+                  : resolve()
+                waitForCurrentProbe()
+              })
+              if (!dialog.open) return
             }
             providerRetryInFlight.add(retryKey)
             try {
@@ -1103,9 +1114,7 @@
               ? providerStatusMessage(actionProvider, "popup-blocking")
               : unavailableProvider
                 ? providerStatusMessage(unavailableProvider, dictionaryBuilderDatumSourceStatus(refreshed.sources?.find((source) => source.provider === unavailableProvider), datum) === "not_found" ? "not-found" : "unavailable")
-                : skippedProviders.length
-                  ? `A provider check is already running for ${skippedProviders.join(", ")}. Wait for that status update, then retry if needed.`
-                  : `Preferred sources were checked; no usable ${datumLabel} candidate was returned.`
+                : `Preferred sources were checked; no usable ${datumLabel} candidate was returned.`
           dialog.querySelector("[data-dictionary-builder-message]").textContent = resultMessage
         } catch (error) {
           if (refreshed !== snapshot && dialog.open) renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
@@ -1240,7 +1249,16 @@
           }
           const retryProvider = async ({ automatic = false } = {}) => {
             const retryKey = `${snapshot.id}:${candidate.provider}`
-            if (retryInFlight || providerRetryInFlight.has(retryKey)) return false
+            if (retryInFlight) return false
+            if (providerRetryInFlight.has(retryKey)) {
+              await new Promise((resolve) => {
+                const waitForCurrentProbe = () => providerRetryInFlight.has(retryKey)
+                  ? window.setTimeout(waitForCurrentProbe, 50)
+                  : resolve()
+                waitForCurrentProbe()
+              })
+              if (!dialog.open) return false
+            }
             retryInFlight = true
             providerRetryInFlight.add(retryKey)
             if (!automatic) {
@@ -1309,7 +1327,7 @@
               robotHandoffTabs.set(candidate.provider, challengeTab)
               sourceBrowserTabs.set(candidate.provider, challengeTab)
             }
-            dialog.querySelector("[data-dictionary-builder-message]").textContent = `Complete the ${candidate.provider} cookie/robot prompt in the new tab. Leave it open; Builder will probe the live page automatically. Retry provider remains available as a fallback.`
+            dialog.querySelector("[data-dictionary-builder-message]").textContent = `Inspect the ${candidate.provider} source tab. SIS retries use its server context and cannot read this tab's page or cookies; use Retry provider to run another server-side probe.`
             stopPromptProbe()
             const challengeTab = robotHandoffTabs.get(candidate.provider)
             const probeTimer = window.setInterval(() => {
@@ -1502,7 +1520,7 @@
     document.querySelectorAll("[data-vocabulary-dictionary-builder]").forEach((button) => {
       if (button.dataset.dictionaryBuilderBound === "true") return
       button.dataset.dictionaryBuilderBound = "true"
-      const pane = button.closest("[data-review-pane], [data-vocabulary-editor]")
+      const pane = button.closest("[data-review-pane], [data-vocabulary-editor], [data-news-vocabulary-row]")
       hydrateLibraryAudio(pane)
       bindEditorSourceStartup(pane)
       const word = pane?.querySelector('[data-vocabulary-field="english"]')?.value || ""
@@ -1510,7 +1528,7 @@
       const sourcePaths = { LD: `https://www.ldoceonline.com/dictionary/${encoded}`, OA: `https://www.oxfordlearnersdictionaries.com/definition/american_english/${encoded}`, OB: `https://www.oxfordlearnersdictionaries.com/definition/english/${encoded}`, BR: `https://www.britannica.com/dictionary/${encoded}`, MW: `https://www.merriam-webster.com/dictionary/${encoded}`, AP: `https://www.merriam-webster.com/dictionary/${encoded}`, ET: `https://www.etymonline.com/search?q=${encoded}`, WK: `https://en.wiktionary.org/w/index.php?search=${encoded}`, CA: `https://dictionary.cambridge.org/dictionary/english/${encoded}`, TH: `https://www.merriam-webster.com/thesaurus/${encoded}`, WH: `https://www.wordhelp.com/dictionary/${encoded}`, GT: `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate` }
       pane?.querySelectorAll("[data-dictionary-builder-source]").forEach((link) => { link.href = sourcePaths[link.dataset.dictionaryBuilderSource] || link.href })
       button.addEventListener("click", async () => {
-        const pane = button.closest("[data-review-pane], [data-vocabulary-editor]")
+        const pane = button.closest("[data-review-pane], [data-vocabulary-editor], [data-news-vocabulary-row]")
         const sourceId = pane?.dataset.reviewSourceId || pane?.dataset.approvedEntryId || "new-canonical"
         const message = pane?.querySelector("[data-vocabulary-dictionary-builder-message]")
         if (!pane || !sourceId) return
@@ -1744,6 +1762,7 @@
   workspace?.addEventListener("change", markDifferences)
   if (workspace) new MutationObserver(() => { ensureReviewDocs(workspace); markDifferences(); bindMwFill(); bindLdoce(); bindOxford(); bindBritannica(); bindMerriamWebster(); bindDictionaryBuilder(); bindOriginAnalysis(); bindTransitivityTools(); bindReviewSidebar() }).observe(workspace, { childList: true, subtree: true })
   if (approvedEditor) new MutationObserver(() => { ensureReviewDocs(approvedEditor); bindMwFill(); bindLdoce(); bindOxford(); bindBritannica(); bindMerriamWebster(); bindDictionaryBuilder(); bindOriginAnalysis(); bindTransitivityTools() }).observe(approvedEditor, { childList: true, subtree: true })
+  if (newWordsRows) new MutationObserver(() => { bindDictionaryBuilder() }).observe(newWordsRows, { childList: true, subtree: true })
   ensureReviewDocs(workspace)
   ensureReviewDocs(approvedEditor)
   bindMwFill()
