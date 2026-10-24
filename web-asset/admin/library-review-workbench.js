@@ -717,9 +717,13 @@
       setSourceLedStatus(provider, status, snapshot, container)
     })
   }
-  const providerStatusMessage = (provider, status) => {
+  const providerStatusMessage = (provider, status, source = null) => {
     const label = INITIAL_SOURCE_LED_LABELS[provider] || provider
-    if (status === "success") return `${label} is ready.`
+    if (status === "success") {
+      const latestAttempt = source?.lastAttempt
+      if (latestAttempt?.status && latestAttempt.status !== "available") return `${label} is ready from its last successful scrape; the latest SIS check reported ${latestAttempt.status.replaceAll("_", " ")}.`
+      return `${label} is ready.`
+    }
     if (status === "opening") return `${label} is reachable; SIS is still waiting for its scrape data and will keep checking while the source tab remains open.`
     if (status === "popup-blocking") return `${label} is challenged. Inspect the source tab, then retry; SIS probes from its server context and cannot use that tab's cookies.`
     if (status === "unavailable") return `${label} is unavailable to SIS right now; attention is needed. You can open the source page to inspect it, but SIS cannot read its cross-origin page or browser-held cookies.`
@@ -771,11 +775,11 @@
           renderSourceLeds(latestSnapshot, ledContainer)
           const refreshedStatus = sourceStatusForSnapshot(provider, latestSnapshot)
           const message = dialog.querySelector("[data-dictionary-builder-message]")
-          if (message) message.textContent = providerStatusMessage(provider, refreshedStatus)
+          if (message) message.textContent = providerStatusMessage(provider, refreshedStatus, refreshedSource)
           renderUpdatedBuilder = JSON.stringify(previousSource || null) !== JSON.stringify(refreshedSource || null)
         } catch (error) {
           const ledContainer = dialog.querySelector("[data-dictionary-builder-source-leds]")
-          setSourceLedStatus(provider, "unavailable", latestSnapshot, ledContainer)
+          setSourceLedStatus(provider, sourceStatusForSnapshot(provider, latestSnapshot), latestSnapshot, ledContainer)
           const message = dialog.querySelector("[data-dictionary-builder-message]")
           if (message) message.textContent = `${INITIAL_SOURCE_LED_LABELS[provider] || provider} could not be reached during its SIS probe: ${error.message || "provider check failed"}.`
         } finally {
@@ -1109,7 +1113,7 @@
           }
           renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
           const resultMessage = availableProvider
-            ? providerStatusMessage(availableProvider, "success")
+            ? providerStatusMessage(availableProvider, "success", refreshed.sources?.find((source) => source.provider === availableProvider))
             : actionProvider
               ? providerStatusMessage(actionProvider, "popup-blocking")
               : unavailableProvider
@@ -1278,7 +1282,7 @@
               renderSourceLeds(refreshed, ledContainer)
               if (!datumReady) {
                 const message = dialog.querySelector("[data-dictionary-builder-message]")
-                if (message) message.textContent = providerStatusMessage(candidate.provider, sourceStatusForSnapshot(candidate.provider, refreshed))
+                if (message) message.textContent = providerStatusMessage(candidate.provider, sourceStatusForSnapshot(candidate.provider, refreshed), refreshedSource)
                 if (automatic) return false
                 return true
               }
@@ -1287,7 +1291,7 @@
               return true
             } catch (error) {
               const ledContainer = dialog.querySelector("[data-dictionary-builder-source-leds]")
-              setSourceLedStatus(candidate.provider, "unavailable", snapshot, ledContainer)
+              setSourceLedStatus(candidate.provider, sourceStatusForSnapshot(candidate.provider, snapshot), snapshot, ledContainer)
               if (!automatic) {
                 retry.disabled = false
                 retry.textContent = "Retry provider"

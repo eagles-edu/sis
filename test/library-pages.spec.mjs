@@ -150,6 +150,8 @@ test("Dictionary Builder keeps origin metadata and selections on retry while pre
   assert.match(libraryReviewWorkbench, /data-dictionary-builder-open-sources[^>]+title="Open the initial source group: BR \/ LD \/ WH \/ ET \/ TH \/ OA \/ GT\. AP is API-only and remains closed\.[^>]+>Open sources</)
   assert.match(libraryReviewWorkbench, /openSourceProbeTimers\.has\(snapshot\.id\)/, "open source polling is idempotent per preview")
   assert.match(libraryReviewWorkbench, /providerRetryInFlight\.add\(retryKey\)/, "manual and automatic retries do not overlap for one provider")
+  assert.match(libraryReviewWorkbench, /setSourceLedStatus\(candidate\.provider, sourceStatusForSnapshot\(candidate\.provider, snapshot\), snapshot, ledContainer\)/, "a failed manual probe preserves the LED backed by the current snapshot")
+  assert.match(libraryReviewWorkbench, /setSourceLedStatus\(provider, sourceStatusForSnapshot\(provider, latestSnapshot\), latestSnapshot, ledContainer\)/, "a failed polling probe preserves the LED backed by the latest snapshot")
   assert.match(libraryReviewWorkbench, /You can open the source page to inspect it, but SIS cannot read its cross-origin page or browser-held cookies/u)
   assert.match(libraryReviewWorkbench, /User action needed \(purple\)/u)
   assert.match(libraryReviewWorkbench, /Not found \/ unavailable \(red\)/u)
@@ -577,6 +579,7 @@ test("Dictionary Builder re-probes open provider tabs once and updates their sta
 
   failGoogleRetry = true
   await runPreferredRetry()
+  assert.equal(dialog.querySelector('[data-source-provider="google_translate"]').dataset.sourceStatus, "success", "a rejected later retry does not turn a previously successful scrape red")
   assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /provider retry rejected/u)
 
   dialog.dispatchEvent(new dom.window.Event("close"))

@@ -1029,6 +1029,42 @@ function publicSnapshot(snapshot) {
   return safe
 }
 
+function hasDictionaryBuilderDatumValue(value) {
+  if (Array.isArray(value)) return value.some(hasDictionaryBuilderDatumValue)
+  if (value && typeof value === "object") return Object.values(value).some(hasDictionaryBuilderDatumValue)
+  return value !== undefined && value !== null && String(value).trim() !== ""
+}
+
+function mergeDictionaryBuilderRetryResult(previous, refreshed) {
+  if (!previous) return refreshed
+  const fields = { ...(previous.fields || {}), ...(refreshed.fields || {}) }
+  const datumStatus = { ...(previous.datumStatus || {}), ...(refreshed.datumStatus || {}) }
+  let keptSuccessfulDatum = false
+  for (const datum of DICTIONARY_BUILDER_DATUMS) {
+    const hadSuccessfulValue = previous.datumStatus?.[datum]?.status === "available" && hasDictionaryBuilderDatumValue(previous.fields?.[datum])
+    const hasRefreshedValue = refreshed.datumStatus?.[datum]?.status === "available" && hasDictionaryBuilderDatumValue(refreshed.fields?.[datum])
+    if (hadSuccessfulValue && !hasRefreshedValue) {
+      fields[datum] = previous.fields[datum]
+      datumStatus[datum] = previous.datumStatus[datum]
+      keptSuccessfulDatum = true
+    }
+  }
+  const refreshedIsFailure = ["unavailable", "not_found", "unsupported", "invalid", "malformed", "robot_blocked", "cookie_prompt", "robot_prompt", "blocked", "waiting_for_input"].includes(refreshed.status)
+  return {
+    ...previous,
+    ...refreshed,
+    status: keptSuccessfulDatum && refreshedIsFailure ? "available" : refreshed.status,
+    fields,
+    datumStatus,
+    entries: refreshed.entries?.length ? refreshed.entries : previous.entries || [],
+    media: refreshed.media?.length ? refreshed.media : previous.media || [],
+    privateMedia: refreshed.privateMedia?.length ? refreshed.privateMedia : previous.privateMedia || [],
+    lastAttempt: refreshedIsFailure
+      ? { status: refreshed.status, message: text(refreshed.message), checkedAt: new Date().toISOString() }
+      : undefined,
+  }
+}
+
 function publicSourceUrl(provider, word) {
   const item = manifestById.get(provider) || manifestById.get(scoringBaseProvider(provider))
   return item?.searchUrl?.(text(word)) || ""
@@ -1151,9 +1187,10 @@ export async function retryDictionaryBuilderSnapshot(snapshotId, entry, { ownerK
       const previous = snapshot.privateSources.find((result) => result.provider === providerId)
       const adapter = dictionaryBuilderAdapter(fetcher, providerId)
       const refreshed = await runDictionaryBuilderProvider(adapter, entry, providerId)
+      const merged = mergeDictionaryBuilderRetryResult(previous, refreshed)
       const refreshedSources = previous
-        ? snapshot.privateSources.map((result) => result.provider === providerId ? refreshed : result)
-        : [...snapshot.privateSources, refreshed]
+        ? snapshot.privateSources.map((result) => result.provider === providerId ? merged : result)
+        : [...snapshot.privateSources, merged]
       snapshot.privateSources = refreshedSources
       snapshot.sources = refreshedSources.map(({ sourceUrl, privateMedia, ...result }) => ({ ...result, sourceUrl: publicSourceUrl(result.provider, entry?.english) }))
       snapshot.citations = buildDictionaryBuilderCitations(entry?.english, snapshot.createdAt, snapshot.sources)

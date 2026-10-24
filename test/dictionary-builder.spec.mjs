@@ -305,6 +305,44 @@ test("Dictionary Builder retries only the challenged provider in its existing sn
   assert.equal(await retryDictionaryBuilderSnapshot(snapshot.id, { id: "other-entry" }, { ownerKey: "session-retry", provider: "ldoce", fetcher }), null)
 })
 
+test("Dictionary Builder keeps last successful scrape data when a later retry is unavailable", async () => {
+  let calls = 0
+  const fetcher = Object.fromEntries(DICTIONARY_BUILDER_MANIFEST.map((source) => [source.id, async () => ({ provider: source.id, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} })]))
+  fetcher.ldoce = async () => {
+    calls += 1
+    if (calls === 1) return {
+      provider: "ldoce",
+      status: "available",
+      fields: { definition: "to praise", examples: "They commended her work." },
+      entries: [{ headword: "commend", senses: [{ definition: "to praise", examples: ["They commended her work."] }] }],
+      media: [],
+      datumStatus: { definition: { status: "available" }, examples: { status: "available" } },
+    }
+    return {
+      provider: "ldoce",
+      status: "unavailable",
+      message: "temporary provider timeout",
+      fields: {},
+      entries: [],
+      media: [],
+      datumStatus: { definition: { status: "unavailable" }, examples: { status: "unavailable" } },
+    }
+  }
+  const entry = { id: "entry-last-good", english: "commend", partOfSpeech: "verb" }
+  const snapshot = await previewDictionaryBuilder(entry, { ownerKey: "session-last-good", fetcher, rankedSources: [{ provider: "ldoce", score: 99 }] })
+  const retried = await retryDictionaryBuilderSnapshot(snapshot.id, entry, { ownerKey: "session-last-good", provider: "ldoce", fetcher })
+  const source = retried.sources.find((result) => result.provider === "ldoce")
+  assert.equal(source.status, "available")
+  assert.equal(source.fields.definition, "to praise")
+  assert.equal(source.fields.examples, "They commended her work.")
+  assert.equal(source.datumStatus.definition.status, "available")
+  assert.equal(source.datumStatus.examples.status, "available")
+  assert.equal(source.lastAttempt.status, "unavailable")
+  assert.equal(source.lastAttempt.message, "temporary provider timeout")
+  assert.equal(retried.sources.filter((result) => result.provider === "ldoce").length, 1)
+  assert.equal(calls, 2)
+})
+
 test("Dictionary Builder coalesces concurrent retries for one snapshot provider", async () => {
   let calls = 0
   const fetcher = Object.fromEntries(DICTIONARY_BUILDER_MANIFEST.map((source) => [source.id, async () => ({ provider: source.id, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} })]))
