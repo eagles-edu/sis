@@ -61,7 +61,7 @@ test("Builder renders every datum with a manual path and POS dropdowns", () => {
   assert.match(workbench, /unavailable: "provider unavailable"/, "Provider-unavailable status has a distinct user-facing label")
   assert.ok(workbench.includes('isDictionaryBuilderRetryableStatus = (status) => isDictionaryBuilderPromptStatus(status) || ["unavailable", "not_found", "unsupported", "invalid", "malformed"]'), "Unavailable and malformed source results remain retryable")
   assert.ok(workbench.includes("const retryableSources = visibleStatusSources.filter((source) => isDictionaryBuilderRetryableStatus"), "Unavailable providers receive an explicit retry control")
-  assert.ok(workbench.includes('return status === "unavailable" && tab && !tab.closed ? "opening" : status'), "An open source page remains amber while its scrape is pending")
+  assert.ok(workbench.includes('return ["success", "default"].includes(status) ? status : "popup-blocking"'), "Every unresolved provider LED is purple while SIS retries or awaits review")
   assert.match(workbench, /returned a cookie\/robot challenge[\s\S]*cannot use that tab's cookies/, "Robot prompts explain that a browser tab cannot transfer its cookies to the server-side probe")
   assert.match(workbench, /isDictionaryBuilderPromptStatus\(candidateStatus\)[\s\S]*dictionary-builder-candidate-robot/, "Robot-blocked sources remain visible as resolvable candidates")
   assert.doesNotMatch(workbench, /Complete the robot verification for \$\{unresolvedRobotDatum\[1\]\.provider\}[\s\S]*before applying/, "Robot-blocked candidates do not block Apply")

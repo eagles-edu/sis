@@ -685,8 +685,10 @@
   const sourceStatusForLed = (provider, snapshot, container) => {
     const override = sourceLedOverrides.get(container)?.get(provider)
     const status = override || sourceStatusForSnapshot(provider, snapshot)
-    const tab = sourceBrowserTabs.get(provider)
-    return status === "unavailable" && tab && !tab.closed ? "opening" : status
+    // Keep raw provider statuses in the snapshot for diagnostics and retries.
+    // The visible state is green only for usable data; everything recoverable
+    // stays purple until the server retry or manual review resolves it.
+    return ["success", "default"].includes(status) ? status : "popup-blocking"
   }
   const renderSourceLeds = (snapshot, container) => {
     if (!container) return
@@ -697,7 +699,7 @@
       led.dataset.sourceProvider = provider
       led.dataset.sourceStatus = status
       led.textContent = INITIAL_SOURCE_LED_LABELS[provider]
-      led.setAttribute("aria-label", `${INITIAL_SOURCE_LED_LABELS[provider]} status: ${status === "success" ? "ready" : status === "unavailable" ? "provider unreachable; attention needed" : status === "not-found" ? "not found (HTTP 404)" : status === "popup-blocking" ? "user action needed" : status === "opening" ? "opening" : "not checked"}`)
+      led.setAttribute("aria-label", `${INITIAL_SOURCE_LED_LABELS[provider]} status: ${status === "success" ? "ready" : status === "popup-blocking" ? "retrying or manual review needed" : "not checked"}`)
       return led
     }))
   }
@@ -729,8 +731,8 @@
     }
     if (status === "opening") return `${label} is being checked by SIS. This preview keeps polling the provider until usable scrape data arrives.`
     if (status === "popup-blocking") return `${label} is challenged. SIS keeps retrying from its server context; opening the source is only for inspection because browser cookies cannot be transferred.`
-    if (status === "unavailable") return `${label} is unavailable to SIS right now; attention is needed. You can open the source page to inspect it, but SIS cannot read its cross-origin page or browser-held cookies.`
-    if (status === "not-found") return `${label} returned no matching entry (HTTP 404).`
+    if (status === "unavailable") return `${label} is unavailable to SIS right now. SIS keeps this provider queued for a server retry; opening the source is only for inspection because browser-held cookies cannot be transferred.`
+    if (status === "not-found") return `${label} returned no matching entry (HTTP 404). SIS keeps the source in the purple retry/manual-review state.`
     return `${label} status is not yet confirmed.`
   }
   const summarizeProviderStatuses = (snapshot) => {
@@ -741,10 +743,10 @@
     })
     const parts = []
     if (grouped.success.length) parts.push(`ready: ${grouped.success.join(", ")}`)
-    if (grouped.opening.length) parts.push(`scrape in progress: ${grouped.opening.join(", ")}`)
-    if (grouped["popup-blocking"].length) parts.push(`user action needed (purple): ${grouped["popup-blocking"].join(", ")}`)
+    if (grouped.opening.length) parts.push(`retrying (purple): ${grouped.opening.join(", ")}`)
+    if (grouped["popup-blocking"].length) parts.push(`retrying or manual review (purple): ${grouped["popup-blocking"].join(", ")}`)
     const unreachable = [...grouped.unavailable, ...grouped["not-found"]]
-    if (unreachable.length) parts.push(`attention needed (red): ${unreachable.join(", ")}`)
+    if (unreachable.length) parts.push(`retrying or manual review (purple): ${unreachable.join(", ")}`)
     return parts.length ? `Provider status — ${parts.join("; ")}.` : "Provider status is not yet confirmed."
   }
   const scheduleDictionaryBuilderPolling = (snapshot, pane, sourceId, dialog, selectedCandidates, activeTab, providerIndex = 0, delay = 10000) => {
@@ -856,7 +858,7 @@
       reservation.blocked.forEach((provider) => setSourceLedStatus(provider, "popup-blocking", null, container))
       startup.disabled = true
       startup.setAttribute("aria-busy", "true")
-      if (message) message.textContent = "Preloading source status; LEDs remain amber until each provider resolves."
+      if (message) message.textContent = "Preloading source status; every unresolved provider stays purple while SIS retries it."
       try {
         const snapshot = await previewDictionaryBuilderForEditor(pane, container, sourceId, word, reservation.blocked)
         if (message) message.textContent = summarizeProviderStatuses(snapshot)
@@ -888,6 +890,10 @@
     if (acquisitionLog) acquisitionLog.textContent = snapshot.acquisitionLog || "No acquisition log was returned."
     root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><div class="dictionary-builder-source-startup-row"><button type="button" class="portal-button portal-button-blue-action portal-button-compact dictionary-builder-source-startup" data-dictionary-builder-open-sources title="Open the initial source group: BR / LD / WH / ET / TH / OA / GT. AP is API-only and remains closed." aria-label="Open initial source group">Open sources</button><div class="dictionary-builder-source-status-block"><div class="dictionary-builder-source-leds" data-dictionary-builder-source-leds role="group" aria-label="Initial source status LEDs"></div><div class="dictionary-builder-source-led-legend" aria-label="Source status legend"><span><i data-led-legend="default" aria-hidden="true"></i>Not checked</span><span><i data-led-legend="not-found" aria-hidden="true"></i>Not found / unavailable (red)</span><span><i data-led-legend="opening" aria-hidden="true"></i>Opening</span><span><i data-led-legend="popup-blocking" aria-hidden="true"></i>User action needed (purple)</span><span><i data-led-legend="success" aria-hidden="true"></i>Ready</span></div></div></div><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply title="${draftOnly ? "Apply selected data to this editable draft; save the canonical entry to persist it." : "Apply selected Dictionary Builder data to this saved Library entry."}">Apply selected</button></div><div data-dictionary-builder-popup-fallbacks hidden></div>`
     const sourceLedContainer = root.querySelector("[data-dictionary-builder-source-leds]")
+    const sourceLegend = root.querySelector(".dictionary-builder-source-led-legend")
+    sourceLegend?.querySelectorAll('[data-led-legend="not-found"], [data-led-legend="opening"]').forEach((legend) => legend.parentElement?.remove())
+    const purpleLegend = sourceLegend?.querySelector('[data-led-legend="popup-blocking"]')?.parentElement
+    if (purpleLegend) purpleLegend.lastChild.textContent = "Retrying / manual review (purple)"
     renderSourceLeds(snapshot, sourceLedContainer)
     const panels = root.querySelector("[data-dictionary-builder-panels]")
     const selectedCandidates = Object.fromEntries(Object.entries(structuredClone(previousSelections)).filter(([datum]) => visibleDictionaryBuilderDatums.has(datum)))
@@ -1030,7 +1036,7 @@
         : visibleStatusSources.some((source) => INITIAL_SOURCE_REQUIRED_DATUMS[source.provider] === datum && source.status === "available" && source.datumStatus?.[datum]?.status !== "available")
           ? `Queried: ${statuses || "no applicable source"}. The source page is reachable, but its ${datumLabel} data has not arrived yet. SIS keeps polling this preview until usable scrape data arrives.`
         : unavailableSources.length
-          ? `Queried: ${statuses || "no applicable source"}. Provider attention needed (red): ${unavailableSources.map((source) => source.provider).join(", ")}.`
+          ? `Queried: ${statuses || "no applicable source"}. SIS keeps retrying or awaiting manual review (purple): ${unavailableSources.map((source) => source.provider).join(", ")}.`
           : `Queried: ${statuses || "no applicable source"}.`
       panels.replaceChildren()
       const section = document.createElement("section")
