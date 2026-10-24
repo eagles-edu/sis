@@ -11,6 +11,7 @@ const MAX_PARAGRAPH_LENGTH = 4_000
 const MAX_REFERENCES = 8
 const ETYMONLINE_BROWSER_TIMEOUT_MS = 15_000
 const ETYMONLINE_BROWSER_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+const ETYMONLINE_RSC_REQUEST_TOKEN = "14etn"
 const LANGUAGE_NAMES = [
   "Old English", "Middle English", "Modern English", "English", "Old French", "Middle French", "French",
   "Old Norse", "Middle Dutch", "Dutch", "German", "Latin", "Greek", "Italian", "Spanish", "Portuguese",
@@ -35,6 +36,14 @@ export function normalizeOriginTerm(value) {
 export function etymonlineSearchUrl(word) {
   const term = normalizeOriginTerm(word)
   return term ? `${ETYMONLINE_ROOT}/search?q=${encodeURIComponent(term)}` : ""
+}
+
+export function etymonlineScrapeUrl(word) {
+  const sourceUrl = etymonlineSearchUrl(word)
+  if (!sourceUrl) return ""
+  const url = new URL(sourceUrl)
+  url.searchParams.set("_rsc", ETYMONLINE_RSC_REQUEST_TOKEN)
+  return url.toString()
 }
 
 function inlineMarkup(node) {
@@ -193,18 +202,19 @@ export async function fetchEtymonlineBrowserPage(sourceUrl, { signal } = {}) {
 
 export async function fetchEtymonlinePreview(word, fetchImpl = fetch, browserFetchImpl = fetchEtymonlineBrowserPage) {
   const sourceUrl = etymonlineSearchUrl(word)
+  const scrapeUrl = etymonlineScrapeUrl(word)
   if (!sourceUrl) throw new Error("A word or phrase is required")
   const parsedUrl = new URL(sourceUrl)
   if (parsedUrl.protocol !== "https:" || parsedUrl.hostname !== ETYMONLINE_HOST) throw new Error("Etymonline host is not allowed")
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
   try {
-    let response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html" }, signal: controller.signal })
+    let response = await fetchWithExponentialBackoff(fetchImpl, scrapeUrl, { headers: { Accept: "text/html" }, signal: controller.signal })
     if (!response.ok) {
       const body = typeof response.text === "function" ? await response.text().catch(() => "") : String(response.html || "")
       const challenge = response.status === 403 || /just a moment|enable javascript and cookies|cf-chl-|challenge-platform|access denied|verify you are human|captcha/iu.test(body)
       if (!challenge) throw new Error(`Etymonline returned HTTP ${response.status || 503}`)
-      response = await browserFetchImpl(sourceUrl, { signal: controller.signal })
+      response = await browserFetchImpl(scrapeUrl, { signal: controller.signal })
       if (!response?.ok) {
         const error = new Error(response?.message || "Etymonline browser access failed")
         if (response?.robotBlocked) error.status = "robot_blocked"
