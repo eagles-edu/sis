@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { buildOriginReference, extractOriginPath, normalizeOriginReferences, parseEtymonlineParagraph, safeEtymonlineMarkup } from "../src/modules/admin/library-origin.mjs"
+import { buildOriginReference, extractOriginPath, fetchEtymonlinePreview, normalizeOriginReferences, parseEtymonlineParagraph, safeEtymonlineMarkup } from "../src/modules/admin/library-origin.mjs"
 import { analyzeLibraryOrigin, createOriginSourceAdapter, fetchWiktionaryEnglishEtymology, parseMerriamWebsterEtymology, parseMerriamWebsterReaderEtymology, parseWiktionaryEnglishEtymology, parseWiktionaryEnglishOriginDetails, wiktionaryEnglishUrl } from "../src/modules/admin/library-origin-analysis.mjs"
 
 const sample = `<section class="prose lg:prose-lg dark:prose-dark [&amp;_em]:bg-warning/30"><p>"humorous," 1756, from <a title="Etymology" href="/word/fun">fun</a> (n.) + <a href="/word/-y">-y</a> (2). Meaning <em>strange</em>, <strong>odd</strong>. <i class="foreign">funny ha-ha</i>.</p></section>`
@@ -12,6 +12,35 @@ test("Etymonline extraction keeps only safe inline editor markup", () => {
   assert.doesNotMatch(result.paragraph, /<a|href=|class=/u)
   assert.match(result.citation, /https:\/\/www\.etymonline\.com\/search\?q=funny/u)
   assert.equal(result.reference.provider, "Etymonline")
+})
+
+test("Etymonline HTTP scraper returns parsed etymology and citation data", async () => {
+  const requests = []
+  const result = await fetchEtymonlinePreview("funny", async (url, options) => {
+    requests.push({ url: String(url), accept: options.headers.Accept })
+    return new Response(sample, { status: 200, headers: { "content-type": "text/html" } })
+  })
+  assert.deepEqual(requests, [{ url: "https://www.etymonline.com/search?q=funny", accept: "text/html" }])
+  assert.equal(result.paragraph, '"humorous," 1756, from fun (n.) + -y (2). Meaning *strange*, **odd**. *funny ha-ha*.')
+  assert.equal(result.reference.provider, "Etymonline")
+  assert.match(result.citation, /https:\/\/www\.etymonline\.com\/search\?q=funny/u)
+})
+
+test("Etymonline retries Cloudflare challenges in a browser before marking the source unavailable", async () => {
+  const calls = []
+  const result = await fetchEtymonlinePreview("funny", async () => new Response("<title>Just a moment...</title><div>cf-chl challenge</div>", { status: 403 }), async (url, options) => {
+    calls.push({ url, signal: options.signal instanceof AbortSignal })
+    return { ok: true, status: 200, url, html: sample }
+  })
+  assert.deepEqual(calls, [{ url: "https://www.etymonline.com/search?q=funny", signal: true }])
+  assert.match(result.paragraph, /\*strange\*/u)
+})
+
+test("Etymonline browser challenge is retained as a user-action status", async () => {
+  await assert.rejects(
+    fetchEtymonlinePreview("funny", async () => new Response("Cloudflare", { status: 403 }), async (url) => ({ ok: false, status: 403, robotBlocked: true, url, message: "Etymonline requires browser verification because the source presented an access challenge." })),
+    (error) => error.status === "robot_blocked" && /access challenge/u.test(error.message),
+  )
 })
 
 test("origin path extraction is conservative and ordered", () => {

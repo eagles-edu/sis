@@ -498,6 +498,9 @@ test("Dictionary Builder excludes zero-score fallbacks and limits First known us
   const notFound = normalizeProviderPreview("merriam_webster_thesaurus", { ok: false, status: "not_found", message: "HTTP 404" }, { english: "missing", partOfSpeech: "noun" })
   assert.equal(notFound.status, "not_found")
   assert.equal(notFound.datumStatus.synonymsAntonyms.status, "not_found")
+  const etymonlineChallenge = normalizeProviderPreview("etymonline", { ok: false, status: "robot_blocked", available: false, message: "Etymonline presented an access challenge." }, { english: "language", partOfSpeech: "noun" })
+  assert.equal(etymonlineChallenge.status, "robot_blocked")
+  assert.equal(etymonlineChallenge.datumStatus.etymology.status, "robot_blocked")
   const robotBlocked = normalizeProviderPreview("wordhelp", { ok: false, status: "robot_blocked", message: "WordHelp requires robot verification; open the source page and complete the prompt before retrying.", sourceUrl: "https://www.wordhelp.com/syllables/english/?q=language" }, { english: "language", partOfSpeech: "noun" })
   assert.equal(robotBlocked.status, "robot_blocked")
   assert.equal(robotBlocked.datumStatus.syllabication.status, "robot_blocked")
@@ -569,6 +572,17 @@ test("MW Thesaurus keeps only the top four rows in each relation category", asyn
   assert.equal(mwHeader.fields.synonymsAntonyms, "Antonyms:\nabundant\nplentiful\nsufficient\nadequate")
 })
 
+test("MW Thesaurus parses current source markup and keeps the matching part of speech", async () => {
+  const html = '<main><h1>Synonyms of chair</h1><div class="entry-word-section-container thesaurus-entry-container"><h2>noun</h2><div class="vg"><div class="sb-entry"><div class="sense-content"><span class="thes-list sim-list-scored"><div class="thes-list-content synonyms_list"><ul><li class="thes-word-list-item">chairperson</li><li class="thes-word-list-item">chairman</li></ul></div></span><span class="thes-list opp-list-scored"><div class="thes-list-content antonyms_list"><ul><li class="thes-word-list-item">member</li></ul></div></span></div></div></div></div></main>'
+  const scrape = async () => ({ ok: true, status: 200, url: "https://www.merriam-webster.com/thesaurus/chair", html })
+  const noun = await previewHtmlAdapter("merriam_webster_thesaurus", { english: "chair", partOfSpeech: "noun" }, async () => ({}), scrape)
+  const verb = await previewHtmlAdapter("merriam_webster_thesaurus", { english: "chair", partOfSpeech: "verb" }, async () => ({}), scrape)
+  assert.equal(noun.datumStatus.synonymsAntonyms.status, "available")
+  assert.equal(noun.fields.synonymsAntonyms, "Synonyms:\nchairperson\nchairman\n\nAntonyms:\nmember")
+  assert.equal(verb.status, "available", "the source page scrape succeeded even when this word sense has no matching POS")
+  assert.equal(verb.datumStatus.synonymsAntonyms.status, "not_provided")
+})
+
 test("MW Thesaurus uses browser access before challenge-prone direct HTTP", async () => {
   const calls = []
   const result = await previewHtmlAdapter(
@@ -609,9 +623,9 @@ test("Dictionary Builder always sources Vietnamese from the automatic Google Tra
   const requests = []
   const result = await previewGoogleTranslateAdapter(
     { english: "commend" },
-    { fetchImpl: async (url) => { requests.push(String(url)); return { ok: true, status: 200, text: async () => '<div class="result-container">khen ng\u1ee3i</div>' } } },
+    { fetchImpl: async (url) => { requests.push(String(url)); return { ok: true, status: 200, text: async () => JSON.stringify([[['khen ng\u1ee3i', 'commend']], null, 'en']) } } },
   )
-  assert.deepEqual(requests, ["https://translate.google.com/m?sl=en&tl=vi&q=commend"])
+  assert.deepEqual(requests, ["https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q=commend"])
   assert.equal(result.provider, "google_translate")
   assert.equal(result.fields.vietnamese, "khen ng\u1ee3i")
   assert.equal(result.datumStatus.vietnamese.status, "available")

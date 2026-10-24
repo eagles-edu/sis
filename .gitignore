@@ -59,6 +59,10 @@ docs/mapping/out/*
 .sync.ffs_db
 .playwright-cli/
 nginx
+!deploy/nginx/
+deploy/nginx/*
+!deploy/nginx/languagetool.internal.conf
+!deploy/nginx/languagetool-standalone.conf
 .playwright-cli
 .sto
 frogbot.yml

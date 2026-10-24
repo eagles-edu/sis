@@ -59,7 +59,7 @@ test("Builder renders every datum with a manual path and POS dropdowns", () => {
   assert.match(workbench, /not_provided: "not provided by source"/, "Not-provided status has a distinct user-facing label")
   assert.match(workbench, /robot_blocked: "cookie\/robot prompt; datum paused"/, "Robot-blocked status has a distinct user-facing label")
   assert.match(workbench, /unavailable: "provider unavailable"/, "Provider-unavailable status has a distinct user-facing label")
-  assert.match(workbench, /Resolve any cookie\/robot prompts[\s\S]*Retry provider/, "Robot prompts remain visible in the Builder header while the run continues")
+  assert.match(workbench, /Cookie\/robot prompt required for \$\{robotSource\.provider\}; this datum is paused[\s\S]*leave it open while Builder probes automatically/, "Robot prompts remain visible while open providers are re-probed")
   assert.match(workbench, /isDictionaryBuilderPromptStatus\(candidateStatus\)[\s\S]*dictionary-builder-candidate-robot/, "Robot-blocked sources remain visible as resolvable candidates")
   assert.doesNotMatch(workbench, /Complete the robot verification for \$\{unresolvedRobotDatum\[1\]\.provider\}[\s\S]*before applying/, "Robot-blocked candidates do not block Apply")
   assert.doesNotMatch(workbench, /Waiting for confirmed \$\{unresolvedManualDatum\[0\]\} data from its preferred source\(s\); use Retry preferred sources before applying a manual value\./, "Manual candidates do not block Apply")

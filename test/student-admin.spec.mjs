@@ -97,6 +97,11 @@ test("family options carry parent email for profile assignment", () => {
   assert.match(ADMIN_JS_SOURCE, /parentEmail: normalizeLower\(entry\?\.parentEmail\)/u)
 })
 
+test("family options select the current family after async hydration", () => {
+  assert.match(ADMIN_JS_SOURCE, /function syncExistingFamilySelection\(\)/u)
+  assert.match(ADMIN_JS_SOURCE, /state\.familyOptionsLoaded = true;[\s\S]*?syncExistingFamilySelection\(\);/u)
+})
+
 test("new student form requires a password, derives Parents ID, and blocks flagged email reuse", () => {
   assert.match(ADMIN_JS_SOURCE, /const PROFILE_NEW_REQUIRED_KEYS = new Set\(\[[\s\S]*?"password"/u)
   assert.match(ADMIN_JS_SOURCE, /const nextValue = eaglesId \? `cm\$\{eaglesId\}` : ""/u)

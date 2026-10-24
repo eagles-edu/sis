@@ -1,6 +1,6 @@
 {
   "name": "sis",
-  "version": "0.1.1.10",
+  "version": "SIS_SYLLABLES_0.1.1.40.40",
   "description": "SIS service workspace",
   "private": true,
   "type": "module",
@@ -10,6 +10,11 @@
   },
   "engines": {
     "node": "22.22.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eagles-edu/sis.git",
+    "branch": "syllables"
   },
   "scripts": {
     "html:normalize-self-closing": "node tools/normalize-html-self-closing.mjs",

@@ -19,16 +19,21 @@ export async function runStudentAdminAuthBootstrap({
     return { status: "preview" };
   }
 
+  const authUserAtStart = state?.authUser;
+  const hasNewerAuthState = () => state?.authUser !== authUserAtStart;
   let me;
   try {
     me = await api?.("/api/admin/auth/me?bootstrap=1");
   } catch (error) {
+    if (hasNewerAuthState()) return { status: "superseded" };
     showLogin?.();
     if (error && error.status && error.status !== 401) {
       setStatus?.(error.message || "Unable to restore session.", true);
     }
     return { status: "unauthenticated", error };
   }
+
+  if (hasNewerAuthState()) return { status: "superseded" };
 
   if (me?.authenticated === false) {
     if (globalThis?.window?.__SIS_DEBUG_AUTH__) {

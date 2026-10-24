@@ -14,7 +14,7 @@ const profileIsland = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/pro
 const parentJs = fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.js"), "utf8")
 
 test("parent invitation emails use a tracker-safe route and one-click activation", () => {
-  assert.match(invitations, /function invitationUrl\(token\) \{ return `\$\{publicOrigin\(\)\}\/parent\/profile-invitations\/\$\{encodeURIComponent\(token\)\}` \}/)
+  assert.match(invitations, /function invitationUrl\(token, origin = publicOrigin\(\)\) \{ return `\$\{origin\}\/parent\/profile-invitations\/\$\{encodeURIComponent\(token\)\}` \}/)
   assert.match(invitations, /function invitationOpenUrl\(token\) \{ return `\$\{publicOrigin\(\)\}\/api\/parent\/profile-invitations\/\$\{encodeURIComponent\(token\)\}\/open\.gif` \}/)
   assert.match(invitations, /openPixel = `<img src="\$\{safe\(openUrl\)\}" width="1" height="1" alt="" aria-hidden="true"/)
   assert.doesNotMatch(invitations, /Activation code|activationCode/)
@@ -30,12 +30,21 @@ test("admin student profiles can create and copy a one-time parent link without 
   assert.match(invitations, /sendEmail = true, includeUrl = false/u)
   assert.match(invitations, /const email = lower\(recipientEmail \|\| \(allowProfileEmail \? student\.profile\?\.motherEmail \|\| student\.profile\?\.studentEmail : ""\)\)/u)
   assert.match(invitations, /if \(sendEmail\) \{[\s\S]*enqueueAsyncSideEffectJob/u)
-  assert.match(invitations, /\.\.\.\(includeUrl \? \{ url: invitationUrl\(token\) \} : \{\}\)/u)
+  assert.match(invitations, /\.\.\.\(includeUrl \? \{ url: invitationUrl\(token, invitationOrigin\) \} : \{\}\)/u)
   assert.match(routes, /if \(method === "POST" && pathname === ADMIN_PARENT_PROFILE_INVITATION_PATH\) \{[\s\S]*sendEmail: false[\s\S]*includeUrl: true/u)
   assert.match(adminHtml, /id="profileCopyParentLinkBtn"[\s\S]*>\s*Copy Link/u)
   assert.match(adminJs, /api\("\/api\/admin\/parent-profile-invitations", \{[\s\S]*method: "POST"[\s\S]*studentRefId: state\.currentStudent\.id/u)
   assert.match(adminJs, /await copyTextToClipboard\(result\?\.invitation\?\.url\)/u)
   assert.match(profileIsland, /onProfileCopyParentLink/u)
+})
+
+test("profile invitation validates its public origin before creating a database record", () => {
+  const originIndex = invitations.indexOf("const invitationOrigin = publicOrigin()")
+  const transactionIndex = invitations.indexOf("const invitation = await prisma.$transaction")
+  assert.ok(originIndex >= 0, "profile invitation origin validation is required")
+  assert.ok(transactionIndex >= 0, "profile invitation transaction is required")
+  assert.ok(originIndex < transactionIndex, "profile invitation origin must validate before the transaction")
+  assert.match(invitations, /url: invitationUrl\(token, invitationOrigin\)/u)
 })
 
 test("copy-link invitations support email-less parent setup for phone, text, or Zalo sharing", () => {

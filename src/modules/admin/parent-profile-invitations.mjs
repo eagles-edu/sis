@@ -59,7 +59,7 @@ function publicOrigin() {
   if (!origin) throw Object.assign(new Error("A public application origin is required for profile invitations"), { statusCode: 503 })
   return origin.replace(/\/+$/, "")
 }
-function invitationUrl(token) { return `${publicOrigin()}/parent/profile-invitations/${encodeURIComponent(token)}` }
+function invitationUrl(token, origin = publicOrigin()) { return `${origin}/parent/profile-invitations/${encodeURIComponent(token)}` }
 function invitationOpenUrl(token) { return `${publicOrigin()}/api/parent/profile-invitations/${encodeURIComponent(token)}/open.gif` }
 
 function initialPassword() {
@@ -172,6 +172,7 @@ export async function createParentProfileInvitation({ studentRefId, recipientEma
   if (!prisma?.parentProfileInvitation) throw Object.assign(new Error("Parent profile invitation persistence is unavailable"), { statusCode: 503 })
   const student = await prisma.student.findUnique({ where: { id: text(studentRefId) }, include: { profile: true } })
   if (!student) throw Object.assign(new Error("Student not found"), { statusCode: 404 })
+  const invitationOrigin = publicOrigin()
   const email = lower(recipientEmail || (allowProfileEmail ? student.profile?.motherEmail || student.profile?.studentEmail : ""))
   if (email && !EMAIL_PATTERN.test(email)) throw Object.assign(new Error("A valid parent/adult student email is required"), { statusCode: 400 })
   if (sendEmail && !email) throw Object.assign(new Error("A valid parent/adult student email is required for email delivery"), { statusCode: 400 })
@@ -191,7 +192,7 @@ export async function createParentProfileInvitation({ studentRefId, recipientEma
     recipientEmail: email || null,
     deliveryMethod: sendEmail ? "email" : "phone-text-zalo",
     expiresAt: invitation.expiresAt.toISOString(),
-    ...(includeUrl ? { url: invitationUrl(token) } : {}),
+    ...(includeUrl ? { url: invitationUrl(token, invitationOrigin) } : {}),
   }
 }
 

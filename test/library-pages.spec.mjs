@@ -144,7 +144,15 @@ test("Dictionary Builder keeps origin metadata and selections on retry while pre
   assert.match(libraryReviewWorkbench, /window\.setTimeout\(\(\) => retryMissingPreferredDatums\(\), 5000\)/)
   assert.match(libraryReviewWorkbench, /retryPreferred\.textContent = "Retry preferred"/)
   assert.match(libraryReviewWorkbench, /retryPreferred\.setAttribute\("aria-label", `Retry preferred sources for \$\{datum\}`\)/)
-  assert.match(libraryReviewWorkbench, /data-dictionary-builder-open-sources[^>]+title="Open the initial source group: BR \/ AP \/ LD \/ WH \/ ET \/ TH \/ OA\.[^>]+>Open sources</)
+  assert.match(libraryReviewWorkbench, /const INITIAL_SOURCE_GROUP_SIZE = 7/u)
+  assert.match(libraryReviewWorkbench, /const INITIAL_SOURCE_PROVIDER_ORDER = \["britannica", "ldoce", "wordhelp", "etymonline", "merriam_webster_thesaurus", "oxford_ame", "google_translate"\]/u)
+  assert.match(libraryReviewWorkbench, /google_translate: `https:\/\/translate\.google\.com\/\?sl=en&tl=vi&text=\$\{encoded\}&op=translate`/u)
+  assert.match(libraryReviewWorkbench, /data-dictionary-builder-open-sources[^>]+title="Open the initial source group: BR \/ LD \/ WH \/ ET \/ TH \/ OA \/ GT\. AP is API-only and remains closed\.[^>]+>Open sources</)
+  assert.match(libraryReviewWorkbench, /openSourceProbeTimers\.has\(snapshot\.id\)/, "open source polling is idempotent per preview")
+  assert.match(libraryReviewWorkbench, /providerRetryInFlight\.add\(retryKey\)/, "manual and automatic retries do not overlap for one provider")
+  assert.match(libraryReviewWorkbench, /source tab is open, but its cross-origin page cannot be inspected directly/u)
+  assert.match(libraryReviewWorkbench, /User action needed \(purple\)/u)
+  assert.match(libraryReviewWorkbench, /Not found \/ unavailable \(red\)/u)
   assert.match(libraryReviewWorkbench, /dictionaryBuilderVerbOnlyDatums/)
   assert.match(libraryReviewWorkbench, /visibleDictionaryBuilderFields/)
   assert.match(libraryReviewWorkbench, /visibleDictionaryBuilderDatums/)
@@ -277,32 +285,258 @@ test("Dictionary Builder preload keeps LEDs amber until the provider snapshot re
   const startup = pane.querySelector("[data-dictionary-builder-open-sources]")
   const leds = () => [...pane.querySelectorAll(".dictionary-builder-source-led")].map((led) => led.dataset.sourceStatus)
   startup.click()
-  assert.deepEqual(leds(), ["opening", "opening", "opening", "opening", "opening", "opening"])
+  assert.deepEqual(leds(), ["opening", "opening", "opening", "opening", "opening", "opening", "opening"])
   resolvePreview({
     ok: true,
     json: async () => ({
       ok: true,
       sources: [
-        { provider: "britannica", status: "available" },
+        { provider: "britannica", status: "unavailable", fields: { definition: "to praise" }, datumStatus: { definition: { status: "available" } } },
         { provider: "ldoce", status: "waiting_for_input" },
         { provider: "wordhelp", status: "not_found" },
         { provider: "etymonline", status: "unavailable" },
         { provider: "merriam_webster_thesaurus", status: "robot_blocked" },
         { provider: "oxford_ame", status: "available" },
+        { provider: "google_translate", status: "available" },
       ],
     }),
   })
   await new Promise((resolve) => setTimeout(resolve, 0))
-  assert.deepEqual(leds(), ["success", "popup-blocking", "not-found", "not-found", "popup-blocking", "success"])
+  assert.deepEqual(leds(), ["success", "popup-blocking", "not-found", "unavailable", "popup-blocking", "success", "success"])
+  assert.equal(pane.querySelector('[data-source-provider="britannica"]').getAttribute("aria-label"), "BR status: ready")
+  assert.equal(pane.querySelector('[data-source-provider="etymonline"]').getAttribute("aria-label"), "ET status: provider unreachable; attention needed")
+  assert.equal(pane.querySelector('[data-source-provider="merriam_webster_thesaurus"]').getAttribute("aria-label"), "TH status: user action needed")
   await new Promise((resolve) => setTimeout(resolve, 1250))
-  assert.deepEqual(leds(), ["success", "popup-blocking", "not-found", "not-found", "popup-blocking", "success"])
+  assert.deepEqual(leds(), ["success", "popup-blocking", "not-found", "unavailable", "popup-blocking", "success", "success"])
   assert.equal(startup.disabled, false)
   assert.equal(startup.getAttribute("aria-busy"), null)
   startup.click()
   await new Promise((resolve) => setTimeout(resolve, 0))
   assert.equal(fetchCalls, 1)
-  assert.equal(openCalls, 6)
-  assert.deepEqual(leds(), ["success", "popup-blocking", "not-found", "not-found", "popup-blocking", "success"])
+  assert.equal(openCalls, 7)
+  assert.deepEqual(leds(), ["success", "popup-blocking", "not-found", "unavailable", "popup-blocking", "success", "success"])
+  dom.window.close()
+})
+
+test("Dictionary Builder opens and retries from an unsaved Library draft", async () => {
+  const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=noun><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
+  const timerCallbacks = new Map()
+  const requests = []
+  let timerId = 0
+  const snapshot = (googleStatus) => ({
+    ok: true,
+    id: "draft-provider-preview",
+    sources: [
+      { provider: "britannica", status: "available", fields: { definition: "to praise" }, datumStatus: { definition: { status: "available" } } },
+      { provider: "ldoce", status: "waiting_for_input" },
+      { provider: "wordhelp", status: "not_found" },
+      { provider: "etymonline", status: "unavailable" },
+      { provider: "merriam_webster_thesaurus", status: "robot_blocked" },
+      { provider: "oxford_ame", status: "available" },
+      { provider: "google_translate", status: googleStatus, fields: googleStatus === "available" ? { vietnamese: "praise" } : {}, datumStatus: { vietnamese: { status: googleStatus } } },
+    ],
+    datumSourceOrder: { vietnamese: ["google_translate"] },
+    warnings: [],
+    acquisitionLog: "",
+  })
+  const context = {
+    window: dom.window,
+    document: dom.window.document,
+    location: dom.window.location,
+    Event: dom.window.Event,
+    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
+    MutationObserver: dom.window.MutationObserver,
+    structuredClone,
+    fetch: async (url) => {
+      requests.push(String(url))
+      return { ok: true, json: async () => snapshot(String(url).endsWith("/retry") ? "available" : "unavailable") }
+    },
+    setTimeout,
+  }
+  context.window.SIS_VOCABULARY_ESL = { grammarFields: [] }
+  context.window.fetch = context.fetch
+  context.window.setTimeout = (callback, delay = 0) => {
+    if (delay > 1200) {
+      const id = ++timerId
+      timerCallbacks.set(id, { callback, delay })
+      return id
+    }
+    return setTimeout(callback, delay)
+  }
+  context.window.clearTimeout = (id) => timerCallbacks.delete(id)
+  context.window.clearInterval = context.window.clearTimeout
+  context.window.open = () => ({ closed: false, location: {}, focus() {} })
+  vm.runInNewContext(libraryReviewWorkbench, context)
+
+  const pane = dom.window.document.querySelector("[data-vocabulary-editor]")
+  pane.querySelector("[data-vocabulary-dictionary-builder]").click()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  const dialog = dom.window.document.querySelector("#libraryDictionaryBuilderDialog")
+  assert.ok(dialog?.hasAttribute("open"))
+  assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /Draft mode: Apply updates the editable review form/u)
+  assert.match(requests[0], /\/entries\/new-canonical\/dictionary-builder\/preview$/u)
+
+  pane.querySelector("[data-dictionary-builder-open-sources]").click()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.match(requests[1], /\/entries\/new-canonical\/dictionary-builder\/preview$/u)
+
+  const retryButton = dialog.querySelector("#dictionary-builder-panel-vietnamese > button")
+  retryButton.click()
+  const pendingRetry = [...timerCallbacks.entries()].filter(([, timer]) => timer.delay === 5000).at(-1)
+  assert.ok(pendingRetry, "draft retries wait for the source tabs to load")
+  timerCallbacks.delete(pendingRetry[0])
+  pendingRetry[1].callback()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.match(requests[2], /\/entries\/new-canonical\/dictionary-builder\/previews\/draft-provider-preview\/retry$/u)
+  assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /GT is ready/u)
+  dom.window.close()
+})
+
+test("Dictionary Builder re-probes open provider tabs once and updates their status", async () => {
+  const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor data-review-source-id=entry-2><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=verb><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
+  const timerCallbacks = new Map()
+  const retryCalls = []
+  let timerId = 0
+  let failGoogleRetry = false
+  const providerStatuses = {
+    britannica: "unavailable",
+    ldoce: "robot_blocked",
+    wordhelp: "not_found",
+    etymonline: "available",
+    merriam_webster_thesaurus: "available",
+    oxford_ame: "available",
+    google_translate: "unavailable",
+  }
+  const scrapeDataReturned = { etymonline: false, merriam_webster_thesaurus: false }
+  const snapshot = () => ({
+    ok: true,
+    id: "provider-poll-preview",
+    sources: [
+      { provider: "britannica", status: providerStatuses.britannica, fields: providerStatuses.britannica === "available" ? { definition: "to praise" } : {}, datumStatus: { definition: { status: providerStatuses.britannica } } },
+      { provider: "ldoce", status: providerStatuses.ldoce, datumStatus: { definition: { status: providerStatuses.ldoce } } },
+      { provider: "wordhelp", status: providerStatuses.wordhelp, datumStatus: { syllabication: { status: providerStatuses.wordhelp } } },
+      { provider: "etymonline", status: providerStatuses.etymonline, fields: scrapeDataReturned.etymonline ? { etymology: "from Old French via Latin" } : {}, datumStatus: { etymology: { status: scrapeDataReturned.etymonline ? "available" : "not_provided" } } },
+      { provider: "merriam_webster_thesaurus", status: providerStatuses.merriam_webster_thesaurus, fields: scrapeDataReturned.merriam_webster_thesaurus ? { definition: "scraped thesaurus entry", synonymsAntonyms: "Synonyms:\npraise\ncommend" } : { definition: "scraped thesaurus entry" }, datumStatus: { synonymsAntonyms: { status: scrapeDataReturned.merriam_webster_thesaurus ? "available" : "not_provided" } } },
+      { provider: "oxford_ame", status: providerStatuses.oxford_ame, datumStatus: { definition: { status: providerStatuses.oxford_ame } } },
+      { provider: "google_translate", status: providerStatuses.google_translate, fields: providerStatuses.google_translate === "available" ? { vietnamese: "khen ngợi" } : {}, datumStatus: { vietnamese: { status: providerStatuses.google_translate } } },
+    ],
+    datumSourceOrder: {},
+    warnings: [],
+    acquisitionLog: "",
+  })
+  const context = {
+    window: dom.window,
+    document: dom.window.document,
+    location: dom.window.location,
+    Event: dom.window.Event,
+    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
+    MutationObserver: dom.window.MutationObserver,
+    structuredClone,
+    fetch: async (url, options = {}) => {
+      if (String(url).endsWith("/preview")) return { ok: true, json: async () => snapshot() }
+      const body = JSON.parse(options.body)
+      retryCalls.push(body.provider)
+      if (body.provider === "google_translate") {
+        if (failGoogleRetry) {
+          failGoogleRetry = false
+          return { ok: false, json: async () => ({ ok: false, error: "provider retry rejected" }) }
+        }
+      }
+      providerStatuses[body.provider] = "available"
+      if (body.provider in scrapeDataReturned) scrapeDataReturned[body.provider] = true
+      return { ok: true, json: async () => snapshot() }
+    },
+    setTimeout,
+  }
+  context.window.SIS_VOCABULARY_ESL = { grammarFields: [] }
+  context.window.fetch = context.fetch
+  context.window.setTimeout = (callback, delay = 0) => {
+    if (delay > 1200) {
+      const id = ++timerId
+      timerCallbacks.set(id, { callback, delay })
+      return id
+    }
+    return setTimeout(callback, delay)
+  }
+  context.window.clearTimeout = (id) => timerCallbacks.delete(id)
+  context.window.clearInterval = context.window.clearTimeout
+  context.window.open = () => ({ closed: false, location: {}, focus() {} })
+  vm.runInNewContext(libraryReviewWorkbench, context)
+
+  const pane = dom.window.document.querySelector("[data-vocabulary-editor]")
+  pane.querySelector("[data-dictionary-builder-open-sources]").click()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  pane.querySelector("[data-vocabulary-dictionary-builder]").click()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  const dialog = dom.window.document.querySelector("#libraryDictionaryBuilderDialog")
+  const pollTimers = () => [...timerCallbacks.entries()].filter(([, timer]) => timer.callback.toString().includes("providerRetryInFlight"))
+  assert.equal(dialog.querySelector('[data-source-provider="ldoce"]').dataset.sourceStatus, "popup-blocking", "a challenge is purple and waits for user action")
+  assert.equal(dialog.querySelector('[data-source-provider="etymonline"]').dataset.sourceStatus, "unavailable", "ET is not green when no etymology was scraped")
+  assert.equal(dialog.querySelector('[data-source-provider="merriam_webster_thesaurus"]').dataset.sourceStatus, "success", "TH is green when its source page was scraped even if this entry has no matching synonym data")
+  const firstPoll = pollTimers()
+  assert.equal(firstPoll.length, 1)
+  const modalOpenSources = dialog.querySelector("[data-dictionary-builder-open-sources]")
+  modalOpenSources.click()
+  modalOpenSources.click()
+  assert.equal(pollTimers().length, 1, "reopening the same source group does not add another poll timer")
+
+  const [pollId, poll] = pollTimers()[0]
+  timerCallbacks.delete(pollId)
+  await poll.callback()
+  assert.deepEqual(retryCalls, ["britannica"])
+  assert.equal(dialog.querySelector('[data-source-provider="britannica"]').dataset.sourceStatus, "success")
+  assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /BR is ready/u)
+  assert.equal(pollTimers().length, 1, "the next probe is scheduled only after the current probe completes")
+
+  const runNextProviderPoll = async (provider) => {
+    const [pollId, poll] = pollTimers()[0]
+    timerCallbacks.delete(pollId)
+    await poll.callback()
+    assert.equal(retryCalls.at(-1), provider)
+    assert.equal(dialog.querySelector(`[data-source-provider="${provider}"]`).dataset.sourceStatus, "success", `${provider} becomes green after its scrape returns data`)
+  }
+  await runNextProviderPoll("ldoce")
+  await runNextProviderPoll("wordhelp")
+  await runNextProviderPoll("etymonline")
+  dialog.querySelector('[data-dictionary-builder-tab="etymology"]').click()
+  assert.equal(dialog.querySelector('[data-dictionary-builder-candidate-value="etymology"][data-dictionary-builder-provider="etymonline"]').value, "from Old French via Latin", "ET scrape data is returned to the Builder")
+  assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /ET is ready/u)
+  await runNextProviderPoll("merriam_webster_thesaurus")
+  assert.equal(snapshot().sources.find((source) => source.provider === "merriam_webster_thesaurus").datumStatus.synonymsAntonyms.status, "available")
+  assert.equal(snapshot().sources.find((source) => source.provider === "merriam_webster_thesaurus").fields.synonymsAntonyms, "Synonyms:\npraise\ncommend")
+  assert.equal(dialog.dictionaryBuilderSelections.synonymsAntonyms?.provider, "merriam_webster_thesaurus", "TH scrape data reaches the Builder selection even when its source LED was already green")
+  dialog.querySelector('[data-dictionary-builder-tab="synonymsAntonyms"]').click()
+  assert.deepEqual([...dialog.querySelectorAll('[data-dictionary-builder-relation][data-dictionary-builder-provider="merriam_webster_thesaurus"]')].map((field) => field.value), ["praise\ncommend", ""], "TH scrape data is returned to the Builder")
+  assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /TH is ready/u)
+  await runNextProviderPoll("oxford_ame")
+  await runNextProviderPoll("google_translate")
+  assert.deepEqual(retryCalls, ["britannica", "ldoce", "wordhelp", "etymonline", "merriam_webster_thesaurus", "oxford_ame", "google_translate"])
+  assert.ok([...dialog.querySelectorAll("[data-source-provider]")].every((led) => ["success", "popup-blocking"].includes(led.dataset.sourceStatus)), "successful scrapes are green and provider challenges are purple; no source is red")
+
+  dialog.querySelector('[data-dictionary-builder-tab="vietnamese"]').click()
+  const runPreferredRetry = async () => {
+    const retryButton = dialog.querySelector("#dictionary-builder-panel-vietnamese > button")
+    assert.ok(retryButton)
+    retryButton.click()
+    const pendingWaits = [...timerCallbacks.entries()].filter(([, timer]) => timer.delay === 5000)
+    const [waitId, wait] = pendingWaits.at(-1)
+    assert.ok(wait, "the preferred retry waits before probing")
+    timerCallbacks.delete(waitId)
+    wait.callback()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  }
+  await runPreferredRetry()
+  assert.equal(retryCalls.at(-1), "google_translate")
+  assert.equal(dialog.querySelector('[data-source-provider="google_translate"]').dataset.sourceStatus, "success")
+  assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /GT is ready/u)
+
+  failGoogleRetry = true
+  await runPreferredRetry()
+  assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /provider retry rejected/u)
+
+  dialog.dispatchEvent(new dom.window.Event("close"))
+  assert.equal(pollTimers().length, 0, "closing the modal stops provider polling")
   dom.window.close()
 })
 
@@ -701,6 +935,12 @@ test("flattened vocabulary preserves New Words geometry and formats safe definit
   assert.equal((flattenedChairDefinitions.match(/<ol>/gu) || []).length, 1)
   assert.equal((flattenedChairDefinitions.match(/<li>/gu) || []).length, 3)
   assert.match(flattenedChairDefinitions, /to preside as chairperson[\s\S]*to install in office[\s\S]*to carry on the shoulders/)
+  const compositeNumberingHtml = context.window.SIS_VOCABULARY_ESL.definitionHtml(
+    "2b. *[+ object], [more exhausted; most exhausted], [more exhausting; most exhausting]* — to try all of (something)\n\n- They've exhausted (all) the possibilities. [=they've tried everything they can]\n\n1. *[+ object], [more exhausted; most exhausted], [more exhausting; most exhausting]* — to consider or talk about (a subject) thoroughly or completely\n    - He can talk about baseball for hours and still feel that he hasn't exhausted the subject/topic.\n\n1) *[more exhausted; most exhausted]*\n    - The children were exhausted after their day at the beach.",
+  )
+  assert.match(compositeNumberingHtml, /<ol><li data-definition-marker="2b\."[\s\S]*to try all of \(something\)/)
+  assert.match(compositeNumberingHtml, /<ol><li>.*to consider or talk about \(a subject\)[\s\S]*<\/ol><ol><li data-definition-marker="1\."/)
+  assert.doesNotMatch(compositeNumberingHtml, /<p>2b\./)
   assert.equal(context.window.SIS_VOCABULARY_ESL.definitionHtml("A\nB"), "<p>A<br>B</p>")
   const synonymsAntonymsTable = context.window.SIS_VOCABULARY_ESL.definitionHtml("| **Synonyms** | **Antonyms** |\n|--------------|--------------|\n| praise | criticize |\n| applaud |  |")
   assert.equal(synonymsAntonymsTable, '<div class="definition-markdown-table-wrap"><table class="definition-markdown-table"><thead><tr><th><strong>Synonyms</strong></th><th><strong>Antonyms</strong></th></tr></thead><tbody><tr><td>praise</td><td>criticize</td></tr><tr><td>applaud</td><td></td></tr></tbody></table></div>')

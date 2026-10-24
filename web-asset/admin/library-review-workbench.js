@@ -518,6 +518,13 @@
   }
   const dictionaryBuilderStatusLabel = (status) => ({ not_found: "not found (HTTP 404)", not_provided: "not provided by source", robot_blocked: "cookie/robot prompt; datum paused", cookie_prompt: "cookie prompt; datum paused", robot_prompt: "robot prompt; datum paused", paused: "paused pending source resolution", waiting_for_input: "waiting for input", unavailable: "provider unavailable", not_offered: "not provided by source" }[status] || status)
   const isDictionaryBuilderPromptStatus = (status) => ["robot_blocked", "cookie_prompt", "robot_prompt", "paused", "waiting_for_input"].includes(status)
+  const dictionaryBuilderDatumSourceStatus = (source, datum) => {
+    const datumStatus = source?.datumStatus?.[datum]?.status
+    if (isDictionaryBuilderPromptStatus(datumStatus) || datumStatus === "available") return datumStatus
+    if (!["not_offered", "not_provided"].includes(datumStatus) && isDictionaryBuilderPromptStatus(source?.status)) return source.status
+    if (["unavailable", "not_found", "unsupported", "invalid"].includes(source?.status)) return source.status
+    return datumStatus || source?.status || "not_offered"
+  }
   const dictionaryBuilderEsc = (value) => String(value == null ? "" : value).replace(/[&<>'"]/gu, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character])
   const dictionaryBuilderSourceMatrix = (word) => {
     const encoded = encodeURIComponent(String(word || "").trim())
@@ -581,10 +588,12 @@
   const robotHandoffTabs = new Map()
   const promptProbeTimers = new Map()
   const sourceBrowserTabs = new Map()
-  const INITIAL_SOURCE_GROUP_SIZE = 6
-  const INITIAL_SOURCE_PROVIDER_ORDER = ["britannica", "ldoce", "wordhelp", "etymonline", "merriam_webster_thesaurus", "oxford_ame"]
-  const INITIAL_SOURCE_LED_ORDER = ["britannica", "ldoce", "wordhelp", "etymonline", "merriam_webster_thesaurus", "oxford_ame"]
-  const INITIAL_SOURCE_LED_LABELS = Object.freeze({ britannica: "BR", ldoce: "LD", wordhelp: "WH", etymonline: "ET", merriam_webster_thesaurus: "TH", oxford_ame: "OA" })
+  const openSourceProbeTimers = new Map()
+  const providerRetryInFlight = new Set()
+  const INITIAL_SOURCE_GROUP_SIZE = 7
+  const INITIAL_SOURCE_PROVIDER_ORDER = ["britannica", "ldoce", "wordhelp", "etymonline", "merriam_webster_thesaurus", "oxford_ame", "google_translate"]
+  const INITIAL_SOURCE_LED_ORDER = ["britannica", "ldoce", "wordhelp", "etymonline", "merriam_webster_thesaurus", "oxford_ame", "google_translate"]
+  const INITIAL_SOURCE_LED_LABELS = Object.freeze({ britannica: "BR", ldoce: "LD", wordhelp: "WH", etymonline: "ET", merriam_webster_thesaurus: "TH", oxford_ame: "OA", google_translate: "GT" })
   const sourceLedOverrides = new WeakMap()
   const dictionaryBuilderPreloadStates = new WeakMap()
   const initialSourceUrl = (provider, word) => {
@@ -598,6 +607,7 @@
       merriam_webster_thesaurus: `https://www.merriam-webster.com/thesaurus/${encoded}`,
       merriam_webster_scrape: `https://www.merriam-webster.com/dictionary/${encoded}`,
       merriam_webster_api: `https://www.merriam-webster.com/dictionary/${encoded}`,
+      google_translate: `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate`,
     }
     return paths[provider] || ""
   }
@@ -630,8 +640,7 @@
     })
   }
   const closeSourceBrowserTabs = () => {
-    promptProbeTimers.forEach((timer) => window.clearInterval(timer))
-    promptProbeTimers.clear()
+    stopProviderProbeTimers()
     sourceBrowserTabs.forEach((tab) => { if (tab && !tab.closed) tab.close() })
     sourceBrowserTabs.clear()
     robotHandoffTabs.clear()
@@ -648,11 +657,25 @@
   const sourceStatusForSnapshot = (provider, snapshot) => {
     if (!snapshot) return "default"
     const source = (snapshot?.sources || []).find((candidate) => candidate.provider === provider || (provider === "merriam_webster_scrape" && candidate.provider === "merriam_webster"))
-    const status = source?.status || source?.datumStatus && Object.values(source.datumStatus).find((datum) => datum?.status && datum.status !== "not_offered")?.status
-    if (status === "available") return "success"
-    if (["waiting_for_input", "manual", "robot_blocked", "cookie_prompt", "robot_prompt", "blocked"].includes(status)) return "popup-blocking"
-    if (["not_found", "unavailable", "unsupported", "invalid"].includes(status)) return "not-found"
-    return "not-found"
+    if (!source) return "default"
+    if (provider === "merriam_webster_thesaurus" && source.status === "available" && hasDictionaryBuilderValue(source.fields?.definition)) return "success"
+    const requiredDatum = { etymonline: "etymology" }[provider]
+    if (requiredDatum) {
+      const datumStatus = source.datumStatus?.[requiredDatum]?.status
+      const datumValue = source.fields?.[requiredDatum]
+      if (datumStatus === "available" && hasDictionaryBuilderValue(datumValue)) return "success"
+      if (isDictionaryBuilderPromptStatus(datumStatus) || isDictionaryBuilderPromptStatus(source.status)) return "popup-blocking"
+      if (datumStatus === "not_found" || source.status === "not_found") return "not-found"
+      if (["unavailable", "unsupported", "invalid", "malformed", "not_provided", "not_offered"].includes(datumStatus)) return "unavailable"
+      if (["unavailable", "unsupported", "invalid", "malformed"].includes(source.status)) return "unavailable"
+      return "unavailable"
+    }
+    const statuses = [source?.status, ...Object.values(source?.datumStatus || {}).map((datum) => datum?.status)].filter(Boolean)
+    if (statuses.some((status) => ["waiting_for_input", "manual", "robot_blocked", "cookie_prompt", "robot_prompt", "blocked"].includes(status))) return "popup-blocking"
+    if (statuses.includes("available")) return "success"
+    if (statuses.includes("unavailable") || statuses.some((status) => ["unsupported", "invalid"].includes(status))) return "unavailable"
+    if (statuses.includes("not_found")) return "not-found"
+    return statuses.length ? "not-found" : "default"
   }
   const sourceStatusForLed = (provider, snapshot, container) => {
     const override = sourceLedOverrides.get(container)?.get(provider)
@@ -667,7 +690,7 @@
       led.dataset.sourceProvider = provider
       led.dataset.sourceStatus = status
       led.textContent = INITIAL_SOURCE_LED_LABELS[provider]
-      led.setAttribute("aria-label", `${INITIAL_SOURCE_LED_LABELS[provider]} status: ${status === "success" ? "ready" : status === "not-found" ? "404, not found, or unavailable" : status === "popup-blocking" ? "awaiting user input" : status === "opening" ? "opening" : "not checked"}`)
+      led.setAttribute("aria-label", `${INITIAL_SOURCE_LED_LABELS[provider]} status: ${status === "success" ? "ready" : status === "unavailable" ? "provider unreachable; attention needed" : status === "not-found" ? "not found (HTTP 404)" : status === "popup-blocking" ? "user action needed" : status === "opening" ? "opening" : "not checked"}`)
       return led
     }))
   }
@@ -678,6 +701,12 @@
   const clearSourceLedOverrides = (container) => {
     sourceLedOverrides.get(container)?.clear()
   }
+  const stopProviderProbeTimers = () => {
+    promptProbeTimers.forEach((timer) => window.clearInterval(timer))
+    promptProbeTimers.clear()
+    openSourceProbeTimers.forEach((timer) => window.clearTimeout(timer))
+    openSourceProbeTimers.clear()
+  }
   const applySourceSnapshotToLeds = (snapshot, container, blockedProviders = []) => {
     if (!container) return
     const blocked = new Set(blockedProviders)
@@ -685,6 +714,77 @@
       const status = blocked.has(provider) ? "popup-blocking" : sourceStatusForSnapshot(provider, snapshot)
       setSourceLedStatus(provider, status, snapshot, container)
     })
+  }
+  const providerStatusMessage = (provider, status) => {
+    const label = INITIAL_SOURCE_LED_LABELS[provider] || provider
+    if (status === "success") return `${label} is ready.`
+    if (status === "popup-blocking") return `${label} needs user action in its open source tab; the affected datum remains paused.`
+    if (status === "unavailable") return `${label} is unreachable from SIS right now; attention is needed. The source tab is open, but its cross-origin page cannot be inspected directly.`
+    if (status === "not-found") return `${label} returned no matching entry (HTTP 404).`
+    return `${label} status is not yet confirmed.`
+  }
+  const summarizeProviderStatuses = (snapshot) => {
+    const grouped = { success: [], "popup-blocking": [], unavailable: [], "not-found": [] }
+    INITIAL_SOURCE_LED_ORDER.forEach((provider) => {
+      const status = sourceStatusForSnapshot(provider, snapshot)
+      if (grouped[status]) grouped[status].push(INITIAL_SOURCE_LED_LABELS[provider])
+    })
+    const parts = []
+    if (grouped.success.length) parts.push(`ready: ${grouped.success.join(", ")}`)
+    if (grouped["popup-blocking"].length) parts.push(`user action needed (purple): ${grouped["popup-blocking"].join(", ")}`)
+    const unreachable = [...grouped.unavailable, ...grouped["not-found"]]
+    if (unreachable.length) parts.push(`attention needed (red): ${unreachable.join(", ")}`)
+    return parts.length ? `Provider status — ${parts.join("; ")}.` : "Provider status is not yet confirmed."
+  }
+  const scheduleOpenSourcePolling = (snapshot, pane, sourceId, dialog, selectedCandidates, activeTab, providerIndex = 0, delay = 10000) => {
+    if (!snapshot?.id || !dialog.open || openSourceProbeTimers.has(snapshot.id)) return
+    const timer = window.setTimeout(async () => {
+      openSourceProbeTimers.delete(snapshot.id)
+      if (!dialog.open) return
+      const openProviders = INITIAL_SOURCE_PROVIDER_ORDER.filter((provider) => {
+        const tab = sourceBrowserTabs.get(provider)
+        if (tab && !tab.closed) return true
+        if (tab?.closed) sourceBrowserTabs.delete(provider)
+        return false
+      })
+      if (!openProviders.length) return
+      const provider = openProviders[providerIndex % openProviders.length]
+      const retryKey = `${snapshot.id}:${provider}`
+      let latestSnapshot = snapshot
+      let renderUpdatedBuilder = false
+      if (!providerRetryInFlight.has(retryKey)) {
+        providerRetryInFlight.add(retryKey)
+        try {
+          const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshot.id)}/retry`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider, entry: readPayload(pane) }) })
+          const refreshed = await response.json()
+          if (!response.ok || !refreshed.ok) throw new Error(refreshed.error || `Could not check ${provider}.`)
+          const previousSource = latestSnapshot.sources?.find((source) => source.provider === provider)
+          latestSnapshot = refreshed
+          const refreshedSource = latestSnapshot.sources?.find((source) => source.provider === provider)
+          const ledContainer = dialog.querySelector("[data-dictionary-builder-source-leds]")
+          sourceLedOverrides.get(ledContainer)?.delete(provider)
+          renderSourceLeds(latestSnapshot, ledContainer)
+          const refreshedStatus = sourceStatusForSnapshot(provider, latestSnapshot)
+          const message = dialog.querySelector("[data-dictionary-builder-message]")
+          if (message) message.textContent = providerStatusMessage(provider, refreshedStatus)
+          renderUpdatedBuilder = JSON.stringify(previousSource || null) !== JSON.stringify(refreshedSource || null)
+        } catch (error) {
+          const ledContainer = dialog.querySelector("[data-dictionary-builder-source-leds]")
+          setSourceLedStatus(provider, "unavailable", latestSnapshot, ledContainer)
+          const message = dialog.querySelector("[data-dictionary-builder-message]")
+          if (message) message.textContent = `${INITIAL_SOURCE_LED_LABELS[provider] || provider} could not be reached during its SIS probe: ${error.message || "provider check failed"}.`
+        } finally {
+          providerRetryInFlight.delete(retryKey)
+        }
+      }
+      if (!dialog.open) return
+      if (renderUpdatedBuilder) {
+        const currentActiveTab = dialog.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || activeTab
+        renderDictionaryBuilder(latestSnapshot, pane, sourceId, structuredClone(selectedCandidates), currentActiveTab, null, { autoRetry: false })
+      }
+      scheduleOpenSourcePolling(latestSnapshot, pane, sourceId, dialog, dialog.dictionaryBuilderSelections || selectedCandidates, dialog.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || activeTab, providerIndex + 1)
+    }, delay)
+    openSourceProbeTimers.set(snapshot.id, timer)
   }
   const reusableDictionaryBuilderPreloadSnapshot = (pane, sourceId, word) => {
     const state = dictionaryBuilderPreloadStates.get(pane)
@@ -711,7 +811,7 @@
         return snapshot
       } catch (error) {
         if (dictionaryBuilderPreloadStates.get(pane)?.token === token) {
-          INITIAL_SOURCE_LED_ORDER.forEach((provider) => setSourceLedStatus(provider, "not-found", null, container))
+          INITIAL_SOURCE_LED_ORDER.forEach((provider) => setSourceLedStatus(provider, "unavailable", null, container))
         }
         throw error
       } finally {
@@ -728,13 +828,13 @@
     renderSourceLeds(null, container)
     startup.addEventListener("click", async () => {
       const word = pane.querySelector('[data-vocabulary-field="english"]')?.value || ""
-      const sourceId = pane.dataset.reviewSourceId || pane.dataset.approvedEntryId
+      const sourceId = pane.dataset.reviewSourceId || pane.dataset.approvedEntryId || "new-canonical"
       const message = pane.querySelector("[data-vocabulary-dictionary-builder-message]")
       const reusableSnapshot = reusableDictionaryBuilderPreloadSnapshot(pane, sourceId, word)
       if (reusableSnapshot) {
         clearSourceLedOverrides(container)
         applySourceSnapshotToLeds(reusableSnapshot, container)
-        if (message) message.textContent = "Source status ready."
+        if (message) message.textContent = summarizeProviderStatuses(reusableSnapshot)
         return
       }
       clearSourceLedOverrides(container)
@@ -746,8 +846,8 @@
       startup.setAttribute("aria-busy", "true")
       if (message) message.textContent = "Preloading source status; LEDs remain amber until each provider resolves."
       try {
-        await previewDictionaryBuilderForEditor(pane, container, sourceId, word, reservation.blocked)
-        if (message) message.textContent = "Source status ready."
+        const snapshot = await previewDictionaryBuilderForEditor(pane, container, sourceId, word, reservation.blocked)
+        if (message) message.textContent = summarizeProviderStatuses(snapshot)
       } catch (error) {
         if (message) message.textContent = error.message || "Source status unavailable."
       } finally {
@@ -758,6 +858,10 @@
   }
   const renderDictionaryBuilder = (snapshot, pane, sourceId, previousSelections = {}, activeTab = "vietnamese", initialReservation = null, { autoRetry = true } = {}) => {
     const dialog = dictionaryBuilderDialog()
+    if (dialog.dataset.providerProbeCleanupBound !== "true") {
+      dialog.dataset.providerProbeCleanupBound = "true"
+      dialog.addEventListener("close", stopProviderProbeTimers)
+    }
     const root = dialog.querySelector("[data-dictionary-builder-root]")
     const sourceMatrixSlot = dialog.querySelector("[data-dictionary-builder-source-matrix-slot]")
     const acquisitionLog = dialog.querySelector("[data-dictionary-builder-log]")
@@ -770,11 +874,12 @@
     sourceMatrixSlot.innerHTML = dictionaryBuilderSourceMatrix(word)
     const draftOnly = sourceId === "new-canonical"
     if (acquisitionLog) acquisitionLog.textContent = snapshot.acquisitionLog || "No acquisition log was returned."
-    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><div class="dictionary-builder-source-startup-row"><button type="button" class="portal-button portal-button-blue-action portal-button-compact dictionary-builder-source-startup" data-dictionary-builder-open-sources title="Open the initial source group: BR / AP / LD / WH / ET / TH / OA. AP is API-only and remains closed." aria-label="Open initial source group">Open sources</button><div class="dictionary-builder-source-status-block"><div class="dictionary-builder-source-leds" data-dictionary-builder-source-leds role="group" aria-label="Initial source status LEDs"></div><div class="dictionary-builder-source-led-legend" aria-label="Source LED legend"><span><i data-led-legend="default" aria-hidden="true"></i>Not checked</span><span><i data-led-legend="not-found" aria-hidden="true"></i>404 / unavailable</span><span><i data-led-legend="opening" aria-hidden="true"></i>Opening</span><span><i data-led-legend="popup-blocking" aria-hidden="true"></i>Awaiting input</span><span><i data-led-legend="success" aria-hidden="true"></i>Ready</span></div></div></div><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply title="${draftOnly ? "Apply selected data to this editable draft; save the canonical entry to persist it." : "Apply selected Dictionary Builder data to this saved Library entry."}">Apply selected</button></div><div data-dictionary-builder-popup-fallbacks hidden></div>`
+    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><div class="dictionary-builder-source-startup-row"><button type="button" class="portal-button portal-button-blue-action portal-button-compact dictionary-builder-source-startup" data-dictionary-builder-open-sources title="Open the initial source group: BR / LD / WH / ET / TH / OA / GT. AP is API-only and remains closed." aria-label="Open initial source group">Open sources</button><div class="dictionary-builder-source-status-block"><div class="dictionary-builder-source-leds" data-dictionary-builder-source-leds role="group" aria-label="Initial source status LEDs"></div><div class="dictionary-builder-source-led-legend" aria-label="Source status legend"><span><i data-led-legend="default" aria-hidden="true"></i>Not checked</span><span><i data-led-legend="not-found" aria-hidden="true"></i>Not found / unavailable (red)</span><span><i data-led-legend="opening" aria-hidden="true"></i>Opening</span><span><i data-led-legend="popup-blocking" aria-hidden="true"></i>User action needed (purple)</span><span><i data-led-legend="success" aria-hidden="true"></i>Ready</span></div></div></div><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply title="${draftOnly ? "Apply selected data to this editable draft; save the canonical entry to persist it." : "Apply selected Dictionary Builder data to this saved Library entry."}">Apply selected</button></div><div data-dictionary-builder-popup-fallbacks hidden></div>`
     const sourceLedContainer = root.querySelector("[data-dictionary-builder-source-leds]")
     renderSourceLeds(snapshot, sourceLedContainer)
     const panels = root.querySelector("[data-dictionary-builder-panels]")
     const selectedCandidates = Object.fromEntries(Object.entries(structuredClone(previousSelections)).filter(([datum]) => visibleDictionaryBuilderDatums.has(datum)))
+    dialog.dictionaryBuilderSelections = selectedCandidates
     visibleDictionaryBuilderFields.forEach(([datum]) => {
       if (selectedCandidates[datum]) return
       const candidate = candidatesForDatum(snapshot, datum).find((item) => item.datumStatus?.[datum]?.status === "available")
@@ -802,6 +907,16 @@
         link.rel = "noopener noreferrer"
         link.textContent = provider
         link.title = `Open the ${provider} source page manually; this does not apply data.`
+        link.addEventListener("click", (event) => {
+          event.preventDefault()
+          const tab = openProviderTabDuringGesture(provider, link.href)
+          if (!tab) {
+            dialog.querySelector("[data-dictionary-builder-message]").textContent = `The ${provider} source tab is still blocked. Allow popups or open the source link directly.`
+            return
+          }
+          sourceBrowserTabs.set(provider, tab)
+          scheduleOpenSourcePolling(snapshot, pane, sourceId, dialog, selectedCandidates, activeTab)
+        })
         fallback.append(link)
       })
     }
@@ -835,8 +950,9 @@
       })
       showPopupFallbackLinks(blockedProviders, sourceByProvider)
       dialog.querySelector("[data-dictionary-builder-message]").textContent = opened === initialSourceEntries.length
-        ? `Initial BR / AP / LD / WH / ET / TH / OA group opened as named tabs in this browser session. AP is API-only and remains closed. Resolve any cookie/robot prompts; affected datums remain paused until Retry provider. Cookies remain in the browser's native cookie jar.`
+        ? `Initial BR / LD / WH / ET / TH / OA / GT group opened as named tabs in this browser session. AP is API-only and remains closed. Open providers are probed one at a time; a purple status needs your action, and a red status means SIS cannot reach that provider. Cross-origin page contents cannot be inspected directly.`
         : `Opened ${opened} of ${initialSourceEntries.length} initial provider tabs in this browser session; blocked providers: ${blockedProviders.join(", ") || "unknown"}. Use the manual links below. AP is API-only; fallback providers stay closed until needed.`
+      if (opened) scheduleOpenSourcePolling(snapshot, pane, sourceId, dialog, selectedCandidates, activeTab, 0, 5000)
     }
     root.querySelector("[data-dictionary-builder-open-sources]").addEventListener("click", openInitialSourceGroup)
     if (initialReservation) {
@@ -844,7 +960,7 @@
       const reservationMessage = dialog.querySelector("[data-dictionary-builder-message]")
       if (reservationMessage) reservationMessage.textContent = initialReservation.blocked.length
         ? `Opened ${initialReservation.reserved.size} of ${INITIAL_SOURCE_GROUP_SIZE} initial provider tabs; blocked providers: ${initialReservation.blocked.join(", ")}. Use the manual links below; affected datums remain waiting for input.`
-        : `Opened ${initialReservation.reserved.size} of ${INITIAL_SOURCE_GROUP_SIZE} initial provider tabs in order BR / AP / LD / WH / ET / TH / OA. AP is API-only; resolve cookie/robot prompts in those tabs; cookies remain active for this Builder session.`
+        : `Opened ${initialReservation.reserved.size} of ${INITIAL_SOURCE_GROUP_SIZE} initial provider tabs in order BR / LD / WH / ET / TH / OA / GT. AP is API-only. Open providers are probed one at a time; a purple status needs your action, and a red status means SIS cannot reach that provider. Cross-origin page contents cannot be inspected directly.`
       showPopupFallbackLinks(initialReservation.blocked, new Map((snapshot.sources || []).map((source) => [source.provider, source])))
     }
     const updateTabSelection = (datum) => {
@@ -866,23 +982,32 @@
       if (sourceId === "new-canonical" || !dialog.open) return
       let refreshed = snapshot
       let changed = false
+      let lastRetryError = null
       const applicableDatums = visibleDictionaryBuilderFields.map(([datum]) => datum)
       for (const datum of applicableDatums) {
         if (hasAvailableRequiredPreferredDatum(refreshed, datum)) continue
         for (const provider of dictionaryBuilderPreferredProviders[datum] || []) {
           if (!dialog.open) return
+          const retryKey = `${refreshed.id}:${provider}`
+          if (providerRetryInFlight.has(retryKey)) continue
+          providerRetryInFlight.add(retryKey)
           try {
             const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(refreshed.id)}/retry`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider, datum, entry: readPayload(pane) }) })
             const next = await response.json()
-            if (!response.ok || !next.ok) continue
+            if (!response.ok || !next.ok) throw new Error(next.error || `Retry failed for ${provider}.`)
             refreshed = next
             changed = true
             if (hasAvailableRequiredPreferredDatum(refreshed, datum)) break
-          } catch {}
+          } catch (error) {
+            lastRetryError = error
+          } finally {
+            providerRetryInFlight.delete(retryKey)
+          }
         }
       }
       const currentActiveTab = root.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || activeTab
       if (changed && dialog.open) renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), currentActiveTab, null, { autoRetry: false })
+      else if (lastRetryError && dialog.open) dialog.querySelector("[data-dictionary-builder-message]").textContent = `Provider status check failed: ${lastRetryError.message || "source request failed"}. Open sources to retry while the provider tabs remain available.`
     }
     const show = (datum, focus = false) => {
       root.querySelectorAll("[data-dictionary-builder-tab]").forEach((button) => {
@@ -902,15 +1027,18 @@
       const visibleStatusSources = datum === "synonymsAntonyms"
         ? statusSources.filter((source) => source.datumStatus?.[datum]?.status !== "not_provided")
         : statusSources
-      const statuses = visibleStatusSources.map((source) => `${source.provider}: ${dictionaryBuilderStatusLabel(source.datumStatus?.[datum]?.status || "not_offered")}`).join(" · ")
-      const robotSource = visibleStatusSources.find((source) => isDictionaryBuilderPromptStatus(source.datumStatus?.[datum]?.status) || isDictionaryBuilderPromptStatus(source.status))
+      const statuses = visibleStatusSources.map((source) => `${source.provider}: ${dictionaryBuilderStatusLabel(dictionaryBuilderDatumSourceStatus(source, datum))}`).join(" · ")
+      const robotSource = visibleStatusSources.find((source) => isDictionaryBuilderPromptStatus(dictionaryBuilderDatumSourceStatus(source, datum)))
+      const unavailableSources = visibleStatusSources.filter((source) => ["unavailable", "not_found", "unsupported", "invalid"].includes(dictionaryBuilderDatumSourceStatus(source, datum)))
       const sectionSummary = dialog.querySelector("[data-dictionary-builder-section-summary]")
       const datumLabel = visibleDictionaryBuilderFields.find(([key]) => key === datum)?.[1] || datum
       const tabHeading = dialog.querySelector("[data-dictionary-builder-tab-heading]")
       if (tabHeading) tabHeading.textContent = datumLabel
       if (sectionSummary) sectionSummary.textContent = robotSource
         ? `Queried: ${statuses || "no applicable source"}. Cookie/robot prompt required for ${robotSource.provider}; this datum is paused. Resolve it in the opened source tab and leave it open while Builder probes automatically.`
-        : `Queried: ${statuses || "no applicable source"}.`
+        : unavailableSources.length
+          ? `Queried: ${statuses || "no applicable source"}. Provider attention needed (red): ${unavailableSources.map((source) => source.provider).join(", ")}.`
+          : `Queried: ${statuses || "no applicable source"}.`
       panels.replaceChildren()
       const section = document.createElement("section")
       section.className = "dictionary-builder-candidates"
@@ -922,21 +1050,65 @@
       retryPreferred.type = "button"
       retryPreferred.className = "portal-button portal-button-blue-action"
       retryPreferred.textContent = "Retry preferred"
-      retryPreferred.title = `Wait 5 seconds, then check the saved snapshot first and retry ${preferredProviders.join(", ")} for ${datum}.`
+      retryPreferred.title = preferredProviders.length
+        ? `Wait 5 seconds, retry ${preferredProviders.join(", ")} for ${datum}, and report the resulting provider status.`
+        : `No preferred automatic source is configured for ${datum}.`
       retryPreferred.setAttribute("aria-label", `Retry preferred sources for ${datum}`)
+      retryPreferred.disabled = preferredProviders.length === 0
       retryPreferred.addEventListener("click", async () => {
         retryPreferred.disabled = true
         retryPreferred.textContent = "Waiting..."
         await new Promise((resolve) => window.setTimeout(resolve, 5000))
         let refreshed = snapshot
+        const skippedProviders = []
         try {
           for (const provider of preferredProviders) {
-            const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshot.id)}/retry`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider, datum, entry: readPayload(pane) }) })
-            const data = await response.json()
-            if (response.ok && data.ok) refreshed = data
+            const retryKey = `${snapshot.id}:${provider}`
+            if (providerRetryInFlight.has(retryKey)) {
+              skippedProviders.push(provider)
+              continue
+            }
+            providerRetryInFlight.add(retryKey)
+            try {
+              const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshot.id)}/retry`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider, datum, entry: readPayload(pane) }) })
+              const data = await response.json()
+              if (!response.ok || !data.ok) throw new Error(data.error || `Retry failed for ${provider}.`)
+              refreshed = data
+            } finally {
+              providerRetryInFlight.delete(retryKey)
+            }
+          }
+          const availableProvider = preferredProviders.find((provider) => {
+            const source = refreshed.sources?.find((candidate) => candidate.provider === provider)
+            return source?.datumStatus?.[datum]?.status === "available" && hasDictionaryBuilderValue(source.fields?.[datum])
+          })
+          const actionProvider = preferredProviders.find((provider) => {
+            const source = refreshed.sources?.find((candidate) => candidate.provider === provider)
+            return isDictionaryBuilderPromptStatus(dictionaryBuilderDatumSourceStatus(source, datum))
+          })
+          const unavailableProvider = preferredProviders.find((provider) => {
+            const source = refreshed.sources?.find((candidate) => candidate.provider === provider)
+            return ["unavailable", "not_found", "unsupported", "invalid"].includes(dictionaryBuilderDatumSourceStatus(source, datum))
+          })
+          const ledContainer = dialog.querySelector("[data-dictionary-builder-source-leds]")
+          if (ledContainer) {
+            const overrides = sourceLedOverrides.get(ledContainer)
+            preferredProviders.forEach((provider) => overrides?.delete(provider))
+            renderSourceLeds(refreshed, ledContainer)
           }
           renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
+          const resultMessage = availableProvider
+            ? providerStatusMessage(availableProvider, "success")
+            : actionProvider
+              ? providerStatusMessage(actionProvider, "popup-blocking")
+              : unavailableProvider
+                ? providerStatusMessage(unavailableProvider, dictionaryBuilderDatumSourceStatus(refreshed.sources?.find((source) => source.provider === unavailableProvider), datum) === "not_found" ? "not-found" : "unavailable")
+                : skippedProviders.length
+                  ? `A provider check is already running for ${skippedProviders.join(", ")}. Wait for that status update, then retry if needed.`
+                  : `Preferred sources were checked; no usable ${datumLabel} candidate was returned.`
+          dialog.querySelector("[data-dictionary-builder-message]").textContent = resultMessage
         } catch (error) {
+          if (refreshed !== snapshot && dialog.open) renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
           dialog.querySelector("[data-dictionary-builder-message]").textContent = error.message || "Preferred source retry failed."
         } finally {
           retryPreferred.disabled = false
@@ -1067,8 +1239,10 @@
             promptProbeTimers.delete(probeKey)
           }
           const retryProvider = async ({ automatic = false } = {}) => {
-            if (retryInFlight) return false
+            const retryKey = `${snapshot.id}:${candidate.provider}`
+            if (retryInFlight || providerRetryInFlight.has(retryKey)) return false
             retryInFlight = true
+            providerRetryInFlight.add(retryKey)
             if (!automatic) {
               retry.disabled = true
               retry.textContent = "Retrying..."
@@ -1081,19 +1255,33 @@
               const refreshedStatus = refreshedSource?.datumStatus?.[datum]?.status || refreshedSource?.status
               const refreshedValue = refreshedSource?.fields?.[datum]
               const datumReady = refreshedStatus === "available" && hasDictionaryBuilderValue(refreshedValue)
-              if (automatic && !datumReady) return false
+              const ledContainer = dialog.querySelector("[data-dictionary-builder-source-leds]")
+              sourceLedOverrides.get(ledContainer)?.delete(candidate.provider)
+              renderSourceLeds(refreshed, ledContainer)
+              if (!datumReady) {
+                const message = dialog.querySelector("[data-dictionary-builder-message]")
+                if (message) message.textContent = providerStatusMessage(candidate.provider, sourceStatusForSnapshot(candidate.provider, refreshed))
+                if (automatic) return false
+                return true
+              }
               stopPromptProbe()
               renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
               return true
             } catch (error) {
+              const ledContainer = dialog.querySelector("[data-dictionary-builder-source-leds]")
+              setSourceLedStatus(candidate.provider, "unavailable", snapshot, ledContainer)
               if (!automatic) {
                 retry.disabled = false
                 retry.textContent = "Retry provider"
                 dialog.querySelector("[data-dictionary-builder-message]").textContent = error.message || "Provider retry failed."
+              } else {
+                const message = dialog.querySelector("[data-dictionary-builder-message]")
+                if (message) message.textContent = `${INITIAL_SOURCE_LED_LABELS[candidate.provider] || candidate.provider} could not be reached during its SIS probe: ${error.message || "provider check failed"}.`
               }
               return false
             } finally {
               retryInFlight = false
+              providerRetryInFlight.delete(retryKey)
               if (!automatic && dialog.querySelector("[data-dictionary-builder-root]")) {
                 retry.disabled = false
                 retry.textContent = "Retry provider"
@@ -1130,7 +1318,7 @@
                 return
               }
               retryProvider({ automatic: true })
-            }, 5000)
+            }, 10000)
             promptProbeTimers.set(probeKey, probeTimer)
             return challengeTab
           }
@@ -1308,6 +1496,7 @@
     if (draftOnly && message) message.textContent = "Draft mode: Apply updates the editable review form. Save canonical to persist it."
     if (typeof dialog.showModal === "function") dialog.showModal()
     else dialog.setAttribute("open", "")
+    if (initialReservation?.reserved?.size) scheduleOpenSourcePolling(snapshot, pane, sourceId, dialog, selectedCandidates, selectedTab, 0, 5000)
   }
   const bindDictionaryBuilder = () => {
     document.querySelectorAll("[data-vocabulary-dictionary-builder]").forEach((button) => {
@@ -1322,7 +1511,7 @@
       pane?.querySelectorAll("[data-dictionary-builder-source]").forEach((link) => { link.href = sourcePaths[link.dataset.dictionaryBuilderSource] || link.href })
       button.addEventListener("click", async () => {
         const pane = button.closest("[data-review-pane], [data-vocabulary-editor]")
-        const sourceId = pane?.dataset.reviewSourceId || pane?.dataset.approvedEntryId
+        const sourceId = pane?.dataset.reviewSourceId || pane?.dataset.approvedEntryId || "new-canonical"
         const message = pane?.querySelector("[data-vocabulary-dictionary-builder-message]")
         if (!pane || !sourceId) return
         const word = pane.querySelector('[data-vocabulary-field="english"]')?.value || ""

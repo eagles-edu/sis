@@ -19439,18 +19439,7 @@
           else el.value = value == null ? "" : String(value);
         }
         if (field === "familyId") {
-          const familySelect = document.getElementById("familyIdExisting");
-          if (familySelect) {
-            const currentFamilyId = normalizeText(el.value);
-            const currentParentId = normalizeText(getFormValue("parentsId"));
-            const matchingOption = Array.from(familySelect.options).find((option) =>
-              normalizeText(option.dataset.familyId) === currentFamilyId &&
-              normalizeText(option.dataset.parentId) === currentParentId,
-            ) || Array.from(familySelect.options).find((option) =>
-              normalizeText(option.dataset.familyId) === currentFamilyId,
-            );
-            familySelect.value = matchingOption?.value || "";
-          }
+          syncExistingFamilySelection();
         }
       }
 
@@ -19470,6 +19459,24 @@
         }
 
         return "value" in el ? normalizeText(el.value) : "";
+      }
+
+      function syncExistingFamilySelection() {
+        const currentDocument = typeof document === "object" ? document : null;
+        if (!currentDocument || typeof currentDocument.getElementById !== "function") return;
+        const familySelect = currentDocument.getElementById("familyIdExisting");
+        const familyInput = currentDocument.getElementById("f_familyId");
+        if (!familySelect || !familyInput) return;
+
+        const currentFamilyId = normalizeText(familyInput.value);
+        const currentParentId = normalizeText(getFormValue("parentsId"));
+        const matchingOption = Array.from(familySelect.options).find((option) =>
+          normalizeText(option.dataset.familyId) === currentFamilyId &&
+          normalizeText(option.dataset.parentId) === currentParentId,
+        ) || Array.from(familySelect.options).find((option) =>
+          normalizeText(option.dataset.familyId) === currentFamilyId,
+        );
+        familySelect.value = matchingOption?.value || "";
       }
 
       function syncNewStudentParentsId({ force = false } = {}) {
@@ -20499,6 +20506,8 @@
             .filter((entry) => entry.familyId)
           : [];
         state.familyOptionsLoaded = true;
+        if (typeof document !== "object") return;
+        syncExistingFamilySelection();
         if (state.profileMode === "edit") {
           const profileInputHasValue = Array.from(
             document.querySelectorAll("input[id^=f_], select[id^=f_], textarea[id^=f_]")

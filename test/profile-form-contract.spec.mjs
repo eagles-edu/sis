@@ -296,6 +296,19 @@ test("existing profile saves repair a missing portal account from legacy passwor
   const writeImportSource = fs.readFileSync("src/modules/admin/student-write-import.mjs", "utf8")
 
   assert.match(writeImportSource, /rawFormPayload:\s*true,\s*normalizedFormPayload:\s*true/)
-  assert.match(writeImportSource, /if \(!portalPasswordHash\) \{[\s\S]*?existingProfile\?\.rawFormPayload\?\.password[\s\S]*?existingProfile\?\.normalizedFormPayload\?\.password/)
+  assert.match(writeImportSource, /if \(!portalPasswordHash\) \{[\s\S]*?existingProfile\?\.rawFormPayload[\s\S]*?existingProfile\?\.normalizedFormPayload[\s\S]*?record\.password/)
   assert.match(writeImportSource, /portalPasswordHash = hashScryptPassword\(assertPortalPasswordPolicy\(legacyPassword\)\)/)
+})
+
+test("every profile save repairs a missing current enrollment period", () => {
+  const writeImportSource = fs.readFileSync("src/modules/admin/student-write-import.mjs", "utf8")
+
+  assert.match(writeImportSource, /async function ensureCurrentStudentEnrollment\(/)
+  assert.match(writeImportSource, /studentEnrollmentPeriod\.findFirst\([\s\S]*?schoolYear[\s\S]*?select:\s*\{\s*id: true\s*\}/)
+  assert.match(writeImportSource, /studentEnrollmentPeriod\.create\([\s\S]*?status: "active"/)
+  assert.equal(
+    (writeImportSource.match(/ensureCurrentStudentEnrollment\(/g) || []).length,
+    3,
+    "new and existing saves must both use the enrollment repair helper",
+  )
 })

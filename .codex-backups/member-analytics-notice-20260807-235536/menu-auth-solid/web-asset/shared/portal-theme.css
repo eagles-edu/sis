@@ -8430,8 +8430,8 @@ html[data-theme="dark"] body.parent-portal-page .portal-modal :where(input, text
 }
 html[data-theme="dark"] body.student-portal-page .quick-link-select,
 html[data-theme="dark"] body.parent-portal-page .quick-link-select {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08)!important;
+  border-color: rgba(255, 255, 255, 0.22)!important;
 }
 html[data-theme="dark"] body.student-portal-page .quick-link-select__label,
 html[data-theme="dark"] body.parent-portal-page .quick-link-select__label {

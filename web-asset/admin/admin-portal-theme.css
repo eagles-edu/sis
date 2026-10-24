@@ -3270,6 +3270,9 @@ html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page,
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition li {
   margin-block: var(--portal-definition-item-gap);
 }
+:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition li[data-definition-marker]::marker {
+  content: attr(data-definition-marker) " ";
+}
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition li > :is(ol, ul) {
   margin-block: var(--portal-definition-item-gap);
 }
@@ -3328,9 +3331,18 @@ body.admin-portal-page #libraryDictionaryBuilderDialog::backdrop {
 
 body.admin-portal-page .library-dictionary-builder-form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   max-block-size: calc(100vh - 32px);
+  min-inline-size: 0;
   min-block-size: 0;
+}
+
+body.admin-portal-page .dictionary-builder-acquisition-log pre {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 body.admin-portal-page .library-dictionary-builder-header {
@@ -3444,7 +3456,8 @@ body.admin-portal-page .dictionary-builder-source-led {
   width: 48px;
 }
 
-body.admin-portal-page .dictionary-builder-source-led[data-source-status="not-found"] {
+body.admin-portal-page .dictionary-builder-source-led[data-source-status="not-found"],
+body.admin-portal-page .dictionary-builder-source-led[data-source-status="unavailable"] {
   background: #d32f2f;
   border-color: #8f1d1d;
 }
@@ -3538,6 +3551,7 @@ body.admin-portal-page .dictionary-builder-source-matrix .dictionary-builder-sou
 body.admin-portal-page .dictionary-builder-source-matrix .dictionary-builder-source-link:nth-child(12) { border-end-end-radius: var(--radius-2); }
 
 body.admin-portal-page [data-dictionary-builder-root] {
+  min-inline-size: 0;
   min-block-size: 0;
   overflow: auto;
   padding: 12px;
@@ -3547,13 +3561,12 @@ body.admin-portal-page [data-dictionary-builder-root] {
   align-items: stretch;
   background: var(--portal-role-panel-bg);
   border: 1px solid var(--portal-role-border);
-  display: flex;
+  display: grid;
   gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
   margin-block: var(--dictionary-builder-compact-gap);
-  overflow-x: auto;
+  overflow: visible;
   padding: 8px;
-  scrollbar-color: var(--portal-button-blue-fill) transparent;
-  scrollbar-width: thin;
 }
 
 body.admin-portal-page .dictionary-builder-tab {
@@ -3564,15 +3577,15 @@ body.admin-portal-page .dictionary-builder-tab {
   color: var(--portal-button-neutral-ink);
   cursor: pointer;
   display: inline-flex;
-  flex: 0 0 auto;
   font: inherit;
   font-size: 0.88rem;
   font-weight: 800;
   gap: 8px;
   justify-content: center;
   min-block-size: 40px;
+  min-inline-size: 0;
   padding: 7px 10px;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 body.admin-portal-page .dictionary-builder-tab:hover {
@@ -3752,6 +3765,17 @@ body.admin-portal-page .library-dictionary-preview-actions select {
     align-items: start;
     grid-template-columns: 1fr;
     padding: 10px 14px;
+  }
+
+  body.admin-portal-page .dictionary-builder-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  body.admin-portal-page .dictionary-builder-tab {
+    min-inline-size: 0;
+    white-space: normal;
   }
 
   body.admin-portal-page [data-dictionary-builder-source-matrix-slot] {
@@ -5252,7 +5276,7 @@ body:is(.admin-portal-page, .parent-portal-page, .student-portal-page)
 }
 html[data-theme="dark"] body:is(.admin-portal-page, .parent-portal-page, .student-portal-page)
   :where(select, .menu-group-links, .menu-sub-links, .row-options-dropdown, .quick-link-select, [role="listbox"], [role="menu"], .pt-score-legend-popover) {
-  background: var(--portal-surface-panel) !important;
+  background: #525252 !important;
 }
 body:is(.admin-portal-page, .parent-portal-page, .student-portal-page) .quick-link-select select {
   background: transparent !important;

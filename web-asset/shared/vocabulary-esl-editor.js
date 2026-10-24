@@ -914,14 +914,30 @@
       return examplesHeading ? [`**Examples of ${examplesHeading[1]}**`] : [line];
     });
     const listItemFromLine = (line) => {
-      const match = String(line).match(/^([\t ]*)(?:(\d+)[.)]|([a-z])[.)]|[-+*])\s+(.+)$/iu);
+      const match = String(line).match(/^([\t ]*)(?:(\d+)([a-z])?([.)])|([a-z])([.)])|([-+*]))\s+(.+)$/iu);
       if (!match) return null;
       const indentation = match[1].replace(/\t/gu, "    ").length;
+      const orderedNumber = match[2] || "";
+      const compositeLetter = match[3]?.toLocaleLowerCase("en-US") || "";
+      const orderedDelimiter = match[4] || match[6] || "";
+      const alphabeticLetter = match[5]?.toLocaleLowerCase("en-US") || "";
+      const isOrdered = Boolean(orderedNumber || alphabeticLetter);
+      const orderedKind = orderedNumber ? (compositeLetter ? "composite" : "numeric") : alphabeticLetter ? "alphabetic" : "";
+      const orderedMarker = orderedNumber
+        ? `${orderedNumber}${compositeLetter}.`
+        : alphabeticLetter
+          ? `${alphabeticLetter}.`
+          : "";
       return {
         indentation,
-        listType: match[2] || match[3] ? "ol" : "ul",
-        orderedStyle: match[3] ? "a" : "",
-        text: match[4],
+        listType: isOrdered ? "ol" : "ul",
+        orderedStyle: alphabeticLetter ? "a" : "",
+        orderedKind,
+        orderedGroup: orderedNumber && compositeLetter ? orderedNumber : "",
+        orderedDelimiter,
+        orderedMarker,
+        customMarker: Boolean((orderedNumber && (compositeLetter || orderedDelimiter === ")")) || (alphabeticLetter && orderedDelimiter === ")")),
+        text: match[8],
       };
     };
     const tableCellsFromLine = (line) => {
@@ -958,7 +974,13 @@
       const listType = first.listType;
       const orderedStyle = first.orderedStyle;
       const typeAttribute = orderedStyle ? ' type="a"' : "";
-      const isSameList = (item) => item && item.indentation === indentation && item.listType === listType && (!item.orderedStyle || item.orderedStyle === orderedStyle);
+      const isSameList = (item) => {
+        if (!item || item.indentation !== indentation || item.listType !== listType || item.orderedStyle !== orderedStyle) return false;
+        if (listType !== "ol") return true;
+        if (item.orderedKind !== first.orderedKind) return false;
+        if (first.orderedKind === "composite" && item.orderedGroup !== first.orderedGroup) return false;
+        return item.orderedDelimiter === first.orderedDelimiter;
+      };
       const output = [`<${listType}${typeAttribute}>`];
       let index = start;
       while (index < lines.length) {
@@ -972,7 +994,8 @@
           break;
         }
         if (!isSameList(item)) break;
-        output.push(`<li>${definitionInlineHtml(item.text)}`);
+        const markerAttribute = item.customMarker ? ` data-definition-marker="${escapeHtml(item.orderedMarker)}"` : "";
+        output.push(`<li${markerAttribute}>${definitionInlineHtml(item.text)}`);
         index += 1;
         const nested = index < lines.length ? listItemFromLine(lines[index]) : null;
         if (nested && nested.indentation > indentation) {

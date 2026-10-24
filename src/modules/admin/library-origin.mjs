@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs"
+
 import * as cheerio from "cheerio"
 import { fetchWithExponentialBackoff } from "./provider-http.mjs"
 
@@ -7,6 +9,8 @@ const MAX_RESPONSE_BYTES = 1_500_000
 const FETCH_TIMEOUT_MS = 8_000
 const MAX_PARAGRAPH_LENGTH = 4_000
 const MAX_REFERENCES = 8
+const ETYMONLINE_BROWSER_TIMEOUT_MS = 15_000
+const ETYMONLINE_BROWSER_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 const LANGUAGE_NAMES = [
   "Old English", "Middle English", "Modern English", "English", "Old French", "Middle French", "French",
   "Old Norse", "Middle Dutch", "Dutch", "German", "Latin", "Greek", "Italian", "Spanish", "Portuguese",
@@ -155,7 +159,39 @@ export function insertEtymologyDeterministically(definition, paragraph) {
   return normalizeDefinitionText(rendered)
 }
 
-export async function fetchEtymonlinePreview(word, fetchImpl = fetch) {
+export async function fetchEtymonlineBrowserPage(sourceUrl, { signal } = {}) {
+  const parsedUrl = new URL(sourceUrl)
+  if (parsedUrl.protocol !== "https:" || parsedUrl.hostname !== ETYMONLINE_HOST || !parsedUrl.pathname.startsWith("/search")) throw new Error("Etymonline browser URL is not allowed")
+  let browser
+  const abortBrowser = () => { void browser?.close() }
+  try {
+    if (signal?.aborted) throw signal.reason || new Error("Etymonline browser access aborted")
+    const { chromium } = await import("playwright")
+    const launchOptions = { headless: true, args: ["--no-sandbox"] }
+    const executablePath = process.env.ETYMONLINE_BROWSER_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
+    if (existsSync(executablePath)) launchOptions.executablePath = executablePath
+    browser = await chromium.launch(launchOptions)
+    signal?.addEventListener("abort", abortBrowser, { once: true })
+    const context = await browser.newContext({ userAgent: ETYMONLINE_BROWSER_USER_AGENT })
+    const page = await context.newPage()
+    const response = await page.goto(sourceUrl, { waitUntil: "domcontentloaded", timeout: ETYMONLINE_BROWSER_TIMEOUT_MS })
+    const html = await page.content()
+    const status = response?.status() || 200
+    if (/just a moment|enable javascript and cookies|cf-chl-|challenge-platform|access denied|verify you are human|captcha/iu.test(html) || status === 403) {
+      return { ok: false, status, robotBlocked: true, url: page.url(), html, message: "Etymonline requires browser verification because the source presented an access challenge; open the source page and retry after resolving it." }
+    }
+    if (status >= 400) return { ok: false, status, url: page.url(), html, message: `Etymonline returned HTTP ${status}` }
+    return { ok: true, status, url: page.url(), html }
+  } catch (error) {
+    if (signal?.aborted) throw signal.reason || error
+    return { ok: false, available: false, message: `Etymonline browser access failed: ${error.message}` }
+  } finally {
+    signal?.removeEventListener("abort", abortBrowser)
+    await browser?.close().catch(() => {})
+  }
+}
+
+export async function fetchEtymonlinePreview(word, fetchImpl = fetch, browserFetchImpl = fetchEtymonlineBrowserPage) {
   const sourceUrl = etymonlineSearchUrl(word)
   if (!sourceUrl) throw new Error("A word or phrase is required")
   const parsedUrl = new URL(sourceUrl)
@@ -163,8 +199,18 @@ export async function fetchEtymonlinePreview(word, fetchImpl = fetch) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
   try {
-    const response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html" }, signal: controller.signal })
-    if (!response.ok) throw new Error("Etymonline is unavailable")
+    let response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html" }, signal: controller.signal })
+    if (!response.ok) {
+      const body = typeof response.text === "function" ? await response.text().catch(() => "") : String(response.html || "")
+      const challenge = response.status === 403 || /just a moment|enable javascript and cookies|cf-chl-|challenge-platform|access denied|verify you are human|captcha/iu.test(body)
+      if (!challenge) throw new Error(`Etymonline returned HTTP ${response.status || 503}`)
+      response = await browserFetchImpl(sourceUrl, { signal: controller.signal })
+      if (!response?.ok) {
+        const error = new Error(response?.message || "Etymonline browser access failed")
+        if (response?.robotBlocked) error.status = "robot_blocked"
+        throw error
+      }
+    }
     if (response.url) {
       const finalUrl = new URL(response.url)
       if (finalUrl.protocol !== "https:" || finalUrl.hostname !== ETYMONLINE_HOST) throw new Error("Etymonline redirect host is not allowed")
@@ -185,8 +231,10 @@ export async function fetchEtymonlinePreview(word, fetchImpl = fetch) {
       let offset = 0
       chunks.forEach((chunk) => { bytes.set(chunk, offset); offset += chunk.byteLength })
       html = new TextDecoder().decode(bytes)
-    } else {
+    } else if (typeof response.text === "function") {
       html = await response.text()
+    } else {
+      html = String(response.html || "")
     }
     return parseEtymonlineParagraph(html, { word, retrievedAt: new Date() })
   } catch (error) {

@@ -1,4 +1,5 @@
 // @ts-check
+// cspell:ignore zalo Duoc brevo IELTS TAYK Meds Trang
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { getConfiguredDatabaseUrlSync } from "./sis-config-store.mjs"
 import { invalidateLevelAndSchoolFiltersCache } from "./student-admin-queries.mjs"
@@ -10,10 +11,12 @@ import { writeStudentProfileBackupSnapshot } from "./student-profile-backups.mjs
 import { timeStudentWritePhase } from "../../infra/observability/student-write-metrics.mjs"
 
 /**
- * @typedef {{
+ * @typedef {Record<string, unknown> & {
  *   eaglesId?: unknown,
  *   studentNumber?: unknown,
  *   email?: unknown,
+ *   level?: unknown,
+ *   password?: unknown,
  *   profile?: Record<string, unknown>,
  * }} ImportStudentPayload
  *
@@ -106,7 +109,7 @@ function canonicalizeGenderSelection(value) {
 function normalizeGenderSelections(value) {
   const selections = normalizeTextArray(value).map((entry) => canonicalizeGenderSelection(entry))
   const seen = new Set()
-  const deduped = []
+  const deduped = /** @type {Array<string>} */ ([])
   selections.forEach((entry) => {
     const key = normalizeLower(entry)
     if (!key || seen.has(key)) return
@@ -133,7 +136,7 @@ function normalizeInteger(value) {
  */
 function normalizePositiveInteger(value) {
   const parsed = normalizeInteger(value)
-  if (!Number.isFinite(parsed) || parsed < 1) return null
+  if (parsed === null || !Number.isFinite(parsed) || parsed < 1) return null
   return parsed
 }
 
@@ -192,6 +195,7 @@ const IMPORT_STRICT_IDENTITY_REQUIRED = resolveBooleanFlag(
   true
 )
 
+/** @type {Promise<import("@prisma/client").PrismaClient> | null} */
 let prismaClientPromise = null
 
 function isStudentAdminStoreEnabled() {
@@ -306,7 +310,7 @@ function buildUniqueEaglesIdCandidate(baseEaglesId, reservedEaglesIdKeys) {
 }
 
 /**
- * @param {ImportStudentPayload} [payload]
+ * @param {Record<string, unknown>} [payload]
  * @returns {Record<string, unknown>}
  */
 function normalizeProfilePayload(payload = {}) {
@@ -383,6 +387,11 @@ function normalizeProfilePayload(payload = {}) {
   }
 }
 
+/**
+ * @param {import("@prisma/client").PrismaClient | import("@prisma/client").Prisma.TransactionClient} client
+ * @param {string} [requestedFamilyId]
+ * @returns {Promise<string>}
+ */
 async function resolveNewStudentFamilyId(client, requestedFamilyId = "") {
   const requested = normalizeText(requestedFamilyId)
   if (requested) {
@@ -404,6 +413,11 @@ async function resolveNewStudentFamilyId(client, requestedFamilyId = "") {
   return family.familyId
 }
 
+/**
+ * @param {import("@prisma/client").PrismaClient | import("@prisma/client").Prisma.TransactionClient} client
+ * @param {{ email?: string, familyId?: string, parentsId?: string, excludedStudentId?: string }} [options]
+ * @returns {Promise<void>}
+ */
 async function assertParentEmailFamilyBoundary(client, {
   email = "",
   familyId = "",
@@ -453,10 +467,72 @@ async function assertParentEmailFamilyBoundary(client, {
 }
 
 /**
- * @returns {Promise<unknown>}
+ * @param {import("@prisma/client").PrismaClient | import("@prisma/client").Prisma.TransactionClient} client
+ * @param {{ studentRefId?: string, parentsId?: string, familyId?: string }} [options]
+ * @returns {Promise<void>}
+ */
+export async function reconcileParentPortalStudentLinks(client, { studentRefId = "", parentsId = "", familyId = "" } = {}) {
+  const requestedParentsId = normalizeText(parentsId)
+  const requestedStudentRefId = normalizeText(studentRefId)
+  if (!requestedParentsId || !requestedStudentRefId) return
+
+  const targetAccount = await client.parentPortalAccount.findUnique({
+    where: { parentsId: requestedParentsId },
+    select: { id: true },
+  })
+  if (targetAccount) {
+    const familyStudents = normalizeText(familyId)
+      ? await client.studentProfile.findMany({
+          where: { familyId: normalizeText(familyId), parentsId: requestedParentsId },
+          select: { studentRefId: true },
+        })
+      : []
+    const studentRefIds = [...new Set([
+      requestedStudentRefId,
+      ...familyStudents.map((student) => normalizeText(student.studentRefId)),
+    ].filter(Boolean))]
+    for (const familyStudentRefId of studentRefIds) {
+      await client.parentPortalStudentLink.upsert({
+        where: {
+          parentAccountId_studentRefId: {
+            parentAccountId: targetAccount.id,
+            studentRefId: familyStudentRefId,
+          },
+        },
+        update: {},
+        create: {
+          parentAccountId: targetAccount.id,
+          studentRefId: familyStudentRefId,
+        },
+      })
+      await client.parentPortalStudentLink.deleteMany({
+        where: {
+          studentRefId: familyStudentRefId,
+          parentAccountId: { not: targetAccount.id },
+        },
+      })
+    }
+    return
+  }
+
+  const linkedAccounts = await client.parentPortalStudentLink.findMany({
+    where: { studentRefId: requestedStudentRefId },
+    select: { parentAccountId: true },
+  })
+  for (const link of linkedAccounts) {
+    await client.parentPortalAccount.update({
+      where: { id: link.parentAccountId },
+      data: { parentsId: requestedParentsId },
+    })
+  }
+}
+
+/**
+ * @returns {Promise<import("@prisma/client").PrismaClient>}
  */
 async function getPrismaClient() {
   if (!isStudentAdminStoreEnabled()) {
+    /** @type {Error & { statusCode?: number }} */
     const error = new Error("Student admin store is disabled")
     error.statusCode = 503
     throw error
@@ -622,12 +698,20 @@ function hasBackfillImportValue(value) {
  * @returns {ImportStudentPayload}
  */
 export function mergeImportPayloadForBackfill(importPayload = {}, existingStudent = {}) {
-  const incoming = importPayload && typeof importPayload === "object" ? importPayload : {}
-  const existing = existingStudent && typeof existingStudent === "object" ? existingStudent : {}
-  const incomingProfile = incoming.profile && typeof incoming.profile === "object" ? incoming.profile : {}
-  const existingProfile = existing.profile && typeof existing.profile === "object" ? existing.profile : {}
+  const incoming = /** @type {ImportStudentPayload} */ (
+    importPayload && typeof importPayload === "object" ? importPayload : {}
+  )
+  const existing = /** @type {Record<string, unknown>} */ (
+    existingStudent && typeof existingStudent === "object" ? existingStudent : {}
+  )
+  const incomingProfile = /** @type {Record<string, unknown>} */ (
+    incoming.profile && typeof incoming.profile === "object" ? incoming.profile : {}
+  )
+  const existingProfile = /** @type {Record<string, unknown>} */ (
+    existing.profile && typeof existing.profile === "object" ? existing.profile : {}
+  )
 
-  const mergedProfile = { ...existingProfile }
+  const mergedProfile = /** @type {Record<string, unknown>} */ ({ ...existingProfile })
   Object.entries(incomingProfile).forEach(([key, value]) => {
     if (!hasBackfillImportValue(value)) return
     mergedProfile[key] = value
@@ -683,14 +767,18 @@ function valuesEqualForImportDiff(leftValue, rightValue) {
  * @returns {Array<string>}
  */
 function collectImportChangedFieldNames(beforeState = {}, afterState = {}) {
-  const changed = []
+  const changed = /** @type {Array<string>} */ ([])
   const scalarKeys = ["email", "studentNumber"]
   scalarKeys.forEach((key) => {
     if (!valuesEqualForImportDiff(beforeState?.[key], afterState?.[key])) changed.push(key)
   })
 
-  const beforeProfile = beforeState?.profile && typeof beforeState.profile === "object" ? beforeState.profile : {}
-  const afterProfile = afterState?.profile && typeof afterState.profile === "object" ? afterState.profile : {}
+  const beforeProfile = /** @type {Record<string, unknown>} */ (
+    beforeState?.profile && typeof beforeState.profile === "object" ? beforeState.profile : {}
+  )
+  const afterProfile = /** @type {Record<string, unknown>} */ (
+    afterState?.profile && typeof afterState.profile === "object" ? afterState.profile : {}
+  )
   const profileKeys = Array.from(new Set([...Object.keys(beforeProfile), ...Object.keys(afterProfile)])).sort(
     (left, right) => left.localeCompare(right)
   )
@@ -712,7 +800,9 @@ function collectImportChangedFieldNames(beforeState = {}, afterState = {}) {
  * }}
  */
 function summarizeImportRowFields(row = {}) {
-  const profile = row?.profile && typeof row.profile === "object" ? row.profile : {}
+  const profile = row?.profile && typeof row.profile === "object"
+    ? /** @type {Record<string, unknown>} */ (row.profile)
+    : {}
   return {
     eaglesId: normalizeText(row?.eaglesId) || null,
     studentNumber: normalizePositiveInteger(row?.studentNumber),
@@ -846,6 +936,10 @@ export function validateImportRowsForIdentity(
   const existingIdentityByEaglesId = new Map()
   const rowErrors = new Map()
 
+  /**
+   * @param {number} rowNumber
+   * @param {unknown} message
+   */
   const setRowError = (rowNumber, message) => {
     if (!Number.isInteger(rowNumber) || rowNumber < 1) return
     if (!normalizeText(message)) return
@@ -927,7 +1021,7 @@ export function validateImportRowsForIdentity(
 }
 
 /**
- * @param {unknown} client
+ * @param {import("@prisma/client").PrismaClient | import("@prisma/client").Prisma.TransactionClient} client
  * @param {unknown} studentNumber
  * @param {string} [excludedStudentId]
  * @returns {Promise<void>}
@@ -951,9 +1045,43 @@ async function assertStudentNumberIsUniqueForClient(client, studentNumber, exclu
 }
 
 /**
- * @param {unknown} client
+ * @param {import("@prisma/client").PrismaClient | import("@prisma/client").Prisma.TransactionClient} client
+ * @param {string} studentRefId
+ * @param {string | null} level
+ * @param {unknown} updatedByUsername
+ * @returns {Promise<void>}
+ */
+async function ensureCurrentStudentEnrollment(client, studentRefId, level, updatedByUsername) {
+  const schoolYear = getConfiguredSchoolYear({ required: true })
+  const existingPeriod = await client.studentEnrollmentPeriod.findFirst({
+    where: {
+      studentRefId,
+      schoolYear,
+    },
+    select: {
+      id: true,
+    },
+  })
+  if (existingPeriod) return
+
+  await client.studentEnrollmentPeriod.create({
+    data: {
+      studentRefId,
+      schoolYear,
+      level,
+      status: "active",
+      startedAt: new Date(),
+      createdBy: normalizeNullableText(updatedByUsername),
+      updatedBy: normalizeNullableText(updatedByUsername),
+    },
+  })
+}
+
+/**
+ * @param {import("@prisma/client").PrismaClient | import("@prisma/client").Prisma.TransactionClient} client
  * @param {ImportStudentPayload} [payload]
  * @param {string} [studentRefId]
+ * @param {SaveStudentOptions} [options]
  * @returns {Promise<{ action: string, studentRefId: string }>}
  */
 async function saveStudentWithClient(client, payload = {}, studentRefId = "", options = {}) {
@@ -961,6 +1089,7 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
   assertWithStatus(Boolean(eaglesId), 400, "eaglesId is required")
 
   const studentEmail = normalizeNullableEmail(payload.email)
+  /** @type {Record<string, any>} */
   const profilePayload = normalizeProfilePayload(payload.profile || {})
   const rawFormPayload =
     profilePayload.rawFormPayload && typeof profilePayload.rawFormPayload === "object" ?
@@ -1008,15 +1137,15 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
     await assertParentEmailFamilyBoundary(client, {
       email: motherEmail,
       familyId: requestedFamilyId,
-      parentsId: profilePayload.parentsId,
+      parentsId: normalizeText(profilePayload.parentsId),
     })
     profilePayload.currentGrade = level
-    profilePayload.familyId = await resolveNewStudentFamilyId(client, payload?.profile?.familyId)
+    profilePayload.familyId = await resolveNewStudentFamilyId(client, normalizeText(payload?.profile?.familyId))
   }
 
   if (requestedId) {
     const existing = await client.student.findUnique({ where: { id: requestedId } })
-    assertWithStatus(Boolean(existing), 404, "Student not found")
+    assertWithStatus(existing !== null, 404, "Student not found")
     const existingProfile = await client.studentProfile.findUnique({
       where: { studentRefId: requestedId },
       select: {
@@ -1026,18 +1155,21 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
       },
     })
     if (!portalPasswordHash) {
-      const legacyPassword =
-        existingProfile?.rawFormPayload?.password ??
-        existingProfile?.normalizedFormPayload?.password ??
-        ""
+      const legacyPassword = [existingProfile?.rawFormPayload, existingProfile?.normalizedFormPayload]
+        .map((value) => {
+          if (!value || typeof value !== "object" || Array.isArray(value)) return ""
+          const record = /** @type {Record<string, unknown>} */ (value)
+          return normalizeText(record.password)
+        })
+        .find(Boolean) || ""
       if (legacyPassword) {
         portalPasswordHash = hashScryptPassword(assertPortalPasswordPolicy(legacyPassword))
       }
     }
     await assertParentEmailFamilyBoundary(client, {
-      email: profilePayload.motherEmail,
-      familyId: profilePayload.familyId,
-      parentsId: profilePayload.parentsId,
+      email: normalizeText(profilePayload.motherEmail),
+      familyId: normalizeText(profilePayload.familyId),
+      parentsId: normalizeText(profilePayload.parentsId),
       excludedStudentId: requestedId,
     })
     assertWithStatus(
@@ -1079,29 +1211,25 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
     await client.studentProfile.upsert({
       where: { studentRefId: student.id },
       update: profilePayload,
-      create: {
+      create: /** @type {any} */ ({
         studentRefId: student.id,
         ...profilePayload,
-      },
+      }),
     })
+    await ensureCurrentStudentEnrollment(
+      client,
+      student.id,
+      canonicalizeCatalogLevel(profilePayload.currentGrade) || null,
+      options.updatedByUsername,
+    )
     const previousParentsId = normalizeText(existingProfile?.parentsId)
     const requestedParentsId = normalizeText(profilePayload.parentsId)
     if (requestedParentsId && requestedParentsId !== previousParentsId) {
-      const linkedAccounts = await client.parentPortalStudentLink.findMany({
-        where: { studentRefId: student.id },
-        select: { parentAccountId: true },
+      await reconcileParentPortalStudentLinks(client, {
+        studentRefId: student.id,
+        parentsId: requestedParentsId,
+        familyId: normalizeText(profilePayload.familyId),
       })
-      for (const link of linkedAccounts) {
-        const conflictingAccount = await client.parentPortalAccount.findUnique({
-          where: { parentsId: requestedParentsId },
-          select: { id: true },
-        })
-        assertWithStatus(!conflictingAccount || conflictingAccount.id === link.parentAccountId, 409, "parentsId already exists")
-        await client.parentPortalAccount.update({
-          where: { id: link.parentAccountId },
-          data: { parentsId: requestedParentsId },
-        })
-      }
     }
     if (portalPasswordHash) {
       await client.studentPortalAccount.upsert({
@@ -1142,24 +1270,17 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
   })
 
   await client.studentProfile.create({
-    data: {
+    data: /** @type {any} */ ({
       studentRefId: student.id,
       ...profilePayload,
-    },
+    }),
   })
-  const schoolYear = getConfiguredSchoolYear({ required: true })
-  const enrolledLevel = canonicalizeCatalogLevel(profilePayload.currentGrade)
-  await client.studentEnrollmentPeriod.create({
-    data: {
-      studentRefId: student.id,
-      schoolYear,
-      level: enrolledLevel,
-      status: "active",
-      startedAt: new Date(),
-      createdBy: normalizeNullableText(options.updatedByUsername),
-      updatedBy: normalizeNullableText(options.updatedByUsername),
-    },
-  })
+  await ensureCurrentStudentEnrollment(
+    client,
+    student.id,
+    canonicalizeCatalogLevel(profilePayload.currentGrade) || null,
+    options.updatedByUsername,
+  )
   if (portalPasswordHash) {
     await client.studentPortalAccount.create({
       data: {
@@ -1178,7 +1299,7 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
 }
 
 /**
- * @param {unknown} client
+ * @param {import("@prisma/client").PrismaClient | import("@prisma/client").Prisma.TransactionClient} client
  * @param {unknown} floor
  * @returns {Promise<number>}
  */
@@ -1192,7 +1313,7 @@ async function resolveNextStudentNumberForClient(client, floor = STUDENT_NUMBER_
   const usedNumbers = new Set(
     rows
       .map((row) => normalizePositiveInteger(row?.studentNumber))
-      .filter((studentNumber) => studentNumber >= minimum),
+      .filter((studentNumber) => studentNumber !== null && studentNumber >= minimum),
   )
   let nextStudentNumber = minimum
   while (usedNumbers.has(nextStudentNumber)) nextStudentNumber += 1
@@ -1245,7 +1366,7 @@ export async function saveStudent(payload = {}, studentRefId = "", options = {})
   } catch (error) {
     console.error("student profile post-save backup failed", {
       studentRefId: result.studentRefId,
-      error: normalizeText(error?.message || error),
+      error: normalizeText(error instanceof Error ? error.message : error),
     })
   }
 
@@ -1329,14 +1450,16 @@ export async function deleteStudent(studentRefId, options = {}) {
 /**
  * @param {Array<Record<string, unknown>>} [rows]
  * @returns {Promise<{
+ *   processed: number,
  *   created: number,
  *   updated: number,
+ *   failed: number,
+ *   strictIdentity: boolean,
  *   errors: Array<Record<string, unknown>>,
- *   rowResults: Array<Record<string, unknown>>,
- *   rowLogs: Array<Record<string, unknown>>,
+ *   rows: Array<Record<string, unknown>>,
+ *   logs: Array<Record<string, unknown>>,
  *   autoFilledEaglesIds: number,
  *   autoFilledStudentNumbers: number,
- *   requireExplicitIdentity: boolean,
  * }>}
  */
 export async function importStudentsFromRows(rows = []) {
@@ -1390,7 +1513,6 @@ export async function importStudentsFromRows(rows = []) {
       }
       errors.push(entry)
       rowResults.push({
-        rowNumber,
         status: "rejected",
         ...entry,
       })
@@ -1425,19 +1547,20 @@ export async function importStudentsFromRows(rows = []) {
               studentNumber: existing.studentNumber,
               profile: existing.profile || {},
             }
-          : null
+          : undefined
         const saved = await saveStudentWithClient(tx, payload, normalizeText(existing?.id))
 
         return {
           saved,
           payload,
-          changedFields: existing ? collectImportChangedFieldNames(beforeState, payload) : [],
+          changedFields: existing && beforeState ? collectImportChangedFieldNames(beforeState, payload) : [],
         }
       })
 
       if (outcome.saved.action === "created") created += 1
       if (outcome.saved.action === "updated") updated += 1
 
+      /** @type {Record<string, unknown>} */
       const successEntry = {
         rowNumber,
         status: outcome.saved.action,
@@ -1451,7 +1574,7 @@ export async function importStudentsFromRows(rows = []) {
       rowResults.push(successEntry)
       rowLogs.push(successEntry)
     } catch (error) {
-      const message = normalizeText(error?.message || error) || "Import failed"
+      const message = normalizeText(error instanceof Error ? error.message : error) || "Import failed"
       const entry = {
         rowNumber,
         phase: "write",
@@ -1460,7 +1583,6 @@ export async function importStudentsFromRows(rows = []) {
       }
       errors.push(entry)
       rowResults.push({
-        rowNumber,
         status: "rejected",
         ...entry,
       })

@@ -1,0 +1,20 @@
+[Unit]
+Description=SIS LanguageTool loopback proxy
+Requires=sis-languagetool.service
+After=network-online.target sis-languagetool.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStartPre=/usr/sbin/nginx -t -q -c /home/eagles/dockerz/sis/deploy/nginx/languagetool-standalone.conf
+ExecStart=/usr/sbin/nginx -g "daemon off;" -c /home/eagles/dockerz/sis/deploy/nginx/languagetool-standalone.conf
+ExecReload=/bin/kill -s HUP $MAINPID
+KillSignal=SIGQUIT
+TimeoutStopSec=10s
+Restart=on-failure
+RestartSec=2s
+
+[Install]
+WantedBy=multi-user.target

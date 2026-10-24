@@ -1060,3 +1060,26 @@ test("admin dark surfaces keep form controls and chart empty states readable", (
     "admin dark empty chart state should use the shared support surface",
   )
 })
+
+test("shared dark control surfaces use the canonical data-surface background", () => {
+  assert.match(
+    sharedThemeSource,
+    /html\[data-theme="dark"\]\s*body:is\(\.admin-portal-page, \.parent-portal-page, \.student-portal-page\)\s*:where\(select, \.menu-group-links, \.menu-sub-links, \.row-options-dropdown, \.quick-link-select, \[role="listbox"\], \[role="menu"\], \.pt-score-legend-popover\)\s*\{\s*background:\s*#525252\s*!important;\s*\}/s,
+    "shared dark select and menu surfaces should use #525252",
+  )
+  assert.match(
+    sharedTheme,
+    /html\[data-theme="dark"\] body:is\(\.admin-portal-page, \.parent-portal-page, \.student-portal-page\)\s*:where\(select, \.menu-group-links, \.menu-sub-links, \.row-options-dropdown, \.quick-link-select, \[role="listbox"\], \[role="menu"\], \.pt-score-legend-popover\)\{background:#525252!important\}/,
+    "generated shared dark select and menu surfaces should remain in parity",
+  )
+  assert.match(
+    sharedThemeSource,
+    /html\[data-theme="dark"\]\s*body:is\(\.parent-portal-page, \.student-portal-page\) \.quick-link-select select option\s*\{\s*background:\s*#525252;\s*color:\s*var\(--portal-dark-text\);\s*\}/s,
+    "quick-link dropdown options should use the same dark contrast surface",
+  )
+  assert.match(
+    sharedTheme,
+    /html\[data-theme="dark"\] body:is\(\.parent-portal-page, \.student-portal-page\) \.quick-link-select select option\{background:#525252;color:var\(--portal-dark-text\)\}/,
+    "generated quick-link dropdown option styling should remain in parity",
+  )
+})

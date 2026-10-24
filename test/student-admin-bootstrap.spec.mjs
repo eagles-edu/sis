@@ -103,3 +103,37 @@ test("student admin auth bootstrap loads session and runs post-login boot", asyn
     "boot",
   ])
 })
+
+test("late unauthenticated bootstrap cannot override a newer successful login", async () => {
+  let resolveBootstrap
+  const calls = []
+  const state = { authUser: null }
+  const bootstrap = runStudentAdminAuthBootstrap({
+    api() {
+      return new Promise((resolve) => {
+        resolveBootstrap = resolve
+      })
+    },
+    state,
+    showLogin() {
+      calls.push("showLogin")
+    },
+    showApp() {
+      calls.push("showApp")
+    },
+    setStatus() {
+      calls.push("setStatus")
+    },
+    isStaticAdminPreviewMode() {
+      return false
+    },
+    ADMIN_API_ORIGIN: "http://127.0.0.1",
+  })
+
+  state.authUser = { username: "admin" }
+  resolveBootstrap({ authenticated: false, reason: "no-session" })
+
+  assert.deepEqual(await bootstrap, { status: "superseded" })
+  assert.deepEqual(state.authUser, { username: "admin" })
+  assert.deepEqual(calls, [])
+})

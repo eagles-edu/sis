@@ -664,7 +664,7 @@ async function previewEtymonlineAdapter(entry, fetchImpl = fetch) {
     const fields = { etymology: preview.paragraph || "", originPath: preview.originPath || "", originReferences: preview.reference ? [preview.reference] : {} }
     return normalizeProviderPreview("etymonline", { ok: true, fields, sourceUrl: preview.sourceUrl }, entry)
   } catch (error) {
-    return normalizeProviderPreview("etymonline", { ok: false, available: false, message: text(error.message) }, entry)
+    return normalizeProviderPreview("etymonline", { ok: false, status: error.status, available: false, message: text(error.message) }, entry)
   }
 }
 
@@ -679,24 +679,39 @@ function decodeGoogleTranslateHtml(value) {
     .replace(/&gt;/giu, ">"))
 }
 
+function decodeGoogleTranslateResponse(value) {
+  const raw = String(value || "")
+  try {
+    const payload = JSON.parse(raw)
+    const segments = Array.isArray(payload?.[0])
+      ? payload[0].map((segment) => Array.isArray(segment) ? decodeGoogleTranslateHtml(segment[0]) : "").filter(Boolean)
+      : []
+    if (segments.length) return segments.join(" ").trim()
+  } catch {
+    // Google can return an HTML error page even when the JSON endpoint is requested.
+  }
+  const match = raw.match(/<div\s+class=["']result-container["'][^>]*>([\s\S]*?)<\/div>/iu)
+  return decodeGoogleTranslateHtml(match?.[1])
+}
+
 export async function previewGoogleTranslateAdapter(entry, { fetchImpl = fetch } = {}) {
   const provider = "google_translate"
   const item = manifestById.get(provider)
   const word = text(entry?.english)
   const datumStatus = (status) => Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: datum === "vietnamese" ? status : "not_offered" }]))
   if (!word || typeof fetchImpl !== "function") return { provider, status: "unavailable", message: "Google Translate requires an English headword.", sourceUrl: item.searchUrl(word), fields: {}, entries: [], media: [], datumStatus: datumStatus("unavailable") }
-  const requestUrl = new URL("https://translate.google.com/m")
+  const requestUrl = new URL("https://translate.googleapis.com/translate_a/single")
+  requestUrl.searchParams.set("client", "gtx")
   requestUrl.searchParams.set("sl", "en")
   requestUrl.searchParams.set("tl", "vi")
+  requestUrl.searchParams.set("dt", "t")
   requestUrl.searchParams.set("q", word)
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), GOOGLE_TRANSLATE_TIMEOUT_MS)
   try {
-    const response = await fetchWithExponentialBackoff(fetchImpl, requestUrl, { headers: { accept: "text/html", "user-agent": "SIS Dictionary Builder/1.5" }, redirect: "follow", signal: controller.signal })
+    const response = await fetchWithExponentialBackoff(fetchImpl, requestUrl, { headers: { accept: "application/json", "user-agent": "SIS Dictionary Builder/1.5" }, redirect: "follow", signal: controller.signal })
     if (!response?.ok) throw new Error(`Google Translate returned HTTP ${response?.status || 0}`)
-    const html = await response.text()
-    const match = html.match(/<div\s+class=["']result-container["'][^>]*>([\s\S]*?)<\/div>/iu)
-    const vietnamese = decodeGoogleTranslateHtml(match?.[1])
+    const vietnamese = decodeGoogleTranslateResponse(await response.text())
     if (!vietnamese) throw new Error("Google Translate returned no Vietnamese translation")
     return { provider, status: "available", message: "", sourceUrl: item.searchUrl(word), fields: { vietnamese }, entries: [], media: [], datumStatus: datumStatus("available") }
   } catch (error) {
