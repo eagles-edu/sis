@@ -365,6 +365,7 @@ test("Dictionary Builder opens and retries from an unsaved Library draft", async
   const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=noun><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
   const timerCallbacks = new Map()
   const requests = []
+  const apiPreviewCalls = []
   let timerId = 0
   const snapshot = (googleStatus) => ({
     ok: true,
@@ -396,7 +397,10 @@ test("Dictionary Builder opens and retries from an unsaved Library draft", async
     },
     setTimeout,
   }
-  context.window.SIS_VOCABULARY_ESL = { grammarFields: [] }
+  context.window.SIS_VOCABULARY_ESL = {
+    grammarFields: [],
+    showApiPreview: async (pane, word) => { apiPreviewCalls.push({ pane, word }) },
+  }
   context.window.fetch = context.fetch
   context.window.setTimeout = (callback, delay = 0) => {
     if (delay > 1200) {
@@ -418,6 +422,11 @@ test("Dictionary Builder opens and retries from an unsaved Library draft", async
   assert.ok(dialog?.hasAttribute("open"))
   assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /Draft mode: Apply updates the editable review form/u)
   assert.match(requests[0], /\/entries\/new-canonical\/dictionary-builder\/preview$/u)
+  const ap = dialog.querySelector('button[data-dictionary-builder-source-link="AP"]')
+  assert.ok(ap)
+  ap.click()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.deepEqual(apiPreviewCalls, [{ pane, word: "commend" }])
 
   pane.querySelector("[data-dictionary-builder-open-sources]").click()
   await new Promise((resolve) => setTimeout(resolve, 0))
@@ -432,6 +441,66 @@ test("Dictionary Builder opens and retries from an unsaved Library draft", async
   await new Promise((resolve) => setTimeout(resolve, 0))
   assert.match(requests[2], /\/entries\/new-canonical\/dictionary-builder\/previews\/draft-provider-preview\/retry$/u)
   assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /GT is ready/u)
+  dom.window.close()
+})
+
+test("Dictionary Builder applies Definition Proper to the enclosing saved Library entry", async () => {
+  const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor data-approved-entry-id=entry-1><div data-news-vocabulary-row=0><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=noun><textarea data-vocabulary-field=definition></textarea><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
+  const requests = []
+  const snapshot = {
+    ok: true,
+    id: "saved-entry-preview",
+    sources: [{ provider: "britannica", status: "available", fields: { definition: "A source-verified definition." }, datumStatus: { definition: { status: "available" } } }],
+    datumSourceOrder: { definition: ["britannica"] },
+    warnings: [],
+    acquisitionLog: "",
+  }
+  const context = {
+    window: dom.window,
+    document: dom.window.document,
+    location: dom.window.location,
+    Event: dom.window.Event,
+    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
+    MutationObserver: dom.window.MutationObserver,
+    structuredClone,
+    fetch: async (url) => {
+      requests.push(String(url))
+      return requests.length === 1
+        ? { ok: true, status: 200, json: async () => snapshot }
+        : { ok: true, status: 200, json: async () => ({ ok: true, appliedFields: ["definition"], entry: { definition: "A source-verified definition." } }) }
+    },
+    setTimeout,
+  }
+  context.window.fetch = context.fetch
+  context.window.setTimeout = setTimeout
+  context.window.clearTimeout = clearTimeout
+  context.window.SIS_VOCABULARY_ESL = {
+    grammarFields: [],
+    hydrate: (pane, entry) => {
+      Object.entries(entry).forEach(([field, value]) => {
+        const input = pane.querySelector(`[data-vocabulary-field="${field}"]`)
+        if (input) input.value = value
+      })
+    },
+  }
+  context.window.open = () => ({ closed: false, location: {}, focus() {} })
+  vm.runInNewContext(libraryReviewWorkbench, context)
+
+  const editor = dom.window.document.querySelector("[data-vocabulary-editor]")
+  editor.querySelector("[data-vocabulary-dictionary-builder]").click()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  const dialog = dom.window.document.querySelector("#libraryDictionaryBuilderDialog")
+  assert.doesNotMatch(dialog.querySelector("[data-dictionary-builder-message]").textContent, /Draft mode/u)
+  assert.match(requests[0], /\/entries\/entry-1\/dictionary-builder\/preview$/u)
+  dialog.querySelector('[data-dictionary-builder-tab="definition"]').click()
+  dialog.querySelector('[data-dictionary-builder-candidate-value="definition"]').focus()
+  dialog.querySelector('[data-dictionary-builder-apply]').click()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  assert.match(requests[1], /\/entries\/entry-1\/dictionary-builder\/previews\/saved-entry-preview\/apply$/u)
+  assert.equal(editor.querySelector('[data-vocabulary-field="definition"]').value, "A source-verified definition.")
+  assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /Applied definition/u)
   dom.window.close()
 })
 

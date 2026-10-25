@@ -47,6 +47,8 @@ test("dictionary scraper integrations preserve protected media and audit contrac
   assert.match(workbench, /portal-button-blue-action news-vocabulary-lookup dictionary-builder-source-link/)
   assert.match(workbench, /data-vocabulary-lookup="\$\{label\}"/)
   assert.match(workbench, /data-dictionary-builder-source-link="\$\{label\}"/)
+  assert.match(workbench, /label === "AP"[\s\S]*?<button type="button"[\s\S]*?Merriam-Webster API preview/)
+  assert.match(workbench, /data-dictionary-builder-source-link="AP"[\s\S]*?showApiPreview\(pane, word\)/)
   assert.doesNotMatch(workbench, /libraryDictionaryBuilderApDialog|showDictionaryBuilderApModal/)
   assert.match(workbench, /datum === "vietnamese" && source\.provider !== "google_translate"/)
   assert.match(workbench, /const statusSourceIds = datum === "vietnamese"/)

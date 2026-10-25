@@ -560,8 +560,7 @@
     })].filter(Boolean).join("\n\n").trim();
   }
 
-  function bindLookupButtons(row) {
-    const showApiPreview = async (button, english) => {
+  async function showApiPreview(row, english) {
       let dialog = document.getElementById("vocabularyMerriamWebsterApiDialog")
       if (!dialog) {
         dialog = document.createElement("dialog")
@@ -606,14 +605,16 @@
           message.textContent = error.message || "Merriam-Webster API is unavailable."
         }
       }
-    }
+  }
+
+  function bindLookupButtons(row) {
     row?.querySelectorAll("[data-vocabulary-lookup]").forEach((button) => {
       if (button.dataset.lookupBound === "true") return;
       button.dataset.lookupBound = "true";
       button.addEventListener("click", async () => {
       const label = button.getAttribute("data-vocabulary-lookup");
       const english = row.querySelector('[data-vocabulary-field="english"]')?.value;
-      if (label === "AP") { await showApiPreview(button, String(english || "").trim()); return; }
+      if (label === "AP") { await showApiPreview(row, String(english || "").trim()); return; }
       const url = lookupUrl(label, english);
       if (url) window.open(url, "_blank", "noopener,noreferrer");
       if (label !== "ET") return;
@@ -1281,6 +1282,7 @@
     flatEntryHtml,
     definitionHtml,
     insertEtymologyDeterministically,
+    showApiPreview,
     bindLookupButtons,
     bindDefinitionAutosize,
     bindDefinitionPaste,

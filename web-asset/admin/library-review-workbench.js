@@ -25,6 +25,14 @@
 
   const readValue = (input) => input.type === "checkbox" ? input.checked : input.value
   const textValue = (value) => String(value == null ? "" : value).trim()
+  const vocabularyEditorPaneFor = (element) => {
+    const paneSelector = "[data-review-pane], [data-vocabulary-editor], [data-news-vocabulary-row]"
+    const nearestPane = element?.closest(paneSelector)
+    for (let pane = nearestPane; pane; pane = pane.parentElement?.closest(paneSelector)) {
+      if (pane.dataset.reviewSourceId || pane.dataset.approvedEntryId) return pane
+    }
+    return nearestPane
+  }
   const SPEAKER_ICON_PATH = "/web-asset/icons/svg/speaker-red-usa.svg"
   let speakerAnimationId = 0
 
@@ -540,7 +548,9 @@
       ["MW", `https://www.merriam-webster.com/dictionary/${encoded}`], ["AP", `https://www.merriam-webster.com/dictionary/${encoded}`], ["ET", `https://www.etymonline.com/search?q=${encoded}`], ["WK", `https://en.wiktionary.org/w/index.php?search=${encoded}`],
       ["CA", `https://dictionary.cambridge.org/dictionary/english/${encoded}`], ["TH", `https://www.merriam-webster.com/thesaurus/${encoded}`], ["WH", `https://www.wordhelp.com/syllables/english/?q=${encoded}`], ["GT", `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate`],
     ]
-    return `<div class="news-vocabulary-lookups dictionary-builder-source-matrix" data-dictionary-builder-source-matrix role="group" aria-label="Twelve outbound Dictionary Builder source links">${links.map(([label, href]) => `<a class="portal-button portal-button-blue-action news-vocabulary-lookup dictionary-builder-source-link" data-vocabulary-lookup="${label}" data-dictionary-builder-source-link="${label}" href="${href}" target="_blank" rel="noopener noreferrer" title="Open ${label}; this does not apply data.">${label}</a>`).join("")}</div>`
+    return `<div class="news-vocabulary-lookups dictionary-builder-source-matrix" data-dictionary-builder-source-matrix role="group" aria-label="Dictionary Builder sources">${links.map(([label, href]) => label === "AP"
+      ? `<button type="button" class="portal-button portal-button-blue-action news-vocabulary-lookup dictionary-builder-source-link" data-vocabulary-lookup="${label}" data-dictionary-builder-source-link="${label}" title="Open the Merriam-Webster API preview; this does not apply data.">${label}</button>`
+      : `<a class="portal-button portal-button-blue-action news-vocabulary-lookup dictionary-builder-source-link" data-vocabulary-lookup="${label}" data-dictionary-builder-source-link="${label}" href="${href}" target="_blank" rel="noopener noreferrer" title="Open ${label}; this does not apply data.">${label}</a>`).join("")}</div>`
   }
   const dictionaryBuilderDialog = () => {
     let dialog = document.getElementById("libraryDictionaryBuilderDialog")
@@ -886,6 +896,15 @@
     const selectedTab = visibleDictionaryBuilderDatums.has(activeTab) ? activeTab : visibleDictionaryBuilderFields[0]?.[0] || "vietnamese"
     const tabs = visibleDictionaryBuilderFields.map(([datum, label], index) => `<button type="button" class="dictionary-builder-tab" id="dictionary-builder-tab-${datum}" role="tab" aria-controls="dictionary-builder-panel-${datum}" aria-selected="${datum === selectedTab}" tabindex="${datum === selectedTab ? 0 : -1}" data-dictionary-builder-tab="${datum}"><span class="dictionary-builder-tab-step">${index + 1}</span><span>${dictionaryBuilderEsc(label)}</span></button>`).join("")
     sourceMatrixSlot.innerHTML = dictionaryBuilderSourceMatrix(word)
+    sourceMatrixSlot.querySelector('[data-dictionary-builder-source-link="AP"]')?.addEventListener("click", async (event) => {
+      event.preventDefault()
+      const showApiPreview = window.SIS_VOCABULARY_ESL?.showApiPreview
+      if (typeof showApiPreview !== "function") {
+        dialog.querySelector("[data-dictionary-builder-message]").textContent = "Merriam-Webster API preview is unavailable."
+        return
+      }
+      await showApiPreview(pane, word)
+    })
     const draftOnly = sourceId === "new-canonical"
     if (acquisitionLog) acquisitionLog.textContent = snapshot.acquisitionLog || "No acquisition log was returned."
     root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><div class="dictionary-builder-source-startup-row"><button type="button" class="portal-button portal-button-blue-action portal-button-compact dictionary-builder-source-startup" data-dictionary-builder-open-sources title="Open the initial source group: BR / LD / WH / ET / TH / OA / GT. AP is API-only and remains closed." aria-label="Open initial source group">Open sources</button><div class="dictionary-builder-source-status-block"><div class="dictionary-builder-source-leds" data-dictionary-builder-source-leds role="group" aria-label="Initial source status LEDs"></div><div class="dictionary-builder-source-led-legend" aria-label="Source status legend"><span><i data-led-legend="default" aria-hidden="true"></i>Not checked</span><span><i data-led-legend="not-found" aria-hidden="true"></i>Not found / unavailable (red)</span><span><i data-led-legend="opening" aria-hidden="true"></i>Opening</span><span><i data-led-legend="popup-blocking" aria-hidden="true"></i>User action needed (purple)</span><span><i data-led-legend="success" aria-hidden="true"></i>Ready</span></div></div></div><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply title="${draftOnly ? "Apply selected data to this editable draft; save the canonical entry to persist it." : "Apply selected Dictionary Builder data to this saved Library entry."}">Apply selected</button></div><div data-dictionary-builder-popup-fallbacks hidden></div>`
@@ -1518,15 +1537,15 @@
     document.querySelectorAll("[data-vocabulary-dictionary-builder]").forEach((button) => {
       if (button.dataset.dictionaryBuilderBound === "true") return
       button.dataset.dictionaryBuilderBound = "true"
-      const pane = button.closest("[data-review-pane], [data-vocabulary-editor], [data-news-vocabulary-row]")
+      const pane = vocabularyEditorPaneFor(button)
       hydrateLibraryAudio(pane)
       bindEditorSourceStartup(pane)
       const word = pane?.querySelector('[data-vocabulary-field="english"]')?.value || ""
       const encoded = encodeURIComponent(word.trim())
-      const sourcePaths = { LD: `https://www.ldoceonline.com/dictionary/${encoded}`, OA: `https://www.oxfordlearnersdictionaries.com/definition/american_english/${encoded}`, OB: `https://www.oxfordlearnersdictionaries.com/definition/english/${encoded}`, BR: `https://www.britannica.com/dictionary/${encoded}`, MW: `https://www.merriam-webster.com/dictionary/${encoded}`, AP: `https://www.merriam-webster.com/dictionary/${encoded}`, ET: `https://www.etymonline.com/search?q=${encoded}`, WK: `https://en.wiktionary.org/w/index.php?search=${encoded}`, CA: `https://dictionary.cambridge.org/dictionary/english/${encoded}`, TH: `https://www.merriam-webster.com/thesaurus/${encoded}`, WH: `https://www.wordhelp.com/dictionary/${encoded}`, GT: `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate` }
+      const sourcePaths = { LD: `https://www.ldoceonline.com/dictionary/${encoded}`, OA: `https://www.oxfordlearnersdictionaries.com/definition/american_english/${encoded}`, OB: `https://www.oxfordlearnersdictionaries.com/definition/english/${encoded}`, BR: `https://www.britannica.com/dictionary/${encoded}`, MW: `https://www.merriam-webster.com/dictionary/${encoded}`, ET: `https://www.etymonline.com/search?q=${encoded}`, WK: `https://en.wiktionary.org/w/index.php?search=${encoded}`, CA: `https://dictionary.cambridge.org/dictionary/english/${encoded}`, TH: `https://www.merriam-webster.com/thesaurus/${encoded}`, WH: `https://www.wordhelp.com/dictionary/${encoded}`, GT: `https://translate.google.com/?sl=en&tl=vi&text=${encoded}&op=translate` }
       pane?.querySelectorAll("[data-dictionary-builder-source]").forEach((link) => { link.href = sourcePaths[link.dataset.dictionaryBuilderSource] || link.href })
       button.addEventListener("click", async () => {
-        const pane = button.closest("[data-review-pane], [data-vocabulary-editor], [data-news-vocabulary-row]")
+        const pane = vocabularyEditorPaneFor(button)
         const sourceId = pane?.dataset.reviewSourceId || pane?.dataset.approvedEntryId || "new-canonical"
         const message = pane?.querySelector("[data-vocabulary-dictionary-builder-message]")
         if (!pane || !sourceId) return
