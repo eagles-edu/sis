@@ -19,6 +19,17 @@ test("Oxford parser extracts American headword, POS, definitions, grammar, and a
   assert.match(result.fields.definition, /200 words\.\n\n2\. \*countable\* — a second collection of words/u)
 })
 
+test("Oxford parser accepts the current British entry markup without falling back to unsupported", () => {
+  const html = `<!doctype html><div id="entryContent"><div class="entry"><h1 class="headword">commend</h1><span class="pos">verb</span><ol class="senses_multiple"><li class="sense"><span class="sensetop">commend somebody</span><span class="def">to praise somebody, especially publicly</span><ul class="examples"><li><span class="x">She was commended on her handling of the situation.</span></li></ul></li></ol><table class="verb_forms_table"><tr class="verb_form" form="root"><td class="verb_form"><span class="vf_prefix">present simple</span> commend</td></tr><tr class="verb_form" form="past"><td class="verb_form"><span class="vf_prefix">past simple</span> commended</td></tr></table></div></div>`
+  const result = parseOxfordHtml(html, { sourceUrl: "https://www.oxfordlearnersdictionaries.com/definition/english/commend", lookupWord: "commend", partOfSpeech: "verb" })
+  assert.equal(result.ok, true)
+  assert.equal(result.selectedEntries.length, 1)
+  assert.equal(result.entries[0].headword, "commend")
+  assert.equal(result.entries[0].partOfSpeech, "verb")
+  assert.match(result.fields.definition, /to praise somebody, especially publicly/u)
+  assert.equal(result.fields.verbForms.verbV2, "commended")
+})
+
 test("Oxford parser extracts American audio for verb forms only on verb entries", () => {
   const html = `<!doctype html><div id="entryContent"><div class="entry"><div class="top-g"><div class="webtop-g"><h2 class="h">transact</h2><span class="pos">verb</span></div></div><table class="verb_forms_table"><tr class="verb_form" form="root"><td class="phons_n_am"><span class="sound" data-src-mp3="https://www.oxfordlearnersdictionaries.com/media/american_english/us_pron/t/tra/trans/transact__us_1_rr.mp3"></span></td></tr><tr class="verb_form" form="past"><td class="phons_n_am"><span class="sound" data-src-mp3="https://www.oxfordlearnersdictionaries.com/media/american_english/us_pron/t/tra/trans/transacted__us_1.mp3"></span></td></tr><tr class="verb_form" form="prespart"><td class="phons_n_am"><span class="sound" data-src-mp3="https://www.oxfordlearnersdictionaries.com/media/american_english/us_pron/t/tra/trans/transacting__us_1.mp3"></span></td></tr></table><span class="sn-g"><span class="def">to transact business</span></span></div></div>`
   const result = parseOxfordHtml(html, { sourceUrl: "https://www.oxfordlearnersdictionaries.com/definition/american_english/transact", lookupWord: "transact", partOfSpeech: "verb" })

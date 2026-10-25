@@ -89,8 +89,8 @@ function verbForms(node) {
     const field = formKeys[text(row.attr("form"))]
     const cell = row.find("td.verb_form, td.form").first()
     const form = cell.length
-      ? text(cell.text())
-      : text(row.find(".vp").first().clone().find(".prefix").remove().end().text())
+      ? text(cell.clone().find(".prefix, .vf_prefix").remove().end().text())
+      : text(row.find(".vp").first().clone().find(".prefix, .vf_prefix").remove().end().text())
     if (field && form) result[field] = form
   })
   return result
@@ -113,10 +113,10 @@ function parseSense(node, index) {
 }
 
 function parseEntry(node, sourceUrl) {
-  const headword = text(node.find(".webtop-g .h, .top-g .h").first().text())
-  const partOfSpeech = text(node.find(".webtop-g .pos, .top-g .pos").first().text()).toLowerCase()
+  const headword = text(node.find(".webtop-g .h, .top-g .h, .headword").first().text())
+  const partOfSpeech = text(node.find(".webtop-g .pos, .top-g .pos, .headword + .pos, .pos").first().text()).toLowerCase()
   const senses = []
-  node.find(".sn-g").each((index, child) => {
+  node.find(".sn-g, .senses_multiple > .sense").each((index, child) => {
     const sense = parseSense(node.find(child), index)
     if (sense.definition || sense.examples.length) senses.push(sense)
   })

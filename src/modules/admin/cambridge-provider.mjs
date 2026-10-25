@@ -8,6 +8,7 @@ export const CAMBRIDGE_BASE_URL = "https://dictionary.cambridge.org/dictionary/e
 export const CAMBRIDGE_MAX_HTML_BYTES = 3 * 1024 * 1024
 
 function text(value) { return String(value == null ? "" : value).replace(/\s+/gu, " ").trim() }
+function isCambridgeAccessChallenge(html) { return /just a moment|enable javascript and cookies|cf-chl-|challenge-platform|access denied|verify you are human|captcha|checking your browser/iu.test(String(html || "")) }
 function validUrl(value) {
   const parsed = new URL(value)
   const validPath = parsed.pathname.startsWith("/dictionary/english/") || parsed.pathname.startsWith("/us/dictionary/english/")
@@ -65,8 +66,11 @@ export async function previewCambridgeLibraryEntry(entry, fetchImpl = fetch) {
   const sourceUrl = validUrl(`${CAMBRIDGE_BASE_URL}${encodeURIComponent(lookupWord.replace(/\s+/gu, "-"))}`)
   let response
   try { response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Cambridge-preview/1.0" }, redirect: "follow" }) } catch (error) { return { ok: false, available: false, message: `Cambridge is unavailable; no Library data was changed. ${error.message}` } }
-  if (!response.ok) return { ok: false, available: false, message: `Cambridge is unavailable (HTTP ${response.status || 503}); no Library data was changed.` }
-  try { return parseCambridgeHtml(await boundedText(response), { sourceUrl: response.url || sourceUrl, lookupWord, partOfSpeech: text(entry?.partOfSpeech) }) } catch (error) { return { ok: false, available: false, message: `Cambridge is unavailable; no Library data was changed. ${error.message}` } }
+  let html = ""
+  try { html = await boundedText(response) } catch (error) { return { ok: false, available: false, message: `Cambridge is unavailable; no Library data was changed. ${error.message}` } }
+  if (isCambridgeAccessChallenge(html)) return { ok: false, status: "robot_blocked", available: false, sourceUrl, message: "Cambridge presented an access challenge; no Library data was changed." }
+  if (!response.ok) return { ok: false, available: false, sourceUrl, message: `Cambridge is unavailable (HTTP ${response.status || 503}); no Library data was changed.` }
+  try { return parseCambridgeHtml(html, { sourceUrl: response.url || sourceUrl, lookupWord, partOfSpeech: text(entry?.partOfSpeech) }) } catch (error) { return { ok: false, available: false, sourceUrl, message: `Cambridge is unavailable; no Library data was changed. ${error.message}` } }
 }
 
 export const cambridgeProvider = registerDictionaryProvider({ key: "cambridge", preview: previewCambridgeLibraryEntry })

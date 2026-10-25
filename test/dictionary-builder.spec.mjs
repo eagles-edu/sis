@@ -305,6 +305,63 @@ test("Dictionary Builder retries only the challenged provider in its existing sn
   assert.equal(await retryDictionaryBuilderSnapshot(snapshot.id, { id: "other-entry" }, { ownerKey: "session-retry", provider: "ldoce", fetcher }), null)
 })
 
+test("Dictionary Builder retries every source idempotently without duplicate source records", async () => {
+  const entry = { id: "entry-all-sources", english: "commend", partOfSpeech: "verb" }
+  const calls = new Map()
+  const fetcher = Object.fromEntries(DICTIONARY_BUILDER_MANIFEST.map((source) => [source.id, async () => {
+    calls.set(source.id, (calls.get(source.id) || 0) + 1)
+    const datumStatus = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: source.capabilities[datum] ? "available" : "not_offered" }]))
+    return {
+      provider: source.id,
+      status: "available",
+      sourceUrl: source.searchUrl(entry.english),
+      fields: Object.fromEntries(Object.keys(source.capabilities).map((datum) => [datum, `${source.id} ${datum}`])),
+      entries: [],
+      media: [],
+      datumStatus,
+    }
+  }]))
+  const snapshot = await previewDictionaryBuilder(entry, { ownerKey: "session-all-sources", fetcher, rankedSources: [] })
+  const expectedProviders = new Set(snapshot.sources.map((source) => source.provider))
+  let latest = snapshot
+  for (const source of DICTIONARY_BUILDER_MANIFEST) {
+    const first = await retryDictionaryBuilderSnapshot(snapshot.id, entry, { ownerKey: "session-all-sources", provider: source.id, fetcher })
+    const second = await retryDictionaryBuilderSnapshot(snapshot.id, entry, { ownerKey: "session-all-sources", provider: source.id, fetcher })
+    assert.ok(first)
+    assert.ok(second)
+    const firstSource = first.sources.find((item) => item.provider === source.id)
+    const secondSource = second.sources.find((item) => item.provider === source.id)
+    assert.ok(firstSource)
+    assert.ok(secondSource)
+    expectedProviders.add(source.id)
+    assert.deepEqual(
+      {
+        provider: secondSource.provider,
+        status: secondSource.status,
+        sourceUrl: secondSource.sourceUrl,
+        fields: secondSource.fields,
+        entries: secondSource.entries,
+        media: secondSource.media,
+        datumStatus: secondSource.datumStatus,
+      },
+      {
+        provider: firstSource.provider,
+        status: firstSource.status,
+        sourceUrl: firstSource.sourceUrl,
+        fields: firstSource.fields,
+        entries: firstSource.entries,
+        media: firstSource.media,
+        datumStatus: firstSource.datumStatus,
+      },
+      `${source.id} has stable repeated retry output`,
+    )
+    assert.equal(second.sources.filter((item) => item.provider === source.id).length, 1, `${source.id} is present once`)
+    latest = second
+  }
+  assert.deepEqual(latest.sources.map((source) => source.provider).sort(), [...expectedProviders].sort())
+  assert.ok([...calls.values()].every((count) => count >= 2))
+})
+
 test("Dictionary Builder keeps last successful scrape data when a later retry is unavailable", async () => {
   let calls = 0
   const fetcher = Object.fromEntries(DICTIONARY_BUILDER_MANIFEST.map((source) => [source.id, async () => ({ provider: source.id, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} })]))

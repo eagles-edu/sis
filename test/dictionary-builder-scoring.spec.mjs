@@ -3,7 +3,7 @@ import fs from "node:fs"
 import test from "node:test"
 
 import { DICTIONARY_BUILDER_SCORING_DATUMS, DICTIONARY_BUILDER_SCORING_SOURCES, dictionaryBuilderInitialQuality } from "../src/modules/admin/dictionary-builder.mjs"
-import { parseCambridgeHtml } from "../src/modules/admin/cambridge-provider.mjs"
+import { parseCambridgeHtml, previewCambridgeLibraryEntry } from "../src/modules/admin/cambridge-provider.mjs"
 
 test("Dictionary Builder scoring defines twelve independently scored sources and automatic scarcity quality", () => {
   assert.equal(DICTIONARY_BUILDER_SCORING_SOURCES.length, 12)
@@ -86,4 +86,14 @@ test("Cambridge parser returns pronunciation stress and syllabication", () => {
   assert.equal(parsed.ok, true)
   assert.equal(parsed.entries[0].hyphenation, "kə-MEND")
   assert.match(parsed.entries[0].pronunciation.us, /ˈmend/)
+})
+
+test("Cambridge access challenges remain a stable robot-blocked provider status", async () => {
+  const response = () => ({ ok: false, status: 403, headers: new Headers(), text: async () => "<title>Just a moment...</title><div>cf-chl challenge-platform</div>" })
+  const first = await previewCambridgeLibraryEntry({ english: "commend", partOfSpeech: "verb" }, response)
+  const second = await previewCambridgeLibraryEntry({ english: "commend", partOfSpeech: "verb" }, response)
+  assert.deepEqual(first, second)
+  assert.equal(first.ok, false)
+  assert.equal(first.status, "robot_blocked")
+  assert.match(first.message, /access challenge/u)
 })
