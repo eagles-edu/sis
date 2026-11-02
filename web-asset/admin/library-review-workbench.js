@@ -476,13 +476,13 @@
     if (value && typeof value === "object") return Object.values(value).some(dictionaryBuilderDraftValue)
     return value !== undefined && value !== null && String(value).trim() !== ""
   }
-  const applyDictionaryBuilderDraftSelections = (pane, selections, mode, isVerbEntry) => {
+  const applyDictionaryBuilderDraftSelections = (pane, selections, mode, isVerbEntry, forceReplaceFields = new Set()) => {
     const next = readPayload(pane)
     const changed = []
     const deferred = []
     const write = (field, value) => {
       if (!dictionaryBuilderDraftValue(value)) return false
-      if (mode === "fill_missing" && dictionaryBuilderDraftValue(next[field])) return false
+      if (mode === "fill_missing" && !forceReplaceFields.has(field) && dictionaryBuilderDraftValue(next[field])) return false
       next[field] = value
       changed.push(field)
       return true
@@ -514,7 +514,7 @@
       }
       write(field, value)
     })
-    window.SIS_VOCABULARY_ESL?.hydrate(pane, next, { preserveSyllabication: true })
+    window.SIS_VOCABULARY_ESL?.hydrate(pane, next)
     pane.querySelectorAll("[data-review-field]").forEach((input) => {
       const path = input.dataset.reviewField
       const value = path.split(".").reduce((current, key) => current && typeof current === "object" ? current[key] : "", next)
@@ -1487,16 +1487,23 @@
           if (["grammarClassification", "originReferences", "verbForms"].includes(datum)) { try { value = typeof value === "string" ? JSON.parse(value) : value } catch { return } }
           selections[datum] = { provider: selection.provider, value }
         })
+        const activeDatum = root.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab
+        const forceReplaceFields = activeDatum === "definition"
+          ? ["definition"]
+          : activeDatum === "syllabication"
+            ? ["syllabication", "syllableCount"]
+            : []
+        const replaceableSelectedFields = forceReplaceFields.filter((field) => Object.hasOwn(selections, field))
         if (draftOnly) {
           const mode = root.querySelector("[data-dictionary-builder-mode]").value
-          const draftResult = applyDictionaryBuilderDraftSelections(pane, selections, mode, isVerbEntry)
-          pane.dataset.dictionaryBuilderPending = JSON.stringify({ snapshotId: snapshot.id, snapshotEntryId: sourceId, mode, selections })
+          const draftResult = applyDictionaryBuilderDraftSelections(pane, selections, mode, isVerbEntry, new Set(replaceableSelectedFields))
+          pane.dataset.dictionaryBuilderPending = JSON.stringify({ snapshotId: snapshot.id, snapshotEntryId: sourceId, mode, selections, forceReplaceFields: replaceableSelectedFields })
           const changed = draftResult.changed.length ? `Applied ${draftResult.changed.join(", ")} to the editable draft.` : "No selected fields changed the editable draft."
           const deferred = draftResult.deferred.length ? ` ${draftResult.deferred.join(", ")} selection will be pulled into protected Library media when Save canonical completes.` : ""
           message.textContent = `${changed}${deferred} Save canonical to persist the draft and selected media.`
           return
         }
-        const requestBody = { mode: root.querySelector("[data-dictionary-builder-mode]").value, selections }
+        const requestBody = { mode: root.querySelector("[data-dictionary-builder-mode]").value, selections, forceReplaceFields: replaceableSelectedFields }
         const applySnapshot = (snapshotId) => fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshotId)}/apply`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody) })
         let response = await applySnapshot(snapshot.id)
         if (response.status === 404) {

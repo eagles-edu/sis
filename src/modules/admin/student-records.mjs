@@ -1,4 +1,5 @@
 // @ts-check
+import { createHash } from "node:crypto"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { getSisConfigSnapshotSync } from "./sis-config-store.mjs"
 import { courseWeekNumberForSchoolSetupDate } from "./course-week-calendar.mjs"
@@ -12,6 +13,26 @@ import { canonicalizeLevel } from "./level-catalog.mjs"
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
+}
+
+/**
+ * @param {string} prefix
+ * @param {unknown[]} parts
+ * @returns {string}
+ */
+function deterministicEntryId(prefix, parts) {
+  const key = JSON.stringify(parts)
+  const digest = createHash("sha256").update(key).digest("hex")
+  return `${prefix}_${digest}`
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
+function utcCalendarDateKey(value) {
+  const date = parseDateOrNull(value)
+  return date ? date.toISOString().slice(0, 10) : ""
 }
 
 /**
@@ -396,6 +417,11 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
       data.enrollmentPeriodId = normalizeNullableText(existing.enrollmentPeriodId)
     }
 
+    if (utcCalendarDateKey(existing.attendanceDate) === utcCalendarDateKey(attendanceDate)) {
+      data.attendanceDate = existing.attendanceDate
+      data.weekNumber = configuredWeekNumber(existing.attendanceDate, schoolYear)
+    }
+
     return prisma.studentAttendance.update({
       where: { id: recordId },
       data,
@@ -417,7 +443,7 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
   attendanceDayStart.setUTCHours(0, 0, 0, 0)
   const attendanceDayEnd = new Date(attendanceDayStart)
   attendanceDayEnd.setUTCDate(attendanceDayEnd.getUTCDate() + 1)
-  const existingByDate = await prisma.studentAttendance.findFirst({
+  const existingByDate = await prisma.studentAttendance.findMany({
     where: {
       studentRefId: studentRef,
       className,
@@ -426,19 +452,33 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
         lt: attendanceDayEnd,
       },
     },
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "asc" }],
   })
-  if (existingByDate) {
+  if (existingByDate.length) {
+    const preferredAttendance = existingByDate.find((record) =>
+      record.schoolYear === schoolYear && record.quarter === quarter
+    ) || existingByDate[0]
     if (!data.enrollmentPeriodId) {
-      data.enrollmentPeriodId = normalizeNullableText(existingByDate.enrollmentPeriodId)
+      data.enrollmentPeriodId = normalizeNullableText(preferredAttendance.enrollmentPeriodId)
     }
+    data.attendanceDate = preferredAttendance.attendanceDate
+    data.weekNumber = configuredWeekNumber(preferredAttendance.attendanceDate, schoolYear)
     return prisma.studentAttendance.update({
-      where: { id: existingByDate.id },
+      where: { id: preferredAttendance.id },
       data,
     })
   }
 
-  return prisma.studentAttendance.create({
-    data: {
+  const id = deterministicEntryId("teacher_attendance", [
+    studentRef,
+    className,
+    utcCalendarDateKey(attendanceDate),
+  ])
+  return prisma.studentAttendance.upsert({
+    where: { id },
+    update: data,
+    create: {
+      id,
       studentRefId: studentRef,
       ...data,
     },
@@ -559,8 +599,42 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
     data.enrollmentPeriodId = normalizeNullableText(period?.id)
   }
 
-  const created = await prisma.studentGradeRecord.create({
-    data: {
+  const existingTeacherEntry = await prisma.studentGradeRecord.findFirst({
+    where: {
+      studentRefId: studentRef,
+      className,
+      schoolYear,
+      quarter,
+      assignmentName: { equals: assignmentName, mode: "insensitive" },
+      dueAt: data.dueAt,
+      enrollmentPeriodId: data.enrollmentPeriodId,
+      sourceSystem: null,
+      sourceAttemptId: null,
+    },
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "asc" }],
+  })
+  if (existingTeacherEntry) {
+    const updated = await prisma.studentGradeRecord.update({
+      where: { id: existingTeacherEntry.id },
+      data,
+    })
+    return mapGradeRecordForApi(updated)
+  }
+
+  const id = deterministicEntryId("teacher_grade", [
+    studentRef,
+    className,
+    schoolYear,
+    quarter,
+    normalizeLower(assignmentName),
+    data.dueAt?.toISOString() || null,
+    data.enrollmentPeriodId,
+  ])
+  const created = await prisma.studentGradeRecord.upsert({
+    where: { id },
+    update: data,
+    create: {
+      id,
       studentRefId: studentRef,
       ...data,
     },

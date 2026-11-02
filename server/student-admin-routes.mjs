@@ -116,6 +116,7 @@ import {
   listExerciseTitles,
   listLevelAndSchoolFilters,
 } from "../src/modules/admin/student-admin-queries.mjs"
+import { buildMoodleRosterExport } from "../src/modules/admin/moodle-roster-export.mjs"
 import {
   createParentProfileInvitation,
   resendParentProfileInvitation,
@@ -232,6 +233,7 @@ import {
 } from "../src/modules/portal/portal-privacy-alerts.mjs"
 import { readPortalAsset, savePortalAsset } from "../src/modules/portal/portal-asset-store.mjs"
 import { markStudentWriteRequestAuthenticated } from "../src/infra/observability/student-write-metrics.mjs"
+import { disableMoodleStudent } from "../src/modules/admin/moodle-provisioning.mjs"
 
 const ADMIN_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_ADMIN_PAGE_PATH, "/admin")
 const ADMIN_POINTS_PAGE_PATH = normalizePathPrefix(
@@ -1188,7 +1190,7 @@ function createDefaultRolePermissions() {
       canManageUsers: false,
       canManagePermissions: false,
       startPage: "overview",
-      allowedPages: ["overview", "profile", "attendance", "assignments", "parent-tracking", "performance-engagement", "grades", "reports", "family"],
+      allowedPages: ["overview", "profile", "attendance", "assignments", "parent-tracking", "news-reports", "performance-engagement", "grades", "reports", "family"],
     },
     student: {
       role: "student",
@@ -2065,6 +2067,16 @@ function sendPdf(response, filename, payloadBuffer) {
 function sendXlsx(response, filename, payloadBuffer) {
   response.writeHead(200, {
     "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "Content-Disposition": `attachment; filename="${filename}"`,
+    "Content-Length": String(payloadBuffer.length),
+    "Cache-Control": "no-store",
+  })
+  response.end(payloadBuffer)
+}
+
+function sendCsv(response, filename, payloadBuffer) {
+  response.writeHead(200, {
+    "Content-Type": "text/csv; charset=utf-8",
     "Content-Disposition": `attachment; filename="${filename}"`,
     "Content-Length": String(payloadBuffer.length),
     "Cache-Control": "no-store",
@@ -8122,6 +8134,23 @@ async function handleApiRequest(request, response, pathname, url) {
     return true
   }
 
+  if (method === "GET" && (pathname === `${ADMIN_STUDENTS_PREFIX}/moodle-import.xlsx` || pathname === `${ADMIN_STUDENTS_PREFIX}/moodle-import.csv`)) {
+    assertStoreEnabled()
+    assertCanManageUsers(rolePolicy)
+    const roster = await listEnrollmentRoster({ take: 1000, includeUnenrolled: false })
+    if (roster.items.length >= 1000) {
+      throw Object.assign(new Error("Current SIS roster exceeds the 1,000-row Moodle export limit"), { statusCode: 413 })
+    }
+    const students = roster.items.filter((entry) => entry.currentEnrollment?.status === "active")
+    const exported = buildMoodleRosterExport(students)
+    if (pathname.endsWith(".csv")) {
+      sendCsv(response, "moodle-current-students.csv", exported.csv)
+    } else {
+      sendXlsx(response, "moodle-current-students.xlsx", exported.workbook)
+    }
+    return true
+  }
+
   if (method === "GET" && pathname === `${ADMIN_API_PREFIX}/filters`) {
     assertStoreEnabled()
     const data = await listLevelAndSchoolFilters()
@@ -8406,6 +8435,15 @@ async function handleApiRequest(request, response, pathname, url) {
     const rows = parseSpreadsheetRowsFromUploadPayload(payload)
     const result = await importStudentsFromRows(rows)
     sendJson(response, 200, result)
+    return true
+  }
+
+  const moodleDisableMatch = pathname.match(new RegExp(`^${escapeRegex(ADMIN_STUDENTS_PREFIX)}/([^/]+)/moodle/disable$`))
+  if (moodleDisableMatch && method === "POST") {
+    assertStoreEnabled()
+    assertCanManageUsers(rolePolicy)
+    const result = await disableMoodleStudent(decodeURIComponent(moodleDisableMatch[1]))
+    sendJson(response, 202, result)
     return true
   }
 

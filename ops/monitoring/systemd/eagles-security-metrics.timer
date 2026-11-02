@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh local CrowdSec and Fail2ban dashboard metrics
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=30s
+AccuracySec=1s
+Persistent=true
+Unit=eagles-security-metrics.service
+
+[Install]
+WantedBy=timers.target

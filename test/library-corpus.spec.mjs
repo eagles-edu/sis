@@ -105,6 +105,66 @@ test("Dictionary Builder Apply maps the selected syllabication into the canonica
   assert.equal(updates[0].syllabication, "lán-guage")
 })
 
+test("Dictionary Builder Apply replaces active definition and syllable selections while preserving a modal POS class", async () => {
+  const { DICTIONARY_BUILDER_DATUMS, DICTIONARY_BUILDER_MANIFEST, previewDictionaryBuilder } = await import("../src/modules/admin/dictionary-builder.mjs")
+  const { applyDictionaryBuilderSnapshot } = await import("../src/modules/admin/library-corpus.mjs")
+  let entry = {
+    id: "library-cannot-modal",
+    english: "cannot",
+    partOfSpeech: "verb",
+    definition: "Old definition.",
+    syllabication: "can-not",
+    syllableCount: 2,
+    grammarClassification: { grammarFamily: "modal" },
+    originReferences: null,
+  }
+  const datumStatus = Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, { status: ["definition", "syllabication", "syllableCount", "grammarClassification"].includes(datum) ? "available" : "not_offered" }]))
+  const unavailable = (provider) => ({ provider, status: "unsupported", fields: {}, entries: [], media: [], datumStatus: {} })
+  const fetcher = Object.fromEntries(DICTIONARY_BUILDER_MANIFEST.map(({ id }) => [id, async () => unavailable(id)]))
+  fetcher.britannica = async () => ({
+    provider: "britannica",
+    status: "available",
+    sourceUrl: "https://www.britannica.com/dictionary/cannot",
+    fields: { definition: "A replacement definition.", syllabication: "CAN-not", syllableCount: 2, grammarClassification: { grammarFamily: "action" } },
+    entries: [],
+    media: [],
+    datumStatus,
+  })
+  const snapshot = await previewDictionaryBuilder(entry, {
+    ownerKey: "active-datum-replace",
+    fetcher,
+    rankedSources: [{ provider: "britannica", score: 99 }],
+    rankedSourcesByDatum: Object.fromEntries(DICTIONARY_BUILDER_DATUMS.map((datum) => [datum, ["definition", "syllabication", "syllableCount", "grammarClassification"].includes(datum) ? [{ provider: "britannica", score: 99, confirmedAvailable: true }] : []])),
+  })
+  const client = {
+    libraryEntry: {
+      findUnique: async () => entry,
+      update: async ({ data }) => { entry = { ...entry, ...data }; return entry },
+    },
+    libraryMediaAsset: { findMany: async () => [] },
+    libraryEntryRevision: { create: async () => ({}) },
+    dictionaryProviderSuitabilityMetric: { upsert: async () => ({}) },
+    $transaction: async (callback) => callback(client),
+  }
+  const result = await applyDictionaryBuilderSnapshot(entry.id, { name: "Tester", role: "admin" }, {
+    snapshotId: snapshot.id,
+    mode: "fill_missing",
+    forceReplaceFields: ["definition", "syllabication", "syllableCount"],
+    selections: {
+      definition: { provider: "britannica", value: "A replacement definition." },
+      syllabication: { provider: "britannica", value: "CAN-not" },
+      syllableCount: { provider: "britannica", value: 2 },
+      grammarClassification: { provider: "britannica", value: { grammarFamily: "action" } },
+    },
+  }, { ownerKey: "active-datum-replace", clientOverride: client })
+  assert.equal(result.entry.definition, "A replacement definition.")
+  assert.equal(result.entry.syllabication, "cán-not")
+  assert.equal(result.entry.syllableCount, 2)
+  assert.equal(result.entry.grammarClassification.grammarFamily, "modal")
+  assert.ok(result.appliedFields.includes("definition"))
+  assert.ok(result.appliedFields.includes("syllabication"))
+})
+
 test("Dictionary Builder Apply keeps unrelated incomplete noun profiles from blocking a datum", async () => {
   const { DICTIONARY_BUILDER_DATUMS, previewDictionaryBuilder } = await import("../src/modules/admin/dictionary-builder.mjs")
   const { applyDictionaryBuilderSnapshot } = await import("../src/modules/admin/library-corpus.mjs")

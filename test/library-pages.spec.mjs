@@ -361,8 +361,8 @@ test("Dictionary Builder preload keeps unresolved LEDs purple until the provider
   dom.window.close()
 })
 
-test("Dictionary Builder opens and retries from an unsaved Library draft", async () => {
-  const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=noun><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
+test("Dictionary Builder opens, retries, and applies syllables from an unsaved Library draft", async () => {
+  const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=noun><input data-vocabulary-field=syllabication value=><input data-vocabulary-field=syllableCount value=><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
   const timerCallbacks = new Map()
   const requests = []
   const apiPreviewCalls = []
@@ -373,13 +373,13 @@ test("Dictionary Builder opens and retries from an unsaved Library draft", async
     sources: [
       { provider: "britannica", status: "available", fields: { definition: "to praise" }, datumStatus: { definition: { status: "available" } } },
       { provider: "ldoce", status: "waiting_for_input" },
-      { provider: "wordhelp", status: "not_found" },
+      { provider: "wordhelp", status: "available", fields: { syllabication: "COM-mend", syllableCount: 2 }, datumStatus: { syllabication: { status: "available" }, syllableCount: { status: "available" } } },
       { provider: "etymonline", status: "unavailable" },
       { provider: "merriam_webster_thesaurus", status: "robot_blocked" },
       { provider: "oxford_ame", status: "available" },
       { provider: "google_translate", status: googleStatus, fields: googleStatus === "available" ? { vietnamese: "praise" } : {}, datumStatus: { vietnamese: { status: googleStatus } } },
     ],
-    datumSourceOrder: { vietnamese: ["google_translate"] },
+    datumSourceOrder: { vietnamese: ["google_translate"], syllabication: ["wordhelp"], syllableCount: ["wordhelp"] },
     warnings: [],
     acquisitionLog: "",
   })
@@ -400,6 +400,12 @@ test("Dictionary Builder opens and retries from an unsaved Library draft", async
   context.window.SIS_VOCABULARY_ESL = {
     grammarFields: [],
     showApiPreview: async (pane, word) => { apiPreviewCalls.push({ pane, word }) },
+    hydrate: (pane, data) => {
+      for (const field of ["syllabication", "syllableCount"]) {
+        const input = pane.querySelector(`[data-vocabulary-field="${field}"]`)
+        if (input && Object.hasOwn(data, field)) input.value = data[field] ?? ""
+      }
+    },
   }
   context.window.fetch = context.fetch
   context.window.setTimeout = (callback, delay = 0) => {
@@ -441,12 +447,19 @@ test("Dictionary Builder opens and retries from an unsaved Library draft", async
   await new Promise((resolve) => setTimeout(resolve, 0))
   assert.match(requests[2], /\/entries\/new-canonical\/dictionary-builder\/previews\/draft-provider-preview\/retry$/u)
   assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /GT is ready/u)
+  dialog.querySelector('[data-dictionary-builder-tab="syllabication"]').click()
+  dialog.querySelector("[data-dictionary-builder-apply]").click()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.equal(pane.querySelector('[data-vocabulary-field="syllabication"]').value, "COM-mend")
+  assert.equal(pane.querySelector('[data-vocabulary-field="syllableCount"]').value, "2")
+  assert.deepEqual(JSON.parse(pane.dataset.dictionaryBuilderPending).forceReplaceFields, ["syllabication", "syllableCount"])
   dom.window.close()
 })
 
 test("Dictionary Builder applies Definition Proper to the enclosing saved Library entry", async () => {
-  const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor data-approved-entry-id=entry-1><div data-news-vocabulary-row=0><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=noun><textarea data-vocabulary-field=definition></textarea><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
+  const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor data-approved-entry-id=entry-1><div data-news-vocabulary-row=0><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=verb><input data-vocabulary-field=grammarFamily value=modal><textarea data-vocabulary-field=definition>Existing definition.</textarea><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
   const requests = []
+  const requestBodies = []
   const snapshot = {
     ok: true,
     id: "saved-entry-preview",
@@ -463,11 +476,12 @@ test("Dictionary Builder applies Definition Proper to the enclosing saved Librar
     HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
     MutationObserver: dom.window.MutationObserver,
     structuredClone,
-    fetch: async (url) => {
+    fetch: async (url, options = {}) => {
       requests.push(String(url))
+      if (options.body) requestBodies.push(JSON.parse(options.body))
       return requests.length === 1
         ? { ok: true, status: 200, json: async () => snapshot }
-        : { ok: true, status: 200, json: async () => ({ ok: true, appliedFields: ["definition"], entry: { definition: "A source-verified definition." } }) }
+        : { ok: true, status: 200, json: async () => ({ ok: true, appliedFields: ["definition"], entry: { definition: "A source-verified definition.", grammarClassification: { grammarFamily: "modal" } } }) }
     },
     setTimeout,
   }
@@ -481,6 +495,7 @@ test("Dictionary Builder applies Definition Proper to the enclosing saved Librar
         const input = pane.querySelector(`[data-vocabulary-field="${field}"]`)
         if (input) input.value = value
       })
+      if (entry.grammarClassification?.grammarFamily) pane.querySelector('[data-vocabulary-field="grammarFamily"]').value = entry.grammarClassification.grammarFamily
     },
   }
   context.window.open = () => ({ closed: false, location: {}, focus() {} })
@@ -499,7 +514,9 @@ test("Dictionary Builder applies Definition Proper to the enclosing saved Librar
   await new Promise((resolve) => setTimeout(resolve, 0))
 
   assert.match(requests[1], /\/entries\/entry-1\/dictionary-builder\/previews\/saved-entry-preview\/apply$/u)
+  assert.deepEqual(requestBodies.at(-1).forceReplaceFields, ["definition"])
   assert.equal(editor.querySelector('[data-vocabulary-field="definition"]').value, "A source-verified definition.")
+  assert.equal(editor.querySelector('[data-vocabulary-field="grammarFamily"]').value, "modal")
   assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /Applied definition/u)
   dom.window.close()
 })

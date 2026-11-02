@@ -2181,6 +2181,7 @@ test("all configured teacher accounts receive the same read/write attendance pol
     const permissionBody = await permissions.json()
     assert.equal(permissionBody.roles?.teacher?.canRead, true)
     assert.equal(permissionBody.roles?.teacher?.canWrite, true)
+    assert.ok(permissionBody.roles?.teacher?.allowedPages?.includes("news-reports"))
 
     const attendance = await fetchLocal(port, "/api/admin/students/abc/attendance", {
       method: "POST",
@@ -3024,6 +3025,15 @@ test("GET /api/admin/students/import-template.xlsx requires auth", async () => {
   assert.equal(res.status, 401)
   const body = await res.json()
   assert.match(body.error, /Unauthorized/i)
+})
+
+test("Moodle roster Excel and native CSV exports require an admin session", async () => {
+  for (const pathName of ["/api/admin/students/moodle-import.xlsx", "/api/admin/students/moodle-import.csv"]) {
+    const res = await fetchLocal(port, pathName)
+    assert.equal(res.status, 401, pathName)
+    const body = await res.json()
+    assert.match(body.error, /Unauthorized/i, pathName)
+  }
 })
 
 test("GET /api/admin/users requires auth", async () => {

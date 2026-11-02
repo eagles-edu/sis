@@ -60,8 +60,26 @@ Persistent Docker volumes:
 | node-exporter | `http://127.0.0.1:9100` | Host metrics |
 | process-exporter | `http://127.0.0.1:9256` | Test-mirror process metrics |
 | blackbox-exporter | `http://127.0.0.1:9115` | Public HTTP(S) probe metrics |
+| Security Overview | `http://127.0.0.1:3030/d/host-security-overview` | Local CrowdSec/Fail2ban status and active banned-address table |
 
 All endpoints are bound to loopback. They are not public web services and should remain behind SSH access or an authenticated internal reverse proxy.
+
+## Host Security Overview
+
+Grafana's **Host Security Overview** dashboard is provisioned from `ops/monitoring/grafana/dashboards/security-overview.json` and remains subject to the existing Grafana authentication and loopback-only listener. The dashboard includes current CrowdSec decisions, current Fail2ban SSH bans and failures, policy settings, systemd service state, and an active ban table grouped by source and country.
+
+The host timer `eagles-security-metrics.timer` runs the root-owned installed copy of `tools/security-monitoring-metrics.sh` every 30 seconds. It writes an atomic Prometheus textfile snapshot into `runtime-data/prometheus/security-overview.prom`, which the existing node-exporter textfile collector scrapes. CrowdSec decisions and Fail2ban's active SSH list are joined to the local `/var/lib/crowdsec/data/GeoLite2-City.mmdb` database; country lookups do not send addresses to an external service. Unknown or non-IP ranges display `Unknown` rather than using a remote lookup.
+
+The active-ban table intentionally contains address labels because the local dashboard needs to show the banned addresses. Those label series remain in Prometheus for its configured seven-day retention after a ban disappears from the current list. No new network listener is added, and the dashboard does not expose unban controls or the Fail2ban control socket.
+
+Useful local checks:
+
+```bash
+systemctl status eagles-security-metrics.timer
+systemctl start eagles-security-metrics.service
+curl -fsS http://127.0.0.1:9100/metrics | grep '^eagles_security_'
+curl -fsS http://127.0.0.1:3030/api/health
+```
 
 ## Starting and checking the suite
 
