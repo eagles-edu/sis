@@ -68,6 +68,10 @@ A bare `npm run db:*`, a mismatched `SIS_ENV_FILE`/`DOTENV_CONFIG_PATH`, or a cr
 6. Keep edits ASCII unless the target file already needs Unicode.
 7. Before editing, make a backup or verify that a current backup/snapshot already exists for the file.
 8. After any file edit, restart the dev runtime before reporting the task complete.
+9. For multi-stage work, write the plan, stop for approval, and implement one stage per approval. Do not edit files before the plan is approved.
+10. Before reporting a port, service, or credential as blocked, check the live process or port and the env file that owns it (`.env.dev` for dev). Do not report from memory or from a single file.
+11. For multi-step work, keep the todo list current in the session database and report status by todo ID. Do not answer progress questions with estimates.
+12. For repeated fixes of one lint rule across a file, use `.github/prompts/fix-rule.prompt.md` so every match is fixed in one pass.
 
 ### Configuration Hierarchy
 
