@@ -71,3 +71,6 @@ test/e2e/index.html
 
 # Authenticated browser captures stay local and must not enter public commits.
 .playwright-mcp/
+
+# Local Moodle checkout is maintained separately from SIS.
+/moodle/
