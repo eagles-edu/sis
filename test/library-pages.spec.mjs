@@ -140,8 +140,10 @@ test("Dictionary Builder keeps origin metadata and selections on retry while pre
   assert.match(libraryReviewWorkbench, /input\.dataset\.vocabularyOriginField/)
   assert.doesNotMatch(libraryReviewWorkbench, /worksCited: \["etymonline"\]/)
   assert.match(libraryReviewWorkbench, /datum !== "originPath" \|\| preferred\.includes\(source\.provider\)/)
-  assert.match(libraryReviewWorkbench, /structuredClone\(selectedCandidates\), datum, null, \{ autoRetry: false \}/)
-  assert.match(libraryReviewWorkbench, /scheduleDictionaryBuilderPolling\(snapshot, pane, sourceId, dialog, selectedCandidates, selectedTab, 0, 2000\)/)
+  assert.match(libraryReviewWorkbench, /const currentSelections = dialog\.open \? dialog\.dictionaryBuilderSelections \|\| previousSelections : previousSelections/u)
+  assert.match(libraryReviewWorkbench, /applyMode === "replace_all" \? " selected"/u, "Replace all is the default Dictionary Builder mode")
+  assert.match(libraryReviewWorkbench, /sourceUrlForProvider = \(provider, sourceUrl, word\) => provider === "oxford_ame"\s+\? initialSourceUrl\(provider, word\)/u, "OA always targets the American English path")
+  assert.match(libraryReviewWorkbench, /navigateProviderTab\(existing, sourceUrl\)/u, "reused source tabs navigate to the current preview URL")
   assert.match(libraryReviewWorkbench, /retryPreferred\.textContent = "Retry preferred"/)
   assert.match(libraryReviewWorkbench, /retryPreferred\.setAttribute\("aria-label", `Retry preferred sources for \$\{datum\}`\)/)
   assert.match(libraryReviewWorkbench, /const INITIAL_SOURCE_GROUP_SIZE = 7/u)
@@ -361,8 +363,8 @@ test("Dictionary Builder preload keeps unresolved LEDs purple until the provider
   dom.window.close()
 })
 
-test("Dictionary Builder opens and retries from an unsaved Library draft", async () => {
-  const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=noun><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
+test("Dictionary Builder opens, retries, and applies syllables from an unsaved Library draft", async () => {
+  const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=noun><input data-vocabulary-field=syllabication value=><input data-vocabulary-field=syllableCount value=><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
   const timerCallbacks = new Map()
   const requests = []
   const apiPreviewCalls = []
@@ -373,13 +375,13 @@ test("Dictionary Builder opens and retries from an unsaved Library draft", async
     sources: [
       { provider: "britannica", status: "available", fields: { definition: "to praise" }, datumStatus: { definition: { status: "available" } } },
       { provider: "ldoce", status: "waiting_for_input" },
-      { provider: "wordhelp", status: "not_found" },
+      { provider: "wordhelp", status: "available", fields: { syllabication: "COM-mend", syllableCount: 2 }, datumStatus: { syllabication: { status: "available" }, syllableCount: { status: "available" } } },
       { provider: "etymonline", status: "unavailable" },
       { provider: "merriam_webster_thesaurus", status: "robot_blocked" },
       { provider: "oxford_ame", status: "available" },
       { provider: "google_translate", status: googleStatus, fields: googleStatus === "available" ? { vietnamese: "praise" } : {}, datumStatus: { vietnamese: { status: googleStatus } } },
     ],
-    datumSourceOrder: { vietnamese: ["google_translate"] },
+    datumSourceOrder: { vietnamese: ["google_translate"], syllabication: ["wordhelp"], syllableCount: ["wordhelp"] },
     warnings: [],
     acquisitionLog: "",
   })
@@ -400,6 +402,12 @@ test("Dictionary Builder opens and retries from an unsaved Library draft", async
   context.window.SIS_VOCABULARY_ESL = {
     grammarFields: [],
     showApiPreview: async (pane, word) => { apiPreviewCalls.push({ pane, word }) },
+    hydrate: (pane, data) => {
+      for (const field of ["syllabication", "syllableCount"]) {
+        const input = pane.querySelector(`[data-vocabulary-field="${field}"]`)
+        if (input && Object.hasOwn(data, field)) input.value = data[field] ?? ""
+      }
+    },
   }
   context.window.fetch = context.fetch
   context.window.setTimeout = (callback, delay = 0) => {
@@ -441,12 +449,19 @@ test("Dictionary Builder opens and retries from an unsaved Library draft", async
   await new Promise((resolve) => setTimeout(resolve, 0))
   assert.match(requests[2], /\/entries\/new-canonical\/dictionary-builder\/previews\/draft-provider-preview\/retry$/u)
   assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /GT is ready/u)
+  dialog.querySelector('[data-dictionary-builder-tab="syllabication"]').click()
+  dialog.querySelector("[data-dictionary-builder-apply]").click()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.equal(pane.querySelector('[data-vocabulary-field="syllabication"]').value, "COM-mend")
+  assert.equal(pane.querySelector('[data-vocabulary-field="syllableCount"]').value, "2")
+  assert.deepEqual(JSON.parse(pane.dataset.dictionaryBuilderPending).forceReplaceFields, ["syllabication", "syllableCount"])
   dom.window.close()
 })
 
 test("Dictionary Builder applies Definition Proper to the enclosing saved Library entry", async () => {
-  const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor data-approved-entry-id=entry-1><div data-news-vocabulary-row=0><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=noun><textarea data-vocabulary-field=definition></textarea><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
+  const dom = new JSDOM("<!doctype html><body><div id=libraryApprovedEditor><div data-vocabulary-editor data-approved-entry-id=entry-1><div data-news-vocabulary-row=0><input data-vocabulary-field=english value=commend><input data-vocabulary-field=partOfSpeech value=verb><input data-vocabulary-field=grammarFamily value=modal><textarea data-vocabulary-field=definition>Existing definition.</textarea><p data-vocabulary-dictionary-builder-message></p><button type=button data-vocabulary-dictionary-builder>Definition</button><button type=button data-dictionary-builder-open-sources>Open sources</button><div data-dictionary-builder-source-leds></div></div></div></div></body>", { url: "http://127.0.0.1/admin/library" })
   const requests = []
+  const requestBodies = []
   const snapshot = {
     ok: true,
     id: "saved-entry-preview",
@@ -463,11 +478,12 @@ test("Dictionary Builder applies Definition Proper to the enclosing saved Librar
     HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
     MutationObserver: dom.window.MutationObserver,
     structuredClone,
-    fetch: async (url) => {
+    fetch: async (url, options = {}) => {
       requests.push(String(url))
+      if (options.body) requestBodies.push(JSON.parse(options.body))
       return requests.length === 1
         ? { ok: true, status: 200, json: async () => snapshot }
-        : { ok: true, status: 200, json: async () => ({ ok: true, appliedFields: ["definition"], entry: { definition: "A source-verified definition." } }) }
+        : { ok: true, status: 200, json: async () => ({ ok: true, appliedFields: ["definition"], entry: { definition: "A source-verified definition.", grammarClassification: { grammarFamily: "modal" } } }) }
     },
     setTimeout,
   }
@@ -481,6 +497,7 @@ test("Dictionary Builder applies Definition Proper to the enclosing saved Librar
         const input = pane.querySelector(`[data-vocabulary-field="${field}"]`)
         if (input) input.value = value
       })
+      if (entry.grammarClassification?.grammarFamily) pane.querySelector('[data-vocabulary-field="grammarFamily"]').value = entry.grammarClassification.grammarFamily
     },
   }
   context.window.open = () => ({ closed: false, location: {}, focus() {} })
@@ -499,7 +516,9 @@ test("Dictionary Builder applies Definition Proper to the enclosing saved Librar
   await new Promise((resolve) => setTimeout(resolve, 0))
 
   assert.match(requests[1], /\/entries\/entry-1\/dictionary-builder\/previews\/saved-entry-preview\/apply$/u)
+  assert.deepEqual(requestBodies.at(-1).forceReplaceFields, ["definition"])
   assert.equal(editor.querySelector('[data-vocabulary-field="definition"]').value, "A source-verified definition.")
+  assert.equal(editor.querySelector('[data-vocabulary-field="grammarFamily"]').value, "modal")
   assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /Applied definition/u)
   dom.window.close()
 })
@@ -590,6 +609,9 @@ test("Dictionary Builder retries pending providers server-side and updates their
 
   const dialog = dom.window.document.querySelector("#libraryDictionaryBuilderDialog")
   const pollTimers = () => [...timerCallbacks.entries()].filter(([, timer]) => timer.callback.toString().includes("providerRetryInFlight"))
+  const applyMode = dialog.querySelector("[data-dictionary-builder-mode]")
+  assert.equal(applyMode.value, "replace_all", "Replace all is the default apply mode")
+  applyMode.value = "replace_selected"
   assert.doesNotMatch(dialog.querySelector(".dictionary-builder-source-led-legend").textContent, /red|opening/iu, "the visible source legend offers only green success or purple retry/manual-review states")
   assert.equal(dialog.querySelector('[data-source-provider="britannica"]').dataset.sourceStatus, "popup-blocking", "a failed provider probe remains purple before the server retry")
   assert.equal(dialog.querySelector('[data-source-provider="ldoce"]').dataset.sourceStatus, "popup-blocking", "a challenge is purple and waits for user action")
@@ -613,6 +635,7 @@ test("Dictionary Builder retries pending providers server-side and updates their
     assert.equal(dialog.querySelector(`[data-source-provider="${provider}"]`).dataset.sourceStatus, expectedStatus, `${provider} reports ${expectedStatus} after its latest scrape`)
   }
   await runNextProviderPoll("ldoce")
+  assert.equal(dialog.querySelector("[data-dictionary-builder-mode]").value, "replace_selected", "an asynchronous provider refresh preserves the selected apply mode")
   await runNextProviderPoll("etymonline", "popup-blocking")
   assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /ET is challenged\. Complete the check in its open source tab and leave it open/u)
   await runNextProviderPoll("merriam_webster_thesaurus", "success")
@@ -623,7 +646,15 @@ test("Dictionary Builder retries pending providers server-side and updates their
   assert.deepEqual([...dialog.querySelectorAll('[data-dictionary-builder-relation][data-dictionary-builder-provider="merriam_webster_thesaurus"]')].map((field) => field.value), ["praise\ncommend", ""], "TH scrape data is returned to the Builder")
   assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /TH is ready/u)
   await runNextProviderPoll("oxford_ame", "success")
+  dialog.querySelector('[data-dictionary-builder-tab="definition"]').click()
+  const selectedDefinitionRadio = dialog.querySelector('input[type="radio"][value="oxford_ame"]')
+  assert.ok(selectedDefinitionRadio, "the available OA definition can be selected")
+  selectedDefinitionRadio.click()
+  assert.equal(dialog.dictionaryBuilderSelections.definition?.provider, "oxford_ame")
   await runNextProviderPoll("google_translate", "success")
+  dialog.querySelector('[data-dictionary-builder-tab="definition"]').click()
+  assert.equal(dialog.querySelector('input[type="radio"][value="oxford_ame"]').checked, true, "a later provider refresh preserves the selected OA definition source")
+  assert.equal(dialog.querySelector("[data-dictionary-builder-mode]").value, "replace_selected", "later provider refreshes preserve the selected apply mode")
   await runNextProviderPoll("britannica", "success")
   assert.match(dialog.querySelector("[data-dictionary-builder-message]").textContent, /BR is ready/u)
   await runNextProviderPoll("etymonline", "success")

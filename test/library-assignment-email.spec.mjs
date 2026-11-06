@@ -3,7 +3,7 @@ import dotenv from "dotenv"
 import test from "node:test"
 
 dotenv.config({ path: ".env.dev", override: false })
-process.env.NODE_ENV = "test"
+process.env.NODE_ENV = "development"
 process.env.SIS_ENV_FILE = ".env.dev"
 
 test("Library assignment email queueing is stable and idempotent", async () => {

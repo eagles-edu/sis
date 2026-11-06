@@ -1,5 +1,7 @@
 // @ts-check
 
+import { createHash } from "node:crypto"
+
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import {
   getConfiguredSchoolYear,
@@ -9,6 +11,7 @@ import {
   canonicalizeLevel as canonicalizeCatalogLevel,
   resolveLevelVariants as resolveCatalogLevelVariants,
 } from "./level-catalog.mjs"
+import { queueMoodleEnrollmentChange } from "./moodle-provisioning.mjs"
 
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
@@ -29,6 +32,25 @@ function assertWithStatus(condition, status, message) {
   const error = new Error(message)
   error.statusCode = status
   throw error
+}
+
+/**
+ * @param {string} studentRefId
+ * @param {string} schoolYear
+ * @returns {string}
+ */
+function deterministicActiveEnrollmentPeriodId(studentRefId, schoolYear, generationAnchorId = "") {
+  const key = JSON.stringify([studentRefId, schoolYear, generationAnchorId || "initial"])
+  const digest = createHash("sha256").update(key).digest("hex")
+  return `active_enrollment_${digest}`
+}
+
+/**
+ * @param {unknown} error
+ * @returns {boolean}
+ */
+function isPrismaUniqueConstraintError(error) {
+  return normalizeText(error?.code).toUpperCase() === "P2002"
 }
 
 function normalizeDate(value, fallback = null) {
@@ -334,9 +356,15 @@ export async function resolveEnrollmentPeriodForStudent(
     },
   })
   assertWithStatus(Boolean(student), 404, "Student not found")
+  const generationAnchor = await client.studentEnrollmentPeriod.findFirst({
+    where: {
+      studentRefId: targetStudentId,
+      schoolYear: targetSchoolYear,
+    },
+    orderBy: [{ startedAt: "desc" }, { createdAt: "desc" }],
+  })
   const level = normalizeNullableText(canonicalizeLevel(levelHint || student?.profile?.currentGrade))
-  const created = await client.studentEnrollmentPeriod.create({
-    data: {
+  const periodData = {
       studentRefId: targetStudentId,
       schoolYear: targetSchoolYear,
       level,
@@ -344,9 +372,32 @@ export async function resolveEnrollmentPeriodForStudent(
       startedAt: resolveBackfillStartedAt(new Date()),
       createdBy: normalizeNullableText(updatedByUsername),
       updatedBy: normalizeNullableText(updatedByUsername),
-    },
-  })
-  return created
+  }
+  const id = deterministicActiveEnrollmentPeriodId(
+    targetStudentId,
+    targetSchoolYear,
+    normalizeText(generationAnchor?.id)
+  )
+  try {
+    return await client.studentEnrollmentPeriod.upsert({
+      where: { id },
+      update: {},
+      create: { id, ...periodData },
+    })
+  } catch (error) {
+    if (!isPrismaUniqueConstraintError(error)) throw error
+    const concurrentlyCreated = await client.studentEnrollmentPeriod.findFirst({
+      where: {
+        studentRefId: targetStudentId,
+        schoolYear: targetSchoolYear,
+        status: ENROLLMENT_STATUS_ACTIVE,
+        endedAt: null,
+      },
+      orderBy: [{ startedAt: "desc" }, { createdAt: "desc" }],
+    })
+    if (concurrentlyCreated) return concurrentlyCreated
+    throw error
+  }
 }
 
 export async function backfillEnrollmentPeriodLinks({
@@ -828,6 +879,13 @@ export async function changeStudentEnrollment(
         create: buildEnrollmentProfileCreateData(targetStudentId, nextLevel),
       })
 
+      await queueMoodleEnrollmentChange(tx, {
+        student,
+        action: "promote",
+        fromLevel: student.profile?.currentGrade || currentPeriod.level,
+        toLevel: nextLevel,
+      })
+
       return {
         ok: true,
         action,
@@ -880,6 +938,12 @@ export async function changeStudentEnrollment(
         where: { studentRefId: targetStudentId },
         update: { currentGrade: null },
         create: buildEnrollmentProfileCreateData(targetStudentId, null),
+      })
+
+      await queueMoodleEnrollmentChange(tx, {
+        student,
+        action: "unenroll",
+        fromLevel: levelForArchive,
       })
 
       return {

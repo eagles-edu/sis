@@ -419,8 +419,9 @@ function setupTestEnv() {
   process.env.EXERCISE_MAILER_ORIGIN = "*"
   process.env.MAILER_DEBUG = "false"
   process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = TEST_ADMIN_UI_SETTINGS_FILE
-  process.env.STUDENT_ADMIN_USER = process.env.STUDENT_ADMIN_USER || "admin"
-  process.env.STUDENT_ADMIN_PASS = process.env.STUDENT_ADMIN_PASS || "3825u2z"
+  process.env.STUDENT_ADMIN_USER = `portal-site-review-${process.pid}`
+  process.env.STUDENT_ADMIN_PASS = `portal-site-review-pass-${process.pid}`
+  delete process.env.STUDENT_ADMIN_PASSWORD_HASH
   process.env.STUDENT_STUDENT_USER = process.env.STUDENT_STUDENT_USER || "kramer001"
   process.env.STUDENT_STUDENT_PASS = process.env.STUDENT_STUDENT_PASS || "P1k@ch00"
   process.env.STUDENT_PARENT_USER = process.env.STUDENT_PARENT_USER || "cmkramer001"

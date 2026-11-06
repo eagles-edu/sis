@@ -1402,7 +1402,7 @@ export async function previewMerriamWebsterLibraryEntry(entry, fetchImpl = fetch
         fields.originPath = text(fallback?.fields?.originPath) || fallbackEtymology
         if (fallback.fields.originReferences) fields.originReferences = fallback.fields.originReferences
       }
-    } catch {}
+    } catch { /* Merriam-Webster remains usable when the optional Word History fallback fails. */ }
   }
   return { ok: true, available: true, fields, details }
 }
@@ -1571,6 +1571,9 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
     : []
   const mode = dictionaryApplyMode(payload?.mode || "fill_missing", "dictionary builder")
   const selections = payload?.selections && typeof payload.selections === "object" ? payload.selections : {}
+  const forceReplaceFields = new Set(Array.isArray(payload?.forceReplaceFields)
+    ? payload.forceReplaceFields.filter((field) => typeof field === "string" && DICTIONARY_BUILDER_ALLOWED_FIELDS.has(field))
+    : [])
   const selectedFields = Object.keys(selections).filter((field) => DICTIONARY_BUILDER_ALLOWED_FIELDS.has(field))
   const proposed = {}
   const definitionFields = {}
@@ -1614,7 +1617,10 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
     if (field === "grammarClassification" && value && typeof value === "object" && !Array.isArray(value)) {
       const classification = Object.fromEntries(["grammarFamily", "grammarSubtype", "grammarDetail", "grammarNumber", "grammarFamilies", "grammarSubtypes"].filter((key) => Object.hasOwn(value, key) && value[key] !== "" && value[key] !== false && (!Array.isArray(value[key]) || value[key].length)).map((key) => [key, value[key]]))
       if (!Object.keys(classification).length) continue
-      proposed.grammarClassification = classification
+      const existingClassification = existing.grammarClassification && typeof existing.grammarClassification === "object" && !Array.isArray(existing.grammarClassification) ? existing.grammarClassification : {}
+      proposed.grammarClassification = mode === "fill_missing"
+        ? { ...classification, ...Object.fromEntries(Object.entries(existingClassification).filter(([, current]) => current !== undefined && current !== null && current !== "" && current !== false && (!Array.isArray(current) || current.length))) }
+        : classification
       DICTIONARY_BUILDER_POS_FORM_FIELDS.forEach((posField) => {
         if (!Object.hasOwn(value, posField)) return
         if (mode === "fill_missing" && existing[posField]) return
@@ -1624,12 +1630,12 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
       continue
     }
     if (DICTIONARY_BUILDER_DEFINITION_FIELDS.has(field)) {
-      if (field === "definition" && mode === "fill_missing" && existing.definition) definitionFields.definition = existing.definition
+      if (field === "definition" && mode === "fill_missing" && existing.definition && !forceReplaceFields.has(field)) definitionFields.definition = existing.definition
       else if (value !== undefined && value !== null && value !== "") definitionFields[field] = value
       claimLedger.push({ field, provider, status: manualSelection ? "manual" : source.datumStatus?.[datum]?.status || "unavailable" })
       continue
     }
-    if (mode === "fill_missing" && existing[field] && field !== "grammarClassification") continue
+    if (mode === "fill_missing" && existing[field] && field !== "grammarClassification" && !forceReplaceFields.has(field)) continue
     if (value === undefined || value === null || value === "") continue
     if (field === "originReferences") proposed.originReferences = normalizeOriginReferences([...(normalizeOriginReferences(existing.originReferences) || []), ...(normalizeOriginReferences(value) || [])])
     else proposed[field] = value

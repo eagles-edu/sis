@@ -239,6 +239,7 @@ const {
   setStudentAdminRuntimeHealthProvider,
 } = await import("./student-admin-routes.mjs")
 const { ensureDefaultPortalAssets } = await import("../src/modules/portal/portal-asset-store.mjs")
+const { handleMoodleProvisioningRequest } = await import("../src/modules/admin/moodle-provisioning.mjs")
 
 try {
   const portalAssetSeed = await ensureDefaultPortalAssets()
@@ -1672,6 +1673,8 @@ async function sendMailerMessage(transporter, message, provider) {
 async function handleRequest(request, response, transporter, provider) {
   const { method } = request
   const url = new URL(request.url || "", `http://${request.headers.host || "localhost"}`)
+
+  if (await handleMoodleProvisioningRequest(request, response)) return
 
   if ((method === "GET" || method === "HEAD") && url.pathname === "/robots.txt") {
     response.writeHead(200, {

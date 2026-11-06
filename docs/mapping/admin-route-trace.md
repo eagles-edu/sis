@@ -64,11 +64,15 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | POST | `/api/admin/notifications/email` | Yes | write role (teacher restricted exception) | No | `queueAnnouncementEmail` or `sendAnnouncementEmail` |
 | POST | `/api/admin/exports/xlsx` | Yes | write role | No | `buildXlsxFromPayload` |
 | GET | `/api/admin/students/import-template.xlsx` | Yes | any readable role | No | template file streaming |
+| GET | `/api/admin/students/moodle-import.xlsx` | Yes | `canManageUsers` | Yes | Moodle current-student workbook with native-upload and SIS-link sheets |
+| GET | `/api/admin/students/moodle-import.csv` | Yes | `canManageUsers` | Yes | Moodle-native Upload users CSV companion |
+| GET | `/api/admin/students/moodle-fixes.xlsx` | Yes | `canManageUsers` | Yes | SIS import workbook containing only active students blocked from Moodle export |
 | GET | `/api/admin/filters` | Yes | any readable role | Yes | `listLevelAndSchoolFilters` (`src/modules/admin/student-admin-queries.mjs`) |
 | GET | `/api/admin/students/next-student-number` | Yes | any readable role | Yes | `getNextStudentNumber` (`src/modules/admin/student-roster.mjs`) |
 | GET | `/api/admin/students` | Yes | any readable role | Yes | `listStudents` (`src/modules/admin/student-roster.mjs`) |
 | POST | `/api/admin/students` | Yes | write role | Yes | `saveStudent` |
 | POST | `/api/admin/students/import` | Yes | write role | Yes | `importStudentsFromRows` |
+| POST | `/api/admin/students/{studentRefId}/moodle/disable` | Yes | `canManageUsers` | Yes | queue SIS-owned Moodle disable and suspend SIS student login pending signed receipt |
 | GET | `/api/admin/family` | Yes | any readable role | Yes | `findFamilyByEmergencyPhone` (`phone` query parameter) in `src/modules/admin/student-records.mjs` |
 | GET | `/api/admin/users` | Yes | `canManageUsers` | Yes | `listAdminUsers` |
 | POST | `/api/admin/users` | Yes | `canManageUsers` | Yes | `createAdminUser` |
@@ -77,6 +81,15 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | GET | `/api/admin/students/{studentRefId}` | Yes | any readable role | Yes | `getStudentById` (`src/modules/admin/student-roster.mjs`) |
 | PUT | `/api/admin/students/{studentRefId}` | Yes | write role | Yes | `saveStudent` (update) |
 | DELETE | `/api/admin/students/{studentRefId}` | Yes | write role | Yes | `deleteStudent` |
+
+## Signed Moodle Provisioning Routes
+
+| Method | Path | Auth Required | Handler |
+| --- | --- | --- | --- |
+| POST | `/api/moodle/provisioning/poll` | Moodle HMAC signature, timestamp, and one-use nonce | ordered SIS command polling |
+| POST | `/api/moodle/provisioning/receipt` | Moodle HMAC signature, timestamp, and one-use nonce | command receipt processing |
+| POST | `/api/moodle/provisioning/link` | Moodle HMAC signature, timestamp, and one-use nonce | idempotent Moodle numeric-user-ID to SIS student identity link |
+
 | GET | `/api/admin/students/{studentRefId}/report-card.pdf` | Yes | any readable role | Yes | `generateStudentReportCardPdf` |
 | POST | `/api/admin/students/{studentRefId}/attendance` | Yes | write role | Yes | `saveAttendanceRecord` in `src/modules/admin/student-records.mjs` |
 | DELETE | `/api/admin/students/{studentRefId}/attendance/{recordId}` | Yes | write role | Yes | `deleteAttendanceRecord` in `src/modules/admin/student-records.mjs` |
@@ -98,6 +111,14 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | GET | `/api/parent/children/{eaglesId}/profile` | Yes (parent session) | linked-child scope | child profile + lock/immutable metadata |
 | PUT | `/api/parent/children/{eaglesId}/profile-draft` | Yes (parent session) | linked-child scope + lock enforcement | `saveParentProfileDraftSubmission` |
 | POST | `/api/parent/children/{eaglesId}/profile-submit` | Yes (parent session) | linked-child scope | `setParentProfileSubmissionSubmitted` |
+
+## Google Forms Grade Submission
+
+| Method | Path | Auth Required | Handler |
+| --- | --- | --- | --- |
+| POST | `/api/integrations/google-forms/grades` | `GOOGLE_FORMS_GRADES_SECRET` HMAC signature, timestamp, and one-use nonce | idempotent `saveGradeRecord` submission from the Google Forms response-sheet trigger |
+
+The minimum signed grade data is `eaglesId`, `score`, `maxScore`, and `title`; `sourceAttemptId` is optional. `maxScore` is required for percentage calculation. The handler maps `title` to the grade assignment name, assigns the grade to the school year and quarter current at receipt using authoritative SIS school setup, and derives class and enrollment period from the student's single active enrollment in that school year. It fails closed if that SIS context is invalid or ambiguous. The Apps Script source is `integrations/google-forms/grades.gs`; it maps the response sheet's `EaglesID` and `Score` columns and hashes spreadsheet/sheet/row identity for retry-safe grade IDs.
 
 ## Incoming Exercise Queue Action Values (`POST /api/admin/exercise-results/incoming`)
 

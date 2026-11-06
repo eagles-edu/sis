@@ -1,0 +1,126 @@
+{
+  "uid": "host-security-overview",
+  "title": "Host Security Overview",
+  "tags": ["security", "crowdsec", "fail2ban", "host"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "description": "Local-only, read-only view of CrowdSec and Fail2ban. Active address rows are enriched from the host's local GeoLite2 database; no external IP lookup is used.",
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Active CrowdSec bans",
+      "description": "Current CrowdSec IP and range ban decisions.",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "eagles_crowdsec_active_decisions", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }] } }, "overrides": [] }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Active Fail2ban SSH bans",
+      "description": "Current addresses banned by the sshd jail.",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "eagles_fail2ban_banned_current{jail=\"sshd\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }] } }, "overrides": [] }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Unique active addresses",
+      "description": "Distinct addresses across the CrowdSec and Fail2ban lists.",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "count(count by (address) (eagles_security_ban_info)) or vector(0)", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Collector age",
+      "description": "Age of the last successful local data collection. Values above 90 seconds indicate the collector is stale.",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "time() - eagles_security_metrics_generated_timestamp_seconds", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 60 }, { "color": "red", "value": 90 }] } }, "overrides": [] }
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Currently banned addresses",
+      "description": "Current CrowdSec decisions and Fail2ban SSH bans, with offline country lookup. Address values are retained locally in Prometheus for its configured retention period.",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 5 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "eagles_security_ban_info", "format": "table", "instant": true, "refId": "A" }],
+      "fieldConfig": { "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false } }, "overrides": [] },
+      "options": { "showHeader": true, "cellHeight": "sm", "footer": { "show": false } }
+    },
+    {
+      "id": 6,
+      "type": "barchart",
+      "title": "Active bans by country and source",
+      "description": "Counts of currently banned addresses, grouped by source and country.",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 15 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "sum by (country, source) (eagles_security_ban_info)", "legendFormat": "{{country}} / {{source}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "orientation": "horizontal", "xTickLabelRotation": 0, "xTickLabelSpacing": 0, "showValue": "always", "stacking": "normal", "tooltip": { "mode": "single", "sort": "none" }, "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "CrowdSec parser activity",
+      "description": "Parsed and rejected event rates reported by CrowdSec.",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 15 },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "sum(rate(cs_parser_hits_ok_total[5m]))", "legendFormat": "parsed", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "sum(rate(cs_parser_hits_ko_total[5m]))", "legendFormat": "not parsed", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "options": { "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "SSH failures in window",
+      "description": "Current failed SSH attempts counted by Fail2ban within its 10-minute window.",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 24 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "eagles_fail2ban_failed_current{jail=\"sshd\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 4 }, { "color": "red", "value": 6 }] } }, "overrides": [] }
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "SSH ban threshold",
+      "description": "Maximum SSH failures before permanent ban.",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 24 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "eagles_fail2ban_maxretry{jail=\"sshd\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Failure window",
+      "description": "Fail2ban SSH lookback window.",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 24 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "eagles_fail2ban_findtime_seconds{jail=\"sshd\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "SSH ban duration",
+      "description": "-1 means the SSH ban has no expiration.",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 24 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "eagles_fail2ban_bantime_seconds{jail=\"sshd\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "short", "mappings": [{ "type": "value", "options": { "-1": { "text": "Permanent", "color": "red" } } }] }, "overrides": [] }
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "Security service state",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 29 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "sis-prometheus" }, "expr": "node_systemd_unit_state{name=~\"(crowdsec|crowdsec-firewall-bouncer|fail2ban)\\.service\",state=\"active\"}", "format": "table", "instant": true, "refId": "A" }],
+      "fieldConfig": { "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false } }, "overrides": [] },
+      "options": { "showHeader": true, "cellHeight": "sm", "footer": { "show": false } }
+    }
+  ]
+}
