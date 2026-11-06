@@ -15,6 +15,7 @@ test("report settings island wires import, settings, and report controls", async
           <button id="importTemplateBtn" type="button"></button>
           <button id="moodleRosterExcelBtn" type="button"></button>
           <button id="moodleRosterCsvBtn" type="button"></button>
+          <button id="moodleRosterFixesBtn" type="button"></button>
           <button id="settingsSaveBtn" type="button"></button>
           <button id="settingsResetBtn" type="button"></button>
           <button id="reportSaveBtn" type="button"></button>
@@ -46,6 +47,9 @@ test("report settings island wires import, settings, and report controls", async
     },
     onMoodleCsvExport() {
       events.push("moodle-csv")
+    },
+    onMoodleFixesExport() {
+      events.push("moodle-fixes")
     },
     onSettingsSave() {
       events.push("settings-save")
@@ -90,6 +94,7 @@ test("report settings island wires import, settings, and report controls", async
   document.getElementById("importTemplateBtn").click()
   document.getElementById("moodleRosterExcelBtn").click()
   document.getElementById("moodleRosterCsvBtn").click()
+  document.getElementById("moodleRosterFixesBtn").click()
   document.getElementById("settingsSaveBtn").click()
   document.getElementById("settingsResetBtn").click()
   document.getElementById("reportSaveBtn").click()
@@ -113,6 +118,7 @@ test("report settings island wires import, settings, and report controls", async
     "import-template",
     "moodle-excel",
     "moodle-csv",
+    "moodle-fixes",
     "settings-save",
     "settings-reset",
     "report-save",

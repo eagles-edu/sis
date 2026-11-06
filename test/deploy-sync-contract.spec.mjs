@@ -230,6 +230,13 @@ test("test-mirror vhost enables fast Brotli compression for HTML and static asse
   assert.doesNotMatch(testMirrorNginxConfig, /brotli_comp_level 11;/)
 })
 
+test("test-mirror vhost forwards Google Forms grade posts to the SIS API", () => {
+  assert.match(
+    testMirrorNginxConfig,
+    /location = \/api\/integrations\/google-forms\/grades \{\s+proxy_pass http:\/\/sis_test_api_upstream;\s+include \/etc\/nginx\/snippets\/sis-api-proxy-common\.conf;/s,
+  )
+})
+
 test("admin asset payloads stay below the Lighthouse reduction gates", () => {
   const adminJsStat = fs.statSync(path.resolve(process.cwd(), "web-asset/admin/student-admin.min.js"))
   const adminCssStat = fs.statSync(path.resolve(process.cwd(), "web-asset/admin/student-admin.min.css"))

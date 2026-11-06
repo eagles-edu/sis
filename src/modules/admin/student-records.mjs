@@ -591,6 +591,28 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
     return mapGradeRecordForApi(updated)
   }
 
+  if (data.sourceSystem && data.sourceAttemptId) {
+    const existingSourceRecord = await prisma.studentGradeRecord.findUnique({
+      where: {
+        sourceSystem_sourceAttemptId: {
+          sourceSystem: data.sourceSystem,
+          sourceAttemptId: data.sourceAttemptId,
+        },
+      },
+    })
+    if (existingSourceRecord) {
+      assertWithStatus(existingSourceRecord.studentRefId === studentRef, 409, "Source attempt is already linked to another student")
+      if (!data.enrollmentPeriodId) {
+        data.enrollmentPeriodId = normalizeNullableText(existingSourceRecord.enrollmentPeriodId)
+      }
+      const updated = await prisma.studentGradeRecord.update({
+        where: { id: existingSourceRecord.id },
+        data,
+      })
+      return mapGradeRecordForApi(updated)
+    }
+  }
+
   if (!data.enrollmentPeriodId) {
     const period = await resolveEnrollmentPeriodForStudent(prisma, studentRef, {
       schoolYear,
@@ -621,15 +643,17 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
     return mapGradeRecordForApi(updated)
   }
 
-  const id = deterministicEntryId("teacher_grade", [
-    studentRef,
-    className,
-    schoolYear,
-    quarter,
-    normalizeLower(assignmentName),
-    data.dueAt?.toISOString() || null,
-    data.enrollmentPeriodId,
-  ])
+  const id = data.sourceSystem && data.sourceAttemptId
+    ? deterministicEntryId("source_grade", [studentRef, data.sourceSystem, data.sourceAttemptId])
+    : deterministicEntryId("teacher_grade", [
+      studentRef,
+      className,
+      schoolYear,
+      quarter,
+      normalizeLower(assignmentName),
+      data.dueAt?.toISOString() || null,
+      data.enrollmentPeriodId,
+    ])
   const created = await prisma.studentGradeRecord.upsert({
     where: { id },
     update: data,

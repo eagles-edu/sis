@@ -73,6 +73,7 @@ import {
   enqueueAsyncSideEffectJob,
 } from "../src/modules/async/side-effect-jobs.mjs"
 import { processBrevoWebhookEvent } from "../src/modules/email/brevo-delivery.mjs"
+import { processGoogleFormsGradeSubmission } from "../src/modules/integrations/google-forms-grades.mjs"
 import { getBrevoStatistics } from "../src/modules/email/brevo.mjs"
 import {
   getEmailBatchQueueRuntimeStatus,
@@ -116,7 +117,10 @@ import {
   listExerciseTitles,
   listLevelAndSchoolFilters,
 } from "../src/modules/admin/student-admin-queries.mjs"
-import { buildMoodleRosterExport } from "../src/modules/admin/moodle-roster-export.mjs"
+import {
+  buildMoodleRosterCorrectionExport,
+  buildMoodleRosterExport,
+} from "../src/modules/admin/moodle-roster-export.mjs"
 import {
   createParentProfileInvitation,
   resendParentProfileInvitation,
@@ -378,6 +382,7 @@ const BREVO_WEBHOOK_PATH = normalizePathPrefix(
   process.env.BREVO_WEBHOOK_PATH,
   "/api/webhooks/brevo/transactional",
 )
+const GOOGLE_FORMS_GRADES_PATH = "/api/integrations/google-forms/grades"
 const ASSIGNMENT_REMINDER_CLICK_PATH_RE = /^\/api\/assignment-reminders\/track\/click\/([^/]+)$/
 const ASSIGNMENT_REMINDER_OPEN_PATH_RE = /^\/api\/assignment-reminders\/track\/open\/([^/]+)$/
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH = normalizePathPrefix(
@@ -8151,6 +8156,19 @@ async function handleApiRequest(request, response, pathname, url) {
     return true
   }
 
+  if (method === "GET" && pathname === `${ADMIN_STUDENTS_PREFIX}/moodle-fixes.xlsx`) {
+    assertStoreEnabled()
+    assertCanManageUsers(rolePolicy)
+    const roster = await listEnrollmentRoster({ take: 1000, includeUnenrolled: false })
+    if (roster.items.length >= 1000) {
+      throw Object.assign(new Error("Current SIS roster exceeds the 1,000-row Moodle correction export limit"), { statusCode: 413 })
+    }
+    const students = roster.items.filter((entry) => entry.currentEnrollment?.status === "active")
+    const exported = buildMoodleRosterCorrectionExport(students)
+    sendXlsx(response, "moodle-student-corrections.xlsx", exported.workbook)
+    return true
+  }
+
   if (method === "GET" && pathname === `${ADMIN_API_PREFIX}/filters`) {
     assertStoreEnabled()
     const data = await listLevelAndSchoolFilters()
@@ -9348,6 +9366,17 @@ export async function handleStudentAdminRequest(request, response) {
   const url = new URL(request.url || "/", `http://${host}`)
   const pathname = url.pathname
   const requestOrigin = resolveRequestOrigin(request)
+
+  if (method === "POST" && pathname === GOOGLE_FORMS_GRADES_PATH) {
+    try {
+      assertStoreEnabled()
+      const result = await processGoogleFormsGradeSubmission(request)
+      sendJson(response, 200, result)
+    } catch (error) {
+      withError(response, request, error)
+    }
+    return true
+  }
 
   if (method === "POST" && pathname === BREVO_WEBHOOK_PATH) {
     try {

@@ -1,7 +1,14 @@
 import assert from "node:assert/strict"
+import fs from "node:fs"
+import path from "node:path"
 import test from "node:test"
 
 import { resolveEnrollmentPeriodForStudent } from "../src/modules/admin/enrollment-periods.mjs"
+
+const enrollmentPeriodsSource = fs.readFileSync(
+  path.resolve(process.cwd(), "src/modules/admin/enrollment-periods.mjs"),
+  "utf8",
+)
 
 function createPeriod({ id, studentRefId, schoolYear, level, status, startedAt, createdBy, updatedBy }) {
   return {
@@ -130,4 +137,10 @@ test("a new active enrollment period gets a new deterministic ID after the prior
   assert.equal(nextPeriod.status, "active")
   assert.equal(nextPeriod.endedAt, null)
   assert.equal(prisma.periods.length, 2)
+})
+
+test("normal SIS promotion and unenrollment transactions queue Moodle membership changes", () => {
+  assert.match(enrollmentPeriodsSource, /import \{ queueMoodleEnrollmentChange \} from "\.\/moodle-provisioning\.mjs"/u)
+  assert.match(enrollmentPeriodsSource, /await queueMoodleEnrollmentChange\(tx,\s*\{\s*student,\s*action: "promote"/u)
+  assert.match(enrollmentPeriodsSource, /await queueMoodleEnrollmentChange\(tx,\s*\{\s*student,\s*action: "unenroll"/u)
 })

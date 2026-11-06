@@ -107,6 +107,51 @@ export async function queueStudentProvisioning(tx, { student, profile, password 
   return { queued: true }
 }
 
+export async function queueMoodleEnrollmentChange(tx, { student, action, fromLevel = "", toLevel = "" }) {
+  if (!isMoodleProvisioningEnabled()) return { queued: false, reason: "disabled" }
+
+  const studentRefId = text(student?.id)
+  if (!studentRefId) throw Object.assign(new Error("studentRefId is required for Moodle enrollment changes"), { statusCode: 400 })
+
+  const link = await tx.moodleUserLink.findUnique({
+    where: { studentRefId },
+    select: { status: true, moodleUserId: true },
+  })
+  const linkCanReceiveCommands = link?.status === "active" || link?.status === "pending" ||
+    (link?.status === "blocked" && Boolean(link.moodleUserId))
+  if (!linkCanReceiveCommands) return { queued: false, reason: "not_linked" }
+
+  const previousLevel = canonicalizeLevel(fromLevel) || ""
+  if (action === "promote") {
+    const nextLevel = canonicalizeLevel(toLevel) || ""
+    if (!nextLevel) throw Object.assign(new Error("toLevel is required for Moodle promotion"), { statusCode: 400 })
+    if (previousLevel === nextLevel) return { queued: false, reason: "unchanged_level" }
+    await queueMoodleCommand(tx, {
+      studentRefId,
+      action: "promote_student",
+      payload: { fromLevel: previousLevel, toLevel: nextLevel },
+    })
+    return { queued: true, actions: ["promote_student"] }
+  }
+
+  if (action === "unenroll") {
+    if (!previousLevel) return { queued: false, reason: "missing_level" }
+    await queueMoodleCommand(tx, {
+      studentRefId,
+      action: "unenrol",
+      payload: { level: previousLevel },
+    })
+    await queueMoodleCommand(tx, {
+      studentRefId,
+      action: "remove_cohort",
+      payload: { cohortIdnumber: previousLevel, cohortName: previousLevel },
+    })
+    return { queued: true, actions: ["unenrol", "remove_cohort"] }
+  }
+
+  throw Object.assign(new Error("Unsupported Moodle enrollment change"), { statusCode: 400 })
+}
+
 export async function disableMoodleStudent(studentRefId) {
   if (!isMoodleProvisioningEnabled()) throw Object.assign(new Error("Moodle provisioning is not configured"), { statusCode: 503 })
   const prisma = await getSharedPrismaClient()

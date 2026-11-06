@@ -11,6 +11,7 @@ import {
   canonicalizeLevel as canonicalizeCatalogLevel,
   resolveLevelVariants as resolveCatalogLevelVariants,
 } from "./level-catalog.mjs"
+import { queueMoodleEnrollmentChange } from "./moodle-provisioning.mjs"
 
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
@@ -878,6 +879,13 @@ export async function changeStudentEnrollment(
         create: buildEnrollmentProfileCreateData(targetStudentId, nextLevel),
       })
 
+      await queueMoodleEnrollmentChange(tx, {
+        student,
+        action: "promote",
+        fromLevel: student.profile?.currentGrade || currentPeriod.level,
+        toLevel: nextLevel,
+      })
+
       return {
         ok: true,
         action,
@@ -930,6 +938,12 @@ export async function changeStudentEnrollment(
         where: { studentRefId: targetStudentId },
         update: { currentGrade: null },
         create: buildEnrollmentProfileCreateData(targetStudentId, null),
+      })
+
+      await queueMoodleEnrollmentChange(tx, {
+        student,
+        action: "unenroll",
+        fromLevel: levelForArchive,
       })
 
       return {

@@ -7,9 +7,13 @@ import * as XLSX from "xlsx"
 import {
   handleMoodleProvisioningRequest,
   linkMoodleUsersWithClient,
+  queueMoodleEnrollmentChange,
   queueStudentProvisioning,
 } from "../src/modules/admin/moodle-provisioning.mjs"
-import { buildMoodleRosterExport } from "../src/modules/admin/moodle-roster-export.mjs"
+import {
+  buildMoodleRosterCorrectionExport,
+  buildMoodleRosterExport,
+} from "../src/modules/admin/moodle-roster-export.mjs"
 
 function makeTransaction(student) {
   const state = { commands: [], link: null }
@@ -81,6 +85,90 @@ test("promotion removes only the prior SIS level and adds the new level while re
   } finally {
     if (previous === undefined) delete process.env.MOODLE_SIS_PROVISIONING_SECRET
     else process.env.MOODLE_SIS_PROVISIONING_SECRET = previous
+  }
+})
+
+test("normal SIS level promotions queue a direct Moodle move for linked students", async () => {
+  const previousSecret = process.env.MOODLE_SIS_PROVISIONING_SECRET
+  const previousEnabled = process.env.MOODLE_SIS_PROVISIONING_ENABLED
+  process.env.MOODLE_SIS_PROVISIONING_SECRET = "moodle-provisioning-test-secret"
+  delete process.env.MOODLE_SIS_PROVISIONING_ENABLED
+  try {
+    const tx = makeTransaction(student)
+    tx.state.existingLink = { status: "active", moodleUserId: 41 }
+    const result = await queueMoodleEnrollmentChange(tx, {
+      student,
+      action: "promote",
+      fromLevel: "Movers",
+      toLevel: "A2 Flyers",
+    })
+    assert.deepEqual(result, { queued: true, actions: ["promote_student"] })
+    assert.equal(tx.state.commands.length, 1)
+    assert.equal(tx.state.commands[0].action, "promote_student")
+    assert.deepEqual(tx.state.commands[0].payloadJson, {
+      fromLevel: "A1 Movers",
+      toLevel: "A2 Flyers",
+      eaglesId: "eagles001",
+      studentNumber: 1001,
+    })
+  } finally {
+    if (previousSecret === undefined) delete process.env.MOODLE_SIS_PROVISIONING_SECRET
+    else process.env.MOODLE_SIS_PROVISIONING_SECRET = previousSecret
+    if (previousEnabled === undefined) delete process.env.MOODLE_SIS_PROVISIONING_ENABLED
+    else process.env.MOODLE_SIS_PROVISIONING_ENABLED = previousEnabled
+  }
+})
+
+test("normal SIS unenrollment queues course removal and level-cohort removal but retains Eagles Club", async () => {
+  const previousSecret = process.env.MOODLE_SIS_PROVISIONING_SECRET
+  const previousEnabled = process.env.MOODLE_SIS_PROVISIONING_ENABLED
+  process.env.MOODLE_SIS_PROVISIONING_SECRET = "moodle-provisioning-test-secret"
+  delete process.env.MOODLE_SIS_PROVISIONING_ENABLED
+  try {
+    const tx = makeTransaction(student)
+    tx.state.existingLink = { status: "active", moodleUserId: 41 }
+    const result = await queueMoodleEnrollmentChange(tx, {
+      student,
+      action: "unenroll",
+      fromLevel: "A1 Movers",
+    })
+    assert.deepEqual(result, { queued: true, actions: ["unenrol", "remove_cohort"] })
+    assert.deepEqual(tx.state.commands.map((command) => command.action), ["unenrol", "remove_cohort"])
+    assert.deepEqual(tx.state.commands.map((command) => command.payloadJson), [
+      { level: "A1 Movers", eaglesId: "eagles001", studentNumber: 1001 },
+      { cohortIdnumber: "A1 Movers", cohortName: "A1 Movers", eaglesId: "eagles001", studentNumber: 1001 },
+    ])
+  } finally {
+    if (previousSecret === undefined) delete process.env.MOODLE_SIS_PROVISIONING_SECRET
+    else process.env.MOODLE_SIS_PROVISIONING_SECRET = previousSecret
+    if (previousEnabled === undefined) delete process.env.MOODLE_SIS_PROVISIONING_ENABLED
+    else process.env.MOODLE_SIS_PROVISIONING_ENABLED = previousEnabled
+  }
+})
+
+test("normal SIS enrollment changes do not create Moodle commands for unlinked or disabled students", async () => {
+  const previousSecret = process.env.MOODLE_SIS_PROVISIONING_SECRET
+  const previousEnabled = process.env.MOODLE_SIS_PROVISIONING_ENABLED
+  process.env.MOODLE_SIS_PROVISIONING_SECRET = "moodle-provisioning-test-secret"
+  delete process.env.MOODLE_SIS_PROVISIONING_ENABLED
+  try {
+    for (const link of [null, { status: "disabled", moodleUserId: 41 }]) {
+      const tx = makeTransaction(student)
+      tx.state.existingLink = link
+      const result = await queueMoodleEnrollmentChange(tx, {
+        student,
+        action: "promote",
+        fromLevel: "A1 Movers",
+        toLevel: "A2 Flyers",
+      })
+      assert.deepEqual(result, { queued: false, reason: "not_linked" })
+      assert.equal(tx.state.commands.length, 0)
+    }
+  } finally {
+    if (previousSecret === undefined) delete process.env.MOODLE_SIS_PROVISIONING_SECRET
+    else process.env.MOODLE_SIS_PROVISIONING_SECRET = previousSecret
+    if (previousEnabled === undefined) delete process.env.MOODLE_SIS_PROVISIONING_ENABLED
+    else process.env.MOODLE_SIS_PROVISIONING_ENABLED = previousEnabled
   }
 })
 
@@ -177,6 +265,36 @@ test("Moodle roster export fails closed for incomplete current-student identitie
   assert.match(error.message, /1 current student needs correction/u)
   assert.match(error.message, /valid student email/u)
   assert.match(error.message, /fullName/u)
+})
+
+test("Moodle correction workbook contains only blocked students in the SIS import format", () => {
+  const result = buildMoodleRosterCorrectionExport([
+    {
+      eaglesId: "eagles001",
+      studentNumber: 1001,
+      email: "",
+      profile: { englishName: "Sam", fullName: "", studentEmail: "" },
+      currentEnrollment: { level: "Movers", status: "active" },
+    },
+    {
+      eaglesId: "eagles002",
+      studentNumber: 1002,
+      email: "ready@example.edu",
+      profile: { englishName: "Lee", fullName: "Nguyen Van B" },
+      currentEnrollment: { level: "A1 Movers", status: "active" },
+    },
+  ])
+  const workbook = XLSX.read(result.workbook, { type: "buffer" })
+  const rows = XLSX.utils.sheet_to_json(workbook.Sheets["Student Import"], { header: 1, raw: false })
+
+  assert.equal(result.rowCount, 1)
+  assert.deepEqual(rows[0], [
+    "eaglesId", "studentNumber", "englishName", "fullName", "studentEmail", "currentGrade", "missingFields",
+  ])
+  assert.deepEqual(rows[1], [
+    "eagles001", "1001", "Sam", "", "", "A1 Movers", "fullName, valid student email",
+  ])
+  assert.deepEqual(workbook.SheetNames, ["Student Import", "Instructions"])
 })
 
 test("signed Moodle roster links bind each numeric Moodle user ID to matching SIS identity", async () => {

@@ -15,6 +15,7 @@ import {
 import { buildStudentReportCardPayload, generateStudentReportCardPdf } from "../server/student-report-card-pdf.mjs"
 import { LEVEL_DEFINITIONS, canonicalizeLevel } from "../src/modules/admin/level-catalog.mjs"
 import { assertPortalPasswordPolicy } from "../src/modules/admin/users.mjs"
+import { buildMoodleRosterCorrectionExport } from "../src/modules/admin/moodle-roster-export.mjs"
 
 const TEST_ADMIN_UI_SETTINGS_FILE = `/tmp/sis-admin-ui-settings-${process.pid}.json`
 const TEST_GENERATED_SIS_CONFIG_FILE = path.resolve(process.cwd(), "config/sis-config.test.json")
@@ -89,6 +90,32 @@ test("student profile bootstrap hydrates family options before rendering the for
     ADMIN_JS_SOURCE,
     /if \(slug === "profile"\) \{[\s\S]*?renderProfileInfoLayout\(state\.currentStudent\);[\s\S]*?loadFamilyIds\(\)\.catch\(handleError\);/u,
   )
+})
+
+test("Moodle correction workbook is accepted by the existing SIS spreadsheet import parser", () => {
+  const exported = buildMoodleRosterCorrectionExport([{
+    eaglesId: "eagles001",
+    studentNumber: 1001,
+    email: "",
+    profile: { englishName: "Sam", fullName: "", studentEmail: "" },
+    currentEnrollment: { level: "A1 Movers", status: "active" },
+  }])
+  const rows = parseSpreadsheetRowsFromUploadPayload({
+    fileName: "moodle-student-corrections.xlsx",
+    format: "xlsx",
+    fileDataBase64: exported.workbook.toString("base64"),
+  })
+
+  assert.equal(rows.length, 1)
+  assert.equal(rows[0].eaglesId, "eagles001")
+  assert.equal(rows[0].studentNumber, "1001")
+  assert.equal(rows[0].englishName, "Sam")
+  assert.equal(rows[0].currentGrade, "A1 Movers")
+  assert.equal(rows[0].missingFields, "fullName, valid student email")
+  assert.match(ADMIN_HTML_SOURCE, /id="moodleRosterFixesBtn"/u)
+  assert.match(ADMIN_JS_SOURCE, /\/api\/admin\/students\/moodle-fixes\.xlsx/u)
+  assert.match(ADMIN_JS_SOURCE, /bindById\("moodleRosterFixesBtn"/u)
+  assert.match(ADMIN_JS_SOURCE, /onMoodleFixesExport\(\)\s*\{\s*downloadMoodleCorrections\(\)\.catch\(handleError\);\s*\}/u)
 })
 
 test("family options carry parent email for profile assignment", () => {
@@ -3027,8 +3054,12 @@ test("GET /api/admin/students/import-template.xlsx requires auth", async () => {
   assert.match(body.error, /Unauthorized/i)
 })
 
-test("Moodle roster Excel and native CSV exports require an admin session", async () => {
-  for (const pathName of ["/api/admin/students/moodle-import.xlsx", "/api/admin/students/moodle-import.csv"]) {
+test("Moodle roster exports and correction workbook require an admin session", async () => {
+  for (const pathName of [
+    "/api/admin/students/moodle-import.xlsx",
+    "/api/admin/students/moodle-import.csv",
+    "/api/admin/students/moodle-fixes.xlsx",
+  ]) {
     const res = await fetchLocal(port, pathName)
     assert.equal(res.status, 401, pathName)
     const body = await res.json()
