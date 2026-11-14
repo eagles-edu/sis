@@ -72,6 +72,7 @@ A bare `npm run db:*`, a mismatched `SIS_ENV_FILE`/`DOTENV_CONFIG_PATH`, or a cr
 10. Before reporting a port, service, or credential as blocked, check the live process or port and the env file that owns it (`.env.dev` for dev). Do not report from memory or from a single file.
 11. For multi-step work, keep the todo list current in the session database and report status by todo ID. Do not answer progress questions with estimates.
 12. For repeated fixes of one lint rule across a file, use `.github/prompts/fix-rule.prompt.md` so every match is fixed in one pass.
+13. After each completed, verified implementation or operational milestone, commit and push the full current branch history to its configured upstream. Verify the branch, upstream, and remote visibility first; review the staged diff for secrets, student PII, backups, runtime data, and authenticated captures, and leave unrelated dirty files out. Git publication and mirror sync are separate operations; complete both when the task requires both.
 
 ### Configuration Hierarchy
 
