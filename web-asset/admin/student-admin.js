@@ -21058,6 +21058,74 @@
         setStatus("Import template downloaded.");
       }
 
+      async function downloadMoodleRoster(format) {
+        const normalizedFormat = normalizeLower(format);
+        if (normalizedFormat !== "xlsx" && normalizedFormat !== "csv") {
+          throw new Error("Unsupported Moodle roster format");
+        }
+        const response = await fetch(
+          resolveApiUrl(`/api/admin/students/moodle-import.${normalizedFormat}`),
+          { credentials: "include" },
+        );
+        if (!response.ok) {
+          let message = `HTTP ${response.status}`;
+          try {
+            const payload = await response.json();
+            if (payload && payload.error) message = payload.error;
+          } catch (error) {
+            void error;
+          }
+          const apiError = new Error(message);
+          apiError.status = response.status;
+          throw apiError;
+        }
+
+        const blob = await response.blob();
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const disposition = response.headers.get("content-disposition") || "";
+        const suggestedName = parseFilenameFromDisposition(disposition);
+        link.href = downloadUrl;
+        link.download = suggestedName || `moodle-current-students.${normalizedFormat}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(downloadUrl);
+        setStatus(`Moodle ${normalizedFormat.toUpperCase()} roster downloaded.`);
+      }
+
+      async function downloadMoodleCorrections() {
+        const response = await fetch(
+          resolveApiUrl("/api/admin/students/moodle-fixes.xlsx"),
+          { credentials: "include" },
+        );
+        if (!response.ok) {
+          let message = `HTTP ${response.status}`;
+          try {
+            const payload = await response.json();
+            if (payload && payload.error) message = payload.error;
+          } catch (error) {
+            void error;
+          }
+          const apiError = new Error(message);
+          apiError.status = response.status;
+          throw apiError;
+        }
+
+        const blob = await response.blob();
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const disposition = response.headers.get("content-disposition") || "";
+        const suggestedName = parseFilenameFromDisposition(disposition);
+        link.href = downloadUrl;
+        link.download = suggestedName || "moodle-student-corrections.xlsx";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(downloadUrl);
+        setStatus("Moodle correction workbook downloaded.");
+      }
+
       function attendancePayload() {
         return {
           id: normalizeText(document.getElementById("a_id").value),
@@ -23440,6 +23508,15 @@
         bindById("importTemplateBtn", "click", () =>
           downloadImportTemplate().catch(handleError),
         );
+        bindById("moodleRosterExcelBtn", "click", () =>
+          downloadMoodleRoster("xlsx").catch(handleError),
+        );
+        bindById("moodleRosterCsvBtn", "click", () =>
+          downloadMoodleRoster("csv").catch(handleError),
+        );
+        bindById("moodleRosterFixesBtn", "click", () =>
+          downloadMoodleCorrections().catch(handleError),
+        );
         bindById("settingsSaveBtn", "click", () => saveUiSettings().catch(handleError));
         bindById("settingsResetBtn", "click", () => resetUiSettings().catch(handleError));
         bindById("reportSaveBtn", "click", () => saveReport().catch(handleError));
@@ -23497,7 +23574,7 @@
       if (IS_JSDOM_ENV) {
         bindReportSettingsFallback();
       } else {
-        void scheduleAdminIslandImport(() => import("/web-asset/admin/report-settings-island.mjs"), 1800, "report-settings|settings|reports")
+        void scheduleAdminIslandImport(() => import("/web-asset/admin/report-settings-island.mjs"), 1800, "student-admin|report-settings|settings|reports")
           .then((mod) =>
             mod.initReportSettingsIsland({
               document,
@@ -23506,6 +23583,15 @@
               },
               onImportTemplate() {
                 downloadImportTemplate().catch(handleError);
+              },
+              onMoodleExcelExport() {
+                downloadMoodleRoster("xlsx").catch(handleError);
+              },
+              onMoodleCsvExport() {
+                downloadMoodleRoster("csv").catch(handleError);
+              },
+              onMoodleFixesExport() {
+                downloadMoodleCorrections().catch(handleError);
               },
               onSettingsSave() {
                 saveUiSettings().catch(handleError);

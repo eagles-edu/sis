@@ -2,6 +2,9 @@ export function initReportSettingsIsland({
   document,
   onImportSpreadsheet,
   onImportTemplate,
+  onMoodleExcelExport,
+  onMoodleCsvExport,
+  onMoodleFixesExport,
   onSettingsSave,
   onSettingsReset,
   onReportSave,
@@ -20,6 +23,15 @@ export function initReportSettingsIsland({
   });
   document?.getElementById("importTemplateBtn")?.addEventListener("click", () => {
     if (typeof onImportTemplate === "function") onImportTemplate();
+  });
+  document?.getElementById("moodleRosterExcelBtn")?.addEventListener("click", () => {
+    if (typeof onMoodleExcelExport === "function") onMoodleExcelExport();
+  });
+  document?.getElementById("moodleRosterCsvBtn")?.addEventListener("click", () => {
+    if (typeof onMoodleCsvExport === "function") onMoodleCsvExport();
+  });
+  document?.getElementById("moodleRosterFixesBtn")?.addEventListener("click", () => {
+    if (typeof onMoodleFixesExport === "function") onMoodleFixesExport();
   });
   document?.getElementById("settingsSaveBtn")?.addEventListener("click", () => {
     if (typeof onSettingsSave === "function") onSettingsSave();
