@@ -3,6 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import test from "node:test"
 import { parse as parseDotenv } from "dotenv"
+import "../tools/assert-prisma-environment.mjs"
 import { chromium } from "playwright"
 import { auditPage, ensureArtifactsDir, PORTAL_AUDIT_ARTIFACTS_DIR, PORTAL_AUDIT_INIT_SCRIPT, runLighthouseJson, writeAssetPartitionManifests } from "../tools/portal-audit-harness.mjs"
 import {
@@ -11,7 +12,7 @@ import {
 } from "./helpers/standard-portal-credentials.mjs"
 
 const ORIGIN = process.env.PORTAL_AUDIT_ORIGIN || "http://127.0.0.1:8788"
-const ENV_PATH = process.env.SIS_ENV_FILE || ".env.dev"
+const ENV_PATH = String(process.env.SIS_ENV_FILE || "").trim()
 
 function readEnv(filePath) {
   return fs.existsSync(filePath) ? parseDotenv(fs.readFileSync(filePath)) : {}

@@ -3,6 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import test from "node:test"
 import { parse as parseDotenv } from "dotenv"
+import "../tools/assert-prisma-environment.mjs"
 import {
   resolveStandardParentCredentials,
   resolveStandardStudentCredentials,
@@ -48,11 +49,10 @@ const CHROMIUM_LAUNCH_OPTIONS = CHROMIUM_EXECUTABLE_PATH
   ? { headless: true, executablePath: CHROMIUM_EXECUTABLE_PATH }
   : { headless: true }
 
-process.env.NODE_ENV = process.env.NODE_ENV || "development"
-process.env.SIS_ENV_FILE = process.env.SIS_ENV_FILE || ".env.dev"
+const SIS_ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 process.env.EXERCISE_MAILER_ORIGIN = process.env.EXERCISE_MAILER_ORIGIN || "*"
 process.env.MAILER_DEBUG = process.env.MAILER_DEBUG || "false"
-const ENV_FILE = process.env.SIS_ENV_FILE
+const ENV_FILE = SIS_ENV_FILE
 const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
 const STUDENT_CREDENTIALS = resolveStandardStudentCredentials(ENV_VALUES)
 const PARENT_CREDENTIALS = resolveStandardParentCredentials(ENV_VALUES)

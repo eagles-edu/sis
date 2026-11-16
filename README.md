@@ -162,7 +162,7 @@ Role model:
 
 ```bash
 # Targeted test suite
-npm test
+env SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development npm test
 
 # Build generated admin assets
 npm run build:admin-assets

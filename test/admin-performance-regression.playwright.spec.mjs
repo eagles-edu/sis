@@ -2,9 +2,10 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import test from "node:test"
 import { chromium } from "playwright"
+import "../tools/assert-prisma-environment.mjs"
 
 const ORIGIN = process.env.ADMIN_PERF_ORIGIN || "http://127.0.0.1:8788"
-const ENV_PATH = process.env.SIS_ENV_FILE || ".env.dev"
+const ENV_PATH = String(process.env.SIS_ENV_FILE || "").trim()
 
 function readEnv(filePath) {
   const values = {}

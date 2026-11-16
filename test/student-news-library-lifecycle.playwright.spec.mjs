@@ -4,12 +4,13 @@ import test from "node:test"
 import { parse as parseDotenv } from "dotenv"
 import { chromium } from "playwright"
 import { resolveStandardStudentCredentials } from "./helpers/standard-portal-credentials.mjs"
+import "../tools/assert-prisma-environment.mjs"
 
-const ENV_FILE = process.env.SIS_ENV_FILE || ".env.dev"
+const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
 const ORIGIN = (process.env.STUDENT_NEWS_LIBRARY_ORIGIN || "http://127.0.0.1:8788").replace(/\/$/u, "")
 const EXECUTABLE_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
-const IS_DEV_RUN = (process.env.NODE_ENV || "development") === "development" && ENV_FILE === ".env.dev"
+const IS_DEV_RUN = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
 
 function studentCredentials() {
   return resolveStandardStudentCredentials(ENV_VALUES)

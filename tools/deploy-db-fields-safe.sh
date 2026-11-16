@@ -149,7 +149,7 @@ run_prisma_migrate_status() {
 
   set +e
   output="$(
-    cd "${RUNTIME_ROOT}" && npx prisma migrate status 2>&1
+    cd "${RUNTIME_ROOT}" && env SIS_ENV_FILE=.env DOTENV_CONFIG_PATH=.env NODE_ENV=production npx prisma migrate status 2>&1
   )"
   status_code=$?
   set -e
@@ -225,7 +225,7 @@ fi
 echo "[step] migrate: npm run db:migrate:deploy (runtime root)"
 (
   cd "${RUNTIME_ROOT}"
-  npm run db:migrate:deploy
+  env SIS_ENV_FILE=.env DOTENV_CONFIG_PATH=.env NODE_ENV=production npm run db:migrate:deploy
 )
 
 echo "[step] verify: prisma migrate status (runtime root)"

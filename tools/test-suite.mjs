@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { spawn, spawnSync } from "node:child_process"
+import "./assert-prisma-environment.mjs"
 
 const ROOT_DIR = process.cwd()
 const TEST_DIR = path.resolve(ROOT_DIR, "test")

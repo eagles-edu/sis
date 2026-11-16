@@ -489,7 +489,7 @@ refresh_runtime_prisma_client() {
     return 0
   fi
   echo "[sync] refreshing Prisma client in ${RUNTIME_ROOT}"
-  (cd "${RUNTIME_ROOT}" && npm run db:generate)
+  (cd "${RUNTIME_ROOT}" && env SIS_ENV_FILE=.env DOTENV_CONFIG_PATH=.env NODE_ENV=production npm run db:generate)
 }
 
 restart_if_requested() {

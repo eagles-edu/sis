@@ -4,8 +4,9 @@ import test from "node:test"
 import { parse as parseDotenv } from "dotenv"
 import { chromium } from "playwright"
 import { resolveStandardStudentCredentials } from "./helpers/standard-portal-credentials.mjs"
+import "../tools/assert-prisma-environment.mjs"
 
-const ENV_FILE = process.env.SIS_ENV_FILE || ".env.dev"
+const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE)
   ? parseDotenv(fs.readFileSync(ENV_FILE))
   : {}

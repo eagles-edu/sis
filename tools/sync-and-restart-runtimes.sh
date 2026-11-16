@@ -154,8 +154,8 @@ refresh_live_prisma_client() {
   log "refreshing live Prisma client and applying migrations in ${LIVE_ROOT}"
   (
     cd "$LIVE_ROOT" &&
-      npm run db:generate &&
-      npm run db:migrate:deploy
+      env SIS_ENV_FILE=.env DOTENV_CONFIG_PATH=.env NODE_ENV=production npm run db:generate &&
+      env SIS_ENV_FILE=.env DOTENV_CONFIG_PATH=.env NODE_ENV=production npm run db:migrate:deploy
   )
 }
 

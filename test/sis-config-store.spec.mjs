@@ -4,6 +4,12 @@ import os from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import test from "node:test"
+import "../tools/assert-prisma-environment.mjs"
+
+const DEV_DATABASE_TESTS_ENABLED =
+  process.env.NODE_ENV === "development" &&
+  process.env.SIS_ENV_FILE === ".env.dev" &&
+  process.env.DOTENV_CONFIG_PATH === ".env.dev"
 
 function freshImport(specifierPath) {
   const url = pathToFileURL(specifierPath)
@@ -276,7 +282,7 @@ test("test runtime mirror mode prefers database/source chronology over file prec
   }
 })
 
-test("sis config mirror health ignores nested key order drift", async () => {
+test("sis config mirror health ignores nested key order drift", { skip: !DEV_DATABASE_TESTS_ENABLED }, async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   const priorCwd = process.cwd()
   const priorNodeEnv = process.env.NODE_ENV
@@ -684,7 +690,7 @@ test("ensureSisConfigLoaded falls back to the default snapshot when the SIS conf
   }
 })
 
-test("ensureSisConfigLoaded recreates a deleted SIS config from the database after a cached default", async () => {
+test("ensureSisConfigLoaded recreates a deleted SIS config from the database after a cached default", { skip: !DEV_DATABASE_TESTS_ENABLED }, async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   const priorNodeEnv = process.env.NODE_ENV
   const priorSisConfigFile = process.env.SIS_CONFIG_FILE
@@ -749,7 +755,7 @@ test("ensureSisConfigLoaded recreates a deleted SIS config from the database aft
   }
 })
 
-test("ensureSisConfigLoaded recreates a missing database mirror from SIS config JSON", async () => {
+test("ensureSisConfigLoaded recreates a missing database mirror from SIS config JSON", { skip: !DEV_DATABASE_TESTS_ENABLED }, async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   const priorNodeEnv = process.env.NODE_ENV
   const priorSisConfigFile = process.env.SIS_CONFIG_FILE
