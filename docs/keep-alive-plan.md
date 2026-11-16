@@ -12,7 +12,7 @@
 
 - [ ] Read `AGENTS.md`, `docs/CODE-EDITING-DOCS-INDEX.md`, `docs/sop.md`, `sis.md`, and the applicable surface and route contracts.
 - [x] Record the current Git branch, upstream, remote visibility, and unrelated dirty files before making changes. [KA-001, KA-004]
-- [ ] Review the existing uncommitted parent draft and approval changes and their regression test; retain or revise them based on end-to-end evidence. [KA-002: end-to-end gate incomplete]
+- [ ] Review the existing uncommitted parent draft and approval changes and their regression test; retain or revise them based on end-to-end evidence. [KA-002, KA-005: end-to-end gate incomplete]
 - [ ] Preserve unrelated changes and establish a current backup before each file edit.
 - [ ] Compare the last pushed implementation, relevant backups, and route documentation before changing a route contract.
 - [ ] Inventory each subsystem's entry points, authorization, storage, dependencies, existing tests, and known failures.
@@ -197,3 +197,5 @@
 - **KA-003** — Branch setup: created local `keep-alive,` from the synchronized starting HEAD, set upstream to `origin/keep-alive,`, and pushed the complete current branch history after each documentation milestone. Before this record, local HEAD and the remote branch both resolved to `f406825a`; worktree source/runtime changes remained uncommitted and untouched. Evidence: `git status --short --branch`, `git rev-parse HEAD`, and `git ls-remote origin refs/heads/keep-alive,`.
 
 - **KA-004** — Source-control correction: at the user's direction, removed five ignored runtime artifacts (PID files, dev log, maintenance log, and test metrics) from Git tracking with `git rm --cached`; all five local runtime files remain on disk. `.gitignore` already contains exact ignore rules for those paths. This keeps operational state out of the public code repository.
+
+- **KA-005** — Parent draft source checkpoint: committed the existing repeated-save merge and approval agreement handling with the new focused regression spec. `node --test test/parent-profile-draft-regression.spec.mjs test/parent-profile-invitation-contract.spec.mjs` passed 10/10 on dev. The authenticated browser write and approval path remains unverified because `.env.dev` has no usable password for the required `cmmark001` account; no DB writes or notification sends were performed. This reference does not mark the parent review item complete.

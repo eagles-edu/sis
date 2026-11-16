@@ -4637,6 +4637,7 @@ async function saveParentProfileDraftSubmission({
   studentRefId = "",
   draftPayloadJson = {},
   diffPayloadJson = {},
+  currentProfile = {},
   comment = "",
 }) {
   const normalizedParentAccountId = normalizeText(parentAccountId)
@@ -4655,12 +4656,13 @@ async function saveParentProfileDraftSubmission({
       })
       const now = new Date()
       if (latestDraft) {
+        const mergedDraft = { ...(latestDraft.draftPayloadJson || {}), ...draftPayloadJson }
         const updated = await prisma.parentProfileSubmissionQueue.update({
           where: { id: latestDraft.id },
           data: {
-            draftPayloadJson,
-            diffPayloadJson,
-            comment: normalizedComment || null,
+            draftPayloadJson: mergedDraft,
+            diffPayloadJson: buildProfileDiffSnapshot(currentProfile, mergedDraft),
+            comment: normalizedComment || latestDraft.comment || null,
             failurePoint: null,
             rejectionReason: null,
           },
@@ -4700,11 +4702,13 @@ async function saveParentProfileDraftSubmission({
           && normalizeText(row.status) === PARENT_PROFILE_QUEUE_STATUS_DRAFT
       )
       if (existingIndex >= 0) {
+        const existing = PARENT_PORTAL_MEMORY.submissions[existingIndex]
+        const mergedDraft = { ...(existing.draftPayloadJson || {}), ...draftPayloadJson }
         const updated = {
-          ...PARENT_PORTAL_MEMORY.submissions[existingIndex],
-          draftPayloadJson,
-          diffPayloadJson,
-          comment: normalizedComment,
+          ...existing,
+          draftPayloadJson: mergedDraft,
+          diffPayloadJson: buildProfileDiffSnapshot(currentProfile, mergedDraft),
+          comment: normalizedComment || existing.comment || "",
           failurePoint: "",
           rejectionReason: "",
           updatedAt: nowIsoText,
@@ -8027,6 +8031,7 @@ async function handleApiRequest(request, response, pathname, url) {
         })
         const diffPayload = buildProfileDiffSnapshot(existing || {}, writablePatch)
         const updateData = { ...writablePatch }
+        delete updateData.signatureAgreed
         updateData.normalizedFormPayload = {
           ...(existing?.normalizedFormPayload && typeof existing.normalizedFormPayload === "object"
             ? existing.normalizedFormPayload
@@ -9092,13 +9097,14 @@ async function handleParentApiRequest(request, response, pathname, url) {
       studentRefId: child.studentRefId,
       draftPayloadJson: patch,
       diffPayloadJson: diffPayload,
+      currentProfile: child.profile || {},
       comment: normalizeText(payload?.comment),
     })
     sendJson(response, 200, {
       ok: true,
       submissionId: draft.id,
       status: PARENT_PROFILE_QUEUE_STATUS_DRAFT,
-      diff: diffPayload,
+      diff: draft.diffPayloadJson,
     })
     return true
   }
