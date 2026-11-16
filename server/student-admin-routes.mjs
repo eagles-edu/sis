@@ -8013,6 +8013,11 @@ async function handleApiRequest(request, response, pathname, url) {
 
     if (action === "reject") {
       const rejectionReason = normalizeText(payload?.rejectionReason || payload?.reason)
+      if (!rejectionReason) {
+        const error = new Error("A rejection reason is required")
+        error.statusCode = 400
+        throw error
+      }
       const updated = await updateParentProfileSubmissionById(submissionId, {
         status: PARENT_PROFILE_QUEUE_STATUS_REJECTED,
         rejectionReason,

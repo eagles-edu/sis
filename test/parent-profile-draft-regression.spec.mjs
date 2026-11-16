@@ -438,3 +438,75 @@ test("parent profile approval refuses locked fields before writing the official 
   assert.equal(responsePayload.payload.ok, false)
   assert.match(responsePayload.payload.error, /locked fields/i)
 })
+
+test("parent profile rejection requires and records an auditable reason without changing the official profile", async () => {
+  const submission = {
+    id: "synthetic-rejection-submission-023",
+    studentRefId: "synthetic-rejection-student-023",
+    status: "submitted",
+    draftPayloadJson: { fullName: "Unchanged Synthetic Learner" },
+  }
+  let requestPayload = { action: "reject" }
+  let queueUpdate = null
+  let profileTouches = 0
+  let responsePayload = null
+  const context = vm.createContext({
+    Error,
+    PARENT_PROFILE_QUEUE_STATUS_REJECTED: "rejected",
+    normalizeText: (value) => String(value ?? "").trim(),
+    normalizeLower: (value) => String(value ?? "").trim().toLowerCase(),
+    getParentProfileSubmissionById: async (id) => id === submission.id ? submission : null,
+    updateParentProfileSubmissionById: async (_id, patch) => {
+      queueUpdate = patch
+      return { ...submission, ...patch }
+    },
+    getSharedPrismaClient: async () => {
+      profileTouches += 1
+      throw new Error("Rejection must not load or write an official profile")
+    },
+    assertCanManageUsers: () => {},
+    nowIso: () => "2026-11-17T10:00:00.000Z",
+    parseBody: async () => requestPayload,
+    sendJson: (_response, status, payload) => {
+      responsePayload = { status, payload }
+    },
+    decodeURIComponent,
+    PARENT_PROFILE_QUEUE_STATUS_SUBMITTED: "submitted",
+    profileSubmissionMatch: ["/api/admin/profile-submissions/synthetic-rejection-submission-023", submission.id],
+    method: "POST",
+    pathname: `/api/admin/profile-submissions/${submission.id}`,
+    rolePolicy: { canManageUsers: true },
+    session: { username: "synthetic-admin-023" },
+    request: {},
+    response: {},
+  })
+  const rejectRoute = vm.runInContext(
+    `(async () => { ${source.slice(adminReviewRouteStart, adminReviewRouteEnd)} })`,
+    context,
+  )
+
+  let missingReasonError = null
+  try {
+    await rejectRoute()
+  } catch (error) {
+    missingReasonError = error
+  }
+  assert.equal(missingReasonError?.statusCode, 400)
+  assert.match(missingReasonError?.message || "", /rejection reason is required/i)
+  assert.equal(queueUpdate, null)
+  assert.equal(profileTouches, 0)
+
+  requestPayload = { action: "reject", rejectionReason: "Please verify the submitted name." }
+  assert.equal(await rejectRoute(), true)
+  assert.deepEqual(JSON.parse(JSON.stringify(queueUpdate)), {
+    status: "rejected",
+    rejectionReason: "Please verify the submitted name.",
+    reviewedByUsername: "synthetic-admin-023",
+    reviewedAt: "2026-11-17T10:00:00.000Z",
+  })
+  assert.equal(profileTouches, 0)
+  assert.equal(responsePayload.status, 200)
+  assert.equal(responsePayload.payload.action, "reject")
+  assert.equal(responsePayload.payload.item.status, "rejected")
+  assert.equal(responsePayload.payload.item.rejectionReason, "Please verify the submitted name.")
+})
