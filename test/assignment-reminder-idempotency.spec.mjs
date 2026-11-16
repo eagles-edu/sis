@@ -1,39 +1,120 @@
 import assert from "node:assert/strict"
+import { createHash, randomUUID } from "node:crypto"
 import dotenv from "dotenv"
 import test from "node:test"
 
-dotenv.config({ path: ".env.dev", override: false })
+dotenv.config({ path: ".env.test", override: true })
 process.env.NODE_ENV = "test"
-process.env.SIS_ENV_FILE = ".env.dev"
+process.env.SIS_ENV_FILE = ".env.test"
+process.env.DOTENV_CONFIG_PATH = ".env.test"
+process.env.DATABASE_URL = ""
+
+function syntheticStudentNumber(stamp) {
+  return 900000 + (Number.parseInt(stamp.replaceAll("-", "").slice(0, 8), 16) % 100000)
+}
+
+function reminderQueueId(dispatchKey) {
+  return `assignment-reminder-${createHash("sha256").update(dispatchKey).digest("hex").slice(0, 40)}`
+}
 
 test("assignment reminder engagement keeps one stable dispatch across repeated runs", async () => {
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const { dispatchAssignmentCreated } = await import("../src/modules/admin/assignment-reminder-dispatcher.mjs")
   const prisma = await getSharedPrismaClient()
-  const stamp = Date.now()
-  const student = await prisma.student.create({ data: { externalKey: `reminder-${stamp}`, studentNumber: 920000 + Math.floor(Math.random() * 9000), eaglesId: `REMINDER-${stamp}`, email: `reminder-${stamp}@example.test` } })
+  const stamp = randomUUID()
+  const recipient = `reminder-${stamp}@example.invalid`
   const level = `Reminder Test ${stamp}`
-  await prisma.studentProfile.create({ data: { studentRefId: student.id, sourceFormId: `reminder-${stamp}`, fullName: "Reminder Test", englishName: "Reminder Test", currentGrade: level, genderSelections: [], languagesAtHome: [], learningDisorders: [], covidShotHistory: [], feverMedicineAllowed: [], sourceUrl: "test" } })
-  const template = await prisma.assignmentTemplate.create({ data: { id: `reminder-template-${stamp}`, assignmentTitle: "Stable reminder", exerciseTitle: "Vocabulary", level, itemsJson: [{ url: "https://eagles.edu.vn/student/library.html" }] } })
-  let queueIds = []
+  const templateId = `reminder-template-${stamp}`
+  let studentId = ""
+  let templateCreated = false
+  const queueIds = new Set()
+
   try {
-    const first = await dispatchAssignmentCreated(template.id, { now: new Date("2026-08-20T12:00:00.000Z") })
-    const second = await dispatchAssignmentCreated(template.id, { now: new Date("2026-08-20T12:00:00.000Z") })
-    queueIds = [...new Set(first.queueIds || [])]
+    const student = await prisma.student.create({
+      data: {
+        externalKey: `reminder-${stamp}`,
+        studentNumber: syntheticStudentNumber(stamp),
+        eaglesId: `REMINDER-${stamp}`,
+        email: recipient,
+      },
+      select: { id: true },
+    })
+    studentId = student.id
+    await prisma.studentProfile.create({
+      data: {
+        studentRefId: studentId,
+        sourceFormId: `reminder-${stamp}`,
+        fullName: "Synthetic Reminder Student",
+        englishName: "Synthetic Reminder Student",
+        currentGrade: level,
+        genderSelections: [],
+        languagesAtHome: [],
+        learningDisorders: [],
+        covidShotHistory: [],
+        feverMedicineAllowed: [],
+        sourceUrl: "test",
+      },
+    })
+    await prisma.assignmentTemplate.create({
+      data: {
+        id: templateId,
+        assignmentTitle: "Stable reminder",
+        exerciseTitle: "Vocabulary",
+        level,
+        itemsJson: [{ url: "https://eagles.edu.vn/student/library.html" }],
+      },
+    })
+    templateCreated = true
+
+    const now = new Date("2026-08-20T12:00:00.000Z")
+    const first = await dispatchAssignmentCreated(templateId, { now })
+    const second = await dispatchAssignmentCreated(templateId, { now })
+    for (const queueId of [...(first.queueIds || []), ...(second.queueIds || [])]) queueIds.add(queueId)
     assert.equal(first.dispatched, 1)
     assert.equal(second.dispatched, 0)
-    assert.equal(await prisma.assignmentReminderDispatch.count({ where: { assignmentTemplateId: template.id } }), 1)
-    assert.equal(await prisma.assignmentReminderEngagement.count({ where: { dispatch: { assignmentTemplateId: template.id } } }), 1)
-    const engagement = await prisma.assignmentReminderEngagement.findFirst({ where: { dispatch: { assignmentTemplateId: template.id } }, include: { dispatch: true } })
+    assert.equal(await prisma.assignmentReminderDispatch.count({ where: { assignmentTemplateId: templateId } }), 1)
+    assert.equal(await prisma.assignmentReminderEngagement.count({ where: { dispatch: { assignmentTemplateId: templateId } } }), 1)
+    const engagement = await prisma.assignmentReminderEngagement.findFirst({
+      where: { dispatch: { assignmentTemplateId: templateId } },
+      include: { dispatch: true },
+    })
+    const dispatchKey = [templateId, studentId, "student", "assignment-created", "2026-08-20", recipient].join(":")
+    const expectedQueueId = reminderQueueId(dispatchKey)
     assert.equal(engagement?.trackingToken.length, 64)
-    assert.equal(engagement?.dispatch?.queueId, queueIds[0])
+    assert.equal(engagement?.dispatch?.queueId, expectedQueueId)
+    queueIds.add(expectedQueueId)
   } finally {
-    await prisma.asyncSideEffectJob.deleteMany({ where: { jobType: "announcement-email", dedupeKey: { in: queueIds } } })
-    await prisma.assignmentReminderEngagement.deleteMany({ where: { dispatch: { assignmentTemplateId: template.id } } })
-    await prisma.assignmentReminderDispatch.deleteMany({ where: { assignmentTemplateId: template.id } })
-    for (const queueId of queueIds) await prisma.adminNotificationQueue.deleteMany({ where: { id: queueId } })
-    await prisma.assignmentTemplate.delete({ where: { id: template.id } })
-    await prisma.studentProfile.delete({ where: { studentRefId: student.id } })
-    await prisma.student.delete({ where: { id: student.id } })
+    const cleanupErrors = []
+    const attempt = async (operation) => {
+      try {
+        await operation()
+      } catch (error) {
+        cleanupErrors.push(error)
+      }
+    }
+    if (templateCreated) {
+      const dispatches = await prisma.assignmentReminderDispatch.findMany({
+        where: { assignmentTemplateId: templateId },
+        select: { queueId: true },
+      }).catch((error) => {
+        cleanupErrors.push(error)
+        return []
+      })
+      for (const dispatch of dispatches) if (dispatch.queueId) queueIds.add(dispatch.queueId)
+      const ids = [...queueIds]
+      if (ids.length) {
+        await attempt(() => prisma.asyncSideEffectJob.deleteMany({ where: { jobType: "announcement-email", dedupeKey: { in: ids } } }))
+        await attempt(() => prisma.adminNotificationQueue.deleteMany({ where: { id: { in: ids } } }))
+      }
+      await attempt(() => prisma.assignmentReminderEngagement.deleteMany({ where: { dispatch: { assignmentTemplateId: templateId } } }))
+      await attempt(() => prisma.assignmentReminderDispatch.deleteMany({ where: { assignmentTemplateId: templateId } }))
+      await attempt(() => prisma.assignmentTemplate.deleteMany({ where: { id: templateId } }))
+    }
+    if (studentId) {
+      await attempt(() => prisma.studentProfile.deleteMany({ where: { studentRefId: studentId } }))
+      await attempt(() => prisma.student.deleteMany({ where: { id: studentId } }))
+    }
+    await attempt(() => prisma.$disconnect())
+    if (cleanupErrors.length) throw new AggregateError(cleanupErrors, "Synthetic assignment reminder cleanup failed")
   }
 })

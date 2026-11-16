@@ -17,10 +17,10 @@
 - [x] Compare the last pushed implementation, relevant backups, and route documentation before changing a route contract. [KA-007]
 - [x] Inventory each subsystem's entry points, authorization, storage, dependencies, existing tests, and known failures. [KA-009]
 - [x] Pin `.env.dev`, `.env.test`, or `.env` to its owning environment; never use one environment's credentials or configuration as another's fallback. [KA-008]
-- [x] Set matching `SIS_ENV_FILE`, `DOTENV_CONFIG_PATH`, and `NODE_ENV` for every Prisma command. [KA-008]
-- [x] Confirm `SELECT current_database()` before database tests or writes. [KA-008]
-- [ ] Establish isolated synthetic records and deterministic cleanup in dev and test.
-- [ ] Configure test notification recipients or a test transport so synthetic checks cannot message real people.
+- [ ] Set matching `SIS_ENV_FILE`, `DOTENV_CONFIG_PATH`, and `NODE_ENV` for every Prisma command. KA-008 verified one dev query; the repository-wide command and test-script audit remains open.
+- [x] Confirm `SELECT current_database()` before database tests or writes. [KA-008, KA-010]
+- [ ] Establish isolated synthetic records and deterministic cleanup in dev and test. KA-010 covers three test-mirror fixtures; dev coverage remains open.
+- [ ] Configure test notification recipients or a test transport so synthetic checks cannot message real people. KA-010 covers three test-mirror fixtures only.
 - [ ] Verify available alert routing and monitoring services without exposing credentials.
 - [ ] Record baseline results and evidence for each subsystem before changing it.
 
@@ -207,3 +207,5 @@
 - **KA-008** — Dev environment boundary verified read-only in `/home/eagles/dockerz/sis`: executed `SELECT current_database()` through `getSharedPrismaClient` with `SIS_ENV_FILE=.env.dev`, `DOTENV_CONFIG_PATH=.env.dev`, and `NODE_ENV=development`; result was `sis_dev`. No `.env.test` or production `.env` fallback was used and no DB writes were made. Evidence: the command output for the environment-pinned query on 2026-11-17. This records the dev-only environment and query gate; it does not claim test/live verification.
 
 - **KA-009** — Completed a source inventory of all checklist subsystems, mapping routes/pages, authorization boundaries, Prisma storage, external or worker dependencies, existing contract/regression tests, and known failures or unverified checks. Evidence: [keep-alive-inventory.md](keep-alive-inventory.md), `docs/mapping/admin-route-trace.md`, `prisma/schema.prisma`, module/test path inventory, and the current monitoring references. Confirmed gaps are recorded as gaps rather than treated as passing checks.
+
+- **KA-010** — Test-mirror fixture isolation: updated the assignment-reminder idempotency, Library assignment email, and Brevo webhook integration specs to pin `.env.test` with matching `SIS_ENV_FILE`, `DOTENV_CONFIG_PATH`, and `NODE_ENV`; use UUID-scoped synthetic records and reserved `example.invalid` recipients; and attempt full cleanup even after setup or assertion failures. The assignment-reminder spec keeps async side-effect jobs in test-only memory storage so the active test worker cannot send its synthetic queue item. Confirmed `sis-test` before the run; all three specs passed. Post-run aggregate queries found zero matching synthetic students, templates, reminder dispatches, webhook deliveries/events, or invalid-recipient notifications; the database async-job aggregate remained the three pre-existing succeeded jobs. Evidence: `node --check` on all three specs, `git diff --check`, the focused `node --test` run on 2026-11-17, and environment-pinned post-run cleanup counts. This verifies the three test-mirror fixtures only; dev synthetic cleanup and repository-wide notification isolation remain open.
