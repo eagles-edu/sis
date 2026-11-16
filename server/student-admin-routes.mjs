@@ -4632,6 +4632,39 @@ function mapParentProfileSubmissionRecord(record = {}) {
   }
 }
 
+async function loadParentProfileDraftPayload({ parentAccountId = "", studentRefId = "" } = {}) {
+  const normalizedParentAccountId = normalizeText(parentAccountId)
+  const normalizedStudentRefId = normalizeText(studentRefId)
+  if (!normalizedParentAccountId || !normalizedStudentRefId) return {}
+
+  return runParentPortalDbOperation(
+    async (prisma) => {
+      const latestDraft = await prisma.parentProfileSubmissionQueue.findFirst({
+        where: {
+          parentAccountId: normalizedParentAccountId,
+          studentRefId: normalizedStudentRefId,
+          status: PARENT_PROFILE_QUEUE_STATUS_DRAFT,
+        },
+        orderBy: { updatedAt: "desc" },
+        select: { draftPayloadJson: true },
+      })
+      const payload = latestDraft?.draftPayloadJson
+      return payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {}
+    },
+    async () => {
+      const latestDraft = PARENT_PORTAL_MEMORY.submissions
+        .filter((row) =>
+          normalizeText(row.parentAccountId) === normalizedParentAccountId
+          && normalizeText(row.studentRefId) === normalizedStudentRefId
+          && normalizeText(row.status) === PARENT_PROFILE_QUEUE_STATUS_DRAFT
+        )
+        .sort((left, right) => Date.parse(normalizeText(right.updatedAt)) - Date.parse(normalizeText(left.updatedAt)))[0]
+      const payload = latestDraft?.draftPayloadJson
+      return payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {}
+    }
+  )
+}
+
 async function saveParentProfileDraftSubmission({
   parentAccountId = "",
   studentRefId = "",
@@ -9046,6 +9079,10 @@ async function handleParentApiRequest(request, response, pathname, url) {
       throw error
     }
     const lockedFields = await listParentProfileFieldLocks(child.studentRefId)
+    const draftPayloadJson = await loadParentProfileDraftPayload({
+      parentAccountId: parentContext.parentAccountId || `parents:${parentContext.parentsId}`,
+      studentRefId: child.studentRefId,
+    })
     sendJson(response, 200, {
       ok: true,
       child: {
@@ -9059,6 +9096,7 @@ async function handleParentApiRequest(request, response, pathname, url) {
       immutableFields: Array.from(PARENT_PROFILE_IMMUTABLE_FIELDS),
       lockedFields,
       profile: child.profile || {},
+      draftPayloadJson,
     })
     return true
   }

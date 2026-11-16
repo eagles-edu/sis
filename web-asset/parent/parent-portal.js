@@ -6609,10 +6609,15 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         )
         const child = payload.child || {}
         state.selectedEaglesId = normalizeText(child.eaglesId)
-        state.profile =
+        const officialProfile =
           payload.profile && typeof payload.profile === "object" ?
             payload.profile
           : {}
+        const savedDraft =
+          payload.draftPayloadJson && typeof payload.draftPayloadJson === "object" && !Array.isArray(payload.draftPayloadJson) ?
+            payload.draftPayloadJson
+          : {}
+        state.profile = { ...officialProfile, ...savedDraft }
         state.lockedFields = new Set(
           Array.isArray(payload.lockedFields) ?
             payload.lockedFields.map((entry) => normalizeText(entry))

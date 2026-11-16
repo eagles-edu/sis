@@ -2664,6 +2664,87 @@ test("parent portal grade/class resolver ignores immutable eagles level when pub
   dom.window.close()
 })
 
+test("parent portal reload shows saved draft values and later edits preserve the signature", async () => {
+  const calls = []
+  const persistedDraft = {
+    schoolName: "Saved Draft School",
+    otherLanguage: "Saved draft language",
+    signatureFullName: "Parent Name",
+    signatureEmail: "parent@example.test",
+    signatureAgreed: ["yes"],
+  }
+  const dom = await createParentPortalDom(
+    async (resource, init = {}) => {
+      const urlText = toUrlText(resource)
+      const method = String(init.method || "GET").toUpperCase()
+      const parsed = new URL(urlText, "http://preview.invalid")
+      const pathname = parsed.pathname
+      calls.push({ method, pathname, body: init.body || "" })
+
+      if (pathname === "/api/parent/auth/me" && method === "GET") {
+        return jsonTextResponse(200, {
+          authenticated: true,
+          user: { parentsId: "cmmark001", role: "parent" },
+        })
+      }
+      if (pathname === "/api/parent/children" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          items: [{ eaglesId: "vi001", eaglesRefId: "s-vi001", studentNumber: 101, fullName: "Student One", englishName: "Student One", currentGrade: "A2 Flyers" }],
+        })
+      }
+      if (pathname === "/api/parent/dashboard" && method === "GET") {
+        return jsonTextResponse(200, {
+          children: [{ eaglesId: "vi001", attendance: { total: 20, present: 19, absent: 1 }, assignments: { pending: 0, overdue: 0 }, grades: { averageScorePercent: 92 }, performance: { reportCount: 1 } }],
+        })
+      }
+      if (pathname === "/api/parent/children/vi001/profile" && method === "GET") {
+        return jsonTextResponse(200, {
+          child: { eaglesId: "vi001", studentNumber: 101, fullName: "Student One", currentGrade: "A2 Flyers" },
+          profile: { schoolName: "Official School", otherLanguage: "Official language" },
+          draftPayloadJson: persistedDraft,
+          lockedFields: [],
+          immutableFields: ["eaglesId", "studentNumber"],
+        })
+      }
+      if (pathname === "/api/parent/children/vi001/profile-draft" && method === "PUT") {
+        return jsonTextResponse(200, { ok: true, submissionId: "draft-1", status: "draft" })
+      }
+      return jsonTextResponse(404, { error: "Not found" })
+    },
+    "http://127.0.0.1:8787/parent/portal",
+  )
+
+  const document = dom.window.document
+  await waitFor(() => {
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
+  })
+  document.getElementById("openChildPageBtn").click()
+  await waitFor(() => assert.equal(document.getElementById("childPageCard").classList.contains("hidden"), false))
+  await waitFor(() => assert.equal(document.getElementById("pf_schoolName")?.value, "Saved Draft School"))
+  assert.equal(document.getElementById("pf_otherLanguage").value, "Saved draft language")
+  assert.equal(document.getElementById("pf_signatureFullName").value, "Parent Name")
+  assert.equal(document.getElementById("pf_signatureEmail").value, "parent@example.test")
+  assert.equal(document.querySelector('[data-field-key="signatureAgreed"][value="yes"]').checked, true)
+
+  const schoolName = document.getElementById("pf_schoolName")
+  schoolName.value = "Edited After Reload"
+  schoolName.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+  document.getElementById("saveDraftBtn").click()
+  await waitFor(() => assert.ok(calls.some((call) => call.pathname.endsWith("/profile-draft") && call.method === "PUT")))
+  await waitFor(() => assert.match(document.getElementById("childPageStatus").textContent || "", /Đã lưu nháp/u))
+
+  const saveCall = calls.find((call) => call.pathname.endsWith("/profile-draft") && call.method === "PUT")
+  assert.deepEqual(JSON.parse(saveCall.body).patch, { schoolName: "Edited After Reload" })
+  assert.equal(schoolName.value, "Edited After Reload")
+  assert.equal(document.getElementById("pf_otherLanguage").value, "Saved draft language")
+  assert.equal(document.getElementById("pf_signatureFullName").value, "Parent Name")
+  assert.equal(document.getElementById("pf_signatureEmail").value, "parent@example.test")
+  assert.equal(document.querySelector('[data-field-key="signatureAgreed"][value="yes"]').checked, true)
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
 test("parent portal profile draft submit surfaces API errors on child page", async () => {
   const calls = []
   const dom = await createParentPortalDom(

@@ -108,7 +108,7 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | GET | `/api/parent/auth/me` | Yes (parent session) | parent session | parent session identity payload |
 | GET | `/api/parent/children` | Yes (parent session) | linked-child scope | `listParentLinkedStudents` |
 | GET | `/api/parent/dashboard` | Yes (parent session) | linked-child scope | `buildParentDashboardPayload` |
-| GET | `/api/parent/children/{eaglesId}/profile` | Yes (parent session) | linked-child scope | child profile + lock/immutable metadata |
+| GET | `/api/parent/children/{eaglesId}/profile` | Yes (parent session) | linked-child scope | official child profile, latest saved draft payload, and lock/immutable metadata |
 | PUT | `/api/parent/children/{eaglesId}/profile-draft` | Yes (parent session) | linked-child scope + lock enforcement | `saveParentProfileDraftSubmission` |
 | POST | `/api/parent/children/{eaglesId}/profile-submit` | Yes (parent session) | linked-child scope | `setParentProfileSubmissionSubmitted` |
 
