@@ -45,6 +45,9 @@ test("student Library is a protected physical page with shared chrome and studen
   assert.match(student, /id="studentLibraryAddOneBtn"[^>]*>Add Word<\/button>/)
   assert.match(student, /id="studentLibraryAddFiveBtn"[^>]*>Add Five<\/button>/)
   assert.match(student, /studentNewWordsApi[\s\S]*PUT/)
+  assert.doesNotMatch(student, /editorRowHtml\([^)]*includeDictionaryBuilder:\s*true/)
+  assert.doesNotMatch(student, /editorRowHtml\([^)]*includeOriginAnalysis:\s*true/)
+  assert.doesNotMatch(student, /editorRowHtml\([^)]*includeTransitivityTools:\s*true/)
   assert.match(student, /studentLibrarySubmitWordsBtn[\s\S]*libraryApi\}\/submissions/)
   assert.match(student, /myWords: document\.getElementById\("libraryMyWords"\)\.checked \? "true" : ""/)
   assert.match(student, /libraryFilters.*addEventListener\("submit"/s)
@@ -59,6 +62,14 @@ test("student Library is a protected physical page with shared chrome and studen
   assert.match(student, /createdByName/)
   assert.match(student, /__SIS_STUDENT_API_PREFIX/)
   assert.match(routes, /const STUDENT_LIBRARY_API_PATH = `\$\{STUDENT_API_PREFIX\}\/library`/)
+})
+
+test("student and Library pages bust stale caches for shared vocabulary validation", () => {
+  const studentEditorVersion = "20261116.2"
+  const versionedEditor = new RegExp(`vocabulary-esl-editor\\.js\\?v=${studentEditorVersion}`, "u")
+  assert.match(student, versionedEditor)
+  assert.match(portalScript, versionedEditor)
+  assert.match(studentPortal, new RegExp(`student-portal\\.min\\.js\\?v=${studentEditorVersion}`, "u"))
 })
 
 test("New Words and News vocabulary use the same full ESL row payload without student MW fill", () => {
@@ -1200,6 +1211,43 @@ test("definition paste preserves clipboard emphasis, lists, indentation, and par
     "**styled**\n\na. alpha\nb. beta",
   )
   assert.equal(context.window.SIS_VOCABULARY_ESL.htmlToDefinitionText("", "A\r\n\r\nB\n"), "A\n\nB\n")
+})
+
+test("student New Words definition paste survives propagation stops and keeps formatting", () => {
+  const dom = new JSDOM("<!doctype html><body></body>")
+  dom.window.document.addEventListener("paste", (event) => event.stopImmediatePropagation(), true)
+  const context = {
+    window: dom.window,
+    document: dom.window.document,
+    console,
+    Event: dom.window.Event,
+    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
+  }
+  vm.runInNewContext(sharedVocabularyEditor, context)
+  const row = dom.window.document.createElement("div")
+  row.innerHTML = context.window.SIS_VOCABULARY_ESL.editorRowHtml("student-new-word-0", { index: 0, removable: true })
+  dom.window.document.body.append(row)
+  const textareas = [...row.querySelectorAll('[data-vocabulary-field="definition"]')]
+  assert.equal(textareas.length, 1, "the student New Words editor row includes its definition field")
+
+  for (const textarea of textareas) {
+    textarea.addEventListener("paste", (event) => event.stopPropagation())
+    const paste = new dom.window.Event("paste", { bubbles: true, cancelable: true })
+    Object.defineProperty(paste, "clipboardData", {
+      value: {
+        getData(type) {
+          if (type === "text/html") return "<p>A <strong>bold</strong> and <em>italic</em> definition.</p>"
+          if (type === "text/plain") return "A bold and italic definition."
+          return ""
+        },
+      },
+    })
+    textarea.dispatchEvent(paste)
+
+    assert.equal(paste.defaultPrevented, true)
+    assert.equal(textarea.value, "A **bold** and *italic* definition.")
+    assert.match(context.window.SIS_VOCABULARY_ESL.definitionHtml(textarea.value), /<strong>bold<\/strong> and <em>italic<\/em>/u)
+  }
 })
 
 test("unheaded Etymonline prose after Stems is restored to the documented section order", () => {

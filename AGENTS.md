@@ -73,6 +73,8 @@ A bare `npm run db:*`, a mismatched `SIS_ENV_FILE`/`DOTENV_CONFIG_PATH`, or a cr
 11. For multi-step work, keep the todo list current in the session database and report status by todo ID. Do not answer progress questions with estimates.
 12. For repeated fixes of one lint rule across a file, use `.github/prompts/fix-rule.prompt.md` so every match is fixed in one pass.
 13. After each completed, verified implementation or operational milestone, commit and push the full current branch history to its configured upstream. Verify the branch, upstream, and remote visibility first; review the staged diff for secrets, student PII, backups, runtime data, and authenticated captures, and leave unrelated dirty files out. Git publication and mirror sync are separate operations; complete both when the task requires both.
+14. When the user explicitly requests troubleshooting, repair, testing, idempotency, or smoke checks, complete each authorized action and gather its evidence before reporting status. Do not claim that the user failed to request, approve, or provide something when the session contains that instruction or approval; perform the authorized work and report only a concrete blocker that remains after trying it.
+15. For Student Library New Words fixes, verify the visible save, reload persistence, repeat-save idempotency, and repeatable cleanup with a synthetic entry. Student entry forms must not render admin-only Dictionary Builder, origin-analysis, or transitivity controls; retain the protected student-only Merriam-Webster preview path.
 
 ### Configuration Hierarchy
 
