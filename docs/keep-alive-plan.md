@@ -12,7 +12,7 @@
 
 - [ ] Read `AGENTS.md`, `docs/CODE-EDITING-DOCS-INDEX.md`, `docs/sop.md`, `sis.md`, and the applicable surface and route contracts.
 - [x] Record the current Git branch, upstream, remote visibility, and unrelated dirty files before making changes. [KA-001]
-- [ ] Review the existing uncommitted parent draft and approval changes and their regression test; retain or revise them based on end-to-end evidence.
+- [ ] Review the existing uncommitted parent draft and approval changes and their regression test; retain or revise them based on end-to-end evidence. [KA-002: end-to-end gate incomplete]
 - [ ] Preserve unrelated changes and establish a current backup before each file edit.
 - [ ] Compare the last pushed implementation, relevant backups, and route documentation before changing a route contract.
 - [ ] Inventory each subsystem's entry points, authorization, storage, dependencies, existing tests, and known failures.
@@ -191,3 +191,5 @@
 ## Evidence references
 
 - **KA-001** — 2026-11-17 dev workspace: starting branch `migrate/full-sync-parity-audit-skill` tracked `origin/migrate/full-sync-parity-audit-skill`; local HEAD and upstream both resolved to `2c82cdaeaca7167b0f895137ebc83bc018cf7f15`; `eagles-edu/sis` is public with default branch `syllables`. Recorded pre-existing dirty paths: `.gitignore`, `runtime-data/dev-async-worker.pid`, `runtime-data/dev-runtime.log`, `runtime-data/dev-runtime.pid`, `runtime-data/maintenance-reports/sis-config-repair-cron.log`, `runtime-data/prometheus/sis-test-request-metrics.prom`, `server/student-admin-routes.mjs`, and `test/parent-profile-draft-regression.spec.mjs`. Runtime paths remain outside commits. Evidence: `git status --short --branch`, `git rev-list --left-right --count @{u}...HEAD`, `gh repo view eagles-edu/sis --json visibility,defaultBranchRef,url`, and `git ls-remote origin`.
+
+- **KA-002** — Dev baseline: `sis_dev` confirmed with environment-pinned Prisma access; `/healthz` returned 200; focused parent draft and invitation contract specs passed (10/10). The exact parent account `cmmark001` is present in `.env.dev` only as a password hash; no matching plaintext password is configured, so the authenticated write workflow was not run. No DB writes or notifications were made. The code and spec remain under end-to-end review; this item is not complete.
