@@ -220,6 +220,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     await loginStudent(page)
     await page.goto(`${ORIGIN}/student/library.html?apiOrigin=${encodeURIComponent(ORIGIN)}`, { waitUntil: "domcontentloaded" })
     await page.locator("#studentLibraryAddOneBtn").click()
+    assert.equal(await page.locator("[data-vocabulary-dictionary-builder], [data-dictionary-builder-open-sources], [data-dictionary-builder-source-leds], [data-vocabulary-origin-analysis], [data-vocabulary-transitivity-check]").count(), 0, "student New Words rows do not render admin-only Dictionary Builder, origin, or transitivity controls")
     const newWordsDefinition = page.locator('#studentLibraryNewWordsRows [data-vocabulary-field="definition"]')
     await newWordsDefinition.waitFor({ state: "visible", timeout: 10000 })
     const pastedDefinition = await page.evaluate(() => {
@@ -351,6 +352,31 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     const savedNewWord = await prisma.studentNewWord.findFirst({ where: { studentRefId, englishKey: savedNewWordEnglish } })
     assert.ok(savedNewWord?.id, "the new word is persisted in the student New Words table")
     newWordsFixtureIds.push(savedNewWord.id)
+    const repeatedSave = await page.evaluate(async () => {
+      const currentResponse = await fetch("/api/student/new-words", { credentials: "include" })
+      const current = await currentResponse.json()
+      if (!currentResponse.ok || !Array.isArray(current.items)) throw new Error(`New Words reload failed before replay: HTTP ${currentResponse.status}`)
+      const response = await fetch("/api/student/new-words", { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: current.items }) })
+      return { status: response.status, body: await response.json() }
+    })
+    assert.equal(repeatedSave.status, 200, "replaying the exact persisted Student Library payload succeeds")
+    assert.equal(repeatedSave.body.items.filter((word) => word.english === savedNewWordEnglish).length, 1, "the replay response contains the new word exactly once")
+    const persistedRegressionWords = await prisma.studentNewWord.findMany({
+      where: { studentRefId, englishKey: { in: [savedNewWordEnglish, `legacyconfederations${alphaStamp}`] } },
+      select: { id: true, englishKey: true, syllabication: true },
+    })
+    assert.equal(persistedRegressionWords.filter((word) => word.englishKey === savedNewWordEnglish).length, 1, "replaying the save does not duplicate the new word")
+    const persistedLegacyWord = persistedRegressionWords.find((word) => word.englishKey === `legacyconfederations${alphaStamp}`)
+    assert.equal(persistedLegacyWord?.id, invalidLegacyWord.id, "the unchanged legacy word remains in place across repeated saves")
+    assert.equal(persistedLegacyWord?.syllabication, "leg-a-cy-con-fed-er-á-tions", "the unchanged legacy syllabication is preserved")
+    await page.reload({ waitUntil: "domcontentloaded" })
+    await page.locator("#libraryStatus").waitFor({ state: "visible", timeout: 10000 })
+    const reloadedNewWords = await page.evaluate(async () => {
+      const response = await fetch("/api/student/new-words", { credentials: "include" })
+      return { status: response.status, body: await response.json() }
+    })
+    assert.equal(reloadedNewWords.status, 200, "the authenticated New Words list remains available after page reload")
+    assert.equal(reloadedNewWords.body.items.filter((word) => word.english === savedNewWordEnglish).length, 1, "the saved word is still persisted exactly once after page reload")
     for (const word of words.filter((entry) => entry.english !== "confederations")) {
       await page.locator("#librarySearch").fill(word.english)
       await page.locator('#libraryFilters button[type="submit"]').click()
