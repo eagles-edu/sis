@@ -10,7 +10,7 @@
 
 ## Preparation and environment boundaries
 
-- [ ] Read `AGENTS.md`, `docs/CODE-EDITING-DOCS-INDEX.md`, `docs/sop.md`, `sis.md`, and the applicable surface and route contracts.
+- [x] Read `AGENTS.md`, `docs/CODE-EDITING-DOCS-INDEX.md`, `docs/sop.md`, `sis.md`, and the applicable surface and route contracts. [KA-006]
 - [x] Record the current Git branch, upstream, remote visibility, and unrelated dirty files before making changes. [KA-001, KA-004]
 - [ ] Review the existing uncommitted parent draft and approval changes and their regression test; retain or revise them based on end-to-end evidence. [KA-002, KA-005: end-to-end gate incomplete]
 - [ ] Preserve unrelated changes and establish a current backup before each file edit.
@@ -199,3 +199,5 @@
 - **KA-004** — Source-control correction: at the user's direction, removed five ignored runtime artifacts (PID files, dev log, maintenance log, and test metrics) from Git tracking with `git rm --cached`; all five local runtime files remain on disk. `.gitignore` already contains exact ignore rules for those paths. This keeps operational state out of the public code repository.
 
 - **KA-005** — Parent draft source checkpoint: committed the existing repeated-save merge and approval agreement handling with the new focused regression spec. `node --test test/parent-profile-draft-regression.spec.mjs test/parent-profile-invitation-contract.spec.mjs` passed 10/10 on dev. The authenticated browser write and approval path remains unverified because `.env.dev` has no usable password for the required `cmmark001` account; no DB writes or notification sends were performed. This reference does not mark the parent review item complete.
+
+- **KA-006** — Preparation review completed in `/home/eagles/dockerz/sis` on `keep-alive,`: read `AGENTS.md`, `docs/CODE-EDITING-DOCS-INDEX.md`, `docs/sop.md`, `README.md`, `sis.md`, `docs/DOCUMENT-STATUS-AND-PARAMETER-AUDIT.md`, `docs/CORE-DESIGN-PARAMETERS.md`, `docs/mapping/admin-route-trace.md`, and `docs/security-and-backup-policy.md`, plus the parent/student surface manual. Confirmed cookie-session auth, linked-child scope, draft and submission route contracts, admin review routes, strict environment ownership, backup-first edits, and the dev-first workflow. Evidence: current document contents and `git status --short --branch` at `5338737624d1f884cd60c8470408ea2063125112`; no code, database, or environment configuration was changed by this review.
