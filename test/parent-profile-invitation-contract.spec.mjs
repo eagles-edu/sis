@@ -1,7 +1,9 @@
 import assert from "node:assert/strict"
+import crypto from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
 import test from "node:test"
+import vm from "node:vm"
 import { ensureParentPortalAccount, resolveParentPortalAccountIdentity } from "../src/modules/admin/parent-profile-invitations.mjs"
 
 const rootDir = process.cwd()
@@ -12,6 +14,9 @@ const adminHtml = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student
 const adminJs = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.js"), "utf8")
 const profileIsland = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/profile-island.mjs"), "utf8")
 const parentJs = fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.js"), "utf8")
+const redeemStart = invitations.indexOf("export async function redeemParentProfileInvitation(")
+const redeemEnd = invitations.indexOf("\nexport async function recoverParentProfileInvitation(", redeemStart)
+assert.ok(redeemStart >= 0 && redeemEnd > redeemStart)
 
 test("parent invitation emails use a tracker-safe route and one-click activation", () => {
   assert.match(invitations, /function invitationUrl\(token, origin = publicOrigin\(\)\) \{ return `\$\{origin\}\/parent\/profile-invitations\/\$\{encodeURIComponent\(token\)\}` \}/)
@@ -77,6 +82,118 @@ test("profile completion requires a saved signature, email, and explicit agreeme
   assert.match(parentJs, /key: "signatureEmail",[\s\S]{0,180}required: true/u)
   assert.match(routes, /const required = \[profile\.fullName, profile\.currentGrade, profile\.motherName, profile\.motherEmail, profile\.motherPhone\]/u)
   assert.match(routes, /sentAt: row\.invitationSentAt \|\| row\.invitationQueuedAt/u)
+})
+
+test("parent submission rejects each missing signature component without changing draft state", async () => {
+  const source = routes
+  const submitStart = source.indexOf("async function setParentProfileSubmissionSubmitted(")
+  const submitEnd = source.indexOf("\nasync function listParentProfileSubmissions(", submitStart)
+  assert.ok(submitStart >= 0 && submitEnd > submitStart)
+  const cases = [
+    { label: "signature name", draft: { signatureFullName: "", signatureEmail: "parent@example.invalid", signatureAgreed: ["yes"] } },
+    { label: "signature email", draft: { signatureFullName: "Synthetic Parent", signatureEmail: "", signatureAgreed: ["yes"] } },
+    { label: "agreement", draft: { signatureFullName: "Synthetic Parent", signatureEmail: "parent@example.invalid", signatureAgreed: ["no"] } },
+  ]
+
+  for (const [index, entry] of cases.entries()) {
+    const row = {
+      id: `synthetic-signature-submission-${index + 1}`,
+      parentAccountId: "synthetic-parent-signature",
+      studentRefId: "synthetic-student-signature",
+      status: "draft",
+      draftPayloadJson: entry.draft,
+    }
+    let updateCalls = 0
+    const context = vm.createContext({
+      Date,
+      Error,
+      PARENT_PROFILE_QUEUE_STATUS_DRAFT: "draft",
+      PARENT_PROFILE_QUEUE_STATUS_SUBMITTED: "submitted",
+      normalizeText: (value) => String(value ?? "").trim(),
+      normalizeLower: (value) => String(value ?? "").trim().toLowerCase(),
+      resolveBoolean: (value, fallback = false) => value === true || String(value).toLowerCase() === "true" || (value === undefined ? fallback : false),
+      runParentPortalDbOperation: (handler) => handler({
+        parentProfileSubmissionQueue: {
+          findFirst: async () => row,
+          update: async ({ data }) => {
+            updateCalls += 1
+            Object.assign(row, data)
+            return row
+          },
+        },
+      }),
+      mapParentProfileSubmissionRecord: (record) => record,
+    })
+    const submit = vm.runInContext(`(${source.slice(submitStart, submitEnd)})`, context)
+
+    await assert.rejects(
+      submit({ parentAccountId: row.parentAccountId, studentRefId: row.studentRefId }),
+      (error) => error?.statusCode === 400 && /signed, explicitly agreed to, and saved/i.test(error.message),
+      `${entry.label} must be required`,
+    )
+    assert.equal(row.status, "draft", `${entry.label} failure must leave the draft unsubmitted`)
+    assert.equal(updateCalls, 0, `${entry.label} failure must not update the queue row`)
+  }
+})
+
+test("expired and reused parent activation links are rejected without consuming them again", async () => {
+  const token = "synthetic-parent-invitation-token-025"
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex")
+  const expiredInvitation = {
+    id: "synthetic-expired-invitation-025",
+    tokenHash,
+    status: "sent",
+    expiresAt: new Date(Date.now() - 60_000),
+  }
+  const activatedInvitation = {
+    id: "synthetic-activated-invitation-025",
+    tokenHash,
+    status: "activated",
+    expiresAt: new Date(Date.now() + 60_000),
+  }
+  let selectedInvitation = expiredInvitation
+  let updateManyCalls = 0
+  const context = vm.createContext({
+    Date,
+    Error,
+    assertActivationRateLimit: () => {},
+    text: (value) => value === undefined || value === null ? "" : String(value).trim(),
+    lower: (value) => value === undefined || value === null ? "" : String(value).trim().toLowerCase(),
+    tokenHash: (value) => crypto.createHash("sha256").update(String(value ?? "").trim()).digest("hex"),
+    getSharedPrismaClient: async () => ({
+      parentProfileInvitation: {
+        findUnique: async ({ where }) => {
+          assert.equal(where.tokenHash, tokenHash)
+          return selectedInvitation
+        },
+        updateMany: async () => {
+          updateManyCalls += 1
+          return { count: 0 }
+        },
+      },
+    }),
+  })
+  const redeem = vm.runInContext(`(${invitations.slice(redeemStart, redeemEnd).replace("export async function", "async function")})`, context)
+
+  await assert.rejects(
+    redeem({ token, sourceKey: "synthetic-expired-source" }),
+    (error) => error?.statusCode === 410 && /invalid, expired, or has already been used/i.test(error.message),
+  )
+  assert.equal(updateManyCalls, 0, "expired invitation must not be activated")
+
+  selectedInvitation = activatedInvitation
+  await assert.rejects(
+    redeem({ token, sourceKey: "synthetic-reused-source" }),
+    (error) => error?.statusCode === 410 && /invalid, expired, or has already been used/i.test(error.message),
+  )
+  assert.equal(updateManyCalls, 0, "already activated invitation must not be activated a second time")
+
+  selectedInvitation = { ...activatedInvitation, status: "sent" }
+  await assert.rejects(
+    redeem({ token, sourceKey: "synthetic-race-source" }),
+    (error) => error?.statusCode === 410 && /already been used/i.test(error.message),
+  )
+  assert.equal(updateManyCalls, 1, "conditional activation must reject a concurrent prior redemption")
 })
 
 test("parent identity rejects email reuse across Parents IDs instead of creating an email-less account", () => {
