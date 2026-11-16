@@ -5,13 +5,15 @@ import vm from "node:vm"
 
 const source = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
 const draftStart = source.indexOf("async function loadParentProfileDraftPayload(")
-const draftEnd = source.indexOf("\nasync function saveParentProfileDraftSubmission(", draftStart)
+const draftEnd = source.indexOf("\nasync function withParentProfileSubmissionWriteLock(", draftStart)
 const start = source.indexOf("async function saveParentProfileDraftSubmission(")
 const end = source.indexOf("\nasync function setParentProfileSubmissionSubmitted(", start)
 const submitStart = source.indexOf("async function setParentProfileSubmissionSubmitted(")
 const submitEnd = source.indexOf("\nasync function listParentProfileSubmissions(", submitStart)
 const listStart = source.indexOf("async function listParentProfileSubmissions(", submitEnd)
 const listEnd = source.indexOf("\nasync function getParentProfileSubmissionById(", listStart)
+const writeLockStart = source.indexOf("async function withParentProfileSubmissionWriteLock(")
+const writeLockEnd = source.indexOf("\nasync function saveParentProfileDraftSubmission(", writeLockStart)
 const parentSubmitRouteStart = source.indexOf("  const submitPathMatch = pathname.match(PARENT_CHILD_PROFILE_SUBMIT_PATH_RE)")
 const parentSubmitRouteEnd = source.indexOf("\n\n  return false", parentSubmitRouteStart)
 const adminReviewRouteStart = source.indexOf("  if (profileSubmissionMatch && method === \"POST\") {")
@@ -22,6 +24,7 @@ assert.ok(draftStart >= 0 && draftEnd > draftStart)
 assert.ok(start >= 0 && end > start)
 assert.ok(submitStart >= 0 && submitEnd > submitStart)
 assert.ok(listStart >= 0 && listEnd > listStart)
+assert.ok(writeLockStart >= 0 && writeLockEnd > writeLockStart)
 assert.ok(parentSubmitRouteStart >= 0 && parentSubmitRouteEnd > parentSubmitRouteStart)
 assert.ok(adminReviewRouteStart >= 0 && adminReviewRouteEnd > adminReviewRouteStart)
 assert.ok(withErrorStart >= 0 && withErrorEnd > withErrorStart)
@@ -79,11 +82,30 @@ test("parent profile reload uses the newest matching draft in volatile test stor
 
 test("repeated parent draft saves preserve earlier fields and replace only edited fields", async () => {
   let row = null
-  const prisma = { parentProfileSubmissionQueue: {
-    findFirst: async () => row,
-    create: async ({ data }) => (row = { id: "draft-1", ...data, createdAt: new Date(), updatedAt: new Date() }),
-    update: async ({ data }) => (row = { ...row, ...data, updatedAt: new Date() }),
-  } }
+  let transactionTail = Promise.resolve()
+  const lockKeys = []
+  const prisma = {
+    $transaction: async (handler) => {
+      const previousTransaction = transactionTail
+      let releaseTransaction
+      transactionTail = new Promise((resolve) => { releaseTransaction = resolve })
+      await previousTransaction
+      try {
+        return await handler(prisma)
+      } finally {
+        releaseTransaction()
+      }
+    },
+    $executeRaw: async (strings, ...values) => {
+      lockKeys.push({ query: Array.from(strings).join("?"), values })
+      return 1
+    },
+    parentProfileSubmissionQueue: {
+      findFirst: async () => row,
+      create: async ({ data }) => (row = { id: "draft-1", ...data, createdAt: new Date(), updatedAt: new Date() }),
+      update: async ({ data }) => (row = { ...row, ...data, updatedAt: new Date() }),
+    },
+  }
   const context = vm.createContext({
     Date,
     normalizeText: (value) => String(value ?? "").trim(),
@@ -93,11 +115,28 @@ test("repeated parent draft saves preserve earlier fields and replace only edite
     buildProfileDiffSnapshot: (profile, patch) => ({ changedFields: Object.entries(patch).filter(([key, value]) => JSON.stringify(profile[key] ?? null) !== JSON.stringify(value ?? null)).map(([fieldKey, to]) => ({ fieldKey, to })) }),
   })
   const save = vm.runInContext(`(${source.slice(start, end)})`, context)
+  context.withParentProfileSubmissionWriteLock = vm.runInContext(
+    `(${source.slice(writeLockStart, writeLockEnd)})`,
+    context,
+  )
   const common = { parentAccountId: "parent-1", studentRefId: "student-1", currentProfile: { fullName: "Old" } }
   await save({ ...common, draftPayloadJson: { fullName: "New", signatureFullName: "Parent", signatureEmail: "parent@example.test", signatureAgreed: ["yes"] } })
   const saved = await save({ ...common, draftPayloadJson: { fullName: "Newest", motherPhone: "123" } })
   assert.deepEqual(JSON.parse(JSON.stringify(saved.draftPayloadJson)), { fullName: "Newest", signatureFullName: "Parent", signatureEmail: "parent@example.test", signatureAgreed: ["yes"], motherPhone: "123" })
   assert.equal(saved.diffPayloadJson.changedFields.length, 5)
+
+  const repeated = await save({ ...common, draftPayloadJson: { fullName: "Newest", motherPhone: "123" } })
+  assert.deepEqual(JSON.parse(JSON.stringify(repeated.draftPayloadJson)), JSON.parse(JSON.stringify(saved.draftPayloadJson)))
+
+  await Promise.all([
+    save({ ...common, draftPayloadJson: { motherPhone: "456" } }),
+    save({ ...common, draftPayloadJson: { schoolName: "Concurrent School" } }),
+  ])
+  assert.equal(row.draftPayloadJson.motherPhone, "456")
+  assert.equal(row.draftPayloadJson.schoolName, "Concurrent School")
+  assert.equal(lockKeys.length, 5)
+  assert.ok(lockKeys.every(({ query }) => query.includes("pg_advisory_xact_lock")))
+  assert.ok(lockKeys.every(({ values }) => values[0] === "parent-profile:parent-1:student-1"))
 })
 
 test("parent submission enters the review queue without changing the official profile", async () => {
@@ -123,6 +162,8 @@ test("parent submission enters the review queue without changing the official pr
   }
   let officialProfileWrites = 0
   const prisma = {
+    $transaction: async (handler) => handler(prisma),
+    $executeRaw: async () => 1,
     parentProfileSubmissionQueue: {
       findFirst: async ({ where }) => row.parentAccountId === where.parentAccountId
         && row.studentRefId === where.studentRefId
@@ -156,9 +197,18 @@ test("parent submission enters the review queue without changing the official pr
     mapParentProfileSubmissionRecord: (record) => record,
     PARENT_PORTAL_MEMORY: { submissions: [] },
   })
+  context.withParentProfileSubmissionWriteLock = vm.runInContext(
+    `(${source.slice(writeLockStart, writeLockEnd)})`,
+    context,
+  )
   const submit = vm.runInContext(`(${source.slice(submitStart, submitEnd)})`, context)
   const list = vm.runInContext(`(${source.slice(listStart, listEnd)})`, context)
   const submitted = await submit({
+    parentAccountId: "synthetic-parent-019",
+    studentRefId: "synthetic-student-019",
+    comment: "Synthetic review request",
+  })
+  const repeatedSubmission = await submit({
     parentAccountId: "synthetic-parent-019",
     studentRefId: "synthetic-student-019",
     comment: "Synthetic review request",
@@ -167,6 +217,8 @@ test("parent submission enters the review queue without changing the official pr
 
   assert.equal(submitted.status, "submitted")
   assert.ok(submitted.submittedAt)
+  assert.equal(repeatedSubmission, null)
+  assert.equal(row.status, "submitted")
   assert.equal(queued.length, 1)
   assert.equal(queued[0].id, "synthetic-parent-profile-submission-019")
   assert.deepEqual(JSON.parse(JSON.stringify(queued[0].draftPayloadJson)), {
@@ -451,6 +503,7 @@ test("parent profile rejection requires and records an auditable reason without 
   }
   let requestPayload = { action: "reject" }
   let queueUpdate = null
+  let queueUpdateCalls = 0
   let profileTouches = 0
   let responsePayload = null
   const context = vm.createContext({
@@ -461,7 +514,9 @@ test("parent profile rejection requires and records an auditable reason without 
     getParentProfileSubmissionById: async (id) => id === submission.id ? submission : null,
     updateParentProfileSubmissionById: async (_id, patch) => {
       queueUpdate = patch
-      return { ...submission, ...patch }
+      queueUpdateCalls += 1
+      Object.assign(submission, patch)
+      return { ...submission }
     },
     getSharedPrismaClient: async () => {
       profileTouches += 1
@@ -512,6 +567,94 @@ test("parent profile rejection requires and records an auditable reason without 
   assert.equal(responsePayload.payload.action, "reject")
   assert.equal(responsePayload.payload.item.status, "rejected")
   assert.equal(responsePayload.payload.item.rejectionReason, "Please verify the submitted name.")
+  assert.equal(queueUpdateCalls, 1)
+
+  assert.equal(await rejectRoute(), true)
+  assert.equal(queueUpdateCalls, 1)
+  assert.equal(responsePayload.payload.alreadyReviewed, true)
+  assert.equal(profileTouches, 0)
+})
+
+test("parent profile review retries are idempotent and conflicting repeat decisions are rejected", async () => {
+  const submission = {
+    id: "synthetic-review-retry-submission-026",
+    studentRefId: "synthetic-review-retry-student-026",
+    status: "submitted",
+    draftPayloadJson: { fullName: "Updated Synthetic Learner" },
+  }
+  let payload = { action: "approve" }
+  let profileWrites = 0
+  let queueWrites = 0
+  let responsePayload = null
+  const profile = { studentRefId: submission.studentRefId, fullName: "Original Synthetic Learner" }
+  const context = vm.createContext({
+    Error,
+    PARENT_PROFILE_IMMUTABLE_FIELDS: new Set(["eaglesId", "studentNumber"]),
+    PARENT_PROFILE_EDITABLE_FIELDS: new Set(["fullName"]),
+    PARENT_PROFILE_QUEUE_STATUS_APPROVED: "approved",
+    PARENT_PROFILE_QUEUE_STATUS_REJECTED: "rejected",
+    normalizeText: (value) => String(value ?? "").trim(),
+    normalizeLower: (value) => String(value ?? "").trim().toLowerCase(),
+    normalizeParentProfilePatch: (patch) => ({ ...patch }),
+    listParentProfileFieldLocks: async () => [],
+    getParentProfileSubmissionById: async (id) => id === submission.id ? submission : null,
+    getSharedPrismaClient: async () => ({
+      studentProfile: {
+        findUnique: async () => profile,
+        update: async ({ data }) => {
+          profileWrites += 1
+          Object.assign(profile, data)
+          return profile
+        },
+        create: async () => assert.fail("Expected an existing synthetic profile"),
+      },
+    }),
+    buildProfileDiffSnapshot: () => ({ changedFields: [] }),
+    updateParentProfileSubmissionById: async (_id, patch) => {
+      queueWrites += 1
+      Object.assign(submission, patch)
+      return { ...submission }
+    },
+    assertCanManageUsers: () => {},
+    nowIso: () => "2026-11-17T12:00:00.000Z",
+    parseBody: async () => payload,
+    sendJson: (_response, status, body) => {
+      responsePayload = { status, body }
+    },
+    decodeURIComponent,
+    PARENT_PROFILE_QUEUE_STATUS_SUBMITTED: "submitted",
+    profileSubmissionMatch: ["/api/admin/profile-submissions/synthetic-review-retry-submission-026", submission.id],
+    method: "POST",
+    pathname: `/api/admin/profile-submissions/${submission.id}`,
+    rolePolicy: { canManageUsers: true },
+    session: { username: "synthetic-admin-026" },
+    request: {},
+    response: {},
+  })
+  const reviewRoute = vm.runInContext(
+    `(async () => { ${source.slice(adminReviewRouteStart, adminReviewRouteEnd)} })`,
+    context,
+  )
+
+  assert.equal(await reviewRoute(), true)
+  assert.equal(responsePayload.status, 200)
+  assert.equal(submission.status, "approved")
+  assert.equal(profileWrites, 1)
+  assert.equal(queueWrites, 1)
+
+  assert.equal(await reviewRoute(), true)
+  assert.equal(responsePayload.body.alreadyReviewed, true)
+  assert.equal(responsePayload.body.item.status, "approved")
+  assert.equal(profileWrites, 1)
+  assert.equal(queueWrites, 1)
+
+  payload = { action: "reject", rejectionReason: "Synthetic conflicting decision" }
+  assert.equal(await reviewRoute(), true)
+  assert.equal(responsePayload.status, 409)
+  assert.equal(responsePayload.body.ok, false)
+  assert.equal(responsePayload.body.item.status, "approved")
+  assert.equal(profileWrites, 1)
+  assert.equal(queueWrites, 1)
 })
 
 test("failed parent profile approval reports persistence failure and keeps the submission unapproved", async () => {
@@ -607,4 +750,93 @@ test("failed parent profile approval reports persistence failure and keeps the s
   assert.equal(responsePayload.payload.error, "Synthetic student profile write failed")
   assert.equal(Object.hasOwn(responsePayload.payload, "action"), false)
   assert.equal(Object.hasOwn(responsePayload.payload, "item"), false)
+})
+
+test("parent approval queue-write failure reports partial profile persistence without marking approval complete", async () => {
+  const submission = {
+    id: "synthetic-partial-approval-submission-026",
+    studentRefId: "synthetic-partial-approval-student-026",
+    status: "submitted",
+    draftPayloadJson: { fullName: "Updated Synthetic Learner" },
+  }
+  const row = { ...submission }
+  const profile = { studentRefId: submission.studentRefId, fullName: "Original Synthetic Learner" }
+  const queueUpdates = []
+  let profileWrites = 0
+  let responsePayload = null
+  const context = vm.createContext({
+    Error,
+    PARENT_PROFILE_IMMUTABLE_FIELDS: new Set(["eaglesId", "studentNumber"]),
+    PARENT_PROFILE_EDITABLE_FIELDS: new Set(["fullName"]),
+    PARENT_PROFILE_QUEUE_STATUS_APPROVED: "approved",
+    normalizeText: (value) => String(value ?? "").trim(),
+    normalizeLower: (value) => String(value ?? "").trim().toLowerCase(),
+    normalizeParentProfilePatch: (patch) => ({ ...patch }),
+    listParentProfileFieldLocks: async () => [],
+    getParentProfileSubmissionById: async (id) => id === row.id ? row : null,
+    getSharedPrismaClient: async () => ({
+      studentProfile: {
+        findUnique: async () => profile,
+        update: async ({ data }) => {
+          profileWrites += 1
+          Object.assign(profile, data)
+          return profile
+        },
+        create: async () => assert.fail("Expected an existing synthetic profile"),
+      },
+    }),
+    buildProfileDiffSnapshot: () => ({ changedFields: [{ fieldKey: "fullName" }] }),
+    updateParentProfileSubmissionById: async (id, patch) => {
+      assert.equal(id, row.id)
+      queueUpdates.push(patch)
+      if (queueUpdates.length === 1) {
+        const error = new Error("Synthetic approval queue write failed")
+        error.statusCode = 503
+        throw error
+      }
+      Object.assign(row, patch)
+      return { ...row }
+    },
+    assertCanManageUsers: () => {},
+    nowIso: () => "2026-11-17T13:00:00.000Z",
+    parseBody: async () => ({ action: "approve" }),
+    sendJson: (_response, status, payload) => {
+      responsePayload = { status, payload }
+    },
+    allowCors: () => {},
+    decodeURIComponent,
+    PARENT_PROFILE_QUEUE_STATUS_SUBMITTED: "submitted",
+    profileSubmissionMatch: ["/api/admin/profile-submissions/synthetic-partial-approval-submission-026", row.id],
+    method: "POST",
+    pathname: `/api/admin/profile-submissions/${row.id}`,
+    rolePolicy: { canManageUsers: true },
+    session: { username: "synthetic-admin-026" },
+    request: {},
+    response: {},
+  })
+  const reviewRoute = vm.runInContext(
+    `(async () => { ${source.slice(adminReviewRouteStart, adminReviewRouteEnd)} })`,
+    context,
+  )
+  const reportError = vm.runInContext(`(${source.slice(withErrorStart, withErrorEnd)})`, context)
+
+  let approvalError = null
+  try {
+    await reviewRoute()
+  } catch (error) {
+    approvalError = error
+  }
+  reportError(context.response, context.request, approvalError)
+
+  assert.equal(profileWrites, 1)
+  assert.equal(profile.fullName, "Updated Synthetic Learner")
+  assert.equal(queueUpdates.length, 2)
+  assert.equal(queueUpdates[0].status, "approved")
+  assert.equal(queueUpdates[1].failurePoint, "merge-write")
+  assert.equal(row.status, "submitted")
+  assert.equal(row.failurePoint, "merge-write")
+  assert.equal(row.rejectionReason, "Synthetic approval queue write failed")
+  assert.equal(responsePayload.status, 503)
+  assert.equal(responsePayload.payload.error, "Synthetic approval queue write failed")
+  assert.equal(Object.hasOwn(responsePayload.payload, "action"), false)
 })

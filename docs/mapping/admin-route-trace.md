@@ -58,7 +58,7 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | POST | `/api/admin/exercise-results/incoming` | Yes | `canManageUsers` | No | queue triage actions (`set...`, `resolve...`, `delete...`) |
 | GET | `/api/admin/profile-submissions` | Yes | `canManageUsers` | No | `listParentProfileSubmissions` |
 | PUT | `/api/admin/profile-submissions/{submissionId}` | Yes | `canManageUsers` | No | admin draft patch update (`updateParentProfileSubmissionById`) |
-| POST | `/api/admin/profile-submissions/{submissionId}` | Yes | `canManageUsers` | No | profile review actions (`approve`, `reject`) |
+| POST | `/api/admin/profile-submissions/{submissionId}` | Yes | `canManageUsers` | No | profile review actions (`approve`, `reject`); repeated same-decision requests are idempotent, conflicting decisions return 409 |
 | GET | `/api/admin/notifications/batch-status` | Yes | any readable role | No | `listQueuedAnnouncements` + `getEmailBatchQueueStatus` |
 | POST | `/api/admin/notifications/batch-status` | Yes | `canManageUsers` | No | batch actions (`send-all`, `hold`, `requeue`, `edit`) |
 | POST | `/api/admin/notifications/email` | Yes | write role (teacher restricted exception) | No | `queueAnnouncementEmail` or `sendAnnouncementEmail` |

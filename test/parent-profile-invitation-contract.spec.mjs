@@ -112,6 +112,7 @@ test("parent submission rejects each missing signature component without changin
       normalizeText: (value) => String(value ?? "").trim(),
       normalizeLower: (value) => String(value ?? "").trim().toLowerCase(),
       resolveBoolean: (value, fallback = false) => value === true || String(value).toLowerCase() === "true" || (value === undefined ? fallback : false),
+      withParentProfileSubmissionWriteLock: async (prisma, _parentAccountId, _studentRefId, handler) => handler(prisma),
       runParentPortalDbOperation: (handler) => handler({
         parentProfileSubmissionQueue: {
           findFirst: async () => row,

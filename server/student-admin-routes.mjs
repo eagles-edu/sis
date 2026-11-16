@@ -4665,6 +4665,20 @@ async function loadParentProfileDraftPayload({ parentAccountId = "", studentRefI
   )
 }
 
+async function withParentProfileSubmissionWriteLock(prisma, parentAccountId, studentRefId, handler) {
+  if (typeof prisma?.$transaction !== "function") {
+    throw Object.assign(new Error("Parent profile submission transaction is unavailable"), { statusCode: 503 })
+  }
+  return prisma.$transaction(async (transactionClient) => {
+    if (typeof transactionClient?.$executeRaw !== "function") {
+      throw Object.assign(new Error("Parent profile submission concurrency lock is unavailable"), { statusCode: 503 })
+    }
+    const lockKey = `parent-profile:${normalizeText(parentAccountId)}:${normalizeText(studentRefId)}`
+    await transactionClient.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`
+    return handler(transactionClient)
+  })
+}
+
 async function saveParentProfileDraftSubmission({
   parentAccountId = "",
   studentRefId = "",
@@ -4678,8 +4692,12 @@ async function saveParentProfileDraftSubmission({
   const normalizedComment = normalizeText(comment)
 
   return runParentPortalDbOperation(
-    async (prisma) => {
-      const latestDraft = await prisma.parentProfileSubmissionQueue.findFirst({
+    async (prisma) => withParentProfileSubmissionWriteLock(
+      prisma,
+      normalizedParentAccountId,
+      normalizedStudentRefId,
+      async (transactionClient) => {
+      const latestDraft = await transactionClient.parentProfileSubmissionQueue.findFirst({
         where: {
           parentAccountId: normalizedParentAccountId,
           studentRefId: normalizedStudentRefId,
@@ -4690,7 +4708,7 @@ async function saveParentProfileDraftSubmission({
       const now = new Date()
       if (latestDraft) {
         const mergedDraft = { ...(latestDraft.draftPayloadJson || {}), ...draftPayloadJson }
-        const updated = await prisma.parentProfileSubmissionQueue.update({
+        const updated = await transactionClient.parentProfileSubmissionQueue.update({
           where: { id: latestDraft.id },
           data: {
             draftPayloadJson: mergedDraft,
@@ -4708,7 +4726,7 @@ async function saveParentProfileDraftSubmission({
           updatedAt: updated.updatedAt?.toISOString?.() || now.toISOString(),
         })
       }
-      const created = await prisma.parentProfileSubmissionQueue.create({
+      const created = await transactionClient.parentProfileSubmissionQueue.create({
         data: {
           parentAccountId: normalizedParentAccountId,
           studentRefId: normalizedStudentRefId,
@@ -4725,7 +4743,8 @@ async function saveParentProfileDraftSubmission({
         createdAt: created.createdAt?.toISOString?.() || now.toISOString(),
         updatedAt: created.updatedAt?.toISOString?.() || now.toISOString(),
       })
-    },
+      }
+    ),
     async () => {
       const nowIsoText = nowIso()
       const existingIndex = PARENT_PORTAL_MEMORY.submissions.findIndex(
@@ -4778,8 +4797,12 @@ async function setParentProfileSubmissionSubmitted({ parentAccountId = "", stude
   const normalizedComment = normalizeText(comment)
 
   return runParentPortalDbOperation(
-    async (prisma) => {
-      const latestDraft = await prisma.parentProfileSubmissionQueue.findFirst({
+    async (prisma) => withParentProfileSubmissionWriteLock(
+      prisma,
+      normalizedParentAccountId,
+      normalizedStudentRefId,
+      async (transactionClient) => {
+      const latestDraft = await transactionClient.parentProfileSubmissionQueue.findFirst({
         where: {
           parentAccountId: normalizedParentAccountId,
           studentRefId: normalizedStudentRefId,
@@ -4802,7 +4825,7 @@ async function setParentProfileSubmissionSubmitted({ parentAccountId = "", stude
         throw error
       }
       const submittedAt = new Date()
-      const updated = await prisma.parentProfileSubmissionQueue.update({
+      const updated = await transactionClient.parentProfileSubmissionQueue.update({
         where: { id: latestDraft.id },
         data: {
           status: PARENT_PROFILE_QUEUE_STATUS_SUBMITTED,
@@ -4819,7 +4842,8 @@ async function setParentProfileSubmissionSubmitted({ parentAccountId = "", stude
         createdAt: updated.createdAt?.toISOString?.() || "",
         updatedAt: updated.updatedAt?.toISOString?.() || "",
       })
-    },
+      }
+    ),
     async () => {
       const index = PARENT_PORTAL_MEMORY.submissions.findIndex(
         (row) =>
@@ -8011,6 +8035,28 @@ async function handleApiRequest(request, response, pathname, url) {
       throw error
     }
 
+    if (action !== "approve" && action !== "reject") {
+      const error = new Error("Unsupported profile submission action")
+      error.statusCode = 400
+      throw error
+    }
+    const currentStatus = normalizeLower(submission.status)
+    const decisionStatus = action === "approve"
+      ? PARENT_PROFILE_QUEUE_STATUS_APPROVED
+      : PARENT_PROFILE_QUEUE_STATUS_REJECTED
+    if (currentStatus === decisionStatus) {
+      sendJson(response, 200, { ok: true, action, item: submission, alreadyReviewed: true })
+      return true
+    }
+    if (currentStatus !== PARENT_PROFILE_QUEUE_STATUS_SUBMITTED) {
+      sendJson(response, 409, {
+        ok: false,
+        error: "Profile submission has already been reviewed or is not submitted",
+        item: submission,
+      })
+      return true
+    }
+
     if (action === "reject") {
       const rejectionReason = normalizeText(payload?.rejectionReason || payload?.reason)
       if (!rejectionReason) {
@@ -8114,12 +8160,6 @@ async function handleApiRequest(request, response, pathname, url) {
         })
         throw error
       }
-    }
-
-    {
-      const error = new Error("Unsupported profile submission action")
-      error.statusCode = 400
-      throw error
     }
   }
 
