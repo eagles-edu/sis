@@ -3,6 +3,11 @@
 import { chromium } from 'playwright';
 
 const ORIGIN = 'http://127.0.0.1:8788';
+const STANDARD_STUDENT_LOGIN = 'mark001';
+const STANDARD_STUDENT_PASSWORD = process.env.STUDENT_STUDENT_USER === STANDARD_STUDENT_LOGIN ? process.env.STUDENT_STUDENT_PASS || '' : '';
+const STANDARD_PARENT_LOGIN = 'cmmark001';
+const STANDARD_PARENT_PASSWORD = process.env.STUDENT_PARENT_USER === STANDARD_PARENT_LOGIN ? process.env.STUDENT_PARENT_PASS || '' : '';
+
 const VIEWPORT = { width: 390, height: 844 };
 
 const adminPages = [
@@ -61,8 +66,8 @@ async function loginAdmin(page) {
 async function loginParent(page) {
   await page.goto(abs('/parent?apiOrigin=http://127.0.0.1:8788'), { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#loginForm', { timeout: 15000 });
-  await page.fill('#parentsId', 'cmkramer001');
-  await page.fill('#parentPassword', 'P1k@ch00');
+  await page.fill('#parentsId', STANDARD_PARENT_LOGIN);
+  await page.fill('#parentPassword', STANDARD_PARENT_PASSWORD);
   await Promise.all([
     page.waitForResponse((res) => res.url().includes('/api/parent/auth/login')),
     page.click('#loginBtn'),
@@ -77,8 +82,8 @@ async function loginParent(page) {
 async function loginStudent(page) {
   await page.goto(abs('/student?apiOrigin=http://127.0.0.1:8788'), { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#loginForm', { timeout: 15000 });
-  await page.fill('#loginEaglesId', 'kramer001');
-  await page.fill('#loginPassword', 'P1k@ch00');
+  await page.fill('#loginEaglesId', STANDARD_STUDENT_LOGIN);
+  await page.fill('#loginPassword', STANDARD_STUDENT_PASSWORD);
   await Promise.all([
     page.waitForResponse((res) => res.url().includes('/api/student/auth/login')),
     page.click('#loginBtn'),

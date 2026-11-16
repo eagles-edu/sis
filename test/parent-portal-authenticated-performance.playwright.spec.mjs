@@ -3,6 +3,7 @@ import fs from "node:fs"
 import test from "node:test"
 import { parse as parseDotenv } from "dotenv"
 import { chromium } from "playwright"
+import { resolveStandardParentCredentials } from "./helpers/standard-portal-credentials.mjs"
 
 const ENV_FILE = process.env.SIS_ENV_FILE || ".env.dev"
 const ENV_VALUES = fs.existsSync(ENV_FILE)
@@ -27,9 +28,7 @@ function resolveChromiumExecutablePath() {
 }
 
 function parentCredentials() {
-  const user = process.env.STUDENT_PARENT_USER || ENV_VALUES.STUDENT_PARENT_USER || ""
-  const pass = process.env.STUDENT_PARENT_PASS || ENV_VALUES.STUDENT_PARENT_PASS || ""
-  return { user, pass }
+  return resolveStandardParentCredentials(ENV_VALUES)
 }
 
 const PARENT = parentCredentials()

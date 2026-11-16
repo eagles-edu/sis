@@ -2,7 +2,7 @@
 
 This file is read at ai boot as SOP (Standard Operating Procedure) and serves as the short, always-loaded contract for agents in `/home/eagles/dockerz/sis`.
 
-**Use `.env.dev` for necessary user credentials.**
+**Use `.env.dev` for necessary user credentials.** Credentials for `https://moodle.eagles.edu.vn` are stored in this repository's `.env.dev`; load them only when needed and never expose their values.
 
 ---
 
@@ -68,7 +68,7 @@ A bare `npm run db:*`, a mismatched `SIS_ENV_FILE`/`DOTENV_CONFIG_PATH`, or a cr
 6. Keep edits ASCII unless the target file already needs Unicode.
 7. Before editing, make a backup or verify that a current backup/snapshot already exists for the file.
 8. After any file edit, restart the dev runtime before reporting the task complete.
-9. For multi-stage work, write the plan, stop for approval, and implement one stage per approval. Do not edit files before the plan is approved.
+9. For multi-stage work, write the plan, then proceed one stage at a time. The user's explicit request and applicable instructions approve the plan and all necessary in-scope stages; do not pause for separate plan or stage approval. Pause only if a stage would materially expand scope, introduce a destructive or irreversible action, or conflict with another instruction, and explain the specific blocker.
 10. Before reporting a port, service, or credential as blocked, check the live process or port and the env file that owns it (`.env.dev` for dev). Do not report from memory or from a single file.
 11. For multi-step work, keep the todo list current in the session database and report status by todo ID. Do not answer progress questions with estimates.
 12. For repeated fixes of one lint rule across a file, use `.github/prompts/fix-rule.prompt.md` so every match is fixed in one pass.
@@ -225,6 +225,9 @@ When a request says `identical`, `copy/paste`, `use the shared header`, `use the
 ## Authentication Contract
 
 Admin API auth is **cookie-session based**, not bearer-token based.
+
+- Routine authenticated browser verification uses student `mark001` and parent `cmmark001`. Resolve passwords only from the environment-owned file for the target; match these exact account IDs in `STUDENT_STUDENT_USER` / `STUDENT_STUDENT_PASS`, `STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON`, `STUDENT_PARENT_USER` / `STUDENT_PARENT_PASS`, or `STUDENT_PARENT_PORTAL_ACCOUNTS_JSON`. Never select the first configured account or substitute another account. If the named account is absent from that environment, skip the authenticated gate and report the missing account without copying credentials between environments or exposing values.
+- Isolated unit and contract fixtures may use synthetic accounts; they are not credentials for authenticated portal verification.
 
 - **Login endpoints:**
   - `POST /api/admin/auth/login`

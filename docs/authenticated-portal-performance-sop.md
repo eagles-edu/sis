@@ -14,6 +14,9 @@ The flow under test is: portal route -> visible login form -> successful UI logi
 
 1. Read `AGENTS.md`, `docs/CODE-EDITING-DOCS-INDEX.md`, `docs/sop.md`, `README.md`, `sis.md`, `docs/DOCUMENT-STATUS-AND-PARAMETER-AUDIT.md`, `docs/CORE-DESIGN-PARAMETERS.md`, and the affected portal surface contract before browser work.
 2. Use the environment-owned file for the target: `.env.dev` for dev, `.env.test` for the test mirror, and `.env` for the live/admin mirror. Parse it without shell-sourcing quoted JSON values. Never print credentials or student PII.
+   - Use `mark001` for student login and `cmmark001` for parent login in every routine authenticated browser check.
+   - Resolve the matching password only from that target's environment file: student values use `STUDENT_STUDENT_USER` / `STUDENT_STUDENT_PASS` or the exact `eaglesId` entry in `STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON`; parent values use `STUDENT_PARENT_USER` / `STUDENT_PARENT_PASS` or the exact `parentsId` entry in `STUDENT_PARENT_PORTAL_ACCOUNTS_JSON`.
+   - Do not fall back to the first available account, a different username, or a credential from another environment. If the named account is not configured for the target, skip that authenticated gate and report the missing environment-owned account without printing any credential values.
 3. Launch Chrome/Chromium with Playwright at both `1440x900` desktop and `390x844` mobile viewports.
 4. Open the target route, fill the visible username/password controls, submit the visible form, and wait for the authenticated application panel. Do not replace this with a `fetch()` login or cookie injection.
 5. After the UI login settles, reload the same route in the same browser context. Capture the state at `domcontentloaded`, then wait for the authenticated shell and first data surface.

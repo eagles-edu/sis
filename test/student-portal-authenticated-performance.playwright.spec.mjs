@@ -3,6 +3,7 @@ import fs from "node:fs"
 import test from "node:test"
 import { parse as parseDotenv } from "dotenv"
 import { chromium } from "playwright"
+import { resolveStandardStudentCredentials } from "./helpers/standard-portal-credentials.mjs"
 
 const ENV_FILE = process.env.SIS_ENV_FILE || ".env.dev"
 const ENV_VALUES = fs.existsSync(ENV_FILE)
@@ -31,17 +32,7 @@ function resolveChromiumExecutablePath() {
 }
 
 function studentCredentials() {
-  if (ENV_VALUES.STUDENT_STUDENT_USER && ENV_VALUES.STUDENT_STUDENT_PASS) {
-    return { user: ENV_VALUES.STUDENT_STUDENT_USER, pass: ENV_VALUES.STUDENT_STUDENT_PASS }
-  }
-  let accounts = []
-  try {
-    accounts = JSON.parse(ENV_VALUES.STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON || "[]")
-  } catch (error) {
-    throw new Error(`Unable to parse student portal accounts from ${ENV_FILE}: ${error.message}`, { cause: error })
-  }
-  const account = accounts.find((entry) => entry?.eaglesId && entry?.password)
-  return { user: account?.eaglesId || "", pass: account?.password || "" }
+  return resolveStandardStudentCredentials(ENV_VALUES)
 }
 
 const STUDENT = studentCredentials()

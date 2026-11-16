@@ -2,11 +2,20 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import path from "node:path"
 import test from "node:test"
+import { parse as parseDotenv } from "dotenv"
+import {
+  resolveStandardParentCredentials,
+  resolveStandardStudentCredentials,
+} from "./helpers/standard-portal-credentials.mjs"
 
 const ROOT_DIR = process.cwd()
 const ARTIFACTS_DIR = path.resolve(ROOT_DIR, "artifacts")
 const AXE_PATH = path.resolve(ROOT_DIR, "node_modules/axe-core/axe.min.js")
 const TEST_ADMIN_UI_SETTINGS_FILE = `/tmp/sis-admin-ui-settings-${process.pid}.json`
+const REVIEW_ENV_FILE = ".env.dev"
+const REVIEW_ENV_VALUES = fs.existsSync(REVIEW_ENV_FILE)
+  ? parseDotenv(fs.readFileSync(REVIEW_ENV_FILE))
+  : {}
 
 let chromium = null
 try {
@@ -422,10 +431,21 @@ function setupTestEnv() {
   process.env.STUDENT_ADMIN_USER = `portal-site-review-${process.pid}`
   process.env.STUDENT_ADMIN_PASS = `portal-site-review-pass-${process.pid}`
   delete process.env.STUDENT_ADMIN_PASSWORD_HASH
-  process.env.STUDENT_STUDENT_USER = process.env.STUDENT_STUDENT_USER || "kramer001"
-  process.env.STUDENT_STUDENT_PASS = process.env.STUDENT_STUDENT_PASS || "P1k@ch00"
-  process.env.STUDENT_PARENT_USER = process.env.STUDENT_PARENT_USER || "cmkramer001"
-  process.env.STUDENT_PARENT_PASS = process.env.STUDENT_PARENT_PASS || "P1k@ch00"
+  const credentials = resolveReviewCredentials()
+  if (credentials.student.eaglesId && credentials.student.password) {
+    process.env.STUDENT_STUDENT_USER = credentials.student.eaglesId
+    process.env.STUDENT_STUDENT_PASS = credentials.student.password
+  } else {
+    delete process.env.STUDENT_STUDENT_USER
+    delete process.env.STUDENT_STUDENT_PASS
+  }
+  if (credentials.parent.parentsId && credentials.parent.password) {
+    process.env.STUDENT_PARENT_USER = credentials.parent.parentsId
+    process.env.STUDENT_PARENT_PASS = credentials.parent.password
+  } else {
+    delete process.env.STUDENT_PARENT_USER
+    delete process.env.STUDENT_PARENT_PASS
+  }
   try {
     fs.rmSync(TEST_ADMIN_UI_SETTINGS_FILE, { force: true })
   } catch (error) {
@@ -433,35 +453,15 @@ function setupTestEnv() {
   }
 }
 
-function parseJsonEnv(name) {
-  const raw = process.env[name]
-  if (!raw) return null
-  try {
-    return JSON.parse(raw)
-  } catch (error) {
-    void error
-    return null
-  }
-}
-
 function resolveReviewCredentials() {
   const adminUser = process.env.STUDENT_ADMIN_USER || "admin"
   const adminPass = process.env.STUDENT_ADMIN_PASS || "3825u2z"
-  const studentAccounts = parseJsonEnv("STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON")
-  const studentAccount =
-    Array.isArray(studentAccounts) ?
-      studentAccounts.find((account) => {
-        return account && account.status === "active" && account.eaglesId && account.password
-      }) || studentAccounts[0] :
-      null
-  const studentEaglesId = studentAccount?.eaglesId || process.env.STUDENT_STUDENT_USER || "kramer001"
-  const studentPass = studentAccount?.password || process.env.STUDENT_STUDENT_PASS || "P1k@ch00"
-  const parentUser = process.env.STUDENT_PARENT_USER || "cmkramer001"
-  const parentPass = process.env.STUDENT_PARENT_PASS || "P1k@ch00"
+  const studentCredentials = resolveStandardStudentCredentials(REVIEW_ENV_VALUES)
+  const parentCredentials = resolveStandardParentCredentials(REVIEW_ENV_VALUES)
   return {
     admin: { user: adminUser, password: adminPass },
-    student: { eaglesId: studentEaglesId, password: studentPass },
-    parent: { parentsId: parentUser, password: parentPass },
+    student: { eaglesId: studentCredentials.user, password: studentCredentials.pass },
+    parent: { parentsId: parentCredentials.user, password: parentCredentials.pass },
   }
 }
 
@@ -1181,9 +1181,15 @@ async function reviewAdminUtilities(page, origin, theme, coverage) {
   coverage.push({ theme, role: "admin-utilities", pointsState, pointsSurfaces, pointsAxe, gradesState, gradesSurfaces, gradesAxe, reloadButton })
 }
 
-const skipReason = resolvePlaywrightSkipReason()
-
 setupTestEnv()
+const reviewCredentials = resolveReviewCredentials()
+const skipReason =
+  resolvePlaywrightSkipReason() ||
+  (!reviewCredentials.student.eaglesId || !reviewCredentials.student.password
+    ? `student mark001 credentials are required from ${REVIEW_ENV_FILE}`
+    : !reviewCredentials.parent.parentsId || !reviewCredentials.parent.password
+      ? `parent cmmark001 credentials are required from ${REVIEW_ENV_FILE}`
+      : false)
 
 function traceReviewStage(stage) {
   process.stderr.write(`[portal-site-review] ${stage}\n`)
