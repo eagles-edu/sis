@@ -370,7 +370,7 @@ test("parent portal initial auth paints the dashboard without probing /me", asyn
       initialAuthState: {
         authenticated: true,
         user: {
-          parentsId: "cmkramer001",
+          parentsId: "cmmark001",
           role: "parent",
         },
       },
@@ -487,7 +487,7 @@ test("parent portal static preview over http falls back to dev apiOrigin when om
         authenticated = true
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
 
@@ -495,7 +495,7 @@ test("parent portal static preview over http falls back to dev apiOrigin when om
         if (!authenticated) return jsonTextResponse(401, { error: "Unauthorized" })
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
 
@@ -556,7 +556,7 @@ test("parent portal static preview over http falls back to dev apiOrigin when om
     assert.ok(calls.includes("GET http://127.0.0.1:8788/api/parent/auth/me"))
   })
 
-  document.getElementById("parentsId").value = "cmkramer001"
+  document.getElementById("parentsId").value = "cmmark001"
   document.getElementById("parentPassword").value = "family-pass-123"
   document.getElementById("loginForm").dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true }))
 
@@ -592,7 +592,7 @@ test("parent portal static preview over http uses explicit apiOrigin for login",
         authenticated = true
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
 
@@ -600,7 +600,7 @@ test("parent portal static preview over http uses explicit apiOrigin for login",
         if (!authenticated) return jsonTextResponse(401, { error: "Unauthorized" })
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
 
@@ -657,7 +657,7 @@ test("parent portal static preview over http uses explicit apiOrigin for login",
   await waitFor(() => {
     assert.ok(calls.includes("GET http://127.0.0.1:8788/api/parent/auth/me"))
   })
-  document.getElementById("parentsId").value = "cmkramer001"
+  document.getElementById("parentsId").value = "cmmark001"
   document.getElementById("parentPassword").value = "family-pass-123"
   document.getElementById("loginForm").dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true }))
 
@@ -687,7 +687,7 @@ test("parent portal keeps profile form on child page view instead of dashboard c
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
 
@@ -742,7 +742,7 @@ test("parent portal keeps profile form on child page view instead of dashboard c
       initialAuthState: {
         authenticated: true,
         user: {
-          parentsId: "cmkramer001",
+          parentsId: "cmmark001",
           role: "parent",
         },
       },
@@ -787,7 +787,7 @@ test("parent portal profile fields keep reference form section and label orderin
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
 
@@ -832,7 +832,7 @@ test("parent portal profile fields keep reference form section and label orderin
           profile: {
             id: "cmmdu4wxs000126g0g5mdskt2",
             studentRefId: "cmmdu4wxe000026g0cr1uxt8y",
-            parentsId: "cmkramer001",
+            parentsId: "cmmark001",
             memberSince: "2025-09",
             requiredValidationOk: true,
             updatedAt: "2026-03-08T04:50:17.210Z",
@@ -866,7 +866,7 @@ test("parent portal profile fields keep reference form section and label orderin
       initialAuthState: {
         authenticated: true,
         user: {
-          parentsId: "cmkramer001",
+          parentsId: "cmmark001",
           role: "parent",
         },
       },
@@ -968,7 +968,7 @@ test("parent portal profile fields keep reference form section and label orderin
   assert.equal(document.getElementById("pf_meta_parentsId")?.disabled, true)
   assert.equal(document.getElementById("pf_meta_updatedAt")?.disabled, true)
   assert.equal(document.getElementById("pf_meta_memberSince")?.value, "09/2025")
-  assert.equal(document.getElementById("pf_meta_parentsId")?.value, "cmkramer001")
+  assert.equal(document.getElementById("pf_meta_parentsId")?.value, "cmmark001")
   assert.equal(document.getElementById("pf_meta_updatedAt")?.value, "2026-03-08T04:50:17.210Z")
 
   const profileText = normalizeText(document.getElementById("profileFields").textContent)
@@ -995,7 +995,7 @@ test("parent portal menu opens a detailed homework page with calendar and histor
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
 
@@ -1184,7 +1184,7 @@ test("parent portal menu opens a detailed homework page with calendar and histor
       initialAuthState: {
         authenticated: true,
         user: {
-          parentsId: "cmkramer001",
+          parentsId: "cmmark001",
           role: "parent",
         },
       },
@@ -1223,7 +1223,7 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
 
@@ -1425,7 +1425,7 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
       initialAuthState: {
         authenticated: true,
         user: {
-          parentsId: "cmkramer001",
+          parentsId: "cmmark001",
           role: "parent",
         },
       },
@@ -1524,7 +1524,7 @@ test("parent portal grades YTD uses the setup-defined quarter when a stored labe
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
 
@@ -1655,7 +1655,7 @@ test("parent portal grades YTD uses the setup-defined quarter when a stored labe
       initialAuthState: {
         authenticated: true,
         user: {
-          parentsId: "cmkramer001",
+          parentsId: "cmmark001",
           role: "parent",
         },
       },
@@ -1723,7 +1723,7 @@ test("parent portal grades YTD still renders when rows carry explicit quarter co
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
 
@@ -1796,7 +1796,7 @@ test("parent portal grades YTD still renders when rows carry explicit quarter co
       initialAuthState: {
         authenticated: true,
         user: {
-          parentsId: "cmkramer001",
+          parentsId: "cmmark001",
           role: "parent",
         },
       },
@@ -1838,7 +1838,7 @@ test("parent portal news queue chips use canonical Approved/Waiting/Revise label
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
       if (pathname === "/api/parent/children" && method === "GET") {
@@ -1942,7 +1942,7 @@ test("parent portal news queue chips use canonical Approved/Waiting/Revise label
         return jsonTextResponse(200, {
           ok: true,
           acknowledgedAt: "2026-05-10T10:00:00.000Z",
-          acknowledgedBy: "cmkramer001",
+          acknowledgedBy: "cmmark001",
         })
       }
       return jsonTextResponse(404, { error: "Not found" })
@@ -2032,7 +2032,7 @@ test("parent portal opens news detail directly from news queue when dashboard ca
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
       if (pathname === "/api/parent/children" && method === "GET") {
@@ -2311,7 +2311,7 @@ test("parent portal attendance overview renders class/tardy square stats", async
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
       if (pathname === "/api/parent/children" && method === "GET") {
@@ -2389,7 +2389,7 @@ test("parent portal report archive sorts newest first and clears outstanding aft
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
       if (pathname === "/api/parent/children" && method === "GET") {
@@ -2593,7 +2593,7 @@ test("parent portal grade/class resolver ignores immutable eagles level when pub
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
 
@@ -2677,7 +2677,7 @@ test("parent portal profile draft submit surfaces API errors on child page", asy
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
       if (pathname === "/api/parent/children" && method === "GET") {
@@ -2775,7 +2775,7 @@ test("parent portal profile review submit requires signature and agreement befor
       if (pathname === "/api/parent/auth/me" && method === "GET") {
         return jsonTextResponse(200, {
           authenticated: true,
-          user: { parentsId: "cmkramer001", role: "parent" },
+          user: { parentsId: "cmmark001", role: "parent" },
         })
       }
       if (pathname === "/api/parent/children" && method === "GET") {

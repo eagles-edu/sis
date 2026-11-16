@@ -9,6 +9,7 @@ import { getConfiguredSchoolYear } from "./school-setup-store.mjs"
 import { assertPortalPasswordPolicy, hashScryptPassword } from "./users.mjs"
 import { writeStudentProfileBackupSnapshot } from "./student-profile-backups.mjs"
 import { timeStudentWritePhase } from "../../infra/observability/student-write-metrics.mjs"
+import { isMoodleProvisioningEnabled, queueStudentProvisioning } from "./moodle-provisioning.mjs"
 
 /**
  * @typedef {Record<string, unknown> & {
@@ -1150,6 +1151,7 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
       where: { studentRefId: requestedId },
       select: {
         parentsId: true,
+        currentGrade: true,
         rawFormPayload: true,
         normalizedFormPayload: true,
       },
@@ -1248,6 +1250,15 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
       })
     }
 
+    if (isMoodleProvisioningEnabled()) {
+      await queueStudentProvisioning(client, {
+        student,
+        profile: profilePayload,
+        password: portalPassword,
+        previousLevel: existingProfile?.currentGrade,
+      })
+    }
+
     return {
       action: "updated",
       studentRefId: student.id,
@@ -1290,6 +1301,10 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
         studentRefId: student.id,
       },
     })
+  }
+
+  if (isMoodleProvisioningEnabled()) {
+    await queueStudentProvisioning(client, { student, profile: profilePayload, password: portalPassword, isNew: true })
   }
 
   return {

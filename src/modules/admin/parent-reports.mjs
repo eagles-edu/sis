@@ -1,6 +1,7 @@
 // src/modules/admin/parent-reports.mjs
 // @ts-check
 
+import { createHash } from "node:crypto"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { resolveEnrollmentPeriodForStudent } from "./enrollment-periods.mjs"
 import { buildStudentReportCardPayload } from "../../../server/student-report-card-pdf.mjs"
@@ -24,6 +25,20 @@ function normalizeText(value) {
  */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
+}
+
+/**
+ * @param {string} studentRefId
+ * @param {string} className
+ * @param {string} schoolYear
+ * @param {string} quarter
+ * @param {string | null} enrollmentPeriodId
+ * @returns {string}
+ */
+function deterministicParentReportId(studentRefId, className, schoolYear, quarter, enrollmentPeriodId) {
+  const key = JSON.stringify([studentRefId, className, schoolYear, quarter, enrollmentPeriodId])
+  const digest = createHash("sha256").update(key).digest("hex")
+  return `teacher_report_${digest}`
 }
 
 /**
@@ -749,6 +764,7 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
       quarter,
       enrollmentPeriodId: reportData.enrollmentPeriodId,
     },
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "asc" }],
   })
   if (existingScopedReport) {
     if (normalizeLower(payload.updatedByRole) === "teacher") {
@@ -766,43 +782,33 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
   }
   reportData.workflowState = requestedWorkflowState || PARENT_REPORT_WORKFLOW_STATE_DRAFT
 
+  const reportUpsertId = deterministicParentReportId(
+    studentRef,
+    className,
+    schoolYear,
+    quarter,
+    reportData.enrollmentPeriodId,
+  )
+  /** @param {Record<string, unknown>} data */
+  const writeReport = (data) => existingScopedReport
+    ? prisma.parentClassReport.update({ where: { id: existingScopedReport.id }, data })
+    : prisma.parentClassReport.upsert({
+        where: { id: reportUpsertId },
+        update: data,
+        create: {
+          id: reportUpsertId,
+          studentRefId: studentRef,
+          ...data,
+        },
+      })
+
   let upsertedReport
   try {
-    upsertedReport = await prisma.parentClassReport.upsert({
-      where: {
-        studentRefId_className_schoolYear_quarter_enrollmentPeriodId: {
-          studentRefId: studentRef,
-          className,
-          schoolYear,
-          quarter,
-          enrollmentPeriodId: reportData.enrollmentPeriodId,
-        },
-      },
-      update: reportData,
-      create: {
-        studentRefId: studentRef,
-        ...reportData,
-      },
-    })
+    upsertedReport = await writeReport(reportData)
   } catch (error) {
     if (!isLegacyParentReportParticipationPointsSchemaError(error)) throw error
     const legacyReportData = stripLegacyParentReportFields(reportData)
-    upsertedReport = await prisma.parentClassReport.upsert({
-      where: {
-        studentRefId_className_schoolYear_quarter_enrollmentPeriodId: {
-          studentRefId: studentRef,
-          className,
-          schoolYear,
-          quarter,
-          enrollmentPeriodId: reportData.enrollmentPeriodId,
-        },
-      },
-      update: legacyReportData,
-      create: {
-        studentRefId: studentRef,
-        ...legacyReportData,
-      },
-    })
+    upsertedReport = await writeReport(legacyReportData)
   }
   await recordParentClassReportEvent({
     reportId: normalizeText(upsertedReport?.id),

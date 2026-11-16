@@ -91,9 +91,10 @@ test("live admin sync wrapper is pinned to the live admin host and refreshes Pri
   assert.match(liveScript, /window\.__SIS_RUNTIME_ENV=.*window\.__SIS_ADMIN_PAGE_PATH=.*window\.__SIS_PARENT_PORTAL_PAGE_PATH=.*window\.__SIS_STUDENT_PORTAL_PAGE_PATH=/s)
   assert.match(liveScript, /runtime-data\/admin-ui-settings\.json/)
   assert.match(liveScript, /LIVE_PRESERVED_RUNTIME_FILES=\([\s\S]*"runtime-data\/admin-ui-settings\.json"/)
-  assert.match(liveScript, /npm ci --no-audit --no-fund/)
+  assert.match(liveScript, /npm ci --include=dev --no-audit --no-fund/)
   assert.match(liveScript, /refresh_runtime_prisma_client\(\)/)
   assert.match(liveScript, /npm run db:migrate:deploy/)
+  assert.doesNotMatch(liveScript, /npm prune --omit=dev/u, "the generated Prisma client remains installed for the production runtime")
   assert.match(liveScript, /immutable restore mismatch: \.env/)
   assert.match(liveScript, /preserved immutable hash verified: \$\{rel_path\}/)
   assert.match(liveScript, /allowed_runtime_paths.*runtime-data/s)
@@ -124,6 +125,19 @@ test("live portal docs advertise the backup bundle and admin origin", () => {
   assert.match(liveLinksDoc, /\/home\/eagles\/dockerz\/backups\/live-admin\//)
   assert.match(liveLinksDoc, /https:\/\/admin\.eagles\.edu\.vn/)
   assert.match(liveLinksDoc, /refreshes Prisma[\s\S]*db:generate[\s\S]*db:migrate:deploy/i)
+})
+
+test("test and live sync provision service-writable Library media roots", () => {
+  assert.match(testScript, /TEST_LIBRARY_MEDIA_ROOT="\$\{SIS_TEST_LIBRARY_MEDIA_ROOT:-\$\(dirname "\$TEST_ROOT"\)\/sis-library-media\/test\}"/)
+  assert.match(liveScript, /LIVE_LIBRARY_MEDIA_ROOT="\$\{SIS_LIVE_LIBRARY_MEDIA_ROOT:-\$\(dirname "\$\{LIVE_ROOT\}"\)\/sis-library-media\/production\}"/)
+  for (const [script, ensureName, environment, runnerName] of [
+    [testScript, "ensure_test_library_media_root", "test", "main"],
+    [liveScript, "ensure_live_library_media_root", "live", "run_apply"],
+  ]) {
+    assert.match(script, new RegExp(`${ensureName}\\(\\) \\{[\\s\\S]*install -d -o eagles -g eagles -m 0750 \\"\\$\\{(?:TEST|LIVE)_LIBRARY_MEDIA_ROOT\\}\\"[\\s\\S]*sudo -n -u eagles test -w \\"\\$\\{(?:TEST|LIVE)_LIBRARY_MEDIA_ROOT\\}\\"[\\s\\S]*${environment} Library media root is not writable`))
+    assert.match(script, /id -un\)" == "eagles" && -w "\$\{(?:TEST|LIVE)_LIBRARY_MEDIA_ROOT\}" && -x "\$\{(?:TEST|LIVE)_LIBRARY_MEDIA_ROOT\}"/)
+    assert.match(script, new RegExp(`${runnerName}\\(\\) \\{[\\s\\S]*?${ensureName}`))
+  }
 })
 
 test("live nginx config mirrors the test parent route shape", () => {

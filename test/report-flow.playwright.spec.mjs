@@ -2,6 +2,13 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import path from "node:path"
 import test from "node:test"
+import { parse as parseDotenv } from "dotenv"
+import {
+  resolveStandardParentCredentials,
+  resolveStandardStudentCredentials,
+  STANDARD_PARENT_LOGIN,
+  STANDARD_STUDENT_LOGIN,
+} from "./helpers/standard-portal-credentials.mjs"
 
 const ROOT_DIR = process.cwd()
 const AXE_PATH = path.resolve(ROOT_DIR, "node_modules/axe-core/axe.min.js")
@@ -45,12 +52,25 @@ process.env.NODE_ENV = process.env.NODE_ENV || "development"
 process.env.SIS_ENV_FILE = process.env.SIS_ENV_FILE || ".env.dev"
 process.env.EXERCISE_MAILER_ORIGIN = process.env.EXERCISE_MAILER_ORIGIN || "*"
 process.env.MAILER_DEBUG = process.env.MAILER_DEBUG || "false"
+const ENV_FILE = process.env.SIS_ENV_FILE
+const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
+const STUDENT_CREDENTIALS = resolveStandardStudentCredentials(ENV_VALUES)
+const PARENT_CREDENTIALS = resolveStandardParentCredentials(ENV_VALUES)
 process.env.STUDENT_ADMIN_USER = process.env.STUDENT_ADMIN_USER || "admin"
-process.env.STUDENT_ADMIN_PASS = process.env.STUDENT_ADMIN_PASS || "3825u2z"
-process.env.STUDENT_STUDENT_USER = process.env.STUDENT_STUDENT_USER || "kramer001"
-process.env.STUDENT_STUDENT_PASS = process.env.STUDENT_STUDENT_PASS || "P1k@ch00"
-process.env.STUDENT_PARENT_USER = process.env.STUDENT_PARENT_USER || "cmkramer001"
-process.env.STUDENT_PARENT_PASS = process.env.STUDENT_PARENT_PASS || "P1k@ch00"
+if (STUDENT_CREDENTIALS.user && STUDENT_CREDENTIALS.pass) {
+  process.env.STUDENT_STUDENT_USER = STUDENT_CREDENTIALS.user
+  process.env.STUDENT_STUDENT_PASS = STUDENT_CREDENTIALS.pass
+} else {
+  delete process.env.STUDENT_STUDENT_USER
+  delete process.env.STUDENT_STUDENT_PASS
+}
+if (PARENT_CREDENTIALS.user && PARENT_CREDENTIALS.pass) {
+  process.env.STUDENT_PARENT_USER = PARENT_CREDENTIALS.user
+  process.env.STUDENT_PARENT_PASS = PARENT_CREDENTIALS.pass
+} else {
+  delete process.env.STUDENT_PARENT_USER
+  delete process.env.STUDENT_PARENT_PASS
+}
 
 let reportFlowAccountsPromise = null
 let reportFlowFixtureSeedPromise = null
@@ -70,6 +90,8 @@ async function ensureReportFlowFixture() {
           join "ParentPortalStudentLink" l on l."studentRefId" = s.id
           join "ParentPortalAccount" p on p.id = l."parentAccountId"
           where p.status = 'active'
+            and p."parentsId" = ${STANDARD_PARENT_LOGIN}
+            and s."eaglesId" = ${STANDARD_STUDENT_LOGIN}
             and (r."approvedAt" is not null or r."publishedAt" is not null or r."notificationQueuedAt" is not null)
           group by p."parentsId", s."eaglesId"
           order by count(r.id) desc, p."parentsId" asc, s."eaglesId" asc
@@ -87,6 +109,8 @@ async function ensureReportFlowFixture() {
           join "ParentPortalStudentLink" l on l."studentRefId" = s.id
           join "ParentPortalAccount" p on p.id = l."parentAccountId"
           where p.status = 'active'
+            and p."parentsId" = ${STANDARD_PARENT_LOGIN}
+            and s."eaglesId" = ${STANDARD_STUDENT_LOGIN}
             and r."approvedAt" is null
             and r."publishedAt" is null
             and r."notificationQueuedAt" is null
@@ -132,6 +156,8 @@ async function getReportFlowAccounts() {
           join "Student" s on s.id = l."studentRefId"
           join "ParentClassReport" r on r."studentRefId" = s.id
           where p.status = 'active'
+            and p."parentsId" = ${STANDARD_PARENT_LOGIN}
+            and s."eaglesId" = ${STANDARD_STUDENT_LOGIN}
             and (r."approvedAt" is not null or r."publishedAt" is not null or r."notificationQueuedAt" is not null)
           group by p."parentsId", s."eaglesId"
           order by count(r.id) desc, p."parentsId" asc, s."eaglesId" asc
@@ -140,9 +166,9 @@ async function getReportFlowAccounts() {
         assert.ok(rows.length > 0, "report-flow test database should expose at least one parent report fixture")
         return {
           parentUser: String(rows[0].parentsId || "").trim(),
-          parentPass: "P1k@ch00",
+          parentPass: PARENT_CREDENTIALS.pass,
           studentUser: String(rows[0].eaglesId || "").trim(),
-          studentPass: "P1k@ch00",
+          studentPass: STUDENT_CREDENTIALS.pass,
         }
       } finally {
         await prisma.$disconnect()
@@ -155,6 +181,12 @@ async function getReportFlowAccounts() {
 function resolvePlaywrightSkipReason() {
   if (!chromium) return "playwright package is not installed"
   if (!CHROMIUM_EXECUTABLE_PATH) return "playwright browser executable is not installed"
+  if (!STUDENT_CREDENTIALS.user || !STUDENT_CREDENTIALS.pass) {
+    return `student ${STANDARD_STUDENT_LOGIN} credentials are required from ${ENV_FILE}`
+  }
+  if (!PARENT_CREDENTIALS.user || !PARENT_CREDENTIALS.pass) {
+    return `parent ${STANDARD_PARENT_LOGIN} credentials are required from ${ENV_FILE}`
+  }
   return false
 }
 

@@ -1,13 +1,25 @@
 #!/usr/bin/env node
+import fs from "node:fs";
 import process from "node:process";
+import { parse as parseDotenv } from "dotenv";
+import {
+  resolveStandardParentCredentials,
+  resolveStandardStudentCredentials,
+  STANDARD_PARENT_LOGIN,
+  STANDARD_STUDENT_LOGIN,
+} from "../test/helpers/standard-portal-credentials.mjs";
 
 const DEFAULT_BASE_URL = "http://127.0.0.1:8786";
-const DEFAULT_ADMIN_USER = "admin";
-const DEFAULT_ADMIN_PASS = "3825u2z";
-const DEFAULT_PARENT_ID = "cmkramer001";
-const DEFAULT_PARENT_PASS = "P1k@ch00";
-const DEFAULT_STUDENT_ID = "ben001";
-const DEFAULT_STUDENT_PASS = "P1k@ch00";
+const ENV_FILE = process.env.SIS_ENV_FILE || ".env.test";
+const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {};
+const PARENT_CREDENTIALS = resolveStandardParentCredentials(ENV_VALUES);
+const STUDENT_CREDENTIALS = resolveStandardStudentCredentials(ENV_VALUES);
+const DEFAULT_ADMIN_USER = ENV_VALUES.STUDENT_ADMIN_USER || "admin";
+const DEFAULT_ADMIN_PASS = ENV_VALUES.STUDENT_ADMIN_PASS || "";
+const DEFAULT_PARENT_ID = PARENT_CREDENTIALS.user || STANDARD_PARENT_LOGIN;
+const DEFAULT_PARENT_PASS = PARENT_CREDENTIALS.pass;
+const DEFAULT_STUDENT_ID = STUDENT_CREDENTIALS.user || STANDARD_STUDENT_LOGIN;
+const DEFAULT_STUDENT_PASS = STUDENT_CREDENTIALS.pass;
 
 function parseArgs(argv) {
   const result = { _: [] };
@@ -107,30 +119,10 @@ const config = {
     process.env.STUDENT_ADMIN_PASS,
     DEFAULT_ADMIN_PASS
   ),
-  parentId: textOrDefault(
-    args["parent-id"],
-    process.env.ADMIN_SMOKE_PARENT_ID,
-    process.env.STUDENT_PARENT_USER,
-    DEFAULT_PARENT_ID
-  ),
-  parentPass: textOrDefault(
-    args["parent-pass"],
-    process.env.ADMIN_SMOKE_PARENT_PASS,
-    process.env.STUDENT_PARENT_PASS,
-    DEFAULT_PARENT_PASS
-  ),
-  studentId: textOrDefault(
-    args["student-id"],
-    process.env.ADMIN_SMOKE_STUDENT_ID,
-    process.env.STUDENT_STUDENT_USER,
-    DEFAULT_STUDENT_ID
-  ),
-  studentPass: textOrDefault(
-    args["student-pass"],
-    process.env.ADMIN_SMOKE_STUDENT_PASS,
-    process.env.STUDENT_STUDENT_PASS,
-    DEFAULT_STUDENT_PASS
-  ),
+  parentId: DEFAULT_PARENT_ID,
+  parentPass: DEFAULT_PARENT_PASS,
+  studentId: DEFAULT_STUDENT_ID,
+  studentPass: DEFAULT_STUDENT_PASS,
   mutations: Boolean(args.mutations || args.full),
   points: Boolean(args.points || args.full),
   notifications: Boolean(args.notifications || args.full),
@@ -223,6 +215,12 @@ async function runCleanup() {
 }
 
 async function main() {
+  if (!config.parentPass) {
+    throw new Error(`parent cmmark001 credentials are required from ${ENV_FILE}`)
+  }
+  if (!config.studentPass) {
+    throw new Error(`student mark001 credentials are required from ${ENV_FILE}`)
+  }
   console.log(`Base URL: ${config.baseUrl}`);
   console.log(
     `Modes: mutations=${config.mutations ? "on" : "off"} points=${config.points ? "on" : "off"} notifications=${config.notifications ? "on" : "off"} logout=${config.logout ? "on" : "off"}`

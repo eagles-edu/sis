@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="enrol/sis/db" VERSION="2026102710" COMMENT="XMLDB file for Moodle enrol/sis plugin">
+  <TABLES>
+    <TABLE NAME="enrol_sis_command" COMMENT="Idempotency receipts for SIS provisioning commands">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
+        <FIELD NAME="commandid" TYPE="char" LENGTH="100" NOTNULL="true" />
+        <FIELD NAME="outcome" TYPE="char" LENGTH="32" NOTNULL="true" />
+        <FIELD NAME="resultjson" TYPE="text" NOTNULL="false" />
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" />
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+        <KEY NAME="commandid_uix" TYPE="unique" FIELDS="commandid" />
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="enrol_sis_cohort" COMMENT="Cohort memberships created and owned by SIS">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" />
+        <FIELD NAME="cohortid" TYPE="int" LENGTH="10" NOTNULL="true" />
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" />
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+        <KEY NAME="userid_cohort_uix" TYPE="unique" FIELDS="userid, cohortid" />
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id" />
+        <KEY NAME="cohortid_fk" TYPE="foreign" FIELDS="cohortid" REFTABLE="cohort" REFFIELDS="id" />
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="cohortid_ix" UNIQUE="false" FIELDS="cohortid" />
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="enrol_sis_link" COMMENT="Pending and completed signed SIS roster links">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" />
+        <FIELD NAME="eaglesid" TYPE="char" LENGTH="100" NOTNULL="true" />
+        <FIELD NAME="studentnumber" TYPE="char" LENGTH="100" NOTNULL="true" />
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" />
+        <FIELD NAME="lasterrorcode" TYPE="char" LENGTH="80" NOTNULL="false" />
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" />
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" />
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+        <KEY NAME="userid_uix" TYPE="unique" FIELDS="userid" />
+        <KEY NAME="eaglesid_uix" TYPE="unique" FIELDS="eaglesid" />
+        <KEY NAME="studentnumber_uix" TYPE="unique" FIELDS="studentnumber" />
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id" />
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="status_time_ix" UNIQUE="false" FIELDS="status, timemodified" />
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

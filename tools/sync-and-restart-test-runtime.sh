@@ -30,7 +30,7 @@ TEST_PUBLIC_ADMIN_DIR="${SIS_TEST_PUBLIC_ADMIN_DIR:-${TEST_PUBLIC_ROOT}/sis-admi
 TEST_PUBLIC_PARENT_DIR="${SIS_TEST_PUBLIC_PARENT_DIR:-${TEST_PUBLIC_ROOT}/sis-parent}"
 TEST_PUBLIC_STUDENT_DIR="${SIS_TEST_PUBLIC_STUDENT_DIR:-${TEST_PUBLIC_ROOT}/sis-student}"
 TEST_PUBLIC_SHARED_DIR="${SIS_TEST_PUBLIC_SHARED_DIR:-${TEST_PUBLIC_ROOT}/web-asset/shared}"
-TEST_LIBRARY_MEDIA_ROOT="${SIS_TEST_LIBRARY_MEDIA_ROOT:-/home/test.eagles.edu.vn/sis-library-media/test}"
+TEST_LIBRARY_MEDIA_ROOT="${SIS_TEST_LIBRARY_MEDIA_ROOT:-$(dirname "$TEST_ROOT")/sis-library-media/test}"
 ROUTE_CONTRACT_FILE="${SIS_TEST_ROUTE_CONTRACT_FILE:-${REPO_ROOT}/config/test-route-contract.json}"
 if [[ ! -f "$ROUTE_CONTRACT_FILE" ]]; then
   echo "missing test route contract file: $ROUTE_CONTRACT_FILE" >&2
@@ -1129,14 +1129,24 @@ cleanup_test_backup_artifacts() {
 
 ensure_test_library_media_root() {
   log "ensuring test Library media root ${TEST_LIBRARY_MEDIA_ROOT}"
-  if [[ -d "${TEST_LIBRARY_MEDIA_ROOT}" && -w "${TEST_LIBRARY_MEDIA_ROOT}" ]]; then
+  if [[ ! -d "${TEST_LIBRARY_MEDIA_ROOT}" || ! -w "${TEST_LIBRARY_MEDIA_ROOT}" || ! -x "${TEST_LIBRARY_MEDIA_ROOT}" ]]; then
+    if [[ "${EUID}" -eq 0 ]]; then
+      install -d -o eagles -g eagles -m 0750 "${TEST_LIBRARY_MEDIA_ROOT}"
+    else
+      sudo -n install -d -o eagles -g eagles -m 0750 "${TEST_LIBRARY_MEDIA_ROOT}"
+    fi
+  fi
+  if [[ "${EUID}" -eq 0 ]] && runuser -u eagles -- test -w "${TEST_LIBRARY_MEDIA_ROOT}" -a -x "${TEST_LIBRARY_MEDIA_ROOT}"; then
     return 0
   fi
-  if [[ "${EUID}" -eq 0 ]]; then
-    install -d -o eagles -g eagles -m 0750 "${TEST_LIBRARY_MEDIA_ROOT}"
-  else
-    sudo -n install -d -o eagles -g eagles -m 0750 "${TEST_LIBRARY_MEDIA_ROOT}"
+  if [[ "$(id -un)" == "eagles" && -w "${TEST_LIBRARY_MEDIA_ROOT}" && -x "${TEST_LIBRARY_MEDIA_ROOT}" ]]; then
+    return 0
   fi
+  if [[ "$(id -un)" != "eagles" ]] && sudo -n -u eagles test -w "${TEST_LIBRARY_MEDIA_ROOT}" -a -x "${TEST_LIBRARY_MEDIA_ROOT}"; then
+    return 0
+  fi
+  echo "test Library media root is not writable by the runtime user: ${TEST_LIBRARY_MEDIA_ROOT}" >&2
+  return 1
 }
 
 sync_test_public_html_index() {

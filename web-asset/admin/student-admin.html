@@ -1332,6 +1332,27 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
                 Use `eaglesId` + `studentNumber`; missing or duplicate
                 identity values will fail import preflight.
               </p>
+              <hr>
+              <h3>Moodle Current Students</h3>
+              <div class="row">
+                <div class="col-12 grid-actions">
+                  <button id="moodleRosterExcelBtn" type="button" class="portal-button portal-button-primary"
+                    title="Download the current active SIS roster as an Excel workbook with Moodle and SIS-link sheets.">
+                    Moodle Excel
+                  </button>
+                  <button id="moodleRosterCsvBtn" type="button" class="portal-button portal-button-primary"
+                    title="Download the current active SIS roster as CSV for Moodle's native Upload users tool.">
+                    Moodle CSV
+                  </button>
+                  <button id="moodleRosterFixesBtn" type="button" class="portal-button portal-button-info"
+                    title="Download an SIS import workbook listing current students whose data blocks the complete Moodle roster export.">
+                    Moodle Fixes
+                  </button>
+                </div>
+              </div>
+              <p class="small" id="moodleRosterExportNote">
+                Moodle native Upload users requires CSV. The Excel workbook also includes the SIS Link sheet for the SIS enrolment importer. If required student data is missing, download Moodle Fixes, correct values from authoritative records, import the workbook into SIS, then download the full roster again.
+              </p>
             </div>
 
             <div class="section-stack">
@@ -5086,7 +5107,7 @@ No family lookup yet.</pre>
           if (adminAppLoaded) return
           adminAppLoaded = true
           const script = document.createElement("script")
-          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-5c950292dfa0c0be"
+          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-a6e9f512e4627cee"
           script.defer = true
           if (replaySubmit || replayClick || replayPage) {
             script.addEventListener("load", () => {

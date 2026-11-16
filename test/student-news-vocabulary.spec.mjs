@@ -316,6 +316,26 @@ test("Student News checks vocabulary format and spelling without dictionary syll
   assert.deepEqual(result.rowWarnings, [])
 })
 
+test("student News and New Words accept a single-letter stressed vowel in an internal syllable", async () => {
+  for (const syllabication of ["con-fed-er-á-tions", "con-fed-er-A-tions"]) {
+    assert.equal(vocabularyEntryError({ english: "confederations", syllabication }), "")
+    assert.equal(vocabularySyllabicationFormatAndSpellingError({ english: "confederations", syllabication }), "")
+  }
+  assert.match(
+    vocabularyEntryError({ english: "confederations", syllabication: "con-fed-er-S-tions" }),
+    /single-character stressed syllable/u,
+  )
+
+  const result = await evaluateStudentNewsVocabulary([{
+    partOfSpeech: "noun",
+    english: "confederations",
+    vietnamese: "các liên bang",
+    syllabication: "con-fed-er-á-tions",
+    definition: "Groups of states or organizations united for a shared purpose.",
+  }], { minimumWords: 1 })
+  assert.equal(result.passed, true, result.message)
+})
+
 test("Student News admin guidance records the format-and-spelling scope", async () => {
   const { buildStudentNewsComplianceBlock, evaluateStudentNewsMinimumRequirements, updateStudentNewsValidationIssues } = await import("../src/modules/admin/student-news-compliance.mjs")
   const validation = await evaluateStudentNewsMinimumRequirements({

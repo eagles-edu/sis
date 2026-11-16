@@ -47,8 +47,8 @@ const ROLE_CONFIG = {
     },
   },
   parent: {
-    defaultUser: process.env.STUDENT_PARENT_USER || "cmkramer001",
-    defaultPassword: process.env.STUDENT_PARENT_PASS || "P1k@ch00",
+    defaultUser: "cmmark001",
+    defaultPassword: process.env.STUDENT_PARENT_USER === "cmmark001" ? process.env.STUDENT_PARENT_PASS || "" : "",
     endpoint: "/api/parent/auth/login",
     cookieName: "parent_portal_sid",
     cookieWaitPattern: /^parent_portal_sid=([^;]+)/i,
@@ -66,8 +66,8 @@ const ROLE_CONFIG = {
     },
   },
   student: {
-    defaultUser: process.env.STUDENT_STUDENT_USER || "kramer001",
-    defaultPassword: process.env.STUDENT_STUDENT_PASS || "P1k@ch00",
+    defaultUser: "mark001",
+    defaultPassword: process.env.STUDENT_STUDENT_USER === "mark001" ? process.env.STUDENT_STUDENT_PASS || "" : "",
     endpoint: "/api/student/auth/login",
     cookieName: "student_portal_sid",
     cookieWaitPattern: /^student_portal_sid=([^;]+)/i,

@@ -26,11 +26,14 @@ model Student {
   enrollmentPeriods StudentEnrollmentPeriod[]
   parentPortalLinks ParentPortalStudentLink[]
   studentPortalAccount StudentPortalAccount?
+  moodleUserLink     MoodleUserLink?
+  moodleCommands     MoodleProvisioningCommand[]
   parentProfileSubmissions ParentProfileSubmissionQueue[]
   parentProfileFieldLocks ParentProfileFieldLock[]
   parentProfileInvitations ParentProfileInvitation[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
+  moodleDeletionPending Boolean         @default(false)
 
   @@schema("public")
 }
@@ -1210,5 +1213,81 @@ model StudentPortalAccount {
 
   @@index([status])
   @@index([studentRefId])
+  @@schema("public")
+}
+
+model MoodleLevelMapping {
+  id              String   @id @default(cuid())
+  canonicalLevel  String   @unique
+  courseIdnumber  String   @unique
+  cohortIdnumber  String   @unique
+  cohortName      String
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@schema("public")
+}
+
+model MoodleUserLink {
+  id             String   @id @default(cuid())
+  studentRefId   String   @unique
+  student        Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  eaglesId       String   @unique
+  studentNumber  Int      @unique
+  moodleUserId   Int?     @unique
+  status         String   @default("pending")
+  lastSyncedAt   DateTime?
+  lastErrorCode  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status, updatedAt])
+  @@schema("public")
+}
+
+model MoodleProvisioningCommand {
+  id                 String   @id @default(cuid())
+  sequence           BigInt   @unique @default(autoincrement())
+  studentRefId       String?
+  student            Student? @relation(fields: [studentRefId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  action             String
+  idempotencyKey     String   @unique
+  payloadJson        Json?
+  encryptedPayload   String?
+  status             String   @default("pending")
+  attemptCount       Int      @default(0)
+  nextAttemptAt      DateTime @default(now())
+  lastErrorCode      String?
+  terminalAt         DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  receipt            MoodleProvisioningReceipt?
+
+  @@index([status, nextAttemptAt, sequence])
+  @@index([studentRefId, sequence])
+  @@schema("public")
+}
+
+model MoodleProvisioningReceipt {
+  id           String                    @id @default(cuid())
+  commandId    String                    @unique
+  command      MoodleProvisioningCommand @relation(fields: [commandId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  outcome      String
+  resultJson   Json?
+  receivedAt   DateTime                  @default(now())
+
+  @@index([outcome, receivedAt])
+  @@schema("public")
+}
+
+model MoodleProvisioningNonce {
+  source       String
+  nonce        String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@id([source, nonce])
+  @@index([expiresAt])
   @@schema("public")
 }

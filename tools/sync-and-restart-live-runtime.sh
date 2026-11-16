@@ -15,6 +15,7 @@ esac
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOURCE_ROOT="${SIS_SOURCE_ROOT:-${REPO_ROOT}}"
 LIVE_ROOT="${SIS_LIVE_ROOT:-/home/admin.eagles.edu.vn/sis}"
+LIVE_LIBRARY_MEDIA_ROOT="${SIS_LIVE_LIBRARY_MEDIA_ROOT:-$(dirname "${LIVE_ROOT}")/sis-library-media/production}"
 PUBLIC_ROOT="${SIS_LIVE_PUBLIC_ROOT:-/home/admin.eagles.edu.vn/public_html}"
 LIVE_ORIGIN="${SIS_LIVE_PRIMARY_ORIGIN:-https://admin.eagles.edu.vn}"
 LIVE_LIGHTHOUSE_ENABLED="${SIS_LIVE_LIGHTHOUSE_ENABLED:-1}"
@@ -934,6 +935,28 @@ cleanup_live_backup_artifacts() {
   "${LIVE_WRITE_PREFIX[@]}" find "${LIVE_ROOT}" -type f -name '*.BAK-*' -delete
 }
 
+ensure_live_library_media_root() {
+  log "ensuring live Library media root ${LIVE_LIBRARY_MEDIA_ROOT}"
+  if [[ ! -d "${LIVE_LIBRARY_MEDIA_ROOT}" || ! -w "${LIVE_LIBRARY_MEDIA_ROOT}" || ! -x "${LIVE_LIBRARY_MEDIA_ROOT}" ]]; then
+    if [[ "${EUID}" -eq 0 ]]; then
+      install -d -o eagles -g eagles -m 0750 "${LIVE_LIBRARY_MEDIA_ROOT}"
+    else
+      sudo -n install -d -o eagles -g eagles -m 0750 "${LIVE_LIBRARY_MEDIA_ROOT}"
+    fi
+  fi
+  if [[ "${EUID}" -eq 0 ]] && runuser -u eagles -- test -w "${LIVE_LIBRARY_MEDIA_ROOT}" -a -x "${LIVE_LIBRARY_MEDIA_ROOT}"; then
+    return 0
+  fi
+  if [[ "$(id -un)" == "eagles" && -w "${LIVE_LIBRARY_MEDIA_ROOT}" && -x "${LIVE_LIBRARY_MEDIA_ROOT}" ]]; then
+    return 0
+  fi
+  if [[ "$(id -un)" != "eagles" ]] && sudo -n -u eagles test -w "${LIVE_LIBRARY_MEDIA_ROOT}" -a -x "${LIVE_LIBRARY_MEDIA_ROOT}"; then
+    return 0
+  fi
+  echo "live Library media root is not writable by the runtime user: ${LIVE_LIBRARY_MEDIA_ROOT}" >&2
+  return 1
+}
+
 sync_runtime_code_trees() {
   local code_dir=""
   local code_file=""
@@ -1117,7 +1140,7 @@ EOF
 
 ensure_live_dependencies() {
   log "installing live dependencies in ${LIVE_ROOT}"
-  (cd "${LIVE_ROOT}" && npm ci --no-audit --no-fund)
+  (cd "${LIVE_ROOT}" && npm ci --include=dev --no-audit --no-fund)
 }
 
 wipe_live_target_contents() {
@@ -1377,6 +1400,7 @@ run_apply() {
   sync_live_runtime_assets
   verify_local_ui_live_parity
   cleanup_live_backup_artifacts
+  ensure_live_library_media_root
   pin_live_env_contract
   if should_refresh_prisma; then
     refresh_runtime_prisma_client

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { parseOxfordHtml, previewOxfordLibraryEntry, sanitizeOxfordPreview } from "../src/modules/admin/oxford-provider.mjs"
+import { parseOxfordHtml, previewOxfordLibraryEntry, previewOxfordBreLibraryEntry, sanitizeOxfordPreview } from "../src/modules/admin/oxford-provider.mjs"
 
 const fixture = `<!doctype html><div id="entryContent"><div class="entry"><div class="top-g"><div class="webtop-g"><h2 class="h">word</h2><span class="pos">noun</span></div><div class="pron-g"><span class="phon"><span class="name">NAmE</span>/wərd/</span><div class="sound" data-src-mp3="https://www.oxfordlearnersdictionaries.com/media/american_english/us_pron/w/wor/word_/word__us_1.mp3"></div></div></div><span class="sn-g"><span class="num">1</span><span class="gram">countable</span><span class="def">a single unit of language</span><span class="x">Do not write more than 200 words.</span></span><span class="sn-g"><span class="num">2</span><span class="gram">countable</span><span class="def">a second collection of words</span><span class="x">The second example is here.</span></span></div></div>`
 
@@ -97,4 +97,29 @@ test("Oxford preview fails closed when the source is unavailable", async () => {
   const preview = await previewOxfordLibraryEntry({ english: "word" }, async () => ({ ok: false, status: 503, headers: new Headers() }))
   assert.equal(preview.ok, false)
   assert.match(preview.message, /no Library data was changed/u)
+})
+
+test("Oxford American preview rejects redirects to the British English path", async () => {
+  const preview = await previewOxfordLibraryEntry({ english: "word", partOfSpeech: "noun" }, async (url) => ({
+    ok: true,
+    status: 200,
+    url: String(url).replace("/definition/american_english/", "/definition/english/"),
+    headers: new Headers(),
+    text: async () => fixture,
+  }))
+  assert.equal(preview.ok, false)
+  assert.match(preview.message, /wrong English variant/u)
+  assert.match(preview.message, /no Library data was changed/u)
+})
+
+test("Oxford American preview ignores nearby British verb links", async () => {
+  const html = '<div id="entryContent"><div class="entry"><div class="top-g"><div class="webtop-g"><h2 class="h">debate</h2><span class="pos">noun</span></div></div><span class="sn-g"><span class="def">a discussion</span></span></div></div><div class="responsive_row nearby"><h4>Nearby words</h4><a href="https://www.oxfordlearnersdictionaries.com/definition/english/debate_2" title="Definition of debate verb in British English"><data class="hwd">debate <pos>verb</pos></data></a></div>'
+  const requested = []
+  const preview = await previewOxfordLibraryEntry({ english: "debate", partOfSpeech: "verb" }, async (url) => {
+    requested.push(String(url))
+    return { ok: true, status: 200, url: String(url), headers: new Headers(), text: async () => html }
+  })
+  assert.equal(requested.length, 1, "a British nearby entry is not fetched by the American provider")
+  assert.match(requested[0], /definition\/american_english/u)
+  assert.equal(preview.sourceUrl.includes("definition/english"), false)
 })

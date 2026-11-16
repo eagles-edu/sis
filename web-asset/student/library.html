@@ -132,7 +132,7 @@
     </main>
   </div>
   <script defer src="/web-asset/shared/portal-preferences.js"></script>
-  <script defer src="/web-asset/shared/vocabulary-esl-editor.js"></script>
+  <script defer src="/web-asset/shared/vocabulary-esl-editor.js?v=20261116.2"></script>
   <script>window.SIS_PORTAL_THEME?.initPrivacyConsent?.({ locale: "vi", portal: "student" }); window.SIS_PORTAL_THEME?.installBrevoConversationA11y?.();</script>
   <script>
     (() => {
@@ -165,7 +165,7 @@
         const amount = Math.max(1, Math.min(5, Number(count) || 1));
         for (let index = 0; index < amount; index += 1) {
           libraryNewWordSequence += 1;
-          studentLibraryNewWordsRows?.insertAdjacentHTML("beforeend", window.SIS_VOCABULARY_ESL.editorRowHtml(`student-library-new-${libraryNewWordSequence}`, { removable: true, includeDictionaryBuilder: true, includeTransitivityTools: true, includeOriginAnalysis: true, originLookupPath: `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library/etymonline` }));
+          studentLibraryNewWordsRows?.insertAdjacentHTML("beforeend", window.SIS_VOCABULARY_ESL.editorRowHtml(`student-library-new-${libraryNewWordSequence}`, { removable: true }));
           bindStudentLibraryNewWordRow(studentLibraryNewWordsRows?.lastElementChild);
         }
       }

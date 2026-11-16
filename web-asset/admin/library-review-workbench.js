@@ -476,13 +476,13 @@
     if (value && typeof value === "object") return Object.values(value).some(dictionaryBuilderDraftValue)
     return value !== undefined && value !== null && String(value).trim() !== ""
   }
-  const applyDictionaryBuilderDraftSelections = (pane, selections, mode, isVerbEntry) => {
+  const applyDictionaryBuilderDraftSelections = (pane, selections, mode, isVerbEntry, forceReplaceFields = new Set()) => {
     const next = readPayload(pane)
     const changed = []
     const deferred = []
     const write = (field, value) => {
       if (!dictionaryBuilderDraftValue(value)) return false
-      if (mode === "fill_missing" && dictionaryBuilderDraftValue(next[field])) return false
+      if (mode === "fill_missing" && !forceReplaceFields.has(field) && dictionaryBuilderDraftValue(next[field])) return false
       next[field] = value
       changed.push(field)
       return true
@@ -514,7 +514,7 @@
       }
       write(field, value)
     })
-    window.SIS_VOCABULARY_ESL?.hydrate(pane, next, { preserveSyllabication: true })
+    window.SIS_VOCABULARY_ESL?.hydrate(pane, next)
     pane.querySelectorAll("[data-review-field]").forEach((input) => {
       const path = input.dataset.reviewField
       const value = path.split(".").reduce((current, key) => current && typeof current === "object" ? current[key] : "", next)
@@ -603,6 +603,7 @@
     if (typeof window.requestAnimationFrame === "function") window.requestAnimationFrame(applySize)
   }
   const sourceBrowserTabs = new Map()
+  const sourceBrowserTabUrls = new WeakMap()
   const openSourceProbeTimers = new Map()
   const providerRetryInFlight = new Set()
   const INITIAL_SOURCE_GROUP_SIZE = 7
@@ -627,6 +628,14 @@
     }
     return paths[provider] || ""
   }
+  const sourceUrlForProvider = (provider, sourceUrl, word) => provider === "oxford_ame"
+    ? initialSourceUrl(provider, word)
+    : sourceUrl || initialSourceUrl(provider, word)
+  const navigateProviderTab = (tab, sourceUrl) => {
+    if (!tab || tab.closed || !sourceUrl || sourceBrowserTabUrls.get(tab) === sourceUrl) return
+    tab.location.href = sourceUrl
+    sourceBrowserTabUrls.set(tab, sourceUrl)
+  }
   const providerTabName = (provider) => `sis-dictionary-builder-${provider}`
   const openProviderTabDuringGesture = (provider, sourceUrl = "about:blank") => {
     const target = providerTabName(provider)
@@ -639,7 +648,7 @@
       const existing = sourceBrowserTabs.get(provider)
       if (existing && !existing.closed) { reserved.set(provider, existing); return }
       const tab = openProviderTabDuringGesture(provider, initialSourceUrl(provider, word))
-      if (tab) { sourceBrowserTabs.set(provider, tab); reserved.set(provider, tab) }
+      if (tab) { sourceBrowserTabs.set(provider, tab); sourceBrowserTabUrls.set(tab, initialSourceUrl(provider, word)); reserved.set(provider, tab) }
       else blocked.push(provider)
     })
     return { reserved, blocked, word }
@@ -649,10 +658,10 @@
     const navigations = []
     reservation?.reserved?.forEach((tab, provider) => {
       const sourceUrl = sourceByProvider.get(provider) || initialSourceUrl(provider, reservation.word)
-      if (sourceUrl && tab) navigations.push({ tab, sourceUrl })
+      if (sourceUrl && tab) navigations.push({ tab, sourceUrl: sourceUrlForProvider(provider, sourceUrl, reservation.word) })
     })
     navigations.forEach(({ tab, sourceUrl }, index) => {
-      window.setTimeout(() => { if (!tab.closed) tab.location.href = sourceUrl }, index * 1000)
+      window.setTimeout(() => navigateProviderTab(tab, sourceUrl), index * 1000)
     })
   }
   const closeSourceBrowserTabs = () => {
@@ -802,11 +811,11 @@
         }
       }
       if (!dialog.open) return
-      scheduleDictionaryBuilderPolling(latestSnapshot, pane, sourceId, dialog, dialog.dictionaryBuilderSelections || selectedCandidates, dialog.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || activeTab, INITIAL_SOURCE_PROVIDER_ORDER.indexOf(provider) + 1)
       if (renderUpdatedBuilder) {
         const currentActiveTab = dialog.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || activeTab
-        renderDictionaryBuilder(latestSnapshot, pane, sourceId, structuredClone(selectedCandidates), currentActiveTab, null, { autoRetry: false })
+        renderDictionaryBuilder(latestSnapshot, pane, sourceId, dialog.dictionaryBuilderSelections || selectedCandidates, currentActiveTab, null, { autoRetry: false, providerIndex: INITIAL_SOURCE_PROVIDER_ORDER.indexOf(provider) + 1, pollDelay: 10000 })
       }
+      scheduleDictionaryBuilderPolling(latestSnapshot, pane, sourceId, dialog, dialog.dictionaryBuilderSelections || selectedCandidates, dialog.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || activeTab, INITIAL_SOURCE_PROVIDER_ORDER.indexOf(provider) + 1)
     }, delay)
     openSourceProbeTimers.set(snapshot.id, timer)
   }
@@ -880,7 +889,7 @@
       }
     })
   }
-  const renderDictionaryBuilder = (snapshot, pane, sourceId, previousSelections = {}, activeTab = "vietnamese", initialReservation = null, { autoRetry = true } = {}) => {
+  const renderDictionaryBuilder = (snapshot, pane, sourceId, previousSelections = {}, activeTab = "vietnamese", initialReservation = null, { autoRetry = true, providerIndex = 0, pollDelay = 2000 } = {}) => {
     const dialog = dictionaryBuilderDialog()
     if (dialog.dataset.providerProbeCleanupBound !== "true") {
       dialog.dataset.providerProbeCleanupBound = "true"
@@ -895,6 +904,9 @@
     const visibleDictionaryBuilderDatums = new Set(visibleDictionaryBuilderFields.map(([datum]) => datum))
     const selectedTab = visibleDictionaryBuilderDatums.has(activeTab) ? activeTab : visibleDictionaryBuilderFields[0]?.[0] || "vietnamese"
     const tabs = visibleDictionaryBuilderFields.map(([datum, label], index) => `<button type="button" class="dictionary-builder-tab" id="dictionary-builder-tab-${datum}" role="tab" aria-controls="dictionary-builder-panel-${datum}" aria-selected="${datum === selectedTab}" tabindex="${datum === selectedTab ? 0 : -1}" data-dictionary-builder-tab="${datum}"><span class="dictionary-builder-tab-step">${index + 1}</span><span>${dictionaryBuilderEsc(label)}</span></button>`).join("")
+    const availableApplyModes = new Set(["fill_missing", "replace_selected", "replace_all"])
+    const currentApplyMode = dialog.querySelector("[data-dictionary-builder-mode]")?.value
+    const applyMode = availableApplyModes.has(currentApplyMode) ? currentApplyMode : "replace_all"
     sourceMatrixSlot.innerHTML = dictionaryBuilderSourceMatrix(word)
     sourceMatrixSlot.querySelector('[data-dictionary-builder-source-link="AP"]')?.addEventListener("click", async (event) => {
       event.preventDefault()
@@ -907,7 +919,7 @@
     })
     const draftOnly = sourceId === "new-canonical"
     if (acquisitionLog) acquisitionLog.textContent = snapshot.acquisitionLog || "No acquisition log was returned."
-    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><div class="dictionary-builder-source-startup-row"><button type="button" class="portal-button portal-button-blue-action portal-button-compact dictionary-builder-source-startup" data-dictionary-builder-open-sources title="Open the initial source group: BR / LD / WH / ET / TH / OA / GT. AP is API-only and remains closed." aria-label="Open initial source group">Open sources</button><div class="dictionary-builder-source-status-block"><div class="dictionary-builder-source-leds" data-dictionary-builder-source-leds role="group" aria-label="Initial source status LEDs"></div><div class="dictionary-builder-source-led-legend" aria-label="Source status legend"><span><i data-led-legend="default" aria-hidden="true"></i>Not checked</span><span><i data-led-legend="not-found" aria-hidden="true"></i>Not found / unavailable (red)</span><span><i data-led-legend="opening" aria-hidden="true"></i>Opening</span><span><i data-led-legend="popup-blocking" aria-hidden="true"></i>User action needed (purple)</span><span><i data-led-legend="success" aria-hidden="true"></i>Ready</span></div></div></div><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"><option value="fill_missing">Fill missing</option><option value="replace_selected">Replace selected</option><option value="replace_all">Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply title="${draftOnly ? "Apply selected data to this editable draft; save the canonical entry to persist it." : "Apply selected Dictionary Builder data to this saved Library entry."}">Apply selected</button></div><div data-dictionary-builder-popup-fallbacks hidden></div>`
+    root.innerHTML = `<div class="dictionary-builder-tabs" role="tablist" aria-label="Dictionary Builder sections">${tabs}</div><div data-dictionary-builder-panels></div><div class="library-dictionary-preview-actions"><div class="dictionary-builder-source-startup-row"><button type="button" class="portal-button portal-button-blue-action portal-button-compact dictionary-builder-source-startup" data-dictionary-builder-open-sources title="Open the initial source group: BR / LD / WH / ET / TH / OA / GT. AP is API-only and remains closed." aria-label="Open initial source group">Open sources</button><div class="dictionary-builder-source-status-block"><div class="dictionary-builder-source-leds" data-dictionary-builder-source-leds role="group" aria-label="Initial source status LEDs"></div><div class="dictionary-builder-source-led-legend" aria-label="Source status legend"><span><i data-led-legend="default" aria-hidden="true"></i>Not checked</span><span><i data-led-legend="not-found" aria-hidden="true"></i>Not found / unavailable (red)</span><span><i data-led-legend="opening" aria-hidden="true"></i>Opening</span><span><i data-led-legend="popup-blocking" aria-hidden="true"></i>User action needed (purple)</span><span><i data-led-legend="success" aria-hidden="true"></i>Ready</span></div></div></div><select data-dictionary-builder-mode aria-label="Dictionary Builder apply mode"><option value="fill_missing"${applyMode === "fill_missing" ? " selected" : ""}>Fill missing</option><option value="replace_selected"${applyMode === "replace_selected" ? " selected" : ""}>Replace selected</option><option value="replace_all"${applyMode === "replace_all" ? " selected" : ""}>Replace all</option></select><button type="button" class="portal-button portal-button-affirm" data-dictionary-builder-apply title="${draftOnly ? "Apply selected data to this editable draft; save the canonical entry to persist it." : "Apply selected Dictionary Builder data to this saved Library entry."}">Apply selected</button></div><div data-dictionary-builder-popup-fallbacks hidden></div>`
     const sourceLedContainer = root.querySelector("[data-dictionary-builder-source-leds]")
     const sourceLegend = root.querySelector(".dictionary-builder-source-led-legend")
     sourceLegend?.querySelectorAll('[data-led-legend="not-found"], [data-led-legend="opening"]').forEach((legend) => legend.parentElement?.remove())
@@ -915,7 +927,8 @@
     if (purpleLegend) purpleLegend.lastChild.textContent = "Retrying / manual review (purple)"
     renderSourceLeds(snapshot, sourceLedContainer)
     const panels = root.querySelector("[data-dictionary-builder-panels]")
-    const selectedCandidates = Object.fromEntries(Object.entries(structuredClone(previousSelections)).filter(([datum]) => visibleDictionaryBuilderDatums.has(datum)))
+    const currentSelections = dialog.open ? dialog.dictionaryBuilderSelections || previousSelections : previousSelections
+    const selectedCandidates = Object.fromEntries(Object.entries(structuredClone(currentSelections)).filter(([datum]) => visibleDictionaryBuilderDatums.has(datum)))
     dialog.dictionaryBuilderSelections = selectedCandidates
     visibleDictionaryBuilderFields.forEach(([datum]) => {
       if (selectedCandidates[datum]) return
@@ -939,7 +952,7 @@
       blockedProviders.forEach((provider) => {
         const link = document.createElement("a")
         link.className = "dictionary-builder-candidate-source"
-        link.href = sourceByProvider.get(provider)?.sourceUrl || initialSourceUrl(provider, word)
+        link.href = sourceUrlForProvider(provider, sourceByProvider.get(provider)?.sourceUrl, word)
         link.target = "_blank"
         link.rel = "noopener noreferrer"
         link.textContent = provider
@@ -952,6 +965,7 @@
             return
           }
           sourceBrowserTabs.set(provider, tab)
+          sourceBrowserTabUrls.set(tab, link.href)
           scheduleDictionaryBuilderPolling(snapshot, pane, sourceId, dialog, selectedCandidates, activeTab)
         })
         fallback.append(link)
@@ -962,16 +976,17 @@
       INITIAL_SOURCE_PROVIDER_ORDER.forEach((provider) => setSourceLedStatus(provider, "opening", snapshot, sourceLedContainer))
       const initialSourceEntries = INITIAL_SOURCE_PROVIDER_ORDER.map((provider) => ({
         provider,
-        sourceUrl: sourceByProvider.get(provider)?.sourceUrl || initialSourceUrl(provider, word),
+        sourceUrl: sourceUrlForProvider(provider, sourceByProvider.get(provider)?.sourceUrl, word),
       })).filter(({ sourceUrl }) => sourceUrl)
       let opened = 0
       const pendingNavigations = []
       initialSourceEntries.forEach(({ provider, sourceUrl }) => {
         const existing = sourceBrowserTabs.get(provider)
-        if (existing && !existing.closed) { existing.focus?.(); opened += 1; return }
+        if (existing && !existing.closed) { navigateProviderTab(existing, sourceUrl); existing.focus?.(); opened += 1; return }
         const tab = openProviderTabDuringGesture(provider, sourceUrl)
         if (tab) {
           sourceBrowserTabs.set(provider, tab)
+          sourceBrowserTabUrls.set(tab, sourceUrl)
           pendingNavigations.push({ tab, sourceUrl })
           opened += 1
         }
@@ -993,13 +1008,16 @@
     }
     root.querySelector("[data-dictionary-builder-open-sources]").addEventListener("click", openInitialSourceGroup)
     const openTrackedSourceTab = (provider, sourceUrl, datum) => {
+      const targetUrl = sourceUrlForProvider(provider, sourceUrl, word)
       const existing = sourceBrowserTabs.get(provider)
-      const tab = existing && !existing.closed ? existing : openProviderTabDuringGesture(provider, sourceUrl || initialSourceUrl(provider, word))
+      const tab = existing && !existing.closed ? existing : openProviderTabDuringGesture(provider, targetUrl)
       if (!tab) {
         dialog.querySelector("[data-dictionary-builder-message]").textContent = `The ${provider} source tab was blocked. Allow popups, then retry the provider check.`
         return null
       }
       sourceBrowserTabs.set(provider, tab)
+      if (existing && !existing.closed) navigateProviderTab(tab, targetUrl)
+      else sourceBrowserTabUrls.set(tab, targetUrl)
       tab.focus?.()
       renderSourceLeds(snapshot, sourceLedContainer)
       const source = snapshot.sources?.find((candidate) => candidate.provider === provider)
@@ -1121,7 +1139,7 @@
             preferredProviders.forEach((provider) => overrides?.delete(provider))
             renderSourceLeds(refreshed, ledContainer)
           }
-          renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
+          renderDictionaryBuilder(refreshed, pane, sourceId, dialog.dictionaryBuilderSelections || selectedCandidates, dialog.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || datum, null, { autoRetry: false, providerIndex: INITIAL_SOURCE_PROVIDER_ORDER.indexOf(preferredProviders.at(-1)) + 1, pollDelay: 10000 })
           const resultMessage = availableProvider
             ? providerStatusMessage(availableProvider, "success", refreshed.sources?.find((source) => source.provider === availableProvider))
             : actionProvider
@@ -1131,7 +1149,7 @@
                 : `Preferred sources were checked; no usable ${datumLabel} candidate was returned.`
           dialog.querySelector("[data-dictionary-builder-message]").textContent = resultMessage
         } catch (error) {
-          if (refreshed !== snapshot && dialog.open) renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
+          if (refreshed !== snapshot && dialog.open) renderDictionaryBuilder(refreshed, pane, sourceId, dialog.dictionaryBuilderSelections || selectedCandidates, dialog.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || datum, null, { autoRetry: false, providerIndex: INITIAL_SOURCE_PROVIDER_ORDER.indexOf(preferredProviders.at(-1)) + 1, pollDelay: 10000 })
           dialog.querySelector("[data-dictionary-builder-message]").textContent = error.message || "Preferred source retry failed."
         } finally {
           retryPreferred.disabled = false
@@ -1150,10 +1168,11 @@
       const candidateList = document.createElement("div")
       candidateList.className = "dictionary-builder-candidate-list"
       const appendSourceLink = (container, provider, sourceUrl) => {
-        if (!sourceUrl) return null
+        const targetUrl = sourceUrlForProvider(provider, sourceUrl, word)
+        if (!targetUrl) return null
         const link = document.createElement("a")
         link.className = "dictionary-builder-candidate-source"
-        link.href = sourceUrl
+        link.href = targetUrl
         link.target = "_blank"
         link.rel = "noopener noreferrer"
         link.textContent = "View source page"
@@ -1189,7 +1208,7 @@
               const response = await fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshot.id)}/retry`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: source.provider, datum, entry: readPayload(pane) }) })
               const refreshed = await response.json()
               if (!response.ok || !refreshed.ok) throw new Error(refreshed.error || `Retry failed for ${source.provider}.`)
-              renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
+              renderDictionaryBuilder(refreshed, pane, sourceId, dialog.dictionaryBuilderSelections || selectedCandidates, dialog.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || datum, null, { autoRetry: false, providerIndex: INITIAL_SOURCE_PROVIDER_ORDER.indexOf(source.provider) + 1, pollDelay: 10000 })
               const refreshedSource = refreshed.sources?.find((candidate) => candidate.provider === source.provider)
               const currentLedContainer = dialog.querySelector("[data-dictionary-builder-source-leds]")
               dialog.querySelector("[data-dictionary-builder-message]").textContent = providerStatusMessage(source.provider, sourceStatusForLed(source.provider, refreshed, currentLedContainer), refreshedSource)
@@ -1341,7 +1360,7 @@
                 if (message) message.textContent = providerStatusMessage(candidate.provider, sourceStatusForLed(candidate.provider, refreshed, ledContainer), refreshedSource)
                 return false
               }
-              renderDictionaryBuilder(refreshed, pane, sourceId, structuredClone(selectedCandidates), datum, null, { autoRetry: false })
+              renderDictionaryBuilder(refreshed, pane, sourceId, dialog.dictionaryBuilderSelections || selectedCandidates, dialog.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab || datum, null, { autoRetry: false, providerIndex: INITIAL_SOURCE_PROVIDER_ORDER.indexOf(candidate.provider) + 1, pollDelay: 10000 })
               scheduleDictionaryBuilderPolling(refreshed, pane, sourceId, dialog, dialog.dictionaryBuilderSelections || selectedCandidates, datum, INITIAL_SOURCE_PROVIDER_ORDER.indexOf(candidate.provider) + 1)
               return true
             } catch (error) {
@@ -1487,16 +1506,23 @@
           if (["grammarClassification", "originReferences", "verbForms"].includes(datum)) { try { value = typeof value === "string" ? JSON.parse(value) : value } catch { return } }
           selections[datum] = { provider: selection.provider, value }
         })
+        const activeDatum = root.querySelector('[data-dictionary-builder-tab][aria-selected="true"]')?.dataset.dictionaryBuilderTab
+        const forceReplaceFields = activeDatum === "definition"
+          ? ["definition"]
+          : activeDatum === "syllabication"
+            ? ["syllabication", "syllableCount"]
+            : []
+        const replaceableSelectedFields = forceReplaceFields.filter((field) => Object.hasOwn(selections, field))
         if (draftOnly) {
           const mode = root.querySelector("[data-dictionary-builder-mode]").value
-          const draftResult = applyDictionaryBuilderDraftSelections(pane, selections, mode, isVerbEntry)
-          pane.dataset.dictionaryBuilderPending = JSON.stringify({ snapshotId: snapshot.id, snapshotEntryId: sourceId, mode, selections })
+          const draftResult = applyDictionaryBuilderDraftSelections(pane, selections, mode, isVerbEntry, new Set(replaceableSelectedFields))
+          pane.dataset.dictionaryBuilderPending = JSON.stringify({ snapshotId: snapshot.id, snapshotEntryId: sourceId, mode, selections, forceReplaceFields: replaceableSelectedFields })
           const changed = draftResult.changed.length ? `Applied ${draftResult.changed.join(", ")} to the editable draft.` : "No selected fields changed the editable draft."
           const deferred = draftResult.deferred.length ? ` ${draftResult.deferred.join(", ")} selection will be pulled into protected Library media when Save canonical completes.` : ""
           message.textContent = `${changed}${deferred} Save canonical to persist the draft and selected media.`
           return
         }
-        const requestBody = { mode: root.querySelector("[data-dictionary-builder-mode]").value, selections }
+        const requestBody = { mode: root.querySelector("[data-dictionary-builder-mode]").value, selections, forceReplaceFields: replaceableSelectedFields }
         const applySnapshot = (snapshotId) => fetch(`/api/admin/library/entries/${encodeURIComponent(sourceId)}/dictionary-builder/previews/${encodeURIComponent(snapshotId)}/apply`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody) })
         let response = await applySnapshot(snapshot.id)
         if (response.status === 404) {
@@ -1531,7 +1557,7 @@
     if (draftOnly && message) message.textContent = "Draft mode: Apply updates the editable review form. Save canonical to persist it."
     if (typeof dialog.showModal === "function") dialog.showModal()
     else dialog.setAttribute("open", "")
-    scheduleDictionaryBuilderPolling(snapshot, pane, sourceId, dialog, selectedCandidates, selectedTab, 0, 2000)
+    scheduleDictionaryBuilderPolling(snapshot, pane, sourceId, dialog, selectedCandidates, selectedTab, providerIndex, pollDelay)
   }
   const bindDictionaryBuilder = () => {
     document.querySelectorAll("[data-vocabulary-dictionary-builder]").forEach((button) => {

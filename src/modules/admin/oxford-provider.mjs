@@ -11,10 +11,11 @@ export const OXFORD_MAX_HTML_BYTES = 2 * 1024 * 1024
 function text(value) { return String(value == null ? "" : value).replace(/\s+/gu, " ").trim() }
 function unique(values) { return [...new Set(values.map(text).filter(Boolean))] }
 
-function validOxfordUrl(value) {
+function validOxfordUrl(value, expectedBaseUrl = "") {
   const parsed = new URL(value)
   if (parsed.protocol !== "https:" || !OXFORD_HOSTNAMES.has(parsed.hostname.toLowerCase())) throw new Error("Oxford URL host is not allowed")
   if (!parsed.pathname.startsWith("/definition/american_english/") && !parsed.pathname.startsWith("/definition/english/")) throw new Error("Oxford URL path is not allowed")
+  if (expectedBaseUrl && !parsed.pathname.startsWith(new URL(expectedBaseUrl).pathname)) throw new Error("Oxford provider returned the wrong English variant")
   return parsed.toString()
 }
 
@@ -214,7 +215,7 @@ export function parseOxfordHtml(html, { sourceUrl = "", lookupWord = "", partOfS
   return { ok: true, provider: "oxford", sourceUrl: normalizedSourceUrl, lookupWord: text(lookupWord), entries: parsedEntries, selectedEntries, fields: oxfordFields(selectedEntries, parsedEntries) }
 }
 
-function findOxfordPosUrl(html, lookupWord, partOfSpeech) {
+function findOxfordPosUrl(html, lookupWord, partOfSpeech, expectedBaseUrl) {
   const requestedWord = text(lookupWord).toLocaleLowerCase("en-US")
   const requestedPos = text(partOfSpeech).toLocaleLowerCase("en-US")
   if (!requestedWord || !requestedPos) return ""
@@ -226,19 +227,19 @@ function findOxfordPosUrl(html, lookupWord, partOfSpeech) {
     const word = text(link.find("data.hwd, .hwd").first().text() || link.text()).toLocaleLowerCase("en-US")
     const title = text(link.attr("title")).toLocaleLowerCase("en-US")
     if (!word.startsWith(requestedWord) || !(title.includes(requestedPos) || text(link.find("pos").first().text()).toLocaleLowerCase("en-US") === requestedPos)) continue
-    try { return validOxfordUrl(new URL(href, OXFORD_BASE_URL).toString()) } catch {}
+    try { return validOxfordUrl(new URL(href, expectedBaseUrl).toString(), expectedBaseUrl) } catch {}
   }
   return ""
 }
 
-async function fetchOxfordPage(fetchImpl, sourceUrl) {
+async function fetchOxfordPage(fetchImpl, sourceUrl, expectedBaseUrl) {
   let response
   try {
     response = await fetchWithExponentialBackoff(fetchImpl, sourceUrl, { headers: { Accept: "text/html", "User-Agent": "SIS-admin-Oxford-preview/1.0" }, redirect: "follow" })
   } catch (error) { return { ok: false, available: false, message: `Oxford is unavailable; no Library data was changed. ${error.message}` } }
   if (!response.ok) return { ok: false, available: false, message: `Oxford is unavailable (HTTP ${response.status || 503}); no Library data was changed.` }
   try {
-    return { ok: true, url: response.url ? validOxfordUrl(response.url) : sourceUrl, html: await boundedResponseText(response) }
+    return { ok: true, url: response.url ? validOxfordUrl(response.url, expectedBaseUrl) : validOxfordUrl(sourceUrl, expectedBaseUrl), html: await boundedResponseText(response) }
   } catch (error) { return { ok: false, available: false, message: `Oxford is unavailable; no Library data was changed. ${error.message}` } }
 }
 
@@ -248,14 +249,14 @@ async function previewOxfordByBase(entry, fetchImpl, baseUrl) {
   const slug = encodeURIComponent(lookupWord.replace(/\s+/gu, "-"))
   const sourceUrl = validOxfordUrl(`${baseUrl}${slug}?q=${encodeURIComponent(lookupWord)}`)
   const requestedPartOfSpeech = text(entry?.partOfSpeech)
-  const firstPage = await fetchOxfordPage(fetchImpl, sourceUrl)
+  const firstPage = await fetchOxfordPage(fetchImpl, sourceUrl, baseUrl)
   if (!firstPage.ok) return firstPage
   let page = firstPage
   let parsed = parseOxfordHtml(page.html, { sourceUrl: page.url, lookupWord, partOfSpeech: requestedPartOfSpeech })
   if (requestedPartOfSpeech.toLocaleLowerCase("en-US") === "verb" && !parsed.selectedEntries?.length) {
-    const verbUrl = findOxfordPosUrl(page.html, lookupWord, requestedPartOfSpeech)
+    const verbUrl = findOxfordPosUrl(page.html, lookupWord, requestedPartOfSpeech, baseUrl)
     if (verbUrl && verbUrl !== page.url) {
-      const verbPage = await fetchOxfordPage(fetchImpl, verbUrl)
+      const verbPage = await fetchOxfordPage(fetchImpl, verbUrl, baseUrl)
       if (verbPage.ok) {
         page = verbPage
         parsed = parseOxfordHtml(page.html, { sourceUrl: page.url, lookupWord, partOfSpeech: requestedPartOfSpeech })

@@ -2,32 +2,27 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import path from "node:path"
 import test from "node:test"
+import { parse as parseDotenv } from "dotenv"
 import { chromium } from "playwright"
 import { auditPage, ensureArtifactsDir, PORTAL_AUDIT_ARTIFACTS_DIR, PORTAL_AUDIT_INIT_SCRIPT, runLighthouseJson, writeAssetPartitionManifests } from "../tools/portal-audit-harness.mjs"
+import {
+  resolveStandardParentCredentials,
+  resolveStandardStudentCredentials,
+} from "./helpers/standard-portal-credentials.mjs"
 
 const ORIGIN = process.env.PORTAL_AUDIT_ORIGIN || "http://127.0.0.1:8788"
 const ENV_PATH = process.env.SIS_ENV_FILE || ".env.dev"
 
 function readEnv(filePath) {
-  const values = {}
-  if (!fs.existsSync(filePath)) return values
-  for (const line of fs.readFileSync(filePath, "utf8").split(/\r?\n/u)) {
-    const index = line.indexOf("=")
-    if (index < 1 || line.trim().startsWith("#")) continue
-    values[line.slice(0, index).trim()] = line.slice(index + 1).trim().replace(/^['"]|['"]$/g, "")
-  }
-  return values
+  return fs.existsSync(filePath) ? parseDotenv(fs.readFileSync(filePath)) : {}
 }
 
 function credentials() {
   const env = readEnv(ENV_PATH)
-  let students = []
-  try { students = JSON.parse(env.STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON || "[]") } catch { students = [] }
-  const student = students.find((entry) => entry?.eaglesId && entry?.password)
   return {
     admin: { user: env.STUDENT_ADMIN_USER, pass: env.STUDENT_ADMIN_PASS },
-    parent: { user: env.STUDENT_PARENT_USER, pass: env.STUDENT_PARENT_PASS },
-    student: { user: student?.eaglesId, pass: student?.password },
+    parent: resolveStandardParentCredentials(env),
+    student: resolveStandardStudentCredentials(env),
   }
 }
 
@@ -55,11 +50,18 @@ function assertAuditHealthy(result, { allowAuth401 = false } = {}) {
   assert.deepEqual(unexpectedAxe, [], `${result.name} unexpected serious accessibility violations`)
 }
 
-test("portal audit coverage captures CLS, accessibility, overflow, and auth reload states", async (t) => {
+const PORTAL_CREDENTIALS = credentials()
+const CREDENTIAL_SKIP_REASON = !PORTAL_CREDENTIALS.student.user || !PORTAL_CREDENTIALS.student.pass
+  ? `student mark001 credentials are required from ${ENV_PATH}`
+  : !PORTAL_CREDENTIALS.parent.user || !PORTAL_CREDENTIALS.parent.pass
+    ? `parent cmmark001 credentials are required from ${ENV_PATH}`
+    : false
+
+test("portal audit coverage captures CLS, accessibility, overflow, and auth reload states", { skip: CREDENTIAL_SKIP_REASON }, async (t) => {
   await ensureArtifactsDir()
   const browser = await chromium.launch({ headless: true })
   t.after(() => browser.close())
-  const account = credentials()
+  const account = PORTAL_CREDENTIALS
   const audits = []
 
   for (const viewport of [{ name: "desktop", width: 1440, height: 900 }, { name: "mobile", width: 390, height: 844 }]) {

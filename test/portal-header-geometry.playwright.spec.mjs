@@ -102,7 +102,7 @@ function makeMockApiBody(pathname) {
     return {
       ok: true,
       authenticated: true,
-      user: { parentsId: "cmkramer001", role: "parent" },
+      user: { parentsId: "cmmark001", role: "parent" },
     }
   }
   if (pathname.includes("/api/student/dashboard")) {
@@ -115,7 +115,7 @@ function makeMockApiBody(pathname) {
     return {
       ok: true,
       authenticated: true,
-      user: { eaglesId: "kramer001", role: "student" },
+      user: { eaglesId: "mark001", role: "student" },
     }
   }
   return { ok: true }
@@ -127,7 +127,7 @@ async function preparePortalMocks(page, apiOrigin) {
     window.__SIS_PARENT_API_ORIGIN = origin
     window.__SIS_PARENT_INITIAL_AUTH__ = {
       authenticated: true,
-      user: { parentsId: "cmkramer001", role: "parent" },
+      user: { parentsId: "cmmark001", role: "parent" },
     }
     window.__SIS_STUDENT_API_ORIGIN = origin
     window.__SIS_STUDENT_INITIAL_AUTH__ =
@@ -135,7 +135,7 @@ async function preparePortalMocks(page, apiOrigin) {
         authenticated: false,
       } : {
         authenticated: true,
-        user: { eaglesId: "kramer001", role: "student" },
+        user: { eaglesId: "mark001", role: "student" },
       }
   }, apiOrigin)
 

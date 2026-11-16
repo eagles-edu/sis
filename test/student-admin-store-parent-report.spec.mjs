@@ -225,6 +225,15 @@ test("parent report save path keeps legacy participation-points schema fallback 
   assert.match(source, /stripLegacyParentReportFields\(reportData\)/)
 })
 
+test("teacher parent report saves are idempotent when enrollment period is null", () => {
+  const source = fs.readFileSync(new URL("../src/modules/admin/parent-reports.mjs", import.meta.url), "utf8")
+  assert.match(source, /function deterministicParentReportId\(/)
+  assert.match(source, /const reportUpsertId = deterministicParentReportId\(/)
+  assert.match(source, /existingScopedReport\s*\?\s*prisma\.parentClassReport\.update\(/)
+  assert.match(source, /prisma\.parentClassReport\.upsert\(\{\s*where:\s*\{\s*id:\s*reportUpsertId\s*\}/)
+  assert.doesNotMatch(source, /studentRefId_className_schoolYear_quarter_enrollmentPeriodId/)
+})
+
 test("normalizeParentReportWorkflowState recognizes the implemented report workflow", () => {
   assert.equal(normalizeParentReportWorkflowState("draft_pr"), "draft_pr")
   assert.equal(
