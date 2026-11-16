@@ -15,7 +15,7 @@
 - [ ] Review the existing uncommitted parent draft and approval changes and their regression test; retain or revise them based on end-to-end evidence. [KA-002, KA-005: end-to-end gate incomplete]
 - [ ] Preserve unrelated changes and establish a current backup before each file edit.
 - [x] Compare the last pushed implementation, relevant backups, and route documentation before changing a route contract. [KA-007]
-- [ ] Inventory each subsystem's entry points, authorization, storage, dependencies, existing tests, and known failures.
+- [x] Inventory each subsystem's entry points, authorization, storage, dependencies, existing tests, and known failures. [KA-009]
 - [x] Pin `.env.dev`, `.env.test`, or `.env` to its owning environment; never use one environment's credentials or configuration as another's fallback. [KA-008]
 - [x] Set matching `SIS_ENV_FILE`, `DOTENV_CONFIG_PATH`, and `NODE_ENV` for every Prisma command. [KA-008]
 - [x] Confirm `SELECT current_database()` before database tests or writes. [KA-008]
@@ -205,3 +205,5 @@
 - **KA-007** — Parent profile route baseline comparison completed before the KA-005 source checkpoint. Compared `server/student-admin-routes.mjs` at last-pushed base `2c82cdaeaca7167b0f895137ebc83bc018cf7f15` with the exact matching copies in the 2026-11-16 live-admin and test-runtime backups (SHA-256 `f1dcc54e5a7c3c2b39642c364237cc461463169995c239fb9cf50bd80ed5dbf0` for all three). Reviewed the parent routes in `docs/mapping/admin-route-trace.md` and the source diff adding merged draft fields, cumulative diffs, preserved comments/agreement, and returning the persisted diff. Evidence: `git diff 2c82cdae..53387376 -- server/student-admin-routes.mjs test/parent-profile-draft-regression.spec.mjs`, backup hashes, and the route table. This closes the baseline-comparison preparation item only; the authenticated draft-to-approval workflow remains incomplete.
 
 - **KA-008** — Dev environment boundary verified read-only in `/home/eagles/dockerz/sis`: executed `SELECT current_database()` through `getSharedPrismaClient` with `SIS_ENV_FILE=.env.dev`, `DOTENV_CONFIG_PATH=.env.dev`, and `NODE_ENV=development`; result was `sis_dev`. No `.env.test` or production `.env` fallback was used and no DB writes were made. Evidence: the command output for the environment-pinned query on 2026-11-17. This records the dev-only environment and query gate; it does not claim test/live verification.
+
+- **KA-009** — Completed a source inventory of all checklist subsystems, mapping routes/pages, authorization boundaries, Prisma storage, external or worker dependencies, existing contract/regression tests, and known failures or unverified checks. Evidence: [keep-alive-inventory.md](keep-alive-inventory.md), `docs/mapping/admin-route-trace.md`, `prisma/schema.prisma`, module/test path inventory, and the current monitoring references. Confirmed gaps are recorded as gaps rather than treated as passing checks.
