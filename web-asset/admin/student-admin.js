@@ -11081,6 +11081,8 @@
       }
 
       function showUserPanel() {
+        const parentProfileReviewSection = document.getElementById("parentProfileReviewSection");
+        if (parentProfileReviewSection) parentProfileReviewSection.hidden = !canManageUsers();
         const panel = document.getElementById("userAdminPanel");
         if (canManageUsers()) panel.classList.remove("hidden");
         else panel.classList.add("hidden");
@@ -22623,6 +22625,99 @@
         setStatus("Family lookup form cleared.");
       }
 
+      function parentProfileReviewValue(value) {
+        if (Array.isArray(value)) return value.map((entry) => normalizeText(entry)).filter(Boolean).join(", ") || "(empty)";
+        if (value && typeof value === "object") return JSON.stringify(value);
+        if (value === null || value === undefined || normalizeText(value) === "") return "(empty)";
+        return String(value);
+      }
+
+      function renderParentProfileSubmissions(items = []) {
+        const root = document.getElementById("profileSubmissionRows");
+        if (!root) return;
+        const records = Array.isArray(items) ? items : [];
+        if (!records.length) {
+          root.innerHTML = '<p class="small">No submitted parent profile changes are waiting for review.</p>';
+          return;
+        }
+        root.innerHTML = records.map((item, index) => {
+          const id = normalizeText(item?.id);
+          const changes = Array.isArray(item?.diffPayloadJson?.changedFields) ? item.diffPayloadJson.changedFields : [];
+          const draft = item?.adminEditedPayloadJson && typeof item.adminEditedPayloadJson === "object"
+            ? item.adminEditedPayloadJson
+            : item?.draftPayloadJson && typeof item.draftPayloadJson === "object"
+              ? item.draftPayloadJson
+              : {};
+          const reviewRows = changes.length
+            ? changes.map((change) => `<li><strong>${escapeHtml(change?.fieldKey || "Profile field")}</strong>: ${escapeHtml(parentProfileReviewValue(change?.from))} &rarr; ${escapeHtml(parentProfileReviewValue(change?.to))}</li>`).join("")
+            : Object.entries(draft).map(([fieldKey, value]) => `<li><strong>${escapeHtml(fieldKey)}</strong>: ${escapeHtml(parentProfileReviewValue(value))}</li>`).join("");
+          const safeId = escapeHtml(id);
+          const rejectId = `profileSubmissionRejectReason${index}`;
+          const time = normalizeText(item?.submittedAt || item?.createdAt) || "Unknown";
+          const comment = normalizeText(item?.comment);
+          return `<article class="panel" data-surface-role="card" aria-labelledby="profileSubmissionTitle${index}">
+            <h4 id="profileSubmissionTitle${index}">Submitted profile changes</h4>
+            <p class="small">Student ref: ${escapeHtml(item?.studentRefId || "Unknown")} · Parent account: ${escapeHtml(item?.parentAccountId || "Unknown")} · Submitted: ${escapeHtml(time)}</p>
+            ${comment ? `<p>${escapeHtml(comment)}</p>` : ""}
+            <details>
+              <summary>Inspect submitted changes (${changes.length || Object.keys(draft).length} fields)</summary>
+              <ul>${reviewRows || "<li>No field changes were recorded.</li>"}</ul>
+            </details>
+            <label for="${rejectId}">Rejection reason</label>
+            <textarea id="${rejectId}" data-profile-rejection-reason="${safeId}" rows="3" aria-describedby="profileSubmissionRejectHelp${index}"></textarea>
+            <p id="profileSubmissionRejectHelp${index}" class="small">Enter a reason before rejecting this submission.</p>
+            <div class="actions">
+              <button type="button" class="portal-button portal-button-affirm" data-profile-review="approve" data-submission-id="${safeId}" title="Approve these saved changes and apply permitted fields to the official student profile.">Approve</button>
+              <button type="button" class="portal-button portal-button-danger" data-profile-review="reject" data-submission-id="${safeId}" aria-describedby="profileSubmissionRejectHelp${index}" title="Reject these saved changes without updating the official student profile.">Reject</button>
+            </div>
+          </article>`;
+        }).join("");
+      }
+
+      async function loadParentProfileSubmissions() {
+        if (!canManageUsers()) throw new Error("Only administrators can review parent profile submissions.");
+        const status = document.getElementById("profileSubmissionStatus");
+        if (status) status.textContent = "Loading submitted profile changes…";
+        try {
+          const result = await api("/api/admin/profile-submissions?take=100");
+          renderParentProfileSubmissions(result?.items);
+          if (status) status.textContent = `${Number(result?.total || 0)} submitted profile change(s) loaded.`;
+          return result;
+        } catch (error) {
+          if (status) status.textContent = "Could not load submitted profile changes. Retry Refresh Reviews.";
+          throw error;
+        }
+      }
+
+      async function reviewParentProfileSubmission(submissionId, action, button) {
+        if (!canManageUsers()) throw new Error("Only administrators can review parent profile submissions.");
+        const id = normalizeText(submissionId);
+        const reviewAction = normalizeLower(action);
+        if (!id || !["approve", "reject"].includes(reviewAction)) return;
+        let rejectionReason = "";
+        if (reviewAction === "reject") {
+          const root = document.getElementById("profileSubmissionRows");
+          const input = Array.from(root?.querySelectorAll("[data-profile-rejection-reason]") || [])
+            .find((candidate) => candidate.dataset.profileRejectionReason === id);
+          rejectionReason = normalizeText(input?.value);
+          if (!rejectionReason) throw new Error("Enter a rejection reason before rejecting this submission.");
+        }
+        const actionLabel = reviewAction === "approve" ? "approve these profile changes" : "reject this profile submission";
+        if (!window.confirm(`Confirm that you want to ${actionLabel}?`)) return;
+        if (button) button.disabled = true;
+        try {
+          await api(`/api/admin/profile-submissions/${encodeURIComponent(id)}`, {
+            method: "POST",
+            body: { action: reviewAction, rejectionReason },
+          });
+          setStatus(reviewAction === "approve" ? "Parent profile changes approved." : "Parent profile submission rejected.");
+          await loadParentProfileSubmissions();
+        } catch (error) {
+          if (button) button.disabled = false;
+          throw error;
+        }
+      }
+
       function handleError(error) {
         if (error && error.status === 401) {
           const loginVisible = !document
@@ -23217,6 +23312,12 @@
       });
       bindById("familyBtn", "click", () => lookupFamilyPhone().catch(handleError));
       bindById("familyClearResultBtn", "click", () => clearFamilyLookupResult());
+      bindById("profileSubmissionRefreshBtn", "click", () => loadParentProfileSubmissions().catch(handleError));
+      bindById("profileSubmissionRows", "click", (event) => {
+        const button = event.target?.closest?.("[data-profile-review][data-submission-id]");
+        if (!button) return;
+        reviewParentProfileSubmission(button.dataset.submissionId, button.dataset.profileReview, button).catch(handleError);
+      });
       bindById("userNewBtn", "click", () => {
         clearUserForm();
         setStatus("New user form ready.");

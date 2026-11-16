@@ -239,6 +239,12 @@ body {
         min-width: 0;
         padding: 12px;
   }
+      .parent-profile-submission-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--portal-content-gap);
+        min-width: 0;
+  }
       #authPanel {
         margin: 0 auto;
         margin-top: clamp(3rem, 5vw, 4rem);

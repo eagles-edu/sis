@@ -936,10 +936,10 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
       display: none !important;
     }
   </style>
-  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=sha256-20e13405e71570d3" as="style"
+  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=sha256-206d99eef9e4e0ec" as="style"
     onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
-    <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=sha256-20e13405e71570d3">
+    <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=sha256-206d99eef9e4e0ec">
   </noscript>
 </head>
 
@@ -4081,6 +4081,22 @@ Select a homework link to inspect details.</pre>
               </div>
               <pre class="small" id="familyResult">
 No family lookup yet.</pre>
+              <section id="parentProfileReviewSection" aria-labelledby="parentProfileReviewTitle" hidden>
+                <h3 id="parentProfileReviewTitle">Parent Profile Reviews</h3>
+                <p class="small page-note">
+                  Inspect saved parent changes before approving them onto the student profile or rejecting them.
+                </p>
+                <div class="actions">
+                  <button id="profileSubmissionRefreshBtn" type="button" class="portal-button portal-button-teal-refresh"
+                    aria-describedby="profileSubmissionStatus">
+                    Refresh
+                  </button>
+                </div>
+                <p id="profileSubmissionStatus" class="small" role="status" aria-live="polite">
+                  Reviews have not been loaded.
+                </p>
+                <div id="profileSubmissionRows" class="parent-profile-submission-list" aria-live="polite" aria-relevant="additions text"></div>
+              </section>
             </div>
 
             <div class="content page-section hidden" id="userAdminPanel" data-page="users" data-surface-role="content">
@@ -5107,7 +5123,7 @@ No family lookup yet.</pre>
           if (adminAppLoaded) return
           adminAppLoaded = true
           const script = document.createElement("script")
-          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-a6e9f512e4627cee"
+          script.src = "/web-asset/admin/student-admin.min.js?v=sha256-1c274c427375a6fb"
           script.defer = true
           if (replaySubmit || replayClick || replayPage) {
             script.addEventListener("load", () => {

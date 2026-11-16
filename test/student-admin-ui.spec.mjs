@@ -7,6 +7,8 @@ import { runStudentAdminAuthBootstrap } from "../web-asset/admin/student-admin-b
 
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
 const ADMIN_JS_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.js")
+const ADMIN_CSS_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.css")
+const ADMIN_CSS = fs.readFileSync(ADMIN_CSS_PATH, "utf8")
 const ADMIN_FALLBACKS_PATH = path.resolve(process.cwd(), "web-asset/admin/admin-fallbacks.mjs")
 const ADMIN_HTML = fs.readFileSync(ADMIN_HTML_PATH, "utf8")
 const ADMIN_JS = fs.readFileSync(ADMIN_JS_PATH, "utf8")
@@ -9381,5 +9383,152 @@ test("overview queue and homework tables keep mobile scroll wrappers", async () 
   assert.ok(document.querySelector("#performanceQueueDetails .table-scroll-wrap"))
   assert.equal(document.getElementById("schoolSetupLogoPreviewImg")?.getAttribute("src"), "data:,")
 
+  dom.window.close()
+})
+
+test("parent profile review UI inspects submissions and sends confirmed approve and reject actions", async () => {
+  const rolePolicy = {
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: true,
+    canManagePermissions: true,
+    startPage: "overview",
+    allowedPages: ["overview", "family", "users", "permissions", "settings"],
+  }
+  const records = [
+    {
+      id: "submission-approve-1",
+      studentRefId: "student-001",
+      parentAccountId: "parent-001",
+      status: "submitted",
+      submittedAt: "2026-11-17T08:00:00.000Z",
+      draftPayloadJson: { englishName: "New Name" },
+      diffPayloadJson: {
+        changedCount: 1,
+        changedFields: [{ fieldKey: "englishName", from: "Old Name", to: "New Name" }],
+      },
+    },
+    {
+      id: "submission-reject-2",
+      studentRefId: "student-002",
+      parentAccountId: "parent-002",
+      status: "submitted",
+      submittedAt: "2026-11-17T09:00:00.000Z",
+      draftPayloadJson: { emergencyPhone: "New test number" },
+      diffPayloadJson: {
+        changedCount: 1,
+        changedFields: [{ fieldKey: "emergencyPhone", from: "Old test number", to: "New test number" }],
+      },
+    },
+  ]
+  const reviewActions = []
+  let authenticated = false
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const parsed = new URL(String(resource), "http://127.0.0.1")
+    const method = String(init.method || "GET").toUpperCase()
+    if (parsed.pathname === "/api/admin/auth/me" && method === "GET") {
+      return authenticated
+        ? jsonResponse(200, { authenticated: true, user: { username: "admin", role: "admin" }, rolePolicy })
+        : jsonResponse(401, { error: "Unauthorized" })
+    }
+    if (parsed.pathname === "/api/admin/auth/login" && method === "POST") {
+      authenticated = true
+      return jsonResponse(200, { user: { username: "admin", role: "admin" }, rolePolicy })
+    }
+    if (parsed.pathname === "/api/admin/permissions" && method === "GET") {
+      return jsonResponse(200, { roles: { admin: rolePolicy } })
+    }
+    if (parsed.pathname === "/api/admin/profile-submissions" && method === "GET") {
+      return jsonResponse(200, { ok: true, total: records.length, items: records })
+    }
+    const submissionMatch = parsed.pathname.match(/^\/api\/admin\/profile-submissions\/([^/]+)$/)
+    if (submissionMatch && method === "POST") {
+      const payload = JSON.parse(String(init.body || "{}"))
+      const id = decodeURIComponent(submissionMatch[1])
+      reviewActions.push({ id, ...payload })
+      const index = records.findIndex((record) => record.id === id)
+      if (index >= 0) records.splice(index, 1)
+      return jsonResponse(200, { ok: true, action: payload.action, item: { id, status: payload.action === "approve" ? "approved" : "rejected" } })
+    }
+    return jsonResponse(200, { ok: true, items: [] })
+  })
+  dom.window.confirm = () => true
+  submitLogin(dom)
+  await waitFor(() => assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false))
+
+  const document = dom.window.document
+  const reviewSection = document.getElementById("parentProfileReviewSection")
+  assert.equal(reviewSection.hidden, false)
+  assert.equal(document.getElementById("profileSubmissionRows").classList.contains("parent-profile-submission-list"), true)
+  assert.match(ADMIN_CSS, /\.parent-profile-submission-list\s*\{[^}]*gap:\s*var\(--portal-content-gap\)/s)
+  openPage(dom, "family")
+  document.getElementById("profileSubmissionRefreshBtn").click()
+  await waitFor(() => assert.equal(document.querySelectorAll("[data-profile-review]").length, 4))
+  assert.match(document.getElementById("profileSubmissionRows").textContent, /Old Name.*New Name/)
+  assert.equal(document.querySelector("#profileSubmissionRows details summary")?.textContent.includes("Inspect submitted changes"), true)
+  assert.ok(document.querySelector('label[for="profileSubmissionRejectReason0"]'))
+
+  const approveButton = document.querySelector('[data-profile-review="approve"][data-submission-id="submission-approve-1"]')
+  approveButton.click()
+  await waitFor(() => assert.equal(reviewActions.length, 1))
+  assert.deepEqual(reviewActions[0], { id: "submission-approve-1", action: "approve", rejectionReason: "" })
+
+  let rejectButton = document.querySelector('[data-profile-review="reject"][data-submission-id="submission-reject-2"]')
+  let reasonInput = document.querySelector('[data-profile-rejection-reason="submission-reject-2"]')
+  rejectButton.click()
+  await settleDomAsync(dom)
+  assert.equal(reviewActions.length, 1)
+  rejectButton = document.querySelector('[data-profile-review="reject"][data-submission-id="submission-reject-2"]')
+  reasonInput = document.querySelector('[data-profile-rejection-reason="submission-reject-2"]')
+  reasonInput.value = "Please correct the contact number."
+  rejectButton.click()
+  await waitFor(() => assert.equal(reviewActions.length, 2))
+  assert.deepEqual(reviewActions[1], {
+    id: "submission-reject-2",
+    action: "reject",
+    rejectionReason: "Please correct the contact number.",
+  })
+  await waitFor(() => assert.match(document.getElementById("profileSubmissionRows").textContent, /No submitted parent profile changes/))
+  dom.window.close()
+})
+
+test("parent profile review UI stays hidden and does not fetch for non-managers", async () => {
+  const rolePolicy = {
+    role: "teacher",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: false,
+    canManagePermissions: false,
+    startPage: "family",
+    allowedPages: ["overview", "family"],
+  }
+  let authenticated = false
+  let reviewListRequests = 0
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const parsed = new URL(String(resource), "http://127.0.0.1")
+    const method = String(init.method || "GET").toUpperCase()
+    if (parsed.pathname === "/api/admin/auth/me" && method === "GET") {
+      return authenticated
+        ? jsonResponse(200, { authenticated: true, user: { username: "teacher", role: "teacher" }, rolePolicy })
+        : jsonResponse(401, { error: "Unauthorized" })
+    }
+    if (parsed.pathname === "/api/admin/auth/login" && method === "POST") {
+      authenticated = true
+      return jsonResponse(200, { user: { username: "teacher", role: "teacher" }, rolePolicy })
+    }
+    if (parsed.pathname === "/api/admin/permissions" && method === "GET") {
+      return jsonResponse(200, { roles: { teacher: rolePolicy } })
+    }
+    if (parsed.pathname === "/api/admin/profile-submissions") reviewListRequests += 1
+    return jsonResponse(200, { ok: true, items: [] })
+  })
+  submitLogin(dom, { username: "teacher" })
+  await waitFor(() => assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false))
+  const section = dom.window.document.getElementById("parentProfileReviewSection")
+  assert.equal(section.hidden, true)
+  dom.window.document.getElementById("profileSubmissionRefreshBtn").click()
+  await settleDomAsync(dom)
+  assert.equal(reviewListRequests, 0)
   dom.window.close()
 })
