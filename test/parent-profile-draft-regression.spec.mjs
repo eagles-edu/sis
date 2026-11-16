@@ -16,12 +16,15 @@ const parentSubmitRouteStart = source.indexOf("  const submitPathMatch = pathnam
 const parentSubmitRouteEnd = source.indexOf("\n\n  return false", parentSubmitRouteStart)
 const adminReviewRouteStart = source.indexOf("  if (profileSubmissionMatch && method === \"POST\") {")
 const adminReviewRouteEnd = source.indexOf("\n\n  if (method === \"POST\" && pathname === ADMIN_NOTIFY_EMAIL_PATH)", adminReviewRouteStart)
+const withErrorStart = source.indexOf("function withError(")
+const withErrorEnd = source.indexOf("\nasync function handleLogin(", withErrorStart)
 assert.ok(draftStart >= 0 && draftEnd > draftStart)
 assert.ok(start >= 0 && end > start)
 assert.ok(submitStart >= 0 && submitEnd > submitStart)
 assert.ok(listStart >= 0 && listEnd > listStart)
 assert.ok(parentSubmitRouteStart >= 0 && parentSubmitRouteEnd > parentSubmitRouteStart)
 assert.ok(adminReviewRouteStart >= 0 && adminReviewRouteEnd > adminReviewRouteStart)
+assert.ok(withErrorStart >= 0 && withErrorEnd > withErrorStart)
 
 test("parent profile reload reads only the latest draft for the authenticated parent and linked student", async () => {
   let query = null
@@ -509,4 +512,99 @@ test("parent profile rejection requires and records an auditable reason without 
   assert.equal(responsePayload.payload.action, "reject")
   assert.equal(responsePayload.payload.item.status, "rejected")
   assert.equal(responsePayload.payload.item.rejectionReason, "Please verify the submitted name.")
+})
+
+test("failed parent profile approval reports persistence failure and keeps the submission unapproved", async () => {
+  const submission = {
+    id: "synthetic-failed-approval-submission-024",
+    studentRefId: "synthetic-failed-approval-student-024",
+    status: "submitted",
+    draftPayloadJson: { fullName: "Updated Synthetic Learner" },
+  }
+  const row = { ...submission }
+  const queueUpdates = []
+  let profileUpdateAttempts = 0
+  let responsePayload = null
+  const context = vm.createContext({
+    Date,
+    Error,
+    PARENT_PROFILE_IMMUTABLE_FIELDS: new Set(["eaglesId", "studentNumber"]),
+    PARENT_PROFILE_EDITABLE_FIELDS: new Set(["fullName"]),
+    PARENT_PROFILE_QUEUE_STATUS_APPROVED: "approved",
+    normalizeText: (value) => String(value ?? "").trim(),
+    normalizeLower: (value) => String(value ?? "").trim().toLowerCase(),
+    normalizeParentProfilePatch: (patch) => ({ ...patch }),
+    listParentProfileFieldLocks: async () => [],
+    getParentProfileSubmissionById: async (id) => id === row.id ? row : null,
+    getSharedPrismaClient: async () => ({
+      studentProfile: {
+        findUnique: async () => ({
+          studentRefId: submission.studentRefId,
+          fullName: "Original Synthetic Learner",
+        }),
+        update: async () => {
+          profileUpdateAttempts += 1
+          const error = new Error("Synthetic student profile write failed")
+          error.statusCode = 503
+          throw error
+        },
+        create: async () => {
+          throw new Error("Existing synthetic profile must use update")
+        },
+      },
+    }),
+    buildProfileDiffSnapshot: () => ({ changedFields: [] }),
+    updateParentProfileSubmissionById: async (id, patch) => {
+      assert.equal(id, row.id)
+      queueUpdates.push(patch)
+      Object.assign(row, patch)
+      return { ...row }
+    },
+    assertCanManageUsers: () => {},
+    nowIso: () => "2026-11-17T11:00:00.000Z",
+    parseBody: async () => ({ action: "approve" }),
+    sendJson: (_response, status, payload) => {
+      responsePayload = { status, payload }
+    },
+    allowCors: () => {},
+    decodeURIComponent,
+    PARENT_PROFILE_QUEUE_STATUS_SUBMITTED: "submitted",
+    profileSubmissionMatch: ["/api/admin/profile-submissions/synthetic-failed-approval-submission-024", row.id],
+    method: "POST",
+    pathname: `/api/admin/profile-submissions/${row.id}`,
+    rolePolicy: { canManageUsers: true },
+    session: { username: "synthetic-admin-024" },
+    request: {},
+    response: {},
+  })
+  const approveRoute = vm.runInContext(
+    `(async () => { ${source.slice(adminReviewRouteStart, adminReviewRouteEnd)} })`,
+    context,
+  )
+  const reportError = vm.runInContext(`(${source.slice(withErrorStart, withErrorEnd)})`, context)
+
+  let approvalError = null
+  try {
+    await approveRoute()
+  } catch (error) {
+    approvalError = error
+  }
+  assert.equal(approvalError?.statusCode, 503)
+  assert.match(approvalError?.message || "", /synthetic student profile write failed/i)
+  reportError(context.response, context.request, approvalError)
+
+  assert.equal(profileUpdateAttempts, 1)
+  assert.equal(queueUpdates.length, 1)
+  assert.deepEqual(JSON.parse(JSON.stringify(queueUpdates[0])), {
+    failurePoint: "merge-write",
+    rejectionReason: "Synthetic student profile write failed",
+    reviewedByUsername: "synthetic-admin-024",
+    reviewedAt: "2026-11-17T11:00:00.000Z",
+  })
+  assert.equal(row.status, "submitted")
+  assert.equal(row.failurePoint, "merge-write")
+  assert.equal(responsePayload.status, 503)
+  assert.equal(responsePayload.payload.error, "Synthetic student profile write failed")
+  assert.equal(Object.hasOwn(responsePayload.payload, "action"), false)
+  assert.equal(Object.hasOwn(responsePayload.payload, "item"), false)
 })
