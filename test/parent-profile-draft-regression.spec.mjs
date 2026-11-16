@@ -14,11 +14,14 @@ const listStart = source.indexOf("async function listParentProfileSubmissions(",
 const listEnd = source.indexOf("\nasync function getParentProfileSubmissionById(", listStart)
 const parentSubmitRouteStart = source.indexOf("  const submitPathMatch = pathname.match(PARENT_CHILD_PROFILE_SUBMIT_PATH_RE)")
 const parentSubmitRouteEnd = source.indexOf("\n\n  return false", parentSubmitRouteStart)
+const adminReviewRouteStart = source.indexOf("  if (profileSubmissionMatch && method === \"POST\") {")
+const adminReviewRouteEnd = source.indexOf("\n\n  if (method === \"POST\" && pathname === ADMIN_NOTIFY_EMAIL_PATH)", adminReviewRouteStart)
 assert.ok(draftStart >= 0 && draftEnd > draftStart)
 assert.ok(start >= 0 && end > start)
 assert.ok(submitStart >= 0 && submitEnd > submitStart)
 assert.ok(listStart >= 0 && listEnd > listStart)
 assert.ok(parentSubmitRouteStart >= 0 && parentSubmitRouteEnd > parentSubmitRouteStart)
+assert.ok(adminReviewRouteStart >= 0 && adminReviewRouteEnd > adminReviewRouteStart)
 
 test("parent profile reload reads only the latest draft for the authenticated parent and linked student", async () => {
   let query = null
@@ -176,4 +179,120 @@ test("parent submission enters the review queue without changing the official pr
   const route = source.slice(parentSubmitRouteStart, parentSubmitRouteEnd)
   assert.match(route, /setParentProfileSubmissionSubmitted\(/)
   assert.doesNotMatch(route, /studentProfile\.(?:create|update)\(/)
+})
+
+test("parent submission approval updates only its linked official profile and retains signature evidence", async () => {
+  const submission = {
+    id: "synthetic-approval-submission-021",
+    studentRefId: "synthetic-approval-student-021",
+    status: "submitted",
+    draftPayloadJson: {
+      fullName: "Updated Synthetic Learner",
+      signatureFullName: "Synthetic Parent",
+      signatureEmail: "parent@example.invalid",
+      signatureAgreed: ["yes"],
+      eaglesId: "attempted-id-change",
+      studentNumber: 999999,
+      adminOnlyValue: "discard this field",
+    },
+    adminEditedPayloadJson: null,
+    diffPayloadJson: {},
+  }
+  const existingProfile = {
+    studentRefId: "synthetic-approval-student-021",
+    fullName: "Original Synthetic Learner",
+    normalizedFormPayload: { existingNormalized: "keep" },
+    rawFormPayload: { existingRaw: "keep" },
+  }
+  let profileLookupWhere = null
+  let profileUpdateCall = null
+  let profileCreateCall = null
+  let queueUpdate = null
+  let responsePayload = null
+  const prisma = {
+    studentProfile: {
+      findUnique: async ({ where }) => {
+        profileLookupWhere = where
+        return existingProfile
+      },
+      update: async (args) => {
+        profileUpdateCall = args
+        return { ...existingProfile, ...args.data }
+      },
+      create: async (args) => {
+        profileCreateCall = args
+        return args.data
+      },
+    },
+  }
+  const context = vm.createContext({
+    Date,
+    Error,
+    PARENT_PROFILE_IMMUTABLE_FIELDS: new Set(["eaglesId", "studentNumber"]),
+    PARENT_PROFILE_EDITABLE_FIELDS: new Set(["fullName", "signatureFullName", "signatureEmail", "signatureAgreed", "eaglesId", "studentNumber"]),
+    PARENT_PROFILE_QUEUE_STATUS_APPROVED: "approved",
+    normalizeText: (value) => String(value ?? "").trim(),
+    normalizeLower: (value) => String(value ?? "").trim().toLowerCase(),
+    normalizeParentProfilePatch: (patch) => ({ ...patch }),
+    listParentProfileFieldLocks: async () => [],
+    getParentProfileSubmissionById: async (id) => id === submission.id ? submission : null,
+    getSharedPrismaClient: async () => prisma,
+    buildProfileDiffSnapshot: (profile, patch) => ({
+      changedFields: Object.entries(patch)
+        .filter(([key, value]) => JSON.stringify(profile?.[key] ?? null) !== JSON.stringify(value ?? null))
+        .map(([fieldKey, to]) => ({ fieldKey, from: profile?.[fieldKey] ?? null, to })),
+    }),
+    updateParentProfileSubmissionById: async (id, patch) => {
+      assert.equal(id, submission.id)
+      queueUpdate = patch
+      return { ...submission, ...patch }
+    },
+    assertCanManageUsers: () => {},
+    nowIso: () => "2026-11-17T08:30:00.000Z",
+    parseBody: async () => ({ action: "approve" }),
+    sendJson: (_response, status, payload) => {
+      responsePayload = { status, payload }
+    },
+    decodeURIComponent,
+    PARENT_PROFILE_QUEUE_STATUS_SUBMITTED: "submitted",
+    profileSubmissionMatch: ["/api/admin/profile-submissions/synthetic-approval-submission-021", submission.id],
+    method: "POST",
+    pathname: `/api/admin/profile-submissions/${submission.id}`,
+    rolePolicy: { canManageUsers: true },
+    session: { username: "synthetic-admin-021" },
+    request: {},
+    response: {},
+  })
+  const handleReview = vm.runInContext(
+    `(async () => { ${source.slice(adminReviewRouteStart, adminReviewRouteEnd)} })`,
+    context,
+  )
+  const handled = await handleReview()
+
+  assert.equal(handled, true)
+  assert.deepEqual(JSON.parse(JSON.stringify(profileLookupWhere)), {
+    studentRefId: "synthetic-approval-student-021",
+  })
+  assert.equal(profileUpdateCall.where.studentRefId, "synthetic-approval-student-021")
+  assert.equal(profileCreateCall, null)
+  assert.equal(profileUpdateCall.data.fullName, "Updated Synthetic Learner")
+  assert.equal(profileUpdateCall.data.signatureFullName, "Synthetic Parent")
+  assert.equal(profileUpdateCall.data.signatureEmail, "parent@example.invalid")
+  assert.equal(Object.hasOwn(profileUpdateCall.data, "signatureAgreed"), false)
+  assert.equal(profileUpdateCall.data.normalizedFormPayload.existingNormalized, "keep")
+  assert.equal(profileUpdateCall.data.rawFormPayload.existingRaw, "keep")
+  for (const payload of [profileUpdateCall.data.normalizedFormPayload, profileUpdateCall.data.rawFormPayload]) {
+    assert.equal(payload.signatureFullName, "Synthetic Parent")
+    assert.equal(payload.signatureEmail, "parent@example.invalid")
+    assert.deepEqual(JSON.parse(JSON.stringify(payload.signatureAgreed)), ["yes"])
+  }
+  assert.equal(Object.hasOwn(profileUpdateCall.data, "eaglesId"), false)
+  assert.equal(Object.hasOwn(profileUpdateCall.data, "studentNumber"), false)
+  assert.equal(Object.hasOwn(profileUpdateCall.data, "adminOnlyValue"), false)
+  assert.equal(queueUpdate.status, "approved")
+  assert.equal(queueUpdate.reviewedByUsername, "synthetic-admin-021")
+  assert.ok(queueUpdate.diffPayloadJson.changedFields.some((field) => field.fieldKey === "fullName"))
+  assert.equal(responsePayload.status, 200)
+  assert.equal(responsePayload.payload.action, "approve")
+  assert.equal(responsePayload.payload.item.status, "approved")
 })
