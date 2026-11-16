@@ -19,7 +19,7 @@
 - [x] Pin `.env.dev`, `.env.test`, or `.env` to its owning environment; never use one environment's credentials or configuration as another's fallback. [KA-008]
 - [x] Set matching `SIS_ENV_FILE`, `DOTENV_CONFIG_PATH`, and `NODE_ENV` for every Prisma command. [KA-008, KA-011]
 - [x] Confirm `SELECT current_database()` before database tests or writes. [KA-008, KA-010]
-- [ ] Establish isolated synthetic records and deterministic cleanup in dev and test. KA-010 covers three test-mirror fixtures; dev coverage remains open.
+- [x] Establish isolated synthetic records and deterministic cleanup in dev and test. [KA-010, KA-012]
 - [ ] Configure test notification recipients or a test transport so synthetic checks cannot message real people. KA-010 covers three test-mirror fixtures only.
 - [ ] Verify available alert routing and monitoring services without exposing credentials.
 - [ ] Record baseline results and evidence for each subsystem before changing it.
@@ -61,12 +61,12 @@
 
 - [ ] Trace student Library access, New Words entry, draft save, submission, review, and result display.
 - [ ] Reproduce and fix verified failures in the student Library lifecycle.
-- [ ] Verify formatted definitions survive save and reload.
-- [ ] Verify repeat save is idempotent and synthetic cleanup can be repeated.
-- [ ] Verify New Words forms omit admin-only Dictionary Builder, origin-analysis, and transitivity controls.
+- [x] Verify formatted definitions survive save and reload. [KA-012]
+- [x] Verify repeat save is idempotent and synthetic cleanup can be repeated. [KA-012]
+- [x] Verify New Words forms omit admin-only Dictionary Builder, origin-analysis, and transitivity controls. [KA-012]
 - [ ] Verify the protected student-only Merriam-Webster preview path.
 - [ ] Test shared client and authoritative server validation, legacy entries, duplicates, and review outcomes.
-- [ ] Run the authenticated visible save, reload, repeat-save, and cleanup browser checks.
+- [x] Run the authenticated visible save, reload, repeat-save, and cleanup browser checks. [KA-012]
 - [ ] Monitor Library access, save failures, review failures, queue age, and required dependencies.
 - [ ] Record regression, authenticated browser, cleanup, and monitor evidence.
 
@@ -211,3 +211,5 @@
 - **KA-010** — Test-mirror fixture isolation: updated the assignment-reminder idempotency, Library assignment email, and Brevo webhook integration specs to pin `.env.test` with matching `SIS_ENV_FILE`, `DOTENV_CONFIG_PATH`, and `NODE_ENV`; use UUID-scoped synthetic records and reserved `example.invalid` recipients; and attempt full cleanup even after setup or assertion failures. The assignment-reminder spec keeps async side-effect jobs in test-only memory storage so the active test worker cannot send its synthetic queue item. Confirmed `sis-test` before the run; all three specs passed. Post-run aggregate queries found zero matching synthetic students, templates, reminder dispatches, webhook deliveries/events, or invalid-recipient notifications; the database async-job aggregate remained the three pre-existing succeeded jobs. Evidence: `node --check` on all three specs, `git diff --check`, the focused `node --test` run on 2026-11-17, and environment-pinned post-run cleanup counts. This verifies the three test-mirror fixtures only; dev synthetic cleanup and repository-wide notification isolation remain open.
 
 - **KA-011** — Completed the Prisma environment audit. Added a fail-closed environment checker for the database-backed test runner, diagnostics, watch command, and authenticated Playwright specs; updated environment-specific npm scripts and `start`/`dev` to pass all three matching variables; and pinned the previously bare live Prisma wrappers in `deploy-db-fields-safe.sh`, `deploy-api-safe.sh`, `sis-runtime-resync.sh`, and the live branch of `sync-and-restart-runtimes.sh`. The dev-only SIS config database specs now run only with the exact `.env.dev`/`development` pair, so test/live suites cannot redirect them to dev. Bare `db:*` package scripts still require an explicit caller environment and Prisma config rejects missing or mismatched values. Evidence: repository-wide CLI and test-fallback searches; `node --check`, `bash -n`, and package JSON validation; valid dev/test/live checker invocations plus rejection of missing and mismatched variables; `test/sis-config-store.spec.mjs` under `.env.test` passed 11 tests and skipped its three dev-only DB tests; and 22 existing runtime/deploy contract tests passed. No Prisma CLI, migration, or live database operation was run.
+
+- **KA-012** — Dev Student Library/New Words verification: upgraded the authenticated Library edit-submit and News/New Words lifecycle specs to UUID-scoped fixtures with deterministic identifiers, partial-setup cleanup, repeated idempotent cleanup, and cleanup errors that fail the spec. With `.env.dev`, `NODE_ENV=development`, and `SELECT current_database()` confirmed as `sis_dev`, Chromium ran the visible `mark001` login and both browser specs passed. Verified formatted News definition persistence, Library contribution edits, New Words repeat-save idempotency, reload persistence, and absence of admin-only New Words controls. After both cleanup passes, environment-pinned aggregate queries returned zero matching synthetic reports, New Words rows, Library entries/contributions, or invalid-recipient notifications; the temporary authenticated screenshot was removed. Dev `/healthz` returned 200. Evidence: `node --check`, `git diff --check`, the focused Playwright specs on 2026-11-17, and post-run aggregate counts. This does not verify parent workflows or live/test UI behavior.

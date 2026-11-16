@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { randomUUID } from "node:crypto"
 import fs from "node:fs"
 import test from "node:test"
 import { parse as parseDotenv } from "dotenv"
@@ -70,6 +71,7 @@ async function createNewsFixture(prisma, studentRefId, stamp, vocabularyWords = 
   const vocabulary = vocabularyWords.map((word) => ({ ...word, id: `news-library-word-${stamp}-${word.english}` }))
   return prisma.studentNewsReport.create({
     data: {
+      id: `news-library-report-${stamp}`,
       studentRefId,
       reportDate,
       reportSequence: 9000,
@@ -111,9 +113,12 @@ async function createLibraryLifecycleFixtures(prisma, studentRefId, stamp) {
   const fixtures = []
   for (const [label, status, reviewStatus, dueAt] of cases) {
     const english = `lifecycle${label}${stamp}`
+    const entryId = `student-news-library-lifecycle-entry-${stamp}-${label}`
+    const contributionId = `student-news-library-lifecycle-contribution-${stamp}-${label}`
     const payload = libraryPayload(english, definitions[label])
     const entry = await prisma.libraryEntry.create({
       data: {
+        id: entryId,
         normalizedKey: english,
         english,
         partOfSpeech: "noun",
@@ -135,6 +140,7 @@ async function createLibraryLifecycleFixtures(prisma, studentRefId, stamp) {
     })
     const contribution = await prisma.libraryContribution.create({
       data: {
+        id: contributionId,
         entryId: entry.id,
         studentRefId,
         contributorName: STUDENT.user,
@@ -153,12 +159,13 @@ async function createLibraryLifecycleFixtures(prisma, studentRefId, stamp) {
   return fixtures
 }
 
-test("authenticated student News and New Words saves, Library visibility, week-set modal, and contribution lifecycle", { skip: SKIP_REASON }, async () => {
+test("authenticated student News and New Words saves, Library visibility, week-set modal, and contribution lifecycle", { skip: SKIP_REASON }, async (t) => {
   Object.assign(process.env, ENV_VALUES)
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const prisma = await getSharedPrismaClient()
-  const stamp = String(Date.now())
-  const alphaStamp = stamp.replace(/[0-9]/gu, (digit) => String.fromCharCode(97 + Number(digit)))
+  const stamp = randomUUID()
+  const alphaStamp = stamp.replaceAll("-", "").replace(/[0-9]/gu, (digit) => String.fromCharCode(97 + Number(digit)))
+  const legacyWordEnglish = `legacyconfederations${alphaStamp}`
   let reportId = ""
   let studentRefId = ""
   const newsContributionIds = []
@@ -172,7 +179,79 @@ test("authenticated student News and New Words saves, Library visibility, week-s
   const consoleErrors = []
   const requestFailures = []
   let expectedForbiddenConsoleErrors = 0
-  try {
+  t.after(async () => {
+    const cleanupErrors = []
+    const attempt = async (operation) => {
+      try {
+        await operation()
+      } catch (error) {
+        cleanupErrors.push(error)
+      }
+    }
+    if (page) await attempt(() => page.close())
+    if (context) await attempt(() => context.close())
+    if (browser) await attempt(() => browser.close())
+
+    for (let cleanupPass = 0; cleanupPass < 2; cleanupPass += 1) {
+      const lifecycleSourcePrefix = `student-news-library-lifecycle-${stamp}-`
+      const newsSourceIds = NEWS_WORDS.map((word) => `news-library-word-${stamp}-${word.english}`)
+      const lifecycleContributionIds = ["pending", "legacy", "awaiting", "active", "expired"]
+        .map((label) => `student-news-library-lifecycle-contribution-${stamp}-${label}`)
+      const syntheticContributions = await prisma.libraryContribution.findMany({
+        where: {
+          OR: [
+            { id: { in: [...newsContributionIds, ...lifecycleContributionIds] } },
+            { sourceId: { in: newsSourceIds } },
+            { sourceId: { startsWith: lifecycleSourcePrefix } },
+          ],
+        },
+        select: { id: true },
+      }).catch((error) => {
+        cleanupErrors.push(error)
+        return []
+      })
+      const contributionIds = [...new Set([
+        ...newsContributionIds,
+        ...lifecycleFixtures.map((fixture) => fixture.contributionId),
+        ...syntheticContributions.map((contribution) => contribution.id),
+      ])]
+      if (contributionIds.length) {
+        await attempt(() => prisma.libraryContributionRevision.deleteMany({ where: { contributionId: { in: contributionIds } } }))
+        await attempt(() => prisma.libraryContribution.deleteMany({ where: { id: { in: contributionIds } } }))
+      }
+
+      const lifecycleEntryKeys = ["pending", "legacy", "awaiting", "active", "expired"]
+        .map((label) => `lifecycle${label}${stamp}`)
+      const lifecycleEntries = await prisma.libraryEntry.findMany({
+        where: { normalizedKey: { in: lifecycleEntryKeys } },
+        select: { id: true },
+      }).catch((error) => {
+        cleanupErrors.push(error)
+        return []
+      })
+      const entryIds = [...new Set([
+        ...lifecycleFixtures.map((fixture) => fixture.entryId),
+        ...lifecycleEntries.map((entry) => entry.id),
+      ])]
+      if (entryIds.length) {
+        await attempt(() => prisma.libraryEntryRevision.deleteMany({ where: { entryId: { in: entryIds } } }))
+        await attempt(() => prisma.libraryEntry.deleteMany({ where: { id: { in: entryIds } } }))
+      }
+
+      if (studentRefId) {
+        const wordCleanupConditions = [{ englishKey: legacyWordEnglish }, { id: { in: newWordsFixtureIds } }]
+        if (savedNewWordEnglish) wordCleanupConditions.push({ englishKey: savedNewWordEnglish })
+        if (reportId) wordCleanupConditions.push({ sourceReportId: reportId })
+        await attempt(() => prisma.studentNewWord.deleteMany({
+          where: { studentRefId, OR: wordCleanupConditions },
+        }))
+      }
+      if (reportId) await attempt(() => prisma.studentNewsReport.deleteMany({ where: { id: reportId } }))
+    }
+    await attempt(() => prisma.$disconnect())
+    if (cleanupErrors.length) throw new AggregateError(cleanupErrors, "Synthetic Student News and Library cleanup failed")
+  })
+  const runWorkflow = async () => {
     const student = await prisma.student.findUnique({ where: { eaglesId: STUDENT.user }, select: { id: true } })
     assert.ok(student?.id, "configured student must be linked to a Student row")
     studentRefId = student.id
@@ -188,9 +267,9 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     const invalidLegacyWord = await prisma.studentNewWord.create({
       data: {
         studentRefId,
-        englishKey: `legacyconfederations${alphaStamp}`,
+        englishKey: legacyWordEnglish,
         partOfSpeech: "noun",
-        english: `legacyconfederations${alphaStamp}`,
+        english: legacyWordEnglish,
         vietnamese: "các liên bang",
         syllabication: "leg-a-cy-con-fed-er-á-tions",
         definition: "An unchanged previously saved New Words entry with a legal internal single-letter stressed vowel.",
@@ -198,8 +277,8 @@ test("authenticated student News and New Words saves, Library visibility, week-s
       select: { id: true },
     })
     newWordsFixtureIds.push(invalidLegacyWord.id)
-    const report = await createNewsFixture(prisma, studentRefId, stamp, reportWords)
-    reportId = report.id
+    reportId = `news-library-report-${stamp}`
+    await createNewsFixture(prisma, studentRefId, stamp, reportWords)
     lifecycleFixtures.push(...await createLibraryLifecycleFixtures(prisma, studentRefId, stamp))
 
     browser = await chromium.launch({ executablePath: EXECUTABLE_PATH, headless: true })
@@ -363,11 +442,11 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     assert.equal(repeatedSave.status, 200, "replaying the exact persisted Student Library payload succeeds")
     assert.equal(repeatedSave.body.items.filter((word) => word.english === savedNewWordEnglish).length, 1, "the replay response contains the new word exactly once")
     const persistedRegressionWords = await prisma.studentNewWord.findMany({
-      where: { studentRefId, englishKey: { in: [savedNewWordEnglish, `legacyconfederations${alphaStamp}`] } },
+      where: { studentRefId, englishKey: { in: [savedNewWordEnglish, legacyWordEnglish] } },
       select: { id: true, englishKey: true, syllabication: true },
     })
     assert.equal(persistedRegressionWords.filter((word) => word.englishKey === savedNewWordEnglish).length, 1, "replaying the save does not duplicate the new word")
-    const persistedLegacyWord = persistedRegressionWords.find((word) => word.englishKey === `legacyconfederations${alphaStamp}`)
+    const persistedLegacyWord = persistedRegressionWords.find((word) => word.englishKey === legacyWordEnglish)
     assert.equal(persistedLegacyWord?.id, invalidLegacyWord.id, "the unchanged legacy word remains in place across repeated saves")
     assert.equal(persistedLegacyWord?.syllabication, "leg-a-cy-con-fed-er-á-tions", "the unchanged legacy syllabication is preserved")
     await page.reload({ waitUntil: "domcontentloaded" })
@@ -429,22 +508,6 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     assert.deepEqual(consoleErrors, [], `browser console errors: ${consoleErrors.join(" | ")}`)
     assert.deepEqual(requestFailures, [], `browser request failures: ${requestFailures.join(" | ")}`)
     await page.screenshot({ path: "/tmp/student-news-library-lifecycle.png", fullPage: true })
-  } finally {
-    await page?.close().catch(() => {})
-    await context?.close().catch(() => {})
-    await browser?.close().catch(() => {})
-    await prisma.libraryContributionRevision.deleteMany({ where: { contributionId: { in: [...newsContributionIds, ...lifecycleFixtures.map((fixture) => fixture.contributionId)] } } }).catch(() => {})
-    await prisma.libraryContribution.deleteMany({ where: { id: { in: [...newsContributionIds, ...lifecycleFixtures.map((fixture) => fixture.contributionId)] } } }).catch(() => {})
-    await prisma.libraryEntryRevision.deleteMany({ where: { entryId: { in: lifecycleFixtures.map((fixture) => fixture.entryId) } } }).catch(() => {})
-    await prisma.libraryEntry.deleteMany({ where: { id: { in: lifecycleFixtures.map((fixture) => fixture.entryId) } } }).catch(() => {})
-    if (reportId) {
-      await prisma.studentNewWord.deleteMany({ where: { studentRefId, sourceReportId: reportId } }).catch(() => {})
-      await prisma.studentNewsReport.delete({ where: { id: reportId } }).catch(() => {})
-    }
-    if (studentRefId) {
-      await prisma.studentNewWord.deleteMany({ where: { studentRefId, id: { in: newWordsFixtureIds } } }).catch(() => {})
-      if (savedNewWordEnglish) await prisma.studentNewWord.deleteMany({ where: { studentRefId, englishKey: savedNewWordEnglish } }).catch(() => {})
-      await prisma.studentNewWord.deleteMany({ where: { studentRefId, englishKey: `legacyconfederations${alphaStamp}` } }).catch(() => {})
-    }
   }
+  await runWorkflow()
 })
