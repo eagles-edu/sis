@@ -11,7 +11,7 @@
 ## Preparation and environment boundaries
 
 - [ ] Read `AGENTS.md`, `docs/CODE-EDITING-DOCS-INDEX.md`, `docs/sop.md`, `sis.md`, and the applicable surface and route contracts.
-- [x] Record the current Git branch, upstream, remote visibility, and unrelated dirty files before making changes. [KA-001]
+- [x] Record the current Git branch, upstream, remote visibility, and unrelated dirty files before making changes. [KA-001, KA-004]
 - [ ] Review the existing uncommitted parent draft and approval changes and their regression test; retain or revise them based on end-to-end evidence. [KA-002: end-to-end gate incomplete]
 - [ ] Preserve unrelated changes and establish a current backup before each file edit.
 - [ ] Compare the last pushed implementation, relevant backups, and route documentation before changing a route contract.
@@ -195,3 +195,5 @@
 - **KA-002** — Dev baseline: `sis_dev` confirmed with environment-pinned Prisma access; `/healthz` returned 200; focused parent draft and invitation contract specs passed (10/10). The exact parent account `cmmark001` is present in `.env.dev` only as a password hash; no matching plaintext password is configured, so the authenticated write workflow was not run. No DB writes or notifications were made. The code and spec remain under end-to-end review; this item is not complete.
 
 - **KA-003** — Branch setup: created local `keep-alive,` from the synchronized starting HEAD, set upstream to `origin/keep-alive,`, and pushed the complete current branch history after each documentation milestone. Before this record, local HEAD and the remote branch both resolved to `f406825a`; worktree source/runtime changes remained uncommitted and untouched. Evidence: `git status --short --branch`, `git rev-parse HEAD`, and `git ls-remote origin refs/heads/keep-alive,`.
+
+- **KA-004** — Source-control correction: at the user's direction, removed five ignored runtime artifacts (PID files, dev log, maintenance log, and test metrics) from Git tracking with `git rm --cached`; all five local runtime files remain on disk. `.gitignore` already contains exact ignore rules for those paths. This keeps operational state out of the public code repository.

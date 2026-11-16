@@ -74,3 +74,11 @@ test/e2e/index.html
 
 # Local Moodle checkout is maintained separately from SIS.
 /moodle/
+
+
+# Runtime state stays local and must not be committed.
+/runtime-data/dev-async-worker.pid
+/runtime-data/dev-runtime.log
+/runtime-data/dev-runtime.pid
+/runtime-data/maintenance-reports/sis-config-repair-cron.log
+/runtime-data/prometheus/sis-test-request-metrics.prom
