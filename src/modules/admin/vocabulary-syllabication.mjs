@@ -39,6 +39,13 @@ function hasAccentStress(value) {
   return /[aeiouy]\p{M}+/iu.test(String(value).normalize("NFD"))
 }
 
+function isDisallowedSingleCharacterStress(syllable, index) {
+  const letters = String(syllable).normalize("NFD").replace(/\p{M}+/gu, "")
+  return Array.from(syllable).length === 1
+    && index !== 0
+    && !/^[aeiouy]$/iu.test(letters)
+}
+
 function normalizeSyllabicationText(value) {
   return text(value)
     .normalize("NFC")
@@ -73,7 +80,7 @@ export function vocabularySyllabicationError(english, syllabication) {
     const partialCapital = syllables.find((syllable) => /[A-Z]/u.test(syllable) && Array.from(syllable).length > 1 && syllable !== syllable.toLocaleUpperCase("en-US"))
     if (partialCapital) return `Capitalize the complete stressed syllable "${partialCapital}"; do not capitalize only one character.`
     const stressIndexes = syllables.map((syllable, index) => (/[A-Z]/u.test(syllable) || hasAccentStress(syllable) ? index : -1)).filter((index) => index >= 0)
-    if (stressIndexes.some((index) => Array.from(syllables[index]).length === 1 && index !== 0)) return "A single-character stressed syllable is allowed only as the first syllable."
+    if (stressIndexes.some((index) => isDisallowedSingleCharacterStress(syllables[index], index))) return "A single-character stressed syllable is allowed only as the first syllable."
     const wordIsExactCompound = word.split(/\s+/u).includes(renderedWord.toLocaleLowerCase("en-US"))
     if (syllables.length > 1 && !wordIsExactCompound && stressIndexes.length !== 1) return "Every word split into syllables must have exactly one stressed syllable. Research it using the provided dictionary links."
     if (syllables.length === 1 && stressIndexes.length) return "Do not capitalize an unsplit syllabication word. Split multi-syllable words and capitalize exactly one stressed syllable."
@@ -112,7 +119,7 @@ export function vocabularySyllabicationFormatAndSpellingError(row = {}) {
     const stressIndexes = syllables
       .map((syllable, index) => (/[A-Z]/u.test(syllable) || hasAccentStress(syllable) ? index : -1))
       .filter((index) => index >= 0)
-  if (stressIndexes.some((index) => Array.from(syllables[index]).length === 1 && index !== 0)) {
+    if (stressIndexes.some((index) => isDisallowedSingleCharacterStress(syllables[index], index))) {
       return "A single-character stressed syllable is allowed only as the first syllable."
     }
   }

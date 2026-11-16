@@ -57,6 +57,13 @@
     return "";
   }
 
+  function isDisallowedSingleCharacterStress(syllable, index) {
+    const letters = String(syllable).normalize("NFD").replace(/\p{M}+/gu, "");
+    return Array.from(syllable).length === 1
+      && index !== 0
+      && !/^[aeiouy]$/iu.test(letters);
+  }
+
   function vocabularySyllabicationFormatAndSpellingError(row = {}) {
     const english = normalizeVocabularyEnglishText(row.english);
     const capitalizationError = vocabularyEnglishCapitalizationError(row);
@@ -70,7 +77,7 @@
       const partialCapital = syllables.find((syllable) => /[A-Z]/u.test(syllable) && Array.from(syllable).length > 1 && syllable !== syllable.toLocaleUpperCase("en-US"));
       if (partialCapital) return `Capitalize the complete stressed syllable "${partialCapital}"; do not capitalize only one character.`;
       const stressIndexes = syllables.map((syllable, index) => /[A-Z]/u.test(syllable) || /[aeiouy]\p{M}+/iu.test(syllable.normalize("NFD")) ? index : -1).filter((index) => index >= 0);
-      if (stressIndexes.some((index) => Array.from(syllables[index]).length === 1 && index !== 0)) return "A single-character stressed syllable is allowed only as the first syllable.";
+      if (stressIndexes.some((index) => isDisallowedSingleCharacterStress(syllables[index], index))) return "A single-character stressed syllable is allowed only as the first syllable.";
     }
     if (!english) return "";
     const lettersOnly = (valueToNormalize) => String(valueToNormalize == null ? "" : valueToNormalize).normalize("NFD").replace(/\p{M}+/gu, "").replace(/[^\p{L}]/gu, "").toLocaleLowerCase("en-US");
@@ -802,11 +809,19 @@
     dispatchDefinitionInput(textarea);
   }
 
+  const DEFINITION_TEXTAREA_SELECTOR = '[data-vocabulary-field="definition"]';
+
+  function definitionTextareaFor(target) {
+    const textarea = target?.closest?.(DEFINITION_TEXTAREA_SELECTOR);
+    return textarea instanceof HTMLTextAreaElement ? textarea : null;
+  }
+
   function bindDefinitionPaste() {
     if (typeof document === "undefined" || typeof document.addEventListener !== "function") return;
-    document.addEventListener("paste", (event) => {
-      const textarea = event.target?.closest?.('[data-vocabulary-field="definition"]');
-      if (!(textarea instanceof HTMLTextAreaElement)) return;
+    const eventRoot = typeof window !== "undefined" && typeof window.addEventListener === "function" ? window : document;
+    eventRoot.addEventListener("paste", (event) => {
+      const textarea = definitionTextareaFor(event.target);
+      if (!textarea) return;
       const clipboard = event.clipboardData;
       if (!clipboard || typeof clipboard.getData !== "function") return;
       const html = clipboard.getData("text/html");
@@ -814,14 +829,14 @@
       if (!html && !plainText) return;
       event.preventDefault();
       insertDefinitionClipboardText(textarea, htmlToDefinitionText(html, plainText));
-    });
+    }, true);
   }
 
   function bindDefinitionFormatting() {
     if (typeof document === "undefined" || typeof document.addEventListener !== "function") return;
     document.addEventListener("keydown", (event) => {
-      const textarea = event.target?.closest?.('[data-vocabulary-field="definition"]');
-      if (!(textarea instanceof HTMLTextAreaElement)) return;
+      const textarea = definitionTextareaFor(event.target);
+      if (!textarea) return;
       if ((event.ctrlKey || event.metaKey) && !event.altKey) {
         const key = String(event.key || "").toLowerCase();
         const format = key === "b" ? ["**", "**"] : key === "i" ? ["*", "*"] : key === "u" ? ["[u]", "[/u]"] : null;

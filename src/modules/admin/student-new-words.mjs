@@ -140,7 +140,14 @@ export async function saveStudentNewWords(studentRefId, value) {
     where: { studentRefId, archivedAt: null },
     select: { id: true, englishKey: true, partOfSpeech: true, english: true, vietnamese: true, syllabication: true, definition: true, eslJson: true },
   })
+  const existingById = new Map(existing.map((row) => [text(row.id), row]))
+  const existingByEnglishKey = new Map(existing.map((row) => [text(row.englishKey), row]))
   const validationResults = await Promise.all(source.map(async (row, index) => {
+    const savedRow = existingById.get(text(row?.id)) || existingByEnglishKey.get(wordKey(row?.english))
+    const unchangedSavedRow = savedRow
+      && wordKey(row?.english) === wordKey(savedRow.english)
+      && normalizeVocabularySyllabication(row?.syllabication) === normalizeVocabularySyllabication(savedRow.syllabication)
+    if (unchangedSavedRow) return { index, message: "", warning: "" }
     const result = await validateVocabularyEntry(row)
     return { index, ...result }
   }))
@@ -150,7 +157,6 @@ export async function saveStudentNewWords(studentRefId, value) {
     error.statusCode = 400
     throw error
   }
-  const existingByEnglishKey = new Map(existing.map((row) => [text(row.englishKey), row]))
   const duplicate = source.slice(0, MAX_WORDS).map((row, index) => {
     const englishKey = wordKey(row?.english).slice(0, 240)
     const existingRow = existingByEnglishKey.get(englishKey)

@@ -81,7 +81,7 @@
         fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js",
         tabulator: "/web-asset/vendor/tabulatorz/tabulator.min.js",
         tabulatorCss: "/web-asset/vendor/tabulatorz/tabulator.min.css",
-        vocabularyEsl: "/web-asset/shared/vocabulary-esl-editor.js",
+        vocabularyEsl: "/web-asset/shared/vocabulary-esl-editor.js?v=20261116.2",
       };
       function loadPortalAsset(name) {
         if (name === "fullcalendar" && window.FullCalendar?.Calendar) return Promise.resolve();
@@ -4193,6 +4193,13 @@
         return window.SIS_VOCABULARY_ESL?.canonicalizeSyllabication(value) || normalizeSyllabication(value);
       }
 
+      function isDisallowedSingleCharacterStress(syllable, index) {
+        const letters = String(syllable).normalize("NFD").replace(/\p{M}+/gu, "");
+        return Array.from(syllable).length === 1
+          && index !== 0
+          && !/^[aeiouy]$/iu.test(letters);
+      }
+
       function vocabularyEntryError(row = {}) {
         const english = t(row.english);
         const capitalizationError = window.SIS_VOCABULARY_ESL?.vocabularyEnglishCapitalizationError?.(row)
@@ -4213,7 +4220,7 @@
           const partial = syllables.find((syllable) => /[A-Z]/u.test(syllable) && Array.from(syllable).length > 1 && syllable !== syllable.toLocaleUpperCase("en-US"));
           if (partial) return `Capitalize the complete stressed syllable "${partial}", not only one character.`;
           const stress = syllables.map((syllable, index) => /[A-ZáéíóúýàèìòùâêîôûãẽĩõũÁÉÍÓÚÝÀÈÌÒÙÂÊÎÔÛÃẼĨÕŨ]/u.test(syllable) ? index : -1).filter((index) => index >= 0);
-          if (stress.some((index) => Array.from(syllables[index]).length === 1 && index !== 0)) return "A single-character stressed syllable is allowed only as the first syllable.";
+          if (stress.some((index) => isDisallowedSingleCharacterStress(syllables[index], index))) return "A single-character stressed syllable is allowed only as the first syllable.";
           const exactCompound = english.toLocaleLowerCase("en-US").split(/\s+/u).includes(word.toLocaleLowerCase("en-US"));
           if (syllables.length > 1 && !exactCompound && stress.length !== 1) return "Every split word needs exactly one stressed syllable. Research it using the provided dictionary links.";
           if (syllables.length === 1 && stress.length) return "Do not capitalize an unsplit syllabication word.";
@@ -4234,7 +4241,7 @@
           const partialCapital = syllables.find((syllable) => /[A-Z]/u.test(syllable) && Array.from(syllable).length > 1 && syllable !== syllable.toLocaleUpperCase("en-US"));
           if (partialCapital) return `Capitalize the complete stressed syllable "${partialCapital}"; do not capitalize only one character.`;
           const stressIndexes = syllables.map((syllable, index) => /[A-Z]/u.test(syllable) || /[aeiouy]\p{M}+/iu.test(syllable.normalize("NFD")) ? index : -1).filter((index) => index >= 0);
-          if (stressIndexes.some((index) => Array.from(syllables[index]).length === 1 && index !== 0)) return "A single-character stressed syllable is allowed only as the first syllable.";
+          if (stressIndexes.some((index) => isDisallowedSingleCharacterStress(syllables[index], index))) return "A single-character stressed syllable is allowed only as the first syllable.";
         }
         if (!t(row.english)) return "";
         const lettersOnly = (valueToNormalize) => String(valueToNormalize == null ? "" : valueToNormalize).normalize("NFD").replace(/\p{M}+/gu, "").replace(/[^\p{L}]/gu, "").toLocaleLowerCase("en-US");

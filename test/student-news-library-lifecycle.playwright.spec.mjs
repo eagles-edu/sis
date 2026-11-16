@@ -26,9 +26,9 @@ const SKIP_REASON = !IS_DEV_RUN
 
 const NEWS_WORDS = [
   { partOfSpeech: "noun", english: "air-strike", vietnamese: "cuộc không kích", syllabication: "air-strike", definition: "An attack from aircraft.", esl: { countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "compound" } },
+  { partOfSpeech: "noun", english: "confederations", vietnamese: "các liên bang", syllabication: "con-fed-er-á-tions", definition: "Groups of states or organizations united for a shared purpose.", esl: { countability: "countable", physicalQuality: "abstract", grammaticalNumber: "plural", primaryClassification: "common" } },
   { partOfSpeech: "noun", english: "check-in", vietnamese: "thủ tục nhận phòng", syllabication: "check-in", definition: "The act of registering on arrival.", esl: { countability: "countable", physicalQuality: "abstract", grammaticalNumber: "singular", primaryClassification: "compound" } },
   { partOfSpeech: "adjective", english: "life-size", vietnamese: "kích thước thật", syllabication: "life-size", definition: "Having the same size as the real subject.", esl: { grammarClassification: { grammarSubtype: "attributive" } } },
-  { partOfSpeech: "adjective", english: "long-term", vietnamese: "dài hạn", syllabication: "long-term", definition: "Continuing for a long period of time.", esl: { grammarClassification: { grammarSubtype: "attributive" } } },
   { partOfSpeech: "adverb", english: "step-by-step", vietnamese: "từng bước", syllabication: "step-by-step", definition: "Progressing one stage at a time.", esl: { grammarClassification: { grammarSubtype: "manner" } } },
 ]
 
@@ -64,9 +64,9 @@ async function loginStudent(page) {
   }
 }
 
-async function createNewsFixture(prisma, studentRefId, stamp) {
+async function createNewsFixture(prisma, studentRefId, stamp, vocabularyWords = NEWS_WORDS) {
   const reportDate = new Date()
-  const vocabulary = NEWS_WORDS.map((word) => ({ ...word, id: `news-library-word-${stamp}-${word.english}` }))
+  const vocabulary = vocabularyWords.map((word) => ({ ...word, id: `news-library-word-${stamp}-${word.english}` }))
   return prisma.studentNewsReport.create({
     data: {
       studentRefId,
@@ -152,15 +152,19 @@ async function createLibraryLifecycleFixtures(prisma, studentRefId, stamp) {
   return fixtures
 }
 
-test("authenticated student News five-word save, Library visibility, week-set modal, and contribution lifecycle", { skip: SKIP_REASON }, async () => {
+test("authenticated student News and New Words saves, Library visibility, week-set modal, and contribution lifecycle", { skip: SKIP_REASON }, async () => {
   Object.assign(process.env, ENV_VALUES)
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const prisma = await getSharedPrismaClient()
   const stamp = String(Date.now())
+  const alphaStamp = stamp.replace(/[0-9]/gu, (digit) => String.fromCharCode(97 + Number(digit)))
   let reportId = ""
   let studentRefId = ""
   const newsContributionIds = []
+  const newsContributionIdsByWord = new Map()
   const lifecycleFixtures = []
+  const newWordsFixtureIds = []
+  let savedNewWordEnglish = ""
   let browser
   let context
   let page
@@ -171,7 +175,29 @@ test("authenticated student News five-word save, Library visibility, week-set mo
     const student = await prisma.student.findUnique({ where: { eaglesId: STUDENT.user }, select: { id: true } })
     assert.ok(student?.id, "configured student must be linked to a Student row")
     studentRefId = student.id
-    const report = await createNewsFixture(prisma, studentRefId, stamp)
+    const preexistingNewsWordKeys = new Set((await prisma.studentNewWord.findMany({
+      where: { studentRefId, englishKey: { in: NEWS_WORDS.map((word) => word.english.toLocaleLowerCase("en-US")) } },
+      select: { englishKey: true },
+    })).map((word) => word.englishKey))
+    const expectedSeedWords = NEWS_WORDS.filter((word) => !preexistingNewsWordKeys.has(word.english.toLocaleLowerCase("en-US")))
+    const pastedWord = expectedSeedWords.find((word) => word.english !== "confederations")
+    assert.ok(pastedWord, "at least one submittable News fixture word is new for the configured student")
+    const reportWords = [pastedWord, ...NEWS_WORDS.filter((word) => word !== pastedWord)]
+    const pastedWordEnglish = pastedWord.english
+    const invalidLegacyWord = await prisma.studentNewWord.create({
+      data: {
+        studentRefId,
+        englishKey: `legacyconfederations${alphaStamp}`,
+        partOfSpeech: "noun",
+        english: `legacyconfederations${alphaStamp}`,
+        vietnamese: "các liên bang",
+        syllabication: "leg-a-cy-con-fed-er-á-tions",
+        definition: "An unchanged previously saved New Words entry with a legal internal single-letter stressed vowel.",
+      },
+      select: { id: true },
+    })
+    newWordsFixtureIds.push(invalidLegacyWord.id)
+    const report = await createNewsFixture(prisma, studentRefId, stamp, reportWords)
     reportId = report.id
     lifecycleFixtures.push(...await createLibraryLifecycleFixtures(prisma, studentRefId, stamp))
 
@@ -186,15 +212,48 @@ test("authenticated student News five-word save, Library visibility, week-set mo
       }
       consoleErrors.push(message.text())
     })
-    page.on("requestfailed", (request) => requestFailures.push(`${request.method()} ${request.url()} ${request.failure()?.errorText || "failed"}`))
+    page.on("requestfailed", (request) => {
+      const failure = request.failure()?.errorText || "failed"
+      const optionalWidgetAbort = new URL(request.url()).hostname === "conversations-widget.brevo.com" && failure === "net::ERR_ABORTED"
+      if (!optionalWidgetAbort) requestFailures.push(`${request.method()} ${request.url()} ${failure}`)
+    })
     await loginStudent(page)
+    await page.goto(`${ORIGIN}/student/library.html?apiOrigin=${encodeURIComponent(ORIGIN)}`, { waitUntil: "domcontentloaded" })
+    await page.locator("#studentLibraryAddOneBtn").click()
+    const newWordsDefinition = page.locator('#studentLibraryNewWordsRows [data-vocabulary-field="definition"]')
+    await newWordsDefinition.waitFor({ state: "visible", timeout: 10000 })
+    const pastedDefinition = await page.evaluate(() => {
+      const textarea = document.querySelector('#studentLibraryNewWordsRows [data-vocabulary-field="definition"]')
+      textarea.addEventListener("paste", (event) => event.stopPropagation())
+      textarea.focus()
+      const paste = new ClipboardEvent("paste", { bubbles: true, cancelable: true })
+      Object.defineProperty(paste, "clipboardData", {
+        value: {
+          getData(type) {
+            if (type === "text/html") return "<p>A <strong>bold</strong> and <em>italic</em> definition.</p>"
+            if (type === "text/plain") return "A bold and italic definition."
+            return ""
+          },
+        },
+      })
+      textarea.dispatchEvent(paste)
+      return { prevented: paste.defaultPrevented, value: textarea.value, rendered: window.SIS_VOCABULARY_ESL.definitionHtml(textarea.value) }
+    })
+    assert.equal(pastedDefinition.prevented, true, "the shared paste handler intercepts rich clipboard data before row handlers")
+    assert.equal(pastedDefinition.value, "A **bold** and *italic* definition.")
+    assert.match(pastedDefinition.rendered, /<strong>bold<\/strong> and <em>italic<\/em>/u)
+
+    await page.goto(`${ORIGIN}/student?apiOrigin=${encodeURIComponent(ORIGIN)}`, { waitUntil: "domcontentloaded" })
+    await page.locator("#appPanel").waitFor({ state: "visible", timeout: 30000 })
     await page.click("#openNewsPageBtn")
     await page.locator("#newsPageCard").waitFor({ state: "visible", timeout: 30000 })
     await page.locator('#newsVocabularyRows [data-vocabulary-field="english"]').nth(0).waitFor({ state: "visible", timeout: 30000 })
     assert.equal(await page.locator('#newsVocabularyRows [data-vocabulary-field="english"]').count(), 5, "the real News fixture has exactly five vocabulary editors")
 
-    await page.evaluate(() => {
-      const textarea = document.querySelector('#newsVocabularyRows [data-vocabulary-field="definition"]')
+    await page.evaluate((english) => {
+      const row = [...document.querySelectorAll("#newsVocabularyRows [data-news-vocabulary-row]")].find((candidate) => candidate.querySelector('[data-vocabulary-field="english"]')?.value === english)
+      const textarea = row?.querySelector('[data-vocabulary-field="definition"]')
+      if (!textarea) throw new Error(`definition editor not found for ${english}`)
       textarea.focus()
       textarea.selectionStart = textarea.selectionEnd = textarea.value.length
       const paste = typeof ClipboardEvent === "function"
@@ -211,7 +270,7 @@ test("authenticated student News five-word save, Library visibility, week-set mo
       })
       textarea.dispatchEvent(paste)
       if (!/\*\*bold\*\*/u.test(textarea.value)) throw new Error(`structured paste handler did not run: ${textarea.value}`)
-    })
+    }, pastedWordEnglish)
     const draftResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/draft", { timeout: 30000 })
     await page.click("#saveDraftBtn")
     assert.equal((await draftResponse).status(), 200, "News Save returns HTTP 200")
@@ -219,11 +278,16 @@ test("authenticated student News five-word save, Library visibility, week-set mo
     const savedDraft = await prisma.studentNewsReport.findUnique({ where: { id: reportId }, select: { vocabularyJson: true, submissionState: true } })
     assert.equal(savedDraft?.submissionState, "draft")
     assert.equal(savedDraft?.vocabularyJson?.length, 5)
-    assert.match(savedDraft?.vocabularyJson?.[0]?.definition || "", /\*\*bold\*\*[\s\S]*- first[\s\S]*\n[ ]{4}- \*nested\*/u)
+    assert.equal(savedDraft?.vocabularyJson?.find((entry) => entry.english === "confederations")?.syllabication, "con-fed-er-á-tions")
+    assert.match(savedDraft?.vocabularyJson?.find((entry) => entry.english === pastedWordEnglish)?.definition || "", /\*\*bold\*\*[\s\S]*- first[\s\S]*\n[ ]{4}- \*nested\*/u)
 
     const checkResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check", { timeout: 30000 })
     await page.click("#checkBtn")
-    const checkResult = await checkResponse
+    const checkResult = await checkResponse.catch(async (error) => {
+      const status = await page.locator("#formStatus").innerText().catch(() => "unavailable")
+      const disabled = await page.locator("#checkBtn").isDisabled().catch(() => true)
+      throw new Error(`${error.message}; News status: ${status}; Check disabled: ${disabled}`)
+    })
     const checkBody = await checkResult.json()
     assert.equal(checkResult.status(), 200, "News Check returns HTTP 200")
     assert.equal(checkBody.mmrPassed, true, `five-word News Check must pass MMR: ${JSON.stringify(checkBody)}`)
@@ -244,8 +308,8 @@ test("authenticated student News five-word save, Library visibility, week-set mo
     })
     assert.equal(wordData.status, 200, "authenticated New Words list returns HTTP 200")
     const words = (wordData.body.items || []).filter((word) => word.sourceReportId === reportId)
-    assert.deepEqual(words.map((word) => word.english).sort(), NEWS_WORDS.map((word) => word.english).sort(), "all five real words are seeded from the checked News report")
-    for (const word of words) {
+    assert.deepEqual(words.map((word) => word.english).sort(), expectedSeedWords.map((word) => word.english).sort(), "every new real word is seeded from the checked News report without duplicating an existing student word")
+    for (const word of words.filter((entry) => entry.english !== "confederations")) {
       const submitted = await page.evaluate(async (entry) => {
         const response = await fetch("/api/student/library/submissions", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sourceId: entry.id, entry }) })
         return { status: response.status, body: await response.json() }
@@ -253,6 +317,7 @@ test("authenticated student News five-word save, Library visibility, week-set mo
       assert.equal(submitted.status, 201, `Library submission succeeds for ${word.english}`)
       assert.equal(submitted.body.ok, true)
       newsContributionIds.push(submitted.body.contribution.id)
+      newsContributionIdsByWord.set(word.english, submitted.body.contribution.id)
     }
 
     const weekSetButtons = page.locator('#newsPageQueueBody button[data-open-news-week-set]')
@@ -271,16 +336,33 @@ test("authenticated student News five-word save, Library visibility, week-set mo
 
     await page.goto(`${ORIGIN}/student/library.html?apiOrigin=${encodeURIComponent(ORIGIN)}&myWords=true`, { waitUntil: "domcontentloaded" })
     await page.locator("#libraryStatus").waitFor({ state: "visible", timeout: 30000 })
-    for (const word of NEWS_WORDS) {
+    await page.locator("#studentLibraryAddOneBtn").click()
+    const newWordRow = page.locator("#studentLibraryNewWordsRows [data-news-vocabulary-row]").last()
+    savedNewWordEnglish = `regressionword-${alphaStamp}`
+    await newWordRow.locator('[data-vocabulary-field="partOfSpeech"]').selectOption("noun")
+    await newWordRow.locator('[data-vocabulary-field="english"]').fill(savedNewWordEnglish)
+    await newWordRow.locator('[data-vocabulary-field="vietnamese"]').fill("từ kiểm thử")
+    await newWordRow.locator('[data-vocabulary-field="syllabication"]').fill(savedNewWordEnglish)
+    await newWordRow.locator('[data-vocabulary-field="definition"]').fill("A regression word saved through the Student Library form.")
+    const newWordsSaveResponse = page.waitForResponse((response) => response.request().method() === "PUT" && new URL(response.url()).pathname === "/api/student/new-words", { timeout: 30000 })
+    await page.locator("#studentLibrarySaveWordsBtn").click()
+    assert.equal((await newWordsSaveResponse).status(), 200, "Student Library Save Changes persists a new word even when an unchanged legacy row has an internal single-letter stressed vowel")
+    await page.waitForFunction(() => /word saved to New Words/i.test(document.getElementById("studentLibraryNewWordsStatus")?.textContent || ""), null, { timeout: 10000 })
+    const savedNewWord = await prisma.studentNewWord.findFirst({ where: { studentRefId, englishKey: savedNewWordEnglish } })
+    assert.ok(savedNewWord?.id, "the new word is persisted in the student New Words table")
+    newWordsFixtureIds.push(savedNewWord.id)
+    for (const word of words.filter((entry) => entry.english !== "confederations")) {
       await page.locator("#librarySearch").fill(word.english)
       await page.locator('#libraryFilters button[type="submit"]').click()
-      const matchingContribution = newsContributionIds[words.findIndex((entry) => entry.english === word.english)]
+      const matchingContribution = newsContributionIdsByWord.get(word.english)
       await page.locator(`[data-entry-id="${matchingContribution}"]`).waitFor({ state: "visible", timeout: 30000 })
       assert.equal(await page.locator(`[data-entry-id="${matchingContribution}"]`).innerText(), "Edit", `Student Library exposes Edit for ${word.english}`)
     }
-    await page.locator("#librarySearch").fill("air-strike")
+    const pastedContributionId = newsContributionIdsByWord.get(pastedWordEnglish)
+    assert.ok(pastedContributionId, "the pasted News word is submitted for Library review")
+    await page.locator("#librarySearch").fill(pastedWordEnglish)
     await page.locator('#libraryFilters button[type="submit"]').click()
-    await page.locator(`[data-entry-id="${newsContributionIds[0]}"]`).click()
+    await page.locator(`[data-entry-id="${pastedContributionId}"]`).click()
     const newsEditDialog = page.locator("dialog.library-edit-dialog")
     await newsEditDialog.waitFor({ state: "visible", timeout: 10000 })
     assert.match(await newsEditDialog.locator('[data-vocabulary-field="definition"]').inputValue(), /\*\*bold\*\*[\s\S]*- first[\s\S]*\n[ ]{4}- \*nested\*/u)
@@ -331,6 +413,11 @@ test("authenticated student News five-word save, Library visibility, week-set mo
     if (reportId) {
       await prisma.studentNewWord.deleteMany({ where: { studentRefId, sourceReportId: reportId } }).catch(() => {})
       await prisma.studentNewsReport.delete({ where: { id: reportId } }).catch(() => {})
+    }
+    if (studentRefId) {
+      await prisma.studentNewWord.deleteMany({ where: { studentRefId, id: { in: newWordsFixtureIds } } }).catch(() => {})
+      if (savedNewWordEnglish) await prisma.studentNewWord.deleteMany({ where: { studentRefId, englishKey: savedNewWordEnglish } }).catch(() => {})
+      await prisma.studentNewWord.deleteMany({ where: { studentRefId, englishKey: `legacyconfederations${alphaStamp}` } }).catch(() => {})
     }
   }
 })
