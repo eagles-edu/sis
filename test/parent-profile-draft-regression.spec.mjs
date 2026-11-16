@@ -296,3 +296,145 @@ test("parent submission approval updates only its linked official profile and re
   assert.equal(responsePayload.payload.action, "approve")
   assert.equal(responsePayload.payload.item.status, "approved")
 })
+
+test("parent submission is restricted to the authenticated parent's linked child", async () => {
+  const parentContext = {
+    parentsId: "synthetic-parent-id-022",
+    parentAccountId: "synthetic-parent-account-022",
+  }
+  let submissionArgs = null
+  let completedStudentRefId = ""
+  let parentScope = null
+  let responsePayload = null
+  let requestedEaglesId = "synthetic-linked-child-022"
+  let availableChildren = [{
+    eaglesId: "synthetic-linked-child-022",
+    studentRefId: "synthetic-linked-student-022",
+  }]
+  const context = vm.createContext({
+    Error,
+    PARENT_CHILD_PROFILE_SUBMIT_PATH_RE: /^\/api\/parent\/children\/([^/]+)\/profile-submit$/,
+    PARENT_PROFILE_QUEUE_STATUS_SUBMITTED: "submitted",
+    normalizeText: (value) => String(value ?? "").trim(),
+    normalizeLower: (value) => String(value ?? "").trim().toLowerCase(),
+    decodeURIComponent,
+    parseBody: async () => ({ comment: "synthetic parent submission" }),
+    listParentLinkedStudents: async (scope) => {
+      parentScope = scope
+      return availableChildren
+    },
+    setParentProfileSubmissionSubmitted: async (args) => {
+      submissionArgs = args
+      return { id: "synthetic-submission-022" }
+    },
+    markParentProfileInvitationCompleted: async ({ studentRefId }) => {
+      completedStudentRefId = studentRefId
+    },
+    sendJson: (_response, status, payload) => {
+      responsePayload = { status, payload }
+    },
+    pathname: `/api/parent/children/${requestedEaglesId}/profile-submit`,
+    method: "POST",
+    parentContext,
+    request: {},
+    response: {},
+  })
+  const submitRoute = vm.runInContext(
+    `(async () => { ${source.slice(parentSubmitRouteStart, parentSubmitRouteEnd)} })`,
+    context,
+  )
+
+  assert.equal(await submitRoute(), true)
+  assert.deepEqual(JSON.parse(JSON.stringify(parentScope)), {
+    parentsId: "synthetic-parent-id-022",
+    parentAccountId: "synthetic-parent-account-022",
+  })
+  assert.deepEqual(JSON.parse(JSON.stringify(submissionArgs)), {
+    parentAccountId: "synthetic-parent-account-022",
+    studentRefId: "synthetic-linked-student-022",
+    comment: "synthetic parent submission",
+  })
+  assert.equal(completedStudentRefId, "synthetic-linked-student-022")
+  assert.equal(responsePayload.status, 200)
+  assert.equal(responsePayload.payload.status, "submitted")
+
+  availableChildren = [{ eaglesId: "somebody-elses-child", studentRefId: "synthetic-other-student-022" }]
+  requestedEaglesId = "synthetic-unlinked-child-022"
+  context.pathname = `/api/parent/children/${requestedEaglesId}/profile-submit`
+  submissionArgs = null
+  let accessError = null
+  try {
+    await submitRoute()
+  } catch (error) {
+    accessError = error
+  }
+  assert.equal(accessError?.statusCode, 403)
+  assert.match(accessError?.message || "", /not linked to this parent account/i)
+  assert.equal(submissionArgs, null)
+  assert.equal(completedStudentRefId, "synthetic-linked-student-022")
+})
+
+test("parent profile approval refuses locked fields before writing the official profile", async () => {
+  const submission = {
+    id: "synthetic-locked-submission-022",
+    studentRefId: "synthetic-locked-student-022",
+    status: "submitted",
+    draftPayloadJson: { fullName: "Blocked Synthetic Name" },
+    adminEditedPayloadJson: null,
+  }
+  let lockLookupStudentRefId = ""
+  let queueFailureUpdate = null
+  let profileWrites = 0
+  let responsePayload = null
+  const context = vm.createContext({
+    Error,
+    PARENT_PROFILE_IMMUTABLE_FIELDS: new Set(["eaglesId", "studentNumber"]),
+    PARENT_PROFILE_EDITABLE_FIELDS: new Set(["fullName"]),
+    PARENT_PROFILE_QUEUE_STATUS_APPROVED: "approved",
+    normalizeText: (value) => String(value ?? "").trim(),
+    normalizeLower: (value) => String(value ?? "").trim().toLowerCase(),
+    normalizeParentProfilePatch: (patch) => ({ ...patch }),
+    listParentProfileFieldLocks: async (studentRefId) => {
+      lockLookupStudentRefId = studentRefId
+      return ["fullName"]
+    },
+    getParentProfileSubmissionById: async (id) => id === submission.id ? submission : null,
+    updateParentProfileSubmissionById: async (_id, patch) => {
+      queueFailureUpdate = patch
+      return { ...submission, ...patch }
+    },
+    getSharedPrismaClient: async () => {
+      profileWrites += 1
+      throw new Error("Official profile access must not happen for a locked field")
+    },
+    assertCanManageUsers: () => {},
+    nowIso: () => "2026-11-17T09:00:00.000Z",
+    parseBody: async () => ({ action: "approve" }),
+    sendJson: (_response, status, payload) => {
+      responsePayload = { status, payload }
+    },
+    decodeURIComponent,
+    PARENT_PROFILE_QUEUE_STATUS_SUBMITTED: "submitted",
+    profileSubmissionMatch: ["/api/admin/profile-submissions/synthetic-locked-submission-022", submission.id],
+    method: "POST",
+    pathname: `/api/admin/profile-submissions/${submission.id}`,
+    rolePolicy: { canManageUsers: true },
+    session: { username: "synthetic-admin-022" },
+    request: {},
+    response: {},
+  })
+  const approveRoute = vm.runInContext(
+    `(async () => { ${source.slice(adminReviewRouteStart, adminReviewRouteEnd)} })`,
+    context,
+  )
+
+  assert.equal(await approveRoute(), true)
+  assert.equal(lockLookupStudentRefId, "synthetic-locked-student-022")
+  assert.equal(profileWrites, 0)
+  assert.equal(queueFailureUpdate.failurePoint, "lock-conflict")
+  assert.match(queueFailureUpdate.rejectionReason, /fullName/)
+  assert.equal(queueFailureUpdate.status, undefined)
+  assert.equal(responsePayload.status, 409)
+  assert.equal(responsePayload.payload.ok, false)
+  assert.match(responsePayload.payload.error, /locked fields/i)
+})
