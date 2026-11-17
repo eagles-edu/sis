@@ -8,6 +8,7 @@ import { resolveStandardStudentCredentials } from "../test/helpers/standard-port
 const DEV_ORIGIN = "http://127.0.0.1:8788"
 const METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/library-workflow-dev.prom")
 const CHECK_TIMEOUT_MS = 10000
+const DICTIONARY_BUILDER_TIMEOUT_MS = 240000
 const OPEN_REVIEW_STATUSES = ["pending_review", "legacy_pending_review"]
 
 export function assertDevEnvironment(environment = process.env) {
@@ -45,6 +46,10 @@ export function renderLibraryMetrics({
   adminAccessAvailable,
   saveCheckSuccess,
   reviewCheckSuccess,
+  definitionSaveCheckSuccess,
+  dictionaryBuilderCheckSuccess,
+  dictionaryBuilderDefinitionProvidersAvailable,
+  dictionaryBuilderDefinitionProvidersChecked,
   cleanupSuccess,
   openReviewCount,
   oldestOpenReviewAgeSeconds,
@@ -64,6 +69,10 @@ export function renderLibraryMetrics({
     ["sis_library_admin_access_available", "Whether authenticated dev admin Library review access succeeded.", adminAccessAvailable ? 1 : 0],
     ["sis_library_save_check_success", "Whether a synthetic authenticated dev Library submission succeeded.", saveCheckSuccess ? 1 : 0],
     ["sis_library_review_check_success", "Whether a synthetic dev Library review and student result check succeeded.", reviewCheckSuccess ? 1 : 0],
+    ["sis_library_definition_save_check_success", "Whether a synthetic dev Library definition was saved and matched after database readback.", definitionSaveCheckSuccess ? 1 : 0],
+    ["sis_library_dictionary_builder_check_success", "Whether the authenticated dev Dictionary Builder provider check completed.", dictionaryBuilderCheckSuccess ? 1 : 0],
+    ["sis_library_dictionary_builder_definition_providers_available", "Number of Dictionary Builder providers returning an available definition in dev.", dictionaryBuilderDefinitionProvidersAvailable],
+    ["sis_library_dictionary_builder_definition_providers_checked", "Number of Dictionary Builder providers checked for a definition in dev.", dictionaryBuilderDefinitionProvidersChecked],
     ["sis_library_cleanup_success", "Whether the latest synthetic dev Library monitor records were removed.", cleanupSuccess ? 1 : 0],
     ["sis_library_open_review_contributions", "Number of dev Library contributions waiting for review.", openReviewCount],
     ["sis_library_oldest_open_review_age_seconds", "Age in seconds of the oldest dev Library contribution waiting for review.", oldestOpenReviewAgeSeconds],
@@ -95,9 +104,9 @@ export function writeMetricsAtomically(metricsFile, contents) {
   }
 }
 
-async function requestJson(fetchImpl, endpoint, { cookie = "", method = "GET", body } = {}) {
+async function requestJson(fetchImpl, endpoint, { cookie = "", method = "GET", body, timeoutMs = CHECK_TIMEOUT_MS } = {}) {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), CHECK_TIMEOUT_MS)
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
   try {
     const response = await fetchImpl(`${DEV_ORIGIN}${endpoint}`, {
       method,
@@ -112,6 +121,17 @@ async function requestJson(fetchImpl, endpoint, { cookie = "", method = "GET", b
     return { ok: response.ok, status: response.status, payload, setCookie: response.headers.get("set-cookie") || "" }
   } finally {
     clearTimeout(timeout)
+  }
+}
+
+export function summarizeDictionaryBuilderDefinitionAvailability(preview) {
+  const sources = Array.isArray(preview?.sources) ? preview.sources : []
+  const statuses = sources
+    .map((source) => source?.datumStatus?.definition?.status)
+    .filter((status) => typeof status === "string" && status.length > 0 && status !== "not_offered")
+  return {
+    providersChecked: statuses.length,
+    providersAvailable: statuses.filter((status) => status === "available").length,
   }
 }
 
@@ -150,7 +170,7 @@ async function collectQueueMetrics(prisma, now) {
   }
 }
 
-async function cleanupSynthetic(prisma, { studentRefId, sourceId, english, expectedCreatorName }) {
+export async function cleanupSynthetic(prisma, { studentRefId, sourceId, english, expectedCreatorName }) {
   let ownsSyntheticEntry = false
   if (studentRefId && sourceId) {
     const contributions = await prisma.libraryContribution.findMany({
@@ -164,16 +184,25 @@ async function cleanupSynthetic(prisma, { studentRefId, sourceId, english, expec
       await prisma.libraryContribution.deleteMany({ where: { id: { in: contributionIds } } })
     }
   }
-  if (ownsSyntheticEntry && english) {
+  if (english) {
     const entry = await prisma.libraryEntry.findUnique({
       where: { normalizedKey_partOfSpeech: { normalizedKey: english, partOfSpeech: "noun" } },
       select: { id: true, createdByName: true },
     })
-    if (entry?.createdByName === expectedCreatorName) {
+    if (entry && ownsSyntheticEntry && entry.createdByName === expectedCreatorName) {
       await prisma.libraryEntryRevision.deleteMany({ where: { entryId: entry.id } })
       await prisma.libraryEntry.delete({ where: { id: entry.id } })
     }
   }
+  const [remainingContributions, remainingEntry] = await Promise.all([
+    studentRefId && sourceId
+      ? prisma.libraryContribution.count({ where: { studentRefId, sourceKind: "student_new_words", sourceId } })
+      : 0,
+    english
+      ? prisma.libraryEntry.findUnique({ where: { normalizedKey_partOfSpeech: { normalizedKey: english, partOfSpeech: "noun" } }, select: { id: true } })
+      : null,
+  ])
+  return remainingContributions === 0 && !remainingEntry
 }
 
 export async function runLibraryWorkflowMonitor({
@@ -201,6 +230,10 @@ export async function runLibraryWorkflowMonitor({
   let adminAccessAvailable = false
   let saveCheckSuccess = false
   let reviewCheckSuccess = false
+  let definitionSaveCheckSuccess = false
+  let dictionaryBuilderCheckSuccess = false
+  let dictionaryBuilderDefinitionProvidersAvailable = 0
+  let dictionaryBuilderDefinitionProvidersChecked = 0
   let cleanupSuccess = true
   let openReviewCount = 0
   let oldestOpenReviewAgeSeconds = 0
@@ -242,6 +275,19 @@ export async function runLibraryWorkflowMonitor({
     })
     const studentCookie = sessionCookie(studentLogin, "student_portal_sid")
 
+    const builderPreview = adminCookie
+      ? await requestJson(fetchImpl, "/api/admin/library/entries/new-canonical/dictionary-builder/preview", {
+        cookie: adminCookie,
+        method: "POST",
+        body: { entry: { english: "monitor", partOfSpeech: "noun" } },
+        timeoutMs: DICTIONARY_BUILDER_TIMEOUT_MS,
+      })
+      : { ok: false, payload: {} }
+    const builderAvailability = summarizeDictionaryBuilderDefinitionAvailability(builderPreview.payload)
+    dictionaryBuilderDefinitionProvidersAvailable = builderAvailability.providersAvailable
+    dictionaryBuilderDefinitionProvidersChecked = builderAvailability.providersChecked
+    dictionaryBuilderCheckSuccess = builderPreview.ok && Boolean(builderPreview.payload?.id) && builderAvailability.providersChecked > 0
+
     const adminQueue = adminCookie
       ? await requestJson(fetchImpl, "/api/admin/library/queue?status=open_review", { cookie: adminCookie })
       : { ok: false, payload: {} }
@@ -269,16 +315,23 @@ export async function runLibraryWorkflowMonitor({
       method: "POST",
       body: { approved: true, canonicalContributionId: contributionId, entry: payload },
     })
+    const persistedEntry = await prisma.libraryEntry.findUnique({
+      where: { normalizedKey_partOfSpeech: { normalizedKey: english.toLowerCase(), partOfSpeech: "noun" } },
+      select: { definition: true },
+    })
+    definitionSaveCheckSuccess = reviewed.ok && reviewed.payload?.ok === true && persistedEntry?.definition === payload.definition
     const result = studentCookie
       ? await requestJson(fetchImpl, `/api/student/library?search=${encodeURIComponent(english)}&myWords=true`, { cookie: studentCookie })
       : { ok: false, payload: {} }
     reviewCheckSuccess = reviewed.ok && reviewed.payload?.ok === true && result.ok && result.payload?.items?.some((item) => item.english === english && item.isContribution !== true)
     if (!reviewCheckSuccess) throw new Error("Synthetic Library review result failed")
+    if (!definitionSaveCheckSuccess) throw new Error("Synthetic Library definition persistence check failed")
   } catch {
     failure = true
   } finally {
     try {
-      await cleanupSynthetic(prisma, { studentRefId, sourceId, english, expectedCreatorName: adminUsername })
+      cleanupSuccess = await cleanupSynthetic(prisma, { studentRefId, sourceId, english, expectedCreatorName: adminUsername })
+      if (!cleanupSuccess) failure = true
     } catch {
       cleanupSuccess = false
       failure = true
@@ -287,7 +340,7 @@ export async function runLibraryWorkflowMonitor({
   }
 
   const checkedAt = clock() / 1000
-  const success = !failure && apiAvailable && databaseAvailable && redisAvailable && cmuDictionaryAvailable && studentAccessAvailable && adminAccessAvailable && saveCheckSuccess && reviewCheckSuccess && cleanupSuccess
+  const success = !failure && apiAvailable && databaseAvailable && redisAvailable && cmuDictionaryAvailable && studentAccessAvailable && adminAccessAvailable && saveCheckSuccess && reviewCheckSuccess && definitionSaveCheckSuccess && dictionaryBuilderCheckSuccess && dictionaryBuilderDefinitionProvidersAvailable > 0 && cleanupSuccess
   const lastSuccessTimestamp = success ? checkedAt : readLastSuccessTimestamp(metricsFile)
   const metrics = renderLibraryMetrics({
     checkedAt,
@@ -304,12 +357,16 @@ export async function runLibraryWorkflowMonitor({
     adminAccessAvailable,
     saveCheckSuccess,
     reviewCheckSuccess,
+    definitionSaveCheckSuccess,
+    dictionaryBuilderCheckSuccess,
+    dictionaryBuilderDefinitionProvidersAvailable,
+    dictionaryBuilderDefinitionProvidersChecked,
     cleanupSuccess,
     openReviewCount,
     oldestOpenReviewAgeSeconds,
   })
   writeMetricsAtomically(metricsFile, metrics)
-  process.stdout.write(`library_workflow_monitor environment=dev result=${success ? "pass" : "fail"} student_access=${studentAccessAvailable ? "up" : "down"} admin_access=${adminAccessAvailable ? "up" : "down"} save=${saveCheckSuccess ? "pass" : "fail"} review=${reviewCheckSuccess ? "pass" : "fail"} cleanup=${cleanupSuccess ? "pass" : "fail"}\n`)
+  process.stdout.write(`library_workflow_monitor environment=dev result=${success ? "pass" : "fail"} student_access=${studentAccessAvailable ? "up" : "down"} admin_access=${adminAccessAvailable ? "up" : "down"} save=${saveCheckSuccess ? "pass" : "fail"} definition_save=${definitionSaveCheckSuccess ? "pass" : "fail"} builder_check=${dictionaryBuilderCheckSuccess ? "pass" : "fail"} definition_providers=${dictionaryBuilderDefinitionProvidersAvailable}/${dictionaryBuilderDefinitionProvidersChecked} review=${reviewCheckSuccess ? "pass" : "fail"} cleanup=${cleanupSuccess ? "pass" : "fail"}\n`)
   return success
 }
 

@@ -101,6 +101,30 @@ groups:
         annotations:
           summary: Synthetic dev Library review or student result check failed
 
+      - alert: DevLibraryDefinitionSaveFailed
+        expr: sis_library_definition_save_check_success{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Synthetic dev Library definition did not persist exactly
+
+      - alert: DevLibraryDictionaryBuilderCheckFailed
+        expr: sis_library_dictionary_builder_check_success{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Authenticated dev Dictionary Builder provider check failed
+
+      - alert: DevLibraryDictionaryBuilderProvidersUnavailable
+        expr: sis_library_dictionary_builder_definition_providers_checked{environment="dev"} > 0 and sis_library_dictionary_builder_definition_providers_available{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: No Dictionary Builder provider returned a definition in dev
+
       - alert: DevLibraryOldReviewQueue
         expr: sis_library_oldest_open_review_age_seconds{environment="dev"} > 86400
         for: 5m

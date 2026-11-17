@@ -5,8 +5,10 @@ import path from "node:path"
 import test from "node:test"
 import {
   assertDevEnvironment,
+  cleanupSynthetic,
   readLastSuccessTimestamp,
   renderLibraryMetrics,
+  summarizeDictionaryBuilderDefinitionAvailability,
   writeMetricsAtomically,
 } from "../tools/monitor-library-workflow.mjs"
 
@@ -30,6 +32,10 @@ function monitorMetrics(overrides = {}) {
     adminAccessAvailable: true,
     saveCheckSuccess: true,
     reviewCheckSuccess: true,
+    definitionSaveCheckSuccess: true,
+    dictionaryBuilderCheckSuccess: true,
+    dictionaryBuilderDefinitionProvidersAvailable: 3,
+    dictionaryBuilderDefinitionProvidersChecked: 5,
     cleanupSuccess: true,
     openReviewCount: 4,
     oldestOpenReviewAgeSeconds: 3600,
@@ -56,11 +62,50 @@ test("Library metrics expose access, save, review, queue-age, and dependency res
   assert.match(metrics, /sis_library_student_access_available\{environment="dev"\} 0\.000000/u)
   assert.match(metrics, /sis_library_save_check_success\{environment="dev"\} 0\.000000/u)
   assert.match(metrics, /sis_library_review_check_success\{environment="dev"\} 0\.000000/u)
+  assert.match(metrics, /sis_library_definition_save_check_success\{environment="dev"\} 1\.000000/u)
+  assert.match(metrics, /sis_library_dictionary_builder_check_success\{environment="dev"\} 1\.000000/u)
+  assert.match(metrics, /sis_library_dictionary_builder_definition_providers_available\{environment="dev"\} 3\.000000/u)
+  assert.match(metrics, /sis_library_dictionary_builder_definition_providers_checked\{environment="dev"\} 5\.000000/u)
   assert.match(metrics, /sis_library_oldest_open_review_age_seconds\{environment="dev"\} 7200\.000000/u)
   assert.match(metrics, /sis_library_redis_available\{environment="dev"\} 0\.000000/u)
   assert.doesNotMatch(metrics, /environment="(?:test|production)"|cookie|password|@[a-z0-9.-]+/iu)
   assert.equal(metrics.split("\n").filter((line) => line.startsWith("sis_library_") && !line.includes('{environment="dev"}')).length, 0)
   assert.throws(() => monitorMetrics({ openReviewCount: -1 }), /finite non-negative/u)
+})
+
+test("Dictionary Builder availability summary contains only aggregate provider counts", () => {
+  const availability = summarizeDictionaryBuilderDefinitionAvailability({
+    sources: [
+      { provider: "private-provider", definition: "sensitive definition", datumStatus: { definition: { status: "available" } } },
+      { provider: "other", datumStatus: { definition: { status: "not_found" } } },
+      { provider: "not-applicable", datumStatus: { definition: { status: "not_offered" } } },
+      { provider: "missing-status", datumStatus: {} },
+    ],
+  })
+  assert.deepEqual(availability, { providersChecked: 2, providersAvailable: 1 })
+  assert.doesNotMatch(JSON.stringify(availability), /sensitive definition|private-provider/u)
+  assert.deepEqual(summarizeDictionaryBuilderDefinitionAvailability({ sources: [] }), { providersChecked: 0, providersAvailable: 0 })
+})
+
+test("Library monitor cleanup verifies exact synthetic contribution and canonical removal", async () => {
+  const contribution = { id: "synthetic-contribution" }
+  const entry = { id: "synthetic-entry", createdByName: "dev-admin" }
+  const state = { contributions: [contribution], entry }
+  const prisma = {
+    libraryContribution: {
+      findMany: async () => state.contributions.map(({ id }) => ({ id })),
+      deleteMany: async () => { state.contributions = []; return { count: 1 } },
+      count: async () => state.contributions.length,
+    },
+    libraryContributionRevision: { deleteMany: async () => ({ count: 1 }) },
+    libraryEntry: {
+      findUnique: async () => state.entry,
+      delete: async () => { state.entry = null },
+    },
+    libraryEntryRevision: { deleteMany: async () => ({ count: 1 }) },
+  }
+  assert.equal(await cleanupSynthetic(prisma, { studentRefId: "student-ref", sourceId: "library-monitor-id", english: "librarymonitorid", expectedCreatorName: "dev-admin" }), true)
+  assert.deepEqual(state, { contributions: [], entry: null })
 })
 
 test("Library monitor metrics write atomically and carry forward the previous success timestamp", (t) => {
