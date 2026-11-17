@@ -19,7 +19,7 @@ The SIS grade values required from each form are:
 
 The grade is recorded in the school year and quarter current when SIS receives it. SIS derives that period from its authoritative school setup and derives class from the student's single active enrollment for that school year. The form's response timestamp does not select the grade period. SIS rejects submissions when school setup is invalid or the student has no single active enrollment with a level. Class, school year, and quarter are not form fields or Script Properties.
 
-The response sheets also contain `Timestamp`, `Email Address`, `Name`, and quiz-question columns. The sender ignores those columns. The Apps Script calculates a stable attempt ID from the response sheet and row so retries update the same grade record.
+The response sheets also contain `Timestamp`, `Email Address`, `Name`, and quiz-question columns. The sender ignores those columns. The Apps Script calculates a stable attempt ID from the response sheet and row so retries update the same grade record. SIS requires this non-empty `sourceAttemptId`; it rejects requests without one because a server receipt-time fallback cannot distinguish a retry from a new attempt.
 
 ## Configure one Apps Script for many quizzes
 

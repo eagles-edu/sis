@@ -146,7 +146,10 @@ function assertValidPayload(payload) {
   if (!Number.isFinite(Number(payload.maxScore)) || Number(payload.maxScore) <= 0) {
     fail(400, "maxScore must be a positive number")
   }
-  if (payload.sourceAttemptId !== undefined && text(payload.sourceAttemptId).length > 255) {
+  if (typeof payload.sourceAttemptId !== "string" || !text(payload.sourceAttemptId)) {
+    fail(400, "sourceAttemptId is required")
+  }
+  if (text(payload.sourceAttemptId).length > 255) {
     fail(400, "sourceAttemptId is too long")
   }
 }
@@ -223,17 +226,6 @@ export async function processGoogleFormsGradeSubmission(request) {
   if (enrollmentPeriods.length !== 1 || !text(enrollmentPeriods[0]?.level)) {
     fail(422, "Student must have exactly one active, leveled enrollment in the configured school year")
   }
-  const sourceAttemptId = text(payload.sourceAttemptId) || crypto
-    .createHash("sha256")
-    .update(JSON.stringify([
-      text(payload.eaglesId),
-      text(payload.title),
-      submittedAt,
-      Number(payload.score),
-      payload.maxScore === undefined || payload.maxScore === null || payload.maxScore === "" ? null : Number(payload.maxScore),
-    ]))
-    .digest("hex")
-
   const record = await saveGradeRecord(student.id, {
     className: enrollmentPeriods[0].level,
     level: enrollmentPeriods[0].level,
@@ -244,7 +236,7 @@ export async function processGoogleFormsGradeSubmission(request) {
     submittedAt,
     score: Number(payload.score),
     maxScore: payload.maxScore === undefined || payload.maxScore === null || payload.maxScore === "" ? null : Number(payload.maxScore),
-    sourceAttemptId,
+    sourceAttemptId: text(payload.sourceAttemptId),
     sourceSystem: "google-forms",
     sourceOriginLabel: "Google Forms",
     sourceOriginHost: null,
