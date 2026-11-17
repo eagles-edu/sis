@@ -804,6 +804,8 @@ test("admin Library is a protected physical page under Administration without ch
   assert.match(admin, /parentElement\?\.classList\.toggle\("expanded", expanded\)/)
   for (const token of ["Full flattened review", "Largest dupe", "Legacy source", "open_review", "New canonical", "Horizontal split", "Vertical split", "Lock pane scroll", "Save canonical", "Assign merge", "data-review-field", "data-vocabulary-field", "data-canonical-select", "dictionaryBuilderPending", "snapshotEntryId", "local Library media"]) assert.match(admin, new RegExp(token))
   assert.match(admin, /library-review-compare\$\{comparison \? " is-vertical" : " is-single"\}/)
+  assert.match(admin, /const builderSourceId = item\?\.entryId \|\| \(editable && item\?\.id !== "new-canonical" \? "new-canonical" : item\?\.id \|\| ""\)/)
+  assert.match(admin, /data-review-source-id="\$\{esc\(builderSourceId\)\}"/)
   assert.match(sharedVocabularyEditor, /<span class="chip chip-warn">Legacy<\/span>/)
   assert.match(admin, /selectedQueueItem = refreshed \|\| \(selectFirst \? queueItems\[0\] : null\) \|\| null/)
   assert.match(libraryReviewWorkbench, /is-sidebar-collapsed/)
