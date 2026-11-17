@@ -59,7 +59,7 @@
 
 ## Student Library
 
-- [ ] Trace student Library access, New Words entry, draft save, submission, review, and result display.
+- [x] Trace student Library access, New Words entry, draft save, submission, review, and result display. [KA-042; dev source trace: `server/student-admin-routes.mjs`, `src/modules/admin/student-new-words.mjs`, `src/modules/admin/library-corpus.mjs`, `web-asset/student/library.html`, and `web-asset/admin/library-admin.html`; authenticated save/reload/edit coverage is recorded at KA-012. Approval and post-review student result are traced in source but are not covered together by an authenticated end-to-end test; retained as a test gap.]
 - [ ] Reproduce and fix verified failures in the student Library lifecycle.
 - [x] Verify formatted definitions survive save and reload. [KA-012]
 - [x] Verify repeat save is idempotent and synthetic cleanup can be repeated. [KA-012]
