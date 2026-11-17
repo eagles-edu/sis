@@ -4540,6 +4540,7 @@ test("assignments page uses level tiles, itemized exercise links, and completion
     assert.match(rowText, /Week 8 Starter Pack/i)
     assert.match(rowText, /0\/1 done/i)
     assert.equal(assignmentTemplatesApi.list().length, 1)
+    assert.equal(assignmentTemplatesApi.list()[0]?.eaglesId, "SIS-001")
   })
 
   const draftDoneCheckbox = document.querySelector("#assignmentItemRows input[type='checkbox']")

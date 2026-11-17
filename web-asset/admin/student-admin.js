@@ -12155,6 +12155,9 @@
             normalizeText(student?.id) === selectedStudentId ||
             normalizeText(student?.eaglesId) === selectedStudentId,
         );
+        if (selectedStudentId && !normalizeText(selectedStudent?.eaglesId)) {
+          throw new Error("The selected student is no longer available. Reload the student list before saving.");
+        }
         return {
           id: normalizeText(state.assignmentDraft?.id),
           assignmentTitle: normalizeText(document.getElementById("assignTitle").value),
@@ -12162,8 +12165,8 @@
           assignedAt: normalizeText(document.getElementById("assignAssignedAt").value),
           dueAt: normalizeText(document.getElementById("assignDueAt").value),
           level,
-          eaglesId: normalizeText(selectedStudent?.id || selectedStudentId),
-          studentRefId: normalizeText(selectedStudent?.id || selectedStudentId),
+          eaglesId: normalizeText(selectedStudent?.eaglesId),
+          studentRefId: normalizeText(selectedStudent?.id),
           studentEaglesId: normalizeText(selectedStudent?.eaglesId || ""),
           message: normalizeText(document.getElementById("assignMessage").value),
           items,
@@ -15436,9 +15439,11 @@
           form.dueAt || nextSundayIsoDate(form.assignedAt || localIsoDate());
         let recipients = [];
 
-        if (form.eaglesId) {
+        if (form.studentRefId || form.eaglesId) {
           const selectedStudent = source.find(
-            (entry) => normalizeText(entry.id) === form.eaglesId,
+            (entry) =>
+              normalizeText(entry.id) === form.studentRefId ||
+              normalizeText(entry.eaglesId) === form.eaglesId,
           );
           recipients = assignmentRecipientsForStudent(selectedStudent);
         } else if (targetLevel) {
