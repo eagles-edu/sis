@@ -60,7 +60,7 @@
 ## Student Library
 
 - [x] Trace student Library access, New Words entry, draft save, submission, review, and result display. [KA-042; dev source trace: `server/student-admin-routes.mjs`, `src/modules/admin/student-new-words.mjs`, `src/modules/admin/library-corpus.mjs`, `web-asset/student/library.html`, and `web-asset/admin/library-admin.html`; authenticated save/reload/edit coverage is recorded at KA-012. Approval and post-review student result are traced in source but are not covered together by an authenticated end-to-end test; retained as a test gap.]
-- [ ] Reproduce and fix verified failures in the student Library lifecycle.
+- [x] Reproduce and fix verified failures in the student Library lifecycle. [KA-043; dev `.env.dev` authenticated browser regression reproduced a 400 New Words save that had already changed its linked pending Library contribution; validation and save now complete before contribution refresh. The regression passes for rejected input, valid retry refresh, and cleanup in `test/student-news-library-lifecycle.playwright.spec.mjs`; ESLint passes. Separate `test/student-admin.spec.mjs`: 162/163 passed; its final cleanup failed, changed the tracked dev config (restored from Git), and removed the pre-existing untracked `config/sis-config.test.json`, for which no local backup was found.]
 - [x] Verify formatted definitions survive save and reload. [KA-012]
 - [x] Verify repeat save is idempotent and synthetic cleanup can be repeated. [KA-012]
 - [x] Verify New Words forms omit admin-only Dictionary Builder, origin-analysis, and transitivity controls. [KA-012]

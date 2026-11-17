@@ -9409,8 +9409,9 @@ async function handleStudentApiRequest(request, response, pathname, url) {
 
   if (method === "PUT" && pathname === STUDENT_NEW_WORDS_PATH) {
     const payload = await parseBody(request)
+    const result = await saveStudentNewWords(studentRefId, payload?.items)
     await refreshStudentLibraryContributions(studentRefId, normalizeText(session?.eaglesId || session?.username), payload?.items)
-    sendJson(response, 200, await saveStudentNewWords(studentRefId, payload?.items))
+    sendJson(response, 200, result)
     return true
   }
 

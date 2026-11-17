@@ -179,6 +179,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
   const consoleErrors = []
   const requestFailures = []
   let expectedForbiddenConsoleErrors = 0
+  let expectedBadRequestConsoleErrors = 0
   t.after(async () => {
     const cleanupErrors = []
     const attempt = async (operation) => {
@@ -277,6 +278,32 @@ test("authenticated student News and New Words saves, Library visibility, week-s
       select: { id: true },
     })
     newWordsFixtureIds.push(invalidLegacyWord.id)
+    const refreshOrderEnglish = `libraryrefreshorder${alphaStamp}`
+    const refreshOrderWord = await prisma.studentNewWord.create({
+      data: {
+        studentRefId,
+        englishKey: refreshOrderEnglish,
+        partOfSpeech: "noun",
+        english: refreshOrderEnglish,
+        vietnamese: "từ kiểm thử",
+        syllabication: refreshOrderEnglish,
+        definition: "Synthetic word for failed-save contribution isolation.",
+      },
+      select: { id: true },
+    })
+    newWordsFixtureIds.push(refreshOrderWord.id)
+    const refreshOrderContribution = await prisma.libraryContribution.create({
+      data: {
+        studentRefId,
+        contributorName: STUDENT.user,
+        sourceKind: "student_new_words",
+        sourceId: refreshOrderWord.id,
+        payloadJson: libraryPayload(refreshOrderEnglish, "Synthetic word for failed-save contribution isolation."),
+        status: "pending_review",
+      },
+      select: { id: true },
+    })
+    newsContributionIds.push(refreshOrderContribution.id)
     reportId = `news-library-report-${stamp}`
     await createNewsFixture(prisma, studentRefId, stamp, reportWords)
     lifecycleFixtures.push(...await createLibraryLifecycleFixtures(prisma, studentRefId, stamp))
@@ -286,6 +313,10 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     page = await context.newPage()
     page.on("console", (message) => {
       if (message.type() !== "error") return
+      if (expectedBadRequestConsoleErrors > 0 && /400 \(Bad Request\)/u.test(message.text())) {
+        expectedBadRequestConsoleErrors -= 1
+        return
+      }
       if (expectedForbiddenConsoleErrors > 0 && /403 \(Forbidden\)/u.test(message.text())) {
         expectedForbiddenConsoleErrors -= 1
         return
@@ -298,6 +329,29 @@ test("authenticated student News and New Words saves, Library visibility, week-s
       if (!optionalWidgetAbort) requestFailures.push(`${request.method()} ${request.url()} ${failure}`)
     })
     await loginStudent(page)
+    expectedBadRequestConsoleErrors += 1
+    const rejectedDraftSave = await page.evaluate(async (wordId) => {
+      const currentResponse = await fetch("/api/student/new-words", { credentials: "include" })
+      const current = await currentResponse.json()
+      if (!currentResponse.ok) throw new Error(`New Words load failed: HTTP ${currentResponse.status}`)
+      const items = current.items.map((word) => word.id === wordId ? { ...word, syllabication: "not-valid" } : word)
+      const response = await fetch("/api/student/new-words", { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items }) })
+      return { status: response.status, body: await response.json() }
+    }, refreshOrderWord.id)
+    assert.equal(rejectedDraftSave.status, 400, "authoritative validation rejects the invalid New Words draft")
+    const unchangedPendingContribution = await prisma.libraryContribution.findUnique({ where: { id: refreshOrderContribution.id }, select: { payloadJson: true } })
+    assert.equal(unchangedPendingContribution?.payloadJson?.syllabication, refreshOrderEnglish, "a rejected New Words save does not refresh its pending Library contribution")
+    const validRetry = await page.evaluate(async (wordId) => {
+      const currentResponse = await fetch("/api/student/new-words", { credentials: "include" })
+      const current = await currentResponse.json()
+      if (!currentResponse.ok) throw new Error(`New Words reload failed: HTTP ${currentResponse.status}`)
+      const items = current.items.map((word) => word.id === wordId ? { ...word, vietnamese: "từ kiểm thử đã lưu" } : word)
+      const response = await fetch("/api/student/new-words", { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items }) })
+      return { status: response.status, body: await response.json() }
+    }, refreshOrderWord.id)
+    assert.equal(validRetry.status, 200, "a valid retry persists New Words after the rejected draft")
+    const refreshedPendingContribution = await prisma.libraryContribution.findUnique({ where: { id: refreshOrderContribution.id }, select: { payloadJson: true } })
+    assert.equal(refreshedPendingContribution?.payloadJson?.vietnamese, "từ kiểm thử đã lưu", "a valid save still refreshes its pending Library contribution")
     await page.goto(`${ORIGIN}/student/library.html?apiOrigin=${encodeURIComponent(ORIGIN)}`, { waitUntil: "domcontentloaded" })
     await page.locator("#studentLibraryAddOneBtn").click()
     assert.equal(await page.locator("[data-vocabulary-dictionary-builder], [data-dictionary-builder-open-sources], [data-dictionary-builder-source-leds], [data-vocabulary-origin-analysis], [data-vocabulary-transitivity-check]").count(), 0, "student New Words rows do not render admin-only Dictionary Builder, origin, or transitivity controls")
@@ -505,6 +559,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
       const refreshed = await prisma.libraryContribution.findUnique({ where: { id: fixture.contributionId }, select: { payloadJson: true } })
       assert.equal(refreshed?.payloadJson?.vietnamese, `${fixture.label} edited`)
     }
+    assert.equal(expectedBadRequestConsoleErrors, 0, "the expected invalid-save response is the only ignored bad-request console message")
     assert.deepEqual(consoleErrors, [], `browser console errors: ${consoleErrors.join(" | ")}`)
     assert.deepEqual(requestFailures, [], `browser request failures: ${requestFailures.join(" | ")}`)
     await page.screenshot({ path: "/tmp/student-news-library-lifecycle.png", fullPage: true })
