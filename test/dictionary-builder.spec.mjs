@@ -410,7 +410,7 @@ test("Dictionary Builder coalesces concurrent retries for one snapshot provider"
     return { provider: "ldoce", status: "available", fields: { definition: "to praise" }, entries: [], media: [], datumStatus: { definition: { status: "available" } } }
   }
   const entry = { id: "entry-retry-single-flight", english: "commend", partOfSpeech: "verb" }
-  const snapshot = await previewDictionaryBuilder(entry, { ownerKey: "session-retry-single-flight", fetcher, rankedSources: [{ provider: "ldoce", score: 99 }] })
+  const snapshot = await previewDictionaryBuilder(entry, { ownerKey: "session-retry-single-flight", fetcher, rankedSources: [{ provider: "ldoce", score: 99 }], rankedSourcesByDatum: { definition: [{ provider: "ldoce", score: 99 }] } })
   const results = await Promise.all([
     retryDictionaryBuilderSnapshot(snapshot.id, entry, { ownerKey: "session-retry-single-flight", provider: "ldoce", datum: "definition", fetcher }),
     retryDictionaryBuilderSnapshot(snapshot.id, entry, { ownerKey: "session-retry-single-flight", provider: "ldoce", datum: "definition", fetcher }),

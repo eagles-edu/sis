@@ -70,7 +70,7 @@ test("Builder renders every datum with a manual path and POS dropdowns", () => {
   assert.match(workbench, /scheduleDictionaryBuilderPolling = \(snapshot, pane, sourceId, dialog, selectedCandidates, activeTab, providerIndex = 0, delay = 10000\)[\s\S]*retryableProviders/, "The server-side retry loop is idempotent and independent of source tabs")
   assert.match(workbench, /openSourceProbeTimers\.has\(snapshot\.id\)/, "Polling is single-flight for each preview")
   assert.match(workbench, /if \(providerRetryInFlight\.has\(retryKey\)\)[\s\S]*already has a probe running/, "Manual retry reports an existing provider probe instead of overlapping it")
-  assert.match(workbench, /renderDictionaryBuilder\(refreshed, pane, sourceId, structuredClone\(selectedCandidates\), datum/, "Provider retry preserves candidate selections and the active datum")
+  assert.match(workbench, /renderDictionaryBuilder\(refreshed, pane, sourceId, dialog\.dictionaryBuilderSelections \|\| selectedCandidates, dialog\.querySelector\('\[data-dictionary-builder-tab\]\[aria-selected="true"\]'\)\?\.dataset\.dictionaryBuilderTab \|\| datum/, "Provider retry preserves candidate selections and the active datum")
   assert.match(workbench, /source tab was blocked[\s\S]*Retry provider/, "Popup blocking retains an explicit retry path")
   assert.match(workbench, /if \(response\.status === 404\)[\s\S]*rebuilding it with the current selections[\s\S]*refreshedSnapshot\.id/, "Apply refreshes a stale in-memory preview once")
   assert.match(workbench, /retryableProviders = INITIAL_SOURCE_PROVIDER_ORDER\.filter/, "ET and TH remain in the shared server-side retry path")
