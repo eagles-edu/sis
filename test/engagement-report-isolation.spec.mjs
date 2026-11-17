@@ -31,7 +31,6 @@ test("report engagement enforces account scope and records one acknowledgement w
     "../src/infra/db/prisma-client.mjs"
   )
   const { hashScryptPassword } = await import("../src/modules/admin/users.mjs")
-  const { listPerformanceEngagementData } = await import("../src/modules/admin/performance-engagement.mjs")
   const { startExerciseMailer } = await import("../server/exercise-mailer.mjs")
   const { closeStudentAdminRuntimeResources } = await import("../server/student-admin-routes.mjs")
   const prisma = await getSharedPrismaClient()
@@ -41,6 +40,7 @@ test("report engagement enforces account scope and records one acknowledgement w
   const unrelatedParentId = `KA-UP-${stamp}`
   const studentEaglesId = `KA-S-${stamp}`
   const unrelatedStudentEaglesId = `KA-US-${stamp}`
+  const adminUsername = `ka-admin-${stamp}`
   const recipientEmail = `ka-engagement-${stamp}@example.invalid`
   const parentEmail = `ka-parent-recipient-${stamp}@example.invalid`
   let targetStudent = null
@@ -50,6 +50,7 @@ test("report engagement enforces account scope and records one acknowledgement w
   let unrelatedParentAccount = null
   let studentAccount = null
   let unrelatedStudentAccount = null
+  let adminAccount = null
   let targetLink = null
   let unrelatedLink = null
   let report = null
@@ -124,6 +125,13 @@ test("report engagement enforces account scope and records one acknowledgement w
         studentRefId: unrelatedStudent.id,
       },
     })
+    adminAccount = await prisma.adminUser.create({
+      data: {
+        username: adminUsername,
+        role: "admin",
+        passwordHash: hashScryptPassword(password),
+      },
+    })
     report = await prisma.parentClassReport.create({
       data: {
         studentRefId: targetStudent.id,
@@ -182,6 +190,33 @@ test("report engagement enforces account scope and records one acknowledgement w
     })
     const parentCookie = await login("/api/parent/auth/login", { parentsId: parentId, password })
     const studentCookie = await login("/api/student/auth/login", { eaglesId: studentEaglesId, password })
+    const adminCookie = await login("/api/admin/auth/login", { username: adminUsername, password })
+    const engagementPath = "/api/admin/performance-engagement?dateFrom=2026-11-17&dateTo=2026-11-17"
+
+    const anonymousEngagement = await fetch(`${origin}${engagementPath}`)
+    const parentEngagement = await fetch(`${origin}${engagementPath}`, { headers: { cookie: parentCookie } })
+    const studentEngagement = await fetch(`${origin}${engagementPath}`, { headers: { cookie: studentCookie } })
+    assert.equal(anonymousEngagement.status, 401)
+    assert.equal(parentEngagement.status, 401)
+    assert.equal(studentEngagement.status, 401)
+
+    const emptyEngagementResponse = await fetch(
+      `${origin}/api/admin/performance-engagement?dateFrom=2099-01-01&dateTo=2099-01-01`,
+      { headers: { cookie: adminCookie } },
+    )
+    assert.equal(emptyEngagementResponse.status, 200)
+    const emptyEngagement = await emptyEngagementResponse.json()
+    assert.equal(emptyEngagement.totalReports, 0)
+    assert.deepEqual(emptyEngagement.rows, [])
+
+    const beforeAcknowledgmentResponse = await fetch(`${origin}${engagementPath}`, {
+      headers: { cookie: adminCookie },
+    })
+    assert.equal(beforeAcknowledgmentResponse.status, 200)
+    const beforeAcknowledgment = await beforeAcknowledgmentResponse.json()
+    const beforeReportRows = beforeAcknowledgment.rows.filter((row) => row.reportId === report.id)
+    assert.ok(beforeReportRows.length >= 2)
+    assert.ok(beforeReportRows.every((row) => row.acknowledged !== "yes"))
 
     const parentDenied = await fetch(`${origin}/api/parent/reports/${report.id}/acknowledge`, {
       method: "POST",
@@ -257,7 +292,11 @@ test("report engagement enforces account scope and records one acknowledgement w
     assert.notEqual(opened[0].ipHash, "203.0.113.15")
     assert.equal(await prisma.parentClassReportEvent.count({ where: { reportId: `missing-${stamp}` } }), 0)
 
-    const engagement = await listPerformanceEngagementData({ dateFrom: "2026-11-17", dateTo: "2026-11-17" })
+    const engagementResponse = await fetch(`${origin}${engagementPath}`, {
+      headers: { cookie: adminCookie },
+    })
+    assert.equal(engagementResponse.status, 200)
+    const engagement = await engagementResponse.json()
     const reportRows = engagement.rows.filter((row) => row.reportId === report.id)
     const parentRow = reportRows.find((row) => row.reviewed === "parent")
     const studentRow = reportRows.find((row) => row.reviewed === "student")
@@ -288,6 +327,7 @@ test("report engagement enforces account scope and records one acknowledgement w
     if (report) await attempt(() => prisma.parentClassReportEvent.deleteMany({ where: { reportId: report.id } }))
     if (report) await attempt(() => prisma.brevoEmailDelivery.deleteMany({ where: { reportId: report.id } }))
     if (report) await attempt(() => prisma.parentClassReport.deleteMany({ where: { id: report.id } }))
+    if (adminAccount) await attempt(() => prisma.adminUser.deleteMany({ where: { id: adminAccount.id } }))
     if (targetProfile) await attempt(() => prisma.studentProfile.deleteMany({ where: { id: targetProfile.id } }))
     if (studentAccount) await attempt(() => prisma.studentPortalAccount.deleteMany({ where: { id: studentAccount.id } }))
     if (unrelatedStudentAccount) await attempt(() => prisma.studentPortalAccount.deleteMany({ where: { id: unrelatedStudentAccount.id } }))

@@ -9788,18 +9788,22 @@ export async function handleStudentAdminRequest(request, response) {
   }
 
   if (method === "GET" && pathname === "/api/admin/performance-engagement") {
-    const session = await requireAuthenticatedSession(request, response)
-    const role = normalizeLower(session?.role)
-    if (role && role !== "admin" && role !== "teacher") {
-      const error = new Error("Forbidden")
-      error.statusCode = 403
-      throw error
+    try {
+      const session = await requireAuthenticatedSession(request, response)
+      const role = normalizeLower(session?.role)
+      if (role !== "admin" && role !== "teacher") {
+        const error = new Error("Forbidden")
+        error.statusCode = 403
+        throw error
+      }
+      const payload = await listPerformanceEngagementData({
+        dateFrom: normalizeText(url.searchParams.get("dateFrom") || ""),
+        dateTo: normalizeText(url.searchParams.get("dateTo") || ""),
+      })
+      sendJson(response, 200, payload)
+    } catch (error) {
+      withError(response, request, error)
     }
-    const payload = await listPerformanceEngagementData({
-      dateFrom: normalizeText(url.searchParams.get("dateFrom") || ""),
-      dateTo: normalizeText(url.searchParams.get("dateTo") || ""),
-    })
-    sendJson(response, 200, payload)
     return true
   }
 
