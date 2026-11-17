@@ -414,6 +414,29 @@ systemctl --user daemon-reload
 systemctl --user enable --now sis-engagement-monitor-dev.timer
 ```
 
+## Student Library workflow monitor (dev)
+
+Run the authenticated synthetic Library check with:
+
+```bash
+npm run monitor:library:dev
+```
+
+The monitor is pinned to `.env.dev` / `development` and `http://127.0.0.1:8788`. It checks the SIS health endpoint, the `sis_dev` database, session Redis, the local CMU pronunciation dictionary, authenticated student and admin Library access, a student submission, admin approval, and the student's canonical result. Merriam-Webster key presence is reported as configuration gauges; provider keys and provider responses are never emitted. It uses the exact configured `mark001` student account and configured dev admin account without printing either credential.
+
+The submission uses a random lowercase word and source ID. Cleanup removes only the matching contribution and its revisions, then removes its canonical entry only when that contribution was found and the entry's creator matches the configured admin. The check fails if cleanup cannot be verified. Open-review count and oldest pending/legacy review age are measured before the synthetic submission.
+
+The monitor atomically writes fixed `environment="dev"` gauges to `runtime-data/prometheus/library-workflow-dev.prom`. It records access checks, save/review checks, queue count and age, API/database/Redis/CMUdict availability, optional Merriam-Webster key configuration, cleanup status, and last success time. No account, entry, contribution, source, request, cookie, or credential values are metric labels. Prometheus evaluates local alerts for missing monitor reports, access/save/review failures, queue age over 24 hours, required dependency failures, and cleanup failures. The active pared monitoring profile has no Alertmanager receiver, so alerts are visible locally but are not externally delivered.
+
+To schedule the check every five minutes for the current user:
+
+```bash
+install -D -m 0644 ops/monitoring/systemd/sis-library-monitor-dev.service "$HOME/.config/systemd/user/sis-library-monitor-dev.service"
+install -D -m 0644 ops/monitoring/systemd/sis-library-monitor-dev.timer "$HOME/.config/systemd/user/sis-library-monitor-dev.timer"
+systemctl --user daemon-reload
+systemctl --user enable --now sis-library-monitor-dev.timer
+```
+
 ## Approved telemetry additions
 
 The following additions are approved for the test mirror. They are deliberately limited to the student-write incident path and safe operational metadata. They must not expose student data, credentials, session data, request bodies, SQL text, or query parameters.

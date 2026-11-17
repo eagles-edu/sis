@@ -67,6 +67,64 @@ groups:
         annotations:
           summary: Synthetic parent profile workflow monitor failed in dev
 
+  - name: sis-library-workflow-dev
+    rules:
+      - alert: DevLibraryWorkflowMonitorStale
+        expr: absent(sis_library_workflow_last_check_timestamp_seconds{environment="dev"}) or time() - sis_library_workflow_last_check_timestamp_seconds{environment="dev"} > 600
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev Library workflow monitor has not reported for ten minutes
+
+      - alert: DevLibraryAccessUnavailable
+        expr: sis_library_student_access_available{environment="dev"} == 0 or sis_library_admin_access_available{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Authenticated dev Library access check failed
+
+      - alert: DevLibrarySaveCheckFailed
+        expr: sis_library_save_check_success{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Synthetic dev Library save check failed
+
+      - alert: DevLibraryReviewCheckFailed
+        expr: sis_library_review_check_success{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Synthetic dev Library review or student result check failed
+
+      - alert: DevLibraryOldReviewQueue
+        expr: sis_library_oldest_open_review_age_seconds{environment="dev"} > 86400
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: A dev Library contribution has waited for review for more than 24 hours
+
+      - alert: DevLibraryDependencyUnavailable
+        expr: sis_library_api_available{environment="dev"} == 0 or sis_library_database_available{environment="dev"} == 0 or sis_library_redis_available{environment="dev"} == 0 or sis_library_cmu_dictionary_available{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A required dev Library dependency is unavailable
+
+      - alert: DevLibrarySyntheticCleanupFailed
+        expr: sis_library_cleanup_success{environment="dev"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: Dev Library workflow monitor could not clean up its synthetic record
+
   - name: sis-test-mirror
     rules:
       - alert: TestMirrorPublicAdminDown

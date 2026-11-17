@@ -79,6 +79,7 @@
     "worker:async-side-effects": "node tools/async-side-effects-worker.mjs",
     "monitor:parent-profile:dev": "SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development node tools/monitor-parent-profile-workflow.mjs",
     "monitor:engagement:dev": "SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development node --env-file=.env.dev tools/monitor-engagement-workflows.mjs",
+    "monitor:library:dev": "SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development node --env-file=.env.dev tools/monitor-library-workflow.mjs",
     "test:runtime:sync-restart": "tools/sync-and-restart-test-runtime.sh full",
     "test:runtime:sync-restart:precompress": "tools/sync-and-precompress-test-runtime.sh",
     "audit:prod": "npm audit --omit=dev --audit-level=high",

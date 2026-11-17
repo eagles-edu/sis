@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh SIS dev Library workflow health metrics
+
+[Timer]
+OnBootSec=90s
+OnUnitActiveSec=5m
+AccuracySec=10s
+Persistent=true
+Unit=sis-library-monitor-dev.service
+
+[Install]
+WantedBy=timers.target

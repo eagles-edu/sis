@@ -85,3 +85,4 @@ test/e2e/index.html
 /runtime-data/prometheus/parent-profile-workflow.prom
 /runtime-data/prometheus/async-side-effects-worker-dev.prom
 /runtime-data/prometheus/engagement-workflows-dev.prom
+/runtime-data/prometheus/library-workflow-dev.prom
