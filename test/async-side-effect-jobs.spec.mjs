@@ -7,58 +7,69 @@ import test from "node:test"
 const jobsSource = await fs.readFile(new URL("../src/modules/async/side-effect-jobs.mjs", import.meta.url), "utf8")
 
 test("configured mirror runtimes never fall back to volatile side-effect jobs", () => {
-  assert.match(jobsSource, /normalizeLower\(process\.env\.NODE_ENV\) === "test" && !normalizeText\(process\.env\.DATABASE_URL\)/)
+  assert.match(jobsSource, /normalizeLower\(process\.env\.NODE_ENV\) === "test" && \["memory", "in-memory"\]\.includes\(backend\)/)
+  assert.match(jobsSource, /useVolatileTestStorage\(\) \|\| !String\(process\.env\.DATABASE_URL \|\| ""\)\.trim\(\)/)
   assert.match(jobsSource, /status: ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING,[\s\S]*?lockedAt: \{ lte: staleBefore \}/)
   assert.match(jobsSource, /status: ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED,[\s\S]*?lockedAt: null,[\s\S]*?lockedBy: null/)
 })
 
-test("async side effect jobs dedupe, revive, and claim in memory mode", async () => {
-  process.env.NODE_ENV = "test"
+test("async side effect jobs dedupe, revive, and claim in explicit test memory mode", async () => {
+  const previousNodeEnv = process.env.NODE_ENV
   const previousDatabaseUrl = process.env.DATABASE_URL
-  process.env.DATABASE_URL = ""
-  const mod = await import(`../src/modules/async/side-effect-jobs.mjs?memory=${Date.now()}`)
+  const previousBackend = process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND
+  process.env.NODE_ENV = "test"
+  process.env.DATABASE_URL = "postgresql://127.0.0.1:5432/sis-test"
+  process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND = "memory"
 
-  const first = await mod.enqueueAsyncSideEffectJob(
-    mod.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
-    {
-      queueId: "queue-01",
-      announcementPayload: {
-        recipients: ["parent@example.com"],
-        assignmentTitle: "Week 1",
+  try {
+    const mod = await import(`../src/modules/async/side-effect-jobs.mjs?memory=${Date.now()}`)
+    const first = await mod.enqueueAsyncSideEffectJob(
+      mod.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
+      {
+        queueId: "queue-01",
+        announcementPayload: {
+          recipients: ["parent@example.com"],
+          assignmentTitle: "Week 1",
+        },
       },
-    },
-    { dedupeKey: "queue-01" }
-  )
-  assert.equal(first.status, mod.ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED)
+      { dedupeKey: "queue-01" }
+    )
+    assert.equal(first.status, mod.ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED)
 
-  const claimed = await mod.claimAsyncSideEffectJobs({
-    jobTypes: [mod.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL],
-    take: 5,
-    workerId: "test-worker",
-  })
-  assert.equal(claimed.length, 1)
-  assert.equal(claimed[0].id, first.id)
-  assert.equal(claimed[0].status, mod.ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING)
+    const claimed = await mod.claimAsyncSideEffectJobs({
+      jobTypes: [mod.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL],
+      take: 5,
+      workerId: "test-worker",
+    })
+    assert.equal(claimed.length, 1)
+    assert.equal(claimed[0].id, first.id)
+    assert.equal(claimed[0].status, mod.ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING)
 
-  const completed = await mod.completeAsyncSideEffectJob(first.id, { ok: true })
-  assert.equal(completed.status, mod.ASYNC_SIDE_EFFECT_JOB_STATUS_SUCCEEDED)
+    const completed = await mod.completeAsyncSideEffectJob(first.id, { ok: true })
+    assert.equal(completed.status, mod.ASYNC_SIDE_EFFECT_JOB_STATUS_SUCCEEDED)
 
-  const revived = await mod.enqueueAsyncSideEffectJob(
-    mod.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
-    {
-      queueId: "queue-01",
-      announcementPayload: {
-        recipients: ["parent@example.com"],
-        assignmentTitle: "Week 1",
+    const revived = await mod.enqueueAsyncSideEffectJob(
+      mod.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
+      {
+        queueId: "queue-01",
+        announcementPayload: {
+          recipients: ["parent@example.com"],
+          assignmentTitle: "Week 1",
+        },
       },
-    },
-    { dedupeKey: "queue-01" }
-  )
-  assert.equal(revived.id, first.id)
-  assert.equal(revived.status, mod.ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED)
+      { dedupeKey: "queue-01" }
+    )
+    assert.equal(revived.id, first.id)
+    assert.equal(revived.status, mod.ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED)
+  } finally {
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = previousNodeEnv
+    if (previousDatabaseUrl === undefined) delete process.env.DATABASE_URL
+    else process.env.DATABASE_URL = previousDatabaseUrl
+    if (previousBackend === undefined) delete process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND
+    else process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND = previousBackend
+  }
 
-  if (previousDatabaseUrl === undefined) delete process.env.DATABASE_URL
-  else process.env.DATABASE_URL = previousDatabaseUrl
 })
 
 test("report-card pdf worker writes the generated PDF to disk", async () => {

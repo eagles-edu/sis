@@ -7,7 +7,8 @@ dotenv.config({ path: ".env.test", override: true })
 process.env.NODE_ENV = "test"
 process.env.SIS_ENV_FILE = ".env.test"
 process.env.DOTENV_CONFIG_PATH = ".env.test"
-process.env.DATABASE_URL = ""
+process.env.STUDENT_ADMIN_NOTIFY_QUEUE_BACKEND = "memory"
+process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND = "memory"
 
 function syntheticStudentNumber(stamp) {
   return 900000 + (Number.parseInt(stamp.replaceAll("-", "").slice(0, 8), 16) % 100000)
@@ -27,6 +28,7 @@ test("assignment reminder engagement keeps one stable dispatch across repeated r
   const templateId = `reminder-template-${stamp}`
   let studentId = ""
   let templateCreated = false
+  let expectedQueueId = ""
   const queueIds = new Set()
 
   try {
@@ -79,10 +81,25 @@ test("assignment reminder engagement keeps one stable dispatch across repeated r
       include: { dispatch: true },
     })
     const dispatchKey = [templateId, studentId, "student", "assignment-created", "2026-08-20", recipient].join(":")
-    const expectedQueueId = reminderQueueId(dispatchKey)
+    expectedQueueId = reminderQueueId(dispatchKey)
     assert.equal(engagement?.trackingToken.length, 64)
     assert.equal(engagement?.dispatch?.queueId, expectedQueueId)
     queueIds.add(expectedQueueId)
+
+    const { listQueuedAnnouncements } = await import("../src/modules/admin/notification-queue.mjs")
+    const queued = await listQueuedAnnouncements({ queueType: "announcement", take: 20 })
+    const syntheticQueue = queued.items.find((entry) => entry.id === expectedQueueId)
+    assert.deepEqual(syntheticQueue?.recipients, [recipient])
+    assert.match(syntheticQueue?.recipients[0] || "", /@example\.invalid$/u)
+
+    const { claimAsyncSideEffectJobs } = await import("../src/modules/async/side-effect-jobs.mjs")
+    const claimedJobs = await claimAsyncSideEffectJobs({
+      jobTypes: ["announcement-email"],
+      take: 20,
+      workerId: `synthetic-isolation-${stamp}`,
+    })
+    const syntheticJob = claimedJobs.find((job) => job.dedupeKey === expectedQueueId)
+    assert.deepEqual(syntheticJob?.payloadJson?.announcementPayload?.recipients, [recipient])
   } finally {
     const cleanupErrors = []
     const attempt = async (operation) => {
@@ -114,6 +131,18 @@ test("assignment reminder engagement keeps one stable dispatch across repeated r
       await attempt(() => prisma.studentProfile.deleteMany({ where: { studentRefId: studentId } }))
       await attempt(() => prisma.student.deleteMany({ where: { id: studentId } }))
     }
+    await attempt(async () => {
+      const [studentsRemaining, templatesRemaining, dispatchesRemaining, engagementsRemaining, queueRowsRemaining, databaseJobsRemaining] = await Promise.all([
+        studentId ? prisma.student.count({ where: { id: studentId } }) : 0,
+        prisma.assignmentTemplate.count({ where: { id: templateId } }),
+        prisma.assignmentReminderDispatch.count({ where: { assignmentTemplateId: templateId } }),
+        prisma.assignmentReminderEngagement.count({ where: { dispatch: { assignmentTemplateId: templateId } } }),
+        queueIds.size ? prisma.adminNotificationQueue.count({ where: { id: { in: [...queueIds] } } }) : 0,
+        queueIds.size ? prisma.asyncSideEffectJob.count({ where: { jobType: "announcement-email", dedupeKey: { in: [...queueIds] } } }) : 0,
+      ])
+      const remaining = studentsRemaining + templatesRemaining + dispatchesRemaining + engagementsRemaining + queueRowsRemaining + databaseJobsRemaining
+      if (remaining) throw new Error(`Synthetic assignment reminder cleanup left ${remaining} database records`)
+    })
     await attempt(() => prisma.$disconnect())
     if (cleanupErrors.length) throw new AggregateError(cleanupErrors, "Synthetic assignment reminder cleanup failed")
   }

@@ -42,11 +42,19 @@ export const ASYNC_SIDE_EFFECT_JOB_STATUS_FAILED = "failed"
 
 const MEMORY_JOBS = []
 const DEFAULT_PROCESSING_LOCK_TIMEOUT_MS = 10 * 60 * 1000
-let SIDE_EFFECT_JOB_DB_DISABLED = !String(process.env.DATABASE_URL || "").trim()
+
+function useVolatileTestStorage() {
+  const backend = normalizeLower(process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND)
+  return normalizeLower(process.env.NODE_ENV) === "test" && ["memory", "in-memory"].includes(backend)
+}
+
+let SIDE_EFFECT_JOB_DB_DISABLED =
+  useVolatileTestStorage() || !String(process.env.DATABASE_URL || "").trim()
 let SIDE_EFFECT_JOB_DB_WARNED = false
 
 function allowVolatileUnitTestStorage() {
-  return normalizeLower(process.env.NODE_ENV) === "test" && !normalizeText(process.env.DATABASE_URL)
+  return normalizeLower(process.env.NODE_ENV) === "test" &&
+    (useVolatileTestStorage() || !normalizeText(process.env.DATABASE_URL))
 }
 
 function sideEffectPersistenceUnavailable() {
