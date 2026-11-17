@@ -107,20 +107,42 @@ test("parser keeps phrase class, phrase type, and phrase function distinct", () 
 })
 
 test("required online grammar failure is reported as unavailable and remains fail-closed", async () => {
-  await assert.rejects(
-    evaluateStudentNewsMinimumRequirements(basePayload(), {
-      validationConfig: {
-        grammarEngine: {
-          enabled: true,
-          endpoint: "http://127.0.0.1:1/v2/check",
-          timeoutMs: 1000,
+  const originalFetch = globalThis.fetch
+  const originalConsoleError = console.error
+  const originalConsoleWarn = console.warn
+  const rawProviderMarker = "RAW_LANGUAGE_TOOL_RESPONSE_AND_ENDPOINT_CREDENTIAL"
+  const logged = []
+  globalThis.fetch = async () => { throw new Error(rawProviderMarker) }
+  console.error = (...values) => logged.push(values.join(" "))
+  console.warn = (...values) => logged.push(values.join(" "))
+  try {
+    await assert.rejects(
+      evaluateStudentNewsMinimumRequirements(basePayload(), {
+        validationConfig: {
+          grammarEngine: {
+            enabled: true,
+            endpoint: "http://127.0.0.1:1/v2/check?key=endpoint-secret-sentinel",
+            timeoutMs: 1000,
+          },
         },
-      },
-    }),
-    (error) => error?.statusCode === 503
-      && error?.code === "STUDENT_NEWS_VALIDATION_UNAVAILABLE"
-      && error?.payload?.status === "unavailable"
-  )
+      }),
+      (error) => {
+        assert.equal(error?.statusCode, 503)
+        assert.equal(error?.code, "STUDENT_NEWS_VALIDATION_UNAVAILABLE")
+        assert.equal(error?.message, "Grammar validation is temporarily unavailable.")
+        assert.equal(error?.cause, undefined)
+        assert.equal(error?.payload?.status, "unavailable")
+        const responsePayload = { error: error.message, ...error.payload }
+        assert.doesNotMatch(JSON.stringify(responsePayload), /RAW_LANGUAGE_TOOL_RESPONSE_AND_ENDPOINT_CREDENTIAL|endpoint-secret-sentinel/u)
+        return true
+      }
+    )
+    assert.deepEqual(logged, [])
+  } finally {
+    globalThis.fetch = originalFetch
+    console.error = originalConsoleError
+    console.warn = originalConsoleWarn
+  }
 })
 
 test("sentence report covers grammar families with exact ranges and classification", () => {

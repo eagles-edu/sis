@@ -17,6 +17,8 @@ test("normalizes LanguageTool blocking and advisory matches", async () => {
           message: "Start with a capital letter",
           rule: { id: "UPPERCASE_SENTENCE_START", category: { id: "CASING" } },
           replacements: [{ value: "There" }],
+          context: { text: "RAW_PROVIDER_CONTEXT_SENTINEL" },
+          providerCredential: "RAW_PROVIDER_CREDENTIAL_SENTINEL",
           issueType: "grammar",
         },
         {
@@ -38,6 +40,7 @@ test("normalizes LanguageTool blocking and advisory matches", async () => {
     assert.equal(result.blockingIssues[0].ruleId, "UPPERCASE_SENTENCE_START")
     assert.deepEqual(result.advisoryIssues[0].replacements, ["no evidence of"])
     assert.equal(result.advisoryIssues[0].blocking, false)
+    assert.doesNotMatch(JSON.stringify(result), /RAW_PROVIDER_CONTEXT_SENTINEL|RAW_PROVIDER_CREDENTIAL_SENTINEL/u)
   } finally {
     globalThis.fetch = originalFetch
   }

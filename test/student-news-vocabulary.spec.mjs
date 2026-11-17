@@ -495,6 +495,49 @@ test("authoritative validator accepts CMU stress and Collegiate written division
   resetVocabularyDictionaryCacheForTest()
 })
 
+test("authoritative dictionary credentials and unmodeled response fields stay server-side", async () => {
+  const previousCollegiateKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  const previousConsoleLog = console.log
+  const previousConsoleWarn = console.warn
+  const key = "test-server-only-collegiate-key-sentinel"
+  const rawMarker = "RAW_MERRIAM_WEBSTER_RESPONSE_SENTINEL"
+  const requestedUrls = []
+  const logs = []
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = key
+  console.log = (...values) => logs.push(values.join(" "))
+  console.warn = (...values) => logs.push(values.join(" "))
+  resetVocabularyDictionaryCacheForTest()
+  try {
+    const result = await validateVocabularyEntry(
+      { english: "apple", syllabication: "AP-ple" },
+      {
+        fetchImpl: async (url) => {
+          requestedUrls.push(String(url))
+          return {
+            ok: true,
+            json: async () => [{
+              hwi: { hw: "ap*ple" },
+              rawProviderField: rawMarker,
+              meta: { credentialEcho: key },
+            }],
+          }
+        },
+      },
+    )
+    assert.deepEqual(result, { message: "", warning: "" })
+    assert.equal(requestedUrls.length, 1)
+    assert.equal(new URL(requestedUrls[0]).searchParams.get("key"), key)
+    assert.doesNotMatch(JSON.stringify(result), new RegExp(`${key}|${rawMarker}`, "u"))
+    assert.deepEqual(logs, [])
+  } finally {
+    if (previousCollegiateKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = previousCollegiateKey
+    console.log = previousConsoleLog
+    console.warn = previousConsoleWarn
+    resetVocabularyDictionaryCacheForTest()
+  }
+})
+
 test("authoritative syllable validation ignores MW pronunciation stress and uses only written division", async () => {
   process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
   resetVocabularyDictionaryCacheForTest()

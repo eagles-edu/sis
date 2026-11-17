@@ -1967,8 +1967,7 @@ async function buildStudentNewsLanguageReports(actionWhy, biasAssessment, config
     try {
       result = await checkTextWithLanguageTool(value, config.grammarEngine)
     } catch (error) {
-      const message = error instanceof Error ? error.message : "LanguageTool request failed"
-      const unavailable = new Error(`Grammar validation unavailable: ${message}`, { cause: error })
+      const unavailable = new Error("Grammar validation is temporarily unavailable.")
       unavailable.statusCode = 503
       unavailable.code = "STUDENT_NEWS_VALIDATION_UNAVAILABLE"
       unavailable.payload = {
