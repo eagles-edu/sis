@@ -29,7 +29,7 @@ const SKIP_REASON = !IS_DEV_RUN
 
 const NEWS_WORDS = [
   { partOfSpeech: "noun", english: "air-strike", vietnamese: "cuộc không kích", syllabication: "air-strike", definition: "An attack from aircraft.", esl: { countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "compound" } },
-  { partOfSpeech: "noun", english: "confederations", vietnamese: "các liên bang", syllabication: "con-fed-er-á-tions", definition: "Groups of states or organizations united for a shared purpose.", esl: { countability: "countable", physicalQuality: "abstract", grammaticalNumber: "plural", primaryClassification: "common" } },
+  { partOfSpeech: "noun", english: "computer", vietnamese: "máy tính", syllabication: "com-PUT-er", definition: "An electronic device for processing data.", esl: { countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "common" } },
   { partOfSpeech: "noun", english: "check-in", vietnamese: "thủ tục nhận phòng", syllabication: "check-in", definition: "The act of registering on arrival.", esl: { countability: "countable", physicalQuality: "abstract", grammaticalNumber: "singular", primaryClassification: "compound" } },
   { partOfSpeech: "adjective", english: "life-size", vietnamese: "kích thước thật", syllabication: "life-size", definition: "Having the same size as the real subject.", esl: { grammarClassification: { grammarSubtype: "attributive" } } },
   { partOfSpeech: "adverb", english: "step-by-step", vietnamese: "từng bước", syllabication: "step-by-step", definition: "Progressing one stage at a time.", esl: { grammarClassification: { grammarSubtype: "manner" } } },
@@ -262,7 +262,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
       select: { englishKey: true },
     })).map((word) => word.englishKey))
     const expectedSeedWords = NEWS_WORDS.filter((word) => !preexistingNewsWordKeys.has(word.english.toLocaleLowerCase("en-US")))
-    const pastedWord = expectedSeedWords.find((word) => word.english !== "confederations")
+    const pastedWord = expectedSeedWords.find((word) => word.english !== "computer")
     assert.ok(pastedWord, "at least one submittable News fixture word is new for the configured student")
     const reportWords = [pastedWord, ...NEWS_WORDS.filter((word) => word !== pastedWord)]
     const pastedWordEnglish = pastedWord.english
@@ -414,13 +414,31 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     const savedDraft = await prisma.studentNewsReport.findUnique({ where: { id: reportId }, select: { vocabularyJson: true, submissionState: true } })
     assert.equal(savedDraft?.submissionState, "draft")
     assert.equal(savedDraft?.vocabularyJson?.length, 5)
-    assert.equal(savedDraft?.vocabularyJson?.find((entry) => entry.english === "confederations")?.syllabication, "con-fed-er-á-tions")
+    assert.equal(savedDraft?.vocabularyJson?.find((entry) => entry.english === "computer")?.syllabication, "com-pút-er")
     assert.match(savedDraft?.vocabularyJson?.find((entry) => entry.english === pastedWordEnglish)?.definition || "", /\*\*bold\*\*[\s\S]*- first[\s\S]*\n[ ]{4}- \*nested\*/u)
     const adminReviewDrafts = await listStudentNewsReportsForReview({ status: "all", studentRefId })
     assert.equal(adminReviewDrafts.items.some((item) => item.id === reportId), false, "a persisted student draft stays out of the admin review list")
     const draftCalendarEvent = page.locator("#calendarGrid .fc-event-news-status").filter({ hasText: "DRAFT" }).first()
     await draftCalendarEvent.waitFor({ state: "visible", timeout: 10000 })
     assert.match(await draftCalendarEvent.getAttribute("title") || "", /Draft saved; not submitted for review\./u)
+
+    const computerSyllabication = page.locator('#newsVocabularyRows [data-news-vocabulary-row="2"] [data-vocabulary-field="syllabication"]')
+    await computerSyllabication.fill("com-PU-ter")
+    const invalidDivisionResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check", { timeout: 30000 })
+    await page.click("#checkBtn")
+    const invalidDivisionResult = await invalidDivisionResponse
+    const invalidDivisionBody = await invalidDivisionResult.json()
+    assert.equal(invalidDivisionResult.status(), 200, "an invalid authoritative division is saved with validation guidance")
+    assert.equal(invalidDivisionBody.saved, true)
+    assert.equal(invalidDivisionBody.mmrPassed, false)
+    assert.match(invalidDivisionBody.mmrFailedFields.vocabulary.message, /written division|incorrect/u)
+    assert.doesNotMatch(JSON.stringify(invalidDivisionBody.mmrFailedFields), /com-put-er|com-pút-er/iu, "server feedback does not reveal the authoritative correction")
+    const savedInvalidDivision = await prisma.studentNewsReport.findUnique({ where: { id: reportId }, select: { vocabularyJson: true, submissionState: true } })
+    assert.equal(savedInvalidDivision?.submissionState, "draft")
+    assert.equal(savedInvalidDivision?.vocabularyJson?.find((entry) => entry.english === "computer")?.syllabication, "com-pú-ter", "the submitted division remains available for student correction")
+    const invalidDivisionModal = page.locator("#newsComplianceModalCloseActionBtn")
+    if (await invalidDivisionModal.isVisible().catch(() => false)) await invalidDivisionModal.click()
+    await computerSyllabication.fill("com-PUT-er")
 
     const checkResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check", { timeout: 30000 })
     await page.click("#checkBtn")
@@ -460,7 +478,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     const newsPastedDefinition = savedDraft.vocabularyJson.find((entry) => entry.english === pastedWordEnglish)?.definition
     const seededPastedWord = words.find((word) => word.english === pastedWordEnglish)
     assert.equal(seededPastedWord?.definition, newsPastedDefinition, "News to New Words preserves the exact formatted definition text")
-    for (const word of words.filter((entry) => entry.english !== "confederations")) {
+    for (const word of words.filter((entry) => entry.english !== "computer")) {
       const submitted = await page.evaluate(async (entry) => {
         const response = await fetch("/api/student/library/submissions", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sourceId: entry.id, entry }) })
         return { status: response.status, body: await response.json() }
@@ -534,7 +552,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     })
     assert.equal(reloadedNewWords.status, 200, "the authenticated New Words list remains available after page reload")
     assert.equal(reloadedNewWords.body.items.filter((word) => word.english === savedNewWordEnglish).length, 1, "the saved word is still persisted exactly once after page reload")
-    for (const word of words.filter((entry) => entry.english !== "confederations")) {
+    for (const word of words.filter((entry) => entry.english !== "computer")) {
       await page.locator("#librarySearch").fill(word.english)
       await page.locator('#libraryFilters button[type="submit"]').click()
       const matchingContribution = newsContributionIdsByWord.get(word.english)

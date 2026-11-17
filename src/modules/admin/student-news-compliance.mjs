@@ -5,7 +5,7 @@ import { checkTextWithLanguageTool } from "./student-news-language-tool.mjs"
 import { normalizeDefinitionText } from "./library-origin.mjs"
 import { parseStudentNewsSentence } from "./student-news-parser.mjs"
 import { checkVerbTransitivity } from "./verb-transitivity.mjs"
-import { vocabularyEnglishCapitalizationError, vocabularySyllabicationFormatAndSpellingError } from "./vocabulary-syllabication.mjs"
+import { validateVocabularyEntry, vocabularyEnglishCapitalizationError, vocabularySyllabicationFormatAndSpellingError } from "./vocabulary-syllabication.mjs"
 
 /**
  * @param {unknown} value
@@ -300,19 +300,34 @@ function findStudentNewsEtymologyAttempts(value) {
     .filter(Boolean)
 }
 
-async function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM } = {}) {
+async function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM, fetchImpl } = {}) {
   if (value === undefined || value === null) return { passed: true, message: "", count: 0 }
   const rows = normalizeStudentNewsVocabulary(value)
   const transitivityAttempts = findStudentNewsTransitivityAttempts(value)
   const populated = rows
     .map((row, index) => ({ row, index }))
     .filter(({ row }) => Object.values(row).some(Boolean))
-  const validatedRows = populated.map(({ row, index }) => ({
-    row,
-    index,
-    error: studentNewsVocabularyRowError(row, index),
+  const validatedRows = await Promise.all(populated.map(async ({ row, index }) => {
+    const rowError = studentNewsVocabularyRowError(row, index)
+    if (rowError) return { error: rowError, warning: null }
+    const validation = await validateVocabularyEntry(row, { fetchImpl })
+    return {
+      error: validation.message ? {
+        index,
+        english: row.english,
+        fields: ["syllabication"],
+        message: `Entry ${index + 1} (\"${row.english}\"): ${validation.message}`,
+      } : null,
+      warning: validation.warning ? {
+        index,
+        english: row.english,
+        fields: ["syllabication"],
+        message: `Entry ${index + 1} (\"${row.english}\"): ${validation.warning}`,
+      } : null,
+    }
   }))
   const rowErrors = validatedRows.map((entry) => entry.error).filter(Boolean)
+  const rowWarnings = validatedRows.map((entry) => entry.warning).filter(Boolean)
   const minimum = Math.max(1, Math.min(100, Math.trunc(Number(minimumWords)) || STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM))
   if (rowErrors.length || populated.length < minimum) {
     return {
@@ -322,12 +337,12 @@ async function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEW
         : `At least ${minimum} complete vocabulary rows are required.`,
       count: populated.length,
       rowErrors,
-      rowWarnings: [],
+      rowWarnings,
       transitivityAttemptCount: transitivityAttempts.length,
       transitivityAttempts,
     }
   }
-  return { passed: true, message: "", count: populated.length, rowErrors: [], rowWarnings: [], transitivityAttemptCount: transitivityAttempts.length, transitivityAttempts }
+  return { passed: true, message: "", count: populated.length, rowErrors: [], rowWarnings, transitivityAttemptCount: transitivityAttempts.length, transitivityAttempts }
 }
 
 /**
@@ -1534,10 +1549,10 @@ function buildStudentNewsFieldRevisionTask(fieldKey = "", context = {}) {
       label: "Vocabulary",
       steps: [
         "Complete every vocabulary row with part of speech, English, Vietnamese, syllabication, and definition.",
-        "Use letters, spaces, and hyphens, and make the syllabication letters spell the English word or phrase; stress correctness is not checked in Student News.",
+        "Use the provided dictionary links to verify syllable boundaries and primary stress; temporary dictionary outages are reported as warnings.",
         "Save again after correcting the named entry and its highlighted field.",
       ],
-      criterion: "Every vocabulary row must be complete and use syllabication with valid format and spelling only; Student News does not check dictionary syllable boundaries or primary stress.",
+      criterion: "Every complete vocabulary row must match CMUdict syllable count and primary stress plus Merriam-Webster written division when available.",
     }
   }
   return {
@@ -2156,6 +2171,7 @@ export async function evaluateStudentNewsMinimumRequirements(payload = {}, optio
   }
   const vocabularyValidation = await evaluateStudentNewsVocabulary(payload?.vocabulary, {
     minimumWords: config.vocabularyMinimumWords,
+    fetchImpl: options?.fetchImpl,
   })
   if (!vocabularyValidation.passed) {
     failedFields.vocabulary = {

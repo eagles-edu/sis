@@ -300,23 +300,71 @@ test("Student News syllabication checks spelling and format without requiring st
   assert.equal(isValidStudentNewsSyllabication("in the mornin-ing", "in the morning"), false)
 })
 
-test("Student News checks vocabulary format and spelling without dictionary syllable validation", async () => {
+test("Student News uses the shared CMUdict, Collegiate, and primary-stress validator", async () => {
   assert.equal(vocabularySyllabicationFormatAndSpellingError({ english: "syllable", syllabication: "SYL-la-ble" }), "")
   assert.equal(vocabularySyllabicationFormatAndSpellingError({ english: "syllable", syllabication: "syl-la-ble" }), "")
   assert.equal(vocabularySyllabicationFormatAndSpellingError({ english: "syllable", syllabication: "SYL-lable" }), "")
   assert.match(vocabularySyllabicationFormatAndSpellingError({ english: "syllable", syllabication: "SYL-la-bl" }), /spelling must match/)
-  const result = await evaluateStudentNewsVocabulary([{
+  const row = {
     partOfSpeech: "noun",
-    english: "syllable",
-    vietnamese: "âm tiết",
-    syllabication: "SYL-la-ble",
-    definition: "A unit of spoken language.",
-  }], { minimumWords: 1 })
-  assert.equal(result.passed, true)
-  assert.deepEqual(result.rowWarnings, [])
+    english: "potato",
+    vietnamese: "khoai tây",
+    syllabication: "po-TA-to",
+    definition: "An edible tuber.",
+  }
+  const previousKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-key"
+  resetVocabularyDictionaryCacheForTest()
+  try {
+    const calls = []
+    const fetchImpl = async (url) => {
+      calls.push(String(url))
+      return { ok: true, json: async () => [{ hwi: { hw: "po*ta*to" } }] }
+    }
+    const valid = await evaluateStudentNewsVocabulary([row], { minimumWords: 1, fetchImpl })
+    assert.equal(valid.passed, true, valid.message)
+    assert.deepEqual(valid.rowWarnings, [])
+    assert.equal(calls.length, 1)
+    assert.match(calls[0], /\/collegiate\/json\/potato\?/)
+
+    resetVocabularyDictionaryCacheForTest()
+    const wrongStress = await evaluateStudentNewsVocabulary([{ ...row, syllabication: "PO-ta-to" }], { minimumWords: 1, fetchImpl })
+    assert.equal(wrongStress.passed, false)
+    assert.match(wrongStress.rowErrors[0].message, /primary stress is incorrect/)
+    assert.equal(calls.length, 1)
+
+    resetVocabularyDictionaryCacheForTest()
+    const wrongDivision = await evaluateStudentNewsVocabulary([row], {
+      minimumWords: 1,
+      fetchImpl: async () => ({ ok: true, json: async () => [{ hwi: { hw: "pot*ato" } }] }),
+    })
+    assert.equal(wrongDivision.passed, false)
+    assert.match(wrongDivision.rowErrors[0].message, /incorrect/)
+    assert.doesNotMatch(wrongDivision.rowErrors[0].message, /pot\*ato|po-ta-to/u)
+
+    resetVocabularyDictionaryCacheForTest()
+    const unavailable = await evaluateStudentNewsVocabulary([row], {
+      minimumWords: 1,
+      fetchImpl: async () => ({ ok: false, json: async () => [] }),
+    })
+    assert.equal(unavailable.passed, true)
+    assert.match(unavailable.rowWarnings[0].message, /could not be verified right now/u)
+
+    const unknown = await evaluateStudentNewsVocabulary([{
+      ...row,
+      english: "zzqvword",
+      syllabication: "ZZQ-vword",
+    }], { minimumWords: 1, fetchImpl })
+    assert.equal(unknown.passed, false)
+    assert.match(unknown.rowErrors[0].message, /manual dictionary research/u)
+  } finally {
+    if (previousKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = previousKey
+    resetVocabularyDictionaryCacheForTest()
+  }
 })
 
-test("student News and New Words accept a single-letter stressed vowel in an internal syllable", async () => {
+test("News applies the shared unknown-word gate after the structural stress guard", async () => {
   for (const syllabication of ["con-fed-er-á-tions", "con-fed-er-A-tions"]) {
     assert.equal(vocabularyEntryError({ english: "confederations", syllabication }), "")
     assert.equal(vocabularySyllabicationFormatAndSpellingError({ english: "confederations", syllabication }), "")
@@ -333,10 +381,11 @@ test("student News and New Words accept a single-letter stressed vowel in an int
     syllabication: "con-fed-er-á-tions",
     definition: "Groups of states or organizations united for a shared purpose.",
   }], { minimumWords: 1 })
-  assert.equal(result.passed, true, result.message)
+  assert.equal(result.passed, false)
+  assert.match(result.rowErrors[0].message, /manual dictionary research/u)
 })
 
-test("Student News admin guidance records the format-and-spelling scope", async () => {
+test("Student News admin guidance records authoritative dictionary validation", async () => {
   const { buildStudentNewsComplianceBlock, evaluateStudentNewsMinimumRequirements, updateStudentNewsValidationIssues } = await import("../src/modules/admin/student-news-compliance.mjs")
   const validation = await evaluateStudentNewsMinimumRequirements({
     sourceLink: "https://www.bbc.com/news/articles/example",
@@ -360,7 +409,7 @@ test("Student News admin guidance records the format-and-spelling scope", async 
   }, { validationConfig: { vocabularyMinimumWords: 1 } })
   const issues = updateStudentNewsValidationIssues({}, validation)
   const note = buildStudentNewsComplianceBlock(issues.issues)
-  assert.match(note, /format and spelling only/)
+  assert.match(note, /CMUdict syllable count and primary stress plus Merriam-Webster written division/u)
   assert.match(note, /syllable/)
 })
 

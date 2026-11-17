@@ -20,7 +20,7 @@ import {
   stripAwaitingReReviewMarker,
   updateStudentNewsValidationIssues,
 } from "./student-news-compliance.mjs"
-import { normalizeVocabularySyllabication, vocabularyEnglishCapitalizationError, vocabularySyllabicationFormatAndSpellingError } from "./vocabulary-syllabication.mjs"
+import { normalizeVocabularySyllabication, validateVocabularyEntry, vocabularyEnglishCapitalizationError, vocabularySyllabicationFormatAndSpellingError } from "./vocabulary-syllabication.mjs"
 import {
   isStudentNewsReportSchemaUnavailableError,
   isStudentNewsReviewSchemaUnavailableError,
@@ -1194,6 +1194,15 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
           fields: ["syllabication"],
         })
         continue
+      }
+      const authoritative = await validateVocabularyEntry(row)
+      if (authoritative.message || authoritative.warning) {
+        draftVocabularyWarnings.push({
+          index,
+          english: normalizeText(row?.english),
+          message: authoritative.message || authoritative.warning,
+          fields: ["syllabication"],
+        })
       }
     }
   }
