@@ -5,6 +5,7 @@ import test from "node:test"
 import { parse as parseDotenv } from "dotenv"
 import { chromium } from "playwright"
 import { resolveStandardStudentCredentials } from "./helpers/standard-portal-credentials.mjs"
+import { listStudentNewsReportsForReview } from "../src/modules/admin/student-news-review.mjs"
 import "../tools/assert-prisma-environment.mjs"
 
 const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
@@ -415,6 +416,11 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     assert.equal(savedDraft?.vocabularyJson?.length, 5)
     assert.equal(savedDraft?.vocabularyJson?.find((entry) => entry.english === "confederations")?.syllabication, "con-fed-er-á-tions")
     assert.match(savedDraft?.vocabularyJson?.find((entry) => entry.english === pastedWordEnglish)?.definition || "", /\*\*bold\*\*[\s\S]*- first[\s\S]*\n[ ]{4}- \*nested\*/u)
+    const adminReviewDrafts = await listStudentNewsReportsForReview({ status: "all", studentRefId })
+    assert.equal(adminReviewDrafts.items.some((item) => item.id === reportId), false, "a persisted student draft stays out of the admin review list")
+    const draftCalendarEvent = page.locator("#calendarGrid .fc-event-news-status").filter({ hasText: "DRAFT" }).first()
+    await draftCalendarEvent.waitFor({ state: "visible", timeout: 10000 })
+    assert.match(await draftCalendarEvent.getAttribute("title") || "", /Draft saved; not submitted for review\./u)
 
     const checkResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check", { timeout: 30000 })
     await page.click("#checkBtn")
@@ -436,6 +442,13 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     assert.ok(checkedReport?.mmrPassedAt)
     assert.ok(checkedReport?.dateSatisfiedAt)
     assert.equal(checkedReport?.vocabularyJson?.length, 5)
+    await page.waitForFunction(() => [...document.querySelectorAll("#calendarGrid .fc-event-news-status")].some((event) => event.textContent.trim().toLowerCase() === "ready"), null, { timeout: 10000 })
+    const readyCalendarEvent = page.locator("#calendarGrid .fc-event-news-status").filter({ hasText: /^Ready$/i }).first()
+    assert.match(await readyCalendarEvent.getAttribute("title") || "", /Checks passed; not submitted for review\./u)
+    const readyWeekSetRow = page.locator("#newsPageQueueBody tr[data-news-week-set-id]").first()
+    await readyWeekSetRow.waitFor({ state: "visible", timeout: 10000 })
+    assert.match(await readyWeekSetRow.innerText(), /0\/5[\s\S]*Ready/u, "a checked but unsubmitted report remains editable and is labeled Ready")
+    assert.match(await page.locator("#newsPageQueueSummary").innerText(), /Submitted\s*0/u, "ready reports do not inflate submitted-review counts")
 
     const wordData = await page.evaluate(async () => {
       const response = await fetch("/api/student/new-words", { credentials: "include" })
@@ -462,7 +475,10 @@ test("authenticated student News and New Words saves, Library visibility, week-s
       await weekSetButtons.nth(index).click()
       await page.locator("#newsWeekSetModal").waitFor({ state: "visible", timeout: 10000 })
       weekWords = await page.locator('#newsWeekSetModalVocabularyRows [data-vocabulary-field="english"]').evaluateAll((inputs) => inputs.map((input) => input.value).filter(Boolean))
-      if (NEWS_WORDS.every((word) => weekWords.includes(word.english))) break
+      if (NEWS_WORDS.every((word) => weekWords.includes(word.english))) {
+        assert.equal(await page.locator("#newsViewerReviewStatusChip").innerText(), "-", "a ready report has no admin review status before Submit")
+        break
+      }
       await page.locator("#newsWeekSetModalCloseActionBtn").click()
       await page.locator("#newsWeekSetModal").waitFor({ state: "hidden", timeout: 10000 })
     }

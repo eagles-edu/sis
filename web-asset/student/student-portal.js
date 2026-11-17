@@ -3446,6 +3446,8 @@
             esl: row?.esl && typeof row.esl === "object" ? row.esl : {},
           })) : [],
           submittedAt: t(entry?.submittedAt),
+          submissionState: normalizeLower(entry?.submissionState),
+          firstSubmittedAt: t(entry?.firstSubmittedAt),
           reviewStatus: normalizeNewsReviewStatusToken(entry?.reviewStatus),
           awaitingReReview: entry?.awaitingReReview === true,
           currentMmrPassed: entry?.currentMmrPassed === true,
@@ -3499,6 +3501,8 @@
             weekEnd: isoWeekEndFromStart(weekStart),
             reports: [],
             reportCount: 0,
+            draftCount: 0,
+            readyCount: 0,
             approvedCount: 0,
             submittedCount: 0,
             awaitingReReviewCount: 0,
@@ -3506,21 +3510,25 @@
             latestSubmittedAt: "",
             latestReportDate: "",
             latestReportId: "",
-            _reportDates: new Set(),
+            _submittedReportCount: 0,
           };
           existing.reports.push(report);
-          existing._reportDates.add(report.reportDate);
-          if (report.reviewStatus === "approved") existing.approvedCount += 1;
-          else if (report.reviewStatus === "revision-requested")
-            existing.revisionRequestedCount += 1;
-          else if (report.awaitingReReview === true) existing.awaitingReReviewCount += 1;
-          else existing.submittedCount += 1;
-          const candidateKey = t(report.submittedAt) || t(report.reportDate);
-          const latestKey = t(existing.latestSubmittedAt) || t(existing.latestReportDate);
-          if (!latestKey || candidateKey > latestKey) {
-            existing.latestSubmittedAt = t(report.submittedAt);
-            existing.latestReportDate = t(report.reportDate);
-            existing.latestReportId = t(report.id);
+          if (report.submissionState === "draft") existing.draftCount += 1;
+          else if (report.submissionState === "ready") existing.readyCount += 1;
+          else {
+            existing._submittedReportCount += 1;
+            if (report.reviewStatus === "approved") existing.approvedCount += 1;
+            else if (report.reviewStatus === "revision-requested")
+              existing.revisionRequestedCount += 1;
+            else if (report.awaitingReReview === true) existing.awaitingReReviewCount += 1;
+            else existing.submittedCount += 1;
+            const candidateKey = t(report.submittedAt || report.firstSubmittedAt) || t(report.reportDate);
+            const latestKey = t(existing.latestSubmittedAt) || t(existing.latestReportDate);
+            if (!latestKey || candidateKey > latestKey) {
+              existing.latestSubmittedAt = t(report.submittedAt || report.firstSubmittedAt);
+              existing.latestReportDate = t(report.reportDate);
+              existing.latestReportId = t(report.id);
+            }
           }
           grouped.set(weekStart, existing);
         });
@@ -3532,14 +3540,16 @@
               weekStart: t(entry.weekStart),
               weekEnd: t(entry.weekEnd),
               reports,
-              reportCount: Math.max(entry._reportDates?.size || 0, reports.length),
+              reportCount: entry._submittedReportCount || 0,
+              draftCount: entry.draftCount,
+              readyCount: entry.readyCount,
               approvedCount: entry.approvedCount,
               submittedCount: entry.submittedCount,
               awaitingReReviewCount: entry.awaitingReReviewCount,
               revisionRequestedCount: entry.revisionRequestedCount,
-              latestSubmittedAt: t(entry.latestSubmittedAt) || t(reports[0]?.submittedAt),
-              latestReportDate: t(entry.latestReportDate) || t(reports[0]?.reportDate),
-              latestReportId: t(entry.latestReportId) || t(reports[0]?.id),
+              latestSubmittedAt: t(entry.latestSubmittedAt),
+              latestReportDate: t(entry.latestReportDate),
+              latestReportId: t(entry.latestReportId),
             };
           })
           .sort((left, right) => {
@@ -3615,7 +3625,11 @@
           0,
           Number.parseInt(String(weekSet?.reportCount || 0), 10) || 0,
         );
+        const draftCount = Math.max(0, Number.parseInt(String(weekSet?.draftCount || 0), 10) || 0);
+        const readyCount = Math.max(0, Number.parseInt(String(weekSet?.readyCount || 0), 10) || 0);
         const requiredReports = weeklyMinimumNewsReports();
+        if (reportCount === 0 && readyCount > 0) return "ready";
+        if (reportCount === 0 && draftCount > 0) return "draft";
         if (reportCount >= requiredReports && approvedCount >= requiredReports) return "approved";
         if (revisionRequestedCount > 0) return "revise";
         if (awaitingReReviewCount > 0) return "waiting";
@@ -3629,6 +3643,8 @@
         if (normalized === "revise") return "Revise";
         if (normalized === "waiting") return "Waiting";
         if (normalized === "submitted") return "Submitted";
+        if (normalized === "ready") return "Ready";
+        if (normalized === "draft") return "Draft";
         return "Waiting";
       }
 
@@ -3637,6 +3653,7 @@
         const tone =
           normalized === "approved" ? "good" :
           normalized === "revise" || normalized === "waiting" ? "revise" :
+          normalized === "draft" || normalized === "ready" ? "neutral" :
           "warn";
         const span = document.createElement("span");
         span.className = `chip ${chipClassForTone(tone)}`;
@@ -3719,6 +3736,11 @@
       }
 
       function newsViewerItemStatusChipModel(item = {}) {
+        const submissionState = normalizeLower(item?.submissionState);
+        if (submissionState === "draft" || submissionState === "ready") return {
+          label: "-",
+          tone: "neutral"
+        };
         const hasStatus = Boolean(t(item?.reviewStatus)) || item?.awaitingReReview === true;
         if (!hasStatus) return {
           label: "-",
@@ -4035,7 +4057,8 @@
           weekSets = [];
           state.newsWeekSets = [];
         }
-        const summary = summarizeNewsWeekSetStatuses(weekSets);
+        const submittedWeekSets = weekSets.filter((weekSet) => Number(weekSet?.reportCount) > 0);
+        const summary = summarizeNewsWeekSetStatuses(submittedWeekSets);
         const summaryEl = field("newsQueueSummary");
         renderNewsQueueSummaryChips(summaryEl, summary);
         const summaryPageEl = field("newsPageQueueSummary");
@@ -4870,6 +4893,8 @@
             token === "revise" ? "Revision requested." :
             token === "waiting" ? "Resubmitted and waiting for admin review." :
             token === "approved" ? "Approved." :
+            token === "ready" ? "Checks passed; not submitted for review." :
+            token === "draft" ? "Draft saved; not submitted for review." :
             "Submitted and awaiting review.";
           const displayOrder =
             token === "none-submitted" ? 0 :

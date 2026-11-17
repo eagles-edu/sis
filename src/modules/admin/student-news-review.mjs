@@ -22,6 +22,15 @@ const STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED = "submitted"
 
 /**
  * @param {unknown} value
+ * @returns {boolean}
+ */
+function isStudentNewsReportEligibleForReviewState(value) {
+  const submissionState = normalizeLower(value)
+  return !submissionState || submissionState === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+}
+
+/**
+ * @param {unknown} value
  * @returns {string}
  */
 function normalizeText(value) {
@@ -802,10 +811,7 @@ export async function listStudentNewsReportsForReview({
   const toDate = normalizeStudentNewsReviewDateFilter(dateTo)
 
   const where = {}
-  const rawStatus = normalizeLower(status)
-  const requestedSubmissionState = rawStatus === "draft" ? "draft" : ""
-  if (requestedSubmissionState) where.submissionState = requestedSubmissionState
-  else if (rawStatus !== "all") where.submissionState = STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+  where.submissionState = STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
   if (requestedStudentRefId) where.studentRefId = requestedStudentRefId
   if (fromDate || toDate) {
     where.reportDate = {}
@@ -859,10 +865,7 @@ export async function listStudentNewsReportsForReview({
     const toDateKey = toDate ? toLocalIsoDate(toDate) : ""
     reportRows = readStudentNewsFallbackEntries()
       .filter((entry) => {
-        const submissionState = normalizeLower(entry?.submissionState)
-        return requestedSubmissionState
-          ? submissionState === requestedSubmissionState
-          : rawStatus === "all" || !submissionState || submissionState === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED || submissionState === "draft"
+        return isStudentNewsReportEligibleForReviewState(entry?.submissionState)
       })
       .filter((entry) => !requestedStudentRefId || normalizeText(entry?.studentRefId) === requestedStudentRefId)
       .filter((entry) => !fromDateKey || normalizeText(entry?.reportDate) >= fromDateKey)
@@ -901,6 +904,7 @@ export async function listStudentNewsReportsForReview({
     })
   })
   const filtered = mapped.filter((entry) => {
+    if (!isStudentNewsReportEligibleForReviewState(entry?.submissionState)) return false
     if (requestedStatus !== "all" && normalizeStudentNewsReviewStatus(entry?.reviewStatus, "") !== requestedStatus) return false
     if (requestedLevel) {
       const entryLevel = canonicalizeLevel(entry?.student?.level || "") || ""
@@ -1218,6 +1222,7 @@ export async function reviewStudentNewsReportsBulk(payload = {}, options = {}) {
 
 export {
   buildStudentNewsReviewSelect,
+  isStudentNewsReportEligibleForReviewState,
   normalizeStudentNewsReviewStatus,
   normalizeStudentNewsReviewTake,
   resolveStudentNewsReviewActionStatus,

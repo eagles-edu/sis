@@ -4,6 +4,7 @@ import test from "node:test"
 
 import {
   buildStudentNewsReviewSelect,
+  isStudentNewsReportEligibleForReviewState,
   listStudentNewsReportsForReview,
   normalizeStudentNewsReviewStatus,
   normalizeStudentNewsReviewTake,
@@ -47,10 +48,16 @@ test("student news review helpers normalize status, action, and selection rules"
   assert.equal(reviewSelect.submissionState, true)
 })
 
-test("student news admin review keeps admin statuses unchanged and can expose saved drafts", () => {
+test("student news admin review excludes pre-submit states and preserves legacy submitted rows", () => {
   const source = fs.readFileSync(new URL("../src/modules/admin/student-news-review.mjs", import.meta.url), "utf8")
-  assert.match(source, /const requestedSubmissionState = rawStatus === "draft" \? "draft" : ""/)
-  assert.match(source, /rawStatus === "all" \|\| !submissionState \|\| submissionState === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED/)
+  assert.deepEqual([
+    isStudentNewsReportEligibleForReviewState("draft"),
+    isStudentNewsReportEligibleForReviewState("ready"),
+    isStudentNewsReportEligibleForReviewState("submitted"),
+    isStudentNewsReportEligibleForReviewState(null),
+    isStudentNewsReportEligibleForReviewState("unknown"),
+  ], [false, false, true, true, false])
+  assert.match(source, /where\.submissionState = STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED/)
   assert.match(source, /const STUDENT_NEWS_REVIEW_STATUS_SUBMITTED = "submitted"/)
   assert.match(source, /const STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED = "revision-requested"/)
   assert.match(source, /const STUDENT_NEWS_REVIEW_STATUS_APPROVED = "approved"/)
@@ -58,7 +65,7 @@ test("student news admin review keeps admin statuses unchanged and can expose sa
   assert.match(source, /editablePayload\.vocabularyJson = existingReport\.vocabularyJson/)
   assert.doesNotMatch(source, /Approved news reports cannot be edited/)
   assert.match(source, /const filtered = mapped\.filter\(\(entry\) => \{/)
-  assert.match(source, /submissionState === "draft"/)
+  assert.match(source, /isStudentNewsReportEligibleForReviewState\(entry\?\.submissionState\)/)
 })
 
 test("admin news review keeps every report status actionable and grants revision access", () => {
