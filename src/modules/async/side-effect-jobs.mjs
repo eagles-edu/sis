@@ -23,6 +23,7 @@ import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
  *   jobTypes?: Array<unknown>,
  *   take?: unknown,
  *   workerId?: unknown,
+ *   now?: unknown,
  * }} ClaimJobOptions
  *
  * @typedef {{
@@ -331,17 +332,30 @@ export async function enqueueAsyncSideEffectJob(jobType, payload = {}, options =
  * @param {ClaimJobOptions} [options]
  * @returns {Promise<Array<ReturnType<typeof mapJobRecord>>>}
  */
-export async function claimAsyncSideEffectJobs({ jobTypes = [], take = 10, workerId = "" } = {}) {
+export async function claimAsyncSideEffectJobs({ jobTypes = [], take = 10, workerId = "", now } = {}) {
   const limit = Math.max(1, Math.min(Number.parseInt(String(take || 10), 10) || 10, 100))
   const normalizedJobTypes = Array.from(
     new Set((Array.isArray(jobTypes) ? jobTypes : []).map((entry) => normalizeJobType(entry)).filter(Boolean))
   )
   const normalizedWorkerId = normalizeText(workerId) || `worker-${process.pid}`
-  const availableAt = new Date()
+  const availableAt = normalizeAvailableAt(now)
   const prisma = await getJobPrismaClient()
 
   if (!prisma) {
     if (!allowVolatileUnitTestStorage()) throw sideEffectPersistenceUnavailable()
+    const staleBefore = new Date(availableAt.valueOf() - processingLockTimeoutMs())
+    MEMORY_JOBS.forEach((job) => {
+      if (normalizedJobTypes.length && !normalizedJobTypes.includes(normalizeJobType(job.jobType))) return
+      if (normalizeJobStatus(job.status) !== ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING) return
+      const lockedAt = job.lockedAt ? new Date(job.lockedAt) : null
+      if (!lockedAt || lockedAt > staleBefore) return
+      job.status = ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED
+      job.availableAt = availableAt
+      job.lockedAt = null
+      job.lockedBy = ""
+      job.updatedAt = availableAt
+    })
+
     const claimable = MEMORY_JOBS.filter((job) => {
       if (normalizedJobTypes.length && !normalizedJobTypes.includes(normalizeJobType(job.jobType))) return false
       if (normalizeJobStatus(job.status) !== ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED) return false
