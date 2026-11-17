@@ -10,6 +10,8 @@ import { updateQueuedAnnouncement, nowIso } from "../src/modules/admin/notificat
 import { markAssignmentReminderEngagementSent } from "../src/modules/admin/assignment-reminder-dispatcher.mjs"
 import path from "node:path"
 import process from "node:process"
+import fs from "node:fs"
+import { randomUUID } from "node:crypto"
 import { fileURLToPath } from "node:url"
 
 /**
@@ -69,6 +71,43 @@ function resolveJobTypes() {
     .split(/[\s,]+/u)
     .map((value) => normalizeText(value))
     .filter(Boolean)
+}
+
+let lastSuccessfulPollTimestamp = 0
+
+function writeWorkerHeartbeat({ success, checkedAt = Date.now() / 1000 } = {}) {
+  if (
+    process.env.NODE_ENV !== "development" ||
+    process.env.SIS_ENV_FILE !== ".env.dev" ||
+    process.env.DOTENV_CONFIG_PATH !== ".env.dev"
+  ) return
+
+  const metricsFile = path.join(process.cwd(), "runtime-data/prometheus/async-side-effects-worker-dev.prom")
+  const directory = path.dirname(metricsFile)
+  const safeNumber = (value) => (Number.isFinite(value) && value >= 0 ? value.toFixed(6) : "0")
+  const result = success ? 1 : 0
+  if (success) lastSuccessfulPollTimestamp = checkedAt
+  const contents = [
+    "# HELP sis_async_side_effects_worker_last_poll_timestamp_seconds Unix timestamp of the last completed dev worker poll.",
+    "# TYPE sis_async_side_effects_worker_last_poll_timestamp_seconds gauge",
+    `sis_async_side_effects_worker_last_poll_timestamp_seconds{environment=\"dev\"} ${safeNumber(checkedAt)}`,
+    "# HELP sis_async_side_effects_worker_last_poll_success Whether the latest dev worker poll completed successfully.",
+    "# TYPE sis_async_side_effects_worker_last_poll_success gauge",
+    `sis_async_side_effects_worker_last_poll_success{environment=\"dev\"} ${result}`,
+    "# HELP sis_async_side_effects_worker_last_success_timestamp_seconds Unix timestamp of the last successful dev worker poll.",
+    "# TYPE sis_async_side_effects_worker_last_success_timestamp_seconds gauge",
+    `sis_async_side_effects_worker_last_success_timestamp_seconds{environment=\"dev\"} ${safeNumber(lastSuccessfulPollTimestamp)}`,
+    "",
+  ].join("\n")
+  fs.mkdirSync(directory, { recursive: true, mode: 0o750 })
+  const temporaryFile = `${metricsFile}.${process.pid}.${randomUUID()}.tmp`
+  try {
+    fs.writeFileSync(temporaryFile, contents, { encoding: "utf8", flag: "wx", mode: 0o644 })
+    fs.renameSync(temporaryFile, metricsFile)
+  } catch (error) {
+    fs.rmSync(temporaryFile, { force: true })
+    throw error
+  }
 }
 
 /**
@@ -162,13 +201,19 @@ export async function startAsyncSideEffectsWorker() {
   const pollIntervalMs = resolvePollIntervalMs()
   const once = shouldRunOnce()
   const run = async () => {
-    const result = await runWorkerOnce()
-    if (result.claimed || result.succeeded || result.failed) {
-      console.log(
-        `[async-side-effects] claimed=${result.claimed} succeeded=${result.succeeded} failed=${result.failed}`
-      )
+    try {
+      const result = await runWorkerOnce()
+      writeWorkerHeartbeat({ success: true })
+      if (result.claimed || result.succeeded || result.failed) {
+        console.log(
+          `[async-side-effects] claimed=${result.claimed} succeeded=${result.succeeded} failed=${result.failed}`
+        )
+      }
+      return result
+    } catch (error) {
+      writeWorkerHeartbeat({ success: false })
+      throw error
     }
-    return result
   }
 
   await run()

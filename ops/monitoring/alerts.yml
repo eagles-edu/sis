@@ -1,4 +1,62 @@
 groups:
+  - name: sis-engagement-workflows-dev
+    rules:
+      - alert: DevEngagementMonitorStale
+        expr: absent(sis_engagement_workflow_last_check_timestamp_seconds{environment="dev"}) or time() - sis_engagement_workflow_last_check_timestamp_seconds{environment="dev"} > 180
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev engagement workflow monitor has not reported for three minutes
+
+      - alert: DevEngagementReportApiUnavailable
+        expr: sis_engagement_report_api_available{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Authenticated dev engagement reporting API check failed
+
+      - alert: DevEngagementWebhookProcessingStale
+        expr: sis_engagement_webhook_unprocessed_events{environment="dev"} > 0 and sis_engagement_webhook_oldest_unprocessed_age_seconds{environment="dev"} > 300
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev email engagement webhook processing is more than five minutes behind
+
+      - alert: DevEngagementSideEffectFailures
+        expr: sis_async_side_effect_failed_jobs_24h{environment="dev"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev async side-effect jobs have failed in the last 24 hours
+
+      - alert: DevEngagementSideEffectProcessingStale
+        expr: sis_async_side_effect_stale_processing_jobs{environment="dev"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A dev async side-effect job has been processing for more than five minutes
+
+      - alert: DevEngagementWorkerStale
+        expr: sis_async_side_effect_worker_stale{environment="dev"} == 1
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev async side-effect worker heartbeat is missing or stale
+
+      - alert: DevEngagementWorkerPollFailed
+        expr: sis_async_side_effect_worker_last_poll_success{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev async side-effect worker poll failed
+
   - name: sis-parent-profile-workflow
     rules:
       - alert: DevParentProfileWorkflowCheckFailed

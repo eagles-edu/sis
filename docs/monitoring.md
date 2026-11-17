@@ -395,6 +395,25 @@ The result is atomically written to `runtime-data/prometheus/parent-profile-work
 
 This command is a one-shot functional check; this item does not install a timer. Scheduling, stale-result handling, interrupted-run cleanup, retries, and controlled restarts are addressed by the separate monitoring-worker checklist items. The currently active Compose profile has no Alertmanager, so this rule is visible in local Prometheus but does not send an external notification.
 
+## Engagement workflow monitor (dev)
+
+Run the read-only engagement monitor with:
+
+```bash
+npm run monitor:engagement:dev
+```
+
+It requires the explicit `.env.dev` / `development` environment, confirms the connected database is `sis_dev`, and checks the authenticated `/api/admin/performance-engagement` response using the configured dev admin account. It reads the latest parent-report engagement event, Brevo webhook receipt/processing state, failed and stale async jobs, and queued-job count. The check writes fixed `environment="dev"` gauges atomically to `runtime-data/prometheus/engagement-workflows-dev.prom`; no event payloads, recipient values, student fields, credentials, or job identifiers are emitted.
+
+The dev async side-effects worker writes a separate atomic heartbeat after every completed poll to `runtime-data/prometheus/async-side-effects-worker-dev.prom`, including poll success. Prometheus rules cover API availability, stale monitor results, unprocessed webhook age, failed jobs, stuck processing jobs, failed worker polls, and stale worker heartbeat. Event timestamps and queue counts are available as gauges; idle periods with no new engagement event do not trigger an ingestion alarm. Current Prometheus rules are local-only because the active profile has no Alertmanager receiver. Enable the one-minute user systemd timer with:
+
+```bash
+install -D -m 0644 ops/monitoring/systemd/sis-engagement-monitor-dev.service "$HOME/.config/systemd/user/sis-engagement-monitor-dev.service"
+install -D -m 0644 ops/monitoring/systemd/sis-engagement-monitor-dev.timer "$HOME/.config/systemd/user/sis-engagement-monitor-dev.timer"
+systemctl --user daemon-reload
+systemctl --user enable --now sis-engagement-monitor-dev.timer
+```
+
 ## Approved telemetry additions
 
 The following additions are approved for the test mirror. They are deliberately limited to the student-write incident path and safe operational metadata. They must not expose student data, credentials, session data, request bodies, SQL text, or query parameters.
