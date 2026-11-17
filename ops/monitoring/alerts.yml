@@ -125,6 +125,56 @@ groups:
         annotations:
           summary: Dev Library workflow monitor could not clean up its synthetic record
 
+  - name: sis-news-workflow-dev
+    rules:
+      - alert: DevNewsWorkflowMonitorStale
+        expr: absent(sis_news_workflow_last_check_timestamp_seconds{environment="dev"}) or time() - sis_news_workflow_last_check_timestamp_seconds{environment="dev"} > 600
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev Student News workflow monitor has not reported for ten minutes
+
+      - alert: DevNewsCheckFailed
+        expr: sis_news_check_success{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Authenticated synthetic dev Student News Check failed
+
+      - alert: DevNewsProviderUnavailable
+        expr: sis_news_language_tool_available{environment="dev"} == 0 or sis_news_dictionary_available{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A required Student News validation provider is unavailable in dev
+
+      - alert: DevNewsSubmissionFailed
+        expr: sis_news_submission_failure{environment="dev"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Authenticated synthetic dev Student News submission failed
+
+      - alert: DevNewsOldReviewQueue
+        expr: sis_news_oldest_open_review_age_seconds{environment="dev"} > 86400
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: A dev Student News report has waited for review for more than 24 hours
+
+      - alert: DevNewsSyntheticCleanupFailed
+        expr: sis_news_cleanup_success{environment="dev"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: Dev Student News workflow monitor could not remove its synthetic report
+
   - name: sis-test-mirror
     rules:
       - alert: TestMirrorPublicAdminDown

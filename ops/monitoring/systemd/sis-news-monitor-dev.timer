@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh SIS dev Student News workflow health metrics
+
+[Timer]
+OnBootSec=120s
+OnUnitActiveSec=5m
+AccuracySec=10s
+Persistent=true
+Unit=sis-news-monitor-dev.service
+
+[Install]
+WantedBy=timers.target

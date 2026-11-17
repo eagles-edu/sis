@@ -437,6 +437,29 @@ systemctl --user daemon-reload
 systemctl --user enable --now sis-library-monitor-dev.timer
 ```
 
+## Student News workflow monitor (dev)
+
+Run the authenticated synthetic News check with:
+
+```bash
+npm run monitor:news:dev
+```
+
+The monitor is pinned to `.env.dev` / `development`, verifies `sis_dev`, and uses the exact configured `mark001` student and dev admin accounts. It authenticates to the local dev service, reads the admin News review queue, checks a synthetic report, submits it using the server-issued report ID, and deletes/verifies the synthetic row by its unique UUID-scoped source marker. No student identity, report content, provider response, account, session, credential, or report ID is written to metrics or monitor output.
+
+The synthetic Check duration, Check result, LanguageTool result from the completed sentence checks, and Merriam-Webster vocabulary availability are written as fixed `environment="dev"` gauges to `runtime-data/prometheus/news-workflow-dev.prom`. The monitor also records synthetic submission success/failure, cleanup status, open submitted review count, oldest submitted review age, database/API availability, and last-success time. Prometheus alerts on stale monitor output, Check or submission failure, provider unavailability, cleanup failure, and a review older than 24 hours. The active monitoring profile has no Alertmanager receiver, so these alerts are visible locally only.
+
+Schedule it every five minutes for the current user:
+
+```bash
+install -D -m 0644 ops/monitoring/systemd/sis-news-monitor-dev.service "$HOME/.config/systemd/user/sis-news-monitor-dev.service"
+install -D -m 0644 ops/monitoring/systemd/sis-news-monitor-dev.timer "$HOME/.config/systemd/user/sis-news-monitor-dev.timer"
+systemctl --user daemon-reload
+systemctl --user enable --now sis-news-monitor-dev.timer
+```
+
+The monitor is a one-shot synthetic workflow; `sis-news-monitor-dev.timer` schedules recurring runs. Metrics contain only aggregate results and fixed environment labels.
+
 ## Approved telemetry additions
 
 The following additions are approved for the test mirror. They are deliberately limited to the student-write incident path and safe operational metadata. They must not expose student data, credentials, session data, request bodies, SQL text, or query parameters.
