@@ -457,6 +457,9 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     assert.equal(wordData.status, 200, "authenticated New Words list returns HTTP 200")
     const words = (wordData.body.items || []).filter((word) => word.sourceReportId === reportId)
     assert.deepEqual(words.map((word) => word.english).sort(), expectedSeedWords.map((word) => word.english).sort(), "every new real word is seeded from the checked News report without duplicating an existing student word")
+    const newsPastedDefinition = savedDraft.vocabularyJson.find((entry) => entry.english === pastedWordEnglish)?.definition
+    const seededPastedWord = words.find((word) => word.english === pastedWordEnglish)
+    assert.equal(seededPastedWord?.definition, newsPastedDefinition, "News to New Words preserves the exact formatted definition text")
     for (const word of words.filter((entry) => entry.english !== "confederations")) {
       const submitted = await page.evaluate(async (entry) => {
         const response = await fetch("/api/student/library/submissions", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sourceId: entry.id, entry }) })
@@ -466,6 +469,10 @@ test("authenticated student News and New Words saves, Library visibility, week-s
       assert.equal(submitted.body.ok, true)
       newsContributionIds.push(submitted.body.contribution.id)
       newsContributionIdsByWord.set(word.english, submitted.body.contribution.id)
+      if (word.english === pastedWordEnglish) {
+        const savedContribution = await prisma.libraryContribution.findUnique({ where: { id: submitted.body.contribution.id }, select: { payloadJson: true } })
+        assert.equal(savedContribution?.payloadJson?.definition, newsPastedDefinition, "New Words to Library preserves the exact formatted definition text")
+      }
     }
 
     const weekSetButtons = page.locator('#newsPageQueueBody button[data-open-news-week-set]')
@@ -541,7 +548,14 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     await page.locator(`[data-entry-id="${pastedContributionId}"]`).click()
     const newsEditDialog = page.locator("dialog.library-edit-dialog")
     await newsEditDialog.waitFor({ state: "visible", timeout: 10000 })
-    assert.match(await newsEditDialog.locator('[data-vocabulary-field="definition"]').inputValue(), /\*\*bold\*\*[\s\S]*- first[\s\S]*\n[ ]{4}- \*nested\*/u)
+    const libraryDefinition = await newsEditDialog.locator('[data-vocabulary-field="definition"]').inputValue()
+    assert.equal(libraryDefinition, newsPastedDefinition, "Library reload returns the exact News definition text")
+    const formattedDefinitionViews = await page.evaluate(([newsDefinition, libraryValue]) => [
+      window.SIS_VOCABULARY_ESL.definitionHtml(newsDefinition),
+      window.SIS_VOCABULARY_ESL.definitionHtml(libraryValue),
+    ], [newsPastedDefinition, libraryDefinition])
+    assert.equal(formattedDefinitionViews[1], formattedDefinitionViews[0], "News and Library render the same definition HTML")
+    assert.match(formattedDefinitionViews[0], /<ul>[\s\S]*<ul>[\s\S]*nested[\s\S]*<\/ul>[\s\S]*<\/ul>/u, "nested list formatting survives both paths")
     await newsEditDialog.locator("[data-library-edit-cancel]").click()
 
     for (const fixture of lifecycleFixtures) {
