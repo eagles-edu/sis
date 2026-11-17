@@ -538,11 +538,112 @@ test("authoritative validator rejects wrong stress and uses Learner's only after
   resetVocabularyDictionaryCacheForTest()
 })
 
+test("authoritative validator blocks only after both dictionaries confirm a miss", async () => {
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY = "test-learners"
+  resetVocabularyDictionaryCacheForTest()
+  const calls = []
+  try {
+    const result = await validateVocabularyEntry(
+      { english: "apple", syllabication: "AP-ple" },
+      {
+        fetchImpl: async (url) => {
+          calls.push(String(url))
+          return { ok: true, json: async () => [] }
+        },
+      },
+    )
+    assert.match(result.message, /manual dictionary research/u)
+    assert.equal(result.warning, "")
+    assert.doesNotMatch(result.message, /ap-ple|apple/u)
+    assert.equal(calls.length, 2)
+    assert.match(calls[0], /\/collegiate\//u)
+    assert.match(calls[1], /\/learners\//u)
+  } finally {
+    delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    delete process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY
+    resetVocabularyDictionaryCacheForTest()
+  }
+})
+
 test("authoritative validator allows a warning only when Merriam-Webster is unavailable", async () => {
   resetVocabularyDictionaryCacheForTest()
   const result = await validateVocabularyEntry({ english: "apple", syllabication: "AP-ple" })
   assert.equal(result.message, "")
   assert.match(result.warning, /could not be verified/)
+})
+
+test("Merriam-Webster missing keys and rate limits remain warning-only", async () => {
+  const previousCollegiateKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  const previousLearnersKey = process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY
+  delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  delete process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY
+  resetVocabularyDictionaryCacheForTest()
+  try {
+    let calls = 0
+    const missingKey = await validateVocabularyEntry(
+      { english: "apple", syllabication: "AP-ple" },
+      { fetchImpl: async () => { calls += 1; throw new Error("fetch must not run without a key") } },
+    )
+    assert.equal(missingKey.message, "")
+    assert.match(missingKey.warning, /could not be verified/u)
+    assert.equal(calls, 0)
+
+    process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+    process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY = "test-learners"
+    resetVocabularyDictionaryCacheForTest()
+    const rateLimitedCalls = []
+    const rateLimited = await validateVocabularyEntry(
+      { english: "apple", syllabication: "AP-ple" },
+      {
+        fetchImpl: async (url) => {
+          rateLimitedCalls.push(String(url))
+          return { ok: false, status: 429 }
+        },
+      },
+    )
+    assert.equal(rateLimited.message, "")
+    assert.match(rateLimited.warning, /could not be verified/u)
+    assert.equal(rateLimitedCalls.length, 1)
+    assert.match(rateLimitedCalls[0], /\/collegiate\//u)
+  } finally {
+    if (previousCollegiateKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = previousCollegiateKey
+    if (previousLearnersKey === undefined) delete process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY
+    else process.env.MERRIAM_WEBSTER_LEARNERS_API_KEY = previousLearnersKey
+    resetVocabularyDictionaryCacheForTest()
+  }
+})
+
+test("Merriam-Webster timeout and transport failures remain warning-only", async () => {
+  const previousCollegiateKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  resetVocabularyDictionaryCacheForTest()
+  try {
+    const timedOut = await validateVocabularyEntry(
+      { english: "apple", syllabication: "AP-ple" },
+      {
+        fetchImpl: async (_url, request) => new Promise((_resolve, reject) => {
+          request.signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true })
+        }),
+      },
+    )
+    assert.equal(timedOut.message, "")
+    assert.match(timedOut.warning, /could not be verified/u)
+
+    resetVocabularyDictionaryCacheForTest()
+    const unavailable = await validateVocabularyEntry(
+      { english: "apple", syllabication: "AP-ple" },
+      { fetchImpl: async () => { throw new Error("connection refused") } },
+    )
+    assert.equal(unavailable.message, "")
+    assert.match(unavailable.warning, /could not be verified/u)
+    assert.doesNotMatch(unavailable.warning, /connection refused/u)
+  } finally {
+    if (previousCollegiateKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = previousCollegiateKey
+    resetVocabularyDictionaryCacheForTest()
+  }
 })
 
 test("all student vocabulary save and check surfaces run the same client guard", () => {

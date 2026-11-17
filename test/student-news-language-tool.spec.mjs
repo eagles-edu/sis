@@ -55,3 +55,39 @@ test("malformed LanguageTool responses fail closed", async () => {
     globalThis.fetch = originalFetch
   }
 })
+
+test("LanguageTool rate limits and service failures reject the online check", async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async () => new Response("rate limited", { status: 429 })
+  try {
+    await assert.rejects(
+      checkTextWithLanguageTool("There is no bias.", { endpoint: "http://127.0.0.1:8093/v2/check" }),
+      /HTTP 429/u,
+    )
+    globalThis.fetch = async () => { throw new Error("connection refused") }
+    await assert.rejects(
+      checkTextWithLanguageTool("There is no bias.", { endpoint: "http://127.0.0.1:8093/v2/check" }),
+      /connection refused/u,
+    )
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test("LanguageTool request timeout aborts and rejects the required check", async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async (_url, request) => new Promise((_resolve, reject) => {
+    request.signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true })
+  })
+  try {
+    await assert.rejects(
+      checkTextWithLanguageTool("There is no bias.", {
+        endpoint: "http://127.0.0.1:8093/v2/check",
+        timeoutMs: 1000,
+      }),
+      { name: "AbortError" },
+    )
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
