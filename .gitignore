@@ -82,3 +82,4 @@ test/e2e/index.html
 /runtime-data/dev-runtime.pid
 /runtime-data/maintenance-reports/sis-config-repair-cron.log
 /runtime-data/prometheus/sis-test-request-metrics.prom
+/runtime-data/prometheus/parent-profile-workflow.prom

@@ -381,6 +381,20 @@ Infrastructure metrics alone cannot identify the exact save operation. The SIS s
 
 Request labels must use route templates, not student IDs, names, emails, cookies, or raw request bodies. This avoids turning Prometheus into a student-data store.
 
+## Parent profile workflow monitor
+
+Run the dev functional monitor with:
+
+```bash
+npm run monitor:parent-profile:dev
+```
+
+It uses the explicit `.env.dev` / `development` environment and pins the browser flow to `http://127.0.0.1:8788`. The check performs the authenticated synthetic invitation, draft save/reload/resave, submission, review, and approval workflow. It uses a manual no-email invitation and UUID-scoped synthetic records; test cleanup removes the records. The monitor treats a skipped E2E test as a failed check and has a 120-second process timeout.
+
+The result is atomically written to `runtime-data/prometheus/parent-profile-workflow.prom`, which the existing node-exporter textfile collector scrapes. Its fixed `environment="dev"` label has no student, parent, account, route-parameter, or credential values. The metrics report the latest result, duration, check time, and last successful check time. Prometheus displays `DevParentProfileWorkflowCheckFailed` when the latest result stays failed for 30 seconds.
+
+This command is a one-shot functional check; this item does not install a timer. Scheduling, stale-result handling, interrupted-run cleanup, retries, and controlled restarts are addressed by the separate monitoring-worker checklist items. The currently active Compose profile has no Alertmanager, so this rule is visible in local Prometheus but does not send an external notification.
+
 ## Approved telemetry additions
 
 The following additions are approved for the test mirror. They are deliberately limited to the student-write incident path and safe operational metadata. They must not expose student data, credentials, session data, request bodies, SQL text, or query parameters.

@@ -1,4 +1,14 @@
 groups:
+  - name: sis-parent-profile-workflow
+    rules:
+      - alert: DevParentProfileWorkflowCheckFailed
+        expr: sis_parent_profile_workflow_check_success{environment="dev"} == 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Synthetic parent profile workflow monitor failed in dev
+
   - name: sis-test-mirror
     rules:
       - alert: TestMirrorPublicAdminDown
