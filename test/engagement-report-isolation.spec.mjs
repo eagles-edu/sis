@@ -31,6 +31,7 @@ test("report engagement enforces account scope and records one acknowledgement w
     "../src/infra/db/prisma-client.mjs"
   )
   const { hashScryptPassword } = await import("../src/modules/admin/users.mjs")
+  const { listPerformanceEngagementData } = await import("../src/modules/admin/performance-engagement.mjs")
   const { startExerciseMailer } = await import("../server/exercise-mailer.mjs")
   const { closeStudentAdminRuntimeResources } = await import("../server/student-admin-routes.mjs")
   const prisma = await getSharedPrismaClient()
@@ -41,8 +42,10 @@ test("report engagement enforces account scope and records one acknowledgement w
   const studentEaglesId = `KA-S-${stamp}`
   const unrelatedStudentEaglesId = `KA-US-${stamp}`
   const recipientEmail = `ka-engagement-${stamp}@example.invalid`
+  const parentEmail = `ka-parent-recipient-${stamp}@example.invalid`
   let targetStudent = null
   let unrelatedStudent = null
+  let targetProfile = null
   let parentAccount = null
   let unrelatedParentAccount = null
   let studentAccount = null
@@ -50,7 +53,7 @@ test("report engagement enforces account scope and records one acknowledgement w
   let targetLink = null
   let unrelatedLink = null
   let report = null
-  let delivery = null
+  const deliveries = []
   let server = null
 
   try {
@@ -70,6 +73,21 @@ test("report engagement enforces account scope and records one acknowledgement w
         studentNumber: syntheticStudentNumber(stamp, 8),
         eaglesId: unrelatedStudentEaglesId,
         email: `ka-unrelated-${stamp}@example.invalid`,
+      },
+    })
+    targetProfile = await prisma.studentProfile.create({
+      data: {
+        studentRefId: targetStudent.id,
+        sourceFormId: `ka-engagement-${stamp}`,
+        parentsId: parentId,
+        familyId: `KA-FAMILY-${stamp}`,
+        motherEmail: parentEmail,
+        maIsHomeworkProctor: "yes",
+        genderSelections: [],
+        languagesAtHome: [],
+        learningDisorders: [],
+        covidShotHistory: [],
+        feverMedicineAllowed: [],
       },
     })
     parentAccount = await prisma.parentPortalAccount.create({
@@ -115,19 +133,23 @@ test("report engagement enforces account scope and records one acknowledgement w
         quarter: "q1",
         workflowState: "published",
         publishedAt: new Date(),
+        notificationSentAt: new Date(),
         finalArtifactVersion: 1,
         metaPayload: { classDate: "2026-11-17" },
       },
     })
-    delivery = await prisma.brevoEmailDelivery.create({
-      data: {
-        providerMessageId: `ka-engagement-${stamp}@example.invalid`,
-        recipientEmail,
-        reportId: report.id,
-        status: "sent",
-        sentAt: new Date(),
-      },
-    })
+    for (const [recipient, audience] of [[recipientEmail, "student"], [parentEmail, "parent"]]) {
+      deliveries.push(await prisma.brevoEmailDelivery.create({
+        data: {
+          providerMessageId: `ka-engagement-${audience}-${stamp}@example.invalid`,
+          recipientEmail: recipient,
+          reportId: report.id,
+          status: "sent",
+          queuedAt: new Date(),
+          sentAt: new Date(),
+        },
+      }))
+    }
 
     server = await startExerciseMailer({
       transporter: mockTransporter(),
@@ -234,6 +256,20 @@ test("report engagement enforces account scope and records one acknowledgement w
     assert.ok(opened[0].ipHash)
     assert.notEqual(opened[0].ipHash, "203.0.113.15")
     assert.equal(await prisma.parentClassReportEvent.count({ where: { reportId: `missing-${stamp}` } }), 0)
+
+    const engagement = await listPerformanceEngagementData({ dateFrom: "2026-11-17", dateTo: "2026-11-17" })
+    const reportRows = engagement.rows.filter((row) => row.reportId === report.id)
+    const parentRow = reportRows.find((row) => row.reviewed === "parent")
+    const studentRow = reportRows.find((row) => row.reviewed === "student")
+    assert.ok(parentRow)
+    assert.ok(studentRow)
+    assert.equal(parentRow.emailUsed, parentEmail)
+    assert.equal(studentRow.emailUsed, recipientEmail)
+    assert.equal(parentRow.acknowledged, "yes")
+    assert.equal(studentRow.acknowledged, "yes")
+    assert.equal(studentRow.emailOpened, "yes")
+    assert.equal(parentRow.emailOpened, "")
+    assert.ok(engagement.days.find((day) => day.classDate === "2026-11-17")?.acknowledgedCount >= 2)
   } finally {
     const cleanupErrors = []
     const attempt = async (operation) => {
@@ -250,8 +286,9 @@ test("report engagement enforces account scope and records one acknowledgement w
       await attempt(() => closeStudentAdminRuntimeResources())
     }
     if (report) await attempt(() => prisma.parentClassReportEvent.deleteMany({ where: { reportId: report.id } }))
-    if (delivery) await attempt(() => prisma.brevoEmailDelivery.deleteMany({ where: { id: delivery.id } }))
+    if (report) await attempt(() => prisma.brevoEmailDelivery.deleteMany({ where: { reportId: report.id } }))
     if (report) await attempt(() => prisma.parentClassReport.deleteMany({ where: { id: report.id } }))
+    if (targetProfile) await attempt(() => prisma.studentProfile.deleteMany({ where: { id: targetProfile.id } }))
     if (studentAccount) await attempt(() => prisma.studentPortalAccount.deleteMany({ where: { id: studentAccount.id } }))
     if (unrelatedStudentAccount) await attempt(() => prisma.studentPortalAccount.deleteMany({ where: { id: unrelatedStudentAccount.id } }))
     if (targetLink) await attempt(() => prisma.parentPortalStudentLink.deleteMany({ where: { id: targetLink.id } }))
