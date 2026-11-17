@@ -11,6 +11,9 @@ const CHECK_TIMEOUT_MS = 10000
 const WORKER_STALE_AFTER_SECONDS = 30
 const PROCESSING_STALE_AFTER_SECONDS = 300
 const WEBHOOK_STALE_AFTER_SECONDS = 300
+const ANNOUNCEMENT_QUEUE_STALE_AFTER_SECONDS = 120
+const NOTIFICATION_QUEUE_STALE_AFTER_SECONDS = 1800
+const ASSIGNMENT_DISPATCH_STALE_AFTER_SECONDS = 300
 
 export function assertDevEnvironment(environment = process.env) {
   if (
@@ -55,6 +58,16 @@ export function renderEngagementMetrics({
   failedJobCount,
   staleProcessingJobCount,
   queuedJobCount,
+  announcementQueuedJobCount,
+  announcementOldestQueuedAgeSeconds,
+  notificationDueQueueCount,
+  notificationOldestDueAgeSeconds,
+  notificationDeliveryFailureCount,
+  notificationOldestFailureAgeSeconds,
+  assignmentReminderPendingCount,
+  assignmentReminderOldestPendingAgeSeconds,
+  staleAssignmentReminderDispatchCount,
+  assignmentReminderFailureCount,
   workerLastPollTimestamp,
   workerLastPollSuccess,
 }) {
@@ -73,6 +86,16 @@ export function renderEngagementMetrics({
     ["sis_async_side_effect_failed_jobs_24h", "Number of async side-effect jobs in failed state updated during the last 24 hours.", failedJobCount],
     ["sis_async_side_effect_stale_processing_jobs", "Number of async side-effect jobs locked for more than five minutes.", staleProcessingJobCount],
     ["sis_async_side_effect_queued_jobs", "Number of queued async side-effect jobs.", queuedJobCount],
+    ["sis_async_announcement_queued_jobs", "Number of queued announcement email jobs currently available for processing.", announcementQueuedJobCount],
+    ["sis_async_announcement_oldest_queued_age_seconds", "Age of the oldest available queued dev announcement email job.", announcementOldestQueuedAgeSeconds],
+    ["sis_notification_due_queue_items", "Number of due dev notification queue items with at least one address.", notificationDueQueueCount],
+    ["sis_notification_oldest_due_queue_age_seconds", "Age of the oldest due dev notification queue item with an address.", notificationOldestDueAgeSeconds],
+    ["sis_notification_delivery_failure_queue_items", "Number of queued dev notification items retaining a delivery error.", notificationDeliveryFailureCount],
+    ["sis_notification_oldest_delivery_failure_age_seconds", "Age of the oldest dev notification delivery error.", notificationOldestFailureAgeSeconds],
+    ["sis_assignment_reminder_pending_dispatches", "Number of dev assignment reminder dispatches still pending.", assignmentReminderPendingCount],
+    ["sis_assignment_reminder_oldest_pending_age_seconds", "Age of the oldest pending dev assignment reminder dispatch.", assignmentReminderOldestPendingAgeSeconds],
+    ["sis_assignment_reminder_stale_pending_dispatches", "Number of dev assignment reminder dispatches pending for more than five minutes.", staleAssignmentReminderDispatchCount],
+    ["sis_assignment_reminder_failed_dispatches_24h", "Number of dev assignment reminder dispatches failed in the last 24 hours.", assignmentReminderFailureCount],
     ["sis_async_side_effect_worker_last_poll_timestamp_seconds", "Unix timestamp of the most recently completed dev async side-effect worker poll.", workerLastPollTimestamp],
     ["sis_async_side_effect_worker_last_poll_success", "Whether the most recent dev async side-effect worker poll completed successfully.", workerLastPollSuccess],
     ["sis_async_side_effect_worker_poll_age_seconds", "Age of the most recently completed dev async side-effect worker poll.", workerAge],
@@ -150,7 +173,19 @@ async function collectDatabaseMetrics(prisma, now) {
   if (database[0]?.name !== "sis_dev") throw new Error("Engagement workflow monitor connected to an unexpected database")
   const dayAgo = new Date(now - 86400 * 1000)
   const processingCutoff = new Date(now - PROCESSING_STALE_AFTER_SECONDS * 1000)
-  const [latestReportEvent, latestWebhook, unprocessedCount, oldestUnprocessed, failedJobCount, staleProcessingJobCount, queuedJobCount] = await Promise.all([
+  const assignmentDispatchCutoff = new Date(now - ASSIGNMENT_DISPATCH_STALE_AFTER_SECONDS * 1000)
+  const nowDate = new Date(now)
+  const dueNotificationWhere = {
+    status: "queued",
+    recipients: { isEmpty: false },
+    OR: [{ scheduledFor: null }, { scheduledFor: { lte: nowDate } }],
+  }
+  const queueableAnnouncementWhere = {
+    jobType: "announcement-email",
+    status: "queued",
+    OR: [{ availableAt: null }, { availableAt: { lte: nowDate } }],
+  }
+  const [latestReportEvent, latestWebhook, unprocessedCount, oldestUnprocessed, failedJobCount, staleProcessingJobCount, queuedJobCount, announcementQueuedJobCount, oldestAnnouncementQueued, notificationDueQueueCount, oldestDueNotification, notificationDeliveryFailureCount, oldestNotificationFailure, assignmentReminderPendingCount, oldestPendingReminder, staleAssignmentReminderDispatchCount, assignmentReminderFailureCount] = await Promise.all([
     prisma.parentClassReportEvent.findFirst({ orderBy: { eventAt: "desc" }, select: { eventAt: true } }),
     prisma.brevoEmailWebhookEvent.findFirst({ orderBy: { receivedAt: "desc" }, select: { receivedAt: true } }),
     prisma.brevoEmailWebhookEvent.count({ where: { processedAt: null } }),
@@ -158,11 +193,25 @@ async function collectDatabaseMetrics(prisma, now) {
     prisma.asyncSideEffectJob.count({ where: { status: "failed", updatedAt: { gte: dayAgo } } }),
     prisma.asyncSideEffectJob.count({ where: { status: "processing", lockedAt: { lt: processingCutoff } } }),
     prisma.asyncSideEffectJob.count({ where: { status: "queued" } }),
+    prisma.asyncSideEffectJob.count({ where: queueableAnnouncementWhere }),
+    prisma.asyncSideEffectJob.findFirst({ where: queueableAnnouncementWhere, orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
+    prisma.adminNotificationQueue.count({ where: dueNotificationWhere }),
+    prisma.adminNotificationQueue.findFirst({ where: dueNotificationWhere, orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
+    prisma.adminNotificationQueue.count({ where: { status: "queued", lastError: { not: null } } }),
+    prisma.adminNotificationQueue.findFirst({ where: { status: "queued", lastError: { not: null } }, orderBy: { updatedAt: "asc" }, select: { updatedAt: true } }),
+    prisma.assignmentReminderDispatch.count({ where: { status: "pending" } }),
+    prisma.assignmentReminderDispatch.findFirst({ where: { status: "pending" }, orderBy: { updatedAt: "asc" }, select: { updatedAt: true } }),
+    prisma.assignmentReminderDispatch.count({ where: { status: "pending", updatedAt: { lt: assignmentDispatchCutoff } } }),
+    prisma.assignmentReminderDispatch.count({ where: { status: "failed", updatedAt: { gte: dayAgo } } }),
   ])
   const oldestTimestamp = timestampSeconds(oldestUnprocessed?.receivedAt)
   const oldestAge = oldestTimestamp
     ? Math.max(0, now / 1000 - oldestTimestamp)
     : (unprocessedCount > 0 ? WEBHOOK_STALE_AFTER_SECONDS + 1 : 0)
+  const ageSince = (value) => {
+    const timestamp = timestampSeconds(value)
+    return timestamp ? Math.max(0, now / 1000 - timestamp) : 0
+  }
   return {
     reportEventTimestamp: timestampSeconds(latestReportEvent?.eventAt),
     webhookReceivedTimestamp: timestampSeconds(latestWebhook?.receivedAt),
@@ -171,6 +220,16 @@ async function collectDatabaseMetrics(prisma, now) {
     failedJobCount,
     staleProcessingJobCount,
     queuedJobCount,
+    announcementQueuedJobCount,
+    announcementOldestQueuedAgeSeconds: ageSince(oldestAnnouncementQueued?.createdAt),
+    notificationDueQueueCount,
+    notificationOldestDueAgeSeconds: ageSince(oldestDueNotification?.createdAt),
+    notificationDeliveryFailureCount,
+    notificationOldestFailureAgeSeconds: ageSince(oldestNotificationFailure?.updatedAt),
+    assignmentReminderPendingCount,
+    assignmentReminderOldestPendingAgeSeconds: ageSince(oldestPendingReminder?.updatedAt),
+    staleAssignmentReminderDispatchCount,
+    assignmentReminderFailureCount,
   }
 }
 
@@ -195,7 +254,18 @@ export async function runEngagementWorkflowMonitor({
     const previousSuccess = readLastSuccessTimestamp(metricsFile)
     const workerLastPollTimestamp = readWorkerTimestamp(workerMetricsFile)
     const workerLastPollSuccess = readWorkerPollSuccess(workerMetricsFile)
-    const success = reportApiSuccess && collected.webhookOldestUnprocessedAgeSeconds < WEBHOOK_STALE_AFTER_SECONDS && collected.staleProcessingJobCount === 0 && collected.failedJobCount === 0 && workerLastPollTimestamp > 0 && checkedAt - workerLastPollTimestamp <= WORKER_STALE_AFTER_SECONDS && workerLastPollSuccess === 1
+    const success = reportApiSuccess &&
+      collected.webhookOldestUnprocessedAgeSeconds < WEBHOOK_STALE_AFTER_SECONDS &&
+      collected.staleProcessingJobCount === 0 &&
+      collected.failedJobCount === 0 &&
+      collected.announcementOldestQueuedAgeSeconds <= ANNOUNCEMENT_QUEUE_STALE_AFTER_SECONDS &&
+      collected.notificationOldestDueAgeSeconds <= NOTIFICATION_QUEUE_STALE_AFTER_SECONDS &&
+      collected.notificationDeliveryFailureCount === 0 &&
+      collected.staleAssignmentReminderDispatchCount === 0 &&
+      collected.assignmentReminderFailureCount === 0 &&
+      workerLastPollTimestamp > 0 &&
+      checkedAt - workerLastPollTimestamp <= WORKER_STALE_AFTER_SECONDS &&
+      workerLastPollSuccess === 1
     metrics = renderEngagementMetrics({
       checkedAt,
       durationSeconds: (clock() - started) / 1000,

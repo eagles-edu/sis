@@ -57,6 +57,46 @@ groups:
         annotations:
           summary: Dev async side-effect worker poll failed
 
+      - alert: DevAnnouncementQueueStale
+        expr: sis_async_announcement_oldest_queued_age_seconds{environment="dev"} > 120
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A dev announcement email has remained ready in the queue for over two minutes
+
+      - alert: DevNotificationQueueStale
+        expr: sis_notification_oldest_due_queue_age_seconds{environment="dev"} > 1800
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A due dev notification with a recipient has waited over thirty minutes
+
+      - alert: DevNotificationDeliveryFailure
+        expr: sis_notification_delivery_failure_queue_items{environment="dev"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev notification queue items retain a delivery error
+
+      - alert: DevAssignmentReminderDispatchStale
+        expr: sis_assignment_reminder_stale_pending_dispatches{environment="dev"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A dev assignment reminder dispatch has remained pending for over five minutes
+
+      - alert: DevAssignmentReminderDispatchFailed
+        expr: sis_assignment_reminder_failed_dispatches_24h{environment="dev"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev assignment reminder dispatches have failed in the last 24 hours
+
   - name: sis-parent-profile-workflow
     rules:
       - alert: DevParentProfileWorkflowCheckFailed

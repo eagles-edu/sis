@@ -39,12 +39,29 @@ test("engagement metrics expose only bounded dev gauges and flag missing or stal
     failedJobCount: 2,
     staleProcessingJobCount: 1,
     queuedJobCount: 3,
+    announcementQueuedJobCount: 2,
+    announcementOldestQueuedAgeSeconds: 130,
+    notificationDueQueueCount: 4,
+    notificationOldestDueAgeSeconds: 1900,
+    notificationDeliveryFailureCount: 1,
+    notificationOldestFailureAgeSeconds: 2000,
+    assignmentReminderPendingCount: 2,
+    assignmentReminderOldestPendingAgeSeconds: 350,
+    staleAssignmentReminderDispatchCount: 1,
+    assignmentReminderFailureCount: 1,
     workerLastPollTimestamp: 100,
     workerLastPollSuccess: 0,
   })
   assert.match(metrics, /sis_engagement_report_api_available\{environment="dev"\} 0/u)
   assert.match(metrics, /sis_engagement_webhook_oldest_unprocessed_age_seconds\{environment="dev"\} 400/u)
   assert.match(metrics, /sis_async_side_effect_failed_jobs_24h\{environment="dev"\} 2/u)
+  assert.match(metrics, /Number of queued announcement email jobs currently available for processing\./u)
+  assert.match(metrics, /sis_async_announcement_oldest_queued_age_seconds\{environment="dev"\} 130/u)
+  assert.match(metrics, /sis_notification_oldest_due_queue_age_seconds\{environment="dev"\} 1900/u)
+  assert.match(metrics, /sis_notification_delivery_failure_queue_items\{environment="dev"\} 1/u)
+  assert.match(metrics, /sis_assignment_reminder_oldest_pending_age_seconds\{environment="dev"\} 350/u)
+  assert.match(metrics, /sis_assignment_reminder_stale_pending_dispatches\{environment="dev"\} 1/u)
+  assert.match(metrics, /sis_assignment_reminder_failed_dispatches_24h\{environment="dev"\} 1/u)
   assert.match(metrics, /sis_async_side_effect_worker_stale\{environment="dev"\} 1/u)
   assert.match(metrics, /sis_async_side_effect_worker_last_poll_success\{environment="dev"\} 0/u)
   assert.doesNotMatch(metrics, /student|recipient|password|cookie|session|job_id|[^\s@]+@[^\s@]+/iu)
