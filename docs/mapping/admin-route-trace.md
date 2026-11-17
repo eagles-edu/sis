@@ -111,6 +111,22 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | GET | `/api/parent/children/{eaglesId}/profile` | Yes (parent session) | linked-child scope | official child profile, latest saved draft payload, and lock/immutable metadata |
 | PUT | `/api/parent/children/{eaglesId}/profile-draft` | Yes (parent session) | linked-child scope + lock enforcement | `saveParentProfileDraftSubmission` |
 | POST | `/api/parent/children/{eaglesId}/profile-submit` | Yes (parent session) | linked-child scope | `setParentProfileSubmissionSubmitted` |
+| POST | `/api/parent/reports/{reportId}/acknowledge` | Yes (parent session) | report must be published and linked to this parent account | `getAuthorizedReportRecordForViewer` then idempotent `acknowledgeParentClassReportReview` |
+
+## Student Portal API Routes
+
+| Method | Path | Auth Required | Role Gate | Handler |
+| --- | --- | --- | --- | --- |
+| POST | `/api/student/auth/login` | No | None | student credential verify + session issue |
+| POST | `/api/student/auth/logout` | No | None | student logout + cookie clear |
+| GET | `/api/student/auth/me` | Yes (student session) | student session | student session identity payload |
+| POST | `/api/student/reports/{reportId}/acknowledge` | Yes (student session) | report must be published and linked to this student account | `getAuthorizedReportRecordForViewer` then idempotent `acknowledgeParentClassReportReview` |
+
+## Public Report Engagement Asset
+
+| Method | Path | Auth Required | Validation | Handler |
+| --- | --- | --- | --- | --- |
+| GET | `/api/report-events/email-open.gif` | No (email client asset request) | records only when a sent `BrevoEmailDelivery` matches both report ID and normalized recipient email | returns transparent GIF and stores `email_opened`; storage failures do not change the asset response |
 
 ## Google Forms Grade Submission
 

@@ -5824,7 +5824,7 @@ async function markParentClassReportReviewedByViewer(
     recipientEmail: normalizeLower(recipientEmail),
     channel: "portal",
     userAgent: normalizeText(userAgent),
-    ipAddress: normalizeText(ipAddress),
+    ip: normalizeText(ipAddress),
     metadata: {
       workflowState: normalizeText(existing?.workflowState),
       source: normalizeText(source),
@@ -9082,7 +9082,12 @@ async function handleParentApiRequest(request, response, pathname, url) {
   const parentReportAckMatch = pathname.match(PARENT_REPORT_ACK_PATH_RE)
   if (parentReportAckMatch && method === "POST") {
     const reportId = decodeURIComponent(parentReportAckMatch[1])
-    const updated = await acknowledgeParentClassReportReview(reportId, {
+    const authorizedReport = await getAuthorizedReportRecordForViewer(reportId, {
+      viewerRole: "parent",
+      parentsId: parentContext.parentsId,
+      parentAccountId: parentContext.parentAccountId,
+    })
+    const updated = await acknowledgeParentClassReportReview(authorizedReport.id, {
       viewerRole: "parent",
       reviewedBy: parentContext.parentsId || parentContext.parentAccountId,
     })
@@ -9374,7 +9379,11 @@ async function handleStudentApiRequest(request, response, pathname, url) {
   const studentReportAckMatch = pathname.match(STUDENT_REPORT_ACK_PATH_RE)
   if (studentReportAckMatch && method === "POST") {
     const reportId = decodeURIComponent(studentReportAckMatch[1])
-    const updated = await acknowledgeParentClassReportReview(reportId, {
+    const authorizedReport = await getAuthorizedReportRecordForViewer(reportId, {
+      viewerRole: "student",
+      studentRefId,
+    })
+    const updated = await acknowledgeParentClassReportReview(authorizedReport.id, {
       viewerRole: "student",
       reviewedBy: normalizeText(session?.eaglesId || session?.username),
     })
@@ -9734,18 +9743,40 @@ export async function handleStudentAdminRequest(request, response) {
 
   if (method === "GET" && pathname === REPORT_EVENT_EMAIL_OPEN_PATH) {
     const reportId = normalizeText(url.searchParams.get("reportId") || "")
-    if (reportId) {
-      await recordParentClassReportEvent({
-        reportId,
-        artifactVersion: Number.parseInt(String(url.searchParams.get("artifactVersion") || 0), 10) || 0,
-        eventType: "email_opened",
-        actorType: "recipient",
-        actorId: normalizeLower(url.searchParams.get("recipient") || ""),
-        recipientEmail: normalizeLower(url.searchParams.get("recipient") || ""),
-        channel: "email",
-        userAgent: normalizeText(request.headers["user-agent"] || ""),
-        ipAddress: resolveClientIpAddress(request),
-      }).catch(() => null)
+    const recipientEmail = normalizeLower(url.searchParams.get("recipient") || "")
+    if (reportId && recipientEmail) {
+      try {
+        const prisma = await getSharedPrismaClient()
+        const report = await prisma.parentClassReport.findUnique({
+          where: { id: reportId },
+          select: { id: true },
+        })
+        const delivery = report
+          ? await prisma.brevoEmailDelivery.findFirst({
+              where: {
+                reportId,
+                recipientEmail: { equals: recipientEmail, mode: "insensitive" },
+                sentAt: { not: null },
+              },
+              select: { id: true },
+            })
+          : null
+        if (delivery) {
+          await recordParentClassReportEvent({
+            reportId,
+            artifactVersion: Number.parseInt(String(url.searchParams.get("artifactVersion") || 0), 10) || 0,
+            eventType: "email_opened",
+            actorType: "recipient",
+            actorId: recipientEmail,
+            recipientEmail,
+            channel: "email",
+            userAgent: normalizeText(request.headers["user-agent"] || ""),
+            ip: resolveClientIpAddress(request),
+          })
+        }
+      } catch {
+        // Email clients must always receive the tracking asset, even when event storage is unavailable.
+      }
     }
     response.writeHead(200, {
       "Content-Type": "image/gif",

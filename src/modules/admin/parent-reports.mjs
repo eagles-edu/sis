@@ -421,6 +421,10 @@ function normalizeParentReportMetaPayload(value = {}) {
         ? String(parsedPastDueHomeworkCount)
         : null,
     pastDueHomeworkSummary: normalizeNullableText(value.pastDueHomeworkSummary),
+    parentReviewedAt: normalizeNullableText(value.parentReviewedAt),
+    parentReviewedByUsername: normalizeNullableText(value.parentReviewedByUsername),
+    studentReviewedAt: normalizeNullableText(value.studentReviewedAt),
+    studentReviewedByUsername: normalizeNullableText(value.studentReviewedByUsername),
     recipients: normalizedRecipients,
     outstandingAssignments: normalizedOutstandingAssignments,
   }
@@ -1021,37 +1025,50 @@ export async function acknowledgeParentClassReportReview(reportId, payload = {})
   const prisma = await getPrismaClient()
   const id = normalizeText(reportId)
   assertWithStatus(Boolean(id), 400, "reportId is required")
-  const existing = await prisma.parentClassReport.findUnique({ where: { id } })
-  assertWithStatus(Boolean(existing), 404, "Parent report not found")
-  assertWithStatus(isParentReportPortalVisible(existing), 403, "Performance report is not published")
   const actorType = normalizeLower(payload.viewerRole) === "student" ? "student" : "parent"
   const reviewedBy = parentReportLifecycleActor(payload.reviewedBy)
-  const reviewedAt = new Date()
-  const nextMeta = {
-    ...(existing?.metaPayload && typeof existing.metaPayload === "object" ? existing.metaPayload : {}),
-  }
-  if (actorType === "student") {
-    nextMeta.studentReviewedAt = reviewedAt.toISOString()
-    nextMeta.studentReviewedByUsername = reviewedBy
-  } else {
-    nextMeta.parentReviewedAt = reviewedAt.toISOString()
-    nextMeta.parentReviewedByUsername = reviewedBy
-  }
-  const updated = await prisma.parentClassReport.update({
-    where: { id },
-    data: {
-      metaPayload: nextMeta,
-    },
+  const acknowledgement = actorType === "student" ? "student" : "parent"
+  const reviewedAtKey = `${acknowledgement}ReviewedAt`
+  const reviewedByKey = `${acknowledgement}ReviewedByUsername`
+  const result = await prisma.$transaction(async (transaction) => {
+    const lockedRows = await transaction.$queryRaw`
+      SELECT id FROM "ParentClassReport" WHERE id = ${id} FOR UPDATE
+    `
+    assertWithStatus(lockedRows.length > 0, 404, "Parent report not found")
+    const existing = await transaction.parentClassReport.findUnique({ where: { id } })
+    assertWithStatus(Boolean(existing), 404, "Parent report not found")
+    assertWithStatus(isParentReportPortalVisible(existing), 403, "Performance report is not published")
+    const existingMeta =
+      existing?.metaPayload && typeof existing.metaPayload === "object" && !Array.isArray(existing.metaPayload)
+        ? existing.metaPayload
+        : {}
+    if (normalizeText(existingMeta[reviewedAtKey])) {
+      return existing
+    }
+    const reviewedAt = new Date()
+    const updated = await transaction.parentClassReport.update({
+      where: { id },
+      data: {
+        metaPayload: {
+          ...existingMeta,
+          [reviewedAtKey]: reviewedAt.toISOString(),
+          [reviewedByKey]: reviewedBy,
+        },
+      },
+    })
+    await transaction.parentClassReportEvent.create({
+      data: {
+        reportId: id,
+        artifactVersion: normalizeInteger(updated?.finalArtifactVersion) || 0,
+        eventType: actorType === "student" ? "student_review_acknowledged" : "parent_review_acknowledged",
+        actorType,
+        actorId: reviewedBy,
+        metadataJson: { workflowState: normalizeParentReportWorkflowState(updated?.workflowState) },
+      },
+    })
+    return updated
   })
-  await recordParentClassReportEvent({
-    reportId: id,
-    artifactVersion: normalizeInteger(updated?.finalArtifactVersion) || 0,
-    eventType: actorType === "student" ? "student_review_acknowledged" : "parent_review_acknowledged",
-    actorType,
-    actorId: reviewedBy,
-    metadata: { workflowState: normalizeParentReportWorkflowState(updated?.workflowState) },
-  })
-  return mapParentClassReport(updated)
+  return mapParentClassReport(result)
 }
 
 /**
