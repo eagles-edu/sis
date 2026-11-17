@@ -156,6 +156,7 @@
           generatedAt: "",
           panelOrder: [
             "queued-performance-reports",
+            "announcement-delivery-failures",
             "unmatched-exercise-submissions",
             "current-assignments-pending",
             "overdue-homework",
@@ -3327,6 +3328,7 @@
         queueHub: {
           panelOrder: [
             "queued-performance-reports",
+            "announcement-delivery-failures",
             "unmatched-exercise-submissions",
             "current-assignments-pending",
             "overdue-homework",
@@ -14750,6 +14752,7 @@
 
         const queueApprovalLabel = (item = {}) => {
           const status = normalizeLower(item?.status);
+          if (normalizeText(item?.lastError)) return "Delivery issue";
           if (status === "queued") return "Approved / staged";
           if (status === "hold") return "On hold";
           if (status === "sent") return "Sent";
@@ -15160,10 +15163,14 @@
         await loadParentReportQueue({ showAll: state.parentReportQueue.showAll });
         clearParentQueueSelection();
         setParentQueueModalStatus(
-          `Send selected completed: sent=${result?.sent || 0}, failed=${result?.failed || 0}`,
+          result?.queued > 0
+            ? `Queued ${result.queued} report(s); delivery confirmation pending.`
+            : `Delivery processing completed: sent=${result?.sent || 0}, failed=${result?.failed || 0}`,
         );
         setStatus(
-          `Selected performance reports processed (sent=${result?.sent || 0}, failed=${result?.failed || 0}).`,
+          result?.queued > 0
+            ? `Selected performance reports queued (${result.queued}); delivery confirmation pending.`
+            : `Performance report delivery processing completed (sent=${result?.sent || 0}, failed=${result?.failed || 0}).`,
         );
         await loadDashboardSummary();
       }
@@ -15339,10 +15346,14 @@
         await loadParentReportQueue({ showAll: state.parentReportQueue.showAll });
         clearParentQueueSelection();
         setParentQueueModalStatus(
-          `${selectedQueueIds.length ? "Send selected" : "Send all"} completed: sent=${result?.sent || 0}, failed=${result?.failed || 0}`,
+          result?.queued > 0
+            ? `Queued ${result.queued} report(s); delivery confirmation pending.`
+            : `Delivery processing completed: sent=${result?.sent || 0}, failed=${result?.failed || 0}`,
         );
         setStatus(
-          `${selectedQueueIds.length ? "Selected" : "Queued"} performance reports processed (sent=${result?.sent || 0}, failed=${result?.failed || 0}).`,
+          result?.queued > 0
+            ? `Performance reports queued (${result.queued}); delivery confirmation pending.`
+            : `Performance report delivery processing completed (sent=${result?.sent || 0}, failed=${result?.failed || 0}).`,
         );
         await loadDashboardSummary();
       }
@@ -15487,12 +15498,22 @@
             recipients,
           },
         });
-        setAssignmentStatus(
-          `Assignment email sent to ${result?.sent || recipients.length} recipients.`,
-        );
-        setStatus(
-          `Assignment notification sent (${result?.sent || recipients.length} recipients).`,
-        );
+        if (result?.queued === true) {
+          const deliveryStatusMessage = `Assignment email queued for ${recipients.length} recipients; delivery confirmation pending.`;
+          setAssignmentStatus(deliveryStatusMessage);
+          setStatus(deliveryStatusMessage);
+          return;
+        }
+        const sent = Number.isFinite(Number(result?.sent)) ? Math.max(0, Number(result.sent)) : null;
+        if (sent !== null) {
+          const deliveryStatusMessage = `Assignment email accepted by the mail provider for ${sent} recipients; inbox delivery is not confirmed.`;
+          setAssignmentStatus(deliveryStatusMessage);
+          setStatus(deliveryStatusMessage);
+          return;
+        }
+        const deliveryStatusMessage = "Assignment notification request accepted; delivery confirmation is pending.";
+        setAssignmentStatus(deliveryStatusMessage);
+        setStatus(deliveryStatusMessage);
       }
 
       function applyReminderTemplate(templateText, context = {}) {

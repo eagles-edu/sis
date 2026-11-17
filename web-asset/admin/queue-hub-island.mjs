@@ -25,6 +25,8 @@ function queueHubPanelTitle(panelId = "") {
   switch (id) {
     case "queued-performance-reports":
       return "Queued Performance Reports";
+    case "announcement-delivery-failures":
+      return "Announcement Delivery Failures";
     case "unmatched-exercise-submissions":
       return "Exercise Submissions (Unmatched eaglesId)";
     case "current-assignments-pending":
@@ -316,6 +318,18 @@ function queueHubPanelTableHtml(panel = {}) {
   const items = Array.isArray(panel?.items) ? panel.items : [];
   if (panel?.deferred) {
     return '<div class="queue-hub-empty data-surface" data-surface-role="data-surface">Panel deferred until Queue Hub is opened.</div>';
+  }
+  if (normalizeText(panel?.id) === "announcement-delivery-failures") {
+    if (!items.length) {
+      return '<div class="queue-hub-empty data-surface" data-surface-role="data-surface">No announcement delivery failures or pending retries.</div>';
+    }
+    return `<div class="queue-hub-empty data-surface" data-surface-role="data-surface">${items
+      .slice(0, 25)
+      .map((item) => {
+        const attempts = Math.max(0, Number.parseInt(String(item?.attempts || 0), 10) || 0);
+        return `<p><strong>${escapeHtml(formatDateTime(item?.updatedAt || item?.createdAt))}</strong> | ${escapeHtml(normalizeText(item?.status))} after ${attempts} attempt(s)<br><strong>Delivery error:</strong> ${escapeHtml(normalizeText(item?.lastError))}</p>`;
+      })
+      .join("")}</div>`;
   }
   if (!items.length) {
     return `<div class="queue-hub-empty data-surface" data-surface-role="data-surface">${escapeHtml(spec.emptyText)}</div>`;

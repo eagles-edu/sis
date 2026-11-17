@@ -1,6 +1,7 @@
 // @ts-check
 import crypto from "node:crypto"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { getConfiguredDatabaseUrlSync } from "../admin/sis-config-store.mjs"
 
 /**
  * @typedef {{
@@ -49,8 +50,15 @@ function useVolatileTestStorage() {
   return normalizeLower(process.env.NODE_ENV) === "test" && ["memory", "in-memory"].includes(backend)
 }
 
-let SIDE_EFFECT_JOB_DB_DISABLED =
-  useVolatileTestStorage() || !String(process.env.DATABASE_URL || "").trim()
+function hasConfiguredDatabaseUrl() {
+  try {
+    return Boolean(normalizeText(process.env.DATABASE_URL || getConfiguredDatabaseUrlSync()))
+  } catch {
+    return Boolean(normalizeText(process.env.DATABASE_URL))
+  }
+}
+
+let SIDE_EFFECT_JOB_DB_DISABLED = useVolatileTestStorage() || !hasConfiguredDatabaseUrl()
 let SIDE_EFFECT_JOB_DB_WARNED = false
 
 function allowVolatileUnitTestStorage() {
@@ -160,7 +168,10 @@ function markDatabaseFallback(error) {
 }
 
 async function getJobPrismaClient() {
-  if (SIDE_EFFECT_JOB_DB_DISABLED) return null
+  if (SIDE_EFFECT_JOB_DB_DISABLED) {
+    if (useVolatileTestStorage() || !hasConfiguredDatabaseUrl()) return null
+    SIDE_EFFECT_JOB_DB_DISABLED = false
+  }
   try {
     const prisma = await getSharedPrismaClient()
     if (!prisma || !prisma.asyncSideEffectJob) {
@@ -326,6 +337,55 @@ export async function enqueueAsyncSideEffectJob(jobType, payload = {}, options =
     }
     throw error
   }
+}
+
+/**
+ * List announcement email jobs that failed terminally or are waiting for a
+ * retry after a delivery failure. Recipient and message payloads are excluded.
+ * @param {{ take?: unknown }} [options]
+ * @returns {Promise<Array<{ id: string, status: string, attempts: number, lastError: string, createdAt: string, updatedAt: string, completedAt: string }>>}
+ */
+export async function listAnnouncementDeliveryFailures({ take = 25 } = {}) {
+  const limit = Math.max(1, Math.min(Number.parseInt(String(take || 25), 10) || 25, 100))
+  const toInvestigationRow = (job) => ({
+    id: normalizeText(job.id),
+    status: normalizeJobStatus(job.status),
+    attempts: Number.parseInt(String(job.attempts || 0), 10) || 0,
+    lastError: normalizeText(job.lastError),
+    createdAt: normalizeIsoDate(job.createdAt),
+    updatedAt: normalizeIsoDate(job.updatedAt),
+    completedAt: normalizeIsoDate(job.completedAt),
+  })
+  const prisma = await getJobPrismaClient()
+  let jobs
+  if (!prisma) {
+    if (!allowVolatileUnitTestStorage()) throw sideEffectPersistenceUnavailable()
+    jobs = MEMORY_JOBS
+      .filter((job) => normalizeJobType(job.jobType) === ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL)
+      .filter((job) => normalizeText(job.lastError))
+      .sort((left, right) => new Date(right.updatedAt).valueOf() - new Date(left.updatedAt).valueOf())
+      .slice(0, limit)
+  } else {
+    jobs = await prisma.asyncSideEffectJob.findMany({
+      where: {
+        jobType: ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
+        lastError: { not: null },
+        status: { in: [ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED, ASYNC_SIDE_EFFECT_JOB_STATUS_FAILED] },
+      },
+      orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+      take: limit,
+      select: {
+        id: true,
+        status: true,
+        attempts: true,
+        lastError: true,
+        createdAt: true,
+        updatedAt: true,
+        completedAt: true,
+      },
+    })
+  }
+  return jobs.map(toInvestigationRow).filter((job) => job.id && job.lastError)
 }
 
 /**

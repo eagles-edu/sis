@@ -1831,6 +1831,7 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
     panelOrder: [
       "news-report-review",
       "queued-performance-reports",
+      "announcement-delivery-failures",
       "unmatched-exercise-submissions",
       "current-assignments-pending",
       "overdue-homework",
@@ -1838,6 +1839,18 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
       "pending-profile-submissions",
     ],
     panels: [
+      {
+        id: "announcement-delivery-failures",
+        title: "Announcement Delivery Failures",
+        total: 1,
+        items: [{
+          id: "job-failed-01",
+          status: "queued",
+          attempts: 1,
+          lastError: "temporary provider outage",
+          updatedAt: "2026-03-15T01:40:00.000Z",
+        }],
+      },
       {
         id: "news-report-review",
         title: "News Report Week Sets",
@@ -2007,6 +2020,12 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
   openPage(dom, "queue-hub")
 
   await waitFor(() => {
+    const failurePanel = dom.window.document.querySelector(
+      '[data-queue-hub-panel-id="announcement-delivery-failures"]',
+    )
+    assert.ok(failurePanel)
+    assert.match(normalizeText(failurePanel.textContent), /temporary provider outage/i)
+    assert.match(normalizeText(failurePanel.textContent), /queued/i)
     const openBtn = dom.window.document.querySelector(
       'a[data-queue-hub-open-panel="news-report-review"][data-queue-hub-open-index="0"]'
     )
@@ -4486,7 +4505,7 @@ test("assignments page uses level tiles, itemized exercise links, and completion
     if (method === "POST" && url.includes("/api/admin/notifications/email")) {
       const payload = typeof init.body === "string" ? JSON.parse(init.body || "{}") : init.body || {}
       emailPayloads.push(payload)
-      return jsonResponse(200, { sent: Array.isArray(payload.recipients) ? payload.recipients.length : 0 })
+      return jsonResponse(200, { ok: true, queued: true, deliveryMode: "immediate", queueId: "job-queued-01" })
     }
     return jsonResponse(200, {})
   })
@@ -4568,7 +4587,8 @@ test("assignments page uses level tiles, itemized exercise links, and completion
     assert.ok(emailPayloads[0].recipients.includes("starter@example.com"))
   })
   await waitFor(() => {
-    assert.match(document.getElementById("status").textContent || "", /Assignment notification sent/i)
+    assert.match(document.getElementById("status").textContent || "", /queued for 1 recipients; delivery confirmation pending/i)
+    assert.doesNotMatch(document.getElementById("status").textContent || "", /sent\s*\(/i)
   })
 
   document.getElementById("logoutBtn").click()
@@ -5104,7 +5124,7 @@ test("performance queued parent reports list opens modal and supports hold/edit/
       queuedAt: "2026-04-14T11:00:00.000Z",
       scheduledFor: "2026-04-14T12:00:00.000Z",
       attempts: 0,
-      lastError: "",
+      lastError: "temporary provider outage",
     },
   ]
 
@@ -5226,7 +5246,7 @@ test("performance queued parent reports list opens modal and supports hold/edit/
         return jsonResponse(200, { ok: true, action: "requeue", item: queueItems[0] })
       }
       if (payload.action === "sendAll") {
-        return jsonResponse(200, { ok: true, processed: queueItems.length, sent: queueItems.length, failed: 0 })
+        return jsonResponse(200, { ok: true, processed: queueItems.length, sent: 0, failed: 0, queued: queueItems.length })
       }
       return jsonResponse(400, { error: "Unexpected action" })
     }
@@ -5249,13 +5269,14 @@ test("performance queued parent reports list opens modal and supports hold/edit/
     const section = document.getElementById("performanceQueueSection")
     assert.ok(section)
     assert.equal(section.classList.contains("hidden"), false)
-    assert.match(document.getElementById("performanceQueueRows").textContent || "", /Approved \/ staged/i)
+    assert.match(document.getElementById("performanceQueueRows").textContent || "", /Delivery issue/i)
   })
 
   document.querySelector('[data-queue-open="queue-01"]').click()
   await waitFor(() => {
     assert.equal(document.getElementById("parentQueueModal").classList.contains("hidden"), false)
     assert.equal(document.getElementById("parentQueueItemId").value, "queue-01")
+    assert.equal(document.getElementById("parentQueueItemLastError").value, "temporary provider outage")
   })
 
   document.getElementById("parentQueueHoldBtn").click()
@@ -5283,7 +5304,8 @@ test("performance queued parent reports list opens modal and supports hold/edit/
     assert.ok(batchActions.some((entry) => entry.action === "sendAll"))
   })
   await waitFor(() => {
-    assert.match(document.getElementById("status").textContent || "", /Queued (parent|performance) reports processed/i)
+    assert.match(document.getElementById("status").textContent || "", /queued \(1\); delivery confirmation pending/i)
+    assert.doesNotMatch(document.getElementById("status").textContent || "", /sent=1/i)
   })
 
   dom.window.close()

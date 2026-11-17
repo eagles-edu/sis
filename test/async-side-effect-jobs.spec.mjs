@@ -9,7 +9,7 @@ const jobsSource = await fs.readFile(new URL("../src/modules/async/side-effect-j
 
 test("configured mirror runtimes never fall back to volatile side-effect jobs", () => {
   assert.match(jobsSource, /normalizeLower\(process\.env\.NODE_ENV\) === "test" && \["memory", "in-memory"\]\.includes\(backend\)/)
-  assert.match(jobsSource, /useVolatileTestStorage\(\) \|\| !String\(process\.env\.DATABASE_URL \|\| ""\)\.trim\(\)/)
+  assert.match(jobsSource, /useVolatileTestStorage\(\) \|\| !hasConfiguredDatabaseUrl\(\)/)
   assert.match(jobsSource, /status: ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING,[\s\S]*?lockedAt: \{ lte: staleBefore \}/)
   assert.match(jobsSource, /status: ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED,[\s\S]*?lockedAt: null,[\s\S]*?lockedBy: null/)
 })
@@ -71,6 +71,46 @@ test("async side effect jobs dedupe, revive, and claim in explicit test memory m
     else process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND = previousBackend
   }
 
+})
+
+test("announcement delivery failure listing exposes investigation fields without message or recipients", async () => {
+  const previousNodeEnv = process.env.NODE_ENV
+  const previousDatabaseUrl = process.env.DATABASE_URL
+  const previousBackend = process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND
+  process.env.NODE_ENV = "test"
+  process.env.DATABASE_URL = "postgresql://127.0.0.1:5432/sis-test"
+  process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND = "memory"
+
+  try {
+    const mod = await import(`../src/modules/async/side-effect-jobs.mjs?delivery-failures=${Date.now()}`)
+    const job = await mod.enqueueAsyncSideEffectJob(
+      mod.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
+      { announcementPayload: { recipients: ["private@example.invalid"], message: "private body" } },
+    )
+    await mod.claimAsyncSideEffectJobs({
+      jobTypes: [mod.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL],
+      take: 1,
+      workerId: "ka072-investigation-test",
+    })
+    await mod.failAsyncSideEffectJob(job.id, new Error("synthetic provider rejection"), { maxAttempts: 1 })
+
+    const failures = await mod.listAnnouncementDeliveryFailures({ take: 10 })
+    assert.equal(failures.length, 1)
+    assert.equal(failures[0].id, job.id)
+    assert.equal(failures[0].status, mod.ASYNC_SIDE_EFFECT_JOB_STATUS_FAILED)
+    assert.equal(failures[0].attempts, 1)
+    assert.equal(failures[0].lastError, "synthetic provider rejection")
+    assert.equal(Object.hasOwn(failures[0], "payloadJson"), false)
+    assert.equal(JSON.stringify(failures).includes("private@example.invalid"), false)
+    assert.equal(JSON.stringify(failures).includes("private body"), false)
+  } finally {
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = previousNodeEnv
+    if (previousDatabaseUrl === undefined) delete process.env.DATABASE_URL
+    else process.env.DATABASE_URL = previousDatabaseUrl
+    if (previousBackend === undefined) delete process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND
+    else process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND = previousBackend
+  }
 })
 
 test("announcement dispatch retries provider outages and preserves provider idempotency", async () => {

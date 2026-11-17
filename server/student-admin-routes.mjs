@@ -71,6 +71,7 @@ import {
 import {
   ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
   enqueueAsyncSideEffectJob,
+  listAnnouncementDeliveryFailures,
 } from "../src/modules/async/side-effect-jobs.mjs"
 import { processBrevoWebhookEvent } from "../src/modules/email/brevo-delivery.mjs"
 import { processGoogleFormsGradeSubmission } from "../src/modules/integrations/google-forms-grades.mjs"
@@ -898,6 +899,7 @@ const PARENT_PROFILE_EDITABLE_FIELDS = new Set([
 ])
 const QUEUE_HUB_PANEL_IDS = [
   "queued-performance-reports",
+  "announcement-delivery-failures",
   "unmatched-exercise-submissions",
   "current-assignments-pending",
   "overdue-homework",
@@ -6441,12 +6443,13 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
 async function buildQueueHubPayload({ compact = false } = {}) {
   assertStoreEnabled()
   const dashboard = await getAdminDashboardSummary()
-  const [parentQueue, incomingQueue, submissions, newsReviewQueue] = await Promise.all([
+  const [parentQueue, announcementFailures, incomingQueue, submissions, newsReviewQueue] = await Promise.all([
     listQueuedAnnouncements({
       queueType: NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
       includeSent: false,
       take: compact ? 1 : 20,
     }),
+    listAnnouncementDeliveryFailures({ take: compact ? 1 : 25 }),
     listIncomingExerciseResults({
       statuses: [INCOMING_EXERCISE_RESULT_STATUS_QUEUED],
       take: 20,
@@ -6702,6 +6705,13 @@ async function buildQueueHubPayload({ compact = false } = {}) {
         total: parentQueue.total,
         items: parentQueue.items,
         deferred: compact,
+      },
+      {
+        id: "announcement-delivery-failures",
+        title: "Announcement Delivery Failures",
+        total: announcementFailures.length,
+        items: announcementFailures,
+        deferred: false,
       },
       {
         id: "unmatched-exercise-submissions",
