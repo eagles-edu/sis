@@ -27,17 +27,18 @@ function syntheticStudentNumber(stamp) {
   return 900000 + (Number.parseInt(stamp.replaceAll("-", "").slice(0, 8), 16) % 100000)
 }
 
-test("authenticated manual parent invitation through approval persists on profile reload", { skip: SKIP_REASON }, async (t) => {
+test("authenticated manual parent invitation preserves an editable draft across reload and approval", { skip: SKIP_REASON }, async (t) => {
   Object.assign(process.env, ENV_VALUES)
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const prisma = await getSharedPrismaClient()
   const stamp = randomUUID()
   const compactStamp = stamp.replaceAll("-", "")
-  const eaglesId = `KA027${compactStamp.slice(0, 8)}`
+  const eaglesId = `KA029${compactStamp.slice(0, 8)}`
   const parentsId = `KAP${compactStamp.slice(0, 12)}`
   const familyId = `KAF${compactStamp.slice(0, 12)}`
   const email = `parent-${compactStamp}@example.invalid`
   const phone = `+849${compactStamp.slice(0, 8)}`
+  const editedPhone = `+848${compactStamp.slice(0, 8)}`
   let studentId = ""
   let invitationId = ""
   let parentAccountId = ""
@@ -174,6 +175,38 @@ test("authenticated manual parent invitation through approval persists on profil
   await parentPage.locator("#pf_signatureAgreed").check()
   await parentPage.locator("#saveDraftBtn").click()
   await parentPage.waitForFunction(() => /nháp|lưu/i.test(document.getElementById("childPageStatus")?.textContent || ""), null, { timeout: 30000 })
+  const savedDraft = await prisma.parentProfileSubmissionQueue.findFirst({
+    where: { studentRefId: studentId, parentAccountId, status: "draft" },
+    orderBy: { updatedAt: "desc" },
+    select: { id: true, draftPayloadJson: true },
+  })
+  assert.ok(savedDraft?.id, "the authenticated parent draft must persist before reload")
+  assert.equal(savedDraft.draftPayloadJson?.studentPhone, phone)
+  const officialProfileBeforeReload = await prisma.studentProfile.findUnique({ where: { studentRefId: studentId }, select: { studentPhone: true } })
+  assert.equal(officialProfileBeforeReload?.studentPhone, "+84900000000", "saving a draft must not change the official profile")
+
+  await parentPage.reload({ waitUntil: "domcontentloaded" })
+  await parentPage.locator("#openChildPageBtn").waitFor({ state: "visible", timeout: 30000 })
+  await parentPage.locator("#openChildPageBtn").click()
+  await parentPage.locator("#pf_studentPhone").waitFor({ state: "visible", timeout: 30000 })
+  await parentPage.waitForFunction((expected) => document.getElementById("pf_studentPhone")?.value === expected, phone, { timeout: 30000 })
+  assert.equal(await parentPage.locator("#pf_signatureFullName").inputValue(), "Synthetic Parent")
+  assert.equal(await parentPage.locator("#pf_signatureEmail").inputValue(), email)
+  assert.equal(await parentPage.locator("#pf_signatureAgreed").isChecked(), true)
+
+  await parentPage.locator("#pf_studentPhone").fill(editedPhone)
+  await parentPage.locator("#saveDraftBtn").click()
+  await parentPage.waitForFunction(() => /nháp|lưu/i.test(document.getElementById("childPageStatus")?.textContent || ""), null, { timeout: 30000 })
+  const resavedDraft = await prisma.parentProfileSubmissionQueue.findUnique({
+    where: { id: savedDraft.id },
+    select: { status: true, draftPayloadJson: true },
+  })
+  assert.equal(resavedDraft?.status, "draft")
+  assert.equal(resavedDraft?.draftPayloadJson?.studentPhone, editedPhone)
+  assert.equal(resavedDraft?.draftPayloadJson?.signatureFullName, "Synthetic Parent")
+  assert.equal(resavedDraft?.draftPayloadJson?.signatureEmail, email)
+  assert.deepEqual(resavedDraft?.draftPayloadJson?.signatureAgreed, ["yes"])
+
   await parentPage.locator("#submitReviewBtn").click()
   await parentPage.locator("#childPageStatus").waitFor({ state: "visible", timeout: 30000 })
   await parentPage.waitForFunction(() => /gửi duyệt/i.test(document.getElementById("childPageStatus")?.textContent || ""), null, { timeout: 30000 })
@@ -192,14 +225,14 @@ test("authenticated manual parent invitation through approval persists on profil
   await parentPage.locator("#openChildPageBtn").waitFor({ state: "visible", timeout: 30000 })
   await parentPage.locator("#openChildPageBtn").click()
   await parentPage.locator("#pf_studentPhone").waitFor({ state: "visible", timeout: 30000 })
-  await parentPage.waitForFunction((expected) => document.getElementById("pf_studentPhone")?.value === expected, phone, { timeout: 30000 })
+  await parentPage.waitForFunction((expected) => document.getElementById("pf_studentPhone")?.value === expected, editedPhone, { timeout: 30000 })
 
   const [approvedProfile, approvedQueue, completedInvitation] = await Promise.all([
     prisma.studentProfile.findUnique({ where: { studentRefId: studentId }, select: { studentPhone: true, signatureFullName: true, signatureEmail: true, normalizedFormPayload: true, rawFormPayload: true } }),
     prisma.parentProfileSubmissionQueue.findUnique({ where: { id: submitted.id }, select: { status: true, reviewedAt: true, reviewedByUsername: true } }),
     prisma.parentProfileInvitation.findUnique({ where: { id: invitationId }, select: { status: true, completedAt: true } }),
   ])
-  assert.equal(approvedProfile?.studentPhone, phone)
+  assert.equal(approvedProfile?.studentPhone, editedPhone)
   assert.equal(approvedProfile?.signatureFullName, "Synthetic Parent")
   assert.equal(approvedProfile?.signatureEmail, email)
   for (const payload of [approvedProfile?.normalizedFormPayload, approvedProfile?.rawFormPayload]) {
