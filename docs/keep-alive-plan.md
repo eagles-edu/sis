@@ -64,7 +64,7 @@
 - [x] Verify formatted definitions survive save and reload. [KA-012]
 - [x] Verify repeat save is idempotent and synthetic cleanup can be repeated. [KA-012]
 - [x] Verify New Words forms omit admin-only Dictionary Builder, origin-analysis, and transitivity controls. [KA-012]
-- [ ] Verify the protected student-only Merriam-Webster preview path.
+- [x] Verify the protected student-only Merriam-Webster preview path. [KA-044; dev `.env.dev`, visible authenticated `mark001` browser: AP lookup returned a server-side Collegiate preview with no apply action; the observed request used `POST /api/student/library/mw-preview`. The same endpoint without session credentials returned 401. Source confirms the student router only invokes preview and exposes no student apply route. The live preview rendered `[object Object]` in the Synonyms field; content normalization remains an open quality issue for follow-up.]
 - [ ] Test shared client and authoritative server validation, legacy entries, duplicates, and review outcomes.
 - [x] Run the authenticated visible save, reload, repeat-save, and cleanup browser checks. [KA-012]
 - [ ] Monitor Library access, save failures, review failures, queue age, and required dependencies.
