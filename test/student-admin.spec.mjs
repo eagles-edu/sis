@@ -1163,6 +1163,25 @@ test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinishe
           completed: false,
         },
         {
+          id: "bundle-other-student",
+          assignmentTitle: "Other Student Bundle",
+          assignedAt: currentQuarterStart,
+          dueAt: currentQuarterStart,
+          level: "A1 Movers",
+          eaglesId: "S002",
+          items: [{ id: "bundle-other-student-item-1", title: "Private task", url: "https://example.com/other/private" }],
+          assignmentBundleJson: {
+            assignmentTemplateId: "bundle-other-student",
+            eaglesId: "S002",
+            level: "A1 Movers",
+            assignmentTitle: "Other Student Bundle",
+            assignedAt: currentQuarterStart,
+            dueAt: currentQuarterStart,
+            items: [{ assignmentTemplateItemId: "bundle-other-student-item-1", title: "Private task", url: "https://example.com/other/private" }],
+          },
+          completed: false,
+        },
+        {
           id: pastBundle.assignmentTemplateId,
           assignmentTitle: pastBundle.assignmentTitle,
           assignedAt: pastBundle.assignedAt,
@@ -1179,6 +1198,14 @@ test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinishe
     })
 
     assert.equal(snapshot.details.unfinishedCurrentQuarterAssignments.length, 1)
+    assert.deepEqual(
+      snapshot.details.unfinishedCurrentQuarterAssignments.map((entry) => entry.assignmentTemplateId),
+      ["bundle-current"],
+    )
+    assert.ok(
+      !JSON.stringify(snapshot.details).includes("https://example.com/other/private"),
+      "a targeted assignment for another Eagles ID must not enter this student's dashboard",
+    )
     assert.equal(snapshot.details.pastQuartersUnfinishedAssignments.length, 1)
     assert.equal(snapshot.details.unfinishedCurrentQuarterAssignments[0].href, "https://example.com/current/read")
     assert.equal(snapshot.details.unfinishedCurrentQuarterAssignments[0].itemLinks[0].url, "https://example.com/current/read")
@@ -2161,6 +2188,89 @@ test("POST /api/admin/login returns teacher session cookie", async () => {
   assert.equal(body.authenticated, true)
   assert.equal(body.user?.username, "teacher")
   assert.equal(body.user?.role, "teacher")
+})
+
+test("assignment-template routes enforce session and teacher write boundaries", async () => {
+  const teacherLogin = await fetchLocal(port, "/api/admin/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ username: "teacher", password: "teacher-pass-123" }),
+  })
+  assert.equal(teacherLogin.status, 200)
+  const teacherCookie = (teacherLogin.headers.get("set-cookie") || "").split(";")[0]
+  assert.match(teacherCookie, /student_admin_sid=/i)
+
+  const writeRequests = [
+    {
+      method: "POST",
+      pathname: "/api/admin/assignment-templates",
+      body: {
+        eaglesId: "S001",
+        level: "A1 Movers",
+        assignmentTitle: "Teacher create attempt",
+        assignedAt: "2026-11-18",
+        dueAt: "2026-11-19",
+        items: [{ id: "item-1", title: "Read", url: "https://example.invalid/read" }],
+      },
+    },
+    {
+      method: "POST",
+      pathname: "/api/admin/assignment-templates/import",
+      body: { templates: [] },
+    },
+    {
+      method: "PUT",
+      pathname: "/api/admin/assignment-templates/teacher-edit-attempt",
+      body: { assignmentTitle: "Teacher edit attempt" },
+    },
+    {
+      method: "DELETE",
+      pathname: "/api/admin/assignment-templates/teacher-delete-attempt",
+    },
+  ]
+
+  for (const request of writeRequests) {
+    const response = await fetchLocal(port, request.pathname, {
+      method: request.method,
+      headers: {
+        Cookie: teacherCookie,
+        "content-type": "application/json",
+      },
+      ...(request.body ? { body: JSON.stringify(request.body) } : {}),
+    })
+    assert.equal(response.status, 403, `${request.method} ${request.pathname}`)
+    const body = await response.json()
+    assert.match(body.error, /Forbidden/i)
+  }
+
+  const teacherRead = await fetchLocal(port, "/api/admin/assignment-templates", {
+    headers: { Cookie: teacherCookie },
+  })
+  assert.equal(teacherRead.status, 503)
+  assert.match((await teacherRead.json()).error, /store is disabled/i)
+
+  const anonymousRead = await fetchLocal(port, "/api/admin/assignment-templates")
+  assert.equal(anonymousRead.status, 401)
+
+  const adminLogin = await fetchLocal(port, "/api/admin/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ username: "admin", password: "admin-pass-123" }),
+  })
+  assert.equal(adminLogin.status, 200)
+  const adminCookie = (adminLogin.headers.get("set-cookie") || "").split(";")[0]
+  assert.match(adminCookie, /student_admin_sid=/i)
+
+  const adminWrite = await fetchLocal(port, "/api/admin/assignment-templates", {
+    method: "POST",
+    headers: {
+      Cookie: adminCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({}),
+  })
+  assert.equal(adminWrite.status, 503)
+  assert.match((await adminWrite.json()).error, /store is disabled/i)
 })
 
 test("POST /api/admin/login accepts configured teacher aliases", async () => {
