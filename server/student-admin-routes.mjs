@@ -5065,8 +5065,14 @@ export function buildChildDashboardSnapshot({
     }).length,
     pending: gradeRows.filter((row) => row?.homeworkCompleted !== true && !row?.submittedAt).length,
   }
+  const currentSchoolYear = resolvedSchoolSetup.schoolSetupState === "ok"
+    ? normalizeText(resolvedSchoolSetup.schoolYear)
+    : ""
+  const currentYearGradeRows = currentSchoolYear
+    ? gradeRows.filter((row) => normalizeText(row?.schoolYear) === currentSchoolYear)
+    : []
   const averageScore = (() => {
-    const values = gradeRows
+    const values = currentYearGradeRows
       .map((row) => {
         const score = Number.parseFloat(String(row?.score))
         const maxScore = Number.parseFloat(String(row?.maxScore))

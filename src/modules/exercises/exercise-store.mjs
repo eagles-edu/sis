@@ -723,7 +723,7 @@ async function findMatchedStudent(prisma, submission) {
   }
 
   if (submittedEmail) {
-    const matchedByEmail = await prisma.student.findFirst({
+    const matchedByEmail = await prisma.student.findMany({
       where: {
         OR: [
           {
@@ -776,9 +776,10 @@ async function findMatchedStudent(prisma, submission) {
           },
         },
       },
+      take: 2,
     })
 
-    if (matchedByEmail) return matchedByEmail
+    if (matchedByEmail.length === 1) return matchedByEmail[0]
   }
 
   return null

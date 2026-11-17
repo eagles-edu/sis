@@ -930,6 +930,43 @@ test("buildChildDashboardSnapshot counts late attendance as present", () => {
   assert.equal(snapshot.attendance.excused, 0)
 })
 
+test("buildChildDashboardSnapshot limits YTD average to the valid configured school year", () => {
+  const schoolSetup = {
+    schoolYear: "2026-2027",
+    startDate: "2026-02-21",
+    endDate: "2027-01-24",
+    quarters: [
+      { quarter: "q1", startDate: "2026-02-21", endDate: "2026-05-15" },
+      { quarter: "q2", startDate: "2026-05-16", endDate: "2026-08-07" },
+      { quarter: "q3", startDate: "2026-08-08", endDate: "2026-10-31" },
+      { quarter: "q4", startDate: "2026-11-01", endDate: "2027-01-24" },
+    ],
+  }
+  const snapshot = buildChildDashboardSnapshot({
+    child: { eaglesId: "synthetic-grade-ytd" },
+    attendanceRows: [],
+    gradeRows: [
+      { schoolYear: "2025-2026", score: 100, maxScore: 100 },
+      { schoolYear: "2026-2027", score: 80, maxScore: 100 },
+      { schoolYear: "2026-2027", score: 8, maxScore: 10 },
+    ],
+    reportRows: [],
+    schoolSetup,
+  })
+
+  assert.equal(snapshot.grades.total, 3)
+  assert.equal(snapshot.grades.averageScorePercent, 80)
+
+  const incompleteSetupSnapshot = buildChildDashboardSnapshot({
+    child: { eaglesId: "synthetic-grade-ytd" },
+    attendanceRows: [],
+    gradeRows: [{ schoolYear: "2026-2027", score: 80, maxScore: 100 }],
+    reportRows: [],
+    schoolSetup: { schoolYear: "2026-2027" },
+  })
+  assert.equal(incompleteSetupSnapshot.grades.averageScorePercent, null)
+})
+
 test("buildChildDashboardSnapshot preserves stored school setup quarters and fails closed when dates are blank", () => {
   const adminUiSettingsPath = process.env.STUDENT_ADMIN_UI_SETTINGS_FILE || path.resolve(process.cwd(), "runtime-data/admin-ui-settings.json")
   const sisConfigPath = `/tmp/sis-config-blank-${process.pid}.json`

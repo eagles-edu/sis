@@ -38,11 +38,13 @@ function selectNewestByCreatedAt(rows = []) {
 
 function makePersistPrisma({
   matchedStudent = null,
+  matchedEmailStudents = null,
   matchedSubmissionRows = [],
   matchedGradeRows = [],
 } = {}) {
   const state = {
     studentFindFirstCalls: [],
+    studentFindManyCalls: [],
     incomingFindFirstCalls: [],
     queueCreateCalls: [],
     incomingUpdateCalls: [],
@@ -160,7 +162,19 @@ function makePersistPrisma({
     student: {
       async findFirst(args) {
         state.studentFindFirstCalls.push(args)
-        return matchedStudent
+        return args?.where?.eaglesId
+          ? matchedStudent
+          : Array.isArray(matchedEmailStudents)
+            ? matchedEmailStudents[0] || null
+            : matchedStudent
+      },
+      async findMany(args) {
+        state.studentFindManyCalls.push(args)
+        return Array.isArray(matchedEmailStudents)
+          ? matchedEmailStudents
+          : matchedStudent
+            ? [matchedStudent]
+            : []
       },
     },
     incomingExerciseResult: {
@@ -251,6 +265,53 @@ test("persistExerciseSubmission queues unmatched payload for manual disposition"
     prisma.state.queueCreateCalls[0].data.status,
     INCOMING_EXERCISE_RESULT_STATUS_QUEUED
   )
+})
+
+test("persistExerciseSubmission leaves ambiguous email matches in the manual queue", async () => {
+  const prisma = makePersistPrisma({
+    matchedStudent: null,
+    matchedEmailStudents: [
+      { id: "student-child-a", eaglesId: "CHILD-A", email: "family@example.test" },
+      { id: "student-child-b", eaglesId: "CHILD-B", email: "family@example.test" },
+    ],
+  })
+
+  const result = await persistExerciseSubmission(
+    nativeExercisePayload({
+      eaglesId: "unmatched-submitted-id",
+      email: "family@example.test",
+    }),
+    { prisma },
+  )
+
+  assert.equal(result.saved, true)
+  assert.equal(result.matched, false)
+  assert.equal(result.queued, true)
+  assert.equal(prisma.state.queueCreateCalls.length, 1)
+  assert.equal(prisma.state.submissionCreateCalls.length, 0)
+  assert.equal(prisma.state.gradeRecordCreateCalls.length, 0)
+})
+
+test("persistExerciseSubmission still matches a unique email fallback", async () => {
+  const prisma = makePersistPrisma({
+    matchedStudent: null,
+    matchedEmailStudents: [
+      { id: "student-unique-email", eaglesId: "SINGLE-CHILD", email: "family@example.test" },
+    ],
+  })
+
+  const result = await persistExerciseSubmission(
+    nativeExercisePayload({
+      eaglesId: "legacy-submitted-id",
+      email: "family@example.test",
+    }),
+    { prisma },
+  )
+
+  assert.equal(result.matched, true)
+  assert.equal(result.studentRefId, "student-unique-email")
+  assert.equal(prisma.state.queueCreateCalls.length, 0)
+  assert.equal(prisma.state.gradeRecordCreateCalls.length, 1)
 })
 
 test("persistExerciseSubmission de-duplicates nearby queue records and keeps the highest score", async () => {
