@@ -4094,6 +4094,19 @@
         const response = await fetch(resolveApiUrl(path), init);
         if (response.status === 204) return null;
         const data = await response.json().catch(() => ({}));
+        const requestPath = new URL(resolveApiUrl(path), window.location.href).pathname;
+        const isStudentApiRequest = requestPath.startsWith(`${STUDENT_API_PREFIX}/`);
+        const isStudentLoginRequest = requestPath === `${STUDENT_AUTH_PREFIX}/login`;
+        const isStudentLogoutRequest = requestPath === `${STUDENT_AUTH_PREFIX}/logout`;
+        if (response.status === 401 && isStudentApiRequest && !isStudentLoginRequest && !isStudentLogoutRequest) {
+          if (state.newsFormDirty === true) persistNewsDraftLocally();
+          setBrevoStudentIdentity(null);
+          setAuthenticatedView(false);
+          const err = new Error("Student session expired. Sign in again to continue.");
+          err.status = response.status;
+          err.payload = data;
+          throw err;
+        }
         if (!response.ok) {
           const err = new Error(data.error || `HTTP ${response.status}`);
           err.status = response.status;

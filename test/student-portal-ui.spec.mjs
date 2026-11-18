@@ -21,7 +21,7 @@ const STUDENT_PORTAL_HTML_FOR_TEST = STUDENT_PORTAL_HTML
   .replace(/<script type="module">\s*import svgIcon[\s\S]*?<\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js"><\/script>\s*/i, "")
   .replace(/<link rel="stylesheet" href="\/web-asset\/student\/student-portal\.min\.css">\s*/i, "")
-  .replace(/<script[^>]*src="\/web-asset\/student\/student-portal\.min\.js"[^>]*><\/script>/i, () => `<script>${STUDENT_PORTAL_JS}</script>`)
+  .replace(/<script[^>]*src="\/web-asset\/student\/student-portal\.min\.js(?:\?[^\"]*)?"[^>]*><\/script>/i, () => `<script>${STUDENT_PORTAL_JS}</script>`)
   .replace(/<head>/i, `<head><style>${SHARED_THEME}</style>`)
 
 test("student portal uses the mirrored shared favicon", () => {
@@ -361,6 +361,9 @@ test("student News Check renders a specific session message for a 401 response",
   }, 5000)
   document.getElementById("newsPageCard")?.classList.remove("hidden")
   await waitFor(() => assert.equal(document.getElementById("checkBtn")?.disabled, false), 5000)
+  const titleInput = document.getElementById("articleTitle")
+  titleInput.value = "Unsaved title preserved when the student session expires"
+  titleInput.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
   document.getElementById("checkBtn")?.click()
   await waitFor(() => {
     assert.match(
@@ -369,6 +372,11 @@ test("student News Check renders a specific session message for a 401 response",
     )
   }, 5000)
   assert.ok(calls.includes("POST /api/student/news-reports/check"))
+  assert.equal(document.getElementById("loginPanel")?.classList.contains("hidden"), false, "a 401 returns the student to the sign-in panel")
+  assert.equal(document.getElementById("appPanel")?.classList.contains("hidden"), true, "an expired session cannot leave the student UI appearing active")
+  assert.equal(document.documentElement.getAttribute("data-student-auth-state"), "unauthenticated")
+  const localDraft = JSON.parse(dom.window.localStorage.getItem("sis.student.newsDraft.v1:flyers01") || "null")
+  assert.equal(localDraft?.payload?.articleTitle, titleInput.value, "the current News work is kept in browser recovery storage")
   dom.window.close()
 })
 
