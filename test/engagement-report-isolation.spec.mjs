@@ -39,21 +39,26 @@ test("report engagement enforces account scope and records one acknowledgement w
   const parentId = `KA-P-${stamp}`
   const unrelatedParentId = `KA-UP-${stamp}`
   const studentEaglesId = `KA-S-${stamp}`
+  const siblingStudentEaglesId = `KA-SS-${stamp}`
   const unrelatedStudentEaglesId = `KA-US-${stamp}`
   const adminUsername = `ka-admin-${stamp}`
   const recipientEmail = `ka-engagement-${stamp}@example.invalid`
   const parentEmail = `ka-parent-recipient-${stamp}@example.invalid`
   let targetStudent = null
+  let siblingStudent = null
   let unrelatedStudent = null
   let targetProfile = null
+  let siblingProfile = null
   let parentAccount = null
   let unrelatedParentAccount = null
   let studentAccount = null
   let unrelatedStudentAccount = null
   let adminAccount = null
   let targetLink = null
+  let siblingLink = null
   let unrelatedLink = null
   let report = null
+  let siblingReport = null
   const deliveries = []
   let server = null
 
@@ -68,6 +73,14 @@ test("report engagement enforces account scope and records one acknowledgement w
         email: recipientEmail,
       },
     })
+    siblingStudent = await prisma.student.create({
+      data: {
+        externalKey: `ka-engagement-${stamp}-sibling`,
+        studentNumber: syntheticStudentNumber(stamp, 4),
+        eaglesId: siblingStudentEaglesId,
+        email: `ka-sibling-${stamp}@example.invalid`,
+      },
+    })
     unrelatedStudent = await prisma.student.create({
       data: {
         externalKey: `ka-engagement-${stamp}-unrelated`,
@@ -80,6 +93,21 @@ test("report engagement enforces account scope and records one acknowledgement w
       data: {
         studentRefId: targetStudent.id,
         sourceFormId: `ka-engagement-${stamp}`,
+        parentsId: parentId,
+        familyId: `KA-FAMILY-${stamp}`,
+        motherEmail: parentEmail,
+        maIsHomeworkProctor: "yes",
+        genderSelections: [],
+        languagesAtHome: [],
+        learningDisorders: [],
+        covidShotHistory: [],
+        feverMedicineAllowed: [],
+      },
+    })
+    siblingProfile = await prisma.studentProfile.create({
+      data: {
+        studentRefId: siblingStudent.id,
+        sourceFormId: `ka-engagement-${stamp}-sibling`,
         parentsId: parentId,
         familyId: `KA-FAMILY-${stamp}`,
         motherEmail: parentEmail,
@@ -107,6 +135,9 @@ test("report engagement enforces account scope and records one acknowledgement w
     })
     targetLink = await prisma.parentPortalStudentLink.create({
       data: { parentAccountId: parentAccount.id, studentRefId: targetStudent.id },
+    })
+    siblingLink = await prisma.parentPortalStudentLink.create({
+      data: { parentAccountId: parentAccount.id, studentRefId: siblingStudent.id },
     })
     unrelatedLink = await prisma.parentPortalStudentLink.create({
       data: { parentAccountId: unrelatedParentAccount.id, studentRefId: unrelatedStudent.id },
@@ -144,6 +175,19 @@ test("report engagement enforces account scope and records one acknowledgement w
         notificationSentAt: new Date(),
         finalArtifactVersion: 1,
         metaPayload: { classDate: "2026-11-17" },
+      },
+    })
+    siblingReport = await prisma.parentClassReport.create({
+      data: {
+        studentRefId: siblingStudent.id,
+        className: "Keep Alive Synthetic Sibling",
+        level: "Keep Alive Synthetic",
+        schoolYear: "2026",
+        quarter: "q1",
+        workflowState: "notification_queued",
+        publishedAt: new Date(),
+        finalArtifactVersion: 1,
+        metaPayload: { classDate: "2026-11-18" },
       },
     })
     for (const [recipient, audience] of [[recipientEmail, "student"], [parentEmail, "parent"]]) {
@@ -191,6 +235,31 @@ test("report engagement enforces account scope and records one acknowledgement w
     const parentCookie = await login("/api/parent/auth/login", { parentsId: parentId, password })
     const studentCookie = await login("/api/student/auth/login", { eaglesId: studentEaglesId, password })
     const adminCookie = await login("/api/admin/auth/login", { username: adminUsername, password })
+    const childrenResponse = await fetch(`${origin}/api/parent/children`, {
+      headers: { cookie: parentCookie },
+    })
+    assert.equal(childrenResponse.status, 200)
+    const linkedChildren = await childrenResponse.json()
+    const linkedEaglesIds = new Set((linkedChildren.items || []).map((child) => child.eaglesId))
+    assert.deepEqual(linkedEaglesIds, new Set([studentEaglesId, siblingStudentEaglesId]))
+
+    const dashboardResponse = await fetch(`${origin}/api/parent/dashboard`, {
+      headers: { cookie: parentCookie },
+    })
+    assert.equal(dashboardResponse.status, 200)
+    const dashboard = await dashboardResponse.json()
+    assert.equal(dashboard.children.length, 2)
+    const targetDashboardChild = dashboard.children.find((child) => child.eaglesId === studentEaglesId)
+    const siblingDashboardChild = dashboard.children.find((child) => child.eaglesId === siblingStudentEaglesId)
+    assert.ok(targetDashboardChild?.details?.reportArchive.some((entry) => entry.id === report.id))
+    assert.ok(!targetDashboardChild?.details?.reportArchive.some((entry) => entry.id === siblingReport.id))
+    assert.ok(siblingDashboardChild?.details?.reportArchive.some((entry) => entry.id === siblingReport.id))
+    assert.ok(!siblingDashboardChild?.details?.reportArchive.some((entry) => entry.id === report.id))
+    assert.equal(
+      siblingDashboardChild.details.reportArchive.find((entry) => entry.id === siblingReport.id)?.workflowState,
+      "notification_queued",
+    )
+
     const engagementPath = "/api/admin/performance-engagement?dateFrom=2026-11-17&dateTo=2026-11-17"
 
     const anonymousEngagement = await fetch(`${origin}${engagementPath}`)
@@ -222,11 +291,25 @@ test("report engagement enforces account scope and records one acknowledgement w
       method: "POST",
       headers: { cookie: unrelatedParentCookie },
     })
+    const anonymousAcknowledgment = await fetch(`${origin}/api/parent/reports/${report.id}/acknowledge`, {
+      method: "POST",
+    })
+    const missingAcknowledgment = await fetch(`${origin}/api/parent/reports/missing-${stamp}/acknowledge`, {
+      method: "POST",
+      headers: { cookie: parentCookie },
+    })
+    const siblingParentAcknowledgment = await fetch(`${origin}/api/parent/reports/${siblingReport.id}/acknowledge`, {
+      method: "POST",
+      headers: { cookie: parentCookie },
+    })
     const studentDenied = await fetch(`${origin}/api/student/reports/${report.id}/acknowledge`, {
       method: "POST",
       headers: { cookie: unrelatedStudentCookie },
     })
     assert.equal(parentDenied.status, 403)
+    assert.equal(anonymousAcknowledgment.status, 401)
+    assert.equal(missingAcknowledgment.status, 404)
+    assert.equal(siblingParentAcknowledgment.status, 200)
     assert.equal(studentDenied.status, 403)
 
     const acknowledge = async (path, cookie) => {
@@ -325,19 +408,59 @@ test("report engagement enforces account scope and records one acknowledgement w
       await attempt(() => closeStudentAdminRuntimeResources())
     }
     if (report) await attempt(() => prisma.parentClassReportEvent.deleteMany({ where: { reportId: report.id } }))
+    if (siblingReport) await attempt(() => prisma.parentClassReportEvent.deleteMany({ where: { reportId: siblingReport.id } }))
     if (report) await attempt(() => prisma.brevoEmailDelivery.deleteMany({ where: { reportId: report.id } }))
     if (report) await attempt(() => prisma.parentClassReport.deleteMany({ where: { id: report.id } }))
+    if (siblingReport) await attempt(() => prisma.parentClassReport.deleteMany({ where: { id: siblingReport.id } }))
     if (adminAccount) await attempt(() => prisma.adminUser.deleteMany({ where: { id: adminAccount.id } }))
     if (targetProfile) await attempt(() => prisma.studentProfile.deleteMany({ where: { id: targetProfile.id } }))
+    if (siblingProfile) await attempt(() => prisma.studentProfile.deleteMany({ where: { id: siblingProfile.id } }))
     if (studentAccount) await attempt(() => prisma.studentPortalAccount.deleteMany({ where: { id: studentAccount.id } }))
     if (unrelatedStudentAccount) await attempt(() => prisma.studentPortalAccount.deleteMany({ where: { id: unrelatedStudentAccount.id } }))
     if (targetLink) await attempt(() => prisma.parentPortalStudentLink.deleteMany({ where: { id: targetLink.id } }))
+    if (siblingLink) await attempt(() => prisma.parentPortalStudentLink.deleteMany({ where: { id: siblingLink.id } }))
     if (unrelatedLink) await attempt(() => prisma.parentPortalStudentLink.deleteMany({ where: { id: unrelatedLink.id } }))
     if (parentAccount) await attempt(() => prisma.parentPortalAccount.deleteMany({ where: { id: parentAccount.id } }))
     if (unrelatedParentAccount) await attempt(() => prisma.parentPortalAccount.deleteMany({ where: { id: unrelatedParentAccount.id } }))
     if (targetStudent) await attempt(() => prisma.student.deleteMany({ where: { id: targetStudent.id } }))
+    if (siblingStudent) await attempt(() => prisma.student.deleteMany({ where: { id: siblingStudent.id } }))
     if (unrelatedStudent) await attempt(() => prisma.student.deleteMany({ where: { id: unrelatedStudent.id } }))
+    await attempt(async () => {
+      const [students, profiles, parents, links, reports, reportEvents, emailDeliveries] = await Promise.all([
+        prisma.student.count({ where: { externalKey: { in: [
+          `ka-engagement-${stamp}-target`,
+          `ka-engagement-${stamp}-sibling`,
+          `ka-engagement-${stamp}-unrelated`,
+        ] } } }),
+        prisma.studentProfile.count({ where: { sourceFormId: { in: [
+          `ka-engagement-${stamp}`,
+          `ka-engagement-${stamp}-sibling`,
+        ] } } }),
+        prisma.parentPortalAccount.count({ where: { parentsId: { in: [parentId, unrelatedParentId] } } }),
+        prisma.parentPortalStudentLink.count({ where: { studentRefId: { in: [targetStudent?.id, siblingStudent?.id, unrelatedStudent?.id].filter(Boolean) } } }),
+        prisma.parentClassReport.count({ where: { id: { in: [report?.id, siblingReport?.id].filter(Boolean) } } }),
+        prisma.parentClassReportEvent.count({ where: { reportId: { in: [report?.id, siblingReport?.id].filter(Boolean) } } }),
+        prisma.brevoEmailDelivery.count({
+          where: {
+            providerMessageId: {
+              in: [
+                `ka-engagement-student-${stamp}@example.invalid`,
+                `ka-engagement-parent-${stamp}@example.invalid`,
+              ],
+            },
+          },
+        }),
+      ])
+      assert.deepEqual(
+        { students, profiles, parents, links, reports, reportEvents, emailDeliveries },
+        { students: 0, profiles: 0, parents: 0, links: 0, reports: 0, reportEvents: 0, emailDeliveries: 0 },
+      )
+    })
     await attempt(() => closeSharedPrismaClient())
-    if (cleanupErrors.length) throw new AggregateError(cleanupErrors, "Synthetic engagement cleanup failed")
+    assert.equal(
+      cleanupErrors.length,
+      0,
+      cleanupErrors.length ? new AggregateError(cleanupErrors, "Synthetic engagement cleanup failed") : undefined,
+    )
   }
 })

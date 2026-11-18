@@ -171,18 +171,18 @@ test("announcement dispatch retries provider outages and preserves provider idem
     }
     const first = await jobs.enqueueAsyncSideEffectJob(
       jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
-      { queueId, announcementPayload: payload },
+      { announcementPayload: payload },
       { dedupeKey: queueId }
     )
     const queuedDuplicates = await Promise.all([
       jobs.enqueueAsyncSideEffectJob(
         jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
-        { queueId, announcementPayload: { ...payload, assignmentTitle: "Changed duplicate" } },
+        { announcementPayload: { ...payload, assignmentTitle: "Changed duplicate" } },
         { dedupeKey: queueId }
       ),
       jobs.enqueueAsyncSideEffectJob(
         jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
-        { queueId, announcementPayload: payload },
+        { announcementPayload: payload },
         { dedupeKey: queueId }
       ),
     ])
@@ -203,7 +203,7 @@ test("announcement dispatch retries provider outages and preserves provider idem
     await outageStarted
     const processingDuplicate = await jobs.enqueueAsyncSideEffectJob(
       jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
-      { queueId, announcementPayload: payload },
+      { announcementPayload: payload },
       { dedupeKey: queueId }
     )
     assert.equal(processingDuplicate.id, first.id)
@@ -218,6 +218,7 @@ test("announcement dispatch retries provider outages and preserves provider idem
 
     await new Promise((resolve) => setTimeout(resolve, 20))
     const completions = []
+    const retryFailures = []
     const retryResult = await worker.drainAsyncSideEffectJobs({
       jobTypes: [jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL],
       take: 1,
@@ -225,15 +226,20 @@ test("announcement dispatch retries provider outages and preserves provider idem
       maxAttempts: 3,
       retryDelayMs: 10,
       onJobComplete: (_job, result, completed) => completions.push({ result, completed }),
+      onJobFailed: (_job, error, updated) => retryFailures.push({ message: error.message, updated }),
     })
-    assert.deepEqual(retryResult, { claimed: 1, succeeded: 1, failed: 0, remaining: 0, processing: 0 })
+    assert.deepEqual(
+      retryResult,
+      { claimed: 1, succeeded: 1, failed: 0, remaining: 0, processing: 0 },
+      retryFailures.map((failure) => `${failure.message}; status=${failure.updated?.status}`).join("\n"),
+    )
     assert.equal(completions[0]?.completed?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_SUCCEEDED)
     assert.equal(completions[0]?.completed?.attempts, 2)
     assert.equal(completions[0]?.result?.sent, 1)
 
     const revived = await jobs.enqueueAsyncSideEffectJob(
       jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
-      { queueId, announcementPayload: payload },
+      { announcementPayload: payload },
       { dedupeKey: queueId }
     )
     assert.equal(revived.id, first.id)
@@ -255,6 +261,100 @@ test("announcement dispatch retries provider outages and preserves provider idem
     assert.ok(requests.every(({ options }) => JSON.parse(options.body).bcc[0].email.endsWith("@example.invalid")))
   } finally {
     releaseOutage?.()
+    globalThis.fetch = previousFetch
+    for (const [key, value] of previousEnv) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+})
+
+test("parent report email provider outage remains retryable and does not expose a recipient", async () => {
+  const envKeys = [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "ASYNC_SIDE_EFFECT_JOB_BACKEND",
+    "ASYNC_SIDE_EFFECT_JOB_LOCK_TIMEOUT_MS",
+    "EMAIL_PROVIDER",
+    "BREVO_API_KEY",
+    "BREVO_FROM_EMAIL",
+    "BREVO_API_URL",
+  ]
+  const previousEnv = new Map(envKeys.map((key) => [key, process.env[key]]))
+  const previousFetch = globalThis.fetch
+  process.env.NODE_ENV = "test"
+  process.env.DATABASE_URL = "postgresql://127.0.0.1:5432/sis-test"
+  process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND = "memory"
+  process.env.ASYNC_SIDE_EFFECT_JOB_LOCK_TIMEOUT_MS = "60000"
+  process.env.EMAIL_PROVIDER = "brevo"
+  process.env.BREVO_API_KEY = "synthetic-test-key"
+  process.env.BREVO_FROM_EMAIL = "sis-test@example.invalid"
+  process.env.BREVO_API_URL = "https://brevo.invalid/v3/smtp/email"
+
+  const requests = []
+  globalThis.fetch = async (url, options) => {
+    requests.push({ url, options })
+    if (requests.length === 1) {
+      return new Response(JSON.stringify({ message: "temporary provider outage" }), { status: 503 })
+    }
+    return new Response("{}", { status: 201 })
+  }
+
+  try {
+    const jobs = await import("../src/modules/async/side-effect-jobs.mjs")
+    const worker = await import(`../src/modules/async/side-effect-worker.mjs?parent-report-failure=${Date.now()}`)
+    const queueId = `ka097-parent-report-${crypto.randomUUID()}`
+    const recipient = `ka097-parent-${crypto.randomUUID()}@example.invalid`
+    const payload = {
+      queueId,
+      queueType: "parent-report",
+      recipients: [recipient],
+      assignmentTitle: "Synthetic published report",
+      requestOrigin: "http://127.0.0.1:8788",
+    }
+    const queued = await jobs.enqueueAsyncSideEffectJob(
+      jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
+      { queueType: "parent-report", announcementPayload: payload },
+      { dedupeKey: queueId },
+    )
+    const failures = []
+    const failedDrain = await worker.drainAsyncSideEffectJobs({
+      jobTypes: [jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL],
+      take: 1,
+      workerId: `ka097-parent-report-fail-${crypto.randomUUID()}`,
+      maxAttempts: 3,
+      retryDelayMs: 1,
+      onJobFailed: (_job, error, updated) => failures.push({ message: error.message, updated }),
+    })
+    assert.deepEqual(failedDrain, { claimed: 1, succeeded: 0, failed: 1, remaining: 0, processing: 0 })
+    assert.equal(failures[0]?.updated?.id, queued.id)
+    assert.equal(failures[0]?.updated?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED)
+    assert.equal(failures[0]?.updated?.attempts, 1)
+    assert.match(failures[0]?.message || "", /Brevo email request failed \(503\)/u)
+
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    const completions = []
+    const retryDrain = await worker.drainAsyncSideEffectJobs({
+      jobTypes: [jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL],
+      take: 1,
+      workerId: `ka097-parent-report-retry-${crypto.randomUUID()}`,
+      maxAttempts: 3,
+      retryDelayMs: 1,
+      onJobComplete: (_job, result, completed) => completions.push({ result, completed }),
+    })
+    assert.deepEqual(retryDrain, { claimed: 1, succeeded: 1, failed: 0, remaining: 0, processing: 0 })
+    assert.equal(completions[0]?.completed?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_SUCCEEDED)
+    assert.equal(completions[0]?.completed?.attempts, 2)
+    assert.equal(completions[0]?.result?.sent, 1)
+    assert.equal(requests.length, 2)
+    assert.ok(requests.every(({ url }) => url === "https://brevo.invalid/v3/smtp/email"))
+    assert.equal(JSON.parse(requests[1].options.body).to[0].email, recipient)
+    assert.equal(
+      JSON.parse(requests[0].options.body).headers["Idempotency-Key"],
+      JSON.parse(requests[1].options.body).headers["Idempotency-Key"],
+    )
+    assert.ok(requests.every(({ options }) => JSON.stringify(options).includes("@example.invalid")))
+  } finally {
     globalThis.fetch = previousFetch
     for (const [key, value] of previousEnv) {
       if (value === undefined) delete process.env[key]
