@@ -45,7 +45,7 @@ function metricEnvironment() {
 
 function renderRequestMetrics() {
   const lines = [
-    "# HELP sis_admin_student_write_requests_total Completed authenticated student profile and attendance write requests.",
+    "# HELP sis_admin_student_write_requests_total Completed authenticated student profile, enrollment, and attendance write requests.",
     "# TYPE sis_admin_student_write_requests_total counter",
   ]
   for (const [key, metric] of requestMetrics.entries()) {
@@ -127,6 +127,9 @@ function resolveStudentWriteRoute(request) {
   const url = new URL(request?.url || "/", `http://${request?.headers?.host || "localhost"}`)
   if (method === "POST" && url.pathname === "/api/admin/students") return "POST /api/admin/students"
   if (method === "PUT" && /^\/api\/admin\/students\/[^/]+$/u.test(url.pathname)) return "PUT /api/admin/students/:id"
+  if (method === "POST" && /^\/api\/admin\/students\/[^/]+\/enrollment$/u.test(url.pathname)) {
+    return "POST /api/admin/students/:id/enrollment"
+  }
   if (method === "POST" && /^\/api\/admin\/students\/[^/]+\/attendance$/u.test(url.pathname)) {
     return "POST /api/admin/students/:id/attendance"
   }

@@ -55,6 +55,23 @@ test("authorized attendance failures use fixed route labels without student iden
   assert.doesNotMatch(contents, /private-student-ref|private-date/u)
 })
 
+test("authorized enrollment writes use a fixed route label without student identifiers", async () => {
+  const request = {
+    method: "POST",
+    url: "/api/admin/students/private-student-ref/enrollment?debug=private",
+    headers: { host: "localhost" },
+  }
+  const response = { statusCode: 200 }
+  await metrics.observeStudentWriteRequest(request, response, async () => {
+    metrics.markStudentWriteRequestAuthenticated()
+  })
+  await metrics.initializeStudentWriteMetrics()
+
+  const contents = readFileSync(metricsPath, "utf8")
+  assert.match(contents, /sis_admin_student_write_requests_total\{route="POST \/api\/admin\/students\/:id\/enrollment",status="200"\} 1/u)
+  assert.doesNotMatch(contents, /private-student-ref|debug=private/u)
+})
+
 test("attendance delete routes normalize identifiers before collection", async () => {
   const request = {
     method: "DELETE",

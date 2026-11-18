@@ -3,6 +3,7 @@ import test from "node:test"
 import {
   assertDevEnvironment,
   checkParentReportApi,
+  collectDatabaseMetrics,
   parseWorkerHeartbeat,
   parseWorkerPollSuccess,
   resolveParentMonitorCredentials,
@@ -61,6 +62,13 @@ test("engagement metrics expose only bounded dev gauges and flag missing or stal
     assignmentReminderOldestPendingAgeSeconds: 350,
     staleAssignmentReminderDispatchCount: 1,
     assignmentReminderFailureCount: 1,
+    multipleActiveEnrollmentCount: 2,
+    enrollmentOverlapPairCount: 3,
+    moodleProvisioningDueCount: 4,
+    moodleProvisioningOldestDueAgeSeconds: 500,
+    moodleProvisioningProcessingCount: 2,
+    moodleProvisioningOldestProcessingAgeSeconds: 350,
+    moodleProvisioningRejectedCount: 1,
     workerLastPollTimestamp: 100,
     workerLastPollSuccess: 0,
   })
@@ -80,6 +88,13 @@ test("engagement metrics expose only bounded dev gauges and flag missing or stal
   assert.match(metrics, /sis_assignment_reminder_oldest_pending_age_seconds\{environment="dev"\} 350/u)
   assert.match(metrics, /sis_assignment_reminder_stale_pending_dispatches\{environment="dev"\} 1/u)
   assert.match(metrics, /sis_assignment_reminder_failed_dispatches_24h\{environment="dev"\} 1/u)
+  assert.match(metrics, /sis_enrollment_multiple_active_records\{environment="dev"\} 2/u)
+  assert.match(metrics, /sis_enrollment_overlapping_period_pairs\{environment="dev"\} 3/u)
+  assert.match(metrics, /sis_moodle_provisioning_due_commands\{environment="dev"\} 4/u)
+  assert.match(metrics, /sis_moodle_provisioning_oldest_due_command_age_seconds\{environment="dev"\} 500/u)
+  assert.match(metrics, /sis_moodle_provisioning_processing_commands\{environment="dev"\} 2/u)
+  assert.match(metrics, /sis_moodle_provisioning_oldest_processing_age_seconds\{environment="dev"\} 350/u)
+  assert.match(metrics, /sis_moodle_provisioning_rejected_commands\{environment="dev"\} 1/u)
   assert.match(metrics, /sis_async_side_effect_worker_stale\{environment="dev"\} 1/u)
   assert.match(metrics, /sis_async_side_effect_worker_last_poll_success\{environment="dev"\} 0/u)
   assert.doesNotMatch(metrics, /student|recipient|password|cookie|session|job_id|[^\s@]+@[^\s@]+/iu)
@@ -88,6 +103,43 @@ test("engagement metrics expose only bounded dev gauges and flag missing or stal
   assert.equal(parseWorkerHeartbeat('sis_async_side_effects_worker_last_poll_timestamp_seconds{environment="test"} 123.5\n'), 0)
   assert.equal(parseWorkerPollSuccess('sis_async_side_effects_worker_last_poll_success{environment="dev"} 1\n'), 1)
   assert.equal(parseWorkerPollSuccess('sis_async_side_effects_worker_last_poll_success{environment="dev"} 0\n'), 0)
+})
+
+test("database monitor collects enrollment integrity, provisioning age, and notification backlog as aggregates", async () => {
+  const now = Date.UTC(2026, 10, 19, 0, 0, 0)
+  const old = new Date(now - 7200 * 1000)
+  const noRows = { findFirst: async () => null, count: async () => 0 }
+  const prisma = {
+    $queryRaw: async (query) => String(query).includes("current_database")
+      ? [{ name: "sis_dev" }]
+      : [{ multipleActiveStudents: 2, overlappingPeriodPairs: 3 }],
+    parentClassReportEvent: { findFirst: async () => null },
+    brevoEmailWebhookEvent: noRows,
+    asyncSideEffectJob: noRows,
+    adminNotificationQueue: {
+      count: async ({ where }) => where.lastError ? 1 : where.queueType ? 2 : 5,
+      findFirst: async ({ where }) => ({ createdAt: old, updatedAt: old }),
+    },
+    assignmentReminderDispatch: noRows,
+    moodleProvisioningCommand: {
+      count: async ({ where }) => where.status === "rejected" ? 1 : where.status === "processing" ? 0 : 2,
+      findFirst: async ({ where }) => where.status === "processing"
+        ? null
+        : { createdAt: old, updatedAt: old },
+    },
+  }
+
+  const result = await collectDatabaseMetrics(prisma, now)
+  assert.equal(result.multipleActiveEnrollmentCount, 2)
+  assert.equal(result.enrollmentOverlapPairCount, 3)
+  assert.equal(result.moodleProvisioningDueCount, 2)
+  assert.equal(result.moodleProvisioningOldestDueAgeSeconds, 7200)
+  assert.equal(result.moodleProvisioningProcessingCount, 0)
+  assert.equal(result.moodleProvisioningOldestProcessingAgeSeconds, 0)
+  assert.equal(result.moodleProvisioningRejectedCount, 1)
+  assert.equal(result.notificationDueQueueCount, 5)
+  assert.equal(result.notificationDeliveryFailureCount, 1)
+  assert.doesNotMatch(JSON.stringify(result), /student|recipient|email|password|cookie|session|private-id/iu)
 })
 
 test("parent workflow monitor uses only the exact cmmark001 account and checks its cookie-session dashboard", async () => {

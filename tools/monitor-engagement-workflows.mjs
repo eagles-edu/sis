@@ -14,6 +14,8 @@ const PROCESSING_STALE_AFTER_SECONDS = 300
 const WEBHOOK_STALE_AFTER_SECONDS = 300
 const ANNOUNCEMENT_QUEUE_STALE_AFTER_SECONDS = 120
 const NOTIFICATION_QUEUE_STALE_AFTER_SECONDS = 1800
+const MOODLE_PROVISIONING_QUEUE_STALE_AFTER_SECONDS = 1800
+const MOODLE_PROVISIONING_PROCESSING_STALE_AFTER_SECONDS = 300
 const ASSIGNMENT_DISPATCH_STALE_AFTER_SECONDS = 300
 const STANDARD_PARENT_LOGIN = "cmmark001"
 
@@ -79,6 +81,13 @@ export function renderEngagementMetrics({
   assignmentReminderOldestPendingAgeSeconds,
   staleAssignmentReminderDispatchCount,
   assignmentReminderFailureCount,
+  multipleActiveEnrollmentCount = 0,
+  enrollmentOverlapPairCount = 0,
+  moodleProvisioningDueCount = 0,
+  moodleProvisioningOldestDueAgeSeconds = 0,
+  moodleProvisioningProcessingCount = 0,
+  moodleProvisioningOldestProcessingAgeSeconds = 0,
+  moodleProvisioningRejectedCount = 0,
   workerLastPollTimestamp,
   workerLastPollSuccess,
 }) {
@@ -116,6 +125,13 @@ export function renderEngagementMetrics({
     ["sis_assignment_reminder_oldest_pending_age_seconds", "Age of the oldest pending dev assignment reminder dispatch.", assignmentReminderOldestPendingAgeSeconds],
     ["sis_assignment_reminder_stale_pending_dispatches", "Number of dev assignment reminder dispatches pending for more than five minutes.", staleAssignmentReminderDispatchCount],
     ["sis_assignment_reminder_failed_dispatches_24h", "Number of dev assignment reminder dispatches failed in the last 24 hours.", assignmentReminderFailureCount],
+    ["sis_enrollment_multiple_active_records", "Number of active enrollment records beyond one per profile in the dev database.", multipleActiveEnrollmentCount],
+    ["sis_enrollment_overlapping_period_pairs", "Number of overlapping enrollment period pairs in the dev database.", enrollmentOverlapPairCount],
+    ["sis_moodle_provisioning_due_commands", "Number of due pending or retry Moodle provisioning commands in dev.", moodleProvisioningDueCount],
+    ["sis_moodle_provisioning_oldest_due_command_age_seconds", "Age of the oldest due pending or retry Moodle provisioning command in dev.", moodleProvisioningOldestDueAgeSeconds],
+    ["sis_moodle_provisioning_processing_commands", "Number of Moodle provisioning commands currently processing in dev.", moodleProvisioningProcessingCount],
+    ["sis_moodle_provisioning_oldest_processing_age_seconds", "Age of the oldest dev Moodle provisioning command currently processing.", moodleProvisioningOldestProcessingAgeSeconds],
+    ["sis_moodle_provisioning_rejected_commands", "Number of rejected Moodle provisioning commands in dev.", moodleProvisioningRejectedCount],
     ["sis_async_side_effect_worker_last_poll_timestamp_seconds", "Unix timestamp of the most recently completed dev async side-effect worker poll.", workerLastPollTimestamp],
     ["sis_async_side_effect_worker_last_poll_success", "Whether the most recent dev async side-effect worker poll completed successfully.", workerLastPollSuccess],
     ["sis_async_side_effect_worker_poll_age_seconds", "Age of the most recently completed dev async side-effect worker poll.", workerAge],
@@ -286,7 +302,7 @@ export async function checkParentReportApi(environment = process.env, fetchImpl 
   }
 }
 
-async function collectDatabaseMetrics(prisma, now) {
+export async function collectDatabaseMetrics(prisma, now) {
   const database = await prisma.$queryRaw`SELECT current_database() AS name`
   if (database[0]?.name !== "sis_dev") throw new Error("Engagement workflow monitor connected to an unexpected database")
   const dayAgo = new Date(now - 86400 * 1000)
@@ -314,7 +330,7 @@ async function collectDatabaseMetrics(prisma, now) {
     status: "queued",
     lastError: { not: null },
   }
-  const [latestReportEvent, latestWebhook, unprocessedCount, oldestUnprocessed, failedJobCount, staleProcessingJobCount, queuedJobCount, announcementQueuedJobCount, oldestAnnouncementQueued, notificationDueQueueCount, oldestDueNotification, notificationDeliveryFailureCount, oldestNotificationFailure, parentReportNotificationQueuedCount, oldestParentReportNotification, parentReportNotificationFailureCount, assignmentReminderPendingCount, oldestPendingReminder, staleAssignmentReminderDispatchCount, assignmentReminderFailureCount] = await Promise.all([
+  const [latestReportEvent, latestWebhook, unprocessedCount, oldestUnprocessed, failedJobCount, staleProcessingJobCount, queuedJobCount, announcementQueuedJobCount, oldestAnnouncementQueued, notificationDueQueueCount, oldestDueNotification, notificationDeliveryFailureCount, oldestNotificationFailure, parentReportNotificationQueuedCount, oldestParentReportNotification, parentReportNotificationFailureCount, assignmentReminderPendingCount, oldestPendingReminder, staleAssignmentReminderDispatchCount, assignmentReminderFailureCount, enrollmentConsistency, dueProvisioningCount, oldestDueProvisioning, processingProvisioningCount, oldestProcessingProvisioning, rejectedProvisioningCount] = await Promise.all([
     prisma.parentClassReportEvent.findFirst({ orderBy: { eventAt: "desc" }, select: { eventAt: true } }),
     prisma.brevoEmailWebhookEvent.findFirst({ orderBy: { receivedAt: "desc" }, select: { receivedAt: true } }),
     prisma.brevoEmailWebhookEvent.count({ where: { processedAt: null } }),
@@ -335,6 +351,35 @@ async function collectDatabaseMetrics(prisma, now) {
     prisma.assignmentReminderDispatch.findFirst({ where: { status: "pending" }, orderBy: { updatedAt: "asc" }, select: { updatedAt: true } }),
     prisma.assignmentReminderDispatch.count({ where: { status: "pending", updatedAt: { lt: assignmentDispatchCutoff } } }),
     prisma.assignmentReminderDispatch.count({ where: { status: "failed", updatedAt: { gte: dayAgo } } }),
+    prisma.$queryRaw`
+      SELECT
+        (SELECT COUNT(*)::int FROM (
+          SELECT "studentRefId" FROM public."StudentEnrollmentPeriod"
+          WHERE status = 'active'
+          GROUP BY "studentRefId" HAVING COUNT(*) > 1
+        ) active_conflicts) AS "multipleActiveStudents",
+        (SELECT COUNT(*)::int FROM public."StudentEnrollmentPeriod" a
+          JOIN public."StudentEnrollmentPeriod" b
+            ON a."studentRefId" = b."studentRefId" AND a.id < b.id
+           AND a."startedAt" < COALESCE(b."endedAt", 'infinity'::timestamptz)
+           AND b."startedAt" < COALESCE(a."endedAt", 'infinity'::timestamptz)
+        ) AS "overlappingPeriodPairs"
+    `,
+    prisma.moodleProvisioningCommand.count({
+      where: { status: { in: ["pending", "retry"] }, nextAttemptAt: { lte: nowDate } },
+    }),
+    prisma.moodleProvisioningCommand.findFirst({
+      where: { status: { in: ["pending", "retry"] }, nextAttemptAt: { lte: nowDate } },
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true },
+    }),
+    prisma.moodleProvisioningCommand.count({ where: { status: "processing" } }),
+    prisma.moodleProvisioningCommand.findFirst({
+      where: { status: "processing" },
+      orderBy: { updatedAt: "asc" },
+      select: { updatedAt: true },
+    }),
+    prisma.moodleProvisioningCommand.count({ where: { status: "rejected" } }),
   ])
   const oldestTimestamp = timestampSeconds(oldestUnprocessed?.receivedAt)
   const oldestAge = oldestTimestamp
@@ -365,6 +410,13 @@ async function collectDatabaseMetrics(prisma, now) {
     assignmentReminderOldestPendingAgeSeconds: ageSince(oldestPendingReminder?.updatedAt),
     staleAssignmentReminderDispatchCount,
     assignmentReminderFailureCount,
+    multipleActiveEnrollmentCount: Number(enrollmentConsistency[0]?.multipleActiveStudents || 0),
+    enrollmentOverlapPairCount: Number(enrollmentConsistency[0]?.overlappingPeriodPairs || 0),
+    moodleProvisioningDueCount: dueProvisioningCount,
+    moodleProvisioningOldestDueAgeSeconds: ageSince(oldestDueProvisioning?.createdAt),
+    moodleProvisioningProcessingCount: processingProvisioningCount,
+    moodleProvisioningOldestProcessingAgeSeconds: ageSince(oldestProcessingProvisioning?.updatedAt),
+    moodleProvisioningRejectedCount: rejectedProvisioningCount,
   }
 }
 
@@ -412,6 +464,11 @@ export async function runEngagementWorkflowMonitor({
       collected.parentReportNotificationFailureCount === 0 &&
       collected.staleAssignmentReminderDispatchCount === 0 &&
       collected.assignmentReminderFailureCount === 0 &&
+      collected.multipleActiveEnrollmentCount === 0 &&
+      collected.enrollmentOverlapPairCount === 0 &&
+      collected.moodleProvisioningOldestDueAgeSeconds <= MOODLE_PROVISIONING_QUEUE_STALE_AFTER_SECONDS &&
+      collected.moodleProvisioningOldestProcessingAgeSeconds <= MOODLE_PROVISIONING_PROCESSING_STALE_AFTER_SECONDS &&
+      collected.moodleProvisioningRejectedCount === 0 &&
       workerLastPollTimestamp > 0 &&
       checkedAt - workerLastPollTimestamp <= WORKER_STALE_AFTER_SECONDS &&
       workerLastPollSuccess === 1

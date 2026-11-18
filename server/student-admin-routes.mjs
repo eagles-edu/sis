@@ -8778,6 +8778,7 @@ async function handleApiRequest(request, response, pathname, url) {
     }
 
     if (method === "POST") {
+      markStudentWriteRequestAuthenticated()
       const payload = await parseBody(request)
       const result = await changeStudentEnrollment(studentRefId, payload, {
         updatedByUsername: normalizeText(session?.username),

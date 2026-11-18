@@ -59,6 +59,54 @@ groups:
 
   - name: sis-attendance-dev
     rules:
+      - alert: DevEnrollmentIntegrityConflict
+        expr: sis_enrollment_multiple_active_records{environment="dev"} > 0 or sis_enrollment_overlapping_period_pairs{environment="dev"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev enrollment history contains overlapping or multiple active periods
+
+      - alert: DevMoodleProvisioningQueueStale
+        expr: sis_moodle_provisioning_oldest_due_command_age_seconds{environment="dev"} > 1800
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A due dev Moodle provisioning command has waited over thirty minutes
+
+      - alert: DevMoodleProvisioningRejected
+        expr: sis_moodle_provisioning_rejected_commands{environment="dev"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev Moodle provisioning has rejected commands requiring review
+
+      - alert: DevMoodleProvisioningProcessingStale
+        expr: sis_moodle_provisioning_oldest_processing_age_seconds{environment="dev"} > 300
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A dev Moodle provisioning command has remained processing for over five minutes
+
+      - alert: DevProfileWriteFailure
+        expr: sum(increase(sis_admin_student_write_requests_total{route=~"POST /api/admin/students|PUT /api/admin/students/:id",status!~"2.."}[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: An authenticated dev profile write request failed
+
+      - alert: DevEnrollmentWriteFailure
+        expr: sum(increase(sis_admin_student_write_requests_total{route="POST /api/admin/students/:id/enrollment",status!~"2.."}[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: An authenticated dev enrollment write request failed
+
       - alert: DevAttendanceSaveFailure
         expr: sum(increase(sis_admin_student_write_requests_total{route=~"POST /api/admin/students/:id/attendance|DELETE /api/admin/students/:id/attendance/:recordId",status!~"2.."}[5m])) > 0
         for: 1m
