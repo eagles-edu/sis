@@ -8363,15 +8363,24 @@ async function handleApiRequest(request, response, pathname, url) {
       requireStudentPassword: true,
     })
     let invitation = null
+    let invitationWarning = false
     if (payload?.sendParentCompletionEmail === true) {
       const recipientEmail = normalizeText(result?.student?.profile?.motherEmail || result?.student?.profile?.studentEmail)
-      invitation = await createParentProfileInvitation({
-        studentRefId: result.student.id,
-        recipientEmail,
-        queuedBy: session?.username,
-      })
+      try {
+        invitation = await createParentProfileInvitation({
+          studentRefId: result.student.id,
+          recipientEmail,
+          queuedBy: session?.username,
+        })
+      } catch (error) {
+        invitationWarning = true
+        console.error("Student saved, but parent profile invitation setup failed", {
+          statusCode: Number.isInteger(error?.statusCode) ? error.statusCode : 500,
+          code: normalizeText(error?.code) || "INVITATION_SETUP_FAILED",
+        })
+      }
     }
-    sendJson(response, 200, { ...result, invitation })
+    sendJson(response, 200, { ...result, invitation, invitationWarning })
     return true
   }
 

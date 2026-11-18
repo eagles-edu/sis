@@ -20781,6 +20781,7 @@
           if (!payload.eaglesId) throw new Error("eaglesId is required");
 
           let invitation = null;
+          let invitationWarning = false;
           if (state.currentStudent && state.currentStudent.id) {
             const result = await api(
               `/api/admin/students/${encodeURIComponent(state.currentStudent.id)}`,
@@ -20797,6 +20798,7 @@
             });
             state.currentStudent = result.student;
             invitation = result.invitation || null;
+            invitationWarning = result.invitationWarning === true;
           }
 
           // The write response already contains the complete roster record,
@@ -20805,7 +20807,9 @@
           setProfileMode("info");
           renderProfileInfoLayout(state.currentStudent);
           setStatus(
-            invitation ?
+            invitationWarning ?
+              "Student saved. Parent invitation could not be created or queued. Use Copy Parent Link to share it manually."
+            : invitation ?
               `Student saved. Profile-completion email queued for ${invitation.recipientEmail}.`
             : studentNeedsEnrollment(state.currentStudent) ?
               "Student saved. Warning: no enrollment or class assigned; use Include unenrolled to find this student."

@@ -70,7 +70,7 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | GET | `/api/admin/filters` | Yes | any readable role | Yes | `listLevelAndSchoolFilters` (`src/modules/admin/student-admin-queries.mjs`) |
 | GET | `/api/admin/students/next-student-number` | Yes | any readable role | Yes | `getNextStudentNumber` (`src/modules/admin/student-roster.mjs`) |
 | GET | `/api/admin/students` | Yes | any readable role | Yes | `listStudents` (`src/modules/admin/student-roster.mjs`) |
-| POST | `/api/admin/students` | Yes | write role | Yes | `saveStudent` |
+| POST | `/api/admin/students` | Yes | write role | Yes | `saveStudent`; student persistence remains successful if optional parent invitation setup fails, with `invitationWarning: true` |
 | POST | `/api/admin/students/import` | Yes | write role | Yes | `importStudentsFromRows` |
 | POST | `/api/admin/students/{studentRefId}/moodle/disable` | Yes | `canManageUsers` | Yes | queue SIS-owned Moodle disable and suspend SIS student login pending signed receipt |
 | GET | `/api/admin/family` | Yes | any readable role | Yes | `findFamilyByEmergencyPhone` (`phone` query parameter) in `src/modules/admin/student-records.mjs` |

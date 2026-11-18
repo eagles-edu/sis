@@ -472,6 +472,24 @@ test("student news save/check flow lives in the submissions module with separate
   assert.match(routes, /Database schema mismatch detected/)
 })
 
+test("student creation keeps a committed student successful when parent invitation setup fails", () => {
+  const routes = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
+  const adminClient = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
+  const createRouteStart = routes.indexOf('if (method === "POST" && pathname === ADMIN_STUDENTS_PREFIX) {')
+  const createRouteEnd = routes.indexOf(
+    'if (method === "POST" && pathname === ADMIN_PARENT_PROFILE_INVITATION_PATH)',
+    createRouteStart,
+  )
+  const createRoute = routes.slice(createRouteStart, createRouteEnd)
+
+  assert.match(createRoute, /const result = await saveStudent\(payload/u)
+  assert.match(createRoute, /try \{\s*invitation = await createParentProfileInvitation/u)
+  assert.match(createRoute, /catch \(error\) \{\s*invitationWarning = true/u)
+  assert.match(createRoute, /\{ \.\.\.result, invitation, invitationWarning \}/u)
+  assert.match(adminClient, /invitationWarning \?\s*"Student saved\. Parent invitation could not be created or queued\./u)
+  assert.match(adminClient, /state\.currentStudent = result\.student/u)
+})
+
 test("admin quarter controls share the attendance quarter safety default", () => {
   const source = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
   assert.match(source, /function normalizeQuarterDropdownDefaults\(/)

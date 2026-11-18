@@ -8156,6 +8156,100 @@ test("profile payload mapping preserves mapped fields and custom form payload ke
   dom.window.close()
 })
 
+test("student creation shows a saved-profile warning when optional parent invitation setup fails", async () => {
+  const createdStudent = {
+    id: "synthetic-invitation-warning",
+    studentNumber: 999901,
+    eaglesId: "KA103-UI-SYNTHETIC",
+    profile: {
+      fullName: "Synthetic Keep Alive Student",
+      englishName: "Synthetic Keep Alive Student",
+      currentGrade: "A1 Movers",
+      motherName: "Synthetic Parent",
+      motherEmail: "parent@example.invalid",
+      motherPhone: "+84900000000",
+      familyId: "fam-9999",
+    },
+    currentEnrollment: { status: "active", level: "A1 Movers" },
+  }
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const url = String(resource)
+    const method = init.method || "GET"
+    if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+    if (url.includes("/api/admin/auth/login")) {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: ["overview", "profile", "settings"],
+        },
+      })
+    }
+    if (url.includes("/api/admin/preferences")) return jsonResponse(200, { preferences: {} })
+    if (url.includes("/api/admin/permissions")) {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: ["overview", "profile", "settings"],
+          },
+        },
+      })
+    }
+    if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
+    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["A1 Movers"], schools: [] })
+    if (method === "POST" && url.includes("/api/admin/students")) {
+      return jsonResponse(200, {
+        action: "created",
+        student: createdStudent,
+        invitation: null,
+        invitationWarning: true,
+      })
+    }
+    if (method === "GET" && url.includes("/api/admin/students")) return jsonResponse(200, { items: [], total: 0 })
+    if (url.includes("/api/admin/dashboard")) return jsonResponse(200, { levelCompletion: [], classEnrollmentAttendance: [], weeklyAssignmentCompletion: [], today: {} })
+    if (url.includes("/api/admin/notifications/batch-status")) return jsonResponse(200, { items: [], total: 0, hasMore: false })
+    if (url.includes("/api/admin/exercise-results/incoming")) return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+    if (url.includes("/api/admin/runtime/service-control")) return jsonResponse(200, { available: false, enabled: false, service: "exercise-mailer.service", status: "inactive", detail: "n/a" })
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+  await waitFor(() => assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false))
+  openPage(dom, "profile")
+  await waitFor(() => assert.equal(dom.window.document.querySelector('[data-page="profile"]')?.classList.contains("active"), true))
+  dom.window.document.getElementById("profileCreateInfoBtn").click()
+  await waitFor(() => assert.ok(dom.window.document.getElementById("f_fullName")))
+
+  const document = dom.window.document
+  document.getElementById("f_fullName").value = "Synthetic Keep Alive Student"
+  document.getElementById("f_eaglesId").value = "KA103-UI-SYNTHETIC"
+  document.getElementById("f_password").value = "SyntheticStudentPass123!"
+  document.getElementById("f_currentGrade").value = "A1 Movers"
+  document.getElementById("f_motherName").value = "Synthetic Parent"
+  document.getElementById("f_motherEmail").value = "parent@example.invalid"
+  document.getElementById("f_motherPhone").value = "+84900000000"
+  document.getElementById("sendParentCompletionEmail").checked = true
+  document.getElementById("saveBtn").click()
+
+  await waitFor(() => {
+    assert.match(document.getElementById("status")?.textContent || "", /Student saved\. Parent invitation could not be created or queued\./u)
+  })
+  assert.equal(document.getElementById("f_eaglesId")?.value, "KA103-UI-SYNTHETIC")
+  assert.match(document.getElementById("status")?.textContent || "", /Use Copy Parent Link to share it manually\./u)
+  dom.window.close()
+})
+
 test("profile info display emphasizes student summary and clusters empty fields", async () => {
   const studentDetail = {
     id: "stu-01",
