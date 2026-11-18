@@ -8,6 +8,13 @@ ops/monitoring/.exporters.env
 !.env.sample
 !.env.template
 SIS_CONFIG.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite
+*.sqlite3
+*.db
 
 # Logs
 npm-debug.log*
@@ -25,6 +32,9 @@ tmp/
 .vscode/
 
 # Local backup artifacts
+.backup/
+.codex-backups/
+backups/
 *.bak
 *.bak.*
 *.bak-*
@@ -56,7 +66,7 @@ docs/mapping/out/*
 !docs/mapping/out/.gitkeep
 !docs/monitoring.md
 !docs/test-mirror-monitoring.md
-.sync.ffs_db
+**/.sync.ffs_db
 .playwright-cli/
 nginx
 !deploy/nginx/
@@ -77,18 +87,9 @@ test/e2e/index.html
 
 
 # Runtime state stays local and must not be committed.
-/runtime-data/dev-async-worker.pid
-/runtime-data/dev-runtime.log
-/runtime-data/dev-runtime.pid
-/runtime-data/maintenance-reports/sis-config-repair-cron.log
-/runtime-data/prometheus/sis-test-request-metrics.prom
-/runtime-data/prometheus/parent-profile-workflow.prom
-/runtime-data/prometheus/async-side-effects-worker-dev.prom
-/runtime-data/prometheus/engagement-workflows-dev.prom
-/runtime-data/prometheus/library-workflow-dev.prom
-/runtime-data/prometheus/news-workflow-dev.prom
-/runtime-data/prometheus/*.prom
+/runtime-data/
+*.log
 
 # Environment-owned config mirrors contain local credentials and business data.
-/config/sis-config.development.json
-/config/sis-config.test.json
+/config/sis-config.development.json*
+/config/sis-config.test.json*
