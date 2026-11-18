@@ -120,7 +120,7 @@ Runtime-state differences confirmed at incident close:
 - Dev retained `runtime-data/student-news-reports.json`; test runtime root did not carry that fallback file.
 - Dev `.env.test` points `SIS_CONFIG_FILE` at `config/sis-config.test.json`; test mirror `.env.test` points `SIS_CONFIG_FILE` at `SIS_CONFIG.json`.
 - `config/sis-config.test.json` remains the repo-local test fixture path for local test-mode execution.
-- `development` mode is authoring mode: local dev config files are the source-of-truth and the DB mirror is repaired from them.
+- `development` mode was previously treated as authoring mode; this rule was superseded on 2026-11-18 by the all-environment newest-valid-copy reconciliation policy below.
 - `test` and `production` are mirror/repaired modes: deployed runtime `SIS_CONFIG.json` is reconciled with the DB mirror and the weaker side is repaired when the other side is valid.
 - `SIS_CONFIG.json` content hashes can differ between dev root and test mirror root because test runtime state is an explicit immutable runtime artifact.
 - Database content counts differed materially, including `StudentNewsReport`, `StudentAttendance`, `StudentGradeRecord`, `AdminUser`, and `IncomingExerciseResult`.
@@ -151,3 +151,10 @@ Hardening decisions captured from this incident:
 - Use `sis.md` for the current status snapshot.
 - Use `docs/sop.md` for the active procedure.
 - Use this file for historical context only; do not load it into active task instructions unless the task needs the migration timeline.
+
+### 2026-11-18: SIS config mirror recency recovery
+
+- Root cause: `/healthz` reported mirror state without running reconciliation, the development path hard-coded the JSON file as winner, database read/write errors were swallowed, and repair forced the database row's `updatedAt` to the file payload timestamp. The row therefore could not retain independent recency information.
+- Current rule: all environments compare the config file's filesystem modification time with the database-managed `SisConfigMirror.updatedAt`, choose the newer valid copy, repair the older copy, and read back to verify a database repair. An exact timestamp tie selects the database copy deterministically. Recovery copies the winning version timestamp to both copies, including the repaired file's mtime, preventing timestamp oscillation.
+- Health endpoints now reconcile before reporting. A database failure is surfaced instead of being reported as an apparently successful load.
+- Dev runtime was backed up before repair; the local file was newer than the database row's recorded timestamp and the dev mirror was repaired from that file. No production runtime or production database was changed.

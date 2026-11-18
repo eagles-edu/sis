@@ -993,7 +993,7 @@ async function buildRuntimeHealthPayload() {
     intakeEndpoint: DEFAULT_INTAKE_PATH,
     studentAdminRuntime,
     maintenance,
-    sisConfigMirrorHealth: await getSisConfigMirrorHealthSnapshot(),
+    sisConfigMirrorHealth: await getSisConfigMirrorHealthSnapshot({ repair: true }),
     runtimeSelfHeal: getRuntimeSelfHealStatus(),
   }
 }

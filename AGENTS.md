@@ -79,8 +79,8 @@ A bare `npm run db:*`, a mismatched `SIS_ENV_FILE`/`DOTENV_CONFIG_PATH`, or a cr
 ### Configuration Hierarchy
 
 1. `SIS_CONFIG.json` at a deployed runtime root is the **immutable runtime config contract** for that environment.
-2. `development` mode is **authoring mode**: local dev config files are the source-of-truth and the DB mirror is repaired from them.
-3. `test` and `production` modes are **mirror/repaired mode**: deployed runtime `SIS_CONFIG.json` is reconciled with the DB mirror and the weaker side is repaired when the other side is valid.
+2. Every environment selects the newest valid SIS config copy and repairs the older copy: development uses the config file's filesystem modification time and the database mirror's database-managed `updatedAt`; test and production use the same recency comparison for deployed `SIS_CONFIG.json` and the database mirror. Never assign a fixed winner by environment.
+3. Keep each environment's own file and database isolated. A repair reads and writes only the database and file owned by the active `.env.dev`, `.env.test`, or `.env` execution context.
 4. `config/sis-config.test.json` in the repo is a local test fixture path, not the deployed runtime immutable.
 
 ### Sync & Portal Contracts

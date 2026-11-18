@@ -350,15 +350,6 @@ function resolveSisConfigFilePath() {
   return path.resolve(process.cwd(), SIS_CONFIG_FILE_NAME)
 }
 
-export function shouldPreferSisConfigFileOverDatabase() {
-  const nodeEnv = normalizeRuntimeEnvironment(process.env.NODE_ENV)
-  // Development is authoring mode: the local config file is treated as the source-of-truth.
-  // Test and production are mirror/repaired mode: the newest valid snapshot between
-  // the file and DB mirror is chosen, and the weaker side is repaired as needed.
-  // An explicit SIS_CONFIG_FILE path does not force file precedence in test/prod.
-  return nodeEnv === "development"
-}
-
 /**
  * @param {unknown} value
  * @returns {PlainObject}
@@ -558,6 +549,17 @@ function snapshotComparisonKey(snapshot = {}) {
   })
 }
 
+function snapshotDataComparisonKey(snapshot = {}) {
+  const source = toPlainObject(snapshot)
+  return JSON.stringify({
+    uiSettings: canonicalizeComparisonValue(normalizeUiSettings(source.uiSettings || {})),
+    runtime: canonicalizeComparisonValue(normalizeRuntimeConfig(source.runtime || {})),
+    newsReports: canonicalizeComparisonValue(normalizeNewsReportsConfig(source.newsReports || {})),
+    environment: normalizeRuntimeEnvironment(source.environment),
+    updatedBy: normalizeText(source.updatedBy),
+  })
+}
+
 /**
  * @param {Partial<SisConfigPayload> | Partial<LoadedSisConfigSnapshot> | PlainObject} snapshot
  * @returns {string}
@@ -569,20 +571,6 @@ function mirrorHealthComparisonKey(snapshot = {}) {
     runtime: canonicalizeComparisonValue(normalizeRuntimeConfig(source.runtime || {})),
     newsReports: canonicalizeComparisonValue(normalizeNewsReportsConfig(source.newsReports || {})),
     environment: normalizeRuntimeEnvironment(source.environment),
-  })
-}
-
-/**
- * @param {Partial<SisConfigPayload> | Partial<LoadedSisConfigSnapshot> | PlainObject} snapshot
- * @returns {string}
- */
-function rawSnapshotComparisonKey(snapshot = {}) {
-  const source = toPlainObject(snapshot)
-  return JSON.stringify({
-    uiSettings: canonicalizeComparisonValue(toPlainObject(source.uiSettings || {})),
-    runtime: canonicalizeComparisonValue(toPlainObject(source.runtime || {})),
-    newsReports: canonicalizeComparisonValue(toPlainObject(source.newsReports || {})),
-    environment: normalizeText(source.environment),
     updatedAt: normalizeText(source.updatedAt),
     updatedBy: normalizeText(source.updatedBy),
   })
@@ -675,7 +663,9 @@ function backupCorruptJsonFileIfNeeded(filePath, snapshot) {
 
 function writeJsonFileAtomic(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
-  const encoded = JSON.stringify(value, null, 2)
+  const source = toPlainObject(value)
+  const updatedAt = normalizeText(source.updatedAt) || nowIso()
+  const encoded = JSON.stringify({ ...source, updatedAt }, null, 2)
   // The protected System Config file is writable by the runtime but its
   // parent directory prevents replacement/deletion. Write the existing inode
   // directly so recovery and normal persistence do not require rename access.
@@ -739,6 +729,7 @@ function cachedSnapshotMatchesFiles(cached = null) {
 
 /** @returns {Promise<LoadedSisConfigSnapshot | null>} */
 async function readMirrorFromDatabase() {
+  if (!normalizeText(process.env.DATABASE_URL)) return null
   try {
     const { getSharedPrismaClient } = await import("../../infra/db/prisma-client.mjs")
     const prisma = await getSharedPrismaClient()
@@ -753,8 +744,7 @@ async function readMirrorFromDatabase() {
       updatedBy: normalizeText(row.updatedBy),
     }, resolveSisConfigFilePath(), "database")
   } catch (error) {
-    void error
-    return null
+    throw new Error(`Unable to read SIS config database mirror: ${errorMessage(error)}`, { cause: error })
   }
 }
 
@@ -777,17 +767,26 @@ async function readMirrorFromDatabase() {
  *   detail: string,
  * }>}
  */
-export async function getSisConfigMirrorHealthSnapshot() {
+export async function getSisConfigMirrorHealthSnapshot({ repair = false } = {}) {
+  if (repair) {
+    await ensureSisConfigLoaded({ refresh: true })
+  }
   const filePath = resolveSisConfigFilePath()
   const fileSnapshot = parseJsonFile(filePath)
   const fileLoaded = fileSnapshot.parsed ? normalizeLoadedSnapshot(fileSnapshot.parsed, filePath, "file") : null
+  const fileVersion = fileLoaded ? {
+    ...fileLoaded,
+    updatedAt: compareIsoValues(fileSnapshot.mtimeIso, fileLoaded.updatedAt) > 0
+      ? fileSnapshot.mtimeIso
+      : fileLoaded.updatedAt,
+  } : null
   const dbSnapshot = await readMirrorFromDatabase()
 
   const filePresent = Boolean(fileLoaded)
   const dbPresent = Boolean(dbSnapshot)
   const fileVsDbSynced =
     filePresent && dbPresent &&
-    mirrorHealthComparisonKey(fileLoaded) === mirrorHealthComparisonKey(dbSnapshot)
+    mirrorHealthComparisonKey(fileVersion) === mirrorHealthComparisonKey(dbSnapshot)
 
   const state =
     filePresent && dbPresent ?
@@ -804,7 +803,7 @@ export async function getSisConfigMirrorHealthSnapshot() {
     file: {
       present: filePresent,
       source: fileLoaded ? fileLoaded.source || "missing" : "missing",
-      updatedAt: normalizeText(fileLoaded ? fileLoaded.updatedAt : ""),
+      updatedAt: normalizeText(fileVersion ? fileVersion.updatedAt : ""),
       error: errorMessage(fileSnapshot.error),
     },
     db: {
@@ -824,6 +823,7 @@ export async function getSisConfigMirrorHealthSnapshot() {
  * @returns {Promise<void>}
  */
 async function upsertMirrorToDatabase(snapshot = {}) {
+  if (!normalizeText(process.env.DATABASE_URL)) return
   const source = toPlainObject(snapshot)
   try {
     const { getSharedPrismaClient } = await import("../../infra/db/prisma-client.mjs")
@@ -859,7 +859,7 @@ async function upsertMirrorToDatabase(snapshot = {}) {
       WHERE "id" = ${SIS_CONFIG_MIRROR_ID}
     `
   } catch (error) {
-    void error
+    throw new Error(`Unable to write SIS config database mirror: ${errorMessage(error)}`, { cause: error })
   }
 }
 
@@ -913,15 +913,13 @@ export async function ensureSisConfigLoaded(options = {}) {
   const dbSnapshot = await readMirrorFromDatabase()
   const fileParsed = toPlainObject(fileSnapshot.parsed)
   const dbParsed = toPlainObject(dbSnapshot)
-  const preferSisConfigFile = shouldPreferSisConfigFileOverDatabase()
-
   assertValidRuntimeDatabaseUrl({
     filePath,
     raw: fileSnapshot.raw,
     databaseUrl: toPlainObject(fileParsed.runtime).databaseUrl || "",
     source: "file",
   })
-  if (!preferSisConfigFile && dbSnapshot) {
+  if (dbSnapshot) {
     assertValidRuntimeDatabaseUrl({
       filePath,
       databaseUrl: toPlainObject(dbParsed.runtime).databaseUrl || "",
@@ -931,34 +929,32 @@ export async function ensureSisConfigLoaded(options = {}) {
 
   const fileLoaded = fileSnapshot.parsed ? normalizeLoadedSnapshot(fileSnapshot.parsed, filePath, "file") : null
 
-  // In development we preserve local file authoring semantics. In test and production,
-  // we reconcile the file and DB mirrors by chronology and repair the missing or stale
-  // copy so both sides stay aligned.
-  let latest = null
-  if (preferSisConfigFile) {
-    latest = fileLoaded || dbSnapshot || buildDefaultSnapshot()
-  } else {
-    const candidates = [fileLoaded, dbSnapshot].filter(Boolean)
-    latest = candidates[0] || null
-    for (const candidate of candidates.slice(1)) {
-      if (!latest) {
-        latest = candidate
-        continue
-      }
-      if (compareIsoValues(candidate.updatedAt, latest.updatedAt) > 0) {
-        latest = candidate
-        continue
-      }
-      if (!normalizeText(latest.updatedAt) && normalizeText(candidate.updatedAt)) {
-        latest = candidate
-      }
-    }
-    if (!latest) {
-      latest = buildDefaultSnapshot()
+  // Both copies participate in every environment. File modification time and
+  // the database row's @updatedAt timestamp are independent recency signals.
+  // The database wins an exact tie so repeated recovery runs remain deterministic.
+  const candidates = [
+    dbSnapshot ? { snapshot: dbSnapshot, recency: dbSnapshot.updatedAt } : null,
+    fileLoaded ? {
+      snapshot: {
+        ...fileLoaded,
+        updatedAt: compareIsoValues(fileSnapshot.mtimeIso, fileLoaded.updatedAt) > 0
+          ? fileSnapshot.mtimeIso
+          : fileLoaded.updatedAt,
+      },
+      recency: compareIsoValues(fileSnapshot.mtimeIso, fileLoaded.updatedAt) > 0
+        ? fileSnapshot.mtimeIso
+        : fileLoaded.updatedAt,
+    } : null,
+  ].filter(Boolean)
+  let latestCandidate = candidates[0] || null
+  for (const candidate of candidates.slice(1)) {
+    if (!latestCandidate || compareIsoValues(candidate.recency, latestCandidate.recency) > 0) {
+      latestCandidate = candidate
     }
   }
+  const latest = latestCandidate ? latestCandidate.snapshot : buildDefaultSnapshot()
 
-  const snapshot = normalizeLoadedSnapshot({
+  let snapshot = normalizeLoadedSnapshot({
     uiSettings: latest.uiSettings || {},
     runtime: latest.runtime || {},
     newsReports: latest.newsReports || {},
@@ -967,21 +963,15 @@ export async function ensureSisConfigLoaded(options = {}) {
     updatedBy: latest.updatedBy || "",
   }, filePath, latest.source || "file")
 
-  const latestSourceIsDatabase = latest.source === "database"
   const fileContainsPersistedRedisUrl = Boolean(normalizeText(toPlainObject(fileParsed.runtime).redisUrl))
   const dbContainsPersistedRedisUrl = Boolean(normalizeText(toPlainObject(dbParsed.runtime).redisUrl))
-  const fileMatchesSnapshot = !fileSnapshot.parsed || rawSnapshotComparisonKey(fileSnapshot.parsed) === snapshotComparisonKey(snapshot)
-  const dbMatchesSnapshot = !dbSnapshot || rawSnapshotComparisonKey({
-    uiSettings: dbSnapshot.uiSettings,
-    runtime: dbSnapshot.runtime,
-    newsReports: dbSnapshot.newsReports,
-    updatedAt: dbSnapshot.updatedAt,
-    updatedBy: dbSnapshot.updatedBy,
-  }) === snapshotComparisonKey(snapshot)
+  const fileMatchesSnapshot = !fileSnapshot.parsed || snapshotDataComparisonKey(
+    normalizeLoadedSnapshot(fileSnapshot.parsed, filePath, "file"),
+  ) === snapshotDataComparisonKey(snapshot)
   const fileNeedsWrite =
     !fileSnapshot.exists ||
     fileSnapshot.error ||
-    (!preferSisConfigFile && latestSourceIsDatabase) ||
+    (latest.source === "database") ||
     !fileMatchesSnapshot ||
     fileContainsPersistedRedisUrl ||
     (fileLoaded && compareIsoValues(snapshot.updatedAt, fileLoaded.updatedAt) > 0)
@@ -997,18 +987,30 @@ export async function ensureSisConfigLoaded(options = {}) {
       updatedAt: snapshot.updatedAt,
       updatedBy: snapshot.updatedBy || null,
     })
+    const writtenFile = parseJsonFile(filePath)
+    if (compareIsoValues(writtenFile.mtimeIso, snapshot.updatedAt) > 0) {
+      snapshot = normalizeLoadedSnapshot({
+        ...snapshot,
+        updatedAt: writtenFile.mtimeIso,
+      }, filePath, snapshot.source)
+    }
   }
 
+  const dbMatchesSnapshot = !dbSnapshot || snapshotComparisonKey(dbSnapshot) === snapshotComparisonKey(snapshot)
   const mirrorNeedsWrite =
     !dbSnapshot ||
-    (!preferSisConfigFile && latestSourceIsDatabase) ||
-    latest.source === "file" ||
-    fileNeedsWrite ||
     !dbMatchesSnapshot ||
-    dbContainsPersistedRedisUrl ||
-    compareIsoValues(snapshot.updatedAt, dbSnapshot.updatedAt) !== 0
+    dbContainsPersistedRedisUrl
   if (mirrorNeedsWrite) {
     await upsertMirrorToDatabase(snapshot)
+    if (normalizeText(process.env.DATABASE_URL)) {
+      const repairedMirror = await readMirrorFromDatabase()
+      const repairedMirrorMatches = repairedMirror &&
+        mirrorHealthComparisonKey(repairedMirror) === mirrorHealthComparisonKey(snapshot)
+      if (!repairedMirrorMatches) {
+        throw new Error("SIS config database mirror did not match the authoritative snapshot after repair")
+      }
+    }
   }
 
   cachedSnapshot = {

@@ -99,12 +99,10 @@ let sharedPrismaClientDatabaseUrl = ""
  * @returns {Promise<import("@prisma/client").PrismaClient>}
  */
 export async function getSharedPrismaClient() {
-  // Development uses the environment-specific .env.dev database directly; this
-  // prevents a stale deployed SIS_CONFIG.json mirror from routing dev requests
-  // to the wrong database while local migrations are being authored.
-  const resolvedDatabaseUrl = normalizeLower(process.env.NODE_ENV) === "development"
-    ? normalizeText(process.env.DATABASE_URL || getConfiguredDatabaseUrlSync())
-    : normalizeText(getConfiguredDatabaseUrlSync() || process.env.DATABASE_URL)
+  // The active environment file owns the connection target in every runtime.
+  // The mirrored config URL is only a fallback for runtimes that do not inject
+  // DATABASE_URL; it must never override the environment's selected database.
+  const resolvedDatabaseUrl = normalizeText(process.env.DATABASE_URL || getConfiguredDatabaseUrlSync())
   if (sharedPrismaClientPromise && sharedPrismaClientDatabaseUrl === resolvedDatabaseUrl) return sharedPrismaClientPromise
 
   if (sharedPrismaClientPromise && sharedPrismaClientDatabaseUrl !== resolvedDatabaseUrl) {

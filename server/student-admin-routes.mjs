@@ -2032,7 +2032,7 @@ async function resolveAdminRuntimeHealthPayload() {
     node: process.version,
     studentAdminRuntime: runtimeStatus,
     maintenance: runtimeStatus.maintenance || null,
-    sisConfigMirrorHealth: await getSisConfigMirrorHealthSnapshot(),
+    sisConfigMirrorHealth: await getSisConfigMirrorHealthSnapshot({ repair: true }),
     runtimeSelfHeal: {
       enabled: false,
       lastResult: "unavailable",
