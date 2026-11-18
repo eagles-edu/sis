@@ -245,7 +245,7 @@ function knownPronunciationSyllabicationMatches(word, entered) {
 /**
  * Verifies a vocabulary entry without exposing an authoritative correction.
  * @param {{ english?: unknown, syllabication?: unknown }} row
- * @param {{ fetchImpl?: typeof fetch }} [options]
+ * @param {{ fetchImpl?: typeof fetch, overrideLookup?: (english: string) => Promise<{syllabication?: string} | null> }} [options]
  */
 export async function validateVocabularyEntry(row = {}, options = {}) {
   const formatError = vocabularyEntryError(row)
@@ -259,9 +259,19 @@ export async function validateVocabularyEntry(row = {}, options = {}) {
   for (let index = 0; index < englishWords.length; index += 1) {
     const word = englishWords[index]
     const entered = enteredWords[index]
+    const syllables = normalizedSyllableWord(entered)
+    if (typeof options.overrideLookup === "function") {
+      const override = await options.overrideLookup(word)
+      if (override) {
+        const approved = normalizeVocabularySyllabication(override.syllabication)
+        if (normalizeVocabularySyllabication(entered) !== approved) {
+          return { message: "Syllabication or primary stress does not match the approved school override.", warning: "" }
+        }
+        continue
+      }
+    }
     if (isExactUnsplitCompound(word, entered)) continue
     const profile = cmuSyllableProfile(word)
-    const syllables = normalizedSyllableWord(entered)
     if (!profile) {
       return { message: "Syllabication requires manual dictionary research. Use the provided dictionary links.", warning: "" }
     }

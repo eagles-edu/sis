@@ -748,11 +748,12 @@ async function createStudentNewsReportWithSequence(prisma, studentRefId, reportD
  *   reportDateLocked: boolean,
  * }>}
  */
-async function buildStudentNewsClientItem(row, { validationConfig = {} } = {}) {
+async function buildStudentNewsClientItem(row, { validationConfig = {}, vocabularyOverrideLookup } = {}) {
   const mapped = mapStudentNewsReportRow(row)
   const validationPayload = buildStudentNewsValidationPayload(mapped)
   const minimumRequirements = await evaluateStudentNewsMinimumRequirements(validationPayload, {
     validationConfig,
+    vocabularyOverrideLookup,
   })
   const storedValidationIssues = normalizeValidationIssueMap(mapped?.validationIssuesJson)
   const useStoredValidation = validationConfig && validationConfig.__useStoredValidation === true
@@ -1024,7 +1025,7 @@ export function buildStudentNewsCalendarRows({ now = new Date(), reports = [], d
  *   calendar: Array<ReturnType<typeof buildStudentNewsCalendarRows>[number]>,
  * }>}
  */
-export async function listStudentNewsCalendar(studentRefId, { now = new Date(), days = STUDENT_NEWS_DEFAULT_DAYS } = {}) {
+export async function listStudentNewsCalendar(studentRefId, { now = new Date(), days = STUDENT_NEWS_DEFAULT_DAYS, vocabularyOverrideLookup } = {}) {
   const prisma = await getPrismaClient()
   const id = normalizeText(studentRefId)
   assertWithStatus(Boolean(id), 400, "studentRefId is required")
@@ -1067,6 +1068,7 @@ export async function listStudentNewsCalendar(studentRefId, { now = new Date(), 
         validationConfig: {
           __useStoredValidation: true,
         },
+        vocabularyOverrideLookup,
       })
     )
   )
@@ -1118,7 +1120,7 @@ export async function listStudentNewsCalendar(studentRefId, { now = new Date(), 
  * @param {"check" | "submit"} mode
  * @returns {Promise<Record<string, unknown>>}
  */
-async function persistStudentNewsReport(studentRefId, payload = {}, { now = new Date(), validationConfig = {} } = {}, mode) {
+async function persistStudentNewsReport(studentRefId, payload = {}, { now = new Date(), validationConfig = {}, vocabularyOverrideLookup } = {}, mode) {
   const prisma = await getPrismaClient()
   const id = normalizeText(studentRefId)
   assertWithStatus(Boolean(id), 400, "studentRefId is required")
@@ -1195,7 +1197,7 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
         })
         continue
       }
-      const authoritative = await validateVocabularyEntry(row)
+      const authoritative = await validateVocabularyEntry(row, { overrideLookup: vocabularyOverrideLookup })
       if (authoritative.message || authoritative.warning) {
         draftVocabularyWarnings.push({
           index,
@@ -1208,7 +1210,7 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
   }
   const minimumRequirements = mode === "draft"
     ? { passed: false, failedFields: {}, requiredTasks: [], warningFields: {} }
-    : await evaluateStudentNewsMinimumRequirements(validationPayload, { validationConfig })
+    : await evaluateStudentNewsMinimumRequirements(validationPayload, { validationConfig, vocabularyOverrideLookup })
   let compliance = mode === "draft"
     ? {
         warningFields: draftVocabularyWarnings.length ? {
@@ -1223,6 +1225,7 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
       }
     : await evaluateStudentNewsCompliance(validationPayload, {
         validationConfig,
+        vocabularyOverrideLookup,
         sentenceReports: minimumRequirements.sentenceReports,
       })
   if (minimumRequirements.warningFields?.vocabulary) {
@@ -1308,7 +1311,7 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     if (!mmrPassed || !hasSatisfiedDate) {
       throwWithStatusPayload(409, "Minimum requirements have not been met. Run Check first.", {
         saved: false,
-        item: existing ? await buildStudentNewsClientItem(existing, { validationConfig }) : null,
+        item: existing ? await buildStudentNewsClientItem(existing, { validationConfig, vocabularyOverrideLookup }) : null,
         mmrPassed: false,
         mmrFailedFields: minimumRequirements.failedFields || {},
         warningFields: compliance.warningFields || {},
@@ -1446,7 +1449,7 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     }
   }
 
-  const mappedItem = await buildStudentNewsClientItem(saved, { validationConfig })
+  const mappedItem = await buildStudentNewsClientItem(saved, { validationConfig, vocabularyOverrideLookup })
   const autoApproveConfig = getStudentNewsAutoApprovalConfigSync()
   const autoApproveDueAt =
     mode === "submit" && reviewStatus === STUDENT_NEWS_REVIEW_STATUS_SUBMITTED

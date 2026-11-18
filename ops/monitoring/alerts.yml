@@ -101,6 +101,22 @@ groups:
         annotations:
           summary: Authenticated dev engagement reporting API check failed
 
+      - alert: DevParentAuthenticationUnavailable
+        expr: sis_parent_authentication_available{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Exact configured dev parent account could not authenticate
+
+      - alert: DevParentReportDashboardUnavailable
+        expr: sis_parent_report_dashboard_available{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Authenticated dev parent report dashboard is unavailable
+
       - alert: DevEngagementWebhookProcessingStale
         expr: sis_engagement_webhook_unprocessed_events{environment="dev"} > 0 and sis_engagement_webhook_oldest_unprocessed_age_seconds{environment="dev"} > 300
         for: 1m
@@ -164,6 +180,22 @@ groups:
           severity: warning
         annotations:
           summary: Dev notification queue items retain a delivery error
+
+      - alert: DevParentReportNotificationQueueStale
+        expr: sis_parent_report_notification_oldest_due_age_seconds{environment="dev"} > 1800
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A due dev parent report notification has waited over thirty minutes
+
+      - alert: DevParentReportNotificationDeliveryFailure
+        expr: sis_parent_report_notification_delivery_failure_items{environment="dev"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev parent report notification items retain a delivery error
 
       - alert: DevAssignmentReminderDispatchStale
         expr: sis_assignment_reminder_stale_pending_dispatches{environment="dev"} > 0

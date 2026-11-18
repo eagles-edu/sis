@@ -521,6 +521,36 @@ test("demolition accepts phonetic syllabication when Merriam-Webster shows word-
   }
 })
 
+test("approved Student News syllabication overrides are checked before dictionary providers", async () => {
+  const lookupOrder = []
+  const lookup = async (word) => {
+    lookupOrder.push(`override:${word}`)
+    return { syllabication: "dem-o-LI-tion" }
+  }
+  const accepted = await validateVocabularyEntry(
+    { english: "demolition", syllabication: "dem-o-LI-tion" },
+    { overrideLookup: lookup, fetchImpl: async () => { throw new Error("dictionary must not run for approved override") } },
+  )
+  assert.deepEqual(accepted, { message: "", warning: "" })
+  assert.deepEqual(lookupOrder, ["override:demolition"])
+
+  const rejected = await validateVocabularyEntry(
+    { english: "demolition", syllabication: "de-MO-li-tion" },
+    { overrideLookup: lookup, fetchImpl: async () => { throw new Error("dictionary must not run for approved override") } },
+  )
+  assert.match(rejected.message, /approved school override/u)
+  assert.equal(lookupOrder.length, 2)
+})
+
+test("Student News help uses an in-app checkbox submission and no email link", () => {
+  assert.match(STUDENT_HTML, /id="newsComplianceHelpConsent" type="checkbox"/u)
+  assert.match(STUDENT_HTML, /id="newsComplianceHelpSubmit" type="button"/u)
+  assert.match(STUDENT_JS, /STUDENT_NEWS_VOCABULARY_HELP_PATH/u)
+  const modal = /<div id="newsComplianceHelpPanel"[\s\S]*?<\/div>/u.exec(STUDENT_HTML)?.[0] || ""
+  assert.doesNotMatch(modal, /mailto:|href=/u)
+  assert.doesNotMatch(STUDENT_JS, /newsComplianceHelpLink|mailto:support@eagles\.edu\.vn/u)
+})
+
 test("authoritative dictionary credentials and unmodeled response fields stay server-side", async () => {
   const previousCollegiateKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
   const previousConsoleLog = console.log

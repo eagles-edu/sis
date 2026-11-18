@@ -7,6 +7,7 @@ import { AsyncLocalStorage } from "node:async_hooks"
 
 const requestContext = new AsyncLocalStorage()
 const requestMetrics = new Map()
+const parentReportAcknowledgmentMetrics = new Map()
 const phaseMetrics = new Map()
 const gradeFeedMetrics = new Map()
 let writeQueue = Promise.resolve()
@@ -59,6 +60,19 @@ function renderRequestMetrics() {
     const labels = `route="${escapeLabel(route)}",status="${escapeLabel(status)}"`
     lines.push(`sis_admin_student_write_request_duration_seconds_sum{${labels}} ${metric.sum}`)
     lines.push(`sis_admin_student_write_request_duration_seconds_count{${labels}} ${metric.count}`)
+  }
+  lines.push("# HELP sis_parent_report_acknowledgment_requests_total Completed authenticated parent report acknowledgment requests by response status.")
+  lines.push("# TYPE sis_parent_report_acknowledgment_requests_total counter")
+  for (const [status, metric] of parentReportAcknowledgmentMetrics.entries()) {
+    const labels = `environment="${metricEnvironment()}",route="POST /api/parent/reports/:reportId/acknowledge",status="${escapeLabel(status)}"`
+    lines.push(`sis_parent_report_acknowledgment_requests_total{${labels}} ${metric.count}`)
+  }
+  lines.push("# HELP sis_parent_report_acknowledgment_request_duration_seconds Authenticated parent report acknowledgment request duration.")
+  lines.push("# TYPE sis_parent_report_acknowledgment_request_duration_seconds summary")
+  for (const [status, metric] of parentReportAcknowledgmentMetrics.entries()) {
+    const labels = `environment="${metricEnvironment()}",route="POST /api/parent/reports/:reportId/acknowledge",status="${escapeLabel(status)}"`
+    lines.push(`sis_parent_report_acknowledgment_request_duration_seconds_sum{${labels}} ${metric.sum}`)
+    lines.push(`sis_parent_report_acknowledgment_request_duration_seconds_count{${labels}} ${metric.count}`)
   }
   lines.push("# HELP sis_admin_student_write_phase_duration_seconds Student write phase duration.")
   lines.push("# TYPE sis_admin_student_write_phase_duration_seconds summary")
@@ -140,6 +154,15 @@ function resolveGradeFeedWriteRoute(request) {
   return ""
 }
 
+export function resolveParentReportAcknowledgmentRoute(request) {
+  const method = text(request?.method).toUpperCase()
+  const url = new URL(request?.url || "/", `http://${request?.headers?.host || "localhost"}`)
+  if (method === "POST" && /^\/api\/parent\/reports\/[^/]+\/acknowledge$/u.test(url.pathname)) {
+    return "POST /api/parent/reports/:reportId/acknowledge"
+  }
+  return ""
+}
+
 /**
  * Execute an operation while recording a safe aggregate phase duration for
  * authenticated student create/update requests.
@@ -190,9 +213,10 @@ export function initializeStudentWriteMetrics() {
 export async function observeStudentWriteRequest(request, response, operation) {
   const studentRoute = resolveStudentWriteRoute(request)
   const gradeFeedRoute = resolveGradeFeedWriteRoute(request)
-  if (!studentRoute && !gradeFeedRoute) return operation()
-  const metricClass = studentRoute ? "student-write" : "grade-feed"
-  const route = studentRoute || gradeFeedRoute
+  const parentReportAckRoute = resolveParentReportAcknowledgmentRoute(request)
+  if (!studentRoute && !gradeFeedRoute && !parentReportAckRoute) return operation()
+  const metricClass = studentRoute ? "student-write" : gradeFeedRoute ? "grade-feed" : "parent-report-acknowledgment"
+  const route = studentRoute || gradeFeedRoute || parentReportAckRoute
   const context = { requestId: crypto.randomUUID(), route, phases: [], authorized: false, metricClass }
   return requestContext.run(context, async () => {
     const startedAt = performance.now()
@@ -213,7 +237,8 @@ export async function observeStudentWriteRequest(request, response, operation) {
             phases: context.phases,
           }))
         } else {
-          observeMetric(gradeFeedMetrics, metricKey(route, status))
+          if (metricClass === "grade-feed") observeMetric(gradeFeedMetrics, metricKey(route, status))
+          else observeMetric(parentReportAcknowledgmentMetrics, metricKey(status), durationSeconds)
         }
         void scheduleFlush()
       }

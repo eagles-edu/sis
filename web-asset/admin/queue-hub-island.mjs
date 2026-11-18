@@ -35,6 +35,8 @@ function queueHubPanelTitle(panelId = "") {
       return "Past Overdue Homework";
     case "attendance-risk":
       return "At-Risk Attendance";
+    case "student-news-vocabulary-help":
+      return "Student News Vocabulary Help";
     case "news-report-review":
       return "News Week Sets (7 Reports)";
     case "pending-profile-submissions":
@@ -119,6 +121,21 @@ function normalizeQueueHubCell(value = "") {
 
 function queueHubTableSpec(panelId = "") {
   switch (panelId) {
+    case "student-news-vocabulary-help":
+      return {
+        columns: ["Submitted", "Student", "Word", "Entered Syllabication", "Check Result", "Approved Syllabication", "Actions"],
+        openColumnIndex: -1,
+        row: (item) => [
+          formatDateTime(item?.createdAt),
+          `${normalizeText(item?.student?.name)} (${normalizeText(item?.student?.eaglesId)})`,
+          normalizeText(item?.word),
+          normalizeText(item?.syllabication),
+          normalizeText(item?.checkMessage),
+          queueHubCellHtml(`<input class="queue-vocabulary-override" data-vocabulary-override-for="${escapeHtml(item?.id)}" aria-label="Approved syllabication for ${escapeHtml(item?.word)}" value="${escapeHtml(item?.syllabication)}">`, item?.syllabication),
+          queueHubCellHtml(`<div class="queue-hub-actions"><button type="button" class="portal-button portal-button-info" data-vocabulary-override-approve="${escapeHtml(item?.id)}">Approve</button><button type="button" class="portal-button portal-button-warning" data-vocabulary-help-resolve="${escapeHtml(item?.id)}">Resolve</button></div>`, "Approve or resolve"),
+        ],
+        emptyText: "No vocabulary help requests.",
+      };
     case "queued-performance-reports":
       return {
         columns: ["Queued At", "Performance Report", "Status", "Level", "Queued By"],
@@ -618,6 +635,23 @@ function resetQueueHubPanelOrder() {
       const target = event?.target;
       const ElementCtor = globalThis.Element;
       if (typeof ElementCtor !== "function" || !(target instanceof ElementCtor)) return;
+      const overrideButton = target.closest("button[data-vocabulary-override-approve]");
+      const resolveButton = target.closest("button[data-vocabulary-help-resolve]");
+      if (overrideButton) {
+        const id = normalizeText(overrideButton.getAttribute("data-vocabulary-override-approve"));
+        const input = document.querySelector(`[data-vocabulary-override-for="${id}"]`);
+        api(`/api/admin/news-vocabulary-help/${encodeURIComponent(id)}/approve-override`, {
+          method: "POST",
+          body: { syllabication: input?.value || "" },
+        }).then(() => loadQueueHub({ notify: true })).catch((error) => setStatus?.(error.message, true));
+        return;
+      }
+      if (resolveButton) {
+        const id = normalizeText(resolveButton.getAttribute("data-vocabulary-help-resolve"));
+        api(`/api/admin/news-vocabulary-help/${encodeURIComponent(id)}/resolve`, { method: "POST", body: {} })
+          .then(() => loadQueueHub({ notify: true })).catch((error) => setStatus?.(error.message, true));
+        return;
+      }
       const openBtn = target.closest("a[data-queue-hub-open-panel][data-queue-hub-open-index]");
       const HTMLAnchorElementCtor = globalThis.HTMLAnchorElement;
       if (

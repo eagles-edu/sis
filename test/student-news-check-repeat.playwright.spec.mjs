@@ -13,12 +13,18 @@ const ORIGIN = (process.env.STUDENT_NEWS_CHECK_REPEAT_ORIGIN || "http://127.0.0.
 const CHROMIUM_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
 const DEV_ONLY = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
 const STUDENT = resolveStandardStudentCredentials(ENV_VALUES)
+const ADMIN = {
+  user: String(ENV_VALUES.STUDENT_ADMIN_USER || "").trim(),
+  pass: String(ENV_VALUES.STUDENT_ADMIN_PASS || "").trim(),
+}
 const SKIP_REASON = !DEV_ONLY
   ? "Authenticated News Check repeat coverage is restricted to the explicit dev environment"
   : !fs.existsSync(CHROMIUM_PATH)
     ? `${CHROMIUM_PATH} is required`
-    : !STUDENT.user || !STUDENT.pass
+      : !STUDENT.user || !STUDENT.pass
       ? `the exact mark001 student credentials are required from ${ENV_FILE}`
+      : !ADMIN.user || !ADMIN.pass
+        ? `the exact admin credentials are required from ${ENV_FILE}`
       : false
 
 const VOCABULARY = [
@@ -45,12 +51,16 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
   const prisma = await getSharedPrismaClient()
   const stamp = randomUUID()
   const reportId = `news-check-repeat-${stamp}`
+  let helpSubmissionKey = ""
   const reportDateKey = localDateKey()
   const reportDate = new Date(`${reportDateKey}T00:00:00+07:00`)
   let browser
   let context
   let page
+  let adminContext
+  let adminPage
   const cleanupErrors = []
+  let overrideCreated = false
   const attempt = async (operation) => {
     try { await operation() } catch (error) { cleanupErrors.push(error) }
   }
@@ -58,8 +68,12 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
   t.after(async () => {
     if (page) await attempt(() => page.close())
     if (context) await attempt(() => context.close())
+    if (adminPage) await attempt(() => adminPage.close())
+    if (adminContext) await attempt(() => adminContext.close())
     if (browser) await attempt(() => browser.close())
     await attempt(() => prisma.studentNewsReport.deleteMany({ where: { id: reportId } }))
+    await attempt(() => prisma.studentNewsVocabularyHelpRequest.deleteMany({ where: { submissionKey: helpSubmissionKey } }))
+    if (overrideCreated) await attempt(() => prisma.studentNewsVocabularyOverride.deleteMany({ where: { englishKey: "demolition" } }))
     const remaining = await prisma.studentNewsReport.findUnique({ where: { id: reportId }, select: { id: true } }).catch((error) => {
       cleanupErrors.push(error)
       return null
@@ -71,6 +85,7 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
 
   const student = await prisma.student.findUnique({ where: { eaglesId: STUDENT.user }, select: { id: true } })
   assert.ok(student?.id, "configured mark001 account is linked to a Student row")
+  assert.equal(await prisma.studentNewsVocabularyOverride.findUnique({ where: { englishKey: "demolition" } }), null, "synthetic override test does not overwrite an existing school override")
   const existingReports = await prisma.studentNewsReport.findMany({
     where: { studentRefId: student.id, reportDate },
     select: { reportSequence: true },
@@ -202,13 +217,64 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
   assert.equal(await page.locator("#newsComplianceWarningsSection").isVisible(), true)
   assert.match(await page.locator("#newsComplianceWarningBody").innerText(), /Syllabication could not be verified right now/u)
   assert.equal(await page.locator("#newsGrammarCheckWait").isVisible(), false, "the result modal appears after the animated check overlay closes")
-  const helpHref = await page.locator("#newsComplianceHelpLink").getAttribute("href")
-  assert.match(helpHref, /^mailto:support@eagles\.edu\.vn\?/u)
-  const helpUrl = new URL(helpHref)
-  const helpBody = new URLSearchParams(helpUrl.search).get("body") || ""
-  assert.match(helpBody, /Word: demolition/u)
-  assert.match(helpBody, /Syllabication entered: de-MO-li-tion/u)
-  assert.doesNotMatch(helpBody, /mark001|Synthetic repeated Check/u)
+  assert.equal(await page.locator("#newsComplianceHelpSubmit").isDisabled(), true)
+  await page.locator("#newsComplianceHelpConsent").check()
+  const helpResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/vocabulary-help", { timeout: 30000 })
+  await page.locator("#newsComplianceHelpSubmit").click()
+  const submittedHelpResponse = await helpResponse
+  assert.equal(submittedHelpResponse.status(), 201)
+  helpSubmissionKey = submittedHelpResponse.request().postDataJSON().submissionKey
+  const helpRequest = await prisma.studentNewsVocabularyHelpRequest.findUnique({ where: { submissionKey: helpSubmissionKey } })
+  assert.equal(helpRequest?.studentRefId, student.id)
+  assert.equal(helpRequest?.word, "demolition")
+  assert.equal(helpRequest?.syllabication, "de-mó-li-tion")
+  await page.waitForFunction(() => document.querySelector("#newsComplianceHelpStatus")?.textContent.includes("Submitted to the staff review queue"), { timeout: 10000 })
+  assert.doesNotMatch(await page.locator("#newsComplianceModal").innerText(), /mark001/u)
+
+  adminContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } })
+  adminPage = await adminContext.newPage()
+  const adminLoginResponse = adminPage.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/admin/auth/login", { timeout: 30000 })
+  await adminPage.goto(`${ORIGIN}/admin?apiOrigin=${encodeURIComponent(ORIGIN)}`, { waitUntil: "domcontentloaded" })
+  await adminPage.locator("#loginUser").fill(ADMIN.user)
+  await adminPage.locator("#loginPass").fill(ADMIN.pass)
+  await adminPage.locator('#loginForm button[type="submit"], #loginBtn').first().click()
+  assert.equal((await adminLoginResponse).status(), 200)
+  await adminPage.reload({ waitUntil: "domcontentloaded" })
+  await adminPage.locator("#app").waitFor({ state: "visible", timeout: 30000 })
+  await adminPage.locator('#menuToggleBtn, #floatingMenuBtn').first().click().catch(() => {})
+  await adminPage.locator('[data-page-link="queue-hub"]').click()
+  const helpQueuePanel = adminPage.locator('[data-queue-hub-panel-id="student-news-vocabulary-help"]')
+  await helpQueuePanel.waitFor({ state: "visible", timeout: 30000 })
+  await helpQueuePanel.getByText("demolition", { exact: true }).waitFor({ state: "visible", timeout: 30000 })
+  const panelOrder = await adminPage.locator(".queue-hub-panel").evaluateAll((panels) => panels.map((panel) => panel.getAttribute("data-queue-hub-panel-id")))
+  assert.equal(panelOrder.indexOf("student-news-vocabulary-help") + 1, panelOrder.indexOf("news-report-review"), "vocabulary help is immediately above News Week Sets")
+  await adminPage.setViewportSize({ width: 390, height: 844 })
+  await helpQueuePanel.locator("[data-vocabulary-override-for]").evaluate((input) => {
+    const tableWrap = input.closest(".table-scroll-wrap")
+    if (tableWrap) tableWrap.scrollLeft = tableWrap.scrollWidth
+  })
+  const mobileQueueGeometry = await adminPage.evaluate(() => ({
+    viewport: innerWidth,
+    documentWidth: document.documentElement.scrollWidth,
+    input: (() => { const box = document.querySelector('[data-vocabulary-override-for]')?.getBoundingClientRect(); return box ? { left: box.left, right: box.right } : null })(),
+  }))
+  assert.ok(mobileQueueGeometry.documentWidth <= mobileQueueGeometry.viewport, JSON.stringify(mobileQueueGeometry))
+  assert.ok(mobileQueueGeometry.input?.left >= 0 && mobileQueueGeometry.input?.right <= 390, JSON.stringify(mobileQueueGeometry))
+  await adminPage.setViewportSize({ width: 1440, height: 1000 })
+  const queuedHelpRequest = await prisma.studentNewsVocabularyHelpRequest.findUnique({ where: { submissionKey: helpSubmissionKey } })
+  assert.ok(queuedHelpRequest?.id)
+  const overrideInput = helpQueuePanel.locator(`[data-vocabulary-override-for="${queuedHelpRequest.id}"]`)
+  await overrideInput.fill("dem-o-LI-tion")
+  assert.equal(await overrideInput.inputValue(), "dem-o-LI-tion")
+  const overrideResponse = adminPage.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === `/api/admin/news-vocabulary-help/${queuedHelpRequest.id}/approve-override`, { timeout: 30000 })
+  await helpQueuePanel.locator(`[data-vocabulary-override-approve="${queuedHelpRequest.id}"]`).click()
+  const approvedResponse = await overrideResponse
+  assert.equal(approvedResponse.status(), 200)
+  assert.equal(approvedResponse.request().postDataJSON().syllabication, "dem-o-LI-tion")
+  overrideCreated = true
+  const approvedOverride = await prisma.studentNewsVocabularyOverride.findUnique({ where: { englishKey: "demolition" } })
+  assert.equal(approvedOverride?.syllabication, "dem-o-lí-tion")
+  assert.equal((await prisma.studentNewsVocabularyHelpRequest.findUnique({ where: { id: queuedHelpRequest.id } }))?.status, "resolved")
   await page.locator("#newsComplianceModalCloseActionBtn").click()
 
   for (const [index, word] of VOCABULARY.entries()) {

@@ -291,6 +291,41 @@
       gap: 8px;
   }
 
+    #newsComplianceHelpPanel {
+      border: 1px solid var(--portal-border);
+      box-sizing: border-box;
+      flex: 1 1 100%;
+      inline-size: 100%;
+      max-inline-size: 100%;
+      min-inline-size: 0;
+      border-radius: var(--radius-2);
+      padding: 12px;
+    }
+
+    .news-vocabulary-help-consent {
+      align-items: center;
+      display: flex;
+      flex: 1 1 100%;
+      gap: 10px;
+      inline-size: 100%;
+      line-height: 1.5;
+      min-inline-size: 0;
+      overflow-wrap: anywhere;
+      padding: 4px 2px;
+    }
+
+    .news-vocabulary-help-consent span {
+      flex: 1 1 auto;
+      min-inline-size: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .news-vocabulary-help-consent input {
+      block-size: 1.1rem;
+      flex: 0 0 auto;
+      inline-size: 1.1rem;
+    }
+
     .news-feedback-section h5 {
       font-size: 1rem;
       margin: 0;

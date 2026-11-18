@@ -3,6 +3,7 @@
       const STUDENT_DASHBOARD_PATH = window.__SIS_STUDENT_DASHBOARD_PATH || "/api/student/dashboard";
       const STUDENT_NEWS_REPORTS_PATH = window.__SIS_STUDENT_NEWS_REPORTS_PATH || "/api/student/news-reports";
       const STUDENT_NEWS_REPORTS_CHECK_PATH = window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH || "/api/student/news-reports/check";
+      const STUDENT_NEWS_VOCABULARY_HELP_PATH = `${STUDENT_NEWS_REPORTS_PATH}/vocabulary-help`;
       const STUDENT_NEWS_CALENDAR_PATH = window.__SIS_STUDENT_NEWS_CALENDAR_PATH || "/api/student/news-reports/calendar";
       const STUDENT_NEW_WORDS_PATH = window.__SIS_STUDENT_NEW_WORDS_PATH || "/api/student/new-words";
       const STUDENT_API_PREFIX = window.__SIS_STUDENT_API_PREFIX || "/api/student";
@@ -62,6 +63,7 @@
         newsReportId: "",
         newsReportSequence: 0,
         newsComplianceModalOpen: false,
+        newsVocabularyHelpSubmissionKey: "",
         newNewsFormConfirmModalOpen: false,
         newsComplianceSummary: "",
         submitSuccessModalOpen: false,
@@ -875,23 +877,52 @@
         );
         field("newsComplianceWarningsSection")?.classList.toggle("hidden", !hasWarnings);
         const vocabularyError = state.newsFieldErrors?.vocabulary?.rowErrors?.[0];
-        const helpLink = field("newsComplianceHelpLink");
-        if (helpLink instanceof HTMLAnchorElement && vocabularyError) {
-          const vocabularyRow = document.querySelector(
-            `#newsVocabularyRows [data-news-vocabulary-row="${Number(vocabularyError.index)}"]`,
-          );
-          const syllabication = t(vocabularyRow?.querySelector('[data-vocabulary-field="syllabication"]')?.value);
-          const subject = `Student News vocabulary check help: ${t(vocabularyError.english)}`;
-          const body = [
-            "Please help review this Student News vocabulary check.",
-            `Word: ${t(vocabularyError.english)}`,
-            `Syllabication entered: ${syllabication}`,
-            `Check message: ${t(vocabularyError.message)}`,
-          ].join("\n");
-          helpLink.href = `mailto:support@eagles.edu.vn?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        const helpPanel = field("newsComplianceHelpPanel");
+        helpPanel?.classList.toggle("hidden", !vocabularyError);
+        field("newsComplianceHelpSubmit")?.classList.toggle("hidden", !vocabularyError);
+        if (!vocabularyError) {
+          state.newsVocabularyHelpSubmissionKey = "";
+          if (field("newsComplianceHelpConsent")) field("newsComplianceHelpConsent").checked = false;
+          if (field("newsComplianceHelpSubmit")) field("newsComplianceHelpSubmit").disabled = true;
+          if (field("newsComplianceHelpStatus")) field("newsComplianceHelpStatus").textContent = "";
         }
-        helpLink?.classList.toggle("hidden", !vocabularyError);
         setNewsComplianceModalOpen(true);
+      }
+
+      async function submitNewsVocabularyHelpRequest() {
+        const vocabularyError = state.newsFieldErrors?.vocabulary?.rowErrors?.[0];
+        const consent = field("newsComplianceHelpConsent");
+        const submitButton = field("newsComplianceHelpSubmit");
+        const status = field("newsComplianceHelpStatus");
+        if (!vocabularyError || !consent?.checked || !submitButton || submitButton.disabled) return;
+        const vocabularyRow = document.querySelector(
+          `#newsVocabularyRows [data-news-vocabulary-row="${Number(vocabularyError.index)}"]`,
+        );
+        const syllabication = t(vocabularyRow?.querySelector('[data-vocabulary-field="syllabication"]')?.value);
+        if (!state.newsVocabularyHelpSubmissionKey) {
+          state.newsVocabularyHelpSubmissionKey = globalThis.crypto?.randomUUID?.()
+            || `news-vocab-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        }
+        submitButton.disabled = true;
+        if (status) status.textContent = "Submitting your request…";
+        try {
+          await api(STUDENT_NEWS_VOCABULARY_HELP_PATH, {
+            method: "POST",
+            body: {
+              submissionKey: state.newsVocabularyHelpSubmissionKey,
+              word: t(vocabularyError.english),
+              syllabication,
+              checkMessage: t(vocabularyError.message),
+            },
+          });
+          if (status) status.textContent = "Submitted to the staff review queue.";
+          state.newsVocabularyHelpSubmissionKey = "";
+          consent.checked = false;
+        } catch (error) {
+          if (status) status.textContent = t(error?.message) || "Could not submit the request. Try again.";
+          submitButton.disabled = !consent.checked;
+          throw error;
+        }
       }
 
       function escapeHtml(value) {
@@ -5937,6 +5968,12 @@
           field("newsComplianceModalCloseActionBtn")?.addEventListener("click", () => {
             setNewsComplianceModalOpen(false);
           });
+      field("newsComplianceHelpConsent")?.addEventListener("change", (event) => {
+        field("newsComplianceHelpSubmit").disabled = !event.currentTarget.checked;
+      });
+      field("newsComplianceHelpSubmit")?.addEventListener("click", () => {
+        submitNewsVocabularyHelpRequest().catch(handleError);
+      });
           field("newNewsFormBtn")?.addEventListener("click", () => {
             requestNewNewsReportForm();
           });

@@ -72,6 +72,23 @@ test("attendance delete routes normalize identifiers before collection", async (
   assert.doesNotMatch(contents, /private-student-ref|private-record-id/u)
 })
 
+test("authorized parent report acknowledgment failures use a fixed route and omit report identifiers", async () => {
+  const request = {
+    method: "POST",
+    url: "/api/parent/reports/private-report-id/acknowledge?private=metadata",
+    headers: { host: "localhost" },
+  }
+  const response = { statusCode: 503 }
+  await metrics.observeStudentWriteRequest(request, response, async () => {
+    metrics.markStudentWriteRequestAuthenticated()
+  })
+  await metrics.initializeStudentWriteMetrics()
+
+  const contents = readFileSync(metricsPath, "utf8")
+  assert.match(contents, /sis_parent_report_acknowledgment_requests_total\{environment="dev",route="POST \/api\/parent\/reports\/:reportId\/acknowledge",status="503"\} 1/u)
+  assert.doesNotMatch(contents, /private-report-id|private=metadata/u)
+})
+
 test("unauthorized grade/feed attempts are excluded from the request counters", async () => {
   const request = {
     method: "POST",

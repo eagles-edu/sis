@@ -51,6 +51,8 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | DELETE | `/api/admin/assignment-templates/{templateId}` | Yes | write role | Yes | `deleteAssignmentTemplateById` |
 | POST | `/api/admin/assignment-templates/import` | Yes | write role | Yes | `importAssignmentTemplates` |
 | GET | `/api/admin/queue-hub` | Yes | `canManageUsers` | No | `buildQueueHubPayload` |
+| POST | `/api/admin/news-vocabulary-help/{requestId}/resolve` | Yes | `canManageUsers` | Yes | Resolve an in-app Student News vocabulary help request |
+| POST | `/api/admin/news-vocabulary-help/{requestId}/approve-override` | Yes | `canManageUsers` | Yes | Validate, approve, and store the News syllabication override; subsequent Student News checks consult it before dictionary providers |
 | GET | `/api/admin/exercise-titles` | Yes | any readable role | Yes | `listExerciseTitles` (`src/modules/admin/student-admin-queries.mjs`) |
 | GET | `/api/admin/exercise-results/incoming` | Yes | any readable role | No | `listIncomingExerciseResults` |
 | POST | `/api/admin/exercise-results/incoming` | Yes | `canManageUsers` | No | queue triage actions (`set...`, `resolve...`, `delete...`) |
@@ -118,6 +120,7 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | POST | `/api/student/auth/login` | No | None | student credential verify + session issue |
 | POST | `/api/student/auth/logout` | No | None | student logout + cookie clear |
 | GET | `/api/student/auth/me` | Yes (student session) | student session | student session identity payload |
+| POST | `/api/student/news-reports/vocabulary-help` | Yes (student session) | linked student record | Submit an idempotent in-app vocabulary help request to Queue Hub |
 | POST | `/api/student/reports/{reportId}/acknowledge` | Yes (student session) | report must be published and linked to this student account | `getAuthorizedReportRecordForViewer` then idempotent `acknowledgeParentClassReportReview` |
 
 ## Public Report Engagement Asset

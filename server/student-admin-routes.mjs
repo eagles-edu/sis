@@ -228,6 +228,13 @@ import {
 import { createStudentAdminSessionStore } from "../src/modules/admin/session-store.mjs"
 import { closeSharedPrismaClient, getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
 import {
+  approveStudentNewsVocabularyOverride,
+  getStudentNewsVocabularyOverride,
+  listOpenStudentNewsVocabularyHelpRequests,
+  resolveStudentNewsVocabularyHelpRequest,
+  submitStudentNewsVocabularyHelpRequest,
+} from "../src/modules/admin/student-news-vocabulary-help.mjs"
+import {
   closePortalPreferenceCache,
   getPortalPreferences,
   savePortalPreferences,
@@ -305,6 +312,9 @@ const ADMIN_ASSET_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_ASSETS_PATH)}/([^/]
 const ADMIN_ASSET_RAW_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_ASSETS_PATH)}/raw/([^/]+)$`)
 const ADMIN_DASHBOARD_PATH = `${ADMIN_API_PREFIX}/dashboard`
 const ADMIN_QUEUE_HUB_PATH = `${ADMIN_API_PREFIX}/queue-hub`
+const ADMIN_NEWS_VOCABULARY_HELP_PATH = `${ADMIN_API_PREFIX}/news-vocabulary-help`
+const ADMIN_NEWS_VOCABULARY_HELP_RESOLVE_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_NEWS_VOCABULARY_HELP_PATH)}/([^/]+)/resolve$`)
+const ADMIN_NEWS_VOCABULARY_HELP_OVERRIDE_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_NEWS_VOCABULARY_HELP_PATH)}/([^/]+)/approve-override$`)
 const ADMIN_NEWS_REPORTS_PATH = `${ADMIN_API_PREFIX}/news-reports`
 const ADMIN_NEWS_REPORTS_BULK_PATH = `${ADMIN_NEWS_REPORTS_PATH}/bulk`
 const ADMIN_EXERCISE_TITLES_PATH = `${ADMIN_API_PREFIX}/exercise-titles`
@@ -339,6 +349,7 @@ const STUDENT_DASHBOARD_PATH = `${STUDENT_API_PREFIX}/dashboard`
 const STUDENT_PREFERENCES_PATH = `${STUDENT_API_PREFIX}/preferences`
 const STUDENT_NEWS_REPORTS_PATH = `${STUDENT_API_PREFIX}/news-reports`
 const STUDENT_NEWS_REPORTS_CHECK_PATH = `${STUDENT_API_PREFIX}/news-reports/check`
+const STUDENT_NEWS_VOCABULARY_HELP_PATH = `${STUDENT_NEWS_REPORTS_PATH}/vocabulary-help`
 const STUDENT_NEWS_CHECK_UNAUTHORIZED_MESSAGE =
   "News Check requires an active student session. Sign in again, then retry Check."
 const STUDENT_NEWS_CALENDAR_PATH = `${STUDENT_API_PREFIX}/news-reports/calendar`
@@ -904,6 +915,7 @@ const QUEUE_HUB_PANEL_IDS = [
   "current-assignments-pending",
   "overdue-homework",
   "attendance-risk",
+  "student-news-vocabulary-help",
   "news-report-review",
   "pending-profile-submissions",
 ]
@@ -4049,6 +4061,12 @@ function normalizeQueueHubPanelOrder(input = []) {
     .map((entry) => normalizeText(entry))
     .filter((entry) => QUEUE_HUB_PANEL_IDS.includes(entry))
   const merged = [...new Set(selected)]
+  const vocabularyHelpPanelId = "student-news-vocabulary-help"
+  if (!merged.includes(vocabularyHelpPanelId)) {
+    const newsIndex = merged.indexOf("news-report-review")
+    if (newsIndex >= 0) merged.splice(newsIndex, 0, vocabularyHelpPanelId)
+    else merged.push(vocabularyHelpPanelId)
+  }
   QUEUE_HUB_PANEL_IDS.forEach((id) => {
     if (!merged.includes(id)) merged.push(id)
   })
@@ -6356,7 +6374,7 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
       listStudentPointsLedger(id, { take: 1 }),
       listAssignmentTemplates({ take: 1000 }),
     ])
-    const newsCalendar = await listStudentNewsCalendar(id, { now: new Date(), days: 60 })
+    const newsCalendar = await listStudentNewsCalendar(id, { now: new Date(), days: 60, vocabularyOverrideLookup: getStudentNewsVocabularyOverride })
     const backfilledReportRows = await backfillLegacyParentReportMetadataRows({
       prisma,
       reportRows,
@@ -6439,7 +6457,7 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
 async function buildQueueHubPayload({ compact = false } = {}) {
   assertStoreEnabled()
   const dashboard = await getAdminDashboardSummary()
-  const [parentQueue, announcementFailures, incomingQueue, submissions, newsReviewQueue] = await Promise.all([
+  const [parentQueue, announcementFailures, incomingQueue, submissions, newsReviewQueue, vocabularyHelpRequests] = await Promise.all([
     listQueuedAnnouncements({
       queueType: NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
       includeSent: false,
@@ -6647,6 +6665,7 @@ async function buildQueueHubPayload({ compact = false } = {}) {
         }
       }
     })(),
+    listOpenStudentNewsVocabularyHelpRequests({ take: compact ? 20 : 200 }),
   ])
 
   let overdueItems
@@ -6741,6 +6760,12 @@ async function buildQueueHubPayload({ compact = false } = {}) {
         title: "At-Risk Attendance",
         total: Number.parseInt(String(dashboard?.attendanceRiskWeek?.total || 0), 10) || 0,
         items: Array.isArray(dashboard?.attendanceRiskWeek?.students) ? dashboard.attendanceRiskWeek.students : [],
+      },
+      {
+        id: "student-news-vocabulary-help",
+        title: "Student News Vocabulary Help",
+        total: vocabularyHelpRequests.length,
+        items: vocabularyHelpRequests,
       },
       {
         id: "news-report-review",
@@ -7542,6 +7567,29 @@ async function handleApiRequest(request, response, pathname, url) {
       compact: url.searchParams.get("mode") === "compact",
     })
     sendJson(response, 200, payload)
+    return true
+  }
+
+  const vocabularyHelpResolveMatch = pathname.match(ADMIN_NEWS_VOCABULARY_HELP_RESOLVE_PATH_RE)
+  if (method === "POST" && vocabularyHelpResolveMatch) {
+    assertCanManageUsers(rolePolicy)
+    const requestId = decodeURIComponent(vocabularyHelpResolveMatch[1])
+    const result = await resolveStudentNewsVocabularyHelpRequest(requestId, normalizeText(session?.username))
+    sendJson(response, 200, result)
+    return true
+  }
+
+  const vocabularyHelpOverrideMatch = pathname.match(ADMIN_NEWS_VOCABULARY_HELP_OVERRIDE_PATH_RE)
+  if (method === "POST" && vocabularyHelpOverrideMatch) {
+    assertCanManageUsers(rolePolicy)
+    const requestId = decodeURIComponent(vocabularyHelpOverrideMatch[1])
+    const payload = await parseBody(request)
+    const result = await approveStudentNewsVocabularyOverride(
+      requestId,
+      normalizeText(session?.username),
+      payload?.syllabication,
+    )
+    sendJson(response, 200, result)
     return true
   }
 
@@ -9082,6 +9130,7 @@ async function handleParentApiRequest(request, response, pathname, url) {
 
   const parentReportAckMatch = pathname.match(PARENT_REPORT_ACK_PATH_RE)
   if (parentReportAckMatch && method === "POST") {
+    markStudentWriteRequestAuthenticated()
     const reportId = decodeURIComponent(parentReportAckMatch[1])
     const authorizedReport = await getAuthorizedReportRecordForViewer(reportId, {
       viewerRole: "parent",
@@ -9111,6 +9160,7 @@ async function handleParentApiRequest(request, response, pathname, url) {
     }
     const payload = await listStudentNewsCalendar(child.studentRefId, {
       days: url.searchParams.get("days") || "60",
+      vocabularyOverrideLookup: getStudentNewsVocabularyOverride,
     })
     sendJson(response, 200, payload)
     return true
@@ -9395,6 +9445,7 @@ async function handleStudentApiRequest(request, response, pathname, url) {
   if (method === "GET" && pathname === STUDENT_NEWS_CALENDAR_PATH) {
     const data = await listStudentNewsCalendar(studentRefId, {
       days: url.searchParams.get("days") || "30",
+      vocabularyOverrideLookup: getStudentNewsVocabularyOverride,
     })
     sendJson(response, 200, {
       ...data,
@@ -9419,6 +9470,7 @@ async function handleStudentApiRequest(request, response, pathname, url) {
   if (method === "GET" && pathname === STUDENT_NEWS_REPORTS_PATH) {
     const data = await listStudentNewsCalendar(studentRefId, {
       days: url.searchParams.get("days") || "30",
+      vocabularyOverrideLookup: getStudentNewsVocabularyOverride,
     })
     sendJson(response, 200, {
       ...data,
@@ -9432,6 +9484,7 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     const validationConfig = resolveStudentNewsValidationConfigFromSettings()
     const result = await saveStudentNewsReport(studentRefId, payload, {
       validationConfig,
+      vocabularyOverrideLookup: getStudentNewsVocabularyOverride,
     })
     sendJson(response, 200, result)
     return true
@@ -9442,6 +9495,7 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     const validationConfig = resolveStudentNewsValidationConfigFromSettings()
     const result = await saveStudentNewsDraft(studentRefId, payload, {
       validationConfig,
+      vocabularyOverrideLookup: getStudentNewsVocabularyOverride,
     })
     sendJson(response, 200, result)
     return true
@@ -9452,8 +9506,16 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     const validationConfig = resolveStudentNewsValidationConfigFromSettings()
     const result = await saveStudentNewsDraftCheck(studentRefId, payload, {
       validationConfig,
+      vocabularyOverrideLookup: getStudentNewsVocabularyOverride,
     })
     sendJson(response, 200, result)
+    return true
+  }
+
+  if (method === "POST" && pathname === STUDENT_NEWS_VOCABULARY_HELP_PATH) {
+    const payload = await parseBody(request)
+    const result = await submitStudentNewsVocabularyHelpRequest(studentRefId, payload)
+    sendJson(response, result.created ? 201 : 200, result)
     return true
   }
 

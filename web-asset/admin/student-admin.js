@@ -161,6 +161,7 @@
             "current-assignments-pending",
             "overdue-homework",
             "attendance-risk",
+            "student-news-vocabulary-help",
             "news-report-review",
             "pending-profile-submissions",
           ],
@@ -8463,6 +8464,11 @@
           .map((entry) => normalizeText(entry))
           .filter((entry) => QUEUE_HUB_PANEL_IDS.includes(entry));
         const merged = [...new Set(selected)];
+        if (!merged.includes("student-news-vocabulary-help")) {
+          const newsIndex = merged.indexOf("news-report-review");
+          if (newsIndex >= 0) merged.splice(newsIndex, 0, "student-news-vocabulary-help");
+          else merged.push("student-news-vocabulary-help");
+        }
         QUEUE_HUB_PANEL_IDS.forEach((panelId) => {
           if (!merged.includes(panelId)) merged.push(panelId);
         });

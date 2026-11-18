@@ -14,6 +14,7 @@ const WEBHOOK_STALE_AFTER_SECONDS = 300
 const ANNOUNCEMENT_QUEUE_STALE_AFTER_SECONDS = 120
 const NOTIFICATION_QUEUE_STALE_AFTER_SECONDS = 1800
 const ASSIGNMENT_DISPATCH_STALE_AFTER_SECONDS = 300
+const STANDARD_PARENT_LOGIN = "cmmark001"
 
 export function assertDevEnvironment(environment = process.env) {
   if (
@@ -51,6 +52,12 @@ export function renderEngagementMetrics({
   success,
   lastSuccessTimestamp,
   reportApiSuccess,
+  parentAuthSuccess = 0,
+  parentReportApiSuccess = 0,
+  parentChildCount = 0,
+  parentReportCount = 0,
+  parentLoginDurationSeconds = 0,
+  parentDashboardDurationSeconds = 0,
   reportEventTimestamp,
   webhookReceivedTimestamp,
   webhookUnprocessedCount,
@@ -64,6 +71,9 @@ export function renderEngagementMetrics({
   notificationOldestDueAgeSeconds,
   notificationDeliveryFailureCount,
   notificationOldestFailureAgeSeconds,
+  parentReportNotificationQueuedCount = 0,
+  parentReportNotificationOldestDueAgeSeconds = 0,
+  parentReportNotificationFailureCount = 0,
   assignmentReminderPendingCount,
   assignmentReminderOldestPendingAgeSeconds,
   staleAssignmentReminderDispatchCount,
@@ -79,6 +89,12 @@ export function renderEngagementMetrics({
     ["sis_engagement_workflow_last_check_timestamp_seconds", "Unix timestamp of the latest dev engagement workflow monitor.", checkedAt],
     ["sis_engagement_workflow_last_success_timestamp_seconds", "Unix timestamp of the latest successful dev engagement workflow monitor.", lastSuccessTimestamp],
     ["sis_engagement_report_api_available", "Whether the authenticated dev engagement report API returned its expected response.", reportApiSuccess ? 1 : 0],
+    ["sis_parent_authentication_available", "Whether the exact configured cmmark001 dev parent account authenticated successfully.", parentAuthSuccess ? 1 : 0],
+    ["sis_parent_report_dashboard_available", "Whether the authenticated dev parent dashboard returned linked children and report archive data.", parentReportApiSuccess ? 1 : 0],
+    ["sis_parent_linked_children", "Number of linked children returned to the authenticated dev parent monitor account.", parentChildCount],
+    ["sis_parent_visible_reports", "Aggregate number of parent-visible reports returned by the authenticated dev dashboard.", parentReportCount],
+    ["sis_parent_authentication_duration_seconds", "Duration of the latest dev parent login request.", parentLoginDurationSeconds],
+    ["sis_parent_dashboard_duration_seconds", "Duration of the latest authenticated dev parent dashboard request.", parentDashboardDurationSeconds],
     ["sis_engagement_report_event_last_timestamp_seconds", "Unix timestamp of the most recently ingested parent report engagement event, or zero when none exists.", reportEventTimestamp],
     ["sis_engagement_webhook_last_received_timestamp_seconds", "Unix timestamp of the most recently received email webhook event, or zero when none exists.", webhookReceivedTimestamp],
     ["sis_engagement_webhook_unprocessed_events", "Number of email webhook events without a processed timestamp.", webhookUnprocessedCount],
@@ -92,6 +108,9 @@ export function renderEngagementMetrics({
     ["sis_notification_oldest_due_queue_age_seconds", "Age of the oldest due dev notification queue item with an address.", notificationOldestDueAgeSeconds],
     ["sis_notification_delivery_failure_queue_items", "Number of queued dev notification items retaining a delivery error.", notificationDeliveryFailureCount],
     ["sis_notification_oldest_delivery_failure_age_seconds", "Age of the oldest dev notification delivery error.", notificationOldestFailureAgeSeconds],
+    ["sis_parent_report_notification_queued_items", "Number of due dev parent report notifications with destinations.", parentReportNotificationQueuedCount],
+    ["sis_parent_report_notification_oldest_due_age_seconds", "Age of the oldest due dev parent report notification with destinations.", parentReportNotificationOldestDueAgeSeconds],
+    ["sis_parent_report_notification_delivery_failure_items", "Number of due dev parent report notification queue items retaining a delivery error.", parentReportNotificationFailureCount],
     ["sis_assignment_reminder_pending_dispatches", "Number of dev assignment reminder dispatches still pending.", assignmentReminderPendingCount],
     ["sis_assignment_reminder_oldest_pending_age_seconds", "Age of the oldest pending dev assignment reminder dispatch.", assignmentReminderOldestPendingAgeSeconds],
     ["sis_assignment_reminder_stale_pending_dispatches", "Number of dev assignment reminder dispatches pending for more than five minutes.", staleAssignmentReminderDispatchCount],
@@ -168,6 +187,98 @@ async function checkReportApi(environment) {
   }
 }
 
+export function resolveParentMonitorCredentials(environment = process.env) {
+  const directUser = String(environment.STUDENT_PARENT_USER || "").trim()
+  const directPass = String(environment.STUDENT_PARENT_PASS || "")
+  if (directUser === STANDARD_PARENT_LOGIN && directPass) {
+    return { user: STANDARD_PARENT_LOGIN, pass: directPass }
+  }
+  let accounts = []
+  try {
+    const parsed = JSON.parse(String(environment.STUDENT_PARENT_PORTAL_ACCOUNTS_JSON || "[]"))
+    accounts = Array.isArray(parsed) ? parsed : []
+  } catch {
+    return null
+  }
+  const account = accounts.find((entry) =>
+    (entry?.parentsId || entry?.username) === STANDARD_PARENT_LOGIN &&
+    typeof entry?.password === "string" &&
+    entry.password.length > 0 &&
+    String(entry.status || "active").toLowerCase() !== "inactive"
+  )
+  return account ? { user: STANDARD_PARENT_LOGIN, pass: account.password } : null
+}
+
+export async function checkParentReportApi(environment = process.env, fetchImpl = fetch) {
+  const credentials = resolveParentMonitorCredentials(environment)
+  const startedAt = performance.now()
+  let loginDurationSeconds = 0
+  let dashboardDurationSeconds = 0
+  if (!credentials) {
+    return {
+      authSuccess: false,
+      dashboardSuccess: false,
+      childCount: 0,
+      reportCount: 0,
+      loginDurationSeconds,
+      dashboardDurationSeconds,
+    }
+  }
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), CHECK_TIMEOUT_MS)
+  try {
+    const loginStartedAt = performance.now()
+    const login = await fetchImpl(`${DEV_ORIGIN}/api/parent/auth/login`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ parentsId: credentials.user, password: credentials.pass }),
+      signal: controller.signal,
+    })
+    loginDurationSeconds = (performance.now() - loginStartedAt) / 1000
+    if (!login.ok) {
+      return { authSuccess: false, dashboardSuccess: false, childCount: 0, reportCount: 0, loginDurationSeconds, dashboardDurationSeconds }
+    }
+    const cookie = String(login.headers.get("set-cookie") || "").split(";", 1)[0]
+    if (!cookie) {
+      return { authSuccess: false, dashboardSuccess: false, childCount: 0, reportCount: 0, loginDurationSeconds, dashboardDurationSeconds }
+    }
+    const dashboardStartedAt = performance.now()
+    const dashboardResponse = await fetchImpl(`${DEV_ORIGIN}/api/parent/dashboard`, {
+      headers: { cookie },
+      signal: controller.signal,
+    })
+    dashboardDurationSeconds = (performance.now() - dashboardStartedAt) / 1000
+    if (!dashboardResponse.ok) {
+      return { authSuccess: true, dashboardSuccess: false, childCount: 0, reportCount: 0, loginDurationSeconds, dashboardDurationSeconds }
+    }
+    const payload = await dashboardResponse.json()
+    const children = Array.isArray(payload?.children) ? payload.children : []
+    const validShape = children.length > 0 && children.every((child) => Array.isArray(child?.details?.reportArchive))
+    const reportCount = validShape
+      ? children.reduce((total, child) => total + child.details.reportArchive.length, 0)
+      : 0
+    return {
+      authSuccess: true,
+      dashboardSuccess: validShape,
+      childCount: children.length,
+      reportCount,
+      loginDurationSeconds,
+      dashboardDurationSeconds,
+    }
+  } catch {
+    return {
+      authSuccess: loginDurationSeconds > 0,
+      dashboardSuccess: false,
+      childCount: 0,
+      reportCount: 0,
+      loginDurationSeconds,
+      dashboardDurationSeconds: Math.max(dashboardDurationSeconds, (performance.now() - startedAt) / 1000 - loginDurationSeconds),
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 async function collectDatabaseMetrics(prisma, now) {
   const database = await prisma.$queryRaw`SELECT current_database() AS name`
   if (database[0]?.name !== "sis_dev") throw new Error("Engagement workflow monitor connected to an unexpected database")
@@ -185,7 +296,18 @@ async function collectDatabaseMetrics(prisma, now) {
     status: "queued",
     OR: [{ availableAt: null }, { availableAt: { lte: nowDate } }],
   }
-  const [latestReportEvent, latestWebhook, unprocessedCount, oldestUnprocessed, failedJobCount, staleProcessingJobCount, queuedJobCount, announcementQueuedJobCount, oldestAnnouncementQueued, notificationDueQueueCount, oldestDueNotification, notificationDeliveryFailureCount, oldestNotificationFailure, assignmentReminderPendingCount, oldestPendingReminder, staleAssignmentReminderDispatchCount, assignmentReminderFailureCount] = await Promise.all([
+  const dueParentReportWhere = {
+    queueType: "parent-report",
+    status: "queued",
+    recipients: { isEmpty: false },
+    OR: [{ scheduledFor: null }, { scheduledFor: { lte: nowDate } }],
+  }
+  const failedParentReportWhere = {
+    queueType: "parent-report",
+    status: "queued",
+    lastError: { not: null },
+  }
+  const [latestReportEvent, latestWebhook, unprocessedCount, oldestUnprocessed, failedJobCount, staleProcessingJobCount, queuedJobCount, announcementQueuedJobCount, oldestAnnouncementQueued, notificationDueQueueCount, oldestDueNotification, notificationDeliveryFailureCount, oldestNotificationFailure, parentReportNotificationQueuedCount, oldestParentReportNotification, parentReportNotificationFailureCount, assignmentReminderPendingCount, oldestPendingReminder, staleAssignmentReminderDispatchCount, assignmentReminderFailureCount] = await Promise.all([
     prisma.parentClassReportEvent.findFirst({ orderBy: { eventAt: "desc" }, select: { eventAt: true } }),
     prisma.brevoEmailWebhookEvent.findFirst({ orderBy: { receivedAt: "desc" }, select: { receivedAt: true } }),
     prisma.brevoEmailWebhookEvent.count({ where: { processedAt: null } }),
@@ -199,6 +321,9 @@ async function collectDatabaseMetrics(prisma, now) {
     prisma.adminNotificationQueue.findFirst({ where: dueNotificationWhere, orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
     prisma.adminNotificationQueue.count({ where: { status: "queued", lastError: { not: null } } }),
     prisma.adminNotificationQueue.findFirst({ where: { status: "queued", lastError: { not: null } }, orderBy: { updatedAt: "asc" }, select: { updatedAt: true } }),
+    prisma.adminNotificationQueue.count({ where: dueParentReportWhere }),
+    prisma.adminNotificationQueue.findFirst({ where: dueParentReportWhere, orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
+    prisma.adminNotificationQueue.count({ where: failedParentReportWhere }),
     prisma.assignmentReminderDispatch.count({ where: { status: "pending" } }),
     prisma.assignmentReminderDispatch.findFirst({ where: { status: "pending" }, orderBy: { updatedAt: "asc" }, select: { updatedAt: true } }),
     prisma.assignmentReminderDispatch.count({ where: { status: "pending", updatedAt: { lt: assignmentDispatchCutoff } } }),
@@ -226,6 +351,9 @@ async function collectDatabaseMetrics(prisma, now) {
     notificationOldestDueAgeSeconds: ageSince(oldestDueNotification?.createdAt),
     notificationDeliveryFailureCount,
     notificationOldestFailureAgeSeconds: ageSince(oldestNotificationFailure?.updatedAt),
+    parentReportNotificationQueuedCount,
+    parentReportNotificationOldestDueAgeSeconds: ageSince(oldestParentReportNotification?.createdAt),
+    parentReportNotificationFailureCount,
     assignmentReminderPendingCount,
     assignmentReminderOldestPendingAgeSeconds: ageSince(oldestPendingReminder?.updatedAt),
     staleAssignmentReminderDispatchCount,
@@ -239,6 +367,7 @@ export async function runEngagementWorkflowMonitor({
   workerMetricsFile = WORKER_METRICS_FILE,
   prismaClient = null,
   reportApiCheck = checkReportApi,
+  parentReportApiCheck = checkParentReportApi,
   clock = () => Date.now(),
 } = {}) {
   assertDevEnvironment(environment)
@@ -246,21 +375,34 @@ export async function runEngagementWorkflowMonitor({
   const prisma = prismaClient || await getSharedPrismaClient()
   let metrics
   let reportApiSuccess = false
+  let parentReportCheck = {
+    authSuccess: false,
+    dashboardSuccess: false,
+    childCount: 0,
+    reportCount: 0,
+    loginDurationSeconds: 0,
+    dashboardDurationSeconds: 0,
+  }
   try {
     const reportApiCheckResult = await reportApiCheck(environment)
     reportApiSuccess = Boolean(reportApiCheckResult)
+    parentReportCheck = await parentReportApiCheck(environment)
     const collected = await collectDatabaseMetrics(prisma, clock())
     const checkedAt = clock() / 1000
     const previousSuccess = readLastSuccessTimestamp(metricsFile)
     const workerLastPollTimestamp = readWorkerTimestamp(workerMetricsFile)
     const workerLastPollSuccess = readWorkerPollSuccess(workerMetricsFile)
     const success = reportApiSuccess &&
+      parentReportCheck.authSuccess &&
+      parentReportCheck.dashboardSuccess &&
       collected.webhookOldestUnprocessedAgeSeconds < WEBHOOK_STALE_AFTER_SECONDS &&
       collected.staleProcessingJobCount === 0 &&
       collected.failedJobCount === 0 &&
       collected.announcementOldestQueuedAgeSeconds <= ANNOUNCEMENT_QUEUE_STALE_AFTER_SECONDS &&
       collected.notificationOldestDueAgeSeconds <= NOTIFICATION_QUEUE_STALE_AFTER_SECONDS &&
       collected.notificationDeliveryFailureCount === 0 &&
+      collected.parentReportNotificationOldestDueAgeSeconds <= NOTIFICATION_QUEUE_STALE_AFTER_SECONDS &&
+      collected.parentReportNotificationFailureCount === 0 &&
       collected.staleAssignmentReminderDispatchCount === 0 &&
       collected.assignmentReminderFailureCount === 0 &&
       workerLastPollTimestamp > 0 &&
@@ -272,12 +414,18 @@ export async function runEngagementWorkflowMonitor({
       success,
       lastSuccessTimestamp: success ? checkedAt : previousSuccess,
       reportApiSuccess,
+      parentAuthSuccess: parentReportCheck.authSuccess,
+      parentReportApiSuccess: parentReportCheck.dashboardSuccess,
+      parentChildCount: parentReportCheck.childCount,
+      parentReportCount: parentReportCheck.reportCount,
+      parentLoginDurationSeconds: parentReportCheck.loginDurationSeconds,
+      parentDashboardDurationSeconds: parentReportCheck.dashboardDurationSeconds,
       ...collected,
       workerLastPollTimestamp,
       workerLastPollSuccess,
     })
     writeMetricsAtomically(metricsFile, metrics)
-    process.stdout.write(`engagement_workflow_monitor environment=dev result=${success ? "pass" : "fail"} report_api=${reportApiSuccess ? "up" : "down"}\n`)
+    process.stdout.write(`engagement_workflow_monitor environment=dev result=${success ? "pass" : "fail"} report_api=${reportApiSuccess ? "up" : "down"} parent_dashboard=${parentReportCheck.dashboardSuccess ? "up" : "down"}\n`)
     return success
   } finally {
     if (!prismaClient) await closeSharedPrismaClient()

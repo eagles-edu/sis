@@ -300,7 +300,7 @@ function findStudentNewsEtymologyAttempts(value) {
     .filter(Boolean)
 }
 
-async function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM, fetchImpl } = {}) {
+async function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM, fetchImpl, vocabularyOverrideLookup } = {}) {
   if (value === undefined || value === null) return { passed: true, message: "", count: 0 }
   const rows = normalizeStudentNewsVocabulary(value)
   const transitivityAttempts = findStudentNewsTransitivityAttempts(value)
@@ -310,7 +310,7 @@ async function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEW
   const validatedRows = await Promise.all(populated.map(async ({ row, index }) => {
     const rowError = studentNewsVocabularyRowError(row, index)
     if (rowError) return { error: rowError, warning: null }
-    const validation = await validateVocabularyEntry(row, { fetchImpl })
+    const validation = await validateVocabularyEntry(row, { fetchImpl, overrideLookup: vocabularyOverrideLookup })
     return {
       error: validation.message ? {
         index,
@@ -2171,6 +2171,7 @@ export async function evaluateStudentNewsMinimumRequirements(payload = {}, optio
   const vocabularyValidation = await evaluateStudentNewsVocabulary(payload?.vocabulary, {
     minimumWords: config.vocabularyMinimumWords,
     fetchImpl: options?.fetchImpl,
+    vocabularyOverrideLookup: options?.vocabularyOverrideLookup,
   })
   if (!vocabularyValidation.passed) {
     failedFields.vocabulary = {
