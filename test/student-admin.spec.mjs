@@ -1,5 +1,5 @@
 // test/student-admin.spec.mjs
-import test from "node:test"
+import test, { after } from "node:test"
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import fs from "node:fs"
@@ -11,6 +11,8 @@ import {
   buildStudentPortalCalendarTracks,
   buildFamilyOptionPayload,
   parseSpreadsheetRowsFromUploadPayload,
+  serializeReportRows,
+  closeStudentAdminRuntimeResources,
 } from "../server/student-admin-routes.mjs"
 import { buildStudentReportCardPayload, generateStudentReportCardPdf } from "../server/student-report-card-pdf.mjs"
 import { LEVEL_DEFINITIONS, canonicalizeLevel } from "../src/modules/admin/level-catalog.mjs"
@@ -26,6 +28,29 @@ const SHARED_PORTAL_THEME_SOURCE = fs.readFileSync(new URL("../web-asset/shared/
 const ENROLLMENT_JS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-enrollment.js", import.meta.url), "utf8")
 const REPORT_CARD_JS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/report-card.js", import.meta.url), "utf8")
 const GRADES_TABULATOR_JS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/grades-tabulator.js", import.meta.url), "utf8")
+
+after(async () => {
+  await closeStudentAdminRuntimeResources()
+})
+
+test("parent report archive preserves authoritative generated and approval timestamps", () => {
+  const generatedAt = new Date("2026-11-18T07:14:21.753Z")
+  const approvedAt = new Date("2026-11-18T08:26:42.300Z")
+  const [report] = serializeReportRows([{
+    id: "report-timestamp-contract",
+    studentRefId: "student-timestamp-contract",
+    className: "Writing",
+    schoolYear: "2026-2027",
+    quarter: "q1",
+    workflowState: "published",
+    generatedAt,
+    approvedAt,
+    publishedAt: approvedAt,
+  }])
+
+  assert.equal(report.generatedAt, generatedAt.toISOString())
+  assert.equal(report.approvedAt, approvedAt.toISOString())
+})
 
 test("class and level aliases resolve to one canonical catalog value", () => {
   assert.ok(LEVEL_DEFINITIONS.length > 0)

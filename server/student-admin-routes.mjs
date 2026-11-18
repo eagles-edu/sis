@@ -5607,12 +5607,18 @@ function serializeGradeRows(rows = [], now = new Date()) {
     .filter((row) => row.assignmentName)
 }
 
-function serializeReportRows(rows = []) {
+export function serializeReportRows(rows = []) {
   return (Array.isArray(rows) ? rows : [])
     .map((row, index) => {
       const normalizedRow = mapParentClassReport(row) || row
-      const generatedAt = parseIsoDateTime(normalizedRow?.generatedAt)
-      const approvedAt = parseIsoDateTime(normalizedRow?.approvedAt)
+      const generatedAt =
+        normalizedRow?.generatedAt instanceof Date && Number.isFinite(normalizedRow.generatedAt.valueOf())
+          ? normalizedRow.generatedAt
+          : parseIsoDateTime(normalizedRow?.generatedAt)
+      const approvedAt =
+        normalizedRow?.approvedAt instanceof Date && Number.isFinite(normalizedRow.approvedAt.valueOf())
+          ? normalizedRow.approvedAt
+          : parseIsoDateTime(normalizedRow?.approvedAt)
       const metaPayload =
         normalizedRow?.metaPayload && typeof normalizedRow.metaPayload === "object"
           ? normalizedRow.metaPayload
