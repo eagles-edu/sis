@@ -109,6 +109,8 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
   await page.locator('#loginForm button[type="submit"]').click()
   assert.equal((await loginResponse).status(), 200, "visible student login succeeds")
   await page.locator("#appPanel").waitFor({ state: "visible", timeout: 30000 })
+  const consentAcknowledge = page.locator('#sisConsentPanel [data-sis-consent-action="acknowledge"]')
+  if (await consentAcknowledge.isVisible().catch(() => false)) await consentAcknowledge.click()
   await page.locator("#openNewsPageBtn").click()
   await page.locator("#newsPageCard").waitFor({ state: "visible", timeout: 30000 })
   await page.locator('#newsVocabularyRows [data-vocabulary-field="english"]').first().waitFor({ state: "visible", timeout: 30000 })
@@ -119,9 +121,137 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
     const pathname = new URL(response.url()).pathname
     if (pathname.startsWith("/api/student/")) studentApiResponses.push({ method: response.request().method(), pathname, status: response.status() })
   })
+  await page.route("**/api/student/news-reports/check", async (route) => {
+    const response = await route.fetch()
+    const payload = await response.json()
+    payload.warningFields = {
+      ...(payload.warningFields || {}),
+      vocabulary: {
+        message: "Some vocabulary entries could not be verified right now.",
+        rowWarnings: [{
+          index: 0,
+          english: "demolition",
+          message: "Syllabication could not be verified right now. Research it using the provided dictionary links.",
+          fields: ["syllabication"],
+        }],
+      },
+    }
+    payload.warningTasks = [
+      ...(Array.isArray(payload.warningTasks) ? payload.warningTasks : []),
+      { field: "vocabulary", steps: ["Retry the dictionary check later; this warning does not block Check or Submit."] },
+    ]
+    if (payload.item) {
+      payload.item.warningFields = payload.warningFields
+      payload.item.warningTasks = payload.warningTasks
+    }
+    await route.fulfill({ response, body: JSON.stringify(payload) })
+  })
+
+  const vocabularyRows = page.locator("#newsVocabularyRows [data-news-vocabulary-row]")
+  for (const row of await vocabularyRows.all()) {
+    await row.locator('[data-vocabulary-field="partOfSpeech"]').selectOption("")
+    await row.locator('[data-vocabulary-field="english"]').fill("")
+    await row.locator('[data-vocabulary-field="vietnamese"]').fill("")
+    await row.locator('[data-vocabulary-field="syllabication"]').fill("")
+    await row.locator('[data-vocabulary-field="definition"]').fill("")
+  }
+  await vocabularyRows.first().locator('[data-vocabulary-field="partOfSpeech"]').selectOption("noun")
+  await vocabularyRows.first().locator('[data-vocabulary-field="english"]').fill("demolition")
+  await vocabularyRows.first().locator('[data-vocabulary-field="vietnamese"]').fill("sự phá hủy")
+  await vocabularyRows.first().locator('[data-vocabulary-field="syllabication"]').fill("de-MO-li-tion")
+  await vocabularyRows.first().locator('[data-vocabulary-field="definition"]').fill("The act of destroying a structure.")
+  const rejectedCheckResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check", { timeout: 30000 })
+  await page.locator("#checkBtn").click()
+  const rejectedCheck = await rejectedCheckResponse
+  const rejectedPayload = await rejectedCheck.json()
+  assert.equal(rejectedCheck.status(), 200)
+  assert.equal(rejectedPayload.mmrPassed, false)
+  assert.equal(rejectedPayload.failedFields.vocabulary.score, 1)
+  assert.equal(rejectedPayload.failedFields.vocabulary.threshold, 5)
+  assert.match(rejectedPayload.failedFields.vocabulary.rowErrors[0].message, /Syllabication or primary stress is incorrect/u)
+  await page.locator("#newsComplianceModal").waitFor({ state: "visible", timeout: 30000 })
+  await page.waitForFunction(() => document.querySelector("#newsGrammarCheckWait")?.classList.contains("hidden"))
+  await page.waitForFunction(() => !document.querySelector("#checkBtn")?.disabled)
+  await page.setViewportSize({ width: 390, height: 844 })
+  const mobileModalGeometry = await page.evaluate(() => {
+    const dialog = document.querySelector("#newsComplianceModal .portal-modal-dialog")?.getBoundingClientRect()
+    const actions = [...document.querySelectorAll("#newsComplianceModal .portal-modal-actions > *")]
+      .filter((element) => element.getBoundingClientRect().width > 0)
+      .map((element) => {
+        const rect = element.getBoundingClientRect()
+        return { label: element.textContent.trim(), left: rect.left, right: rect.right }
+      })
+    return {
+      viewport: innerWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      dialog: dialog ? { left: dialog.left, right: dialog.right, bottom: dialog.bottom } : null,
+      actions,
+    }
+  })
+  assert.ok(mobileModalGeometry.dialog?.left >= 0 && mobileModalGeometry.dialog?.right <= 390, JSON.stringify(mobileModalGeometry))
+  assert.ok(mobileModalGeometry.documentWidth <= mobileModalGeometry.viewport, JSON.stringify(mobileModalGeometry))
+  assert.ok(mobileModalGeometry.actions.length >= 2, JSON.stringify(mobileModalGeometry))
+  assert.ok(mobileModalGeometry.actions.every((action) => action.left >= 0 && action.right <= 390), JSON.stringify(mobileModalGeometry))
+  await page.setViewportSize({ width: 1440, height: 1100 })
+  const vocabularyFeedback = await page.locator("#newsComplianceRequiredBody").innerText()
+  assert.match(vocabularyFeedback, /Entry 1 \("demolition"\): Syllabication or primary stress is incorrect\./u)
+  assert.match(vocabularyFeedback, /Score 1\.00 < 5\.00/u)
+  assert.match(vocabularyFeedback, /Step 1: Complete every vocabulary row with part of speech, English, Vietnamese, syllabication, and definition\./u)
+  assert.match(vocabularyFeedback, /Step 2: Use the provided dictionary links to verify syllable boundaries and primary stress; temporary dictionary outages are reported as warnings\./u)
+  assert.match(vocabularyFeedback, /Step 3: Save again after correcting the named entry and its highlighted field\./u)
+  assert.equal(await page.locator("#newsComplianceWarningsSection").isVisible(), true)
+  assert.match(await page.locator("#newsComplianceWarningBody").innerText(), /Syllabication could not be verified right now/u)
+  assert.equal(await page.locator("#newsGrammarCheckWait").isVisible(), false, "the result modal appears after the animated check overlay closes")
+  const helpHref = await page.locator("#newsComplianceHelpLink").getAttribute("href")
+  assert.match(helpHref, /^mailto:support@eagles\.edu\.vn\?/u)
+  const helpUrl = new URL(helpHref)
+  const helpBody = new URLSearchParams(helpUrl.search).get("body") || ""
+  assert.match(helpBody, /Word: demolition/u)
+  assert.match(helpBody, /Syllabication entered: de-MO-li-tion/u)
+  assert.doesNotMatch(helpBody, /mark001|Synthetic repeated Check/u)
+  await page.locator("#newsComplianceModalCloseActionBtn").click()
+
+  for (const [index, word] of VOCABULARY.entries()) {
+    const row = vocabularyRows.nth(index)
+    await row.locator('[data-vocabulary-field="partOfSpeech"]').selectOption(word.partOfSpeech)
+    await row.locator('[data-vocabulary-field="english"]').fill(index === 0 ? "demolition" : word.english)
+    await row.locator('[data-vocabulary-field="vietnamese"]').fill(word.vietnamese)
+    await row.locator('[data-vocabulary-field="syllabication"]').fill(index === 0 ? "dem-o-LI-tion" : word.syllabication)
+    await row.locator('[data-vocabulary-field="definition"]').fill(index === 0 ? "The act of destroying a structure." : word.definition)
+  }
+
+  const restoredFormState = await page.evaluate(() => ({
+    newsPageHidden: document.querySelector("#newsPageCard")?.classList.contains("hidden"),
+    checkDisabled: document.querySelector("#checkBtn")?.disabled,
+    formStatus: document.querySelector("#formStatus")?.textContent || "",
+    checkWaitVisible: !document.querySelector("#newsGrammarCheckWait")?.classList.contains("hidden"),
+    vocabulary: [...document.querySelectorAll("#newsVocabularyRows [data-news-vocabulary-row]")].map((row) => ({
+      english: row.querySelector('[data-vocabulary-field="english"]')?.value,
+      syllabication: row.querySelector('[data-vocabulary-field="syllabication"]')?.value,
+    })),
+    validation: [...document.querySelectorAll(".news-vocabulary-row-validation-message")].map((entry) => entry.textContent),
+  }))
+  assert.equal(restoredFormState.newsPageHidden, false, JSON.stringify(restoredFormState))
+  assert.equal(restoredFormState.checkDisabled, false, JSON.stringify(restoredFormState))
+
   for (const step of ["first Check", "Save", "second Check"]) {
     const pathname = step === "Save" ? "/api/student/news-reports/draft" : "/api/student/news-reports/check"
-    const responsePromise = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === pathname, { timeout: 30000 })
+    const responsePromise = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === pathname, { timeout: 10000 }).catch(async (error) => {
+      const state = await page.evaluate(() => ({
+        checkDisabled: document.querySelector("#checkBtn")?.disabled,
+        saveDisabled: document.querySelector("#saveDraftBtn")?.disabled,
+        reportDate: document.querySelector("#reportDate")?.value,
+        complianceModalOpen: !document.querySelector("#newsComplianceModal")?.classList.contains("hidden"),
+        activeElement: document.activeElement?.id || document.activeElement?.tagName || "",
+        modalDisplay: getComputedStyle(document.querySelector("#newsComplianceModal")).display,
+        modalZIndex: getComputedStyle(document.querySelector("#newsComplianceModal")).zIndex,
+        saveRect: (() => { const rect = document.querySelector("#saveDraftBtn")?.getBoundingClientRect(); return rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null })(),
+        saveHitTarget: (() => { const rect = document.querySelector("#saveDraftBtn")?.getBoundingClientRect(); const target = rect ? document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) : null; return target?.id || target?.tagName || "" })(),
+        formStatus: document.querySelector("#formStatus")?.textContent || "",
+        validation: [...document.querySelectorAll(".field-validation-message")].map((entry) => entry.textContent),
+      }))
+      throw new Error(`${step}: ${error.message}; page state: ${JSON.stringify(state)}; API responses: ${JSON.stringify(studentApiResponses)}`)
+    })
     await page.locator(step === "Save" ? "#saveDraftBtn" : "#checkBtn").click()
     const response = await responsePromise
     const payload = await response.json()

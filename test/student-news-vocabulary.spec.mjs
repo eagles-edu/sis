@@ -495,6 +495,32 @@ test("authoritative validator accepts CMU stress and Collegiate written division
   resetVocabularyDictionaryCacheForTest()
 })
 
+test("demolition accepts phonetic syllabication when Merriam-Webster shows word-division marks", async () => {
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-collegiate"
+  resetVocabularyDictionaryCacheForTest()
+  try {
+    const calls = []
+    const result = await validateVocabularyEntry(
+      { english: "demolition", syllabication: "dem-o-LI-tion" },
+      {
+        fetchImpl: async (url) => {
+          calls.push(String(url))
+          return {
+            ok: true,
+            json: async () => [{ hwi: { hw: "de*mo*li*tion", prs: [{ mw: "ˌde-mə-ˈli-shən" }] } }],
+          }
+        },
+      },
+    )
+    assert.deepEqual(result, { message: "", warning: "" })
+    assert.equal(calls.length, 1)
+    assert.match(calls[0], /\/collegiate\/json\/demolition/u)
+  } finally {
+    delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    resetVocabularyDictionaryCacheForTest()
+  }
+})
+
 test("authoritative dictionary credentials and unmodeled response fields stay server-side", async () => {
   const previousCollegiateKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
   const previousConsoleLog = console.log
@@ -614,6 +640,17 @@ test("authoritative validator allows a warning only when Merriam-Webster is unav
   const result = await validateVocabularyEntry({ english: "apple", syllabication: "AP-ple" })
   assert.equal(result.message, "")
   assert.match(result.warning, /could not be verified/)
+})
+
+test("Student News keeps a temporary dictionary outage as a non-blocking vocabulary warning", async () => {
+  const result = await evaluateStudentNewsVocabulary(
+    [{ partOfSpeech: "noun", english: "apple", vietnamese: "táo", syllabication: "AP-ple", definition: "A fruit." }],
+    { minimumWords: 1 },
+  )
+  assert.equal(result.passed, true)
+  assert.equal(result.count, 1)
+  assert.match(result.rowWarnings[0].message, /could not be verified right now/u)
+  assert.deepEqual(result.rowWarnings[0].fields, ["syllabication"])
 })
 
 test("Merriam-Webster missing keys and rate limits remain warning-only", async () => {

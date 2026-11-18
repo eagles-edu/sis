@@ -4,6 +4,9 @@ const MERRIAM_WEBSTER_API_BASE = "https://www.dictionaryapi.com/api/v3/reference
 const MERRIAM_WEBSTER_CACHE_LIMIT = 2000
 const MERRIAM_WEBSTER_TIMEOUT_MS = 5000
 const merriamWebsterCache = new Map()
+const PRONUNCIATION_SYLLABICATION_VARIANTS = new Map([
+  ["demolition", new Set(["dem-o-li-tion"])],
+])
 
 function text(value) {
   return String(value == null ? "" : value).trim()
@@ -229,6 +232,16 @@ function authoritativeDivisionMatches(entered, authoritative) {
   return enteredNormalized === authoritativeNormalized
 }
 
+function knownPronunciationSyllabicationMatches(word, entered) {
+  const variants = PRONUNCIATION_SYLLABICATION_VARIANTS.get(text(word).toLocaleLowerCase("en-US"))
+  if (!variants) return false
+  const normalized = normalizeSyllabicationText(entered)
+    .normalize("NFD")
+    .replace(/\p{M}+/gu, "")
+    .toLocaleLowerCase("en-US")
+  return variants.has(normalized)
+}
+
 /**
  * Verifies a vocabulary entry without exposing an authoritative correction.
  * @param {{ english?: unknown, syllabication?: unknown }} row
@@ -265,7 +278,10 @@ export async function validateVocabularyEntry(row = {}, options = {}) {
     if (dictionaryResult.status !== "found") {
       return { message: "Syllabication requires manual dictionary research. Use the provided dictionary links.", warning: "" }
     }
-    if (!authoritativeDivisionMatches(entered, dictionaryResult.division)) {
+    if (
+      !authoritativeDivisionMatches(entered, dictionaryResult.division)
+      && !knownPronunciationSyllabicationMatches(word, entered)
+    ) {
       return { message: "Syllabication or primary stress is incorrect. Research it using the provided dictionary links.", warning: "" }
     }
   }

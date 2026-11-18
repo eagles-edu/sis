@@ -613,14 +613,15 @@
         const failed = normalizeFailedFieldMap(failedFieldMap);
         state.newsFieldErrors = failed;
         state.newsRevisionTasks = Array.isArray(revisionTasks) ? revisionTasks : [];
-        state.newsWarningFields = {};
-        state.newsWarningTasks = [];
+        state.newsWarningFields = normalizeFailedFieldMap(warningFieldMap);
+        state.newsWarningTasks = Array.isArray(warningTasks) ? warningTasks : [];
         ["actionWhy", "biasAssessment"].forEach((fieldId) => {
           renderNewsSentenceFeedback(fieldId, failed[fieldId] || {});
         });
         const hasFailed = Object.keys(failed).length > 0;
+        const hasWarnings = Object.keys(state.newsWarningFields).length > 0 || state.newsWarningTasks.length > 0;
         setNewsComplianceModalCtaVisible(hasFailed);
-        if (!hasFailed) {
+        if (!hasFailed && !hasWarnings) {
           state.newsComplianceSummary = "";
           setNewsComplianceModalOpen(false);
         }
@@ -730,12 +731,20 @@
         const normalizedField = t(fieldKey);
         if (normalizedField === "vocabulary" && ((Array.isArray(entry?.rowErrors) && entry.rowErrors.length) || (Array.isArray(entry?.rowWarnings) && entry.rowWarnings.length))) {
           const rows = Array.isArray(entry?.rowErrors) && entry.rowErrors.length ? entry.rowErrors : entry.rowWarnings;
-          return rows
+          const rowMessages = rows
             .map((row) => row.english ? `Entry \"${row.english}\": ${row.message}` : row.message)
             .filter(Boolean)
-            .join(" ");
+          const score = Number.isFinite(Number(entry?.score)) && Number.isFinite(Number(entry?.threshold))
+            ? [`Score ${Number(entry.score).toFixed(2)} < ${Number(entry.threshold).toFixed(2)}`]
+            : [];
+          const steps = Array.isArray(task?.steps)
+            ? task.steps.map((step, index) => `Step ${index + 1}: ${t(step)}`).filter((step) => !step.endsWith(": "))
+            : [];
+          return [...rowMessages, ...score, ...steps].join(" | ");
         }
-        const steps = Array.isArray(task?.steps) ? task.steps.map((step) => t(step)).filter(Boolean) : [];
+        const steps = Array.isArray(task?.steps)
+          ? task.steps.map((step, index) => `Step ${index + 1}: ${t(step)}`).filter((step) => !step.endsWith(": "))
+          : [];
         if (steps.length) return steps.join(" ");
         if (normalizedField === "sourceLink")
           return "Open the article page, copy the full article web address, and paste that exact link.";
@@ -839,12 +848,16 @@
       function renderNewsComplianceModalFromState(summaryText = "") {
         const summary = field("newsComplianceModalSummary");
         const requiredBody = field("newsComplianceRequiredBody");
-        if (!summary || !requiredBody) return;
+        const warningBody = field("newsComplianceWarningBody");
+        if (!summary || !requiredBody || !warningBody) return;
         const hasBlockingErrors = hasNewsFieldValidationErrors();
+        const hasWarnings = hasNewsWarnings();
         const checksPassed = !hasBlockingErrors;
-        const defaultSummary = checksPassed ? "Saved. CHECKS PASSED!" : "Saved. Required checks need attention.";
+        const defaultSummary = checksPassed
+          ? hasWarnings ? "Saved. Checks passed with warnings to review." : "Saved. CHECKS PASSED!"
+          : "Saved. Required checks need attention.";
         state.newsComplianceSummary = checksPassed
-          ? "Saved. CHECKS PASSED!"
+          ? hasWarnings ? defaultSummary : "Saved. CHECKS PASSED!"
           : t(summaryText) || t(state.newsComplianceSummary) || defaultSummary;
         summary.textContent = state.newsComplianceSummary;
         summary.classList.toggle("news-compliance-success", checksPassed);
@@ -854,6 +867,30 @@
           buildStudentFeedbackRowsFromTasks(state.newsFieldErrors || {}, requiredTasks),
           "NO ERRORS — SUBMIT is now available."
         );
+        const warningTasks = Array.isArray(state.newsWarningTasks) ? state.newsWarningTasks : [];
+        renderStudentFeedbackRows(
+          warningBody,
+          buildStudentFeedbackRowsFromTasks(state.newsWarningFields || {}, warningTasks),
+          "No warnings."
+        );
+        field("newsComplianceWarningsSection")?.classList.toggle("hidden", !hasWarnings);
+        const vocabularyError = state.newsFieldErrors?.vocabulary?.rowErrors?.[0];
+        const helpLink = field("newsComplianceHelpLink");
+        if (helpLink instanceof HTMLAnchorElement && vocabularyError) {
+          const vocabularyRow = document.querySelector(
+            `#newsVocabularyRows [data-news-vocabulary-row="${Number(vocabularyError.index)}"]`,
+          );
+          const syllabication = t(vocabularyRow?.querySelector('[data-vocabulary-field="syllabication"]')?.value);
+          const subject = `Student News vocabulary check help: ${t(vocabularyError.english)}`;
+          const body = [
+            "Please help review this Student News vocabulary check.",
+            `Word: ${t(vocabularyError.english)}`,
+            `Syllabication entered: ${syllabication}`,
+            `Check message: ${t(vocabularyError.message)}`,
+          ].join("\n");
+          helpLink.href = `mailto:support@eagles.edu.vn?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
+        helpLink?.classList.toggle("hidden", !vocabularyError);
         setNewsComplianceModalOpen(true);
       }
 
@@ -5202,6 +5239,13 @@
         updateSubmitAvailability();
       }
 
+      function hideNewsGrammarCheckWaitForResult() {
+        const wait = field("newsGrammarCheckWait");
+        wait?.classList.add("hidden");
+        wait?.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("news-grammar-check-busy");
+      }
+
       function markNewsDraftDirty() {
         state.newsFormDirty = true;
         state.newsCurrentMmrPassed = false;
@@ -5381,7 +5425,6 @@
           t(options?.messageFallback) ||
           "Draft saved.";
         const checksPassed = payloadBody?.mmrPassed === true && payloadBody?.complianceFailed !== true;
-        const displaySummaryMessage = checksPassed ? "Saved. CHECKS PASSED!" : summaryMessage;
         const failedFieldMap = resolveFailedFieldMapFromCompliancePayload(payloadBody);
         const revisionTasks = resolveRevisionTasksFromCompliancePayload(
           payloadBody,
@@ -5389,6 +5432,11 @@
         );
         const warningFieldMap = normalizeFailedFieldMap(payloadBody?.warningFields || {});
         const warningTasks = Array.isArray(payloadBody?.warningTasks) ? payloadBody.warningTasks : [];
+        const displaySummaryMessage = checksPassed
+          ? Object.keys(warningFieldMap).length || warningTasks.length
+            ? "Saved. Checks passed with warnings to review."
+            : "Saved. CHECKS PASSED!"
+          : summaryMessage;
         const checkedItem = payloadBody?.item && typeof payloadBody.item === "object"
           ? payloadBody.item
           : null;
@@ -5426,8 +5474,10 @@
           payloadBody?.mmrPassed === true,
         );
         state.newsComplianceSummary = displaySummaryMessage;
-        if (options?.viewerItem !== true) renderNewsComplianceModalFromState(displaySummaryMessage);
         invalidateNewWordsCache();
+        if (options?.viewerItem !== true && (hasNewsFieldValidationErrors() || hasNewsWarnings())) {
+          renderNewsComplianceModalFromState(displaySummaryMessage);
+        }
         await loadStudentData({
           preserveValidation: true,
           preserveForm: options?.viewerItem === true,
@@ -5439,6 +5489,12 @@
           applyOpenReport(checkedItem, { preserveExistingValidation: true, preserveVocabularyEditor: true });
           state.newsReportId = t(checkedItem?.id);
           state.newsReportSequence = Math.max(0, Number(checkedItem?.reportSequence) || 0);
+          applyNewsFieldValidationUi(
+            failedFieldMap,
+            revisionTasks,
+            warningFieldMap,
+            warningTasks,
+          );
         }
         if (options?.reopenReportId) {
           openNewsWeekSetModalByReportId(options.reopenReportId, {
@@ -5450,25 +5506,21 @@
             silentStatus: true,
           });
         }
-        if (options?.viewerItem !== true && (hasNewsFieldValidationErrors() || hasNewsWarnings())) {
-          renderNewsComplianceModalFromState(displaySummaryMessage);
-        }
       }
 
-      const NEWS_GRAMMAR_CHECK_MIN_DISPLAY_MS = 3300;
       const STUDENT_NEWS_CHECK_UNAUTHORIZED_MESSAGE =
         "News Check requires an active student session. Sign in again, then retry Check.";
 
       async function checkNewsPayload(payload = {}, options = {}) {
         const reportDate = t(payload?.reportDate);
         if (!reportDate) throw new Error("Report date is locked.");
-        const grammarCheckStartedAt = Date.now();
         setNewsGrammarCheckBusy(true);
         try {
           const saved = await api(STUDENT_NEWS_REPORTS_CHECK_PATH, {
             method: "POST",
             body: payload,
           });
+          hideNewsGrammarCheckWaitForResult();
           await handleNewsCheckResult(saved, options);
           if (saved?.mmrPassed === true && saved?.complianceFailed !== true) clearNewsDraftLocally();
         } catch (error) {
@@ -5480,10 +5532,6 @@
           }
           throw error;
         } finally {
-          const remainingDisplayMs = NEWS_GRAMMAR_CHECK_MIN_DISPLAY_MS - (Date.now() - grammarCheckStartedAt);
-          if (remainingDisplayMs > 0) {
-            await new Promise((resolve) => setTimeout(resolve, remainingDisplayMs));
-          }
           setNewsGrammarCheckBusy(false);
         }
       }
