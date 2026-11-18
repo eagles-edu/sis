@@ -1403,6 +1403,14 @@ export async function deleteStudent(studentRefId, options = {}) {
   const deleteParentAccounts = options.deleteParentAccounts === true
 
   await prisma.$transaction(async (tx) => {
+    const moodleLink = await tx.moodleUserLink.findUnique({
+      where: { studentRefId: id },
+      select: { status: true },
+    })
+    if (moodleLink) {
+      throw Object.assign(new Error("Student deletion is blocked while a Moodle account link exists."), { statusCode: 409 })
+    }
+
     const parentLinks = await tx.parentPortalStudentLink.findMany({
       where: { studentRefId: id },
       select: { parentAccountId: true },

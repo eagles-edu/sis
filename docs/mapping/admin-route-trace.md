@@ -80,7 +80,7 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | DELETE | `/api/admin/users/{userId}` | Yes | `canManageUsers` | Yes | `deleteAdminUserById` |
 | GET | `/api/admin/students/{studentRefId}` | Yes | any readable role | Yes | `getStudentById` (`src/modules/admin/student-roster.mjs`) |
 | PUT | `/api/admin/students/{studentRefId}` | Yes | write role | Yes | `saveStudent` (update) |
-| DELETE | `/api/admin/students/{studentRefId}` | Yes | write role | Yes | `deleteStudent` |
+| DELETE | `/api/admin/students/{studentRefId}` | Yes | write role | Yes | `deleteStudent`; returns 409 and preserves all SIS records while a Moodle account link exists |
 
 ## Signed Moodle Provisioning Routes
 

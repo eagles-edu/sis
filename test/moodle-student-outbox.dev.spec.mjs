@@ -6,6 +6,17 @@ import { parse as parseDotenv } from "dotenv"
 import test from "node:test"
 import "../tools/assert-prisma-environment.mjs"
 
+const COMMAND_PROCESSOR = fs.readFileSync(new URL("../integrations/moodle/enrol/sis/classes/local/command_processor.php", import.meta.url), "utf8")
+
+test("Moodle command contract binds SIS identities and never hard-deletes a student", () => {
+  assert.match(COMMAND_PROCESSOR, /'username'\s*=>\s*\$eaglesid/u)
+  assert.match(COMMAND_PROCESSOR, /'idnumber'\s*=>\s*\$studentnumber/u)
+  assert.match(COMMAND_PROCESSOR, /'add_cohort'\s*=>\s*\$this->add_cohort_member\(\$payload\)/u)
+  assert.match(COMMAND_PROCESSOR, /'disable_user'\s*=>\s*\$this->disable_user\(\$payload\)/u)
+  assert.match(COMMAND_PROCESSOR, /\$user->suspended\s*=\s*1;[\s\S]*?user_update_user\(\$user, false, true\)/u)
+  assert.doesNotMatch(COMMAND_PROCESSOR, /\buser_delete_user\s*\(/u)
+})
+
 const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const DEV_ONLY = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
 const ENV_VALUES = DEV_ONLY && fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
@@ -27,6 +38,7 @@ test("dev Moodle outbox is student-scoped and accepts only signed, replay-protec
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const { hashScryptPassword } = await import("../src/modules/admin/users.mjs")
   const { queueMoodleEnrollmentChange, queueStudentProvisioning } = await import("../src/modules/admin/moodle-provisioning.mjs")
+  const { deleteStudent } = await import("../src/modules/admin/student-write-import.mjs")
   const { startExerciseMailer } = await import("../server/exercise-mailer.mjs")
   const { closeStudentAdminRuntimeResources } = await import("../server/student-admin-routes.mjs")
   const prisma = await getSharedPrismaClient()
@@ -141,6 +153,12 @@ test("dev Moodle outbox is student-scoped and accepts only signed, replay-protec
   }))
   const initialCommands = await prisma.moodleProvisioningCommand.findMany({ where: { studentRefId }, orderBy: { sequence: "asc" } })
   assert.deepEqual(initialCommands.map((command) => command.action), ["upsert_user", "set_password", "add_cohort", "promote_student"])
+  assert.deepEqual(initialCommands.find((command) => command.action === "add_cohort")?.payloadJson, {
+    cohortIdnumber: "eagles-club",
+    cohortName: "Eagles Club",
+    eaglesId,
+    studentNumber,
+  })
   assert.ok(initialCommands.every((command) => command.studentRefId === studentRefId))
   const passwordCommand = initialCommands.find((command) => command.action === "set_password")
   assert.ok(passwordCommand?.encryptedPayload)
@@ -195,6 +213,13 @@ test("dev Moodle outbox is student-scoped and accepts only signed, replay-protec
   const link = await prisma.moodleUserLink.findUnique({ where: { studentRefId } })
   assert.equal(link?.moodleUserId, moodleUserId)
   assert.equal(link?.status, "active")
+  await assert.rejects(deleteStudent(studentRefId), (error) => {
+    assert.equal(error.statusCode, 409)
+    assert.match(error.message, /Moodle account link exists/u)
+    return true
+  })
+  assert.equal(await prisma.student.count({ where: { id: studentRefId } }), 1, "a linked SIS student must remain intact")
+  assert.equal((await prisma.moodleUserLink.findUnique({ where: { studentRefId } }))?.status, "active")
 
   const levelChange = await prisma.$transaction((tx) => queueMoodleEnrollmentChange(tx, {
     student,
