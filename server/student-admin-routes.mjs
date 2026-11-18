@@ -6806,6 +6806,8 @@ async function handleApiRequest(request, response, pathname, url) {
   if (
     (method === "POST" && pathname === ADMIN_STUDENTS_PREFIX) ||
     (method === "PUT" && ADMIN_STUDENT_PATH_RE.test(pathname)) ||
+    (method === "POST" && ADMIN_ATTENDANCE_PATH_RE.test(pathname)) ||
+    (method === "DELETE" && ADMIN_ATTENDANCE_DELETE_PATH_RE.test(pathname)) ||
     (method === "POST" && ADMIN_GRADES_PATH_RE.test(pathname)) ||
     (method === "DELETE" && ADMIN_GRADE_DELETE_PATH_RE.test(pathname))
   ) {

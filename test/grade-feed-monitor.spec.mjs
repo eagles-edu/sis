@@ -67,11 +67,14 @@ test("grade feed monitor exports fixed aggregate labels and authenticated table 
       requestMetricsFile,
       prismaClient: prisma,
       tableApiCheck: async (environment) => environment.STUDENT_ADMIN_USER === "dev-admin",
+      attendanceApiCheck: async () => ({ reportingAvailable: true, schoolSetupValid: true }),
       clock: () => now,
     })
     const contents = readFileSync(metricsFile, "utf8")
     assert.equal(success, true)
     assert.match(contents, /sis_grade_feed_table_available\{environment="dev"\} 1/u)
+    assert.match(contents, /sis_attendance_reporting_available\{environment="dev"\} 1\.000000/u)
+    assert.match(contents, /sis_attendance_school_setup_valid\{environment="dev"\} 1\.000000/u)
     assert.match(contents, /sis_grade_feed_incoming_unmatched\{environment="dev"\} 4/u)
     assert.match(contents, /sis_grade_feed_incoming_oldest_unmatched_age_seconds\{environment="dev"\} 7200\.000000/u)
     assert.match(contents, /sis_grade_feed_exercise_submission_rows\{environment="dev",source="moodle"\} 2/u)
@@ -101,6 +104,7 @@ test("grade feed monitor reports a failed database check without hiding the API 
       requestMetricsFile: path.join(directory, "missing.prom"),
       prismaClient: prisma,
       tableApiCheck: async () => true,
+      attendanceApiCheck: async () => ({ reportingAvailable: true, schoolSetupValid: true }),
       clock: () => Date.UTC(2026, 10, 18, 7, 0, 0),
     })
     const contents = readFileSync(metricsFile, "utf8")
@@ -108,6 +112,35 @@ test("grade feed monitor reports a failed database check without hiding the API 
     assert.match(contents, /sis_grade_feed_database_available\{environment="dev"\} 0/u)
     assert.match(contents, /sis_grade_feed_table_available\{environment="dev"\} 1/u)
     assert.match(contents, /sis_grade_feed_monitor_success\{environment="dev"\} 0/u)
+  } finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
+})
+
+test("grade feed monitor fails and exposes attendance setup and report availability independently", async () => {
+  const directory = mkdtempSync(path.join(os.tmpdir(), "sis-grade-feed-attendance-monitor-"))
+  const metricsFile = path.join(directory, "grade-feeds.prom")
+  const prisma = {
+    $queryRaw: async () => [{ name: "sis_dev" }],
+    exerciseSubmission: { groupBy: async () => [] },
+    studentGradeRecord: { groupBy: async () => [] },
+    incomingExerciseResult: { count: async () => 0, findFirst: async () => null },
+  }
+  try {
+    const success = await runGradeFeedMonitor({
+      environment: devEnvironment,
+      metricsFile,
+      requestMetricsFile: path.join(directory, "missing.prom"),
+      prismaClient: prisma,
+      tableApiCheck: async () => true,
+      attendanceApiCheck: async () => ({ reportingAvailable: false, schoolSetupValid: false }),
+      clock: () => Date.UTC(2026, 10, 18, 7, 0, 0),
+    })
+    const contents = readFileSync(metricsFile, "utf8")
+    assert.equal(success, false)
+    assert.match(contents, /sis_attendance_reporting_available\{environment="dev"\} 0\.000000/u)
+    assert.match(contents, /sis_attendance_school_setup_valid\{environment="dev"\} 0\.000000/u)
+    assert.match(contents, /sis_grade_feed_monitor_success\{environment="dev"\} 0\.000000/u)
   } finally {
     rmSync(directory, { recursive: true, force: true })
   }

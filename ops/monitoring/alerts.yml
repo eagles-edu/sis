@@ -57,6 +57,32 @@ groups:
         annotations:
           summary: Dev incoming exercise results have failed disposition
 
+  - name: sis-attendance-dev
+    rules:
+      - alert: DevAttendanceSaveFailure
+        expr: sum(increase(sis_admin_student_write_requests_total{route=~"POST /api/admin/students/:id/attendance|DELETE /api/admin/students/:id/attendance/:recordId",status!~"2.."}[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: An authenticated dev attendance save or delete request failed
+
+      - alert: DevAttendanceSchoolSetupInvalid
+        expr: sis_attendance_school_setup_valid{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev SIS attendance school setup is missing or invalid
+
+      - alert: DevAttendanceReportingUnavailable
+        expr: sis_attendance_reporting_available{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Authenticated dev attendance reporting summary is unavailable
+
   - name: sis-engagement-workflows-dev
     rules:
       - alert: DevEngagementMonitorStale

@@ -44,7 +44,7 @@ function metricEnvironment() {
 
 function renderRequestMetrics() {
   const lines = [
-    "# HELP sis_admin_student_write_requests_total Completed authenticated student create or update requests.",
+    "# HELP sis_admin_student_write_requests_total Completed authenticated student profile and attendance write requests.",
     "# TYPE sis_admin_student_write_requests_total counter",
   ]
   for (const [key, metric] of requestMetrics.entries()) {
@@ -52,7 +52,7 @@ function renderRequestMetrics() {
     const labels = `route="${escapeLabel(route)}",status="${escapeLabel(status)}"`
     lines.push(`sis_admin_student_write_requests_total{${labels}} ${metric.count}`)
   }
-  lines.push("# HELP sis_admin_student_write_request_duration_seconds Authenticated student create or update request duration.")
+  lines.push("# HELP sis_admin_student_write_request_duration_seconds Authenticated student profile and attendance write request duration.")
   lines.push("# TYPE sis_admin_student_write_request_duration_seconds summary")
   for (const [key, metric] of requestMetrics.entries()) {
     const [route, status] = key.split("\u0000")
@@ -113,6 +113,12 @@ function resolveStudentWriteRoute(request) {
   const url = new URL(request?.url || "/", `http://${request?.headers?.host || "localhost"}`)
   if (method === "POST" && url.pathname === "/api/admin/students") return "POST /api/admin/students"
   if (method === "PUT" && /^\/api\/admin\/students\/[^/]+$/u.test(url.pathname)) return "PUT /api/admin/students/:id"
+  if (method === "POST" && /^\/api\/admin\/students\/[^/]+\/attendance$/u.test(url.pathname)) {
+    return "POST /api/admin/students/:id/attendance"
+  }
+  if (method === "DELETE" && /^\/api\/admin\/students\/[^/]+\/attendance\/[^/]+$/u.test(url.pathname)) {
+    return "DELETE /api/admin/students/:id/attendance/:recordId"
+  }
   return ""
 }
 

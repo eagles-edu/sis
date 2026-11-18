@@ -38,6 +38,40 @@ test("authorized grade/feed errors use fixed route labels and omit request ident
   assert.doesNotMatch(contents, /private-student-ref|private-attempt/u)
 })
 
+test("authorized attendance failures use fixed route labels without student identifiers", async () => {
+  const request = {
+    method: "POST",
+    url: "/api/admin/students/private-student-ref/attendance?date=private-date",
+    headers: { host: "localhost" },
+  }
+  const response = { statusCode: 422 }
+  await metrics.observeStudentWriteRequest(request, response, async () => {
+    metrics.markStudentWriteRequestAuthenticated()
+  })
+  await metrics.initializeStudentWriteMetrics()
+
+  const contents = readFileSync(metricsPath, "utf8")
+  assert.match(contents, /sis_admin_student_write_requests_total\{route="POST \/api\/admin\/students\/:id\/attendance",status="422"\} 1/u)
+  assert.doesNotMatch(contents, /private-student-ref|private-date/u)
+})
+
+test("attendance delete routes normalize identifiers before collection", async () => {
+  const request = {
+    method: "DELETE",
+    url: "/api/admin/students/private-student-ref/attendance/private-record-id",
+    headers: { host: "localhost" },
+  }
+  const response = { statusCode: 200 }
+  await metrics.observeStudentWriteRequest(request, response, async () => {
+    metrics.markStudentWriteRequestAuthenticated()
+  })
+  await metrics.initializeStudentWriteMetrics()
+
+  const contents = readFileSync(metricsPath, "utf8")
+  assert.match(contents, /sis_admin_student_write_requests_total\{route="DELETE \/api\/admin\/students\/:id\/attendance\/:recordId",status="200"\} 1/u)
+  assert.doesNotMatch(contents, /private-student-ref|private-record-id/u)
+})
+
 test("unauthorized grade/feed attempts are excluded from the request counters", async () => {
   const request = {
     method: "POST",

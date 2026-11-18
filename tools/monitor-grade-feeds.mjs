@@ -57,6 +57,8 @@ export function renderGradeFeedMetrics({
   success,
   databaseAvailable,
   tableAvailable,
+  attendanceReportingAvailable,
+  attendanceSchoolSetupValid,
   requestMetricsAvailable,
   exerciseSources,
   gradeSources,
@@ -72,6 +74,8 @@ export function renderGradeFeedMetrics({
     ["sis_grade_feed_monitor_last_success_timestamp_seconds", "Unix timestamp of the latest successful development grade and feed monitor run.", lastSuccessTimestamp],
     ["sis_grade_feed_database_available", "Whether the development grade and feed database query succeeded against sis_dev.", databaseAvailable ? 1 : 0],
     ["sis_grade_feed_table_available", "Whether the authenticated development admin student table API returned HTTP success.", tableAvailable ? 1 : 0],
+    ["sis_attendance_reporting_available", "Whether the authenticated development admin dashboard returned its attendance risk summary.", attendanceReportingAvailable ? 1 : 0],
+    ["sis_attendance_school_setup_valid", "Whether the authenticated development SIS config API reports valid attendance school setup.", attendanceSchoolSetupValid ? 1 : 0],
     ["sis_grade_feed_request_metrics_available", "Whether the development request instrumentation textfile exists.", requestMetricsAvailable ? 1 : 0],
     ["sis_grade_feed_incoming_unmatched", "Number of unmatched incoming exercise results in active queued or temporary review states.", unmatchedCount],
     ["sis_grade_feed_incoming_queued", "Number of incoming exercise results in queued state.", queuedCount],
@@ -169,6 +173,61 @@ async function checkAdminTableApi(environment, origin = DEV_ORIGIN) {
   }
 }
 
+async function checkAttendanceApi(environment, origin = DEV_ORIGIN) {
+  const username = text(environment.STUDENT_ADMIN_USER)
+  const password = text(environment.STUDENT_ADMIN_PASS)
+  if (!username || !password) return { reportingAvailable: false, schoolSetupValid: false }
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), CHECK_TIMEOUT_MS)
+  try {
+    const login = await fetch(`${origin}/api/admin/auth/login`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ username, password }),
+      signal: controller.signal,
+    })
+    if (!login.ok) return { reportingAvailable: false, schoolSetupValid: false }
+    const cookie = text(login.headers.get("set-cookie")).split(";", 1)[0]
+    if (!cookie) return { reportingAvailable: false, schoolSetupValid: false }
+
+    const [settingsResponse, dashboardResponse] = await Promise.all([
+      fetch(`${origin}/api/admin/settings/ui`, {
+        headers: { cookie, accept: "application/json" },
+        signal: controller.signal,
+      }),
+      fetch(`${origin}/api/admin/dashboard`, {
+        headers: { cookie, accept: "application/json" },
+        signal: controller.signal,
+      }),
+    ])
+    const [settings, dashboard] = await Promise.all([
+      settingsResponse.ok ? settingsResponse.json() : null,
+      dashboardResponse.ok ? dashboardResponse.json() : null,
+    ])
+    const schoolSetupValid = Boolean(
+      settings?.uiSettings?.schoolSetup
+      && typeof settings.uiSettings.schoolSetup === "object"
+      && settings?.meta?.schoolSetupState === "ok"
+      && settings?.meta?.schoolSetupHasIssues === false
+    )
+    const attendanceRiskWeek = dashboard?.attendanceRiskWeek
+    const reportingAvailable = Boolean(
+      attendanceRiskWeek
+      && Number.isSafeInteger(attendanceRiskWeek.total)
+      && attendanceRiskWeek.total >= 0
+      && Array.isArray(attendanceRiskWeek.students)
+    )
+    return {
+      reportingAvailable: dashboardResponse.ok && reportingAvailable,
+      schoolSetupValid: settingsResponse.ok && schoolSetupValid,
+    }
+  } catch {
+    return { reportingAvailable: false, schoolSetupValid: false }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 async function collectDatabaseMetrics(prisma, now) {
   const database = await prisma.$queryRaw`SELECT current_database() AS name`
   if (database[0]?.name !== "sis_dev") throw new Error("Grade feed monitor connected to an unexpected database")
@@ -233,6 +292,7 @@ export async function runGradeFeedMonitor({
   requestMetricsFile = REQUEST_METRICS_FILE,
   prismaClient = null,
   tableApiCheck = checkAdminTableApi,
+  attendanceApiCheck = checkAttendanceApi,
   clock = () => Date.now(),
 } = {}) {
   assertDevEnvironment(environment)
@@ -240,6 +300,8 @@ export async function runGradeFeedMonitor({
   const prisma = prismaClient || await getSharedPrismaClient()
   let databaseAvailable = false
   let tableAvailable = false
+  let attendanceReportingAvailable = false
+  let attendanceSchoolSetupValid = false
   let observed = {
     exerciseSources: Object.fromEntries(SOURCE_KEYS.map((key) => [key, { count: 0, latestTimestamp: 0 }])),
     gradeSources: Object.fromEntries(SOURCE_KEYS.map((key) => [key, { count: 0, latestTimestamp: 0 }])),
@@ -261,9 +323,17 @@ export async function runGradeFeedMonitor({
   } catch {
     tableAvailable = false
   }
+  try {
+    const attendanceStatus = await attendanceApiCheck(environment)
+    attendanceReportingAvailable = Boolean(attendanceStatus?.reportingAvailable)
+    attendanceSchoolSetupValid = Boolean(attendanceStatus?.schoolSetupValid)
+  } catch {
+    attendanceReportingAvailable = false
+    attendanceSchoolSetupValid = false
+  }
 
   const checkedAt = clock() / 1000
-  const success = databaseAvailable && tableAvailable
+  const success = databaseAvailable && tableAvailable && attendanceReportingAvailable && attendanceSchoolSetupValid
   const previousSuccess = readLastSuccessTimestamp(metricsFile)
   const metrics = renderGradeFeedMetrics({
     checkedAt,
@@ -271,6 +341,8 @@ export async function runGradeFeedMonitor({
     success,
     databaseAvailable,
     tableAvailable,
+    attendanceReportingAvailable,
+    attendanceSchoolSetupValid,
     requestMetricsAvailable: fs.existsSync(requestMetricsFile),
     ...observed,
   })
@@ -279,7 +351,7 @@ export async function runGradeFeedMonitor({
   } finally {
     if (!prismaClient) await closeSharedPrismaClient()
   }
-  process.stdout.write(`grade_feed_monitor environment=dev result=${success ? "pass" : "fail"} database=${databaseAvailable ? "up" : "down"} table=${tableAvailable ? "up" : "down"} unmatched=${observed.unmatchedCount} queued=${observed.queuedCount} write_metrics=${fs.existsSync(requestMetricsFile) ? "available" : "missing"} duration_ms=${Math.max(0, clock() - started)}\n`)
+  process.stdout.write(`grade_feed_monitor environment=dev result=${success ? "pass" : "fail"} database=${databaseAvailable ? "up" : "down"} table=${tableAvailable ? "up" : "down"} attendance_setup=${attendanceSchoolSetupValid ? "ok" : "invalid"} attendance_reporting=${attendanceReportingAvailable ? "up" : "down"} unmatched=${observed.unmatchedCount} queued=${observed.queuedCount} write_metrics=${fs.existsSync(requestMetricsFile) ? "available" : "missing"} duration_ms=${Math.max(0, clock() - started)}\n`)
   return success
 }
 

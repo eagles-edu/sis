@@ -1,6 +1,8 @@
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
 import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 import { parse as parseDotenv } from "dotenv"
 import test from "node:test"
 import "../tools/assert-prisma-environment.mjs"
@@ -32,10 +34,15 @@ test("dev attendance persists, repeats idempotently, handles concurrent saves, r
   process.env.DOTENV_CONFIG_PATH = ".env.dev"
   process.env.NODE_ENV = "development"
   process.env.STUDENT_ADMIN_STORE_ENABLED = "true"
+  const originalRequestMetricsFile = process.env.SIS_REQUEST_METRICS_FILE
+  const requestMetricsDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "sis-ka089-attendance-metrics-"))
+  const requestMetricsFile = path.join(requestMetricsDirectory, "requests.prom")
+  process.env.SIS_REQUEST_METRICS_FILE = requestMetricsFile
 
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const { startExerciseMailer } = await import("../server/exercise-mailer.mjs")
   const { closeStudentAdminRuntimeResources } = await import("../server/student-admin-routes.mjs")
+  const { initializeStudentWriteMetrics } = await import("../src/infra/observability/student-write-metrics.mjs")
   const prisma = await getSharedPrismaClient()
   const database = await prisma.$queryRaw`SELECT current_database() AS name`
   assert.equal(database[0]?.name, "sis_dev", "synthetic attendance writes are restricted to the dev database")
@@ -64,6 +71,9 @@ test("dev attendance persists, repeats idempotently, handles concurrent saves, r
     }
     await closeStudentAdminRuntimeResources()
     await prisma.$disconnect()
+    if (originalRequestMetricsFile === undefined) delete process.env.SIS_REQUEST_METRICS_FILE
+    else process.env.SIS_REQUEST_METRICS_FILE = originalRequestMetricsFile
+    fs.rmSync(requestMetricsDirectory, { recursive: true, force: true })
   }
 
   t.after(cleanup)
@@ -200,6 +210,10 @@ test("dev attendance persists, repeats idempotently, handles concurrent saves, r
   })
   assert.equal(invalidContextResponse.status, 422)
   assert.match((await invalidContextResponse.json()).error, /quarter does not match attendanceDate's configured SIS quarter/)
+  await initializeStudentWriteMetrics()
+  const requestMetrics = fs.readFileSync(requestMetricsFile, "utf8")
+  assert.match(requestMetrics, /sis_admin_student_write_requests_total\{route="POST \/api\/admin\/students\/:id\/attendance",status="422"\} 1/u)
+  assert.doesNotMatch(requestMetrics, new RegExp(studentRefId, "u"))
   assert.equal(await prisma.studentAttendance.count({ where: { studentRefId } }), 1)
 
   const concurrentPayloads = [

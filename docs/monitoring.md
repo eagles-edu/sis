@@ -474,6 +474,10 @@ The request wrapper records response counts for admin grade create/delete routes
 
 The monitor writes atomic aggregate gauges to `runtime-data/prometheus/grade-feeds-dev.prom`, scraped by the existing node-exporter textfile collector. It does not change student, grade, or feed records. Prometheus alerts on a missing monitor result, failed database or authenticated table checks, missing request instrumentation, an unmatched incoming backlog, and recorded non-2xx authorized grade/feed writes. Feed-age gauges are available for investigation without treating an idle source as a failure. Alerts are local to Prometheus; the active profile has no Alertmanager receiver.
 
+The same five-minute dev monitor checks `/api/admin/settings/ui` for a valid school setup and `/api/admin/dashboard` for a well-formed `attendanceRiskWeek` summary using an authenticated admin cookie. It inspects only setup status and summary shape; student names, identifiers, and report data remain in memory and are not written to metrics or monitor output. The textfile exports `sis_attendance_school_setup_valid{environment="dev"}` and `sis_attendance_reporting_available{environment="dev"}`. Prometheus alerts when either check fails.
+
+Authenticated admin attendance `POST` and `DELETE` requests are recorded in `sis_admin_student_write_requests_total` with fixed route templates and HTTP status codes. The wrapper marks a request only after the cookie session and admin write-role gate pass; unauthorized and teacher-denied requests are excluded. A non-2xx attendance response fires `DevAttendanceSaveFailure`. Student IDs, attendance dates, comments, cookies, and request bodies are never metric labels or log fields.
+
 Install the recurring five-minute user timer for dev:
 
 ```bash
