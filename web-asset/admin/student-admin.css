@@ -1740,15 +1740,20 @@ transition:
         display: grid;
         gap: 10px;
         margin-top: 10px;
+        min-width: 0;
+        grid-template-columns: minmax(0, 1fr);
   }
       .queue-hub-panel {
         background: var(--portal-color-2cdb084429);
         border: 2px solid var(--portal-color-5987913019);
         border-bottom-width: 4px;
         border-radius: var(--radius-3);
+        box-sizing: border-box;
         cursor: grab;
         display: grid;
         gap: 8px;
+        max-width: 100%;
+        min-width: 0;
         padding: 10px;
   }
       .queue-hub-panel.dragging {
@@ -1784,6 +1789,12 @@ transition:
   }
       .queue-hub-panel .table-scroll-wrap table {
         min-width: 620px;
+  }
+      .queue-hub-panel .table-scroll-wrap {
+        box-sizing: border-box;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto;
   }
       .queue-hub-order-dirty {
         background: var(--portal-status-warn-bg);

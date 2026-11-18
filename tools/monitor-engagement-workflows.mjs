@@ -3,6 +3,7 @@ import path from "node:path"
 import { randomUUID } from "node:crypto"
 import { pathToFileURL } from "node:url"
 import { getSharedPrismaClient, closeSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
+import { verifyScryptPassword } from "../src/modules/admin/users.mjs"
 
 const DEV_ORIGIN = "http://127.0.0.1:8788"
 const METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/engagement-workflows-dev.prom")
@@ -202,11 +203,17 @@ export function resolveParentMonitorCredentials(environment = process.env) {
   }
   const account = accounts.find((entry) =>
     (entry?.parentsId || entry?.username) === STANDARD_PARENT_LOGIN &&
-    typeof entry?.password === "string" &&
-    entry.password.length > 0 &&
+    (typeof entry?.password === "string" && entry.password.length > 0 ||
+      typeof entry?.passwordHash === "string" && entry.passwordHash.length > 0) &&
     String(entry.status || "active").toLowerCase() !== "inactive"
   )
-  return account ? { user: STANDARD_PARENT_LOGIN, pass: account.password } : null
+  if (!account) return null
+  if (typeof account.password === "string" && account.password.length > 0) {
+    return { user: STANDARD_PARENT_LOGIN, pass: account.password }
+  }
+  return directPass && verifyScryptPassword(directPass, account.passwordHash)
+    ? { user: STANDARD_PARENT_LOGIN, pass: directPass }
+    : null
 }
 
 export async function checkParentReportApi(environment = process.env, fetchImpl = fetch) {

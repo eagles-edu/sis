@@ -8,6 +8,7 @@ import {
   resolveParentMonitorCredentials,
   renderEngagementMetrics,
 } from "../tools/monitor-engagement-workflows.mjs"
+import { hashScryptPassword } from "../src/modules/admin/users.mjs"
 
 test("engagement monitor is pinned to dev-owned environment variables", () => {
   assertDevEnvironment({
@@ -90,6 +91,8 @@ test("engagement metrics expose only bounded dev gauges and flag missing or stal
 })
 
 test("parent workflow monitor uses only the exact cmmark001 account and checks its cookie-session dashboard", async () => {
+  const exactParentPassword = "Synthetic-parent-password-123!"
+  const exactParentPasswordHash = hashScryptPassword(exactParentPassword)
   assert.deepEqual(resolveParentMonitorCredentials({
     STUDENT_PARENT_USER: "other-parent",
     STUDENT_PARENT_PASS: "ignored-password",
@@ -102,6 +105,21 @@ test("parent workflow monitor uses only the exact cmmark001 account and checks i
     STUDENT_PARENT_USER: "other-parent",
     STUDENT_PARENT_PASS: "other-password",
     STUDENT_PARENT_PORTAL_ACCOUNTS_JSON: "[]",
+  }), null)
+  assert.deepEqual(resolveParentMonitorCredentials({
+    STUDENT_PARENT_USER: "another-parent",
+    STUDENT_PARENT_PASS: exactParentPassword,
+    STUDENT_PARENT_PORTAL_ACCOUNTS_JSON: JSON.stringify([
+      { parentsId: "cmmark001", passwordHash: exactParentPasswordHash, status: "active" },
+      { parentsId: "another-parent", passwordHash: hashScryptPassword("Other-parent-password-123!"), status: "active" },
+    ]),
+  }), { user: "cmmark001", pass: exactParentPassword })
+  assert.equal(resolveParentMonitorCredentials({
+    STUDENT_PARENT_USER: "another-parent",
+    STUDENT_PARENT_PASS: "Wrong-parent-password-123!",
+    STUDENT_PARENT_PORTAL_ACCOUNTS_JSON: JSON.stringify([
+      { parentsId: "cmmark001", passwordHash: exactParentPasswordHash, status: "active" },
+    ]),
   }), null)
 
   const requests = []

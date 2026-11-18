@@ -9,16 +9,18 @@ import "../tools/assert-prisma-environment.mjs"
 
 const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
-const ORIGIN = (process.env.STUDENT_NEWS_CHECK_REPEAT_ORIGIN || "http://127.0.0.1:8788").replace(/\/$/u, "")
+const TEST_ENV = process.env.NODE_ENV === "test" && ENV_FILE === ".env.test"
+const DEVELOPMENT_ENV = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
+const ORIGIN = (process.env.STUDENT_NEWS_CHECK_REPEAT_ORIGIN || (TEST_ENV ? "http://127.0.0.1:8786" : "http://127.0.0.1:8788")).replace(/\/$/u, "")
 const CHROMIUM_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
-const DEV_ONLY = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
+const ALLOWED_ENVIRONMENT = DEVELOPMENT_ENV || TEST_ENV
 const STUDENT = resolveStandardStudentCredentials(ENV_VALUES)
 const ADMIN = {
   user: String(ENV_VALUES.STUDENT_ADMIN_USER || "").trim(),
   pass: String(ENV_VALUES.STUDENT_ADMIN_PASS || "").trim(),
 }
-const SKIP_REASON = !DEV_ONLY
-  ? "Authenticated News Check repeat coverage is restricted to the explicit dev environment"
+const SKIP_REASON = !ALLOWED_ENVIRONMENT
+  ? "Authenticated News Check repeat coverage requires the explicit dev or test environment"
   : !fs.existsSync(CHROMIUM_PATH)
     ? `${CHROMIUM_PATH} is required`
       : !STUDENT.user || !STUDENT.pass
@@ -163,6 +165,7 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
   })
 
   const vocabularyRows = page.locator("#newsVocabularyRows [data-news-vocabulary-row]")
+  let finalPassingCheckState = null
   for (const row of await vocabularyRows.all()) {
     await row.locator('[data-vocabulary-field="partOfSpeech"]').selectOption("")
     await row.locator('[data-vocabulary-field="english"]').fill("")
@@ -170,47 +173,54 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
     await row.locator('[data-vocabulary-field="syllabication"]').fill("")
     await row.locator('[data-vocabulary-field="definition"]').fill("")
   }
-  await vocabularyRows.first().locator('[data-vocabulary-field="partOfSpeech"]').selectOption("noun")
-  await vocabularyRows.first().locator('[data-vocabulary-field="english"]').fill("demolition")
-  await vocabularyRows.first().locator('[data-vocabulary-field="vietnamese"]').fill("sự phá hủy")
-  await vocabularyRows.first().locator('[data-vocabulary-field="syllabication"]').fill("de-MO-li-tion")
-  await vocabularyRows.first().locator('[data-vocabulary-field="definition"]').fill("The act of destroying a structure.")
+  for (const [index, word] of VOCABULARY.entries()) {
+    const row = vocabularyRows.nth(index)
+    await row.locator('[data-vocabulary-field="partOfSpeech"]').selectOption(word.partOfSpeech)
+    await row.locator('[data-vocabulary-field="english"]').fill(index === 0 ? "demolition" : word.english)
+    await row.locator('[data-vocabulary-field="vietnamese"]').fill(index === 0 ? "sự phá hủy" : word.vietnamese)
+    await row.locator('[data-vocabulary-field="syllabication"]').fill(index === 0 ? "de-MO-li-tion" : word.syllabication)
+    await row.locator('[data-vocabulary-field="definition"]').fill(index === 0 ? "The act of destroying a structure." : word.definition)
+  }
   const rejectedCheckResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check", { timeout: 30000 })
   await page.locator("#checkBtn").click()
   const rejectedCheck = await rejectedCheckResponse
   const rejectedPayload = await rejectedCheck.json()
   assert.equal(rejectedCheck.status(), 200)
   assert.equal(rejectedPayload.mmrPassed, false)
-  assert.equal(rejectedPayload.failedFields.vocabulary.score, 1)
+  assert.equal(rejectedPayload.failedFields.vocabulary.score, VOCABULARY.length, JSON.stringify(rejectedPayload.failedFields.vocabulary))
   assert.equal(rejectedPayload.failedFields.vocabulary.threshold, 5)
   assert.match(rejectedPayload.failedFields.vocabulary.rowErrors[0].message, /Syllabication or primary stress is incorrect/u)
   await page.locator("#newsComplianceModal").waitFor({ state: "visible", timeout: 30000 })
   await page.waitForFunction(() => document.querySelector("#newsGrammarCheckWait")?.classList.contains("hidden"))
   await page.waitForFunction(() => !document.querySelector("#checkBtn")?.disabled)
   await page.setViewportSize({ width: 390, height: 844 })
-  const mobileModalGeometry = await page.evaluate(() => {
-    const dialog = document.querySelector("#newsComplianceModal .portal-modal-dialog")?.getBoundingClientRect()
-    const actions = [...document.querySelectorAll("#newsComplianceModal .portal-modal-actions > *")]
-      .filter((element) => element.getBoundingClientRect().width > 0)
-      .map((element) => {
-        const rect = element.getBoundingClientRect()
-        return { label: element.textContent.trim(), left: rect.left, right: rect.right }
-      })
-    return {
-      viewport: innerWidth,
-      documentWidth: document.documentElement.scrollWidth,
-      dialog: dialog ? { left: dialog.left, right: dialog.right, bottom: dialog.bottom } : null,
-      actions,
-    }
-  })
-  assert.ok(mobileModalGeometry.dialog?.left >= 0 && mobileModalGeometry.dialog?.right <= 390, JSON.stringify(mobileModalGeometry))
-  assert.ok(mobileModalGeometry.documentWidth <= mobileModalGeometry.viewport, JSON.stringify(mobileModalGeometry))
-  assert.ok(mobileModalGeometry.actions.length >= 2, JSON.stringify(mobileModalGeometry))
-  assert.ok(mobileModalGeometry.actions.every((action) => action.left >= 0 && action.right <= 390), JSON.stringify(mobileModalGeometry))
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: width === 320 ? 740 : 844 })
+    const mobileModalGeometry = await page.evaluate(() => {
+      const dialog = document.querySelector("#newsComplianceModal .portal-modal-dialog")?.getBoundingClientRect()
+      const actions = [...document.querySelectorAll("#newsComplianceModal .portal-modal-actions > *")]
+        .filter((element) => element.getBoundingClientRect().width > 0)
+        .map((element) => {
+          const rect = element.getBoundingClientRect()
+          return { label: element.textContent.trim(), left: rect.left, right: rect.right }
+        })
+      return {
+        viewport: innerWidth,
+        documentWidth: document.documentElement.scrollWidth,
+        dialog: dialog ? { left: dialog.left, right: dialog.right, bottom: dialog.bottom } : null,
+        actions,
+      }
+    })
+    assert.equal(mobileModalGeometry.viewport, width, JSON.stringify(mobileModalGeometry))
+    assert.ok(mobileModalGeometry.dialog?.left >= 0 && mobileModalGeometry.dialog?.right <= width, JSON.stringify(mobileModalGeometry))
+    assert.ok(mobileModalGeometry.documentWidth <= mobileModalGeometry.viewport, JSON.stringify(mobileModalGeometry))
+    assert.ok(mobileModalGeometry.actions.length >= 2, JSON.stringify(mobileModalGeometry))
+    assert.ok(mobileModalGeometry.actions.every((action) => action.left >= 0 && action.right <= width), JSON.stringify(mobileModalGeometry))
+  }
   await page.setViewportSize({ width: 1440, height: 1100 })
   const vocabularyFeedback = await page.locator("#newsComplianceRequiredBody").innerText()
   assert.match(vocabularyFeedback, /Entry 1 \("demolition"\): Syllabication or primary stress is incorrect\./u)
-  assert.match(vocabularyFeedback, /Score 1\.00 < 5\.00/u)
+  assert.match(vocabularyFeedback, new RegExp(`Score ${VOCABULARY.length}\\.00`))
   assert.match(vocabularyFeedback, /Step 1: Complete every vocabulary row with part of speech, English, Vietnamese, syllabication, and definition\./u)
   assert.match(vocabularyFeedback, /Step 2: Use the provided dictionary links to verify syllable boundaries and primary stress; temporary dictionary outages are reported as warnings\./u)
   assert.match(vocabularyFeedback, /Step 3: Save again after correcting the named entry and its highlighted field\./u)
@@ -233,6 +243,11 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
 
   adminContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } })
   adminPage = await adminContext.newPage()
+  const adminApiResponses = []
+  adminPage.on("response", (response) => {
+    const pathname = new URL(response.url()).pathname
+    if (pathname.startsWith("/api/admin/")) adminApiResponses.push({ method: response.request().method(), pathname, status: response.status() })
+  })
   const adminLoginResponse = adminPage.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/admin/auth/login", { timeout: 30000 })
   await adminPage.goto(`${ORIGIN}/admin?apiOrigin=${encodeURIComponent(ORIGIN)}`, { waitUntil: "domcontentloaded" })
   await adminPage.locator("#loginUser").fill(ADMIN.user)
@@ -244,22 +259,35 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
   await adminPage.locator('#menuToggleBtn, #floatingMenuBtn').first().click().catch(() => {})
   await adminPage.locator('[data-page-link="queue-hub"]').click()
   const helpQueuePanel = adminPage.locator('[data-queue-hub-panel-id="student-news-vocabulary-help"]')
-  await helpQueuePanel.waitFor({ state: "visible", timeout: 30000 })
+  try {
+    await helpQueuePanel.waitFor({ state: "visible", timeout: 12000 })
+  } catch (error) {
+    const queueDebug = await adminPage.evaluate(() => ({
+      url: location.pathname,
+      authState: document.documentElement.dataset.adminAuthState || "",
+      queuePanelIds: [...document.querySelectorAll("[data-queue-hub-panel-id]")].map((panel) => panel.getAttribute("data-queue-hub-panel-id")),
+      pageErrors: [...document.querySelectorAll(".status.bad, [role=alert]")].map((node) => node.textContent.trim().slice(0, 160)),
+    }))
+    throw new Error(`${error.message}; queue state=${JSON.stringify(queueDebug)}; api=${JSON.stringify(adminApiResponses)}`, { cause: error })
+  }
   await helpQueuePanel.getByText("demolition", { exact: true }).waitFor({ state: "visible", timeout: 30000 })
   const panelOrder = await adminPage.locator(".queue-hub-panel").evaluateAll((panels) => panels.map((panel) => panel.getAttribute("data-queue-hub-panel-id")))
   assert.equal(panelOrder.indexOf("student-news-vocabulary-help") + 1, panelOrder.indexOf("news-report-review"), "vocabulary help is immediately above News Week Sets")
-  await adminPage.setViewportSize({ width: 390, height: 844 })
-  await helpQueuePanel.locator("[data-vocabulary-override-for]").evaluate((input) => {
-    const tableWrap = input.closest(".table-scroll-wrap")
-    if (tableWrap) tableWrap.scrollLeft = tableWrap.scrollWidth
-  })
-  const mobileQueueGeometry = await adminPage.evaluate(() => ({
-    viewport: innerWidth,
-    documentWidth: document.documentElement.scrollWidth,
-    input: (() => { const box = document.querySelector('[data-vocabulary-override-for]')?.getBoundingClientRect(); return box ? { left: box.left, right: box.right } : null })(),
-  }))
-  assert.ok(mobileQueueGeometry.documentWidth <= mobileQueueGeometry.viewport, JSON.stringify(mobileQueueGeometry))
-  assert.ok(mobileQueueGeometry.input?.left >= 0 && mobileQueueGeometry.input?.right <= 390, JSON.stringify(mobileQueueGeometry))
+  for (const width of [320, 390]) {
+    await adminPage.setViewportSize({ width, height: width === 320 ? 740 : 844 })
+    await helpQueuePanel.locator("[data-vocabulary-override-for]").evaluate((input) => {
+      const tableWrap = input.closest(".table-scroll-wrap")
+      if (tableWrap) tableWrap.scrollLeft = tableWrap.scrollWidth - tableWrap.clientWidth
+    })
+    const mobileQueueGeometry = await adminPage.evaluate(() => ({
+      viewport: innerWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      input: (() => { const box = document.querySelector('[data-vocabulary-override-for]')?.getBoundingClientRect(); return box ? { left: box.left, right: box.right } : null })(),
+    }))
+    assert.equal(mobileQueueGeometry.viewport, width, JSON.stringify(mobileQueueGeometry))
+    assert.ok(mobileQueueGeometry.documentWidth <= mobileQueueGeometry.viewport, JSON.stringify(mobileQueueGeometry))
+    assert.ok(mobileQueueGeometry.input?.left >= 0 && mobileQueueGeometry.input?.right <= width, JSON.stringify(mobileQueueGeometry))
+  }
   await adminPage.setViewportSize({ width: 1440, height: 1000 })
   const queuedHelpRequest = await prisma.studentNewsVocabularyHelpRequest.findUnique({ where: { submissionKey: helpSubmissionKey } })
   assert.ok(queuedHelpRequest?.id)
@@ -321,6 +349,18 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
     await page.locator(step === "Save" ? "#saveDraftBtn" : "#checkBtn").click()
     const response = await responsePromise
     const payload = await response.json()
+    if (step === "second Check") {
+      finalPassingCheckState = {
+        mmrPassed: payload?.mmrPassed,
+        complianceFailed: payload?.complianceFailed,
+        item: payload?.item ? {
+          currentMmrPassed: payload.item.currentMmrPassed,
+          dateSatisfied: payload.item.dateSatisfied,
+          dateSatisfiedAt: Boolean(payload.item.dateSatisfiedAt),
+          mmrPassedAt: Boolean(payload.item.mmrPassedAt),
+        } : null,
+      }
+    }
     assert.equal(response.status(), 200, `${step} returns HTTP 200: ${JSON.stringify(payload)}`)
     if (step !== "Save") {
       assert.equal(payload.mmrPassed, true, `${step} passes grammar, vocabulary, and minimum requirements`)
@@ -328,14 +368,20 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
       const closeButton = page.locator("#newsComplianceModalCloseActionBtn")
       if (await closeButton.isVisible().catch(() => false)) await closeButton.click()
       await page.locator("#newsComplianceModal").waitFor({ state: "hidden", timeout: 30000 })
+      await page.waitForFunction(() => !document.querySelector("#checkBtn")?.disabled, null, { timeout: 30000 })
     } else {
       await page.waitForFunction(() => /Draft saved/i.test(document.getElementById("formStatus")?.textContent || ""), null, { timeout: 10000 })
     }
   }
 
   assert.deepEqual(studentApiResponses.filter((response) => response.status === 401), [], `Check -> Save -> Check has no 401 response: ${JSON.stringify(studentApiResponses)}`)
-  assert.equal(await page.locator("#submitBtn").isDisabled(), false, "Submit becomes active after the second passing Check")
   const reportAfterSecondCheck = await prisma.studentNewsReport.findUnique({ where: { id: reportId }, select: { submissionState: true, mmrPassedAt: true, dateSatisfiedAt: true, firstSubmittedAt: true } })
+  assert.equal(await page.locator("#submitBtn").isDisabled(), false, `Submit becomes active after the second passing Check: ${JSON.stringify(await page.evaluate(() => ({
+    disabled: document.querySelector("#submitBtn")?.disabled,
+    status: document.querySelector("#formStatus")?.textContent,
+    submitState: document.querySelector("#newsSubmitStatus")?.textContent,
+    apiResponses: [...document.querySelectorAll("#formStatus")].map((node) => node.textContent),
+  })))}; check=${JSON.stringify(finalPassingCheckState)}; persisted=${JSON.stringify(reportAfterSecondCheck)}; ${JSON.stringify(studentApiResponses)}`)
   assert.equal(reportAfterSecondCheck?.submissionState, "ready", "the same persisted report is ready after the second Check")
   assert.ok(reportAfterSecondCheck?.mmrPassedAt)
   assert.ok(reportAfterSecondCheck?.dateSatisfiedAt)

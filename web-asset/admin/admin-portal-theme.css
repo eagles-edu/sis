@@ -9080,6 +9080,7 @@ body.admin-portal-page #newsReviewViewerModal .queue-modal-card {
 }
 
 @media (max-width: 640px) {
+
   body.admin-portal-page .news-vocabulary-row {
     grid-template-columns: 1fr;
   }
