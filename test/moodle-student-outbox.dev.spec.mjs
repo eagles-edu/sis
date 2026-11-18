@@ -7,6 +7,9 @@ import test from "node:test"
 import "../tools/assert-prisma-environment.mjs"
 
 const COMMAND_PROCESSOR = fs.readFileSync(new URL("../integrations/moodle/enrol/sis/classes/local/command_processor.php", import.meta.url), "utf8")
+const MOODLE_SETTINGS = fs.readFileSync(new URL("../integrations/moodle/enrol/sis/settings.php", import.meta.url), "utf8")
+const MOODLE_SYNC_TASK = fs.readFileSync(new URL("../integrations/moodle/enrol/sis/classes/task/sync.php", import.meta.url), "utf8")
+const MOODLE_ROSTER_IMPORTER = fs.readFileSync(new URL("../integrations/moodle/enrol/sis/classes/local/roster_importer.php", import.meta.url), "utf8")
 
 test("Moodle command contract binds SIS identities and never hard-deletes a student", () => {
   assert.match(COMMAND_PROCESSOR, /'username'\s*=>\s*\$eaglesid/u)
@@ -15,6 +18,12 @@ test("Moodle command contract binds SIS identities and never hard-deletes a stud
   assert.match(COMMAND_PROCESSOR, /'disable_user'\s*=>\s*\$this->disable_user\(\$payload\)/u)
   assert.match(COMMAND_PROCESSOR, /\$user->suspended\s*=\s*1;[\s\S]*?user_update_user\(\$user, false, true\)/u)
   assert.doesNotMatch(COMMAND_PROCESSOR, /\buser_delete_user\s*\(/u)
+})
+
+test("Moodle provisioning and roster import default to fail-closed dry run", () => {
+  assert.match(MOODLE_SETTINGS, /admin_setting_configcheckbox\(\s*'enrol_sis\/dryrun'[\s\S]*?\n\s*1\s*\n\s*\)/u)
+  assert.match(MOODLE_SYNC_TASK, /if \(\(bool\)get_config\('enrol_sis', 'dryrun'\)\)\s*\{\s*mtrace\('SIS provisioning dry run is enabled; commands were not polled or applied\.'\);\s*return;/u)
+  assert.match(MOODLE_ROSTER_IMPORTER, /\(bool\)get_config\('enrol_sis', 'dryrun'\)/u)
 })
 
 const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
