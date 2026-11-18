@@ -8,7 +8,11 @@ import { URL, fileURLToPath } from "node:url"
 import { getEmailProviderStatus, isBrevoEmailProvider, sendBrevoEmail } from "../src/modules/email/brevo.mjs"
 import { getBrevoWebhookHealth, recordBrevoEmailDeliverySafely } from "../src/modules/email/brevo-delivery.mjs"
 import { buildVietnameseEmail } from "../src/modules/email/communication-template.mjs"
-import { observeStudentWriteRequest } from "../src/infra/observability/student-write-metrics.mjs"
+import {
+  initializeStudentWriteMetrics,
+  markStudentWriteRequestAuthenticated,
+  observeStudentWriteRequest,
+} from "../src/infra/observability/student-write-metrics.mjs"
 import { reconcileLibraryLifecycle } from "../src/modules/admin/library-corpus.mjs"
 
 const require = createRequire(import.meta.url)
@@ -1786,6 +1790,7 @@ async function handleRequest(request, response, transporter, provider) {
                 : 403
         throw error
       }
+      markStudentWriteRequestAuthenticated()
     }
 
     const normalizedPayload = moodleRequest ? normalizeMoodlePayload(payload) : payload
@@ -1944,6 +1949,7 @@ async function handleRequest(request, response, transporter, provider) {
  */
 export function startExerciseMailer(options = {}) {
   assertRuntimeEnvironmentSeparation()
+  void initializeStudentWriteMetrics()
   const provider = options.transporter ? "smtp" : isBrevoEmailProvider() ? "brevo" : "smtp"
   const transporter = options.transporter || (provider === "smtp" ? createTransport() : null)
   const hasExplicitPort = options.port !== undefined && options.port !== null

@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh SIS dev grade and exercise-feed health metrics
+
+[Timer]
+OnBootSec=120s
+OnUnitActiveSec=5m
+AccuracySec=10s
+Persistent=true
+Unit=sis-grade-feed-monitor-dev.service
+
+[Install]
+WantedBy=timers.target

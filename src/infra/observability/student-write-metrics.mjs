@@ -8,6 +8,7 @@ import { AsyncLocalStorage } from "node:async_hooks"
 const requestContext = new AsyncLocalStorage()
 const requestMetrics = new Map()
 const phaseMetrics = new Map()
+const gradeFeedMetrics = new Map()
 let writeQueue = Promise.resolve()
 
 function text(value) {
@@ -22,7 +23,7 @@ function metricKey(...parts) {
   return parts.map((part) => text(part)).join("\u0000")
 }
 
-function observeMetric(map, key, durationSeconds) {
+function observeMetric(map, key, durationSeconds = 0) {
   const current = map.get(key) || { count: 0, sum: 0 }
   current.count += 1
   current.sum += Math.max(0, durationSeconds)
@@ -33,7 +34,15 @@ function escapeLabel(value) {
   return text(value).replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/"/g, '\\"')
 }
 
-function renderMetrics() {
+function metricEnvironment() {
+  const environment = text(process.env.NODE_ENV)
+  if (environment === "development") return "dev"
+  if (environment === "test") return "test"
+  if (environment === "production") return "production"
+  return "unknown"
+}
+
+function renderRequestMetrics() {
   const lines = [
     "# HELP sis_admin_student_write_requests_total Completed authenticated student create or update requests.",
     "# TYPE sis_admin_student_write_requests_total counter",
@@ -59,6 +68,15 @@ function renderMetrics() {
     lines.push(`sis_admin_student_write_phase_duration_seconds_sum{${labels}} ${metric.sum}`)
     lines.push(`sis_admin_student_write_phase_duration_seconds_count{${labels}} ${metric.count}`)
   }
+
+  lines.push("# HELP sis_grade_feed_write_requests_total Authorized grade writes and signed exercise-feed submissions by route and response status.")
+  lines.push("# TYPE sis_grade_feed_write_requests_total counter")
+  for (const [key, metric] of gradeFeedMetrics.entries()) {
+    const [route, status] = key.split("\u0000")
+    const labels = `environment="${metricEnvironment()}",route="${escapeLabel(route)}",status="${escapeLabel(status)}"`
+    lines.push(`sis_grade_feed_write_requests_total{${labels}} ${metric.count}`)
+  }
+
   const memory = process.memoryUsage()
   lines.push("# HELP sis_nodejs_heap_used_bytes SIS Node.js heap used bytes at the latest student write metric flush.")
   lines.push("# TYPE sis_nodejs_heap_used_bytes gauge")
@@ -71,14 +89,14 @@ function renderMetrics() {
 
 function scheduleFlush() {
   const filePath = metricFilePath()
-  if (!filePath) return
+  if (!filePath) return Promise.resolve()
   writeQueue = writeQueue
     .catch(() => {})
     .then(async () => {
       const directory = path.dirname(filePath)
       const temporaryPath = `${filePath}.${process.pid}.tmp`
       await fs.mkdir(directory, { recursive: true, mode: 0o750 })
-      await fs.writeFile(temporaryPath, renderMetrics(), { encoding: "utf8", mode: 0o640 })
+      await fs.writeFile(temporaryPath, renderRequestMetrics(), { encoding: "utf8", mode: 0o640 })
       await fs.rename(temporaryPath, filePath)
     })
     .catch((error) => {
@@ -87,19 +105,38 @@ function scheduleFlush() {
         error: text(error?.message || error),
       }))
     })
+  return writeQueue
 }
 
 function resolveStudentWriteRoute(request) {
   const method = text(request?.method).toUpperCase()
   const url = new URL(request?.url || "/", `http://${request?.headers?.host || "localhost"}`)
   if (method === "POST" && url.pathname === "/api/admin/students") return "POST /api/admin/students"
-  if (method === "PUT" && /^\/api\/admin\/students\/[^/]+$/.test(url.pathname)) return "PUT /api/admin/students/:id"
+  if (method === "PUT" && /^\/api\/admin\/students\/[^/]+$/u.test(url.pathname)) return "PUT /api/admin/students/:id"
+  return ""
+}
+
+function resolveGradeFeedWriteRoute(request) {
+  const method = text(request?.method).toUpperCase()
+  const url = new URL(request?.url || "/", `http://${request?.headers?.host || "localhost"}`)
+  if (method === "POST" && /^\/api\/admin\/students\/[^/]+\/grades$/u.test(url.pathname)) {
+    return "POST /api/admin/students/:id/grades"
+  }
+  if (method === "DELETE" && /^\/api\/admin\/students\/[^/]+\/grades\/[^/]+$/u.test(url.pathname)) {
+    return "DELETE /api/admin/students/:id/grades/:recordId"
+  }
+  if (method === "POST" && url.pathname === "/api/integrations/google-forms/grades") {
+    return "POST /api/integrations/google-forms/grades"
+  }
+  if (method === "POST" && url.pathname === "/api/exercise-submission") {
+    return "POST /api/exercise-submission"
+  }
   return ""
 }
 
 /**
- * Execute an operation while recording a safe, aggregate phase duration when it
- * is part of an authenticated student write request.
+ * Execute an operation while recording a safe aggregate phase duration for
+ * authenticated student create/update requests.
  * @template T
  * @param {string} phase
  * @param {() => Promise<T>} operation
@@ -107,7 +144,7 @@ function resolveStudentWriteRoute(request) {
  */
 export async function timeStudentWritePhase(phase, operation) {
   const context = requestContext.getStore()
-  if (!context) return operation()
+  if (!context || context.metricClass !== "student-write") return operation()
   const startedAt = performance.now()
   try {
     return await operation()
@@ -119,18 +156,25 @@ export async function timeStudentWritePhase(phase, operation) {
 }
 
 /**
- * Mark the current route-level timing context as having passed the admin
- * session gate.  Keeping this call after the real auth check means failed or
- * anonymous requests never enter the emitted metrics or structured logs.
+ * Mark the current observed request as authorized after its session or signed
+ * request gate succeeds. Unauthenticated and unsigned failures are not counted.
  */
 export function markStudentWriteRequestAuthenticated() {
   const context = requestContext.getStore()
-  if (context) context.authenticated = true
+  if (context) context.authorized = true
 }
 
 /**
- * Wrap the real request handler for authenticated student create/update routes.
- * No request body, student identifier, cookie, or user identity is retained.
+ * Create the textfile collector snapshot at service start without retaining
+ * request bodies, identifiers, cookies, or account identities.
+ */
+export function initializeStudentWriteMetrics() {
+  return scheduleFlush()
+}
+
+/**
+ * Wrap student and grade/feed write routes using the real HTTP request context.
+ * Only requests marked authorized by their route handler are emitted.
  * @template T
  * @param {import("node:http").IncomingMessage} request
  * @param {import("node:http").ServerResponse} response
@@ -138,28 +182,37 @@ export function markStudentWriteRequestAuthenticated() {
  * @returns {Promise<T>}
  */
 export async function observeStudentWriteRequest(request, response, operation) {
-  const route = resolveStudentWriteRoute(request)
-  if (!route) return operation()
-  const context = { requestId: crypto.randomUUID(), route, phases: [], authenticated: false }
+  const studentRoute = resolveStudentWriteRoute(request)
+  const gradeFeedRoute = resolveGradeFeedWriteRoute(request)
+  if (!studentRoute && !gradeFeedRoute) return operation()
+  const metricClass = studentRoute ? "student-write" : "grade-feed"
+  const route = studentRoute || gradeFeedRoute
+  const context = { requestId: crypto.randomUUID(), route, phases: [], authorized: false, metricClass }
   return requestContext.run(context, async () => {
     const startedAt = performance.now()
     try {
       return await operation()
     } finally {
-      if (context.authenticated) {
+      if (context.authorized) {
         const durationSeconds = (performance.now() - startedAt) / 1000
         const status = String(response.statusCode || 500)
-        observeMetric(requestMetrics, metricKey(route, status), durationSeconds)
-        scheduleFlush()
-        console.info(JSON.stringify({
-          event: "sis_student_write_timing",
-          requestId: context.requestId,
-          route,
-          status: Number(response.statusCode || 500),
-          durationMs: Math.round(durationSeconds * 1000),
-          phases: context.phases,
-        }))
+        if (metricClass === "student-write") {
+          observeMetric(requestMetrics, metricKey(route, status), durationSeconds)
+          console.info(JSON.stringify({
+            event: "sis_student_write_timing",
+            requestId: context.requestId,
+            route,
+            status: Number(response.statusCode || 500),
+            durationMs: Math.round(durationSeconds * 1000),
+            phases: context.phases,
+          }))
+        } else {
+          observeMetric(gradeFeedMetrics, metricKey(route, status))
+        }
+        void scheduleFlush()
       }
     }
   })
 }
+
+export { resolveGradeFeedWriteRoute }

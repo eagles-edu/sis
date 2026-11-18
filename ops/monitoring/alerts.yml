@@ -1,4 +1,62 @@
 groups:
+  - name: sis-grade-feeds-dev
+    rules:
+      - alert: DevGradeFeedMonitorStale
+        expr: absent(sis_grade_feed_monitor_last_check_timestamp_seconds{environment="dev"}) or time() - sis_grade_feed_monitor_last_check_timestamp_seconds{environment="dev"} > 900
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev grade and exercise-feed monitor has not reported for fifteen minutes
+
+      - alert: DevGradeFeedDatabaseUnavailable
+        expr: sis_grade_feed_database_available{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev grade and exercise-feed database check failed
+
+      - alert: DevGradeFeedAdminTableUnavailable
+        expr: sis_grade_feed_table_available{environment="dev"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Authenticated dev admin student table API is unavailable
+
+      - alert: DevGradeFeedRequestMetricsMissing
+        expr: sis_grade_feed_request_metrics_available{environment="dev"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev grade and feed request instrumentation textfile is missing
+
+      - alert: DevGradeFeedUnmatchedBacklog
+        expr: sis_grade_feed_incoming_unmatched{environment="dev"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev incoming exercise results remain unmatched
+
+      - alert: DevGradeFeedRecordedFailure
+        expr: sum(increase(sis_grade_feed_write_requests_total{environment="dev",status!~"2.."}[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: An authorized dev grade write or signed exercise-feed request failed
+
+      - alert: DevIncomingExerciseFailed
+        expr: sis_grade_feed_incoming_failed{environment="dev"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Dev incoming exercise results have failed disposition
+
   - name: sis-engagement-workflows-dev
     rules:
       - alert: DevEngagementMonitorStale

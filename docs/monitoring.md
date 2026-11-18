@@ -460,6 +460,36 @@ systemctl --user enable --now sis-news-monitor-dev.timer
 
 The monitor is a one-shot synthetic workflow; `sis-news-monitor-dev.timer` schedules recurring runs. Metrics contain only aggregate results and fixed environment labels.
 
+## Grade and exercise-feed monitor (dev)
+
+Run the read-only monitor with:
+
+```bash
+npm run monitor:grades:dev
+```
+
+The monitor is pinned to `.env.dev` / `development` and requires `current_database() = sis_dev`. It checks the authenticated admin student-table API, aggregates Moodle and Google Forms exercise/grade timestamps, and records incoming exercise rows by matched/queued/temporary/failed state plus the oldest unmatched age. Feed and grade ages are exported as observations; no stale-feed threshold is applied because submissions are event-driven and may be idle.
+
+The request wrapper records response counts for admin grade create/delete routes after the session and role gate, Moodle exercise submissions after valid HMAC verification, and Google Forms grade submissions after valid HMAC verification. Status labels and route labels are fixed templates; request bodies, student identifiers, names, emails, signatures, nonces, cookies, and provider payloads are never written to metrics. Unauthorized requests are excluded. The dev runtime writes these counters to `runtime-data/prometheus/sis-dev-request-metrics.prom`.
+
+The monitor writes atomic aggregate gauges to `runtime-data/prometheus/grade-feeds-dev.prom`, scraped by the existing node-exporter textfile collector. It does not change student, grade, or feed records. Prometheus alerts on a missing monitor result, failed database or authenticated table checks, missing request instrumentation, an unmatched incoming backlog, and recorded non-2xx authorized grade/feed writes. Feed-age gauges are available for investigation without treating an idle source as a failure. Alerts are local to Prometheus; the active profile has no Alertmanager receiver.
+
+Install the recurring five-minute user timer for dev:
+
+```bash
+install -D -m 0644 ops/monitoring/systemd/sis-grade-feed-monitor-dev.service "$HOME/.config/systemd/user/sis-grade-feed-monitor-dev.service"
+install -D -m 0644 ops/monitoring/systemd/sis-grade-feed-monitor-dev.timer "$HOME/.config/systemd/user/sis-grade-feed-monitor-dev.timer"
+systemctl --user daemon-reload
+systemctl --user enable --now sis-grade-feed-monitor-dev.timer
+```
+
+Inspect the latest run with:
+
+```bash
+systemctl --user status sis-grade-feed-monitor-dev.timer sis-grade-feed-monitor-dev.service
+journalctl --user -u sis-grade-feed-monitor-dev.service -n 30 --no-pager
+```
+
 ## Approved telemetry additions
 
 The following additions are approved for the test mirror. They are deliberately limited to the student-write incident path and safe operational metadata. They must not expose student data, credentials, session data, request bodies, SQL text, or query parameters.

@@ -82,7 +82,7 @@ These are pertinent but usually follow the core review set:
 - [`docs/admin-staff-user-manual.md`](admin-staff-user-manual.md) for visible admin workflow meaning.
 - [`docs/parent-student-user-manual.vi.md`](parent-student-user-manual.vi.md) for visible parent/student workflow meaning.
 - [`docs/font-hosting.md`](font-hosting.md) for B612 Mono and font-loading boundaries.
-- [`docs/monitoring.md`](monitoring.md) and [`docs/test-mirror-monitoring.md`](test-mirror-monitoring.md) for health and parity evidence.
+- [`docs/monitoring.md`](monitoring.md) and [`docs/test-mirror-monitoring.md`](test-mirror-monitoring.md) for health and parity evidence; dev grade/feed signals use `tools/monitor-grade-feeds.mjs`, `src/infra/observability/student-write-metrics.mjs`, `test/grade-feed-monitor.spec.mjs`, and `test/student-write-metrics.spec.mjs`.
 - [`docs/db-backup-failsafe.md`](db-backup-failsafe.md) for backup commands and restore evidence.
 - [`docs/test-redis-note.md`](test-redis-note.md) for Redis/runtime health interpretation.
 - [`docs/plan-upgrade-0426.md`](plan-upgrade-0426.md) for upgrade planning, and [`docs/PLAN.md`](PLAN.md) / [`docs/UPDATED-PLAN.md`](UPDATED-PLAN.md) for `HISTORICAL` theme proposals only; verify every plan claim against current code.

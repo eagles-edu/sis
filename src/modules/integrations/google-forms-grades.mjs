@@ -1,5 +1,6 @@
 // @ts-check
 import crypto from "node:crypto"
+import { markStudentWriteRequestAuthenticated } from "../../infra/observability/student-write-metrics.mjs"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { getSisConfigSnapshotSync } from "../admin/sis-config-store.mjs"
 import { saveGradeRecord } from "../admin/student-records.mjs"
@@ -174,6 +175,7 @@ async function authenticateRequest(request, raw) {
   ) {
     throw Object.assign(new Error("Invalid signed request"), { statusCode: 401 })
   }
+  markStudentWriteRequestAuthenticated()
 
   const prisma = await getSharedPrismaClient()
   try {
