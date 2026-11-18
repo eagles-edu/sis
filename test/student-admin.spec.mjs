@@ -664,7 +664,8 @@ test("student dashboard/news paths guard missing optional Prisma delegates", () 
 
   assert.match(routes, /const newsCalendar = await listStudentNewsCalendar/)
   assert.match(routes, /statusSummary/)
-  assert.match(routes, /function canTeacherWriteDataEntryPath\(/)
+  assert.match(routes, /role === "teacher" && method !== "GET"/)
+  assert.doesNotMatch(routes, /canTeacherWriteDataEntryPath/)
   assert.match(routes, /ADMIN_ATTENDANCE_PATH_RE\.test\(pathname\)/)
   assert.match(routes, /ADMIN_GRADES_PATH_RE\.test\(pathname\)/)
   assert.match(routes, /ADMIN_REPORTS_PATH_RE\.test\(pathname\)/)
@@ -2334,7 +2335,7 @@ test("POST /api/admin/login rejects alias with a different teacher password", as
   assert.match(body.error, /invalid username or password/i)
 })
 
-test("all configured teacher accounts receive the same read/write attendance policy", async () => {
+test("all configured teacher accounts are read-only and cannot write attendance", async () => {
   for (const account of [
     { username: "teacher", password: "teacher-pass-123" },
     { username: "carole01", password: "carole-pass-123" },
@@ -2354,7 +2355,7 @@ test("all configured teacher accounts receive the same read/write attendance pol
     assert.equal(permissions.status, 200)
     const permissionBody = await permissions.json()
     assert.equal(permissionBody.roles?.teacher?.canRead, true)
-    assert.equal(permissionBody.roles?.teacher?.canWrite, true)
+    assert.equal(permissionBody.roles?.teacher?.canWrite, false)
     assert.ok(permissionBody.roles?.teacher?.allowedPages?.includes("news-reports"))
 
     const attendance = await fetchLocal(port, "/api/admin/students/abc/attendance", {
@@ -2368,7 +2369,8 @@ test("all configured teacher accounts receive the same read/write attendance pol
         status: "present",
       }),
     })
-    assert.equal(attendance.status, 503)
+    assert.equal(attendance.status, 403)
+    assert.match((await attendance.json()).error, /Forbidden/i)
   }
 })
 
@@ -2427,7 +2429,7 @@ test("teacher role can read and reaches store-disabled response", async () => {
   assert.match(body.error, /store is disabled/i)
 })
 
-test("teacher can queue parent-report notifications for admin review", async () => {
+test("teacher cannot queue parent-report notifications", async () => {
   const res = await fetchLocal(port, "/api/admin/notifications/email", {
     method: "POST",
     headers: {
@@ -2443,11 +2445,8 @@ test("teacher can queue parent-report notifications for admin review", async () 
       recipients: ["parent-review@example.com"],
     }),
   })
-  assert.equal(res.status, 200)
-  const body = await res.json()
-  assert.equal(body.ok, true)
-  assert.equal(body.queued, true)
-  assert.equal(body.deliveryMode, "weekend-batch")
+  assert.equal(res.status, 403)
+  assert.match((await res.json()).error, /Forbidden/i)
 })
 
 test("teacher cannot send immediate notifications", async () => {
@@ -2468,7 +2467,7 @@ test("teacher cannot send immediate notifications", async () => {
   assert.match(body.error, /Forbidden/i)
 })
 
-test("teacher can access parent-report save path and reaches store-disabled response", async () => {
+test("teacher cannot save parent reports", async () => {
   const res = await fetchLocal(port, "/api/admin/students/abc/reports", {
     method: "POST",
     headers: {
@@ -2482,12 +2481,11 @@ test("teacher can access parent-report save path and reaches store-disabled resp
       comments: "Teacher draft parent report",
     }),
   })
-  assert.equal(res.status, 503)
-  const body = await res.json()
-  assert.match(body.error, /store is disabled/i)
+  assert.equal(res.status, 403)
+  assert.match((await res.json()).error, /Forbidden/i)
 })
 
-test("teacher can submit a parent report for admin review and reaches store-disabled response", async () => {
+test("teacher cannot submit a parent report for admin review", async () => {
   const res = await fetchLocal(port, "/api/admin/students/abc/reports/report-abc/workflow", {
     method: "POST",
     headers: {
@@ -2496,12 +2494,11 @@ test("teacher can submit a parent report for admin review and reaches store-disa
     },
     body: JSON.stringify({ action: "submit" }),
   })
-  assert.equal(res.status, 503)
-  const body = await res.json()
-  assert.match(body.error, /store is disabled/i)
+  assert.equal(res.status, 403)
+  assert.match((await res.json()).error, /Forbidden/i)
 })
 
-test("teacher can access attendance save path and reaches store-disabled response", async () => {
+test("teacher cannot save attendance", async () => {
   const res = await fetchLocal(port, "/api/admin/students/abc/attendance", {
     method: "POST",
     headers: {
@@ -2516,12 +2513,11 @@ test("teacher can access attendance save path and reaches store-disabled respons
       status: "present",
     }),
   })
-  assert.equal(res.status, 503)
-  const body = await res.json()
-  assert.match(body.error, /store is disabled/i)
+  assert.equal(res.status, 403)
+  assert.match((await res.json()).error, /Forbidden/i)
 })
 
-test("teacher can access grade save path and reaches store-disabled response", async () => {
+test("teacher cannot save grades", async () => {
   const res = await fetchLocal(port, "/api/admin/students/abc/grades", {
     method: "POST",
     headers: {
@@ -2539,9 +2535,8 @@ test("teacher can access grade save path and reaches store-disabled response", a
       homeworkOnTime: true,
     }),
   })
-  assert.equal(res.status, 503)
-  const body = await res.json()
-  assert.match(body.error, /store is disabled/i)
+  assert.equal(res.status, 403)
+  assert.match((await res.json()).error, /Forbidden/i)
 })
 
 test("teacher cannot mutate incoming exercise-result queue", async () => {

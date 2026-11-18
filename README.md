@@ -155,7 +155,7 @@ Use these when validating the local dev runtime on port `8788`:
 Role model:
 
 - `admin`: full access
-- `teacher`: limited to approved data-entry surfaces and actions
+- `teacher`: read-only access to permitted admin data surfaces; all mutating methods are forbidden
 - `parent` and `student`: read-only in admin policy context, dedicated access in their own portals
 
 ## Key operational commands

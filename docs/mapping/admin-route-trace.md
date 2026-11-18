@@ -7,10 +7,8 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 - Login path(s): `POST /api/admin/auth/login` and legacy alias `POST /api/admin/login`.
 - Session check: `requireAuthenticatedSession`.
 - Role gate: `enforceRoleAccess`.
+- Teacher role is read-only: authenticated `GET` requests are allowed; all other methods return `403 Forbidden`.
 - Parent session check: `requireAuthenticatedParentSession`.
-- Teacher write exceptions:
-- `POST /api/admin/notifications/email` only when `deliveryMode=weekend-batch` and `queueType=parent-report`.
-- `POST /api/admin/students/{studentRefId}/reports`.
 - Admin-only capability gate: `assertCanManageUsers` for service-control and user CRUD.
 - Settings capability gate: `assertCanManageSettings` for persisted admin UI settings.
 
@@ -61,7 +59,7 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | POST | `/api/admin/profile-submissions/{submissionId}` | Yes | `canManageUsers` | No | profile review actions (`approve`, `reject`); repeated same-decision requests are idempotent, conflicting decisions return 409 |
 | GET | `/api/admin/notifications/batch-status` | Yes | any readable role | No | `listQueuedAnnouncements` + `getEmailBatchQueueStatus` |
 | POST | `/api/admin/notifications/batch-status` | Yes | `canManageUsers` | No | batch actions (`send-all`, `hold`, `requeue`, `edit`) |
-| POST | `/api/admin/notifications/email` | Yes | write role (teacher restricted exception) | No | `queueAnnouncementEmail` or `sendAnnouncementEmail` |
+| POST | `/api/admin/notifications/email` | Yes | write role (admin only) | No | `queueAnnouncementEmail` or `sendAnnouncementEmail` |
 | POST | `/api/admin/exports/xlsx` | Yes | write role | No | `buildXlsxFromPayload` |
 | GET | `/api/admin/students/import-template.xlsx` | Yes | any readable role | No | template file streaming |
 | GET | `/api/admin/students/moodle-import.xlsx` | Yes | `canManageUsers` | Yes | Moodle current-student workbook with native-upload and SIS-link sheets |
@@ -95,7 +93,7 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | DELETE | `/api/admin/students/{studentRefId}/attendance/{recordId}` | Yes | write role | Yes | `deleteAttendanceRecord` in `src/modules/admin/student-records.mjs` |
 | POST | `/api/admin/students/{studentRefId}/grades` | Yes | write role | Yes | `saveGradeRecord` in `src/modules/admin/student-records.mjs` |
 | DELETE | `/api/admin/students/{studentRefId}/grades/{recordId}` | Yes | write role | Yes | `deleteGradeRecord` in `src/modules/admin/student-records.mjs` |
-| POST | `/api/admin/students/{studentRefId}/reports` | Yes | write role (teacher exception allowed) | Yes | `saveParentClassReport` |
+| POST | `/api/admin/students/{studentRefId}/reports` | Yes | write role (admin only) | Yes | `saveParentClassReport` |
 | POST | `/api/admin/students/{studentRefId}/reports/generate` | Yes | write role | Yes | `generateParentClassReportFromGrades` |
 | DELETE | `/api/admin/students/{studentRefId}/reports/{reportId}` | Yes | write role | Yes | `deleteParentClassReport` |
 

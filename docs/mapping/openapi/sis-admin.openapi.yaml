@@ -867,7 +867,7 @@ paths:
                   ok:
                     type: boolean
         '403':
-          description: Teacher cannot mutate in restricted contexts
+          description: Teacher sessions are read-only and cannot save attendance
 
   /api/admin/students/{studentRefId}/attendance/{recordId}:
     delete:

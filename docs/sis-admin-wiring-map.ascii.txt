@@ -381,8 +381,7 @@ Backend subroutines:
   - queueAnnouncementEmail(...) / sendAnnouncementEmail(...)
 
 Conditional path:
-  - teacher role can queue weekend-batch parent reports
-  - teacher cannot send immediate notifications
+  - teacher role cannot create or send notifications
 
 
 PAGE: performance-data (slug: performance-data)
@@ -515,8 +514,7 @@ Auth-required:
 
 Role gates (enforceRoleAccess + assertCanManageUsers):
   - admin: read/write/manage users/permissions/service controls
-  - teacher: read-only API generally, with explicit exception for
-             queueing weekend-batch parent-report notifications
+  - teacher: read-only API; GET is allowed and every other method is forbidden
 
 Session mechanism:
   - cookie session store (redis preferred, memory fallback)

@@ -1193,7 +1193,7 @@ function createDefaultRolePermissions() {
     teacher: {
       role: "teacher",
       canRead: true,
-      canWrite: true,
+      canWrite: false,
       canManageUsers: false,
       canManagePermissions: false,
       startPage: "overview",
@@ -1261,7 +1261,7 @@ function normalizeRolePermissionsPayload(payload = {}) {
     normalized.admin.startPage = normalized.admin.allowedPages[0] || ADMIN_PAGE_DEFAULT_SLUG
   }
   if (!normalized.teacher.canRead) normalized.teacher.canRead = true
-  if (!normalized.teacher.canWrite) normalized.teacher.canWrite = true
+  normalized.teacher.canWrite = false
 
   return normalized
 }
@@ -2805,20 +2805,7 @@ async function requireAuthenticatedStudentSession(request, response, options = {
   return session
 }
 
-function canTeacherWriteDataEntryPath(pathname, method) {
-  if (pathname === ADMIN_PREFERENCES_PATH && (method === "POST" || method === "PUT")) return true
-  if (method !== "POST") return false
-  if (pathname === ADMIN_NOTIFY_EMAIL_PATH) return true
-  if (method === "POST" && pathname === `${ADMIN_LIBRARY_API_PATH}/contributions`) return true
-  if (ADMIN_ATTENDANCE_PATH_RE.test(pathname)) return true
-  if (ADMIN_GRADES_PATH_RE.test(pathname)) return true
-  if (ADMIN_REPORTS_PATH_RE.test(pathname)) return true
-  if (ADMIN_REPORTS_GENERATE_PATH_RE.test(pathname)) return true
-  if (ADMIN_REPORTS_WORKFLOW_PATH_RE.test(pathname)) return true
-  return false
-}
-
-function enforceRoleAccess(session, method, pathname) {
+function enforceRoleAccess(session, method) {
   const policy = getRolePolicy(session?.role)
   if (!policy.canRead) {
     const error = new Error("Forbidden")
@@ -2826,13 +2813,10 @@ function enforceRoleAccess(session, method, pathname) {
     throw error
   }
   const role = normalizeRoleName(session?.role)
-  if (method !== "GET") {
-    if (role === "teacher") {
-      if (canTeacherWriteDataEntryPath(pathname, method)) return policy
-      const error = new Error("Forbidden")
-      error.statusCode = 403
-      throw error
-    }
+  if (role === "teacher" && method !== "GET") {
+    const error = new Error("Forbidden")
+    error.statusCode = 403
+    throw error
   }
   if (method !== "GET" && !policy.canWrite) {
     const error = new Error("Forbidden")
@@ -6817,7 +6801,7 @@ async function handleApiRequest(request, response, pathname, url) {
   // route reads the synchronous snapshot used by school setup and dashboard
   // payloads. Development still keeps file precedence after this repair.
   await ensureSisConfigLoaded()
-  const rolePolicy = enforceRoleAccess(session, method, pathname)
+  const rolePolicy = enforceRoleAccess(session, method)
   const dictionaryBuilderOwnerKey = readSessionIdFromRequest(request)
   if (
     (method === "POST" && pathname === ADMIN_STUDENTS_PREFIX) ||
@@ -8185,16 +8169,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const deliveryMode = normalizeDeliveryMode(payload?.deliveryMode)
     const queueType = normalizeQueueType(payload?.queueType || NOTIFICATION_QUEUE_TYPE_ANNOUNCEMENT)
-    const isTeacher = normalizeRoleName(session?.role) === "teacher"
-    if (isTeacher) {
-      const teacherQueueAllowed =
-        deliveryMode === "weekend-batch" && queueType === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT
-      if (!teacherQueueAllowed) {
-        const error = new Error("Forbidden")
-        error.statusCode = 403
-        throw error
-      }
-    } else if (!rolePolicy.canWrite) {
+    if (!rolePolicy.canWrite) {
       const error = new Error("Forbidden")
       error.statusCode = 403
       throw error

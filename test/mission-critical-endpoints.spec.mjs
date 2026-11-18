@@ -276,56 +276,72 @@ test("teacher cannot execute admin-only write actions", async () => {
   }
 })
 
-test("teacher write-allowed endpoints remain reachable with expected behavior", async () => {
-  const queueRes = await fetchLocal(port, "/api/admin/notifications/email", {
-    method: "POST",
-    headers: {
-      Cookie: teacherSessionCookie,
-      "content-type": "application/json",
+test("teacher cannot mutate previously excepted admin endpoints", async () => {
+  const checks = [
+    {
+      method: "POST",
+      path: "/api/admin/preferences",
+      body: {},
     },
-    body: JSON.stringify({
-      deliveryMode: "weekend-batch",
-      queueType: "parent-report",
-      assignmentTitle: "Teacher Queue",
-      level: "Pre-A1 Starters",
-      message: "queued",
-      recipients: ["parent@example.com"],
-    }),
-  })
-  assert.equal(queueRes.status, 200)
-  const queueBody = await queueRes.json()
-  assert.equal(queueBody.ok, true)
-  assert.equal(queueBody.queued, true)
+    {
+      method: "POST",
+      path: "/api/admin/notifications/email",
+      body: {
+        deliveryMode: "weekend-batch",
+        queueType: "parent-report",
+        assignmentTitle: "Teacher Queue",
+        level: "Pre-A1 Starters",
+        message: "queued",
+        recipients: ["parent@example.com"],
+      },
+    },
+    {
+      method: "POST",
+      path: "/api/admin/library/contributions",
+      body: {},
+    },
+    {
+      method: "POST",
+      path: "/api/admin/students/student-1/attendance",
+      body: { attendanceDate: "2026-03-01", status: "present", className: "Starter" },
+    },
+    {
+      method: "DELETE",
+      path: "/api/admin/students/student-1/attendance/attendance-1",
+    },
+    {
+      method: "POST",
+      path: "/api/admin/students/student-1/grades",
+      body: { assignmentName: "HW1", className: "Starter", dueAt: "2026-03-01" },
+    },
+    {
+      method: "POST",
+      path: "/api/admin/students/student-1/reports",
+      body: { className: "Starter", comments: "ok" },
+    },
+    {
+      method: "POST",
+      path: "/api/admin/students/student-1/reports/generate",
+      body: { className: "Starter", schoolYear: "2026-2027", quarter: "q1" },
+    },
+    {
+      method: "POST",
+      path: "/api/admin/students/student-1/reports/report-1/workflow",
+      body: { action: "submit" },
+    },
+  ]
 
-  const attendanceRes = await fetchLocal(port, "/api/admin/students/student-1/attendance", {
-    method: "POST",
-    headers: {
-      Cookie: teacherSessionCookie,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({ attendanceDate: "2026-03-01", status: "present", className: "Starter" }),
-  })
-  assert.equal(attendanceRes.status, 503)
-
-  const gradesRes = await fetchLocal(port, "/api/admin/students/student-1/grades", {
-    method: "POST",
-    headers: {
-      Cookie: teacherSessionCookie,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({ assignmentName: "HW1", className: "Starter", dueAt: "2026-03-01" }),
-  })
-  assert.equal(gradesRes.status, 503)
-
-  const reportsRes = await fetchLocal(port, "/api/admin/students/student-1/reports", {
-    method: "POST",
-    headers: {
-      Cookie: teacherSessionCookie,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({ className: "Starter", comments: "ok" }),
-  })
-  assert.equal(reportsRes.status, 503)
+  for (const check of checks) {
+    const response = await fetchLocal(port, check.path, {
+      method: check.method,
+      headers: {
+        Cookie: teacherSessionCookie,
+        ...(check.body ? { "content-type": "application/json" } : {}),
+      },
+      ...(check.body ? { body: JSON.stringify(check.body) } : {}),
+    })
+    await assertForbidden(response)
+  }
 })
 
 test("student and parent mission-critical submission endpoints remain callable", async () => {

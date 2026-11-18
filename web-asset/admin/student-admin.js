@@ -9784,7 +9784,7 @@
           teacher: {
             role: "teacher",
             canRead: true,
-            canWrite: true,
+            canWrite: false,
             canManageUsers: false,
             canManagePermissions: false,
             startPage: "overview",
@@ -9938,7 +9938,7 @@
         }
         if (normalized.teacher) {
           normalized.teacher.canRead = true;
-          normalized.teacher.canWrite = true;
+          normalized.teacher.canWrite = false;
         }
 
         return normalized;
@@ -11010,8 +11010,6 @@
 
       function updateWriteAccessControls() {
         const writable = canWriteData();
-        const teacherDataEntryWrite = currentRoleName() === "teacher";
-        const teacherParentTrackingWrite = currentRoleName() === "teacher";
         const ids = [
           "newBtn",
           "saveBtn",
@@ -11034,22 +11032,6 @@
         ids.forEach((id) => {
           const el = document.getElementById(id);
           if (!el) return;
-          if (id === "pt_saveBtn" || id === "pt_queueSendBtn") {
-            el.disabled = !(writable || teacherParentTrackingWrite);
-            return;
-          }
-          if (
-            [
-              "attendanceSaveBtn",
-              "attendanceLandingSaveAllBtn",
-              "gradeSaveBtn",
-              "reportSaveBtn",
-              "reportGenerateBtn",
-            ].includes(id)
-          ) {
-            el.disabled = !(writable || teacherDataEntryWrite);
-            return;
-          }
           el.disabled = !writable;
         });
         const queueBtn = document.getElementById("pt_queueSendBtn");
@@ -18394,7 +18376,7 @@
       }
 
       async function saveParentTrackingReport({ silent = false } = {}) {
-        if (!canWriteData() && currentRoleName() !== "teacher") {
+        if (!canWriteData()) {
           throw new Error("Performance tracking updates are read-only for this role.");
         }
         const rawForm = {
@@ -18582,7 +18564,7 @@
       }
 
       async function queueParentTrackingEmail() {
-        if (!canWriteData() && currentRoleName() !== "teacher") {
+        if (!canWriteData()) {
           throw new Error(
             "Performance report submission is read-only for this role.",
           );

@@ -2535,8 +2535,8 @@ test("tracking data submenus are visible for admin and hidden for teacher", asyn
     ]
     teacherWriteControlIds.forEach((id) => {
       const control = document.getElementById(id)
-      assert.ok(control, `${id} should exist for teacher data entry`)
-      assert.equal(control.disabled, false, `${id} should be enabled for teachers`)
+      assert.ok(control, `${id} should exist on the read-only teacher surface`)
+      assert.equal(control.disabled, true, `${id} should be disabled for teachers`)
     })
   })
   teacherDom.window.document.getElementById("logoutBtn").click()
