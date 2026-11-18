@@ -26,7 +26,7 @@ function mockTransporter() {
   }
 }
 
-test("dev attendance persists, repeats idempotently, matches roster detail, and enforces auth", { skip: !IS_DEV_RUN }, async (t) => {
+test("dev attendance persists, repeats idempotently, handles concurrent saves, reports failures, and enforces auth", { skip: !IS_DEV_RUN }, async (t) => {
   Object.assign(process.env, ENV_VALUES)
   process.env.SIS_ENV_FILE = ".env.dev"
   process.env.DOTENV_CONFIG_PATH = ".env.dev"
@@ -193,6 +193,45 @@ test("dev attendance persists, repeats idempotently, matches roster detail, and 
   assert.equal(correctedBody.record?.comments, "tardy 10m")
   assert.equal(await prisma.studentAttendance.count({ where: { studentRefId } }), 1)
 
+  const invalidContextResponse = await fetch(`${origin}${attendancePath}`, {
+    method: "POST",
+    headers: { Cookie: cookie, "content-type": "application/json" },
+    body: JSON.stringify({ ...initialPayload, quarter: "q3" }),
+  })
+  assert.equal(invalidContextResponse.status, 422)
+  assert.match((await invalidContextResponse.json()).error, /quarter does not match attendanceDate's configured SIS quarter/)
+  assert.equal(await prisma.studentAttendance.count({ where: { studentRefId } }), 1)
+
+  const concurrentPayloads = [
+    {
+      ...initialPayload,
+      attendanceDate: "2026-11-19",
+      status: "present",
+      comments: "KA-088 concurrent save A",
+    },
+    {
+      ...initialPayload,
+      attendanceDate: "2026-11-19",
+      status: "absent",
+      comments: "KA-088 concurrent save B",
+    },
+  ]
+  const concurrentResponses = await Promise.all(concurrentPayloads.map((payload) =>
+    fetch(`${origin}${attendancePath}`, {
+      method: "POST",
+      headers: { Cookie: cookie, "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+  ))
+  assert.deepEqual(concurrentResponses.map((response) => response.status), [200, 200])
+  const concurrentBodies = await Promise.all(concurrentResponses.map((response) => response.json()))
+  assert.equal(new Set(concurrentBodies.map((body) => body.record?.id)).size, 1)
+  assert.equal(await prisma.studentAttendance.count({ where: { studentRefId } }), 2)
+  const concurrentRecord = await prisma.studentAttendance.findUnique({ where: { id: concurrentBodies[0].record.id } })
+  assert.ok(concurrentPayloads.some((payload) =>
+    payload.status === concurrentRecord?.status && payload.comments === concurrentRecord?.comments
+  ))
+
   const persisted = await prisma.studentAttendance.findUnique({ where: { id: firstRecordId } })
   assert.equal(persisted?.status, "late")
   assert.equal(persisted?.comments, "tardy 10m")
@@ -204,9 +243,10 @@ test("dev attendance persists, repeats idempotently, matches roster detail, and 
   })
   assert.equal(detailResponse.status, 200)
   const detail = await detailResponse.json()
-  assert.equal(detail.attendanceRecords?.length, 1)
-  assert.equal(detail.attendanceRecords?.[0]?.id, firstRecordId)
-  assert.equal(detail.attendanceRecords?.[0]?.status, "late")
-  assert.equal(detail.attendanceRecords?.[0]?.comments, "tardy 10m")
-  assert.equal(detail.counts?.attendanceRecords, 1)
+  assert.equal(detail.attendanceRecords?.length, 2)
+  assert.ok(detail.attendanceRecords?.some((record) =>
+    record.id === firstRecordId && record.status === "late" && record.comments === "tardy 10m"
+  ))
+  assert.ok(detail.attendanceRecords?.some((record) => record.id === concurrentRecord?.id))
+  assert.equal(detail.counts?.attendanceRecords, 2)
 })

@@ -44,24 +44,29 @@ test("student records module exposes the admin attendance, grades, and family AP
 })
 
 test("attendance school context accepts configured inclusive boundaries and exact quarters", () => {
-  assert.deepEqual(
-    validateAttendanceSchoolContext({
-      schoolYear: "2026-2027",
-      quarter: "q1",
-      attendanceDate: "2026-02-21",
-      setup: validAttendanceSchoolSetup,
-    }),
-    { schoolYear: "2026-2027", quarter: "q1", attendanceDate: "2026-02-21" },
-  )
-  assert.deepEqual(
-    validateAttendanceSchoolContext({
-      schoolYear: "2026-2027",
-      quarter: "q4",
-      attendanceDate: "2027-01-24",
-      setup: validAttendanceSchoolSetup,
-    }),
-    { schoolYear: "2026-2027", quarter: "q4", attendanceDate: "2027-01-24" },
-  )
+  const boundaries = [
+    ["2026-02-21", "q1"],
+    ["2026-05-15", "q1"],
+    ["2026-05-16", "q2"],
+    ["2026-08-07", "q2"],
+    ["2026-08-08", "q3"],
+    ["2026-10-31", "q3"],
+    ["2026-11-01", "q4"],
+    ["2027-01-24", "q4"],
+  ]
+
+  for (const [attendanceDate, quarter] of boundaries) {
+    assert.deepEqual(
+      validateAttendanceSchoolContext({
+        schoolYear: "2026-2027",
+        quarter,
+        attendanceDate,
+        setup: validAttendanceSchoolSetup,
+      }),
+      { schoolYear: "2026-2027", quarter, attendanceDate },
+      `${attendanceDate} must be accepted in ${quarter}`,
+    )
+  }
 })
 
 test("attendance school context rejects dates outside the year even when a course week exists", () => {
@@ -111,15 +116,58 @@ test("attendance school context rejects mismatched school year and quarter", () 
 })
 
 test("attendance school context fails closed for malformed or incomplete setup", () => {
-  assert.throws(
-    () => validateAttendanceSchoolContext({
-      schoolYear: "2026-2027",
-      quarter: "q1",
-      attendanceDate: "2026-02-21",
+  const invalidSetups = [
+    {
       setup: { ...validAttendanceSchoolSetup, schoolSetupState: "missing" },
-    }),
-    { statusCode: 422, message: "SIS school setup is invalid or incomplete" },
-  )
+      message: "SIS school setup is invalid or incomplete",
+    },
+    {
+      setup: { ...validAttendanceSchoolSetup, schoolYear: "" },
+      message: "SIS school setup is invalid or incomplete",
+    },
+    {
+      setup: { ...validAttendanceSchoolSetup, startDate: "2026-02-30" },
+      message: "SIS school setup is invalid or incomplete",
+    },
+    {
+      setup: {
+        ...validAttendanceSchoolSetup,
+        quarters: validAttendanceSchoolSetup.quarters.slice(0, 3),
+      },
+      message: "SIS school setup has invalid quarter boundaries",
+    },
+    {
+      setup: {
+        ...validAttendanceSchoolSetup,
+        quarters: validAttendanceSchoolSetup.quarters.map((quarter, index) =>
+          index === 1 ? { ...quarter, startDate: "2026-05-17" } : quarter
+        ),
+      },
+      message: "SIS quarter dates are not sequential",
+    },
+    {
+      setup: {
+        ...validAttendanceSchoolSetup,
+        quarters: validAttendanceSchoolSetup.quarters.map((quarter, index) =>
+          index === 3 ? { ...quarter, endDate: "2027-01-23" } : quarter
+        ),
+      },
+      message: "SIS Q4 does not match the school-year end date",
+    },
+  ]
+
+  for (const { setup, message } of invalidSetups) {
+    assert.throws(
+      () => validateAttendanceSchoolContext({
+        schoolYear: "2026-2027",
+        quarter: "q1",
+        attendanceDate: "2026-02-21",
+        setup,
+      }),
+      { statusCode: 422, message },
+    )
+  }
+
   assert.throws(
     () => validateAttendanceSchoolContext({
       schoolYear: "2026-2027",
