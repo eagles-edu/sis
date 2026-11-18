@@ -2378,7 +2378,8 @@ test("parent portal attendance overview renders class/tardy square stats", async
   dom.window.close()
 })
 
-test("parent portal report archive sorts newest first and clears outstanding after acknowledgement", async () => {
+test("parent portal report archive keeps failed acknowledgements pending and allows retry", async () => {
+  let acknowledgementAttempts = 0
   const dom = await createParentPortalDom(
     async (resource, init = {}) => {
       const urlText = toUrlText(resource)
@@ -2498,6 +2499,21 @@ test("parent portal report archive sorts newest first and clears outstanding aft
           immutableFields: ["eaglesId", "studentNumber"],
         })
       }
+      if (pathname === "/api/parent/reports/report-new/acknowledge" && method === "POST") {
+        acknowledgementAttempts += 1
+        if (acknowledgementAttempts === 1) {
+          return jsonTextResponse(503, { error: "Temporary acknowledgement failure" })
+        }
+        return jsonTextResponse(200, {
+          ok: true,
+          report: {
+            metaPayload: {
+              parentReviewedAt: "2026-05-09T09:30:00.000Z",
+              parentReviewedByUsername: "cmmark001",
+            },
+          },
+        })
+      }
       return jsonTextResponse(404, { error: "Not found" })
     },
     "http://127.0.0.1:8787/parent/portal"
@@ -2571,11 +2587,22 @@ test("parent portal report archive sorts newest first and clears outstanding aft
     assert.match(normalizeText(document.getElementById("performanceReportModalTitle")?.textContent), /1\/2/i)
   })
 
-  document.getElementById("acknowledgePerformanceReportBtn").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, cancelable: true }))
+  const acknowledgeButton = document.getElementById("acknowledgePerformanceReportBtn")
+  acknowledgeButton.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, cancelable: true }))
+
+  await waitFor(() => {
+    assert.match(normalizeText(document.body.textContent), /Temporary acknowledgement failure/i)
+    assert.equal(normalizeText(document.getElementById("performanceReportAckStatus")?.textContent), "Chờ phụ huynh xác nhận.")
+    assert.equal(acknowledgeButton.disabled, false)
+    assert.equal(document.querySelector('#performanceReportsList [data-report-id="report-new"]')?.classList.contains("is-outstanding"), true)
+  })
+
+  acknowledgeButton.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, cancelable: true }))
 
   await waitFor(() => {
     assert.match(normalizeText(document.getElementById("performanceReportAckStatus")?.textContent), /acknowledged on|Đã xác nhận lúc/i)
     assert.equal(document.querySelector('#performanceReportsList [data-report-id="report-new"]')?.classList.contains("is-outstanding"), false)
+    assert.equal(acknowledgementAttempts, 2)
   })
 
   await settleDomAsync(dom)

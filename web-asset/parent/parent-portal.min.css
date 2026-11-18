@@ -1,4 +1,4 @@
-.hidden{display:none!important}.row{gap:10px;grid-template-columns:repeat(12,minmax(0,1fr))}.field,.row{display:grid}.field{gap:6px}.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}.c12{grid-column:span 12}.form-row{display:grid;gap:6px}#performanceReportsList{display:none}
+.hidden{display:none!important}.row{gap:10px;grid-template-columns:repeat(12,minmax(0,1fr))}.field,.row{display:grid}.field{gap:6px}.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}.c12{grid-column:span 12}.form-row{display:grid;gap:6px}
       #performanceReportAttendanceBlock,#performanceReportHeader,
       #performanceReportHomeworkBlock,
       #performanceReportModalSections,

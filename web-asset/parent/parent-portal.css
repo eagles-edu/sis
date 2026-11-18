@@ -36,10 +36,6 @@
         gap: 6px;
       }
 
-      #performanceReportsList {
-        display: none;
-      }
-
       #performanceReportHeader,
       #performanceReportHomeworkBlock,
       #performanceReportAttendanceBlock,

@@ -7300,8 +7300,40 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
         ?.addEventListener("click", async () => {
           const active = state.reportArchiveRows[state.activeReportIndex]
           if (!active) return
-          const acknowledgedAt = new Date().toISOString()
+          const acknowledgeButton = document.getElementById(
+            "acknowledgePerformanceReportBtn",
+          )
+          if (acknowledgeButton?.disabled) return
+          if (acknowledgeButton) acknowledgeButton.disabled = true
+          let result
+          try {
+            result = await api(
+              `/api/parent/reports/${encodeURIComponent(normalizeText(active.id))}/acknowledge`,
+              {
+                method: "POST",
+              },
+            )
+          } catch (error) {
+            if (acknowledgeButton) acknowledgeButton.disabled = false
+            setStatus(error?.message || "Không thể xác nhận báo cáo.", "err")
+            return
+          }
+          const acknowledgedReport =
+            result?.report && typeof result.report === "object" ? result.report : {}
+          const acknowledgementMeta =
+            acknowledgedReport?.metaPayload && typeof acknowledgedReport.metaPayload === "object"
+              ? acknowledgedReport.metaPayload
+              : {}
+          const acknowledgedAt =
+            normalizeText(
+              acknowledgedReport.parentReviewedAt || acknowledgementMeta.parentReviewedAt,
+            ) || new Date().toISOString()
           const acknowledgedBy =
+            normalizeText(
+              acknowledgedReport.parentReviewedByUsername ||
+                acknowledgementMeta.parentReviewedByUsername ||
+                acknowledgementMeta.parentReviewedBy,
+            ) ||
             normalizeText(state?.me?.parentsId) ||
             normalizeText(state?.me?.username) ||
             "Parent"
@@ -7310,17 +7342,6 @@ const DEFAULT_PARENT_API_PREFIX = "/api/parent"
           markReportAcknowledged(active.id)
           renderPerformanceReportsOverviewCard(selectedDashboardChild())
           renderActivePerformanceReportModal()
-          try {
-            await api(
-              `/api/parent/reports/${encodeURIComponent(normalizeText(active.id))}/acknowledge`,
-              {
-                method: "POST",
-              },
-            )
-          } catch (error) {
-            setStatus(error?.message || "Không thể xác nhận báo cáo.", "err")
-            return
-          }
           const reportCount = state.reportArchiveRows.length
           const outstandingCount = state.reportArchiveRows.filter(
             (row) => !isReportAcknowledged(row),
