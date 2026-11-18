@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
+import { validateAttendanceSchoolContext } from "../src/modules/admin/attendance-school-setup.mjs"
 import {
   deleteAttendanceRecord,
   deleteGradeRecord,
@@ -15,6 +16,19 @@ import {
   saveGradeRecord,
 } from "../src/modules/admin/student-records.mjs"
 
+const validAttendanceSchoolSetup = {
+  schoolYear: "2026-2027",
+  startDate: "2026-02-21",
+  endDate: "2027-01-24",
+  schoolSetupState: "ok",
+  quarters: [
+    { quarter: "q1", startDate: "2026-02-21", endDate: "2026-05-15" },
+    { quarter: "q2", startDate: "2026-05-16", endDate: "2026-08-07" },
+    { quarter: "q3", startDate: "2026-08-08", endDate: "2026-10-31" },
+    { quarter: "q4", startDate: "2026-11-01", endDate: "2027-01-24" },
+  ],
+}
+
 test("student records module exposes the admin attendance, grades, and family APIs", () => {
   assert.equal(typeof findFamilyByEmergencyPhone, "function")
   assert.equal(typeof saveAttendanceRecord, "function")
@@ -27,6 +41,94 @@ test("student records module exposes the admin attendance, grades, and family AP
   assert.equal(typeof isOnTimeCompletedGradeRecord, "function")
   assert.equal(typeof isAssignmentTrackingGradeRecord, "function")
   assert.equal(typeof mapGradeRecordForApi, "function")
+})
+
+test("attendance school context accepts configured inclusive boundaries and exact quarters", () => {
+  assert.deepEqual(
+    validateAttendanceSchoolContext({
+      schoolYear: "2026-2027",
+      quarter: "q1",
+      attendanceDate: "2026-02-21",
+      setup: validAttendanceSchoolSetup,
+    }),
+    { schoolYear: "2026-2027", quarter: "q1", attendanceDate: "2026-02-21" },
+  )
+  assert.deepEqual(
+    validateAttendanceSchoolContext({
+      schoolYear: "2026-2027",
+      quarter: "q4",
+      attendanceDate: "2027-01-24",
+      setup: validAttendanceSchoolSetup,
+    }),
+    { schoolYear: "2026-2027", quarter: "q4", attendanceDate: "2027-01-24" },
+  )
+})
+
+test("attendance school context rejects dates outside the year even when a course week exists", () => {
+  assert.throws(
+    () => validateAttendanceSchoolContext({
+      schoolYear: "2026-2027",
+      quarter: "q4",
+      attendanceDate: "2027-01-25",
+      setup: validAttendanceSchoolSetup,
+    }),
+    { statusCode: 422, message: "attendanceDate is outside configured SIS school-year dates" },
+  )
+})
+
+test("saveAttendanceRecord rejects an out-of-school-year date before opening the database", async () => {
+  await assert.rejects(
+    saveAttendanceRecord("synthetic-attendance-boundary", {
+      className: "A2 KET",
+      schoolYear: "2026-2027",
+      quarter: "q4",
+      attendanceDate: "2027-01-25",
+      status: "present",
+    }),
+    { statusCode: 422, message: "attendanceDate is outside configured SIS school-year dates" },
+  )
+})
+
+test("attendance school context rejects mismatched school year and quarter", () => {
+  assert.throws(
+    () => validateAttendanceSchoolContext({
+      schoolYear: "2027-2028",
+      quarter: "q2",
+      attendanceDate: "2026-07-19",
+      setup: validAttendanceSchoolSetup,
+    }),
+    { statusCode: 422, message: "schoolYear does not match configured SIS school year" },
+  )
+  assert.throws(
+    () => validateAttendanceSchoolContext({
+      schoolYear: "2026-2027",
+      quarter: "q3",
+      attendanceDate: "2026-07-19",
+      setup: validAttendanceSchoolSetup,
+    }),
+    { statusCode: 422, message: "quarter does not match attendanceDate's configured SIS quarter" },
+  )
+})
+
+test("attendance school context fails closed for malformed or incomplete setup", () => {
+  assert.throws(
+    () => validateAttendanceSchoolContext({
+      schoolYear: "2026-2027",
+      quarter: "q1",
+      attendanceDate: "2026-02-21",
+      setup: { ...validAttendanceSchoolSetup, schoolSetupState: "missing" },
+    }),
+    { statusCode: 422, message: "SIS school setup is invalid or incomplete" },
+  )
+  assert.throws(
+    () => validateAttendanceSchoolContext({
+      schoolYear: "2026-2027",
+      quarter: "q1",
+      attendanceDate: "2026-02-30",
+      setup: validAttendanceSchoolSetup,
+    }),
+    { statusCode: 422, message: "attendanceDate is outside configured SIS school-year dates" },
+  )
 })
 
 test("mapGradeRecordForApi infers record source from grade payload shape", () => {

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { getSisConfigSnapshotSync } from "./sis-config-store.mjs"
 import { courseWeekNumberForSchoolSetupDate } from "./course-week-calendar.mjs"
+import { validateAttendanceSchoolContext } from "./attendance-school-setup.mjs"
 import { resolveEnrollmentPeriodForStudent } from "./enrollment-periods.mjs"
 import { canonicalizeLevel } from "./level-catalog.mjs"
 
@@ -382,7 +383,6 @@ export async function findFamilyByEmergencyPhone(phoneNumber) {
  * @returns {Promise<Record<string, unknown>>}
  */
 export async function saveAttendanceRecord(studentRefId, payload = {}) {
-  const prisma = await getPrismaClient()
   const studentRef = normalizeText(studentRefId)
   assertWithStatus(Boolean(studentRef), 400, "studentRefId is required")
 
@@ -395,6 +395,16 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
   assertWithStatus(Boolean(schoolYear), 400, "schoolYear is required")
   assertWithStatus(Boolean(quarter), 400, "quarter is required")
   assertWithStatus(Boolean(attendanceDate), 400, "attendanceDate is required")
+
+  const schoolSetup = getSisConfigSnapshotSync()?.uiSettings?.schoolSetup || {}
+  validateAttendanceSchoolContext({
+    schoolYear,
+    quarter,
+    attendanceDate: payload.attendanceDate,
+    setup: schoolSetup,
+  })
+
+  const prisma = await getPrismaClient()
 
   const data = {
     className,
