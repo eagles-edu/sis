@@ -141,8 +141,8 @@ export function renderEngagementMetrics({
     ["sis_assignment_reminder_oldest_pending_age_seconds", "Age of the oldest pending dev assignment reminder dispatch.", assignmentReminderOldestPendingAgeSeconds],
     ["sis_assignment_reminder_stale_pending_dispatches", "Number of dev assignment reminder dispatches pending for more than five minutes.", staleAssignmentReminderDispatchCount],
     ["sis_assignment_reminder_failed_dispatches_24h", "Number of dev assignment reminder dispatches failed in the last 24 hours.", assignmentReminderFailureCount],
-    ["sis_enrollment_multiple_active_records", "Number of active enrollment records beyond one per profile in the dev database.", multipleActiveEnrollmentCount],
-    ["sis_enrollment_overlapping_period_pairs", "Number of overlapping enrollment period pairs in the dev database.", enrollmentOverlapPairCount],
+    ["sis_enrollment_multiple_active_records", "Number of school-year groups with multiple open active enrollment periods in the dev database.", multipleActiveEnrollmentCount],
+    ["sis_enrollment_overlapping_period_pairs", "Number of overlapping enrollment period pairs within the same school year in the dev database.", enrollmentOverlapPairCount],
     ["sis_moodle_provisioning_due_commands", "Number of due pending or retry Moodle provisioning commands in dev.", moodleProvisioningDueCount],
     ["sis_moodle_provisioning_oldest_due_command_age_seconds", "Age of the oldest due pending or retry Moodle provisioning command in dev.", moodleProvisioningOldestDueAgeSeconds],
     ["sis_moodle_provisioning_processing_commands", "Number of Moodle provisioning commands currently processing in dev.", moodleProvisioningProcessingCount],
@@ -373,16 +373,18 @@ export async function collectDatabaseMetrics(prisma, now, expectedDatabase = "si
     prisma.$queryRaw`
       SELECT
         (SELECT COUNT(*)::int FROM (
-          SELECT "studentRefId" FROM public."StudentEnrollmentPeriod"
-          WHERE status = 'active'
-          GROUP BY "studentRefId" HAVING COUNT(*) > 1
-        ) active_conflicts) AS "multipleActiveStudents",
+          SELECT "studentRefId", "schoolYear" FROM public."StudentEnrollmentPeriod"
+          WHERE status = 'active' AND "endedAt" IS NULL
+          GROUP BY "studentRefId", "schoolYear" HAVING COUNT(*) > 1
+        ) active_conflicts) AS "openActiveConflictGroups",
         (SELECT COUNT(*)::int FROM public."StudentEnrollmentPeriod" a
           JOIN public."StudentEnrollmentPeriod" b
-            ON a."studentRefId" = b."studentRefId" AND a.id < b.id
+            ON a."studentRefId" = b."studentRefId"
+           AND a."schoolYear" = b."schoolYear"
+           AND a.id < b.id
            AND a."startedAt" < COALESCE(b."endedAt", 'infinity'::timestamptz)
            AND b."startedAt" < COALESCE(a."endedAt", 'infinity'::timestamptz)
-        ) AS "overlappingPeriodPairs"
+        ) AS "sameSchoolYearOverlappingPeriodPairs"
     `,
     prisma.moodleProvisioningCommand.count({
       where: { status: { in: ["pending", "retry"] }, nextAttemptAt: { lte: nowDate } },
@@ -429,8 +431,8 @@ export async function collectDatabaseMetrics(prisma, now, expectedDatabase = "si
     assignmentReminderOldestPendingAgeSeconds: ageSince(oldestPendingReminder?.updatedAt),
     staleAssignmentReminderDispatchCount,
     assignmentReminderFailureCount,
-    multipleActiveEnrollmentCount: Number(enrollmentConsistency[0]?.multipleActiveStudents || 0),
-    enrollmentOverlapPairCount: Number(enrollmentConsistency[0]?.overlappingPeriodPairs || 0),
+    multipleActiveEnrollmentCount: Number(enrollmentConsistency[0]?.openActiveConflictGroups || 0),
+    enrollmentOverlapPairCount: Number(enrollmentConsistency[0]?.sameSchoolYearOverlappingPeriodPairs || 0),
     moodleProvisioningDueCount: dueProvisioningCount,
     moodleProvisioningOldestDueAgeSeconds: ageSince(oldestDueProvisioning?.createdAt),
     moodleProvisioningProcessingCount: processingProvisioningCount,

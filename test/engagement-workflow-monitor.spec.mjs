@@ -168,10 +168,15 @@ test("database monitor collects enrollment integrity, provisioning age, and noti
   const now = Date.UTC(2026, 10, 19, 0, 0, 0)
   const old = new Date(now - 7200 * 1000)
   const noRows = { findFirst: async () => null, count: async () => 0 }
+  const databaseQueries = []
   const prisma = {
-    $queryRaw: async (query) => String(query).includes("current_database")
-      ? [{ name: "sis_dev" }]
-      : [{ multipleActiveStudents: 2, overlappingPeriodPairs: 3 }],
+    $queryRaw: async (query) => {
+      const sql = String(query)
+      databaseQueries.push(sql)
+      return sql.includes("current_database")
+        ? [{ name: "sis_dev" }]
+        : [{ openActiveConflictGroups: 2, sameSchoolYearOverlappingPeriodPairs: 3 }]
+    },
     parentClassReportEvent: { findFirst: async () => null },
     brevoEmailWebhookEvent: noRows,
     asyncSideEffectJob: noRows,
@@ -199,6 +204,9 @@ test("database monitor collects enrollment integrity, provisioning age, and noti
   assert.equal(result.notificationDueQueueCount, 5)
   assert.equal(result.notificationDeliveryFailureCount, 1)
   assert.doesNotMatch(JSON.stringify(result), /student|recipient|email|password|cookie|session|private-id/iu)
+  assert.match(databaseQueries[1], /status = 'active' AND "endedAt" IS NULL/u)
+  assert.match(databaseQueries[1], /GROUP BY "studentRefId", "schoolYear" HAVING COUNT\(\*\) > 1/u)
+  assert.match(databaseQueries[1], /a\."schoolYear" = b\."schoolYear"/u)
 })
 
 test("parent workflow monitor uses only the exact cmmark001 account and checks its cookie-session dashboard", async () => {

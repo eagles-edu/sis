@@ -85,7 +85,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: Dev enrollment history contains overlapping or multiple active periods
+          summary: Dev has conflicting enrollment periods within a school year
 
       - alert: DevMoodleProvisioningQueueStale
         expr: sis_moodle_provisioning_oldest_due_command_age_seconds{environment="dev"} > 1800
@@ -330,7 +330,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: Test enrollment history contains overlapping or multiple active periods
+          summary: Test has conflicting enrollment periods within a school year
 
       - alert: TestMoodleProvisioningQueueStale
         expr: sis_moodle_provisioning_oldest_due_command_age_seconds{environment="test"} > 1800 or sis_moodle_provisioning_oldest_processing_age_seconds{environment="test"} > 300
