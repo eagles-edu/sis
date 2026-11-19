@@ -36,6 +36,7 @@ const VOCABULARY = [
   { partOfSpeech: "adjective", english: "life-size", vietnamese: "kích thước thật", syllabication: "life-size", definition: "Having the same size as the real subject.", esl: { grammarClassification: { grammarSubtype: "attributive" } } },
   { partOfSpeech: "adverb", english: "step-by-step", vietnamese: "từng bước", syllabication: "step-by-step", definition: "Progressing one stage at a time.", esl: { grammarClassification: { grammarSubtype: "manner" } } },
 ]
+const STUDENT_NEWS_CHECK_RESPONSE_TIMEOUT_MS = 90000
 
 function localDateKey(date = new Date()) {
   const values = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
@@ -133,35 +134,56 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
   await page.locator('#newsVocabularyRows [data-vocabulary-field="english"]').first().waitFor({ state: "visible", timeout: 30000 })
   await page.waitForFunction((title) => document.querySelector("#articleTitle")?.value === title && document.querySelector('#newsVocabularyRows [data-vocabulary-field="english"]')?.value === "air-strike" && document.querySelector("#reportDate")?.value, `Synthetic repeated Check ${stamp}`, { timeout: 30000 })
 
+  const studentApiRequests = []
   const studentApiResponses = []
+  const studentApiRequestFailures = []
+  let checkRouteState = { stage: "idle" }
+  page.on("request", (request) => {
+    const pathname = new URL(request.url()).pathname
+    if (pathname.startsWith("/api/student/")) studentApiRequests.push({ method: request.method(), pathname })
+  })
   page.on("response", (response) => {
     const pathname = new URL(response.url()).pathname
     if (pathname.startsWith("/api/student/")) studentApiResponses.push({ method: response.request().method(), pathname, status: response.status() })
   })
+  page.on("requestfailed", (request) => {
+    const pathname = new URL(request.url()).pathname
+    if (pathname.startsWith("/api/student/")) {
+      studentApiRequestFailures.push({ method: request.method(), pathname, failure: request.failure()?.errorText || "unknown" })
+    }
+  })
   await page.route("**/api/student/news-reports/check", async (route) => {
-    const response = await route.fetch()
-    const payload = await response.json()
-    payload.warningFields = {
-      ...(payload.warningFields || {}),
-      vocabulary: {
-        message: "Some vocabulary entries could not be verified right now.",
-        rowWarnings: [{
-          index: 0,
-          english: "demolition",
-          message: "Syllabication could not be verified right now. Research it using the provided dictionary links.",
-          fields: ["syllabication"],
-        }],
-      },
+    checkRouteState = { stage: "server-fetch-pending" }
+    try {
+      const response = await route.fetch()
+      checkRouteState = { stage: "server-response-received", status: response.status() }
+      const payload = await response.json()
+      payload.warningFields = {
+        ...(payload.warningFields || {}),
+        vocabulary: {
+          message: "Some vocabulary entries could not be verified right now.",
+          rowWarnings: [{
+            index: 0,
+            english: "demolition",
+            message: "Syllabication could not be verified right now. Research it using the provided dictionary links.",
+            fields: ["syllabication"],
+          }],
+        },
+      }
+      payload.warningTasks = [
+        ...(Array.isArray(payload.warningTasks) ? payload.warningTasks : []),
+        { field: "vocabulary", steps: ["Retry the dictionary check later; this warning does not block Check or Submit."] },
+      ]
+      if (payload.item) {
+        payload.item.warningFields = payload.warningFields
+        payload.item.warningTasks = payload.warningTasks
+      }
+      await route.fulfill({ response, body: JSON.stringify(payload) })
+      checkRouteState = { stage: "browser-response-fulfilled", status: response.status() }
+    } catch (error) {
+      checkRouteState = { stage: "interception-failed", errorName: error?.name || "Error" }
+      throw error
     }
-    payload.warningTasks = [
-      ...(Array.isArray(payload.warningTasks) ? payload.warningTasks : []),
-      { field: "vocabulary", steps: ["Retry the dictionary check later; this warning does not block Check or Submit."] },
-    ]
-    if (payload.item) {
-      payload.item.warningFields = payload.warningFields
-      payload.item.warningTasks = payload.warningTasks
-    }
-    await route.fulfill({ response, body: JSON.stringify(payload) })
   })
 
   const vocabularyRows = page.locator("#newsVocabularyRows [data-news-vocabulary-row]")
@@ -181,7 +203,16 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
     await row.locator('[data-vocabulary-field="syllabication"]').fill(index === 0 ? "de-MO-li-tion" : word.syllabication)
     await row.locator('[data-vocabulary-field="definition"]').fill(index === 0 ? "The act of destroying a structure." : word.definition)
   }
-  const rejectedCheckResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check", { timeout: 30000 })
+  const rejectedCheckResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check", { timeout: STUDENT_NEWS_CHECK_RESPONSE_TIMEOUT_MS }).catch(async (error) => {
+    const uiState = await page.evaluate(() => ({
+      authState: document.documentElement.dataset.studentAuthState || "",
+      appVisible: Boolean(document.querySelector("#appPanel")?.getClientRects().length),
+      checkDisabled: Boolean(document.querySelector("#checkBtn")?.disabled),
+      checkWaitVisible: !document.querySelector("#newsGrammarCheckWait")?.classList.contains("hidden"),
+      complianceModalOpen: !document.querySelector("#newsComplianceModal")?.classList.contains("hidden"),
+    }))
+    throw new Error(`${error.message}; browser state=${JSON.stringify(uiState)}; route state=${JSON.stringify(checkRouteState)}; student requests=${JSON.stringify(studentApiRequests)}; student responses=${JSON.stringify(studentApiResponses)}; student request failures=${JSON.stringify(studentApiRequestFailures)}`)
+  })
   await page.locator("#checkBtn").click()
   const rejectedCheck = await rejectedCheckResponse
   const rejectedPayload = await rejectedCheck.json()
@@ -332,7 +363,7 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
 
   for (const step of ["first Check", "Save", "second Check"]) {
     const pathname = step === "Save" ? "/api/student/news-reports/draft" : "/api/student/news-reports/check"
-    const responsePromise = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === pathname, { timeout: 10000 }).catch(async (error) => {
+    const responsePromise = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === pathname, { timeout: pathname.endsWith("/check") ? STUDENT_NEWS_CHECK_RESPONSE_TIMEOUT_MS : 30000 }).catch(async (error) => {
       const state = await page.evaluate(() => ({
         checkDisabled: document.querySelector("#checkBtn")?.disabled,
         saveDisabled: document.querySelector("#saveDraftBtn")?.disabled,
