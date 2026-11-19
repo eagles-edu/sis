@@ -173,6 +173,10 @@
 - [ ] Test cleanup after interrupted probes and verify no synthetic records or queued messages remain.
 - [ ] Record worker configuration, alert tests, recovery tests, and operational evidence.
 
+## Domain-layer Grafana dashboards
+
+- [x] Provide a dashboard for every configured domain and distinguish measured signals from missing or shared-attribution layers. [KA-117; generated five provisioned Grafana dashboards for Eagles Homepage, SIS Admin, LTD ERPNext, IELTS Portal, and Thuvien Library. Each includes status cards, availability/alert timelines, DNS and request-phase graphs, configured application/API checks, service/dependency tables, and shared-host resource visualization. Coverage maps preserve current gaps and identify shared, non-domain-attributed metrics instead of implying complete instrumentation. Grafana API listed all five provisioned dashboards; all 79 panel PromQL expressions were accepted by dev Prometheus and the dashboard contract test passed 1/1. Backup: `/home/eagles/dockerz/backups/manual-edits/20261119-domain-dashboards/`]
+
 ## Combined regression testing and rollout
 
 - [ ] Run focused regression tests for every subsystem and record results.

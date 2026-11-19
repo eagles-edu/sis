@@ -1,0 +1,793 @@
+{
+  "uid": "domain-thuvien-library",
+  "title": "Thuvien Library · Domain Layers",
+  "tags": [
+    "domain",
+    "thuvien-library",
+    "availability",
+    "coverage"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Public HTTPS",
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "probe_success{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\",check=\"main\"}",
+          "refId": "A",
+          "legendFormat": "{{domain}}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "HTTP status",
+      "description": "",
+      "gridPos": {
+        "x": 5,
+        "y": 0,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "probe_http_status_code{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\",check=\"main\"}",
+          "refId": "A",
+          "legendFormat": "{{domain}}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "TLS days remaining",
+      "description": "",
+      "gridPos": {
+        "x": 9,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "(probe_ssl_earliest_cert_expiry{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\",check=\"main\"} - time()) / 86400",
+          "refId": "A",
+          "legendFormat": "{{domain}}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "d",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 14
+              },
+              {
+                "color": "green",
+                "value": 30
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Probe freshness",
+      "description": "",
+      "gridPos": {
+        "x": 14,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "time() - timestamp(probe_success{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\",check=\"main\"})",
+          "refId": "A",
+          "legendFormat": "{{domain}}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Active domain alerts",
+      "description": "",
+      "gridPos": {
+        "x": 19,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "count(ALERTS{alertname=~\"PublicWebsite.*|SiteSISAPI.*|Thuvien.*|SISLiveApiServiceDown\",alertstate=~\"pending|firing\",domain=\"thuvien.eagles.edu.vn\"}) or vector(0)",
+          "refId": "A",
+          "legendFormat": "{{domain}}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "type": "state-timeline",
+      "title": "Public availability history",
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "probe_success{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\",check=\"main\"}",
+          "refId": "A",
+          "legendFormat": "{{domain}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mergeValues": true,
+        "showValue": "auto",
+        "alignValue": "center",
+        "rowHeight": 0.9,
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Request phases",
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "probe_http_duration_seconds{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\"}",
+          "refId": "A",
+          "legendFormat": "{{domain}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "DNS resolution",
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "probe_dns_lookup_time_seconds{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\"}",
+          "refId": "A",
+          "legendFormat": "{{domain}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "state-timeline",
+      "title": "Application and media probe state",
+      "description": "Only configured domain-specific checks appear. Coverage gaps are listed in the layer map below.",
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "probe_success{domain=\"thuvien.eagles.edu.vn\",job=~\"blackbox-website-api|blackbox-thuvien-media\"}",
+          "refId": "A",
+          "legendFormat": "{{domain}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mergeValues": true,
+        "showValue": "auto",
+        "alignValue": "center",
+        "rowHeight": 0.9,
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Host resources · shared host",
+      "description": "Node-exporter reports the shared host. These resource metrics are not attributed to this domain.",
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))",
+          "refId": "A",
+          "legendFormat": "{{domain}}"
+        },
+        {
+          "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+          "refId": "B",
+          "legendFormat": "{{domain}}"
+        },
+        {
+          "expr": "100 * (1 - node_filesystem_avail_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"})",
+          "refId": "C",
+          "legendFormat": "{{domain}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": "text",
+      "title": "Layer coverage and attribution",
+      "description": "This map distinguishes collected signals from uninstrumented layers; shared host metrics are not presented as per-domain measurements.",
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "| Layer | Coverage | Signals |\n| --- | --- | --- |\n| Public edge | **Measured** | HTTPS availability, HTTP status, DNS, TLS, and response phases. |\n| Application/API | **Measured** | SIS exercise-submission route; shared SIS service state is not domain-attributed. |\n| Media delivery | **Measured** | One-byte HTTP range checks for a Flip image and reading audio. |\n| Host services | **Measured** | Shared SIS API plus image and audio gateway systemd states. |\n| Data dependencies | **Not measured** | No Thuvien-domain database or object-store dependency probe is exported. |"
+      }
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "Host service state",
+      "description": "Shared host systemd state. Missing series mean no matching systemd unit is exported.",
+      "gridPos": {
+        "x": 12,
+        "y": 28,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "node_systemd_unit_state{name=~\"(exercise-mailer\\\\.service|thuvien-r2-flip-image\\\\.service|thuvien-read-audio\\\\.service)\",state=~\"active|failed\"}",
+          "refId": "A",
+          "legendFormat": "{{domain}}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "md",
+        "sortBy": []
+      }
+    },
+    {
+      "id": 13,
+      "type": "table",
+      "title": "Domain dependencies",
+      "description": "No domain-specific authenticated database/cache dependency probe is configured.",
+      "gridPos": {
+        "x": 0,
+        "y": 37,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "md",
+        "sortBy": []
+      }
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "Application/API response time",
+      "description": "Response duration for configured domain application/API probes.",
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "probe_duration_seconds{domain=\"thuvien.eagles.edu.vn\",job=~\"blackbox-website-api|blackbox-thuvien-media\"}",
+          "refId": "A",
+          "legendFormat": "{{domain}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "type": "state-timeline",
+      "title": "Domain alert timeline",
+      "description": "Only pending and firing alerts with this domain label are shown. Shared, unlabelled service/workflow alerts are called out in layer descriptions.",
+      "gridPos": {
+        "x": 0,
+        "y": 46,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "ALERTS{alertname=~\"PublicWebsite.*|SiteSISAPI.*|Thuvien.*|SISLiveApiServiceDown\",alertstate=~\"pending|firing\",domain=\"thuvien.eagles.edu.vn\"}",
+          "refId": "A",
+          "legendFormat": "{{domain}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "mergeValues": true,
+        "showValue": "auto",
+        "alignValue": "center",
+        "rowHeight": 0.9,
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "version": 1,
+  "weekStart": "monday"
+}
