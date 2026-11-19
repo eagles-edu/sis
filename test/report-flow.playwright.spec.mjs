@@ -1,7 +1,8 @@
 import assert from "node:assert/strict"
+import { randomUUID } from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
-import test from "node:test"
+import { after, test } from "node:test"
 import { parse as parseDotenv } from "dotenv"
 import "../tools/assert-prisma-environment.mjs"
 import {
@@ -74,6 +75,7 @@ if (PARENT_CREDENTIALS.user && PARENT_CREDENTIALS.pass) {
 
 let reportFlowAccountsPromise = null
 let reportFlowFixtureSeedPromise = null
+let reportFlowSyntheticReportId = ""
 
 async function ensureReportFlowFixture() {
   if (!reportFlowFixtureSeedPromise) {
@@ -99,39 +101,43 @@ async function ensureReportFlowFixture() {
         `
         if (visibleRows.length > 0) return
 
-        const draftRows = await prisma.$queryRaw`
-          select
-            r.id as "reportId",
-            p."parentsId" as "parentsId",
-            s."eaglesId" as "eaglesId"
-          from "ParentClassReport" r
-          join "Student" s on s.id = r."studentRefId"
+        const linkedStudents = await prisma.$queryRaw`
+          select s.id as "studentRefId"
+          from "Student" s
           join "ParentPortalStudentLink" l on l."studentRefId" = s.id
           join "ParentPortalAccount" p on p.id = l."parentAccountId"
           where p.status = 'active'
             and p."parentsId" = ${STANDARD_PARENT_LOGIN}
             and s."eaglesId" = ${STANDARD_STUDENT_LOGIN}
-            and r."approvedAt" is null
-            and r."publishedAt" is null
-            and r."notificationQueuedAt" is null
-          order by r."generatedAt" desc, p."parentsId" asc, s."eaglesId" asc
           limit 1
         `
-        assert.ok(draftRows.length > 0, "report-flow test database should expose at least one draft report fixture")
-        const [draftRow] = draftRows
-        const reportId = String(draftRow.reportId || "").trim()
-        assert.ok(reportId, "report-flow draft fixture should include a report id")
-        const now = new Date().toISOString()
-        await prisma.$executeRaw`
-          update "ParentClassReport"
-          set
-            "workflowState" = 'published',
-            "approvedAt" = ${now},
-            "publishedAt" = ${now},
-            "notificationQueuedAt" = ${now},
-            "approvedByUsername" = 'report-flow'
-          where id = ${reportId}
-        `
+        assert.ok(
+          linkedStudents.length > 0,
+          `report-flow requires the exact ${STANDARD_STUDENT_LOGIN}/${STANDARD_PARENT_LOGIN} account pairing in ${ENV_FILE}`,
+        )
+        const now = new Date()
+        const date = now.toISOString().slice(0, 10)
+        const classDay = now.toLocaleDateString("en-US", { weekday: "long", timeZone: "Asia/Ho_Chi_Minh" })
+        const syntheticReport = await prisma.parentClassReport.create({
+          data: {
+            studentRefId: String(linkedStudents[0].studentRefId),
+            className: `Report Flow ${randomUUID()}`,
+            level: "A2 KET",
+            schoolYear: String(now.getFullYear()),
+            quarter: "q1",
+            workflowState: "published",
+            approvedAt: now,
+            approvedByUsername: "report-flow-test",
+            publishedAt: now,
+            notificationQueuedAt: now,
+            finalArtifactVersion: 1,
+            finalArtifactFrozenAt: now,
+            rubricPayload: { skillScores: { pt_skill_questions: "4" } },
+            metaPayload: { classDate: date, classDay },
+          },
+          select: { id: true },
+        })
+        reportFlowSyntheticReportId = syntheticReport.id
       } finally {
         await prisma.$disconnect()
       }
@@ -177,6 +183,22 @@ async function getReportFlowAccounts() {
   }
   return reportFlowAccountsPromise
 }
+
+after(async () => {
+  if (!reportFlowSyntheticReportId) return
+  const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
+  const prisma = await getSharedPrismaClient()
+  try {
+    await prisma.parentClassReport.deleteMany({ where: { id: reportFlowSyntheticReportId } })
+    const remaining = await prisma.parentClassReport.findUnique({
+      where: { id: reportFlowSyntheticReportId },
+      select: { id: true },
+    })
+    assert.equal(remaining, null, "report-flow synthetic report must be removed after browser coverage")
+  } finally {
+    await prisma.$disconnect()
+  }
+})
 
 function resolvePlaywrightSkipReason() {
   if (!chromium) return "playwright package is not installed"

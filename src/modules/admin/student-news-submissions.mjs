@@ -748,18 +748,23 @@ async function createStudentNewsReportWithSequence(prisma, studentRefId, reportD
  *   reportDateLocked: boolean,
  * }>}
  */
-async function buildStudentNewsClientItem(row, { validationConfig = {}, vocabularyOverrideLookup } = {}) {
+async function buildStudentNewsClientItem(row, {
+  validationConfig = {},
+  vocabularyOverrideLookup,
+  precomputedMinimumRequirements,
+  precomputedCompliance,
+} = {}) {
   const mapped = mapStudentNewsReportRow(row)
   const validationPayload = buildStudentNewsValidationPayload(mapped)
-  const minimumRequirements = await evaluateStudentNewsMinimumRequirements(validationPayload, {
-    validationConfig,
-    vocabularyOverrideLookup,
-  })
+  const minimumRequirements = precomputedMinimumRequirements || await evaluateStudentNewsMinimumRequirements(
+    validationPayload,
+    { validationConfig, vocabularyOverrideLookup },
+  )
   const storedValidationIssues = normalizeValidationIssueMap(mapped?.validationIssuesJson)
   const useStoredValidation = validationConfig && validationConfig.__useStoredValidation === true
-  const compliance = useStoredValidation
+  const compliance = precomputedCompliance || (useStoredValidation
     ? buildStoredStudentNewsComplianceState(storedValidationIssues)
-    : await evaluateStudentNewsCompliance(validationPayload, { validationConfig })
+    : await evaluateStudentNewsCompliance(validationPayload, { validationConfig }))
   return {
     ...mapped,
     currentMmrPassed: minimumRequirements.passed === true,
@@ -1449,7 +1454,14 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     }
   }
 
-  const mappedItem = await buildStudentNewsClientItem(saved, { validationConfig, vocabularyOverrideLookup })
+  const mappedItem = await buildStudentNewsClientItem(saved, {
+    validationConfig,
+    vocabularyOverrideLookup,
+    ...(mode === "draft" ? {} : {
+      precomputedMinimumRequirements: minimumRequirements,
+      precomputedCompliance: compliance,
+    }),
+  })
   const autoApproveConfig = getStudentNewsAutoApprovalConfigSync()
   const autoApproveDueAt =
     mode === "submit" && reviewStatus === STUDENT_NEWS_REVIEW_STATUS_SUBMITTED

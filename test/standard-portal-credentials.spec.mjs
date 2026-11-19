@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
+import { hashScryptPassword } from "../src/modules/admin/users.mjs"
 import {
   resolveStandardParentCredentials,
   resolveStandardStudentCredentials,
@@ -27,6 +28,36 @@ test("standard parent credentials select only cmmark001", () => {
   })
 
   assert.deepEqual(credentials, { user: STANDARD_PARENT_LOGIN, pass: "parent-pass" })
+})
+
+test("standard parent credentials verify the environment password against the exact account hash", () => {
+  const credentials = resolveStandardParentCredentials({
+    STUDENT_PARENT_USER: "another-parent",
+    STUDENT_PARENT_PASS: "shared-parent-pass",
+    STUDENT_PARENT_PORTAL_ACCOUNTS_JSON: JSON.stringify([
+      {
+        parentsId: STANDARD_PARENT_LOGIN,
+        passwordHash: hashScryptPassword("shared-parent-pass"),
+        status: "active",
+      },
+    ]),
+  })
+
+  assert.deepEqual(credentials, { user: STANDARD_PARENT_LOGIN, pass: "shared-parent-pass" })
+})
+
+test("standard parent credentials reject a direct password that does not match the exact account hash", () => {
+  assert.deepEqual(resolveStandardParentCredentials({
+    STUDENT_PARENT_USER: "another-parent",
+    STUDENT_PARENT_PASS: "different-parent-pass",
+    STUDENT_PARENT_PORTAL_ACCOUNTS_JSON: JSON.stringify([
+      {
+        parentsId: STANDARD_PARENT_LOGIN,
+        passwordHash: hashScryptPassword("shared-parent-pass"),
+        status: "active",
+      },
+    ]),
+  }), { user: "", pass: "" })
 })
 
 test("standard portal credential resolution fails closed when the named account is absent", () => {
