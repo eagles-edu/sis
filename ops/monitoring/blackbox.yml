@@ -34,6 +34,36 @@ modules:
         User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
       fail_if_body_not_matches_regexp:
         - '"message"\s*:\s*"pong"'
+  https_sis_api_route:
+    prober: http
+    timeout: 10s
+    http:
+      method: GET
+      preferred_ip_protocol: ip4
+      valid_status_codes: [404]
+      follow_redirects: true
+      fail_if_not_ssl: true
+      body_size_limit: "4KB"
+      headers:
+        Accept: application/json
+        User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+      fail_if_body_not_matches_regexp:
+        - '"error"\s*:\s*"Not Found"'
+  https_sis_auth_guard:
+    prober: http
+    timeout: 10s
+    http:
+      method: GET
+      preferred_ip_protocol: ip4
+      valid_status_codes: [401]
+      follow_redirects: true
+      fail_if_not_ssl: true
+      body_size_limit: "4KB"
+      headers:
+        Accept: application/json
+        User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+      fail_if_body_not_matches_regexp:
+        - '"error"\s*:'
   https_206_range:
     prober: http
     timeout: 15s

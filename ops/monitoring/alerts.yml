@@ -577,7 +577,7 @@ groups:
           description: "Prometheus no longer has the expected Thuvien-site probe series."
 
       - alert: PublicWebsiteProbeScrapeFailed
-        expr: up{job=~"blackbox-website-http|blackbox-website-app|blackbox-thuvien-media"} == 0
+        expr: up{job=~"blackbox-website-http|blackbox-website-app|blackbox-website-api|blackbox-admin-auth-api|blackbox-thuvien-media"} == 0
         for: 2m
         labels:
           severity: warning
@@ -612,6 +612,54 @@ groups:
           summary: "LTD ERPNext application API is unavailable"
           description: "The public Frappe ping endpoint did not return its expected pong response."
 
+      - alert: LTDERPNextApplicationProbeMissing
+        expr: absent(probe_success{job="blackbox-website-app",domain="ltd.eagles.vn",check="frappe-api"})
+        for: 2m
+        labels:
+          domain: ltd.eagles.vn
+          severity: critical
+        annotations:
+          summary: "The LTD ERPNext application probe is missing"
+          description: "Prometheus no longer has the expected public Frappe API probe series."
+
+      - alert: SiteSISAPIRouteUnavailable
+        expr: probe_success{job="blackbox-website-api",check="sis-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "The SIS API route is unavailable for {{ $labels.domain }}"
+          description: "The API route did not return the expected read-only method rejection response for at least two minutes."
+
+      - alert: SiteSISAPIProbeSetIncomplete
+        expr: absent(probe_success{job="blackbox-website-api",check="sis-api"}) or count(probe_success{job="blackbox-website-api",check="sis-api"}) != 3
+        for: 2m
+        labels:
+          component: sis-api
+          severity: critical
+        annotations:
+          summary: "SIS API route coverage is incomplete"
+          description: "Prometheus is missing one or more expected admin, IELTS, or Thuvien API route probes."
+
+      - alert: AdminAuthenticationRouteUnavailable
+        expr: probe_success{job="blackbox-admin-auth-api",domain="admin.eagles.edu.vn",check="auth-guard"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "The admin authentication route is unavailable"
+          description: "The session route did not return its expected unauthenticated 401 response for at least two minutes."
+
+      - alert: AdminAuthenticationProbeMissing
+        expr: absent(probe_success{job="blackbox-admin-auth-api",domain="admin.eagles.edu.vn",check="auth-guard"})
+        for: 2m
+        labels:
+          domain: admin.eagles.edu.vn
+          severity: critical
+        annotations:
+          summary: "The admin authentication probe is missing"
+          description: "Prometheus no longer has the expected admin session-authentication probe series."
+
       - alert: ThuvienMediaDeliveryFailed
         expr: probe_success{job="blackbox-thuvien-media",domain="thuvien.eagles.edu.vn"} == 0
         for: 2m
@@ -620,6 +668,16 @@ groups:
         annotations:
           summary: "Thuvien {{ $labels.check }} delivery is unavailable"
           description: "The public media route failed its one-byte HTTP range request."
+
+      - alert: ThuvienMediaProbeSetIncomplete
+        expr: absent(probe_success{job="blackbox-thuvien-media"}) or count(probe_success{job="blackbox-thuvien-media"}) != 2
+        for: 2m
+        labels:
+          domain: thuvien.eagles.edu.vn
+          severity: critical
+        annotations:
+          summary: "Thuvien media probe coverage is incomplete"
+          description: "Prometheus is missing one or more expected flip-image or reading-audio probes."
 
       - alert: NodeExporterUnavailable
         expr: up{job="node"} == 0
@@ -703,6 +761,16 @@ groups:
           summary: "LTD ERPNext component monitor is stale or failed"
           description: "Prometheus has not received a successful inspection of the expected LTD ERPNext containers in three minutes."
 
+      - alert: LTDERPNextContainerProbeSetIncomplete
+        expr: absent(erpnext_container_running{domain="ltd.eagles.vn"}) or count(erpnext_container_running{domain="ltd.eagles.vn"}) != 8
+        for: 2m
+        labels:
+          domain: ltd.eagles.vn
+          severity: critical
+        annotations:
+          summary: "LTD ERPNext container coverage is incomplete"
+          description: "Prometheus is missing one or more of the eight expected ERPNext and Redis component series."
+
       - alert: LTDERPNextContainerDown
         expr: erpnext_container_running{domain="ltd.eagles.vn"} == 0
         for: 1m
@@ -720,3 +788,30 @@ groups:
         annotations:
           summary: "LTD ERPNext {{ $labels.component }} container is unhealthy"
           description: "A container health check reports unhealthy or the container is still starting."
+
+      - alert: SiteDependencyUnavailable
+        expr: site_dependency_status == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.dependency }} {{ $labels.check }} is unavailable for {{ $labels.domain }}"
+          description: "The live-site dependency check has failed for at least two minutes."
+
+      - alert: SiteDependencyMonitorStale
+        expr: absent(site_dependency_monitor_last_check_timestamp_seconds) or time() - site_dependency_monitor_last_check_timestamp_seconds > 180 or site_dependency_monitor_last_check_success == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Live-site dependency monitor is stale or failed"
+          description: "The authenticated PostgreSQL and Redis checks have not completed successfully within three minutes."
+
+      - alert: SiteDependencyProbeSetIncomplete
+        expr: absent(site_dependency_status) or count(site_dependency_status) != 14
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Live-site database and Redis coverage is incomplete"
+          description: "Prometheus is missing one or more of the 14 authenticated database, Redis-role, or container checks."

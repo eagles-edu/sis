@@ -91,6 +91,56 @@ scrape_configs:
       - target_label: __address__
         replacement: blackbox-exporter:9115
 
+  - job_name: blackbox-website-api
+    scrape_interval: 60s
+    scrape_timeout: 15s
+    metrics_path: /probe
+    params:
+      module: [https_sis_api_route]
+    static_configs:
+      - targets: [https://admin.eagles.edu.vn/api/exercise-submission]
+        labels:
+          domain: admin.eagles.edu.vn
+          site: admin
+          check: sis-api
+      - targets: [https://ielts.eagles.edu.vn/api/exercise-submission]
+        labels:
+          domain: ielts.eagles.edu.vn
+          site: ielts
+          check: sis-api
+      - targets: [https://thuvien.eagles.edu.vn/api/exercise-submission]
+        labels:
+          domain: thuvien.eagles.edu.vn
+          site: thuvien
+          check: sis-api
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  - job_name: blackbox-admin-auth-api
+    scrape_interval: 60s
+    scrape_timeout: 15s
+    metrics_path: /probe
+    params:
+      module: [https_sis_auth_guard]
+    static_configs:
+      - targets: [https://admin.eagles.edu.vn/api/admin/auth/session]
+        labels:
+          domain: admin.eagles.edu.vn
+          site: admin
+          check: auth-guard
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
   - job_name: blackbox-thuvien-media
     scrape_interval: 60s
     scrape_timeout: 20s

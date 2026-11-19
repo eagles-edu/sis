@@ -61,12 +61,14 @@
     {
       "id": 6,
       "type": "state-timeline",
-      "title": "Application and media checks",
+      "title": "Application API and media checks",
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 28 },
       "datasource": { "type": "prometheus", "uid": "sis-prometheus" },
       "targets": [
         { "expr": "probe_success{job=\"blackbox-website-app\"}", "legendFormat": "{{domain}} / {{check}}", "refId": "A" },
-        { "expr": "probe_success{job=\"blackbox-thuvien-media\"}", "legendFormat": "{{domain}} / {{check}}", "refId": "B" }
+        { "expr": "probe_success{job=\"blackbox-website-api\"}", "legendFormat": "{{domain}} / {{check}}", "refId": "B" },
+        { "expr": "probe_success{job=\"blackbox-admin-auth-api\"}", "legendFormat": "{{domain}} / {{check}}", "refId": "C" },
+        { "expr": "probe_success{job=\"blackbox-thuvien-media\"}", "legendFormat": "{{domain}} / {{check}}", "refId": "D" }
       ],
       "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }] }, "overrides": [] },
       "options": { "mergeValues": true, "showValue": "never", "alignValue": "center", "rowHeight": 0.9, "tooltip": { "mode": "single", "sort": "none" } }
@@ -128,9 +130,33 @@
       "description": "Prometheus alert rules affecting the monitored sites. Pending alerts are shown before they fire.",
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 44 },
       "datasource": { "type": "prometheus", "uid": "sis-prometheus" },
-      "targets": [{ "expr": "ALERTS{alertname=~\"PublicWebsite.*|LTDERPNext.*|Thuvien.*|.*ServiceDown|EaglesHomepageDatabaseDown|SISLiveApiServiceDown\",alertstate=~\"pending|firing\"}", "legendFormat": "{{alertname}} / {{domain}}", "refId": "A" }],
+      "targets": [{ "expr": "ALERTS{alertname=~\"PublicWebsite.*|LTDERPNext.*|Thuvien.*|SiteDependency.*|SiteSISAPI.*|AdminAuthentication.*|NodeExporterUnavailable|.*ServiceDown|EaglesHomepageDatabaseDown|SISLiveApiServiceDown\",alertstate=~\"pending|firing\"}", "legendFormat": "{{alertname}} / {{domain}}", "refId": "A" }],
       "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "1": { "text": "PENDING / FIRING", "color": "red" } } }] }, "overrides": [] },
       "options": { "mergeValues": true, "showValue": "auto", "alignValue": "center", "rowHeight": 0.9, "tooltip": { "mode": "single", "sort": "none" } }
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "Authenticated database and Redis checks",
+      "description": "Read-only SQL and Redis PING checks for the admin SIS stack and LTD ERPNext Redis roles.",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 52 },
+      "datasource": { "type": "prometheus", "uid": "sis-prometheus" },
+      "targets": [{ "expr": "site_dependency_status", "format": "table", "instant": true, "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "DOWN", "color": "red" },
+                "1": { "text": "UP", "color": "green" }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": { "showHeader": true, "cellHeight": "sm", "sortBy": [] }
     }
   ]
 }

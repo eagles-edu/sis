@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh live SIS and LTD dependency health metrics every minute
+
+[Timer]
+OnBootSec=90s
+OnUnitActiveSec=60s
+AccuracySec=5s
+Persistent=true
+Unit=site-dependency-monitor.service
+
+[Install]
+WantedBy=timers.target
