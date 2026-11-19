@@ -15,6 +15,9 @@ const expectations = new Map([
 ])
 
 test("each monitored domain has a layered Grafana dashboard with explicit measured and missing coverage", () => {
+  const domainFiles = fs.readdirSync(DASHBOARD_DIR).filter((filename) => filename.endsWith("-domain.json")).sort()
+  assert.deepEqual(domainFiles, [...expectations.keys()].sort(), "the dashboards must cover every configured public domain and no untracked domain")
+
   for (const [filename, expected] of expectations) {
     const dashboard = JSON.parse(fs.readFileSync(path.join(DASHBOARD_DIR, filename), "utf8"))
     assert.equal(dashboard.uid.startsWith("domain-"), true, filename)
@@ -28,5 +31,23 @@ test("each monitored domain has a layered Grafana dashboard with explicit measur
     assert.ok(dashboard.panels.some((panel) => panel.type === "state-timeline"), `${filename} must show state history`)
     assert.ok(dashboard.panels.some((panel) => panel.type === "timeseries"), `${filename} must graph time-series data`)
     assert.ok(dashboard.panels.some((panel) => panel.type === "stat"), `${filename} must show summary cards`)
+    const availability = dashboard.panels.find((panel) => panel.title === "24h uptime" && panel.type === "stat")
+    assert.ok(availability, `${filename} must show 24-hour availability`)
+    assert.deepEqual(availability.targets.map((target) => target.legendFormat), ["Success %", "Samples"], `${filename} must show the rate beside its collected sample count`)
+    assert.ok(dashboard.panels.some((panel) => panel.title === "Layer coverage and attribution" && panel.type === "text"), `${filename} must label measured and missing layers`)
+    const requestPhases = dashboard.panels.find((panel) => panel.title === "Request phases")
+    assert.equal(requestPhases.targets[0].legendFormat, "{{phase}}", `${filename} must distinguish each measured request phase`)
+
+    for (const [index, panel] of dashboard.panels.entries()) {
+      assert.ok(panel.gridPos && panel.gridPos.x >= 0 && panel.gridPos.y >= 0, `${filename} panel ${panel.title} must have a grid position`)
+      assert.ok(panel.gridPos.w > 0 && panel.gridPos.h > 0 && panel.gridPos.x + panel.gridPos.w <= 24, `${filename} panel ${panel.title} must fit the Grafana grid`)
+      for (const other of dashboard.panels.slice(index + 1)) {
+        const overlaps = panel.gridPos.x < other.gridPos.x + other.gridPos.w
+          && panel.gridPos.x + panel.gridPos.w > other.gridPos.x
+          && panel.gridPos.y < other.gridPos.y + other.gridPos.h
+          && panel.gridPos.y + panel.gridPos.h > other.gridPos.y
+        assert.equal(overlaps, false, `${filename} panels "${panel.title}" and "${other.title}" must not overlap`)
+      }
+    }
   }
 })

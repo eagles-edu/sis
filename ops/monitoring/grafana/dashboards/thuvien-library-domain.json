@@ -39,7 +39,7 @@
       "gridPos": {
         "x": 0,
         "y": 0,
-        "w": 5,
+        "w": 4,
         "h": 5
       },
       "datasource": {
@@ -50,7 +50,7 @@
         {
           "expr": "probe_success{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\",check=\"main\"}",
           "refId": "A",
-          "legendFormat": "{{domain}}",
+          "legendFormat": "thuvien.eagles.edu.vn",
           "instant": true
         }
       ],
@@ -108,7 +108,7 @@
       "title": "HTTP status",
       "description": "",
       "gridPos": {
-        "x": 5,
+        "x": 4,
         "y": 0,
         "w": 4,
         "h": 5
@@ -121,12 +121,34 @@
         {
           "expr": "probe_http_status_code{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\",check=\"main\"}",
           "refId": "A",
-          "legendFormat": "{{domain}}",
+          "legendFormat": "thuvien.eagles.edu.vn",
           "instant": true
         }
       ],
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 200
+              },
+              {
+                "color": "yellow",
+                "value": 300
+              },
+              {
+                "color": "red",
+                "value": 400
+              }
+            ]
+          }
+        },
         "overrides": []
       },
       "options": {
@@ -147,12 +169,12 @@
     {
       "id": 3,
       "type": "stat",
-      "title": "TLS days remaining",
+      "title": "TLS left",
       "description": "",
       "gridPos": {
-        "x": 9,
+        "x": 8,
         "y": 0,
-        "w": 5,
+        "w": 4,
         "h": 5
       },
       "datasource": {
@@ -163,7 +185,7 @@
         {
           "expr": "(probe_ssl_earliest_cert_expiry{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\",check=\"main\"} - time()) / 86400",
           "refId": "A",
-          "legendFormat": "{{domain}}",
+          "legendFormat": "thuvien.eagles.edu.vn",
           "instant": true
         }
       ],
@@ -208,12 +230,12 @@
     {
       "id": 4,
       "type": "stat",
-      "title": "Probe freshness",
+      "title": "Probe age",
       "description": "",
       "gridPos": {
-        "x": 14,
+        "x": 12,
         "y": 0,
-        "w": 5,
+        "w": 4,
         "h": 5
       },
       "datasource": {
@@ -224,7 +246,7 @@
         {
           "expr": "time() - timestamp(probe_success{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\",check=\"main\"})",
           "refId": "A",
-          "legendFormat": "{{domain}}",
+          "legendFormat": "seconds since last probe",
           "instant": true
         }
       ],
@@ -252,12 +274,12 @@
     {
       "id": 5,
       "type": "stat",
-      "title": "Active domain alerts",
+      "title": "Alerts",
       "description": "",
       "gridPos": {
-        "x": 19,
+        "x": 16,
         "y": 0,
-        "w": 5,
+        "w": 4,
         "h": 5
       },
       "datasource": {
@@ -268,7 +290,7 @@
         {
           "expr": "count(ALERTS{alertname=~\"PublicWebsite.*|SiteSISAPI.*|Thuvien.*|SISLiveApiServiceDown\",alertstate=~\"pending|firing\",domain=\"thuvien.eagles.edu.vn\"}) or vector(0)",
           "refId": "A",
-          "legendFormat": "{{domain}}",
+          "legendFormat": "alerts",
           "instant": true
         }
       ],
@@ -306,6 +328,133 @@
       }
     },
     {
+      "id": 19,
+      "type": "stat",
+      "title": "24h uptime",
+      "description": "The success rate is calculated from samples actually collected in the last 24 hours. The sample count sits beside the rate so incomplete history is visible; no data is not treated as healthy.",
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "100 * avg_over_time(probe_success{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\",check=\"main\"}[24h])",
+          "refId": "A",
+          "legendFormat": "Success %",
+          "instant": true
+        },
+        {
+          "expr": "count_over_time(probe_success{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\",check=\"main\"}[24h])",
+          "refId": "B",
+          "legendFormat": "Samples",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Success %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 99
+                    },
+                    {
+                      "color": "green",
+                      "value": 99.9
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Samples"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    },
+                    {
+                      "color": "green",
+                      "value": 1200
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
       "id": 6,
       "type": "state-timeline",
       "title": "Public availability history",
@@ -324,7 +473,7 @@
         {
           "expr": "probe_success{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\",check=\"main\"}",
           "refId": "A",
-          "legendFormat": "{{domain}}"
+          "legendFormat": "{{check}}"
         }
       ],
       "fieldConfig": {
@@ -390,7 +539,7 @@
         {
           "expr": "probe_http_duration_seconds{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\"}",
           "refId": "A",
-          "legendFormat": "{{domain}}"
+          "legendFormat": "{{phase}}"
         }
       ],
       "fieldConfig": {
@@ -429,7 +578,7 @@
         {
           "expr": "probe_dns_lookup_time_seconds{job=\"blackbox-website-http\",domain=\"thuvien.eagles.edu.vn\"}",
           "refId": "A",
-          "legendFormat": "{{domain}}"
+          "legendFormat": "DNS lookup"
         }
       ],
       "fieldConfig": {
@@ -468,7 +617,7 @@
         {
           "expr": "probe_success{domain=\"thuvien.eagles.edu.vn\",job=~\"blackbox-website-api|blackbox-thuvien-media\"}",
           "refId": "A",
-          "legendFormat": "{{domain}}"
+          "legendFormat": "{{check}} · {{job}}"
         }
       ],
       "fieldConfig": {
@@ -521,8 +670,8 @@
       "title": "Host resources · shared host",
       "description": "Node-exporter reports the shared host. These resource metrics are not attributed to this domain.",
       "gridPos": {
-        "x": 12,
-        "y": 20,
+        "x": 0,
+        "y": 28,
         "w": 12,
         "h": 8
       },
@@ -534,17 +683,17 @@
         {
           "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))",
           "refId": "A",
-          "legendFormat": "{{domain}}"
+          "legendFormat": "CPU busy"
         },
         {
           "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
           "refId": "B",
-          "legendFormat": "{{domain}}"
+          "legendFormat": "Memory used"
         },
         {
           "expr": "100 * (1 - node_filesystem_avail_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"})",
           "refId": "C",
-          "legendFormat": "{{domain}}"
+          "legendFormat": "Root filesystem used"
         }
       ],
       "fieldConfig": {
@@ -572,7 +721,7 @@
       "title": "Layer coverage and attribution",
       "description": "This map distinguishes collected signals from uninstrumented layers; shared host metrics are not presented as per-domain measurements.",
       "gridPos": {
-        "x": 0,
+        "x": 12,
         "y": 28,
         "w": 12,
         "h": 9
@@ -597,8 +746,8 @@
       "title": "Host service state",
       "description": "Shared host systemd state. Missing series mean no matching systemd unit is exported.",
       "gridPos": {
-        "x": 12,
-        "y": 28,
+        "x": 0,
+        "y": 37,
         "w": 12,
         "h": 9
       },
@@ -610,7 +759,7 @@
         {
           "expr": "node_systemd_unit_state{name=~\"(exercise-mailer\\\\.service|thuvien-r2-flip-image\\\\.service|thuvien-read-audio\\\\.service)\",state=~\"active|failed\"}",
           "refId": "A",
-          "legendFormat": "{{domain}}",
+          "legendFormat": "{{name}} / {{state}}",
           "instant": true
         }
       ],
@@ -655,13 +804,13 @@
     },
     {
       "id": 13,
-      "type": "table",
+      "type": "text",
       "title": "Domain dependencies",
       "description": "No domain-specific authenticated database/cache dependency probe is configured.",
       "gridPos": {
-        "x": 0,
+        "x": 12,
         "y": 37,
-        "w": 24,
+        "w": 12,
         "h": 9
       },
       "datasource": {
@@ -670,42 +819,12 @@
       },
       "targets": [],
       "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          }
-        },
+        "defaults": {},
         "overrides": []
       },
       "options": {
-        "showHeader": true,
-        "cellHeight": "md",
-        "sortBy": []
+        "mode": "markdown",
+        "content": "No authenticated domain-specific database or cache dependency probe is configured. This is an instrumentation gap, not a healthy result."
       }
     },
     {
@@ -727,7 +846,7 @@
         {
           "expr": "probe_duration_seconds{domain=\"thuvien.eagles.edu.vn\",job=~\"blackbox-website-api|blackbox-thuvien-media\"}",
           "refId": "A",
-          "legendFormat": "{{domain}}"
+          "legendFormat": "{{check}}"
         }
       ],
       "fieldConfig": {
@@ -766,7 +885,7 @@
         {
           "expr": "ALERTS{alertname=~\"PublicWebsite.*|SiteSISAPI.*|Thuvien.*|SISLiveApiServiceDown\",alertstate=~\"pending|firing\",domain=\"thuvien.eagles.edu.vn\"}",
           "refId": "A",
-          "legendFormat": "{{domain}}"
+          "legendFormat": "{{alertname}} / {{severity}}"
         }
       ],
       "fieldConfig": {

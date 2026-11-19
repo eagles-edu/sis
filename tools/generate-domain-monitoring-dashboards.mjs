@@ -104,7 +104,7 @@ function panel(id, title, type, exprs, gridPos, options = {}) {
     description: options.description || "",
     gridPos,
     datasource: DATASOURCE,
-    targets: exprs.map((entry, index) => target(entry.expr, String.fromCharCode(65 + index), entry.legend || "{{domain}}", entry.instant)),
+    targets: exprs.map((entry, index) => target(entry.expr, entry.refId || String.fromCharCode(65 + index), entry.legend || entry.legendFormat || "{{domain}}", entry.instant)),
     fieldConfig: options.fieldConfig || { defaults: {}, overrides: [] },
     options: options.options || {},
   }
@@ -124,34 +124,47 @@ function dashboardFor(config) {
   const appJobs = config.applicationChecks.join("|")
   const appSelector = appJobs ? `probe_success{${selector},job=~"${appJobs}"}` : null
   const panels = [
-    panel(1, "Public HTTPS", "stat", [target(`probe_success{job="blackbox-website-http",${selector},check="main"}`, "A", domain, true)], { x: 0, y: 0, w: 5, h: 5 }, { fieldConfig: statusField(), options: statOptions() }),
-    panel(2, "HTTP status", "stat", [target(`probe_http_status_code{job="blackbox-website-http",${selector},check="main"}`, "A", domain, true)], { x: 5, y: 0, w: 4, h: 5 }, { options: statOptions() }),
-    panel(3, "TLS days remaining", "stat", [target(`(probe_ssl_earliest_cert_expiry{job="blackbox-website-http",${selector},check="main"} - time()) / 86400`, "A", domain, true)], { x: 9, y: 0, w: 5, h: 5 }, { fieldConfig: { defaults: { unit: "d", thresholds: { mode: "absolute", steps: [{ color: "red", value: null }, { color: "yellow", value: 14 }, { color: "green", value: 30 }] } }, overrides: [] }, options: statOptions() }),
-    panel(4, "Probe freshness", "stat", [target(`time() - timestamp(probe_success{job="blackbox-website-http",${selector},check="main"})`, "A", "seconds since last probe", true)], { x: 14, y: 0, w: 5, h: 5 }, { fieldConfig: { defaults: { unit: "s" }, overrides: [] }, options: statOptions() }),
-    panel(5, "Active domain alerts", "stat", [target(`count(ALERTS{alertname=~"${config.alerts}",alertstate=~"pending|firing",domain="${domain}"}) or vector(0)`, "A", "alerts", true)], { x: 19, y: 0, w: 5, h: 5 }, { fieldConfig: { defaults: { thresholds: { mode: "absolute", steps: [{ color: "green", value: null }, { color: "red", value: 1 }] } }, overrides: [] }, options: statOptions() }),
+    panel(1, "Public HTTPS", "stat", [target(`probe_success{job="blackbox-website-http",${selector},check="main"}`, "A", domain, true)], { x: 0, y: 0, w: 4, h: 5 }, { fieldConfig: statusField(), options: statOptions() }),
+    panel(2, "HTTP status", "stat", [target(`probe_http_status_code{job="blackbox-website-http",${selector},check="main"}`, "A", domain, true)], { x: 4, y: 0, w: 4, h: 5 }, { fieldConfig: { defaults: { thresholds: { mode: "absolute", steps: [{ color: "red", value: null }, { color: "green", value: 200 }, { color: "yellow", value: 300 }, { color: "red", value: 400 }] } }, overrides: [] }, options: statOptions() }),
+    panel(3, "TLS left", "stat", [target(`(probe_ssl_earliest_cert_expiry{job="blackbox-website-http",${selector},check="main"} - time()) / 86400`, "A", domain, true)], { x: 8, y: 0, w: 4, h: 5 }, { fieldConfig: { defaults: { unit: "d", thresholds: { mode: "absolute", steps: [{ color: "red", value: null }, { color: "yellow", value: 14 }, { color: "green", value: 30 }] } }, overrides: [] }, options: statOptions() }),
+    panel(4, "Probe age", "stat", [target(`time() - timestamp(probe_success{job="blackbox-website-http",${selector},check="main"})`, "A", "seconds since last probe", true)], { x: 12, y: 0, w: 4, h: 5 }, { fieldConfig: { defaults: { unit: "s" }, overrides: [] }, options: statOptions() }),
+    panel(5, "Alerts", "stat", [target(`count(ALERTS{alertname=~"${config.alerts}",alertstate=~"pending|firing",domain="${domain}"}) or vector(0)`, "A", "alerts", true)], { x: 16, y: 0, w: 4, h: 5 }, { fieldConfig: { defaults: { thresholds: { mode: "absolute", steps: [{ color: "green", value: null }, { color: "red", value: 1 }] } }, overrides: [] }, options: statOptions() }),
+    panel(19, "24h uptime", "stat", [
+      target(`100 * avg_over_time(probe_success{job="blackbox-website-http",${selector},check="main"}[24h])`, "A", "Success %", true),
+      target(`count_over_time(probe_success{job="blackbox-website-http",${selector},check="main"}[24h])`, "B", "Samples", true),
+    ], { x: 20, y: 0, w: 4, h: 5 }, { description: "The success rate is calculated from samples actually collected in the last 24 hours. The sample count sits beside the rate so incomplete history is visible; no data is not treated as healthy.", fieldConfig: { defaults: { decimals: 2 }, overrides: [
+      { matcher: { id: "byName", options: "Success %" }, properties: [{ id: "unit", value: "percent" }, { id: "min", value: 0 }, { id: "max", value: 100 }, { id: "thresholds", value: { mode: "absolute", steps: [{ color: "red", value: null }, { color: "yellow", value: 99 }, { color: "green", value: 99.9 }] } }] },
+      { matcher: { id: "byName", options: "Samples" }, properties: [{ id: "unit", value: "short" }, { id: "decimals", value: 0 }, { id: "thresholds", value: { mode: "absolute", steps: [{ color: "red", value: null }, { color: "yellow", value: 1 }, { color: "green", value: 1200 }] } }] },
+    ] }, options: { ...statOptions(), textMode: "value_and_name" } }),
     panel(6, "Public availability history", "state-timeline", [target(`probe_success{job="blackbox-website-http",${selector},check="main"}`, "A", "{{check}}")], { x: 0, y: 5, w: 24, h: 7 }, { fieldConfig: statusField(), options: { mergeValues: true, showValue: "auto", alignValue: "center", rowHeight: 0.9, tooltip: { mode: "single", sort: "none" } } }),
     panel(7, "Request phases", "timeseries", [target(`probe_http_duration_seconds{job="blackbox-website-http",${selector}}`, "A", "{{phase}}")], { x: 0, y: 12, w: 12, h: 8 }, { fieldConfig: { defaults: { unit: "s" }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }),
     panel(8, "DNS resolution", "timeseries", [target(`probe_dns_lookup_time_seconds{job="blackbox-website-http",${selector}}`, "A", "DNS lookup")], { x: 12, y: 12, w: 12, h: 8 }, { fieldConfig: { defaults: { unit: "s" }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }),
-    panel(9, "Application and media probe state", "state-timeline", appSelector ? [target(appSelector, "A", "{{check}} · {{job}}")]: [], { x: 0, y: 20, w: 12, h: 8 }, { description: appSelector ? "Only configured domain-specific checks appear. Coverage gaps are listed in the layer map below." : "No domain-specific application or API probe is configured; this is an explicit instrumentation gap.", fieldConfig: statusField(), options: { mergeValues: true, showValue: "auto", alignValue: "center", rowHeight: 0.9, tooltip: { mode: "single", sort: "none" } } }),
+    appSelector
+      ? panel(9, "Application and media probe state", "state-timeline", [target(appSelector, "A", "{{check}} · {{job}}")], { x: 0, y: 20, w: 12, h: 8 }, { description: "Only configured domain-specific checks appear. Coverage gaps are listed in the layer map below.", fieldConfig: statusField(), options: { mergeValues: true, showValue: "auto", alignValue: "center", rowHeight: 0.9, tooltip: { mode: "single", sort: "none" } } })
+      : panel(9, "Application and media probe state", "text", [], { x: 0, y: 20, w: 12, h: 8 }, { description: "No domain-specific application or API probe is configured; this is an explicit instrumentation gap.", options: { mode: "markdown", content: "No application or media probe is configured for this domain. Review the layer coverage map before interpreting this as a healthy result." } }),
     panel(10, "Host resources · shared host", "timeseries", [
       target("100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))", "A", "CPU busy"),
       target("100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)", "B", "Memory used"),
       target("100 * (1 - node_filesystem_avail_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"})", "C", "Root filesystem used"),
-    ], { x: 12, y: 20, w: 12, h: 8 }, { description: "Node-exporter reports the shared host. These resource metrics are not attributed to this domain.", fieldConfig: { defaults: { unit: "percent", min: 0, max: 100 }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }),
-    panel(11, "Layer coverage and attribution", "text", [], { x: 0, y: 28, w: 12, h: 9 }, { description: "This map distinguishes collected signals from uninstrumented layers; shared host metrics are not presented as per-domain measurements.", options: { mode: "markdown", content: `| Layer | Coverage | Signals |\n| --- | --- | --- |\n${config.coverage.map(([layer, status, detail]) => `| ${layer} | **${status}** | ${detail} |`).join("\n")}` } }),
-    panel(12, "Host service state", "table", config.services.length ? [target(`node_systemd_unit_state{name=~"(${config.services.map((service) => service.replaceAll(".", "\\\\.")).join("|")})",state=~"active|failed"}`, "A", "{{name}} / {{state}}", true)] : [], { x: 12, y: 28, w: 12, h: 9 }, { description: "Shared host systemd state. Missing series mean no matching systemd unit is exported.", fieldConfig: statusField(), options: { showHeader: true, cellHeight: "md", sortBy: [] } }),
-    panel(13, "Domain dependencies", "table", config.dependencies ? [target(`site_dependency_status{${selector}}`, "A", "{{dependency}} · {{check}}", true)] : [], { x: 0, y: 37, w: config.containers ? 12 : 24, h: 9 }, { description: config.dependencies ? "Read-only authenticated dependency probes. No rows means the collector has not exported this layer." : "No domain-specific authenticated database/cache dependency probe is configured.", fieldConfig: statusField(), options: { showHeader: true, cellHeight: "md", sortBy: [] } }),
-    panel(17, "Application/API response time", "timeseries", [target(`probe_duration_seconds{${selector},job=~"${appJobs}"}`, "A", "{{check}}")], { x: 12, y: 20, w: 12, h: 8 }, { description: appSelector ? "Response duration for configured domain application/API probes." : "No domain-specific application/API latency probe is configured.", fieldConfig: { defaults: { unit: "s" }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }),
+    ], { x: 0, y: 28, w: 12, h: 8 }, { description: "Node-exporter reports the shared host. These resource metrics are not attributed to this domain.", fieldConfig: { defaults: { unit: "percent", min: 0, max: 100 }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }),
+    panel(11, "Layer coverage and attribution", "text", [], { x: 12, y: 28, w: 12, h: 9 }, { description: "This map distinguishes collected signals from uninstrumented layers; shared host metrics are not presented as per-domain measurements.", options: { mode: "markdown", content: `| Layer | Coverage | Signals |\n| --- | --- | --- |\n${config.coverage.map(([layer, status, detail]) => `| ${layer} | **${status}** | ${detail} |`).join("\n")}` } }),
+    panel(12, "Host service state", "table", config.services.length ? [target(`node_systemd_unit_state{name=~"(${config.services.map((service) => service.replaceAll(".", "\\\\.")).join("|")})",state=~"active|failed"}`, "A", "{{name}} / {{state}}", true)] : [], { x: 0, y: 37, w: 12, h: 9 }, { description: "Shared host systemd state. Missing series mean no matching systemd unit is exported.", fieldConfig: statusField(), options: { showHeader: true, cellHeight: "md", sortBy: [] } }),
+    config.dependencies
+      ? panel(13, "Domain dependencies", "table", [target(`site_dependency_status{${selector}}`, "A", "{{dependency}} · {{check}}", true)], { x: 12, y: 37, w: 12, h: 9 }, { description: "Read-only authenticated dependency probes for this domain.", fieldConfig: statusField(), options: { showHeader: true, cellHeight: "md", sortBy: [] } })
+      : panel(13, "Domain dependencies", "text", [], { x: 12, y: 37, w: 12, h: 9 }, { description: "No domain-specific authenticated database/cache dependency probe is configured.", options: { mode: "markdown", content: "No authenticated domain-specific database or cache dependency probe is configured. This is an instrumentation gap, not a healthy result." } }),
+    appSelector
+      ? panel(17, "Application/API response time", "timeseries", [target(`probe_duration_seconds{${selector},job=~"${appJobs}"}`, "A", "{{check}}")], { x: 12, y: 20, w: 12, h: 8 }, { description: "Response duration for configured domain application/API probes.", fieldConfig: { defaults: { unit: "s" }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } })
+      : panel(17, "Application/API response time", "text", [], { x: 12, y: 20, w: 12, h: 8 }, { description: "No domain-specific application/API latency probe is configured.", options: { mode: "markdown", content: "No domain-specific application/API latency probe is configured. Review the layer coverage map; no latency data is available." } }),
   ]
 
   if (config.containers) {
     panels.push(panel(14, "ERPNext component health", "table", [
       target(`erpnext_container_running{${selector}}`, "A", "{{component}} running", true),
       target(`erpnext_container_health{${selector}}`, "B", "{{component}} health", true),
-    ], { x: 12, y: 37, w: 12, h: 9 }, { description: "Eight expected containers; health -1 means the container has no Docker healthcheck.", options: { showHeader: true, cellHeight: "md", sortBy: [] } }))
+    ], { x: 12, y: 46, w: 12, h: 9 }, { description: "Eight expected containers; health -1 means the container has no Docker healthcheck.", options: { showHeader: true, cellHeight: "md", sortBy: [] } }))
   }
 
-  const alertsY = config.containers ? 46 : 46
+  const alertsY = config.containers ? 55 : 46
   const adminAckAlert = config.slug === "sis-admin"
     ? [target("ALERTS{alertname=\"DevParentReportAcknowledgmentServerFailure\",environment=\"dev\",alertstate=~\"pending|firing\"}", "B", "SIS parent acknowledgment 5xx")]
     : []
@@ -166,11 +179,11 @@ function dashboardFor(config) {
     panels.push(panel(16, "SIS dev workflow state and freshness · environment-wide", "timeseries", [
       target("sis_keepalive_check_failure_info{environment=\"dev\"}", "A", "{{group}} · {{code}}"),
       target("time() - sis_keepalive_check_last_check_timestamp_seconds{environment=\"dev\"}", "B", "{{group}} freshness seconds"),
-    ], { x: 0, y: 54, w: 24, h: 8 }, { description: "These dev checks have environment labels, not domain labels. Failure series are binary, and freshness is graphed as seconds since the last check.", fieldConfig: { defaults: { unit: "s" }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }))
+    ], { x: 0, y: 63, w: 24, h: 8 }, { description: "These dev checks have environment labels, not domain labels. Failure series are binary, and freshness is graphed as seconds since the last check.", fieldConfig: { defaults: { unit: "s" }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }))
     panels.push(panel(18, "Parent report acknowledgment results · dev", "timeseries", [
       target("sum by(status) (increase(sis_parent_report_acknowledgment_requests_total{environment=\"dev\",route=\"POST /api/parent/reports/:reportId/acknowledge\"}[1h]))", "A", "HTTP {{status}}"),
       target("ALERTS{alertname=\"DevParentReportAcknowledgmentServerFailure\",environment=\"dev\",alertstate=~\"pending|firing\"}", "B", "5xx alert"),
-    ], { x: 0, y: 62, w: 24, h: 8 }, { description: "Environment-wide dev acknowledgment result counts and the corresponding 5xx alert; these are not attributed to one individual report.", options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }))
+    ], { x: 0, y: 71, w: 24, h: 8 }, { description: "Environment-wide dev acknowledgment result counts and the corresponding 5xx alert; these are not attributed to one individual report.", options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }))
   }
 
   return {
