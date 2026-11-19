@@ -192,6 +192,10 @@ test("legacy parent report bundle markers decode into first-class payload shape"
     currentHomeworkSummary: "Homework Past Due | due 2026-09-14",
     pastDueHomeworkCount: "2",
     pastDueHomeworkSummary: "2 bài tập quá hạn cần xử lý ngay.",
+    parentReviewedAt: null,
+    parentReviewedByUsername: null,
+    studentReviewedAt: null,
+    studentReviewedByUsername: null,
     recipients: ["student@example.com", "parent@example.com"],
     outstandingAssignments: [
       {

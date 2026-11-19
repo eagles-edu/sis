@@ -89,7 +89,7 @@ test("sis-config-repair.mjs logs an ISO timestamp prefix on successful sync", as
       ...process.env,
       NODE_ENV: "development",
       SIS_CONFIG_FILE: sisConfigPath,
-      DATABASE_URL: "postgresql://user:pass@localhost:5432/sis",
+      DATABASE_URL: "",
     }
     const output = execFileSync(process.execPath, [repairScriptPath], {
       env,

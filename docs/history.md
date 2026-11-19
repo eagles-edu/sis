@@ -173,3 +173,9 @@ Hardening decisions captured from this incident:
 
 - Exercised post-write interruption paths for the parent invitation, submitted Student News report, and approved Library contribution in dev. The flows cleaned their synthetic records and verified queue/contribution/canonical-entry absence; the parent cleanup also removes any async invitation job keyed to its synthetic invitation IDs.
 - Read-only aggregate checks in `sis_dev` and `sis-test` found no synthetic records or matching queued invitation jobs. The dev API remained healthy and production was untouched. Backup: `/home/eagles/dockerz/backups/manual-edits/20261119-ka128-interrupted-probe-cleanup/`.
+
+### 2026-11-19: KA-131 complete core regression pass
+
+- Corrected contract tests whose expectations had drifted from current dictionary-source URL resolution, cache-busted portal assets, route matching, and normalized parent-review fields. Isolated student-admin SIS config writes from the development database and isolated the repair-script fixture from the owned dev database.
+- The SIS config recovery test now validates that the selected database snapshot remains the winner while allowing filesystem mtime precision/ownership behavior; the service account can write the protected config inode but cannot arbitrarily set its mtime.
+- The complete 143-file core suite passed under the explicit `.env.dev` / `development` environment against `sis_dev`. The dev restart completed with no pending migrations, `/healthz` reported `ok`, and the config mirror reported in sync. Production was untouched. Backups: `/home/eagles/dockerz/backups/manual-edits/20261119-ka131-core-regression/`.

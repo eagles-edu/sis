@@ -181,7 +181,7 @@
 
 ## Combined regression testing and rollout
 
-- [ ] Run focused regression tests for every subsystem and record results.
+- [x] Run focused regression tests for every subsystem and record results. [KA-131; 2026-11-19. Under `SIS_ENV_FILE=.env.dev`, `DOTENV_CONFIG_PATH=.env.dev`, `NODE_ENV=development` against `sis_dev`, the complete 143-file core suite passed with exit 0 after correcting stale contract expectations and isolating test config fixtures from the dev config/database. This includes provider failure behavior, config mirror recovery, admin routes/UI, student News vocabulary, and subsystem monitors; separate authenticated workflow/browser gates remain tracked below. The SIS config recovery assertion now checks the winning DB recency and mirror agreement without requiring privileged mutation of the protected config file's filesystem mtime. `test/sis-config-store.spec.mjs` passed 15/15; the final full core run passed all 143 files. `npm run dev:restart` completed with no pending migrations; dev `/healthz` returned `ok`, and SIS config file/database mirror reported in sync. Production was untouched. Backup: `/home/eagles/dockerz/backups/manual-edits/20261119-ka131-core-regression/`]
 - [ ] Run the critical workflows together to detect shared dependency and cross-system regressions.
 - [ ] Verify authenticated desktop and mobile portal workflows for each affected surface.
 - [ ] Rebuild required generated assets and verify source-to-generated parity.

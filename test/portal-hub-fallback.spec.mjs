@@ -57,7 +57,7 @@ test("student boot preserves the historical shared loading order", () => {
   assert.match(studentHtml, /<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>/)
   assert.match(studentHtml, /<script src="\/web-asset\/shared\/portal-action-feedback\.js"><\/script>/)
   assert.match(studentHtml, /<script (?:defer )?src="\/web-asset\/shared\/portal-navigation\.js"><\/script>/)
-  assert.match(studentHtml, /<script (?:defer )?src="\/web-asset\/student\/student-portal\.min\.js"><\/script>/)
+  assert.match(studentHtml, /<script (?:defer )?src="\/web-asset\/student\/student-portal\.min\.js\?v=[^"]+"><\/script>/)
 })
 
 test("parent boot preserves the historical shared loading order", () => {

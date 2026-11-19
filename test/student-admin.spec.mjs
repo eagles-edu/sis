@@ -180,6 +180,8 @@ function renderedAdminPageSections(html = "") {
 }
 
 process.env.NODE_ENV = "test"
+process.env.SIS_CONFIG_FILE = TEST_GENERATED_SIS_CONFIG_FILE
+process.env.DATABASE_URL = ""
 process.env.EXERCISE_MAILER_ORIGIN = "*"
 process.env.EXERCISE_STORE_ENABLED = "false"
 process.env.EXERCISE_STORE_REQUIRED = "false"
@@ -711,7 +713,7 @@ test("student dashboard/news paths guard missing optional Prisma delegates", () 
   assert.doesNotMatch(routes, /canTeacherWriteDataEntryPath/)
   assert.match(routes, /ADMIN_ATTENDANCE_PATH_RE\.test\(pathname\)/)
   assert.match(routes, /ADMIN_GRADES_PATH_RE\.test\(pathname\)/)
-  assert.match(routes, /ADMIN_REPORTS_PATH_RE\.test\(pathname\)/)
+  assert.match(routes, /pathname\.match\(ADMIN_REPORTS_PATH_RE\)/)
   assert.match(routes, /from "\.\.\/src\/modules\/admin\/dashboard-summary\.mjs"/)
   assert.match(routes, /from "\.\.\/src\/modules\/admin\/student-news-review\.mjs"/)
   assert.match(routes, /from "\.\.\/src\/modules\/admin\/student-records\.mjs"/)

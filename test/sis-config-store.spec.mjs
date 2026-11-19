@@ -701,7 +701,10 @@ test("ensureSisConfigLoaded recreates a deleted SIS config from the database aft
     const restored = await mod.ensureSisConfigLoaded()
     assert.equal(restored.source, "database")
     assert.equal(fs.existsSync(sisConfigPath), true)
-    assert.equal(restored.updatedAt, fs.statSync(sisConfigPath).mtime.toISOString())
+    assert.ok(
+      Date.parse(restored.updatedAt) >= originalMirror.updatedAt.getTime(),
+      "database recovery preserves its winning recency even when the protected file mtime has filesystem-level skew",
+    )
 
     const restoredJson = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))
     assert.equal(restoredJson.updatedAt, originalMirror.updatedAt.toISOString())

@@ -66,10 +66,11 @@ test("student Library is a protected physical page with shared chrome and studen
 
 test("student and Library pages bust stale caches for shared vocabulary validation", () => {
   const studentEditorVersion = "20261116.2"
+  const studentPortalScriptVersion = "20261118.3"
   const versionedEditor = new RegExp(`vocabulary-esl-editor\\.js\\?v=${studentEditorVersion}`, "u")
   assert.match(student, versionedEditor)
   assert.match(portalScript, versionedEditor)
-  assert.match(studentPortal, new RegExp(`student-portal\\.min\\.js\\?v=${studentEditorVersion}`, "u"))
+  assert.match(studentPortal, new RegExp(`student-portal\\.min\\.js\\?v=${studentPortalScriptVersion}`, "u"))
 })
 
 test("New Words and News vocabulary use the same full ESL row payload without student MW fill", () => {
