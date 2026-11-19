@@ -184,6 +184,12 @@ http://127.0.0.1:9090/alerts
 
 These alerts are currently evaluated and displayed by Prometheus. External delivery is not configured yet. Add Alertmanager only after an approved receiver destination (email, Slack, or another operations channel) is chosen.
 
+## Controlled restart policy
+
+The test API (`exercise-mailer-test.service`), static server (`sis-web-test.service`), and async worker (`sis-async-side-effects-test.service`) use the same bounded systemd policy from `ops/systemd/keepalive-test-restart-guard.conf`: `Restart=on-failure`, a 30-second delay, and at most four starts (initial start plus three automatic restarts) in 15 minutes. On the limit, systemd leaves the unit failed and performs no host-level action. Apply the allowlisted test-only drop-ins with `sudo tools/install-test-restart-guards.sh`; it validates each unit's `/home/test.eagles.edu.vn` runtime path and `.env.test` ownership before installing, then runs `systemctl daemon-reload` without restarting active services. The install output reports each effective limit.
+
+The dev API is not systemd managed and has no automatic restart loop. `npm run dev:restart` is an operator-only maintenance action because it rebuilds assets and runs the dev-owned Prisma generation/migration checks; it is not a recovery action. No live/admin unit is in the installer allowlist.
+
 ## Normal operating baseline
 
 Expected healthy state:

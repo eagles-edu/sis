@@ -432,6 +432,12 @@ The rows below define the target policy for each logical group. `dev` means `.en
 
 Only the dev schedules listed above are active for the full synthetic workflow monitors. Test supports the engagement read-only check and async-worker heartbeat; test Library, News, grade-feed, attendance, and parent-profile recurring schedules remain unimplemented. All production checks remain out of scope and read-only.
 
+## Controlled test-mirror service restarts
+
+`ops/systemd/keepalive-test-restart-guard.conf` defines the bounded systemd policy for the exact test-mirror API, static server, and async worker units: restart only on process failure, wait 30 seconds between attempts, and allow at most four starts (the initial start plus three automatic restarts) in a rolling 15-minute interval. After the limit, systemd leaves the unit failed with `start-limit-hit`; `StartLimitAction=none` prevents a host reboot or other system-wide action. Install and verify the test-only drop-ins with `sudo tools/install-test-restart-guards.sh`. The installer checks each unit's runtime path and test-owned `.env.test` before writing and records any replaced drop-in under `/home/eagles/dockerz/backups/manual-edits/`.
+
+The dev API is launched as an on-demand process rather than a systemd service. It has no automatic restart loop; routine `npm run dev:restart` rebuilds admin assets and runs the dev-owned Prisma generation/migration checks, so it must remain operator initiated and must never be called as automatic recovery. The test-only drop-ins do not modify `exercise-mailer.service` or any production unit. Restart-limit alerting and recovery-notification verification remain separate checklist items.
+
 ## Parent profile workflow monitor
 
 Run the dev functional monitor with:
