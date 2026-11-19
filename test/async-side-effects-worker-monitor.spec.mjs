@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import fs from "node:fs"
 import test from "node:test"
 import {
   renderWorkerHeartbeat,
@@ -45,4 +46,17 @@ test("test worker heartbeat has isolated test labels and no request or account d
   )
   assert.doesNotMatch(metrics, /environment="dev"|student|recipient|password|cookie|session|job_id|[\w.+-]+@[\w.-]+/iu)
   assert.throws(() => renderWorkerHeartbeat({ environmentLabel: "production", success: true }), /explicit dev or test/u)
+})
+
+test("async worker monitoring logs do not interpolate job data, filenames, or raw errors", () => {
+  const workerSource = fs.readFileSync(new URL("../tools/async-side-effects-worker.mjs", import.meta.url), "utf8")
+  const jobsSource = fs.readFileSync(new URL("../src/modules/async/side-effect-jobs.mjs", import.meta.url), "utf8")
+
+  assert.match(workerSource, /console\.log\("\[async-side-effects\] report_card_pdf_generated"\)/u)
+  assert.match(workerSource, /console\.warn\("\[async-side-effects\] job_failed"\)/u)
+  assert.match(workerSource, /console\.error\("\[async-side-effects\] worker_loop_failed"\)/u)
+  assert.match(workerSource, /console\.error\("\[async-side-effects\] worker_start_failed"\)/u)
+  assert.doesNotMatch(workerSource, /normalizeErrorMessage|job \$\{job\.id\}|result\.filename/u)
+  assert.match(jobsSource, /console\.warn\("async side effects falling back to memory: persistence_unavailable"\)/u)
+  assert.doesNotMatch(jobsSource, /falling back to memory: \$\{normalizeText\(error/u)
 })

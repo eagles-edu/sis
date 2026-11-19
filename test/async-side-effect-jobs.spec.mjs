@@ -92,17 +92,18 @@ test("announcement delivery failure listing exposes investigation fields without
       take: 1,
       workerId: "ka072-investigation-test",
     })
-    await mod.failAsyncSideEffectJob(job.id, new Error("synthetic provider rejection"), { maxAttempts: 1 })
+    await mod.failAsyncSideEffectJob(job.id, Object.assign(new Error("private provider token response"), { statusCode: 503 }), { maxAttempts: 1 })
 
     const failures = await mod.listAnnouncementDeliveryFailures({ take: 10 })
     assert.equal(failures.length, 1)
     assert.equal(failures[0].id, job.id)
     assert.equal(failures[0].status, mod.ASYNC_SIDE_EFFECT_JOB_STATUS_FAILED)
     assert.equal(failures[0].attempts, 1)
-    assert.equal(failures[0].lastError, "synthetic provider rejection")
+    assert.equal(failures[0].lastError, "provider_unavailable")
     assert.equal(Object.hasOwn(failures[0], "payloadJson"), false)
     assert.equal(JSON.stringify(failures).includes("private@example.invalid"), false)
     assert.equal(JSON.stringify(failures).includes("private body"), false)
+    assert.equal(JSON.stringify(failures).includes("private provider token response"), false)
   } finally {
     if (previousNodeEnv === undefined) delete process.env.NODE_ENV
     else process.env.NODE_ENV = previousNodeEnv
@@ -214,7 +215,7 @@ test("announcement dispatch retries provider outages and preserves provider idem
     assert.deepEqual(firstDrainResult, { claimed: 1, succeeded: 0, failed: 1, remaining: 0, processing: 0 })
     assert.equal(outageRecord?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED)
     assert.equal(outageRecord?.attempts, 1)
-    assert.match(outageRecord?.lastError || "", /Brevo email request failed \(503\)/u)
+    assert.equal(outageRecord?.lastError, "provider_unavailable")
 
     await new Promise((resolve) => setTimeout(resolve, 20))
     const completions = []

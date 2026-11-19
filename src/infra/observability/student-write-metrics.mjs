@@ -117,9 +117,10 @@ function scheduleFlush() {
       await fs.rename(temporaryPath, filePath)
     })
     .catch((error) => {
+      void error
       console.error(JSON.stringify({
         event: "sis_student_write_metrics_flush_failed",
-        error: text(error?.message || error),
+        reason: "metrics_write_failed",
       }))
     })
   return writeQueue

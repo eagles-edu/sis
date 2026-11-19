@@ -5,6 +5,7 @@ import {
   ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
   ASYNC_SIDE_EFFECT_JOB_TYPE_PARENT_PROFILE_INVITATION,
   ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF,
+  safeAsyncSideEffectFailureCode,
 } from "../src/modules/async/side-effect-jobs.mjs"
 import { updateQueuedAnnouncement, nowIso } from "../src/modules/admin/notification-queue.mjs"
 import { markAssignmentReminderEngagementSent } from "../src/modules/admin/assignment-reminder-dispatcher.mjs"
@@ -21,15 +22,6 @@ import { fileURLToPath } from "node:url"
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
-}
-
-/**
- * @param {unknown} error
- * @returns {string}
- */
-function normalizeErrorMessage(error) {
-  if (error instanceof Error) return normalizeText(error.message)
-  return normalizeText(error)
 }
 
 /**
@@ -151,7 +143,7 @@ async function updateAnnouncementQueueItem(job, result, failure = null) {
       queueId,
       {
         status: "queued",
-        lastError: normalizeErrorMessage(failure),
+        lastError: safeAsyncSideEffectFailureCode(failure),
         attempts: (Number.parseInt(String(job.attempts || 0), 10) || 0),
       },
       {
@@ -200,16 +192,14 @@ async function runWorkerOnce() {
         await updateAnnouncementQueueItem(job, result, null)
       }
       if (job.jobType === ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF) {
-        console.log(
-          `[async-side-effects] generated ${result.filename || "report-card.pdf"} (${result.bytes || 0} bytes)`
-        )
+        console.log("[async-side-effects] report_card_pdf_generated")
       }
     },
     onJobFailed: async (job, error, failure) => {
       if (job.jobType === ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL) {
         await updateAnnouncementQueueItem(job, null, error)
       } else {
-        console.warn(`[async-side-effects] job ${job.id} failed: ${normalizeErrorMessage(error)}`)
+        console.warn("[async-side-effects] job_failed")
       }
       void failure
     },
@@ -229,9 +219,9 @@ export async function startAsyncSideEffectsWorker() {
         )
       }
       return result
-    } catch (error) {
+    } catch {
       writeWorkerHeartbeat({ success: false })
-      throw error
+      throw new Error("Async side-effects worker poll failed")
     }
   }
 
@@ -239,8 +229,8 @@ export async function startAsyncSideEffectsWorker() {
   if (once) return { stop() {} }
 
   const timer = setInterval(() => {
-    run().catch((error) => {
-      console.error(`[async-side-effects] worker loop failed: ${normalizeErrorMessage(error)}`)
+    run().catch(() => {
+      console.error("[async-side-effects] worker_loop_failed")
     })
   }, pollIntervalMs)
 
@@ -254,8 +244,8 @@ export async function startAsyncSideEffectsWorker() {
 const invokedDirectly = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
 
 if (invokedDirectly) {
-  startAsyncSideEffectsWorker().catch((error) => {
-    console.error(`[async-side-effects] worker start failed: ${normalizeErrorMessage(error)}`)
+  startAsyncSideEffectsWorker().catch(() => {
+    console.error("[async-side-effects] worker_start_failed")
     process.exitCode = 1
   })
 }

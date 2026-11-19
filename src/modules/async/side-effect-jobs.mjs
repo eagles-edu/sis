@@ -93,6 +93,16 @@ function normalizeJobStatus(value) {
   return ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED
 }
 
+export function safeAsyncSideEffectFailureCode(error) {
+  const statusCode = Number.parseInt(String(error?.statusCode || ""), 10)
+  if (statusCode === 408 || statusCode === 504) return "provider_timeout"
+  if (statusCode === 429) return "provider_rate_limited"
+  if (statusCode >= 500 && statusCode <= 599) return "provider_unavailable"
+  if (statusCode >= 400 && statusCode <= 499) return "provider_rejected"
+  if (error?.name === "AbortError" || error?.name === "TimeoutError") return "operation_timeout"
+  return "operation_failed"
+}
+
 function normalizePayload(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {}
   return { ...value }
@@ -163,7 +173,8 @@ function markDatabaseFallback(error) {
   SIDE_EFFECT_JOB_DB_DISABLED = true
   if (!SIDE_EFFECT_JOB_DB_WARNED) {
     SIDE_EFFECT_JOB_DB_WARNED = true
-    console.warn(`async side effects falling back to memory: ${normalizeText(error?.message || error)}`)
+    void error
+    console.warn("async side effects falling back to memory: persistence_unavailable")
   }
 }
 
@@ -554,7 +565,7 @@ export async function failAsyncSideEffectJob(jobId, error, options = {}) {
   if (!id) return null
   const maxAttempts = Math.max(1, Number.parseInt(String(options.maxAttempts || 3), 10) || 3)
   const retryDelayMs = Math.max(0, Number.parseInt(String(options.retryDelayMs || 0), 10) || 0)
-  const lastError = normalizeText(error?.message || error)
+  const lastError = safeAsyncSideEffectFailureCode(error)
   const retryAt = retryDelayMs ? new Date(Date.now() + retryDelayMs) : null
 
   const prisma = await getJobPrismaClient()
