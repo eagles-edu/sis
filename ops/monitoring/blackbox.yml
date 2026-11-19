@@ -6,3 +6,45 @@ modules:
       method: GET
       preferred_ip_protocol: ip4
       valid_status_codes: [200]
+  https_2xx_browser:
+    prober: http
+    timeout: 10s
+    http:
+      method: GET
+      preferred_ip_protocol: ip4
+      valid_status_codes: [200]
+      follow_redirects: true
+      fail_if_not_ssl: true
+      body_size_limit: "1MB"
+      headers:
+        Accept: text/html,application/xhtml+xml
+        User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+  https_2xx_frappe_ping:
+    prober: http
+    timeout: 10s
+    http:
+      method: GET
+      preferred_ip_protocol: ip4
+      valid_status_codes: [200]
+      follow_redirects: true
+      fail_if_not_ssl: true
+      body_size_limit: "4KB"
+      headers:
+        Accept: application/json
+        User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+      fail_if_body_not_matches_regexp:
+        - '"message"\s*:\s*"pong"'
+  https_206_range:
+    prober: http
+    timeout: 15s
+    http:
+      method: GET
+      preferred_ip_protocol: ip4
+      valid_status_codes: [206]
+      follow_redirects: true
+      fail_if_not_ssl: true
+      body_size_limit: "64B"
+      headers:
+        Accept: '*/*'
+        Range: bytes=0-0
+        User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36

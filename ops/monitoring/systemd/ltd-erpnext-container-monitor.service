@@ -1,0 +1,19 @@
+[Unit]
+Description=Inspect expected LTD ERPNext containers for Prometheus
+After=default.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/eagles/dockerz/sis
+ExecStart=/home/eagles/dockerz/sis/ops/monitoring/monitor-erpnext-containers.sh
+TimeoutStartSec=20s
+UMask=0022
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/home/eagles/dockerz/sis/runtime-data/prometheus
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6

@@ -31,6 +31,93 @@ scrape_configs:
       - target_label: __address__
         replacement: blackbox-exporter:9115
 
+  - job_name: blackbox-website-http
+    scrape_interval: 60s
+    scrape_timeout: 15s
+    metrics_path: /probe
+    params:
+      module: [https_2xx_browser]
+    static_configs:
+      - targets: [https://eagles.edu.vn/]
+        labels:
+          domain: eagles.edu.vn
+          site: naked
+          check: main
+      - targets: [https://admin.eagles.edu.vn/admin]
+        labels:
+          domain: admin.eagles.edu.vn
+          site: admin
+          check: main
+      - targets: [https://ltd.eagles.vn/]
+        labels:
+          domain: ltd.eagles.vn
+          site: ltd
+          check: main
+      - targets: [https://ielts.eagles.edu.vn/]
+        labels:
+          domain: ielts.eagles.edu.vn
+          site: ielts
+          check: main
+      - targets: [https://thuvien.eagles.edu.vn/]
+        labels:
+          domain: thuvien.eagles.edu.vn
+          site: thuvien
+          check: main
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  - job_name: blackbox-website-app
+    scrape_interval: 60s
+    scrape_timeout: 15s
+    metrics_path: /probe
+    params:
+      module: [https_2xx_frappe_ping]
+    static_configs:
+      - targets: [https://ltd.eagles.vn/api/method/ping]
+        labels:
+          domain: ltd.eagles.vn
+          site: ltd
+          check: frappe-api
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  - job_name: blackbox-thuvien-media
+    scrape_interval: 60s
+    scrape_timeout: 20s
+    metrics_path: /probe
+    params:
+      module: [https_206_range]
+    static_configs:
+      - targets:
+          - https://thuvien.eagles.edu.vn/turn4js/flip/_image/az_goof_idol_chicken-hearts/pages/1.jpg
+        labels:
+          domain: thuvien.eagles.edu.vn
+          site: thuvien
+          check: flip-image-range
+      - targets:
+          - https://thuvien.eagles.edu.vn/reading/_audio/people/audio/7c9185d7/people055.mp3
+        labels:
+          domain: thuvien.eagles.edu.vn
+          site: thuvien
+          check: read-audio-range
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
   # These jobs intentionally have no targets until tools/monitoring-diagnostics.sh
   # enables the corresponding low-overhead diagnostic exporter.
   - job_name: process-diagnostics

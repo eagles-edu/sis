@@ -494,3 +494,209 @@ groups:
           severity: warning
         annotations:
           summary: Host available memory is below 15 percent
+
+  - name: public-website-availability
+    rules:
+      - alert: PublicWebsiteDown
+        expr: probe_success{job="blackbox-website-http",check="main"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.domain }} is down"
+          description: "The public HTTPS check {{ $labels.instance }} has failed for at least two minutes."
+
+      - alert: PublicWebsiteProbeTargetMissingEaglesEdu
+        expr: absent(probe_success{job="blackbox-website-http",domain="eagles.edu.vn",check="main"})
+        for: 2m
+        labels:
+          domain: eagles.edu.vn
+          severity: critical
+        annotations:
+          summary: "The eagles.edu.vn public probe is missing"
+          description: "Prometheus no longer has the expected apex-site probe series."
+
+      - alert: PublicWebsiteProbeTargetMissingAdmin
+        expr: absent(probe_success{job="blackbox-website-http",domain="admin.eagles.edu.vn",check="main"})
+        for: 2m
+        labels:
+          domain: admin.eagles.edu.vn
+          severity: critical
+        annotations:
+          summary: "The admin.eagles.edu.vn public probe is missing"
+          description: "Prometheus no longer has the expected admin-site probe series."
+
+      - alert: PublicWebsiteProbeTargetMissingLtd
+        expr: absent(probe_success{job="blackbox-website-http",domain="ltd.eagles.vn",check="main"})
+        for: 2m
+        labels:
+          domain: ltd.eagles.vn
+          severity: critical
+        annotations:
+          summary: "The ltd.eagles.vn public probe is missing"
+          description: "Prometheus no longer has the expected LTD-site probe series."
+
+      - alert: PublicWebsiteProbeTargetMissingIelts
+        expr: absent(probe_success{job="blackbox-website-http",domain="ielts.eagles.edu.vn",check="main"})
+        for: 2m
+        labels:
+          domain: ielts.eagles.edu.vn
+          severity: critical
+        annotations:
+          summary: "The ielts.eagles.edu.vn public probe is missing"
+          description: "Prometheus no longer has the expected IELTS-site probe series."
+
+      - alert: PublicWebsiteProbeTargetMissingThuvien
+        expr: absent(probe_success{job="blackbox-website-http",domain="thuvien.eagles.edu.vn",check="main"})
+        for: 2m
+        labels:
+          domain: thuvien.eagles.edu.vn
+          severity: critical
+        annotations:
+          summary: "The thuvien.eagles.edu.vn public probe is missing"
+          description: "Prometheus no longer has the expected Thuvien-site probe series."
+
+      - alert: PublicWebsiteProbeScrapeFailed
+        expr: up{job=~"blackbox-website-http|blackbox-website-app|blackbox-thuvien-media"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Website probe collection failed for {{ $labels.domain }}"
+          description: "Prometheus cannot collect the {{ $labels.check }} probe for {{ $labels.domain }}."
+
+      - alert: PublicWebsiteCertificateExpiringSoon
+        expr: (probe_ssl_earliest_cert_expiry{job="blackbox-website-http",check="main"} - time() < 1209600) and (probe_ssl_earliest_cert_expiry{job="blackbox-website-http",check="main"} > time())
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TLS certificate for {{ $labels.domain }} expires within 14 days"
+          description: "The public HTTPS probe reports a certificate with less than 14 days remaining."
+
+      - alert: PublicWebsiteResponseSlow
+        expr: probe_duration_seconds{job="blackbox-website-http",check="main"} > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.domain }} is responding slowly"
+          description: "The public HTTPS probe has taken over five seconds for at least five minutes."
+
+      - alert: LTDERPNextApplicationCheckFailed
+        expr: probe_success{job="blackbox-website-app",domain="ltd.eagles.vn",check="frappe-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "LTD ERPNext application API is unavailable"
+          description: "The public Frappe ping endpoint did not return its expected pong response."
+
+      - alert: ThuvienMediaDeliveryFailed
+        expr: probe_success{job="blackbox-thuvien-media",domain="thuvien.eagles.edu.vn"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Thuvien {{ $labels.check }} delivery is unavailable"
+          description: "The public media route failed its one-byte HTTP range request."
+
+      - alert: NodeExporterUnavailable
+        expr: up{job="node"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host service monitoring is unavailable"
+          description: "Prometheus cannot collect node-exporter service and host metrics."
+
+      - alert: NginxServiceDown
+        expr: (absent(node_systemd_unit_state{name="nginx.service",state="active"}) or node_systemd_unit_state{name="nginx.service",state="active"} != 1) and on() (up{job="node"} == 1)
+        for: 2m
+        labels:
+          component: nginx
+          severity: critical
+        annotations:
+          summary: "Nginx is down for the monitored websites"
+          description: "The shared Nginx TLS and reverse-proxy service is not active."
+
+      - alert: OpenLiteSpeedServiceDown
+        expr: (absent(node_systemd_unit_state{name="lshttpd.service",state="active"}) or node_systemd_unit_state{name="lshttpd.service",state="active"} != 1) and on() (up{job="node"} == 1)
+        for: 2m
+        labels:
+          component: openlitespeed
+          severity: critical
+        annotations:
+          summary: "OpenLiteSpeed is down for sites that use it"
+          description: "The shared OpenLiteSpeed upstream is not active."
+
+      - alert: EaglesHomepageDatabaseDown
+        expr: (absent(node_systemd_unit_state{name="mariadb.service",state="active"}) or node_systemd_unit_state{name="mariadb.service",state="active"} != 1) and on() (up{job="node"} == 1)
+        for: 2m
+        labels:
+          component: mariadb
+          domain: eagles.edu.vn
+          severity: critical
+        annotations:
+          summary: "The eagles.edu.vn database service is down"
+          description: "The host MariaDB service used by the apex site is not active."
+
+      - alert: SISLiveApiServiceDown
+        expr: (absent(node_systemd_unit_state{name="exercise-mailer.service",state="active"}) or node_systemd_unit_state{name="exercise-mailer.service",state="active"} != 1) and on() (up{job="node"} == 1)
+        for: 2m
+        labels:
+          component: sis-api
+          severity: critical
+        annotations:
+          summary: "The shared SIS live API service is down"
+          description: "The SIS API serving admin, IELTS, and Thuvien routes is not active."
+
+      - alert: ThuvienFlipImageGatewayDown
+        expr: (absent(node_systemd_unit_state{name="thuvien-r2-flip-image.service",state="active"}) or node_systemd_unit_state{name="thuvien-r2-flip-image.service",state="active"} != 1) and on() (up{job="node"} == 1)
+        for: 2m
+        labels:
+          component: flip-image-gateway
+          domain: thuvien.eagles.edu.vn
+          severity: critical
+        annotations:
+          summary: "Thuvien flip-book image gateway is down"
+          description: "The local R2 image gateway service is not active."
+
+      - alert: ThuvienReadAudioGatewayDown
+        expr: (absent(node_systemd_unit_state{name="thuvien-read-audio.service",state="active"}) or node_systemd_unit_state{name="thuvien-read-audio.service",state="active"} != 1) and on() (up{job="node"} == 1)
+        for: 2m
+        labels:
+          component: read-audio-gateway
+          domain: thuvien.eagles.edu.vn
+          severity: critical
+        annotations:
+          summary: "Thuvien reading audio gateway is down"
+          description: "The local R2 audio gateway service is not active."
+
+      - alert: LTDERPNextContainerMonitorStale
+        expr: absent(erpnext_container_monitor_last_check_timestamp_seconds) or time() - erpnext_container_monitor_last_check_timestamp_seconds > 180 or erpnext_container_monitor_last_check_success == 0
+        for: 1m
+        labels:
+          domain: ltd.eagles.vn
+          severity: warning
+        annotations:
+          summary: "LTD ERPNext component monitor is stale or failed"
+          description: "Prometheus has not received a successful inspection of the expected LTD ERPNext containers in three minutes."
+
+      - alert: LTDERPNextContainerDown
+        expr: erpnext_container_running{domain="ltd.eagles.vn"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "LTD ERPNext {{ $labels.component }} container is down"
+          description: "The expected LTD ERPNext container is not running."
+
+      - alert: LTDERPNextContainerUnhealthy
+        expr: erpnext_container_health{domain="ltd.eagles.vn"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "LTD ERPNext {{ $labels.component }} container is unhealthy"
+          description: "A container health check reports unhealthy or the container is still starting."

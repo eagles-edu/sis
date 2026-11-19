@@ -1,0 +1,136 @@
+{
+  "uid": "site-availability",
+  "title": "Public Site Availability",
+  "tags": ["availability", "public-sites", "blackbox"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Public site status",
+      "description": "Public HTTPS checks for the five configured domains.",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "sis-prometheus" },
+      "targets": [{ "expr": "probe_success{job=\"blackbox-website-http\",check=\"main\"}", "legendFormat": "{{domain}}", "instant": true, "refId": "A" }],
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } }, "overrides": [] },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "none", "justifyMode": "auto" }
+    },
+    {
+      "id": 2,
+      "type": "state-timeline",
+      "title": "Public site history",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "sis-prometheus" },
+      "targets": [{ "expr": "probe_success{job=\"blackbox-website-http\",check=\"main\"}", "legendFormat": "{{domain}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }] }, "overrides": [] },
+      "options": { "mergeValues": true, "showValue": "never", "alignValue": "center", "rowHeight": 0.9, "tooltip": { "mode": "single", "sort": "none" } }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Public HTTPS response time",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "sis-prometheus" },
+      "targets": [{ "expr": "probe_duration_seconds{job=\"blackbox-website-http\",check=\"main\"}", "legendFormat": "{{domain}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "DNS lookup time",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "sis-prometheus" },
+      "targets": [{ "expr": "probe_dns_lookup_time_seconds{job=\"blackbox-website-http\",check=\"main\"}", "legendFormat": "{{domain}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "TLS days remaining",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 22 },
+      "datasource": { "type": "prometheus", "uid": "sis-prometheus" },
+      "targets": [{ "expr": "(probe_ssl_earliest_cert_expiry{job=\"blackbox-website-http\",check=\"main\"} - time()) / 86400", "legendFormat": "{{domain}}", "instant": true, "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "d", "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 14 }, { "color": "green", "value": 30 }] } }, "overrides": [] },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "none", "justifyMode": "auto" }
+    },
+    {
+      "id": 6,
+      "type": "state-timeline",
+      "title": "Application and media checks",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "sis-prometheus" },
+      "targets": [
+        { "expr": "probe_success{job=\"blackbox-website-app\"}", "legendFormat": "{{domain}} / {{check}}", "refId": "A" },
+        { "expr": "probe_success{job=\"blackbox-thuvien-media\"}", "legendFormat": "{{domain}} / {{check}}", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }] }, "overrides": [] },
+      "options": { "mergeValues": true, "showValue": "never", "alignValue": "center", "rowHeight": 0.9, "tooltip": { "mode": "single", "sort": "none" } }
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Critical host services",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 36 },
+      "datasource": { "type": "prometheus", "uid": "sis-prometheus" },
+      "targets": [{ "expr": "node_systemd_unit_state{name=~\"(nginx|lshttpd|mariadb|exercise-mailer|thuvien-r2-flip-image|thuvien-read-audio)\\.service\",state=\"active\"}", "format": "table", "instant": true, "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "DOWN", "color": "red" },
+                "1": { "text": "ACTIVE", "color": "green" }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": { "showHeader": true, "cellHeight": "sm", "sortBy": [] }
+    },
+    {
+      "id": 8,
+      "type": "table",
+      "title": "LTD ERPNext component state",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 36 },
+      "datasource": { "type": "prometheus", "uid": "sis-prometheus" },
+      "targets": [
+        { "expr": "erpnext_container_running{domain=\"ltd.eagles.vn\"}", "format": "table", "instant": true, "refId": "A", "legendFormat": "running" },
+        { "expr": "erpnext_container_health{domain=\"ltd.eagles.vn\"}", "format": "table", "instant": true, "refId": "B", "legendFormat": "health" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": { "text": "NO HEALTHCHECK", "color": "yellow" },
+                "0": { "text": "UNHEALTHY", "color": "red" },
+                "1": { "text": "HEALTHY / RUNNING", "color": "green" }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": { "showHeader": true, "cellHeight": "sm", "sortBy": [] }
+    },
+    {
+      "id": 9,
+      "type": "state-timeline",
+      "title": "Website and subsystem alerts",
+      "description": "Prometheus alert rules affecting the monitored sites. Pending alerts are shown before they fire.",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 44 },
+      "datasource": { "type": "prometheus", "uid": "sis-prometheus" },
+      "targets": [{ "expr": "ALERTS{alertname=~\"PublicWebsite.*|LTDERPNext.*|Thuvien.*|.*ServiceDown|EaglesHomepageDatabaseDown|SISLiveApiServiceDown\",alertstate=~\"pending|firing\"}", "legendFormat": "{{alertname}} / {{domain}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "1": { "text": "PENDING / FIRING", "color": "red" } } }] }, "overrides": [] },
+      "options": { "mergeValues": true, "showValue": "auto", "alignValue": "center", "rowHeight": 0.9, "tooltip": { "mode": "single", "sort": "none" } }
+    }
+  ]
+}
