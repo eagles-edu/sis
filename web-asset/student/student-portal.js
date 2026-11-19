@@ -3369,6 +3369,7 @@
         if (normalizedStatus === "ready") return "ready";
         if (normalizedStatus === "draft") return "draft";
         if (normalizedStatus === "open") return "open";
+        if (normalizedStatus === "upcoming") return "upcoming";
         if (normalizedStatus === "missed") return "none-submitted";
         if (awaitingReReview === true) return "waiting";
         if (normalizedReview === "approved") return "approved";
@@ -3386,6 +3387,7 @@
         if (token === "draft") return "Draft";
         if (token === "submitted") return "Submitted";
         if (token === "open") return "Open";
+        if (token === "upcoming") return "Opens at 02:00";
         return "None Submitted";
       }
 
@@ -3398,6 +3400,7 @@
         if (token === "submitted") return "amber";
         if (token === "waiting") return "purple";
         if (token === "open") return "blue";
+        if (token === "upcoming") return "blue";
         return "red";
       }
 
@@ -4943,6 +4946,7 @@
             row.reviewStatus,
             row.awaitingReReview === true,
           );
+          if (token === "upcoming") return;
           const label = newsStatusLabel(
             row.status,
             row.reviewStatus,
@@ -5065,7 +5069,7 @@
 
       function resolveNewsCalendarStatus(row = {}) {
         const status = normalizeLower(row?.status);
-        if (status === "completed" || status === "open" || status === "missed" || status === "ready" || status === "draft") return status;
+        if (status === "completed" || status === "open" || status === "upcoming" || status === "missed" || status === "ready" || status === "draft") return status;
         if (status === "approved" || status === "waiting" || status === "submitted" || status === "revise")
           return "completed";
         if (status === "none-submitted") return "missed";
@@ -5420,7 +5424,7 @@
           const openDate = t(data?.window?.reportDate);
           const closesAt = t(data?.window?.closesAt);
           field("windowSummary").textContent = openDate ?
-            `Open entry date: ${formatPortalDate(openDate)} (window closes at ${closesAt ? formatPortalDateTime(closesAt) : "today 23:59 +07"}).` :
+            `Open entry date: ${formatPortalDate(openDate)} (window closes at ${closesAt ? formatPortalDateTime(closesAt) : "02:00 +07"}).` :
             "No open date currently.";
           if (options?.deferNewWords !== true && !state.newWordsLoaded) await loadNewWords();
           updateSubmitAvailability();

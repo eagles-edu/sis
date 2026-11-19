@@ -91,6 +91,7 @@ function normalizeDateValue(value, fallback = new Date()) {
 const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
 const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
+const STUDENT_NEWS_GRACE_PERIOD_MS = 2 * 60 * 60 * 1000
 
 /**
  * @param {Date} value
@@ -443,12 +444,18 @@ function normalizeStudentNewsDays(value) {
  * }}
  */
 export function resolveStudentNewsSubmissionWindow(now = new Date()) {
-  const currentDayStart = startOfDay(parseDateOrNull(now) || new Date())
+  const nowDate = parseDateOrNull(now) || new Date()
+  const currentDayStart = startOfDay(nowDate)
   const todayDate = toLocalIsoDate(currentDayStart)
+  const graceEndsAt = currentDayStart.getTime() + STUDENT_NEWS_GRACE_PERIOD_MS
+  const reportDayStart = nowDate.getTime() < graceEndsAt
+    ? addDays(currentDayStart, -1)
+    : currentDayStart
+  const closesAt = new Date(reportDayStart.getTime() + ONE_DAY_MS + STUDENT_NEWS_GRACE_PERIOD_MS)
   return {
-    opensAt: currentDayStart.toISOString(),
-    closesAt: endOfDay(currentDayStart).toISOString(),
-    reportDate: todayDate,
+    opensAt: reportDayStart.toISOString(),
+    closesAt: closesAt.toISOString(),
+    reportDate: toLocalIsoDate(reportDayStart),
     todayDate,
     isOpen: true,
     closedReason: "",
@@ -975,6 +982,8 @@ export function buildStudentNewsCalendarRows({ now = new Date(), reports = [], d
     const isOpenDate = Boolean(window?.isOpen) && date === window.reportDate
     const editableUntil = parseDateOrNull(saved?.editableUntil)
     const savedReviewStatus = normalizeStudentNewsReviewStatus(saved?.reviewStatus, "")
+    const currentDayHasNotOpened = date === window.todayDate
+      && nowDate.getTime() < startOfDay(nowDate).getTime() + STUDENT_NEWS_GRACE_PERIOD_MS
     const canEditSaved = savedReviewStatus === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED
       || Boolean(editableUntil instanceof Date && !Number.isNaN(editableUntil.valueOf()) && nowDate < editableUntil)
     const submissionState = normalizeStudentNewsSubmissionState(saved?.submissionState, "")
@@ -986,6 +995,8 @@ export function buildStudentNewsCalendarRows({ now = new Date(), reports = [], d
           : "completed"
       : isOpenDate
         ? "open"
+        : currentDayHasNotOpened
+          ? "upcoming"
         : "missed"
     const statusColor = saved
       ? submissionState === STUDENT_NEWS_SUBMISSION_STATE_DRAFT
@@ -995,6 +1006,8 @@ export function buildStudentNewsCalendarRows({ now = new Date(), reports = [], d
           : resolveStudentNewsStatusColor(saved?.reviewStatus)
       : status === "open"
         ? "amber"
+        : status === "upcoming"
+          ? "blue"
         : "red"
     rows.push({
       date,
