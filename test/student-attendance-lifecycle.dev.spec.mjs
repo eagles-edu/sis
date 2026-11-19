@@ -212,7 +212,7 @@ test("dev attendance persists, repeats idempotently, handles concurrent saves, r
   assert.match((await invalidContextResponse.json()).error, /quarter does not match attendanceDate's configured SIS quarter/)
   await initializeStudentWriteMetrics()
   const requestMetrics = fs.readFileSync(requestMetricsFile, "utf8")
-  assert.match(requestMetrics, /sis_admin_student_write_requests_total\{route="POST \/api\/admin\/students\/:id\/attendance",status="422"\} 1/u)
+  assert.match(requestMetrics, /sis_admin_student_write_requests_total\{environment="dev",route="POST \/api\/admin\/students\/:id\/attendance",status="422"\} 1/u)
   assert.doesNotMatch(requestMetrics, new RegExp(studentRefId, "u"))
   assert.equal(await prisma.studentAttendance.count({ where: { studentRefId } }), 1)
 

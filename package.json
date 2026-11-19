@@ -79,6 +79,7 @@
     "worker:async-side-effects": "node tools/async-side-effects-worker.mjs",
     "monitor:parent-profile:dev": "SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development node tools/monitor-parent-profile-workflow.mjs",
     "monitor:engagement:dev": "SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development node --env-file=.env.dev tools/monitor-engagement-workflows.mjs",
+    "monitor:engagement:test": "SIS_ENV_FILE=.env.test DOTENV_CONFIG_PATH=.env.test NODE_ENV=test SIS_WORKFLOW_MONITOR_METRICS_FILE=runtime-data/prometheus/engagement-workflows-test.prom node --env-file=.env.test tools/monitor-engagement-workflows.mjs",
     "monitor:library:dev": "SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development node --env-file=.env.dev tools/monitor-library-workflow.mjs",
     "monitor:news:dev": "SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development node --env-file=.env.dev tools/monitor-news-workflow.mjs",
     "monitor:grades:dev": "SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development SIS_REQUEST_METRICS_FILE=runtime-data/prometheus/sis-dev-request-metrics.prom node --env-file=.env.dev tools/monitor-grade-feeds.mjs",

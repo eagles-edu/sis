@@ -37,27 +37,30 @@ function escapeLabel(value) {
 
 function metricEnvironment() {
   const environment = text(process.env.NODE_ENV)
-  if (environment === "development") return "dev"
-  if (environment === "test") return "test"
-  if (environment === "production") return "production"
+  const envFile = text(process.env.SIS_ENV_FILE)
+  const dotenvConfigPath = text(process.env.DOTENV_CONFIG_PATH)
+  if (environment === "development" && envFile === ".env.dev" && dotenvConfigPath === ".env.dev") return "dev"
+  if (environment === "test" && envFile === ".env.test" && dotenvConfigPath === ".env.test") return "test"
+  if (environment === "production" && envFile === ".env" && dotenvConfigPath === ".env") return "production"
   return "unknown"
 }
 
 function renderRequestMetrics() {
+  const environment = metricEnvironment()
   const lines = [
     "# HELP sis_admin_student_write_requests_total Completed authenticated student profile, enrollment, and attendance write requests.",
     "# TYPE sis_admin_student_write_requests_total counter",
   ]
   for (const [key, metric] of requestMetrics.entries()) {
     const [route, status] = key.split("\u0000")
-    const labels = `route="${escapeLabel(route)}",status="${escapeLabel(status)}"`
+    const labels = `environment="${environment}",route="${escapeLabel(route)}",status="${escapeLabel(status)}"`
     lines.push(`sis_admin_student_write_requests_total{${labels}} ${metric.count}`)
   }
   lines.push("# HELP sis_admin_student_write_request_duration_seconds Authenticated student profile and attendance write request duration.")
   lines.push("# TYPE sis_admin_student_write_request_duration_seconds summary")
   for (const [key, metric] of requestMetrics.entries()) {
     const [route, status] = key.split("\u0000")
-    const labels = `route="${escapeLabel(route)}",status="${escapeLabel(status)}"`
+    const labels = `environment="${environment}",route="${escapeLabel(route)}",status="${escapeLabel(status)}"`
     lines.push(`sis_admin_student_write_request_duration_seconds_sum{${labels}} ${metric.sum}`)
     lines.push(`sis_admin_student_write_request_duration_seconds_count{${labels}} ${metric.count}`)
   }
@@ -78,7 +81,7 @@ function renderRequestMetrics() {
   lines.push("# TYPE sis_admin_student_write_phase_duration_seconds summary")
   for (const [key, metric] of phaseMetrics.entries()) {
     const [route, phase] = key.split("\u0000")
-    const labels = `route="${escapeLabel(route)}",phase="${escapeLabel(phase)}"`
+    const labels = `environment="${environment}",route="${escapeLabel(route)}",phase="${escapeLabel(phase)}"`
     lines.push(`sis_admin_student_write_phase_duration_seconds_sum{${labels}} ${metric.sum}`)
     lines.push(`sis_admin_student_write_phase_duration_seconds_count{${labels}} ${metric.count}`)
   }
@@ -94,10 +97,10 @@ function renderRequestMetrics() {
   const memory = process.memoryUsage()
   lines.push("# HELP sis_nodejs_heap_used_bytes SIS Node.js heap used bytes at the latest student write metric flush.")
   lines.push("# TYPE sis_nodejs_heap_used_bytes gauge")
-  lines.push(`sis_nodejs_heap_used_bytes ${memory.heapUsed}`)
+  lines.push(`sis_nodejs_heap_used_bytes{environment="${environment}"} ${memory.heapUsed}`)
   lines.push("# HELP sis_nodejs_rss_bytes SIS Node.js resident set size at the latest student write metric flush.")
   lines.push("# TYPE sis_nodejs_rss_bytes gauge")
-  lines.push(`sis_nodejs_rss_bytes ${memory.rss}`)
+  lines.push(`sis_nodejs_rss_bytes{environment="${environment}"} ${memory.rss}`)
   return `${lines.join("\n")}\n`
 }
 

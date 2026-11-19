@@ -8,8 +8,12 @@ const metricsDir = mkdtempSync(path.join(os.tmpdir(), "sis-grade-feed-request-me
 const metricsPath = path.join(metricsDir, "requests.prom")
 const originalMetricsPath = process.env.SIS_REQUEST_METRICS_FILE
 const originalNodeEnv = process.env.NODE_ENV
+const originalSisEnvFile = process.env.SIS_ENV_FILE
+const originalDotenvConfigPath = process.env.DOTENV_CONFIG_PATH
 process.env.SIS_REQUEST_METRICS_FILE = metricsPath
 process.env.NODE_ENV = "development"
+process.env.SIS_ENV_FILE = ".env.dev"
+process.env.DOTENV_CONFIG_PATH = ".env.dev"
 const metrics = await import(`../src/infra/observability/student-write-metrics.mjs?test=${Date.now()}`)
 
 after(() => {
@@ -17,6 +21,10 @@ after(() => {
   else process.env.SIS_REQUEST_METRICS_FILE = originalMetricsPath
   if (originalNodeEnv === undefined) delete process.env.NODE_ENV
   else process.env.NODE_ENV = originalNodeEnv
+  if (originalSisEnvFile === undefined) delete process.env.SIS_ENV_FILE
+  else process.env.SIS_ENV_FILE = originalSisEnvFile
+  if (originalDotenvConfigPath === undefined) delete process.env.DOTENV_CONFIG_PATH
+  else process.env.DOTENV_CONFIG_PATH = originalDotenvConfigPath
   rmSync(metricsDir, { recursive: true, force: true })
 })
 
@@ -51,7 +59,7 @@ test("authorized attendance failures use fixed route labels without student iden
   await metrics.initializeStudentWriteMetrics()
 
   const contents = readFileSync(metricsPath, "utf8")
-  assert.match(contents, /sis_admin_student_write_requests_total\{route="POST \/api\/admin\/students\/:id\/attendance",status="422"\} 1/u)
+  assert.match(contents, /sis_admin_student_write_requests_total\{environment="dev",route="POST \/api\/admin\/students\/:id\/attendance",status="422"\} 1/u)
   assert.doesNotMatch(contents, /private-student-ref|private-date/u)
 })
 
@@ -68,7 +76,7 @@ test("authorized enrollment writes use a fixed route label without student ident
   await metrics.initializeStudentWriteMetrics()
 
   const contents = readFileSync(metricsPath, "utf8")
-  assert.match(contents, /sis_admin_student_write_requests_total\{route="POST \/api\/admin\/students\/:id\/enrollment",status="200"\} 1/u)
+  assert.match(contents, /sis_admin_student_write_requests_total\{environment="dev",route="POST \/api\/admin\/students\/:id\/enrollment",status="200"\} 1/u)
   assert.doesNotMatch(contents, /private-student-ref|debug=private/u)
 })
 
@@ -85,8 +93,24 @@ test("attendance delete routes normalize identifiers before collection", async (
   await metrics.initializeStudentWriteMetrics()
 
   const contents = readFileSync(metricsPath, "utf8")
-  assert.match(contents, /sis_admin_student_write_requests_total\{route="DELETE \/api\/admin\/students\/:id\/attendance\/:recordId",status="200"\} 1/u)
+  assert.match(contents, /sis_admin_student_write_requests_total\{environment="dev",route="DELETE \/api\/admin\/students\/:id\/attendance\/:recordId",status="200"\} 1/u)
   assert.doesNotMatch(contents, /private-student-ref|private-record-id/u)
+})
+
+test("all request and process metrics carry the exact owned environment label", async () => {
+  process.env.NODE_ENV = "test"
+  process.env.SIS_ENV_FILE = ".env.test"
+  process.env.DOTENV_CONFIG_PATH = ".env.test"
+  await metrics.initializeStudentWriteMetrics()
+
+  const contents = readFileSync(metricsPath, "utf8")
+  assert.match(contents, /sis_nodejs_heap_used_bytes\{environment="test"\} \d+/u)
+  assert.match(contents, /sis_nodejs_rss_bytes\{environment="test"\} \d+/u)
+  assert.doesNotMatch(contents, /sis_(?:admin_student_write_requests_total|admin_student_write_request_duration_seconds|admin_student_write_phase_duration_seconds)_\w+\{(?:route|status|phase)=/u)
+  assert.doesNotMatch(contents, /environment="unknown"/u)
+  process.env.NODE_ENV = "development"
+  process.env.SIS_ENV_FILE = ".env.dev"
+  process.env.DOTENV_CONFIG_PATH = ".env.dev"
 })
 
 test("authorized parent report acknowledgment failures use a fixed route and omit report identifiers", async () => {

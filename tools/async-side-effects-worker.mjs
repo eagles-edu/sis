@@ -75,30 +75,49 @@ function resolveJobTypes() {
 
 let lastSuccessfulPollTimestamp = 0
 
-function writeWorkerHeartbeat({ success, checkedAt = Date.now() / 1000 } = {}) {
+export function resolveWorkerMonitoringEnvironment(environment = process.env) {
   if (
-    process.env.NODE_ENV !== "development" ||
-    process.env.SIS_ENV_FILE !== ".env.dev" ||
-    process.env.DOTENV_CONFIG_PATH !== ".env.dev"
-  ) return
+    environment.NODE_ENV === "development" &&
+    environment.SIS_ENV_FILE === ".env.dev" &&
+    environment.DOTENV_CONFIG_PATH === ".env.dev"
+  ) return "dev"
+  if (
+    environment.NODE_ENV === "test" &&
+    environment.SIS_ENV_FILE === ".env.test" &&
+    environment.DOTENV_CONFIG_PATH === ".env.test"
+  ) return "test"
+  return ""
+}
 
-  const metricsFile = path.join(process.cwd(), "runtime-data/prometheus/async-side-effects-worker-dev.prom")
-  const directory = path.dirname(metricsFile)
+export function renderWorkerHeartbeat({ environmentLabel, success, checkedAt = Date.now() / 1000, lastSuccessfulPollTimestamp = 0 } = {}) {
+  if (!["dev", "test"].includes(environmentLabel)) throw new Error("Worker heartbeat requires an explicit dev or test environment")
   const safeNumber = (value) => (Number.isFinite(value) && value >= 0 ? value.toFixed(6) : "0")
   const result = success ? 1 : 0
-  if (success) lastSuccessfulPollTimestamp = checkedAt
-  const contents = [
-    "# HELP sis_async_side_effects_worker_last_poll_timestamp_seconds Unix timestamp of the last completed dev worker poll.",
+  return [
+    "# HELP sis_async_side_effects_worker_last_poll_timestamp_seconds Unix timestamp of the last completed worker poll.",
     "# TYPE sis_async_side_effects_worker_last_poll_timestamp_seconds gauge",
-    `sis_async_side_effects_worker_last_poll_timestamp_seconds{environment=\"dev\"} ${safeNumber(checkedAt)}`,
-    "# HELP sis_async_side_effects_worker_last_poll_success Whether the latest dev worker poll completed successfully.",
+    `sis_async_side_effects_worker_last_poll_timestamp_seconds{environment=\"${environmentLabel}\"} ${safeNumber(checkedAt)}`,
+    "# HELP sis_async_side_effects_worker_last_poll_success Whether the latest worker poll completed successfully.",
     "# TYPE sis_async_side_effects_worker_last_poll_success gauge",
-    `sis_async_side_effects_worker_last_poll_success{environment=\"dev\"} ${result}`,
-    "# HELP sis_async_side_effects_worker_last_success_timestamp_seconds Unix timestamp of the last successful dev worker poll.",
+    `sis_async_side_effects_worker_last_poll_success{environment=\"${environmentLabel}\"} ${result}`,
+    "# HELP sis_async_side_effects_worker_last_success_timestamp_seconds Unix timestamp of the last successful worker poll.",
     "# TYPE sis_async_side_effects_worker_last_success_timestamp_seconds gauge",
-    `sis_async_side_effects_worker_last_success_timestamp_seconds{environment=\"dev\"} ${safeNumber(lastSuccessfulPollTimestamp)}`,
+    `sis_async_side_effects_worker_last_success_timestamp_seconds{environment=\"${environmentLabel}\"} ${safeNumber(lastSuccessfulPollTimestamp)}`,
     "",
   ].join("\n")
+}
+
+function writeWorkerHeartbeat({ success, checkedAt = Date.now() / 1000 } = {}) {
+  const environmentLabel = resolveWorkerMonitoringEnvironment()
+  if (!environmentLabel) return
+  const metricsFile = normalizeText(process.env.ASYNC_SIDE_EFFECTS_WORKER_METRICS_FILE) || path.join(
+    process.cwd(),
+    "runtime-data/prometheus",
+    `async-side-effects-worker-${environmentLabel}.prom`,
+  )
+  const directory = path.dirname(metricsFile)
+  if (success) lastSuccessfulPollTimestamp = checkedAt
+  const contents = renderWorkerHeartbeat({ environmentLabel, success, checkedAt, lastSuccessfulPollTimestamp })
   fs.mkdirSync(directory, { recursive: true, mode: 0o750 })
   const temporaryFile = `${metricsFile}.${process.pid}.${randomUUID()}.tmp`
   try {

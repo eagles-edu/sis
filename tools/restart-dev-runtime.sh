@@ -136,6 +136,7 @@ const child = spawn(process.execPath, ["server/exercise-mailer.mjs"], {
     ...process.env,
     NODE_ENV: "development",
     SIS_ENV_FILE: ".env.dev",
+    DOTENV_CONFIG_PATH: ".env.dev",
     SIS_REQUEST_METRICS_FILE: "runtime-data/prometheus/sis-dev-request-metrics.prom",
   },
   detached: true,

@@ -92,7 +92,7 @@ groups:
           summary: A dev Moodle provisioning command has remained processing for over five minutes
 
       - alert: DevProfileWriteFailure
-        expr: sum(increase(sis_admin_student_write_requests_total{route=~"POST /api/admin/students|PUT /api/admin/students/:id",status!~"2.."}[5m])) > 0
+        expr: sum(increase(sis_admin_student_write_requests_total{environment="dev",route=~"POST /api/admin/students|PUT /api/admin/students/:id",status!~"2.."}[5m])) > 0
         for: 1m
         labels:
           severity: warning
@@ -100,7 +100,7 @@ groups:
           summary: An authenticated dev profile write request failed
 
       - alert: DevEnrollmentWriteFailure
-        expr: sum(increase(sis_admin_student_write_requests_total{route="POST /api/admin/students/:id/enrollment",status!~"2.."}[5m])) > 0
+        expr: sum(increase(sis_admin_student_write_requests_total{environment="dev",route="POST /api/admin/students/:id/enrollment",status!~"2.."}[5m])) > 0
         for: 1m
         labels:
           severity: warning
@@ -108,7 +108,7 @@ groups:
           summary: An authenticated dev enrollment write request failed
 
       - alert: DevAttendanceSaveFailure
-        expr: sum(increase(sis_admin_student_write_requests_total{route=~"POST /api/admin/students/:id/attendance|DELETE /api/admin/students/:id/attendance/:recordId",status!~"2.."}[5m])) > 0
+        expr: sum(increase(sis_admin_student_write_requests_total{environment="dev",route=~"POST /api/admin/students/:id/attendance|DELETE /api/admin/students/:id/attendance/:recordId",status!~"2.."}[5m])) > 0
         for: 1m
         labels:
           severity: warning
@@ -260,6 +260,72 @@ groups:
           severity: warning
         annotations:
           summary: Dev assignment reminder dispatches have failed in the last 24 hours
+
+  - name: sis-student-records-and-engagement-test
+    rules:
+      - alert: TestEngagementMonitorStale
+        expr: absent(sis_engagement_workflow_last_check_timestamp_seconds{environment="test"}) or time() - sis_engagement_workflow_last_check_timestamp_seconds{environment="test"} > 180
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Test engagement workflow monitor has not reported for three minutes
+
+      - alert: TestProfileWriteFailure
+        expr: sum(increase(sis_admin_student_write_requests_total{environment="test",route=~"POST /api/admin/students|PUT /api/admin/students/:id",status!~"2.."}[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: An authenticated test profile write request failed
+
+      - alert: TestEnrollmentWriteFailure
+        expr: sum(increase(sis_admin_student_write_requests_total{environment="test",route="POST /api/admin/students/:id/enrollment",status!~"2.."}[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: An authenticated test enrollment write request failed
+
+      - alert: TestEnrollmentIntegrityConflict
+        expr: sis_enrollment_multiple_active_records{environment="test"} > 0 or sis_enrollment_overlapping_period_pairs{environment="test"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Test enrollment history contains overlapping or multiple active periods
+
+      - alert: TestMoodleProvisioningQueueStale
+        expr: sis_moodle_provisioning_oldest_due_command_age_seconds{environment="test"} > 1800 or sis_moodle_provisioning_oldest_processing_age_seconds{environment="test"} > 300
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Test Moodle provisioning contains stale due or processing commands
+
+      - alert: TestMoodleProvisioningRejected
+        expr: sis_moodle_provisioning_rejected_commands{environment="test"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Test Moodle provisioning has rejected commands requiring review
+
+      - alert: TestNotificationQueueStale
+        expr: sis_notification_oldest_due_queue_age_seconds{environment="test"} > 1800 or sis_parent_report_notification_oldest_due_age_seconds{environment="test"} > 1800
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A due test notification has waited over thirty minutes
+
+      - alert: TestNotificationDeliveryFailure
+        expr: sis_notification_delivery_failure_queue_items{environment="test"} > 0 or sis_parent_report_notification_delivery_failure_items{environment="test"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Test notification queue items retain a delivery error
 
   - name: sis-parent-profile-workflow
     rules:

@@ -11,8 +11,10 @@ WorkingDirectory=/home/test.eagles.edu.vn/sis
 EnvironmentFile=/home/test.eagles.edu.vn/sis/.env.test
 Environment=NODE_ENV=test
 Environment=SIS_ENV_FILE=.env.test
+Environment=DOTENV_CONFIG_PATH=.env.test
 Environment=ASYNC_SIDE_EFFECTS_WORKER_POLL_MS=15000
 Environment=ASYNC_SIDE_EFFECTS_WORKER_TAKE=10
+Environment=ASYNC_SIDE_EFFECTS_WORKER_METRICS_FILE=/home/eagles/dockerz/sis/runtime-data/prometheus/async-side-effects-worker-test.prom
 Environment=PATH=/home/eagles/.nvm/versions/node/v22.22.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart=/home/eagles/.nvm/versions/node/v22.22.1/bin/node --env-file=.env.test /home/test.eagles.edu.vn/sis/tools/async-side-effects-worker.mjs
 Restart=always

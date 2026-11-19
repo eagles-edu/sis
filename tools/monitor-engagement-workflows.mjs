@@ -6,8 +6,7 @@ import { getSharedPrismaClient, closeSharedPrismaClient } from "../src/infra/db/
 import { verifyScryptPassword } from "../src/modules/admin/users.mjs"
 
 const DEV_ORIGIN = "http://127.0.0.1:8788"
-const METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/engagement-workflows-dev.prom")
-const WORKER_METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/async-side-effects-worker-dev.prom")
+const TEST_ORIGIN = "http://127.0.0.1:8786"
 const CHECK_TIMEOUT_MS = 10000
 const WORKER_STALE_AFTER_SECONDS = 30
 const PROCESSING_STALE_AFTER_SECONDS = 300
@@ -24,7 +23,22 @@ export function assertDevEnvironment(environment = process.env) {
     String(environment.NODE_ENV || "").trim() !== "development" ||
     String(environment.SIS_ENV_FILE || "").trim() !== ".env.dev" ||
     String(environment.DOTENV_CONFIG_PATH || "").trim() !== ".env.dev"
-  ) throw new Error("Engagement workflow monitor requires the explicit development environment")
+  ) {
+    throw new Error("Engagement workflow monitor requires the explicit development environment")
+  }
+}
+
+export function resolveMonitorContext(environment = process.env) {
+  const nodeEnvironment = String(environment.NODE_ENV || "").trim()
+  const envFile = String(environment.SIS_ENV_FILE || "").trim()
+  const dotenvConfigPath = String(environment.DOTENV_CONFIG_PATH || "").trim()
+  if (nodeEnvironment === "development" && envFile === ".env.dev" && dotenvConfigPath === ".env.dev") {
+    return { label: "dev", origin: DEV_ORIGIN, databaseName: "sis_dev" }
+  }
+  if (nodeEnvironment === "test" && envFile === ".env.test" && dotenvConfigPath === ".env.test") {
+    return { label: "test", origin: TEST_ORIGIN, databaseName: "sis-test" }
+  }
+  throw new Error("Engagement workflow monitor requires a matching explicit dev or test environment")
 }
 
 function metricNumber(value) {
@@ -39,13 +53,13 @@ function timestampSeconds(value) {
   return Number.isFinite(result) && result > 0 ? result : 0
 }
 
-export function parseWorkerHeartbeat(contents = "") {
-  const match = String(contents).match(/^sis_async_side_effects_worker_last_poll_timestamp_seconds\{environment="dev"\} ([0-9]+(?:\.[0-9]+)?)$/mu)
+export function parseWorkerHeartbeat(contents = "", environmentLabel = "dev") {
+  const match = String(contents).match(new RegExp(`^sis_async_side_effects_worker_last_poll_timestamp_seconds\\{environment="${environmentLabel}"\\} ([0-9]+(?:\\.[0-9]+)?)$`, "mu"))
   return match ? Number(match[1]) : 0
 }
 
-export function parseWorkerPollSuccess(contents = "") {
-  const match = String(contents).match(/^sis_async_side_effects_worker_last_poll_success\{environment="dev"\} ([01])$/mu)
+export function parseWorkerPollSuccess(contents = "", environmentLabel = "dev") {
+  const match = String(contents).match(new RegExp(`^sis_async_side_effects_worker_last_poll_success\\{environment="${environmentLabel}"\\} ([01])$`, "mu"))
   return match ? Number(match[1]) : 0
 }
 
@@ -88,6 +102,7 @@ export function renderEngagementMetrics({
   moodleProvisioningProcessingCount = 0,
   moodleProvisioningOldestProcessingAgeSeconds = 0,
   moodleProvisioningRejectedCount = 0,
+  environmentLabel = "dev",
   workerLastPollTimestamp,
   workerLastPollSuccess,
 }) {
@@ -138,27 +153,28 @@ export function renderEngagementMetrics({
     ["sis_async_side_effect_worker_stale", "Whether the dev async side-effect worker heartbeat is missing or older than thirty seconds.", workerStale ? 1 : 0],
   ]
   return values.flatMap(([name, help, value]) => [
-    `# HELP ${name} ${help}`,
+    `# HELP ${name} ${help.replaceAll("dev", "configured environment")}`,
     `# TYPE ${name} gauge`,
     `${name}{environment="dev"} ${metricNumber(value)}`,
   ]).concat("").join("\n")
+    .replaceAll('environment="dev"', `environment="${environmentLabel}"`)
 }
 
-function readLastSuccessTimestamp(metricsFile) {
+function readLastSuccessTimestamp(metricsFile, environmentLabel = "dev") {
   if (!fs.existsSync(metricsFile)) return 0
   const contents = fs.readFileSync(metricsFile, "utf8")
-  const match = contents.match(/^sis_engagement_workflow_last_success_timestamp_seconds\{environment="dev"\} ([0-9]+(?:\.[0-9]+)?)$/mu)
+  const match = contents.match(new RegExp(`^sis_engagement_workflow_last_success_timestamp_seconds\\{environment="${environmentLabel}"\\} ([0-9]+(?:\\.[0-9]+)?)$`, "mu"))
   return match ? Number(match[1]) : 0
 }
 
-function readWorkerTimestamp(metricsFile) {
+function readWorkerTimestamp(metricsFile, environmentLabel = "dev") {
   if (!fs.existsSync(metricsFile)) return 0
-  return parseWorkerHeartbeat(fs.readFileSync(metricsFile, "utf8"))
+  return parseWorkerHeartbeat(fs.readFileSync(metricsFile, "utf8"), environmentLabel)
 }
 
-function readWorkerPollSuccess(metricsFile) {
+function readWorkerPollSuccess(metricsFile, environmentLabel = "dev") {
   if (!fs.existsSync(metricsFile)) return 0
-  return parseWorkerPollSuccess(fs.readFileSync(metricsFile, "utf8"))
+  return parseWorkerPollSuccess(fs.readFileSync(metricsFile, "utf8"), environmentLabel)
 }
 
 export function writeMetricsAtomically(metricsFile, contents) {
@@ -175,13 +191,14 @@ export function writeMetricsAtomically(metricsFile, contents) {
 }
 
 async function checkReportApi(environment) {
+  const { origin } = resolveMonitorContext(environment)
   const username = String(environment.STUDENT_ADMIN_USER || "").trim()
   const password = String(environment.STUDENT_ADMIN_PASS || "")
   if (!username || !password) return false
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), CHECK_TIMEOUT_MS)
   try {
-    const login = await fetch(`${DEV_ORIGIN}/api/admin/auth/login`, {
+    const login = await fetch(`${origin}/api/admin/auth/login`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -190,7 +207,7 @@ async function checkReportApi(environment) {
     if (!login.ok) return false
     const cookie = String(login.headers.get("set-cookie") || "").split(";", 1)[0]
     if (!cookie) return false
-    const reportResponse = await fetch(`${DEV_ORIGIN}/api/admin/performance-engagement?dateFrom=2999-01-01&dateTo=2999-01-02`, {
+    const reportResponse = await fetch(`${origin}/api/admin/performance-engagement?dateFrom=2999-01-01&dateTo=2999-01-02`, {
       headers: { cookie },
       signal: controller.signal,
     })
@@ -233,6 +250,7 @@ export function resolveParentMonitorCredentials(environment = process.env) {
 }
 
 export async function checkParentReportApi(environment = process.env, fetchImpl = fetch) {
+  const { origin } = resolveMonitorContext(environment)
   const credentials = resolveParentMonitorCredentials(environment)
   const startedAt = performance.now()
   let loginDurationSeconds = 0
@@ -251,7 +269,7 @@ export async function checkParentReportApi(environment = process.env, fetchImpl 
   const timeout = setTimeout(() => controller.abort(), CHECK_TIMEOUT_MS)
   try {
     const loginStartedAt = performance.now()
-    const login = await fetchImpl(`${DEV_ORIGIN}/api/parent/auth/login`, {
+    const login = await fetchImpl(`${origin}/api/parent/auth/login`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ parentsId: credentials.user, password: credentials.pass }),
@@ -266,7 +284,7 @@ export async function checkParentReportApi(environment = process.env, fetchImpl 
       return { authSuccess: false, dashboardSuccess: false, childCount: 0, reportCount: 0, loginDurationSeconds, dashboardDurationSeconds }
     }
     const dashboardStartedAt = performance.now()
-    const dashboardResponse = await fetchImpl(`${DEV_ORIGIN}/api/parent/dashboard`, {
+    const dashboardResponse = await fetchImpl(`${origin}/api/parent/dashboard`, {
       headers: { cookie },
       signal: controller.signal,
     })
@@ -302,9 +320,9 @@ export async function checkParentReportApi(environment = process.env, fetchImpl 
   }
 }
 
-export async function collectDatabaseMetrics(prisma, now) {
+export async function collectDatabaseMetrics(prisma, now, expectedDatabase = "sis_dev") {
   const database = await prisma.$queryRaw`SELECT current_database() AS name`
-  if (database[0]?.name !== "sis_dev") throw new Error("Engagement workflow monitor connected to an unexpected database")
+  if (database[0]?.name !== expectedDatabase) throw new Error("Engagement workflow monitor connected to an unexpected database")
   const dayAgo = new Date(now - 86400 * 1000)
   const processingCutoff = new Date(now - PROCESSING_STALE_AFTER_SECONDS * 1000)
   const assignmentDispatchCutoff = new Date(now - ASSIGNMENT_DISPATCH_STALE_AFTER_SECONDS * 1000)
@@ -422,14 +440,20 @@ export async function collectDatabaseMetrics(prisma, now) {
 
 export async function runEngagementWorkflowMonitor({
   environment = process.env,
-  metricsFile = METRICS_FILE,
-  workerMetricsFile = WORKER_METRICS_FILE,
+  metricsFile = "",
+  workerMetricsFile = "",
   prismaClient = null,
   reportApiCheck = checkReportApi,
   parentReportApiCheck = checkParentReportApi,
   clock = () => Date.now(),
 } = {}) {
-  assertDevEnvironment(environment)
+  const monitorContext = resolveMonitorContext(environment)
+  const outputFile = metricsFile || String(environment.SIS_WORKFLOW_MONITOR_METRICS_FILE || "").trim() || path.join(
+    process.cwd(), "runtime-data/prometheus", `engagement-workflows-${monitorContext.label}.prom`,
+  )
+  const workerFile = workerMetricsFile || String(environment.ASYNC_SIDE_EFFECTS_WORKER_METRICS_FILE || "").trim() || path.join(
+    process.cwd(), "runtime-data/prometheus", `async-side-effects-worker-${monitorContext.label}.prom`,
+  )
   const started = clock()
   const prisma = prismaClient || await getSharedPrismaClient()
   let metrics
@@ -446,11 +470,11 @@ export async function runEngagementWorkflowMonitor({
     const reportApiCheckResult = await reportApiCheck(environment)
     reportApiSuccess = Boolean(reportApiCheckResult)
     parentReportCheck = await parentReportApiCheck(environment)
-    const collected = await collectDatabaseMetrics(prisma, clock())
+    const collected = await collectDatabaseMetrics(prisma, clock(), monitorContext.databaseName)
     const checkedAt = clock() / 1000
-    const previousSuccess = readLastSuccessTimestamp(metricsFile)
-    const workerLastPollTimestamp = readWorkerTimestamp(workerMetricsFile)
-    const workerLastPollSuccess = readWorkerPollSuccess(workerMetricsFile)
+    const previousSuccess = readLastSuccessTimestamp(outputFile, monitorContext.label)
+    const workerLastPollTimestamp = readWorkerTimestamp(workerFile, monitorContext.label)
+    const workerLastPollSuccess = readWorkerPollSuccess(workerFile, monitorContext.label)
     const success = reportApiSuccess &&
       parentReportCheck.authSuccess &&
       parentReportCheck.dashboardSuccess &&
@@ -487,9 +511,10 @@ export async function runEngagementWorkflowMonitor({
       ...collected,
       workerLastPollTimestamp,
       workerLastPollSuccess,
+      environmentLabel: monitorContext.label,
     })
-    writeMetricsAtomically(metricsFile, metrics)
-    process.stdout.write(`engagement_workflow_monitor environment=dev result=${success ? "pass" : "fail"} report_api=${reportApiSuccess ? "up" : "down"} parent_dashboard=${parentReportCheck.dashboardSuccess ? "up" : "down"}\n`)
+    writeMetricsAtomically(outputFile, metrics)
+    process.stdout.write(`engagement_workflow_monitor environment=${monitorContext.label} result=${success ? "pass" : "fail"} report_api=${reportApiSuccess ? "up" : "down"} parent_dashboard=${parentReportCheck.dashboardSuccess ? "up" : "down"}\n`)
     return success
   } finally {
     if (!prismaClient) await closeSharedPrismaClient()
@@ -500,7 +525,7 @@ function main() {
   runEngagementWorkflowMonitor().then((success) => {
     process.exitCode = success ? 0 : 1
   }).catch(() => {
-    process.stderr.write("engagement_workflow_monitor environment=dev result=fail reason=configuration_or_database_error\n")
+    process.stderr.write("engagement_workflow_monitor result=fail reason=configuration_or_database_error\n")
     process.exitCode = 1
   })
 }

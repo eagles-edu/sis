@@ -7,6 +7,7 @@ import {
   parseWorkerHeartbeat,
   parseWorkerPollSuccess,
   resolveParentMonitorCredentials,
+  resolveMonitorContext,
   renderEngagementMetrics,
 } from "../tools/monitor-engagement-workflows.mjs"
 import { hashScryptPassword } from "../src/modules/admin/users.mjs"
@@ -22,6 +23,16 @@ test("engagement monitor is pinned to dev-owned environment variables", () => {
     SIS_ENV_FILE: ".env.test",
     DOTENV_CONFIG_PATH: ".env.test",
   }), /explicit development environment/u)
+  assert.deepEqual(resolveMonitorContext({
+    NODE_ENV: "test",
+    SIS_ENV_FILE: ".env.test",
+    DOTENV_CONFIG_PATH: ".env.test",
+  }), { label: "test", origin: "http://127.0.0.1:8786", databaseName: "sis-test" })
+  assert.throws(() => resolveMonitorContext({
+    NODE_ENV: "test",
+    SIS_ENV_FILE: ".env.test",
+    DOTENV_CONFIG_PATH: ".env.dev",
+  }), /matching explicit dev or test environment/u)
   assert.throws(() => assertDevEnvironment({
     NODE_ENV: "development",
     SIS_ENV_FILE: ".env",
@@ -29,8 +40,8 @@ test("engagement monitor is pinned to dev-owned environment variables", () => {
   }), /explicit development environment/u)
 })
 
-test("engagement metrics expose only bounded dev gauges and flag missing or stale workers", () => {
-  const metrics = renderEngagementMetrics({
+test("engagement metrics expose only bounded environment gauges and flag missing or stale workers", () => {
+  const metricValues = {
     checkedAt: 200,
     durationSeconds: 0.25,
     success: false,
@@ -71,7 +82,9 @@ test("engagement metrics expose only bounded dev gauges and flag missing or stal
     moodleProvisioningRejectedCount: 1,
     workerLastPollTimestamp: 100,
     workerLastPollSuccess: 0,
-  })
+  }
+  const metrics = renderEngagementMetrics(metricValues)
+  const testMetrics = renderEngagementMetrics({ ...metricValues, environmentLabel: "test" })
   assert.match(metrics, /sis_engagement_report_api_available\{environment="dev"\} 0/u)
   assert.match(metrics, /sis_parent_authentication_available\{environment="dev"\} 1/u)
   assert.match(metrics, /sis_parent_report_dashboard_available\{environment="dev"\} 1/u)
@@ -99,10 +112,18 @@ test("engagement metrics expose only bounded dev gauges and flag missing or stal
   assert.match(metrics, /sis_async_side_effect_worker_last_poll_success\{environment="dev"\} 0/u)
   assert.doesNotMatch(metrics, /student|recipient|password|cookie|session|job_id|[^\s@]+@[^\s@]+/iu)
   assert.doesNotMatch(metrics, /environment="(?:test|production)"/u)
+  assert.match(testMetrics, /sis_enrollment_multiple_active_records\{environment="test"\} 2/u)
+  assert.match(testMetrics, /sis_notification_due_queue_items\{environment="test"\} 4/u)
+  assert.doesNotMatch(testMetrics, /environment="dev"/u)
+  const devHelp = metrics.split("\n").filter((line) => line.startsWith("# HELP "))
+  const testHelp = testMetrics.split("\n").filter((line) => line.startsWith("# HELP "))
+  assert.deepEqual(testHelp, devHelp)
   assert.equal(parseWorkerHeartbeat('sis_async_side_effects_worker_last_poll_timestamp_seconds{environment="dev"} 123.5\n'), 123.5)
   assert.equal(parseWorkerHeartbeat('sis_async_side_effects_worker_last_poll_timestamp_seconds{environment="test"} 123.5\n'), 0)
+  assert.equal(parseWorkerHeartbeat('sis_async_side_effects_worker_last_poll_timestamp_seconds{environment="test"} 123.5\n', "test"), 123.5)
   assert.equal(parseWorkerPollSuccess('sis_async_side_effects_worker_last_poll_success{environment="dev"} 1\n'), 1)
   assert.equal(parseWorkerPollSuccess('sis_async_side_effects_worker_last_poll_success{environment="dev"} 0\n'), 0)
+  assert.equal(parseWorkerPollSuccess('sis_async_side_effects_worker_last_poll_success{environment="test"} 1\n', "test"), 1)
 })
 
 test("database monitor collects enrollment integrity, provisioning age, and notification backlog as aggregates", async () => {
@@ -176,6 +197,9 @@ test("parent workflow monitor uses only the exact cmmark001 account and checks i
 
   const requests = []
   const result = await checkParentReportApi({
+    NODE_ENV: "development",
+    SIS_ENV_FILE: ".env.dev",
+    DOTENV_CONFIG_PATH: ".env.dev",
     STUDENT_PARENT_USER: "cmmark001",
     STUDENT_PARENT_PASS: "parent-password",
   }, async (url, options = {}) => {
@@ -192,4 +216,24 @@ test("parent workflow monitor uses only the exact cmmark001 account and checks i
   assert.equal(result.reportCount, 1)
   assert.match(requests[1].options.headers.cookie, /^parent-session=synthetic$/u)
   assert.doesNotMatch(JSON.stringify(result), /private-id|password|cookie/u)
+})
+
+test("test parent monitor uses the test mirror origin and exact cmmark001 account", async () => {
+  const requests = []
+  const result = await checkParentReportApi({
+    NODE_ENV: "test",
+    SIS_ENV_FILE: ".env.test",
+    DOTENV_CONFIG_PATH: ".env.test",
+    STUDENT_PARENT_USER: "cmmark001",
+    STUDENT_PARENT_PASS: "synthetic-test-password",
+  }, async (url, options = {}) => {
+    requests.push({ url: String(url), options })
+    if (requests.length === 1) return { ok: true, headers: { get: () => "test-session=synthetic; Path=/; HttpOnly" } }
+    return { ok: true, json: async () => ({ children: [{ details: { reportArchive: [] } }] }) }
+  })
+  assert.equal(result.authSuccess, true)
+  assert.equal(result.dashboardSuccess, true)
+  assert.match(requests[0].url, /^http:\/\/127\.0\.0\.1:8786\//u)
+  assert.match(requests[1].url, /^http:\/\/127\.0\.0\.1:8786\//u)
+  assert.match(requests[1].options.headers.cookie, /^test-session=synthetic$/u)
 })

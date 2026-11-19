@@ -330,11 +330,17 @@ The following scope is approved for this test mirror. It is intentionally restri
 
 | Addition | Test-mirror scope | Delivery state |
 | --- | --- | --- |
-| Route metrics | Authenticated `POST /api/admin/students` and `PUT /api/admin/students/:id`; total duration, response status, and safe phase durations | Requires test runtime sync and textfile collector configuration |
+| Route metrics | Authenticated `POST /api/admin/students`, `PUT /api/admin/students/:id`, and `POST /api/admin/students/:id/enrollment`; total duration, response status, and safe phase durations | Test runtime sync and textfile collector configuration verified |
 | PostgreSQL exporter | Connections, locks, transactions, cache-hit inputs, long-running/idle activity, autovacuum, I/O | Requires dedicated `sis_monitor` role, secret file, Docker network attachment, then target validation |
 | Redis exporter | Session/cache availability, memory, evictions, blocked clients, command statistics | Requires a dedicated read-only Redis ACL user, persistence verification, secret file, Docker network attachment, then target validation |
 | Alertmanager | Prometheus firing/resolved alerts routed to Slack `#sis-alerts` | Waiting for channel creation and incoming-webhook URL |
 | Structured timing log | `requestId`, route template, HTTP status, total milliseconds, named safe phase milliseconds | Requires test runtime sync and a real authenticated UI save verification |
+
+### Profile, enrollment, provisioning, and notification monitoring
+
+The test SIS API writes authenticated profile and enrollment request counters to the central node-exporter textfile directory through `SIS_REQUEST_METRICS_FILE` in the test-owned `.env.test`. Every emitted sample carries the matching `environment="test"` label plus only fixed route templates, response status, or phase names; account and record identifiers are excluded. The test async worker receives the matching `SIS_ENV_FILE=.env.test`, `DOTENV_CONFIG_PATH=.env.test`, and `NODE_ENV=test` triplet and writes an `environment="test"` heartbeat to the same collector directory. Dev and test series use separate filenames and environment labels, with identical HELP text for shared metric families.
+
+Run the read-only test monitor with `npm run monitor:engagement:test`. It verifies the database name is `sis-test`, checks the authenticated test admin report API and the exact configured `cmmark001` parent dashboard through `127.0.0.1:8786`, and records aggregate enrollment overlap/multiple-active counts, Moodle provisioning queue age and rejection counts, and notification queue age/delivery failures. It writes `engagement-workflows-test.prom`; no writes are made to test SIS records or external services by this monitor. Prometheus rules alert locally on stale test monitor output, failed profile/enrollment requests, enrollment conflicts, stale/rejected Moodle commands, and notification delay/failure. External alert delivery remains unavailable while Alertmanager is absent.
 
 ### Route-level timing contract
 
