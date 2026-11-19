@@ -189,3 +189,7 @@ Hardening decisions captured from this incident:
 ### 2026-11-20: KA-133 authenticated parent/admin desktop and mobile gate
 
 - The full synthetic parent invitation, password setup, draft save/reload, submission, admin review/approval, and profile reload E2E passed twice on desktop after KA-132. In the connected dev Chrome profile, the exact `cmmark001` parent session showed linked `mark001`; its profile form opened with zero unsaved changes. The authenticated admin Family Lookup review control loaded 18 submitted rows. At mobile widths 390px and 320px, both affected surfaces rendered within the viewport; `documentElement` and body widths matched the viewport, the parent profile form had no child overflow, and the review action remained within the viewport. The connected browser desktop check was 1024px; the synthetic full E2E context is 1280×900. The mobile and exact-account checks were read-only; no real profile or queue item was changed. Synthetic E2E cleanup passed. Backup: `/home/eagles/dockerz/backups/manual-edits/20261120-ka133-authenticated-mobile-workflows/`.
+
+### 2026-11-20: KA-134 generated admin asset parity
+
+- KA-132 changed only server-side invitation throttling, tests, and evidence documents; no generated admin assets were required. `npm run dev:restart` ran the admin asset build and reported outputs already current. `npm run build:admin-assets:check` exited 0 with all admin asset outputs up to date. No generated payload drift was found. Backup: `/home/eagles/dockerz/backups/manual-edits/20261120-ka134-generated-assets-parity/`.
