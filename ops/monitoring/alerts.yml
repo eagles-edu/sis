@@ -374,7 +374,7 @@ groups:
           severity: critical
         annotations:
           summary: "Test service {{ $labels.name }} is failed after automatic restart attempts"
-          description: "The unit is in systemd failed state. It has a four-start limit per 15 minutes with a 30-second cooldown; inspect systemctl Result and the unit journal to confirm whether start-limit-hit caused the failure."
+          description: "The unit is in systemd failed state. It has a four-start limit per 15 minutes with a 30-second cooldown; the journal records restart-limit rejection, while Result may remain exit-code from the last process failure."
 
   - name: sis-parent-profile-workflow
     rules:

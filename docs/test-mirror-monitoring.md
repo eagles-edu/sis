@@ -182,11 +182,11 @@ http://127.0.0.1:9090/alerts
 | `HostCpuHigh` | host CPU >85% | 5 min | warning |
 | `HostMemoryLow` | host available memory <15% | 5 min | warning |
 
-These alerts are currently evaluated and displayed by Prometheus. External delivery is not configured yet. Add Alertmanager only after an approved receiver destination (email, Slack, or another operations channel) is chosen.
+Prometheus evaluates these alerts and the active Alertmanager route delivers firing and resolved notifications to Slack `#sis-alert` through the configured incoming webhook. The controlled KA-127 test verified both statuses in that channel with zero failed Slack notifications.
 
 ## Controlled restart policy
 
-The test API (`exercise-mailer-test.service`), static server (`sis-web-test.service`), and async worker (`sis-async-side-effects-test.service`) use the same bounded systemd policy from `ops/systemd/keepalive-test-restart-guard.conf`: `Restart=on-failure`, a 30-second delay, and at most four starts (initial start plus three automatic restarts) in 15 minutes. On the limit, systemd leaves the unit failed and performs no host-level action. Apply the allowlisted test-only drop-ins with `sudo tools/install-test-restart-guards.sh`; it validates each unit's `/home/test.eagles.edu.vn` runtime path and `.env.test` ownership before installing, then runs `systemctl daemon-reload` without restarting active services. The install output reports each effective limit.
+The test API (`exercise-mailer-test.service`), static server (`sis-web-test.service`), and async worker (`sis-async-side-effects-test.service`) use the same bounded systemd policy from `ops/systemd/keepalive-test-restart-guard.conf`: `Restart=on-failure`, a 30-second delay, and at most four executed starts (initial start plus three automatic restarts) in 15 minutes. On the limit, systemd leaves the unit failed and performs no host-level action. On this host the journal recorded `Start request repeated too quickly` for the rejected next attempt while `systemctl show` reported `Result=exit-code` from the last executed process failure; inspect both the unit properties and journal. Apply the allowlisted test-only drop-ins with `sudo tools/install-test-restart-guards.sh`; it validates each unit's `/home/test.eagles.edu.vn` runtime path and `.env.test` ownership before installing, then runs `systemctl daemon-reload` without restarting active services. The install output reports each effective limit.
 
 The dev API is not systemd managed and has no automatic restart loop. `npm run dev:restart` is an operator-only maintenance action because it rebuilds assets and runs the dev-owned Prisma generation/migration checks; it is not a recovery action. No live/admin unit is in the installer allowlist.
 
@@ -339,14 +339,14 @@ The following scope is approved for this test mirror. It is intentionally restri
 | Route metrics | Authenticated `POST /api/admin/students`, `PUT /api/admin/students/:id`, and `POST /api/admin/students/:id/enrollment`; total duration, response status, and safe phase durations | Test runtime sync and textfile collector configuration verified |
 | PostgreSQL exporter | Connections, locks, transactions, cache-hit inputs, long-running/idle activity, autovacuum, I/O | Requires dedicated `sis_monitor` role, secret file, Docker network attachment, then target validation |
 | Redis exporter | Session/cache availability, memory, evictions, blocked clients, command statistics | Requires a dedicated read-only Redis ACL user, persistence verification, secret file, Docker network attachment, then target validation |
-| Alertmanager | Prometheus firing/resolved alerts routed to Slack `#sis-alerts` | Waiting for channel creation and incoming-webhook URL |
+| Alertmanager | Prometheus firing/resolved alerts routed to Slack `#sis-alert` | Configured route verified by KA-127 firing and resolved notifications |
 | Structured timing log | `requestId`, route template, HTTP status, total milliseconds, named safe phase milliseconds | Requires test runtime sync and a real authenticated UI save verification |
 
 ### Profile, enrollment, provisioning, and notification monitoring
 
 The test SIS API writes authenticated profile and enrollment request counters to the central node-exporter textfile directory through `SIS_REQUEST_METRICS_FILE` in the test-owned `.env.test`. Every emitted sample carries the matching `environment="test"` label plus only fixed route templates, response status, or phase names; account and record identifiers are excluded. The test async worker receives the matching `SIS_ENV_FILE=.env.test`, `DOTENV_CONFIG_PATH=.env.test`, and `NODE_ENV=test` triplet and writes an `environment="test"` heartbeat to the same collector directory. Dev and test series use separate filenames and environment labels, with identical HELP text for shared metric families.
 
-Run the read-only test monitor with `npm run monitor:engagement:test`. It verifies the database name is `sis-test`, checks the authenticated test admin report API and the exact configured `cmmark001` parent dashboard through `127.0.0.1:8786`, and records aggregate enrollment overlap/multiple-active counts, Moodle provisioning queue age and rejection counts, and notification queue age/delivery failures. It writes `engagement-workflows-test.prom`; no writes are made to test SIS records or external services by this monitor. Prometheus rules alert locally on stale test monitor output, failed profile/enrollment requests, enrollment conflicts, stale/rejected Moodle commands, and notification delay/failure. External alert delivery remains unavailable while Alertmanager is absent.
+Run the read-only test monitor with `npm run monitor:engagement:test`. It verifies the database name is `sis-test`, checks the authenticated test admin report API and the exact configured `cmmark001` parent dashboard through `127.0.0.1:8786`, and records aggregate enrollment overlap/multiple-active counts, Moodle provisioning queue age and rejection counts, and notification queue age/delivery failures. It writes `engagement-workflows-test.prom`; no writes are made to test SIS records or external services by this monitor. Prometheus rules alert on stale test-monitor output, failed profile/enrollment requests, enrollment conflicts, stale/rejected Moodle commands, and notification delay/failure. Alertmanager routes firing and resolved alerts to Slack `#sis-alert`.
 
 ### Route-level timing contract
 
@@ -371,7 +371,7 @@ The Redis monitoring account must be a dedicated ACL user restricted to exporter
 
 ### Slack alert delivery contract
 
-The approved notification destination is Slack channel `#sis-alerts` with an Incoming Webhook. Its raw URL is held only in ignored `ops/monitoring/.env.alertmanager-slack-webhook` with mode `0600`; Alertmanager reads it from a read-only container mount. Critical alerts repeat every 30 minutes, warning alerts every four hours, and resolved notifications are sent. Alertmanager binds to loopback only.
+The notification destination is Slack channel `#sis-alert` with an Incoming Webhook. Its raw URL is held only in ignored `ops/monitoring/.env.alertmanager-slack-webhook` with mode `0600`; Alertmanager reads it from a read-only container mount. Critical alerts repeat every 30 minutes, warning alerts every four hours, and resolved notifications are sent. KA-127 verified firing and resolved test-service alerts in this channel; the failed-notification counter remained zero. Alertmanager binds to loopback only.
 
 ### Structured timing log contract
 

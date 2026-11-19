@@ -42,7 +42,7 @@ tests:
               type: simple
             exp_annotations:
               summary: Test service exercise-mailer-test.service is failed after automatic restart attempts
-              description: The unit is in systemd failed state. It has a four-start limit per 15 minutes with a 30-second cooldown; inspect systemctl Result and the unit journal to confirm whether start-limit-hit caused the failure.
+              description: The unit is in systemd failed state. It has a four-start limit per 15 minutes with a 30-second cooldown; the journal records restart-limit rejection, while Result may remain exit-code from the last process failure.
 
   - interval: 30s
     input_series:
@@ -53,4 +53,21 @@ tests:
     alert_rule_test:
       - eval_time: 1m
         alertname: TestServiceRestartFailed
+        exp_alerts: []
+
+  - interval: 30s
+    input_series:
+      - series: 'sis_engagement_workflow_last_check_timestamp_seconds{environment="test"}'
+        values: '0 0 0 0 0 0 0 0 0 0 300 300'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: TestEngagementMonitorStale
+        exp_alerts:
+          - exp_labels:
+              environment: test
+              severity: warning
+            exp_annotations:
+              summary: Test engagement workflow monitor has not reported for three minutes
+      - eval_time: 5m
+        alertname: TestEngagementMonitorStale
         exp_alerts: []
