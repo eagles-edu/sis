@@ -381,6 +381,25 @@ Infrastructure metrics alone cannot identify the exact save operation. The SIS s
 
 Request labels must use route templates, not student IDs, names, emails, cookies, or raw request bodies. This avoids turning Prometheus into a student-data store.
 
+## Keep-alive logical check groups
+
+Each checklist subsystem has a fixed logical group ID. A process may run more than one group, but each group must publish its own result, last-check time, last-success time, duration, and bounded failure code. Process exit status or another group's passing result must never stand in for a group's outcome. These group status series use the common `sis_keepalive_check_*` families with only the controlled `environment` and `group` labels; existing subsystem metric families remain the detailed measurements. Group-level status emission is a separate implementation step and is not implied by the existing combined monitors.
+
+| Checklist subsystem | Group ID | Existing detail metric families | Current execution owner and boundary |
+| --- | --- | --- | --- |
+| Parent invitation, draft, submission, approval, and profile update | `parent_profile` | `sis_parent_profile_workflow_*` | `tools/monitor-parent-profile-workflow.mjs`; one dev synthetic lifecycle, no email |
+| Engagement events and reporting | `engagement` | `sis_engagement_*` | `tools/monitor-engagement-workflows.mjs`; dev/test read-only database and authenticated API checks |
+| Student Library | `student_library` | `sis_library_*` excluding Dictionary Builder families | `tools/monitor-library-workflow.mjs`; dev synthetic save/review/result and cleanup |
+| Student News, vocabulary, and grammar | `student_news` | `sis_news_*` | `tools/monitor-news-workflow.mjs`; dev synthetic Check/submission and cleanup |
+| Admin definitions and Dictionary Builder | `dictionary_builder` | `sis_library_dictionary_builder_*` | Currently executed inside the Library monitor, with a distinct detail family; its outcome must remain independent of the student Library workflow result |
+| Assignments and notifications | `assignment_notifications` | `sis_assignment_reminder_*`, `sis_notification_*`, `sis_parent_report_notification_*`, `sis_async_*` | Engagement monitor plus the async side-effects worker; queue and delivery states are measured separately, and worker health is not delivery success |
+| Grades, external exercise feeds, and tables | `grade_feeds` | `sis_grade_feed_*` | `tools/monitor-grade-feeds.mjs`; dev authenticated read checks and aggregate feed state |
+| Attendance | `attendance` | `sis_attendance_*` and fixed attendance route series in `sis_admin_student_write_*` | Grade/feed monitor plus authenticated write instrumentation; attendance result is independent of grade/feed result |
+| Parent site, profiles, performance reports, and notifications | `parent_reports` | `sis_parent_authentication_*`, `sis_parent_report_*`, `sis_parent_report_acknowledgment_*` | Engagement monitor plus acknowledgment route metrics; authenticated parent/dashboard status is separate from acknowledgment-write status |
+| Student profiles, enrollment, and provisioning | `student_profile_enrollment` | `sis_admin_student_write_*`, `sis_enrollment_*`, `sis_moodle_provisioning_*` | Engagement monitor plus authenticated write metrics; profile/enrollment status is separate from Moodle queue state |
+
+The current monitors often share a process and some still expose only one overall result. The group IDs and owned detail families above define the required separation; the following checklist items define operating policy and implement the independent status and freshness series.
+
 ## Parent profile workflow monitor
 
 Run the dev functional monitor with:
