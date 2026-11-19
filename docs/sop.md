@@ -20,6 +20,14 @@ This file holds the reusable operational procedure. Keep `AGENTS.md` short and u
 - When docs and assumptions conflict, stop following the assumption. Use the documented contract unless the user explicitly instructs otherwise.
 - Before changing a route or router contract, diff the last pushed code, the relevant backups, and the route docs first so the pre-drift baseline is explicit before edits begin.
 
+## AI-assisted incident recovery
+
+AI assistance during an operational incident is limited to diagnosis and proposed repairs. It may inspect authorized, sanitized health results, aggregate metrics, redacted logs, source, tests, and documented recovery state; it must distinguish observed facts from inference and identify missing evidence. It may prepare a concrete patch or command proposal with the affected environment, expected data effects, backup requirement, verification, and rollback path.
+
+An alert, automated diagnosis, or AI recommendation does not authorize execution. Do not let AI autonomously write or delete student/parent data, retry or requeue jobs, send external messages, repair runtime configuration, restore a database, restart a service, deploy code, or apply migrations as incident recovery. Execute an operation only when the active user request or standing operating procedure authorizes that specific action in that environment. Do not request redundant approval when authorization is already present. Production/live changes require explicit authorization for the exact operation; keep dev and test isolated.
+
+When the user explicitly requests implementation, carry it out through the normal dev-first process rather than treating the request as an AI-triggered recovery action: back up first, use the owning environment file, verify behavior and data effects, and sync only to the authorized mirror. Service restarts use the fixed bounded policy documented below and do not run deployment, package installation, or migrations. Existing non-AI recovery mechanisms, such as SIS config recency reconciliation and bounded idempotent worker retries, continue under their separate documented environment and data-safety contracts. Do not add AI-triggered recovery execution.
+
 ## Canonical Workspace
 
 - Canonical source: `/home/eagles/dockerz/sis`
