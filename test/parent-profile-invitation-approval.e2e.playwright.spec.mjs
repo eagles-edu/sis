@@ -200,8 +200,30 @@ test("authenticated manual parent invitation preserves an editable draft across 
 
   const parentContext = await browser.newContext({ viewport: { width: 1280, height: 900 } })
   const parentPage = await parentContext.newPage()
+  const parentApiResponses = []
+  parentPage.on("response", (response) => {
+    const responseUrl = new URL(response.url())
+    if (responseUrl.pathname.startsWith("/api/parent/")) {
+      parentApiResponses.push({ path: responseUrl.pathname, status: response.status() })
+    }
+  })
   await parentPage.goto(invitationUrl.toString(), { waitUntil: "domcontentloaded" })
-  await parentPage.locator("#passwordSetupCard").waitFor({ state: "visible", timeout: 30000 })
+  try {
+    await parentPage.locator("#passwordSetupCard").waitFor({ state: "visible", timeout: 30000 })
+  } catch (error) {
+    const pageState = await parentPage.evaluate(() => ({
+      path: location.pathname,
+      title: document.title,
+      passwordSetupVisible: !document.getElementById("passwordSetupCard")?.classList.contains("hidden"),
+      parentLoginVisible: !document.getElementById("parentLoginCard")?.classList.contains("hidden"),
+      profileFieldsVisible: !document.getElementById("profileFields")?.classList.contains("hidden"),
+      status: String(document.getElementById("parentPortalStatus")?.textContent || "").slice(0, 160),
+    }))
+    throw new Error(
+      `Parent invitation setup did not load; api=${JSON.stringify(parentApiResponses)}; page=${JSON.stringify(pageState)}`,
+      { cause: error },
+    )
+  }
   await parentPage.locator("#newParentPassword").fill("KeepAlive-Parent-27!")
   await parentPage.locator("#confirmParentPassword").fill("KeepAlive-Parent-27!")
   await parentPage.locator("#saveParentPasswordBtn").click()
@@ -253,7 +275,26 @@ test("authenticated manual parent invitation preserves an editable draft across 
   assert.equal(beforeApproval?.studentPhone, "+84900000000", "submission must not change the official profile before review")
 
   await adminPage.goto(`${ORIGIN}/admin/family?apiOrigin=${encodeURIComponent(ORIGIN)}`, { waitUntil: "domcontentloaded" })
+  const profileSubmissionsResponse = adminPage.waitForResponse(
+    (response) => response.request().method() === "GET" && /\/api\/admin\/profile-submissions(?:\?|$)/u.test(response.url()),
+    { timeout: 30000 },
+  )
   await adminPage.locator("#profileSubmissionRefreshBtn").click()
+  const submissionsResponse = await profileSubmissionsResponse
+  const submissionsPayload = await submissionsResponse.json()
+  const submissionsError = String(submissionsPayload?.error || "no error detail")
+    .replace(/postgres(?:ql)?:\/\/\S+/giu, "[redacted database URL]")
+    .replace(/(password|secret|token)\s*[=:]\s*\S+/giu, "$1=[redacted]")
+    .slice(0, 180)
+  assert.equal(
+    submissionsResponse.status(),
+    200,
+    `authenticated admin must load the parent profile review queue (${submissionsError})`,
+  )
+  assert.ok(
+    Array.isArray(submissionsPayload?.items) && submissionsPayload.items.some((item) => item?.id === submitted.id),
+    "the submitted parent profile must be returned by the authenticated review queue API",
+  )
   const reviewCard = adminPage.locator("#profileSubmissionRows article").filter({ hasText: studentId })
   await reviewCard.waitFor({ state: "visible", timeout: 30000 })
   adminPage.on("dialog", (dialog) => dialog.accept())

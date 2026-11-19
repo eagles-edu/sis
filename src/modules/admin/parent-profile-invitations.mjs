@@ -13,7 +13,6 @@ const INVITATION_EXPIRY_MAX_DAYS = 30
 const ACTIVATION_RATE_WINDOW_MS = 15 * 60 * 1000
 const ACTIVATION_RATE_MAX_ATTEMPTS = 8
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u
-const activationAttemptsBySource = new Map()
 const invitationRecoveryById = new Map()
 
 function text(value) { return value === undefined || value === null ? "" : String(value).trim() }
@@ -27,19 +26,52 @@ function invitationExpiryDays() {
   const requested = Number.parseInt(text(process.env.PARENT_PROFILE_INVITATION_EXPIRY_DAYS || INVITATION_EXPIRY_DEFAULT_DAYS), 10)
   return Math.min(INVITATION_EXPIRY_MAX_DAYS, Math.max(1, Number.isInteger(requested) ? requested : INVITATION_EXPIRY_DEFAULT_DAYS))
 }
-function assertActivationRateLimit(sourceKey) {
-  const key = text(sourceKey) || "unknown"
-  const now = Date.now()
-  const prior = activationAttemptsBySource.get(key)
-  const attempts = prior && now - prior.startedAt < ACTIVATION_RATE_WINDOW_MS ? prior.attempts + 1 : 1
-  activationAttemptsBySource.set(key, { startedAt: prior && now - prior.startedAt < ACTIVATION_RATE_WINDOW_MS ? prior.startedAt : now, attempts })
-  if (activationAttemptsBySource.size > 5000) {
-    for (const [entryKey, entry] of activationAttemptsBySource.entries()) {
-      if (now - entry.startedAt >= ACTIVATION_RATE_WINDOW_MS) activationAttemptsBySource.delete(entryKey)
+export function createActivationAttemptLimiter({
+  windowMs = ACTIVATION_RATE_WINDOW_MS,
+  maxAttempts = ACTIVATION_RATE_MAX_ATTEMPTS,
+  clock = () => Date.now(),
+} = {}) {
+  const attemptsBySource = new Map()
+
+  function assertNotLocked(sourceKey) {
+    const key = text(sourceKey) || "unknown"
+    const now = clock()
+    const prior = attemptsBySource.get(key)
+    if (!prior) return
+    if (now - prior.startedAt >= windowMs) {
+      attemptsBySource.delete(key)
+      return
+    }
+    if (prior.attempts >= maxAttempts) {
+      throw Object.assign(new Error("Too many activation attempts. Please wait and try again."), { statusCode: 429 })
     }
   }
-  if (attempts > ACTIVATION_RATE_MAX_ATTEMPTS) throw Object.assign(new Error("Too many activation attempts. Please wait and try again."), { statusCode: 429 })
+
+  function recordFailure(sourceKey) {
+    const key = text(sourceKey) || "unknown"
+    const now = clock()
+    const prior = attemptsBySource.get(key)
+    const withinWindow = prior && now - prior.startedAt < windowMs
+    const attempts = withinWindow ? prior.attempts + 1 : 1
+    attemptsBySource.set(key, { startedAt: withinWindow ? prior.startedAt : now, attempts })
+    if (attemptsBySource.size > 5000) {
+      for (const [entryKey, entry] of attemptsBySource.entries()) {
+        if (now - entry.startedAt >= windowMs) attemptsBySource.delete(entryKey)
+      }
+    }
+    if (attempts > maxAttempts) {
+      throw Object.assign(new Error("Too many activation attempts. Please wait and try again."), { statusCode: 429 })
+    }
+  }
+
+  function clear(sourceKey) {
+    attemptsBySource.delete(text(sourceKey) || "unknown")
+  }
+
+  return { assertNotLocked, recordFailure, clear }
 }
+
+const activationAttemptLimiter = createActivationAttemptLimiter()
 function assertInvitationRecoveryRateLimit(invitationId) {
   const key = text(invitationId)
   const now = Date.now()
@@ -255,22 +287,31 @@ export async function consumeParentProfileInvitation(token, { mark = "clicked" }
 }
 
 export async function redeemParentProfileInvitation({ token = "", sourceKey = "" } = {}) {
-  assertActivationRateLimit(sourceKey)
+  const activationSource = text(sourceKey) || "unknown"
+  activationAttemptLimiter.assertNotLocked(activationSource)
   const tokenValue = text(token)
-  if (!tokenValue) throw Object.assign(new Error("This invitation link is unavailable."), { statusCode: 400 })
+  if (!tokenValue) {
+    activationAttemptLimiter.recordFailure(activationSource)
+    throw Object.assign(new Error("This invitation link is unavailable."), { statusCode: 400 })
+  }
   const prisma = await getSharedPrismaClient()
   const invitation = await prisma.parentProfileInvitation.findUnique({
     where: { tokenHash: tokenHash(tokenValue) },
     include: { student: { include: { profile: true } }, parentAccount: true },
   })
   if (!invitation || invitation.expiresAt <= new Date() || !["queued", "sent", "clicked"].includes(lower(invitation.status))) {
+    activationAttemptLimiter.recordFailure(activationSource)
     throw Object.assign(new Error("This invitation link is invalid, expired, or has already been used."), { statusCode: 410 })
   }
   const changed = await prisma.parentProfileInvitation.updateMany({
     where: { id: invitation.id, status: { in: ["queued", "sent", "clicked"] } },
     data: { status: "activated", activatedAt: new Date(), clickedAt: invitation.clickedAt || new Date() },
   })
-  if (changed.count !== 1) throw Object.assign(new Error("This invitation link has already been used."), { statusCode: 410 })
+  if (changed.count !== 1) {
+    activationAttemptLimiter.recordFailure(activationSource)
+    throw Object.assign(new Error("This invitation link has already been used."), { statusCode: 410 })
+  }
+  activationAttemptLimiter.clear(activationSource)
   return invitation
 }
 

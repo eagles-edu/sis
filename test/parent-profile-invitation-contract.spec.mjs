@@ -4,7 +4,11 @@ import fs from "node:fs"
 import path from "node:path"
 import test from "node:test"
 import vm from "node:vm"
-import { ensureParentPortalAccount, resolveParentPortalAccountIdentity } from "../src/modules/admin/parent-profile-invitations.mjs"
+import {
+  createActivationAttemptLimiter,
+  ensureParentPortalAccount,
+  resolveParentPortalAccountIdentity,
+} from "../src/modules/admin/parent-profile-invitations.mjs"
 
 const rootDir = process.cwd()
 const invitations = fs.readFileSync(path.resolve(rootDir, "src/modules/admin/parent-profile-invitations.mjs"), "utf8")
@@ -157,7 +161,11 @@ test("expired and reused parent activation links are rejected without consuming 
   const context = vm.createContext({
     Date,
     Error,
-    assertActivationRateLimit: () => {},
+    activationAttemptLimiter: {
+      assertNotLocked: () => {},
+      recordFailure: () => {},
+      clear: () => {},
+    },
     text: (value) => value === undefined || value === null ? "" : String(value).trim(),
     lower: (value) => value === undefined || value === null ? "" : String(value).trim().toLowerCase(),
     tokenHash: (value) => crypto.createHash("sha256").update(String(value ?? "").trim()).digest("hex"),
@@ -195,6 +203,62 @@ test("expired and reused parent activation links are rejected without consuming 
     (error) => error?.statusCode === 410 && /already been used/i.test(error.message),
   )
   assert.equal(updateManyCalls, 1, "conditional activation must reject a concurrent prior redemption")
+})
+
+test("successful parent activations do not exhaust the shared source failure limit", async () => {
+  const windowMs = 15 * 60 * 1000
+  const clockState = { now: 1_800_000_000_000 }
+  const activationAttemptLimiter = createActivationAttemptLimiter({
+    windowMs,
+    maxAttempts: 8,
+    clock: () => clockState.now,
+  })
+  let validInvitations = true
+  let databaseLookupCount = 0
+  const context = vm.createContext({
+    Date,
+    Error,
+    activationAttemptLimiter,
+    text: (value) => value === undefined || value === null ? "" : String(value).trim(),
+    lower: (value) => value === undefined || value === null ? "" : String(value).trim().toLowerCase(),
+    tokenHash: (value) => String(value ?? "").trim(),
+    getSharedPrismaClient: async () => ({
+      parentProfileInvitation: {
+        findUnique: async ({ where }) => {
+          databaseLookupCount += 1
+          return validInvitations
+            ? { id: where.tokenHash, status: "sent", expiresAt: new Date(Date.now() + 60000), clickedAt: null }
+            : null
+        },
+        updateMany: async () => ({ count: 1 }),
+      },
+    }),
+  })
+  const redeem = vm.runInContext(
+    `(${invitations.slice(redeemStart, redeemEnd).replace("export async function", "async function")})`,
+    context,
+  )
+
+  for (let index = 0; index < 12; index += 1) {
+    const invitation = await redeem({ token: `synthetic-valid-token-${index}`, sourceKey: "shared-school-nat" })
+    assert.equal(invitation.status, "sent")
+  }
+
+  validInvitations = false
+  for (let index = 0; index < 8; index += 1) {
+    await assert.rejects(
+      redeem({ token: `synthetic-invalid-token-${index}`, sourceKey: "shared-school-nat" }),
+      (error) => error?.statusCode === 410,
+    )
+  }
+  await assert.rejects(
+    redeem({ token: "synthetic-invalid-token-locked", sourceKey: "shared-school-nat" }),
+    (error) => error?.statusCode === 429,
+  )
+  assert.equal(databaseLookupCount, 20, "a locked source must be rejected before another database lookup")
+
+  clockState.now += windowMs
+  activationAttemptLimiter.assertNotLocked("shared-school-nat")
 })
 
 test("parent identity rejects email reuse across Parents IDs instead of creating an email-less account", () => {
