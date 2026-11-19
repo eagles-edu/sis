@@ -742,9 +742,9 @@
     },
     {
       "id": 12,
-      "type": "table",
+      "type": "text",
       "title": "Host service state",
-      "description": "Shared host systemd state. Missing series mean no matching systemd unit is exported.",
+      "description": "No domain-specific systemd service is configured for this domain; check the container layer where configured.",
       "gridPos": {
         "x": 0,
         "y": 37,
@@ -757,42 +757,12 @@
       },
       "targets": [],
       "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          }
-        },
+        "defaults": {},
         "overrides": []
       },
       "options": {
-        "showHeader": true,
-        "cellHeight": "md",
-        "sortBy": []
+        "mode": "markdown",
+        "content": "No domain-specific systemd service is configured for this domain; check the container layer where configured."
       }
     },
     {
@@ -897,13 +867,104 @@
       }
     },
     {
-      "id": 14,
-      "type": "table",
-      "title": "ERPNext component health",
-      "description": "Eight expected containers; health -1 means the container has no Docker healthcheck.",
+      "id": 20,
+      "type": "text",
+      "title": "Host service health history · shared host",
+      "description": "No domain-specific systemd service history is configured. This is an instrumentation gap, not a healthy result.",
+      "gridPos": {
+        "x": 0,
+        "y": 46,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "No domain-specific systemd service history is configured. This is an instrumentation gap, not a healthy result."
+      }
+    },
+    {
+      "id": 21,
+      "type": "state-timeline",
+      "title": "Dependency health history",
+      "description": "Authenticated database/cache and container dependency check results over time. Only the fixed dependency and check labels are shown.",
       "gridPos": {
         "x": 12,
         "y": 46,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "site_dependency_status{domain=\"ltd.eagles.vn\"}",
+          "refId": "A",
+          "legendFormat": "{{dependency}} · {{check}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mergeValues": true,
+        "showValue": "auto",
+        "alignValue": "center",
+        "rowHeight": 0.9,
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "type": "table",
+      "title": "ERPNext component health",
+      "description": "Eight expected containers. HEALTHY and UNHEALTHY reflect Docker healthchecks; NO HEALTHCHECK means Docker does not define a healthcheck for that component.",
+      "gridPos": {
+        "x": 12,
+        "y": 55,
         "w": 12,
         "h": 9
       },
@@ -926,7 +987,27 @@
         }
       ],
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "UNHEALTHY",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "HEALTHY",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO HEALTHCHECK",
+                  "color": "gray"
+                }
+              }
+            }
+          ]
+        },
         "overrides": []
       },
       "options": {
@@ -936,13 +1017,79 @@
       }
     },
     {
+      "id": 22,
+      "type": "state-timeline",
+      "title": "Container running history",
+      "description": "Running state for each ERPNext and Redis component over time. Docker healthcheck state is shown separately in the component table.",
+      "gridPos": {
+        "x": 0,
+        "y": 55,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "erpnext_container_running{domain=\"ltd.eagles.vn\"}",
+          "refId": "A",
+          "legendFormat": "{{component}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mergeValues": true,
+        "showValue": "auto",
+        "alignValue": "center",
+        "rowHeight": 0.9,
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
       "id": 15,
       "type": "state-timeline",
       "title": "Domain alert timeline",
       "description": "Only pending and firing alerts with this domain label are shown. Shared, unlabelled service/workflow alerts are called out in layer descriptions.",
       "gridPos": {
         "x": 0,
-        "y": 55,
+        "y": 64,
         "w": 24,
         "h": 8
       },

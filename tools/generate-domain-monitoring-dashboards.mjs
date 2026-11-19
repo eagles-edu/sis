@@ -118,6 +118,13 @@ function statusField() {
   return { defaults: { mappings: [{ type: "value", options: { "0": { text: "DOWN", color: "red" }, "1": { text: "UP", color: "green" } } }], thresholds: { mode: "absolute", steps: [{ color: "red", value: null }, { color: "green", value: 1 }] } }, overrides: [] }
 }
 
+function explicitGapPanel(id, title, x, y, description) {
+  return panel(id, title, "text", [], { x, y, w: 12, h: 9 }, {
+    description,
+    options: { mode: "markdown", content: description },
+  })
+}
+
 function dashboardFor(config) {
   const domain = config.domain
   const selector = `domain="${domain}"`
@@ -148,30 +155,40 @@ function dashboardFor(config) {
       target("100 * (1 - node_filesystem_avail_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"})", "C", "Root filesystem used"),
     ], { x: 0, y: 28, w: 12, h: 8 }, { description: "Node-exporter reports the shared host. These resource metrics are not attributed to this domain.", fieldConfig: { defaults: { unit: "percent", min: 0, max: 100 }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }),
     panel(11, "Layer coverage and attribution", "text", [], { x: 12, y: 28, w: 12, h: 9 }, { description: "This map distinguishes collected signals from uninstrumented layers; shared host metrics are not presented as per-domain measurements.", options: { mode: "markdown", content: `| Layer | Coverage | Signals |\n| --- | --- | --- |\n${config.coverage.map(([layer, status, detail]) => `| ${layer} | **${status}** | ${detail} |`).join("\n")}` } }),
-    panel(12, "Host service state", "table", config.services.length ? [target(`node_systemd_unit_state{name=~"(${config.services.map((service) => service.replaceAll(".", "\\\\.")).join("|")})",state=~"active|failed"}`, "A", "{{name}} / {{state}}", true)] : [], { x: 0, y: 37, w: 12, h: 9 }, { description: "Shared host systemd state. Missing series mean no matching systemd unit is exported.", fieldConfig: statusField(), options: { showHeader: true, cellHeight: "md", sortBy: [] } }),
+    config.services.length
+      ? panel(12, "Host service state", "table", [target(`max by (name) (node_systemd_unit_state{name=~"(${config.services.map((service) => service.replaceAll(".", "\\\\.")).join("|")})",state="active"})`, "A", "{{name}}", true)], { x: 0, y: 37, w: 12, h: 9 }, { description: "Shared host systemd active state. A configured service with active=0 is down; missing series mean no matching systemd unit is exported.", fieldConfig: statusField(), options: { showHeader: true, cellHeight: "md", sortBy: [] } })
+      : explicitGapPanel(12, "Host service state", 0, 37, "No domain-specific systemd service is configured for this domain; check the container layer where configured."),
     config.dependencies
       ? panel(13, "Domain dependencies", "table", [target(`site_dependency_status{${selector}}`, "A", "{{dependency}} · {{check}}", true)], { x: 12, y: 37, w: 12, h: 9 }, { description: "Read-only authenticated dependency probes for this domain.", fieldConfig: statusField(), options: { showHeader: true, cellHeight: "md", sortBy: [] } })
-      : panel(13, "Domain dependencies", "text", [], { x: 12, y: 37, w: 12, h: 9 }, { description: "No domain-specific authenticated database/cache dependency probe is configured.", options: { mode: "markdown", content: "No authenticated domain-specific database or cache dependency probe is configured. This is an instrumentation gap, not a healthy result." } }),
+      : explicitGapPanel(13, "Domain dependencies", 12, 37, "No authenticated domain-specific database or cache dependency probe is configured. This is an instrumentation gap, not a healthy result."),
     appSelector
       ? panel(17, "Application/API response time", "timeseries", [target(`probe_duration_seconds{${selector},job=~"${appJobs}"}`, "A", "{{check}}")], { x: 12, y: 20, w: 12, h: 8 }, { description: "Response duration for configured domain application/API probes.", fieldConfig: { defaults: { unit: "s" }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } })
       : panel(17, "Application/API response time", "text", [], { x: 12, y: 20, w: 12, h: 8 }, { description: "No domain-specific application/API latency probe is configured.", options: { mode: "markdown", content: "No domain-specific application/API latency probe is configured. Review the layer coverage map; no latency data is available." } }),
   ]
 
+  panels.push(config.services.length
+    ? panel(20, "Host service health history · shared host", "state-timeline", [target(`max by (name) (node_systemd_unit_state{name=~"(${config.services.map((service) => service.replaceAll(".", "\\\\.")).join("|")})",state="active"})`, "A", "{{name}}", false)], { x: 0, y: 46, w: 12, h: 9 }, { description: "Active state for each configured systemd service over time. These are shared-host services, not domain-isolated processes.", fieldConfig: statusField(), options: { mergeValues: true, showValue: "auto", alignValue: "center", rowHeight: 0.9, tooltip: { mode: "single", sort: "none" } } })
+    : explicitGapPanel(20, "Host service health history · shared host", 0, 46, "No domain-specific systemd service history is configured. This is an instrumentation gap, not a healthy result."))
+  panels.push(config.dependencies
+    ? panel(21, "Dependency health history", "state-timeline", [target(`site_dependency_status{${selector}}`, "A", "{{dependency}} · {{check}}")], { x: 12, y: 46, w: 12, h: 9 }, { description: "Authenticated database/cache and container dependency check results over time. Only the fixed dependency and check labels are shown.", fieldConfig: statusField(), options: { mergeValues: true, showValue: "auto", alignValue: "center", rowHeight: 0.9, tooltip: { mode: "single", sort: "none" } } })
+    : explicitGapPanel(21, "Dependency health history", 12, 46, "No authenticated domain-specific database or cache dependency history is configured. This is an instrumentation gap, not a healthy result."))
+
   if (config.containers) {
     panels.push(panel(14, "ERPNext component health", "table", [
       target(`erpnext_container_running{${selector}}`, "A", "{{component}} running", true),
       target(`erpnext_container_health{${selector}}`, "B", "{{component}} health", true),
-    ], { x: 12, y: 46, w: 12, h: 9 }, { description: "Eight expected containers; health -1 means the container has no Docker healthcheck.", options: { showHeader: true, cellHeight: "md", sortBy: [] } }))
+    ], { x: 12, y: 55, w: 12, h: 9 }, { description: "Eight expected containers. HEALTHY and UNHEALTHY reflect Docker healthchecks; NO HEALTHCHECK means Docker does not define a healthcheck for that component.", fieldConfig: { defaults: { mappings: [{ type: "value", options: { "-1": { text: "NO HEALTHCHECK", color: "gray" }, "0": { text: "UNHEALTHY", color: "red" }, "1": { text: "HEALTHY", color: "green" } } }] }, overrides: [] }, options: { showHeader: true, cellHeight: "md", sortBy: [] } }))
+    panels.push(panel(22, "Container running history", "state-timeline", [target(`erpnext_container_running{${selector}}`, "A", "{{component}}")], { x: 0, y: 55, w: 12, h: 9 }, { description: "Running state for each ERPNext and Redis component over time. Docker healthcheck state is shown separately in the component table.", fieldConfig: statusField(), options: { mergeValues: true, showValue: "auto", alignValue: "center", rowHeight: 0.9, tooltip: { mode: "single", sort: "none" } } }))
   }
 
-  const alertsY = config.containers ? 55 : 46
+  const alertsY = config.containers ? 64 : 55
   const adminAckAlert = config.slug === "sis-admin"
     ? [target("ALERTS{alertname=\"DevParentReportAcknowledgmentServerFailure\",environment=\"dev\",alertstate=~\"pending|firing\"}", "B", "SIS parent acknowledgment 5xx")]
     : []
   panels.push(panel(15, "Domain alert timeline", "state-timeline", [
     target(`ALERTS{alertname=~"${config.alerts}",alertstate=~"pending|firing",domain="${domain}"}`, "A", "{{alertname}} / {{severity}}"),
     ...adminAckAlert,
-  ], { x: 0, y: alertsY, w: 24, h: 8 }, { description: config.slug === "sis-admin"
+    ], { x: 0, y: alertsY, w: 24, h: 8 }, { description: config.slug === "sis-admin"
     ? "Domain-labeled alerts and the environment-wide dev parent report acknowledgment server-failure alert are shown."
     : "Only pending and firing alerts with this domain label are shown. Shared, unlabelled service/workflow alerts are called out in layer descriptions.", options: { mergeValues: true, showValue: "auto", alignValue: "center", rowHeight: 0.9, tooltip: { mode: "single", sort: "none" } } }))
 
@@ -179,11 +196,11 @@ function dashboardFor(config) {
     panels.push(panel(16, "SIS dev workflow state and freshness · environment-wide", "timeseries", [
       target("sis_keepalive_check_failure_info{environment=\"dev\"}", "A", "{{group}} · {{code}}"),
       target("time() - sis_keepalive_check_last_check_timestamp_seconds{environment=\"dev\"}", "B", "{{group}} freshness seconds"),
-    ], { x: 0, y: 63, w: 24, h: 8 }, { description: "These dev checks have environment labels, not domain labels. Failure series are binary, and freshness is graphed as seconds since the last check.", fieldConfig: { defaults: { unit: "s" }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }))
+    ], { x: 0, y: 72, w: 24, h: 8 }, { description: "These dev checks have environment labels, not domain labels. Failure series are binary, and freshness is graphed as seconds since the last check.", fieldConfig: { defaults: { unit: "s" }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }))
     panels.push(panel(18, "Parent report acknowledgment results · dev", "timeseries", [
       target("sum by(status) (increase(sis_parent_report_acknowledgment_requests_total{environment=\"dev\",route=\"POST /api/parent/reports/:reportId/acknowledge\"}[1h]))", "A", "HTTP {{status}}"),
       target("ALERTS{alertname=\"DevParentReportAcknowledgmentServerFailure\",environment=\"dev\",alertstate=~\"pending|firing\"}", "B", "5xx alert"),
-    ], { x: 0, y: 71, w: 24, h: 8 }, { description: "Environment-wide dev acknowledgment result counts and the corresponding 5xx alert; these are not attributed to one individual report.", options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }))
+    ], { x: 0, y: 80, w: 24, h: 8 }, { description: "Environment-wide dev acknowledgment result counts and the corresponding 5xx alert; these are not attributed to one individual report.", options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }))
   }
 
   return {

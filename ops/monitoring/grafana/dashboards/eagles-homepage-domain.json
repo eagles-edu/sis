@@ -703,7 +703,7 @@
       "id": 12,
       "type": "table",
       "title": "Host service state",
-      "description": "Shared host systemd state. Missing series mean no matching systemd unit is exported.",
+      "description": "Shared host systemd active state. A configured service with active=0 is down; missing series mean no matching systemd unit is exported.",
       "gridPos": {
         "x": 0,
         "y": 37,
@@ -716,9 +716,9 @@
       },
       "targets": [
         {
-          "expr": "node_systemd_unit_state{name=~\"(lshttpd\\\\.service|mariadb\\\\.service)\",state=~\"active|failed\"}",
+          "expr": "max by (name) (node_systemd_unit_state{name=~\"(lshttpd\\\\.service|mariadb\\\\.service)\",state=\"active\"})",
           "refId": "A",
-          "legendFormat": "{{name}} / {{state}}",
+          "legendFormat": "{{name}}",
           "instant": true
         }
       ],
@@ -765,7 +765,7 @@
       "id": 13,
       "type": "text",
       "title": "Domain dependencies",
-      "description": "No domain-specific authenticated database/cache dependency probe is configured.",
+      "description": "No authenticated domain-specific database or cache dependency probe is configured. This is an instrumentation gap, not a healthy result.",
       "gridPos": {
         "x": 12,
         "y": 37,
@@ -812,13 +812,104 @@
       }
     },
     {
+      "id": 20,
+      "type": "state-timeline",
+      "title": "Host service health history · shared host",
+      "description": "Active state for each configured systemd service over time. These are shared-host services, not domain-isolated processes.",
+      "gridPos": {
+        "x": 0,
+        "y": 46,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "max by (name) (node_systemd_unit_state{name=~\"(lshttpd\\\\.service|mariadb\\\\.service)\",state=\"active\"})",
+          "refId": "A",
+          "legendFormat": "{{name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mergeValues": true,
+        "showValue": "auto",
+        "alignValue": "center",
+        "rowHeight": 0.9,
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 21,
+      "type": "text",
+      "title": "Dependency health history",
+      "description": "No authenticated domain-specific database or cache dependency history is configured. This is an instrumentation gap, not a healthy result.",
+      "gridPos": {
+        "x": 12,
+        "y": 46,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "No authenticated domain-specific database or cache dependency history is configured. This is an instrumentation gap, not a healthy result."
+      }
+    },
+    {
       "id": 15,
       "type": "state-timeline",
       "title": "Domain alert timeline",
       "description": "Only pending and firing alerts with this domain label are shown. Shared, unlabelled service/workflow alerts are called out in layer descriptions.",
       "gridPos": {
         "x": 0,
-        "y": 46,
+        "y": 55,
         "w": 24,
         "h": 8
       },

@@ -160,3 +160,9 @@ Hardening decisions captured from this incident:
 - Current rule: all environments compare the config file's filesystem modification time with the database-managed `SisConfigMirror.updatedAt`, choose the newer valid copy, repair the older copy, and read back to verify a database repair. An exact timestamp tie selects the database copy deterministically. Recovery copies the winning version timestamp to both copies, including the repaired file's mtime, preventing timestamp oscillation.
 - Health endpoints now reconcile before reporting. A database failure is surfaced instead of being reported as an apparently successful load.
 - Dev runtime was backed up before repair; the local file was newer than the database row's recorded timestamp and the dev mirror was repaired from that file. No production runtime or production database was changed.
+
+### 2026-11-19: KA-129 domain-layer health history visualization
+
+- Extended the five provisioned domain dashboards with history timelines for each configured host service and authenticated dependency, plus an ERPNext component-running timeline.
+- Dashboard tables now distinguish Docker `HEALTHY`, `UNHEALTHY`, and `NO HEALTHCHECK`; domains without configured service/dependency probes show explicit instrumentation gaps.
+- Dev Grafana provisions the generated dashboards and Prometheus evaluates the newly added layer queries. Production was untouched. Backup: `/home/eagles/dockerz/backups/manual-edits/20261119-domain-layer-visualization/`.
