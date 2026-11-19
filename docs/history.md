@@ -193,3 +193,7 @@ Hardening decisions captured from this incident:
 ### 2026-11-20: KA-134 generated admin asset parity
 
 - KA-132 changed only server-side invitation throttling, tests, and evidence documents; no generated admin assets were required. `npm run dev:restart` ran the admin asset build and reported outputs already current. `npm run build:admin-assets:check` exited 0 with all admin asset outputs up to date. No generated payload drift was found. Backup: `/home/eagles/dockerz/backups/manual-edits/20261120-ka134-generated-assets-parity/`.
+
+### 2026-11-20: KA-135 dev restart and post-restart workflow health
+
+- Dev restart completed from the workspace with all 72 migrations current; `/healthz` reported `status=ok` and the SIS file/database mirror was in sync. The connected authenticated parent profile form and admin parent-review queue both loaded after restart; the review queue returned 18 rows. At 320px and 390px, both pages had no document-level horizontal overflow. No real profile or review row was changed. Backup: `/home/eagles/dockerz/backups/manual-edits/20261120-ka135-post-restart-workflows/`.
