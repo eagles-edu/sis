@@ -265,6 +265,14 @@ groups:
         annotations:
           summary: Dev parent report notification items retain a delivery error
 
+      - alert: DevParentReportAcknowledgmentServerFailure
+        expr: sum(increase(sis_parent_report_acknowledgment_requests_total{environment="dev",route="POST /api/parent/reports/:reportId/acknowledge",status=~"5.."}[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: An authenticated dev parent report acknowledgment request returned a server error
+
       - alert: DevAssignmentReminderDispatchStale
         expr: sis_assignment_reminder_stale_pending_dispatches{environment="dev"} > 0
         for: 1m

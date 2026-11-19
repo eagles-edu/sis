@@ -152,13 +152,25 @@ function dashboardFor(config) {
   }
 
   const alertsY = config.containers ? 46 : 46
-  panels.push(panel(15, "Domain alert timeline", "state-timeline", [target(`ALERTS{alertname=~"${config.alerts}",alertstate=~"pending|firing",domain="${domain}"}`, "A", "{{alertname}} / {{severity}}")], { x: 0, y: alertsY, w: 24, h: 8 }, { description: "Only pending and firing alerts with this domain label are shown. Shared, unlabelled service/workflow alerts are called out in layer descriptions.", options: { mergeValues: true, showValue: "auto", alignValue: "center", rowHeight: 0.9, tooltip: { mode: "single", sort: "none" } } }))
+  const adminAckAlert = config.slug === "sis-admin"
+    ? [target("ALERTS{alertname=\"DevParentReportAcknowledgmentServerFailure\",environment=\"dev\",alertstate=~\"pending|firing\"}", "B", "SIS parent acknowledgment 5xx")]
+    : []
+  panels.push(panel(15, "Domain alert timeline", "state-timeline", [
+    target(`ALERTS{alertname=~"${config.alerts}",alertstate=~"pending|firing",domain="${domain}"}`, "A", "{{alertname}} / {{severity}}"),
+    ...adminAckAlert,
+  ], { x: 0, y: alertsY, w: 24, h: 8 }, { description: config.slug === "sis-admin"
+    ? "Domain-labeled alerts and the environment-wide dev parent report acknowledgment server-failure alert are shown."
+    : "Only pending and firing alerts with this domain label are shown. Shared, unlabelled service/workflow alerts are called out in layer descriptions.", options: { mergeValues: true, showValue: "auto", alignValue: "center", rowHeight: 0.9, tooltip: { mode: "single", sort: "none" } } }))
 
   if (config.slug === "sis-admin") {
     panels.push(panel(16, "SIS dev workflow state and freshness · environment-wide", "timeseries", [
       target("sis_keepalive_check_failure_info{environment=\"dev\"}", "A", "{{group}} · {{code}}"),
       target("time() - sis_keepalive_check_last_check_timestamp_seconds{environment=\"dev\"}", "B", "{{group}} freshness seconds"),
     ], { x: 0, y: 54, w: 24, h: 8 }, { description: "These dev checks have environment labels, not domain labels. Failure series are binary, and freshness is graphed as seconds since the last check.", fieldConfig: { defaults: { unit: "s" }, overrides: [] }, options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }))
+    panels.push(panel(18, "Parent report acknowledgment results · dev", "timeseries", [
+      target("sum by(status) (increase(sis_parent_report_acknowledgment_requests_total{environment=\"dev\",route=\"POST /api/parent/reports/:reportId/acknowledge\"}[1h]))", "A", "HTTP {{status}}"),
+      target("ALERTS{alertname=\"DevParentReportAcknowledgmentServerFailure\",environment=\"dev\",alertstate=~\"pending|firing\"}", "B", "5xx alert"),
+    ], { x: 0, y: 62, w: 24, h: 8 }, { description: "Environment-wide dev acknowledgment result counts and the corresponding 5xx alert; these are not attributed to one individual report.", options: { legend: { displayMode: "list", placement: "bottom" }, tooltip: { mode: "multi", sort: "desc" } } }))
   }
 
   return {

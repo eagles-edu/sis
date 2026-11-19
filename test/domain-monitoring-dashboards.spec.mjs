@@ -8,7 +8,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const DASHBOARD_DIR = path.join(ROOT, "ops/monitoring/grafana/dashboards")
 const expectations = new Map([
   ["eagles-homepage-domain.json", { domain: "eagles.edu.vn", checks: ["probe_success", "probe_http_duration_seconds", "node_systemd_unit_state"], hasGap: true }],
-  ["sis-admin-domain.json", { domain: "admin.eagles.edu.vn", checks: ["blackbox-admin-auth-api", "site_dependency_status", "sis_keepalive_check_failure_info"], hasGap: false }],
+  ["sis-admin-domain.json", { domain: "admin.eagles.edu.vn", checks: ["blackbox-admin-auth-api", "site_dependency_status", "sis_keepalive_check_failure_info", "sis_parent_report_acknowledgment_requests_total", "DevParentReportAcknowledgmentServerFailure"], hasGap: false }],
   ["ltd-erpnext-domain.json", { domain: "ltd.eagles.vn", checks: ["blackbox-website-app", "erpnext_container_running", "site_dependency_status"], hasGap: false }],
   ["ielts-portal-domain.json", { domain: "ielts.eagles.edu.vn", checks: ["blackbox-website-api", "node_systemd_unit_state"], hasGap: true }],
   ["thuvien-library-domain.json", { domain: "thuvien.eagles.edu.vn", checks: ["blackbox-thuvien-media", "thuvien-r2-flip-image", "thuvien-read-audio"], hasGap: true }],

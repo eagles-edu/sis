@@ -758,7 +758,7 @@
       "id": 15,
       "type": "state-timeline",
       "title": "Domain alert timeline",
-      "description": "Only pending and firing alerts with this domain label are shown. Shared, unlabelled service/workflow alerts are called out in layer descriptions.",
+      "description": "Domain-labeled alerts and the environment-wide dev parent report acknowledgment server-failure alert are shown.",
       "gridPos": {
         "x": 0,
         "y": 46,
@@ -773,6 +773,11 @@
         {
           "expr": "ALERTS{alertname=~\"PublicWebsite.*|AdminAuthentication.*|SiteSISAPI.*|SiteDependency.*|SISLiveApiServiceDown\",alertstate=~\"pending|firing\",domain=\"admin.eagles.edu.vn\"}",
           "refId": "A",
+          "legendFormat": "{{domain}}"
+        },
+        {
+          "expr": "ALERTS{alertname=\"DevParentReportAcknowledgmentServerFailure\",environment=\"dev\",alertstate=~\"pending|firing\"}",
+          "refId": "B",
           "legendFormat": "{{domain}}"
         }
       ],
@@ -822,6 +827,48 @@
         "defaults": {
           "unit": "s"
         },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "Parent report acknowledgment results · dev",
+      "description": "Environment-wide dev acknowledgment result counts and the corresponding 5xx alert; these are not attributed to one individual report.",
+      "gridPos": {
+        "x": 0,
+        "y": 62,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by(status) (increase(sis_parent_report_acknowledgment_requests_total{environment=\"dev\",route=\"POST /api/parent/reports/:reportId/acknowledge\"}[1h]))",
+          "refId": "A",
+          "legendFormat": "{{domain}}"
+        },
+        {
+          "expr": "ALERTS{alertname=\"DevParentReportAcknowledgmentServerFailure\",environment=\"dev\",alertstate=~\"pending|firing\"}",
+          "refId": "B",
+          "legendFormat": "{{domain}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
         "overrides": []
       },
       "options": {
