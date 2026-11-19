@@ -76,6 +76,13 @@ All fields are trimmed before validation.
 
 Similarity scoring may still be used for guidance, but low similarity should not block save.
 
+### Optional vocabulary etymology
+
+- Origin type and word-origin note are optional and never block saving.
+- A row with both fields supplied is a completed optional etymology contribution and must not receive an improvement warning.
+- If a student supplies only one field, Check may suggest only the missing companion field; it must not ask students to re-enter information already present.
+- Etymology attempt and extra-point metadata remain separate from warning-only guidance.
+
 ## Field Contract
 
 ### `sourceLink`

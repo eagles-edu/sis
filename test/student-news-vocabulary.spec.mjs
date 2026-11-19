@@ -201,33 +201,86 @@ test("optional verb transitivity attempts earn extra-point metadata without beco
   assert.match(result.warningFields.vocabulary.message, /transitivity attempt/i)
 })
 
-test("optional etymology attempts earn extra-point metadata without becoming required", async () => {
+test("complete optional etymology does not leave a false-positive improvement warning", async () => {
   const { evaluateStudentNewsCompliance } = await import("../src/modules/admin/student-news-compliance.mjs")
-  const result = await evaluateStudentNewsCompliance({
-    sourceLink: "https://www.bbc.com/news/articles/cy91vrzxn34o",
-    articleTitle: "How Pakistan won over Trump",
-    byline: "Caroline Davies",
-    articleDateline: "9 hours ago",
-    leadSynopsis: "Pakistan became an unlikely mediator.",
-    actionActor: "Pakistan",
-    actionAffected: "Iran",
-    actionWhere: "Iran",
-    actionWhat: "Pakistan acted as a mediator.",
-    actionWhy: "The parties needed a mediator.",
-    biasAssessment: "The article presents more than one viewpoint.",
-    vocabulary: [{
-      partOfSpeech: "noun",
-      english: "algebra",
-      vietnamese: "đại số",
-      syllabication: "AL-ge-bra",
-      definition: "A branch of mathematics.",
-      esl: { etymologyType: "borrowed", etymology: "Borrowed through Arabic." },
-    }],
-  }, { validationConfig: { vocabularyMinimumWords: 1 } })
-  assert.equal(result.failedFields.vocabulary, undefined)
-  assert.equal(result.warningFields.vocabulary.etymologyAttemptCount, 1)
-  assert.equal(result.warningFields.vocabulary.extraPointCount, 1)
-  assert.match(result.warningFields.vocabulary.message, /etymology attempt/i)
+  const previousKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-key"
+  resetVocabularyDictionaryCacheForTest()
+  try {
+    const result = await evaluateStudentNewsCompliance({
+      sourceLink: "https://www.bbc.com/news/articles/cy91vrzxn34o",
+      articleTitle: "How Pakistan won over Trump",
+      byline: "Caroline Davies",
+      articleDateline: "9 hours ago",
+      leadSynopsis: "Pakistan became an unlikely mediator.",
+      actionActor: "Pakistan",
+      actionAffected: "Iran",
+      actionWhere: "Iran",
+      actionWhat: "Pakistan acted as a mediator.",
+      actionWhy: "The parties needed a mediator.",
+      biasAssessment: "The article presents more than one viewpoint.",
+      vocabulary: [{
+        partOfSpeech: "noun",
+        english: "algebra",
+        vietnamese: "đại số",
+        syllabication: "AL-ge-bra",
+        definition: "A branch of mathematics.",
+        esl: { etymologyType: "borrowed", etymology: "Borrowed through Arabic." },
+      }],
+    }, {
+      validationConfig: { vocabularyMinimumWords: 1 },
+      fetchImpl: async () => ({ ok: true, json: async () => [{ hwi: { hw: "al*ge*bra" } }] }),
+    })
+    assert.equal(result.failedFields.vocabulary, undefined)
+    assert.equal(result.details.vocabulary.etymologyAttemptCount, 1)
+    assert.equal(result.details.vocabulary.extraPointCount, 1)
+    assert.doesNotMatch(result.warningFields.vocabulary?.message || "", /etymology/i)
+    assert.equal(result.warningTasks.some((task) => task.label === "Etymology extra points"), false)
+  } finally {
+    if (previousKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = previousKey
+    resetVocabularyDictionaryCacheForTest()
+  }
+})
+
+test("partial optional etymology guidance names only missing fields", async () => {
+  const { evaluateStudentNewsCompliance } = await import("../src/modules/admin/student-news-compliance.mjs")
+  const previousKey = process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+  process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = "test-key"
+  resetVocabularyDictionaryCacheForTest()
+  try {
+    const result = await evaluateStudentNewsCompliance({
+      sourceLink: "https://www.bbc.com/news/articles/cy91vrzxn34o",
+      articleTitle: "How Pakistan won over Trump",
+      byline: "Caroline Davies",
+      articleDateline: "9 hours ago",
+      leadSynopsis: "Pakistan became an unlikely mediator.",
+      actionActor: "Pakistan",
+      actionAffected: "Iran",
+      actionWhere: "Iran",
+      actionWhat: "Pakistan acted as a mediator.",
+      actionWhy: "The parties needed a mediator.",
+      biasAssessment: "The article presents more than one viewpoint.",
+      vocabulary: [{
+        partOfSpeech: "noun",
+        english: "algebra",
+        vietnamese: "đại số",
+        syllabication: "AL-ge-bra",
+        definition: "A branch of mathematics.",
+        esl: { etymologyType: "borrowed" },
+      }],
+    }, {
+      validationConfig: { vocabularyMinimumWords: 1 },
+      fetchImpl: async () => ({ ok: true, json: async () => [{ hwi: { hw: "al*ge*bra" } }] }),
+    })
+    const task = result.warningTasks.find((entry) => entry.label === "Etymology extra points")
+    assert.deepEqual(task?.steps, ["Add a brief word-origin note when you can support it; this field is optional and does not block saving."])
+    assert.equal(result.warningFields.vocabulary.etymologyImprovementCount, 1)
+  } finally {
+    if (previousKey === undefined) delete process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY
+    else process.env.MERRIAM_WEBSTER_COLLEGIATE_API_KEY = previousKey
+    resetVocabularyDictionaryCacheForTest()
+  }
 })
 
 test("Student News draft normalization preserves shared editor fields", () => {

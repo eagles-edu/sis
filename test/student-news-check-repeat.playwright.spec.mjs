@@ -32,7 +32,7 @@ const SKIP_REASON = !ALLOWED_ENVIRONMENT
 const VOCABULARY = [
   { partOfSpeech: "noun", english: "air-strike", vietnamese: "cuộc không kích", syllabication: "air-strike", definition: "An attack from aircraft.", esl: { countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "compound" } },
   { partOfSpeech: "noun", english: "computer", vietnamese: "máy tính", syllabication: "com-PUT-er", definition: "An electronic device for processing data.", esl: { countability: "countable", physicalQuality: "concrete", grammaticalNumber: "singular", primaryClassification: "common" } },
-  { partOfSpeech: "noun", english: "check-in", vietnamese: "thủ tục nhận phòng", syllabication: "check-in", definition: "The act of registering on arrival.", esl: { countability: "countable", physicalQuality: "abstract", grammaticalNumber: "singular", primaryClassification: "compound" } },
+  { partOfSpeech: "noun", english: "check-in", vietnamese: "thủ tục nhận phòng", syllabication: "check-in", definition: "The act of registering on arrival.", esl: { countability: "countable", physicalQuality: "abstract", grammaticalNumber: "singular", primaryClassification: "compound", etymologyType: "compound", etymology: "Formed from check + in." } },
   { partOfSpeech: "adjective", english: "life-size", vietnamese: "kích thước thật", syllabication: "life-size", definition: "Having the same size as the real subject.", esl: { grammarClassification: { grammarSubtype: "attributive" } } },
   { partOfSpeech: "adverb", english: "step-by-step", vietnamese: "từng bước", syllabication: "step-by-step", definition: "Progressing one stage at a time.", esl: { grammarClassification: { grammarSubtype: "manner" } } },
 ]
@@ -190,6 +190,7 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
   assert.equal(rejectedPayload.failedFields.vocabulary.score, VOCABULARY.length, JSON.stringify(rejectedPayload.failedFields.vocabulary))
   assert.equal(rejectedPayload.failedFields.vocabulary.threshold, 5)
   assert.match(rejectedPayload.failedFields.vocabulary.rowErrors[0].message, /Syllabication or primary stress is incorrect/u)
+  assert.equal(rejectedPayload.warningTasks.some((task) => task.label === "Etymology extra points"), false, "completed optional etymology does not receive an improvement warning")
   await page.locator("#newsComplianceModal").waitFor({ state: "visible", timeout: 30000 })
   await page.waitForFunction(() => document.querySelector("#newsGrammarCheckWait")?.classList.contains("hidden"))
   await page.waitForFunction(() => !document.querySelector("#checkBtn")?.disabled)
@@ -226,6 +227,7 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
   assert.match(vocabularyFeedback, /Step 3: Save again after correcting the named entry and its highlighted field\./u)
   assert.equal(await page.locator("#newsComplianceWarningsSection").isVisible(), true)
   assert.match(await page.locator("#newsComplianceWarningBody").innerText(), /Syllabication could not be verified right now/u)
+  assert.doesNotMatch(await page.locator("#newsComplianceWarningBody").innerText(), /Choose an origin type when you know the word history|Add a brief word-origin note/u)
   assert.equal(await page.locator("#newsGrammarCheckWait").isVisible(), false, "the result modal appears after the animated check overlay closes")
   assert.equal(await page.locator("#newsComplianceHelpSubmit").isDisabled(), true)
   await page.locator("#newsComplianceHelpConsent").check()

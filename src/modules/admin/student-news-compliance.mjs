@@ -294,6 +294,10 @@ function findStudentNewsEtymologyAttempts(value) {
         fields: [row.etymologyType ? "etymologyType" : null, row.etymology ? "etymology" : null].filter(Boolean),
         etymologyType: row.etymologyType || null,
         etymology: row.etymology || null,
+        missingFields: [
+          !row.etymologyType ? "etymologyType" : null,
+          !row.etymology ? "etymology" : null,
+        ].filter(Boolean),
         message: `Entry ${index + 1}${row.english ? ` ("${row.english}")` : ""} includes an optional etymology attempt for extra points.`,
       }
     })
@@ -2564,12 +2568,18 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
   const vocabularyRowWarnings = findStudentNewsVocabularyExtraPointWarnings(payload?.vocabulary)
   const transitivityAttempts = findStudentNewsTransitivityAttempts(payload?.vocabulary)
   const etymologyAttempts = findStudentNewsEtymologyAttempts(payload?.vocabulary)
+  const etymologyImprovements = etymologyAttempts.filter((entry) => entry.missingFields.length > 0)
   const vocabularyRows = normalizeStudentNewsVocabulary(payload?.vocabulary)
   const populatedVocabularyRows = vocabularyRows.filter((row) => Object.values(row).some(Boolean))
   const vocabularyExtraRows = populatedVocabularyRows.length > config.vocabularyMinimumWords
     ? populatedVocabularyRows.slice(config.vocabularyMinimumWords)
     : []
-  if (vocabularyRowWarnings.length || vocabularyExtraRows.length || transitivityAttempts.length || etymologyAttempts.length) {
+  validationDetails.vocabulary = {
+    etymologyAttemptCount: etymologyAttempts.length,
+    etymologyAttempts,
+    extraPointCount: vocabularyExtraRows.length + vocabularyRowWarnings.length + transitivityAttempts.length + etymologyAttempts.length,
+  }
+  if (vocabularyRowWarnings.length || vocabularyExtraRows.length || transitivityAttempts.length || etymologyImprovements.length) {
     const vocabularyMessages = []
     if (vocabularyExtraRows.length) {
       vocabularyMessages.push(`${vocabularyExtraRows.length} vocabulary entr${vocabularyExtraRows.length === 1 ? "y" : "ies"} beyond the required five can earn extra points.`)
@@ -2580,8 +2590,8 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
     if (transitivityAttempts.length) {
       vocabularyMessages.push(`${transitivityAttempts.length} optional transitivity attempt${transitivityAttempts.length === 1 ? "" : "s"} can earn extra points.`)
     }
-    if (etymologyAttempts.length) {
-      vocabularyMessages.push(`${etymologyAttempts.length} optional etymology attempt${etymologyAttempts.length === 1 ? "" : "s"} can earn extra points.`)
+    if (etymologyImprovements.length) {
+      vocabularyMessages.push(`${etymologyImprovements.length} vocabulary entr${etymologyImprovements.length === 1 ? "y has" : "ies have"} an incomplete optional etymology.`)
     }
     warningFields.vocabulary = {
       message: vocabularyMessages.join(" "),
@@ -2593,6 +2603,8 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
       transitivityAttempts,
       etymologyAttemptCount: etymologyAttempts.length,
       etymologyAttempts,
+      etymologyImprovementCount: etymologyImprovements.length,
+      etymologyImprovements,
       extraPointCount: vocabularyExtraRows.length + vocabularyRowWarnings.length + transitivityAttempts.length + etymologyAttempts.length,
     }
   }
@@ -2631,15 +2643,17 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
       criterion: "Optional: attempt a transitivity selection for a verb vocabulary row.",
     })
   }
-  if (etymologyAttempts.length) {
+  if (etymologyImprovements.length) {
+    const missingEtymologyType = etymologyImprovements.some((entry) => entry.missingFields.includes("etymologyType"))
+    const missingEtymologyNote = etymologyImprovements.some((entry) => entry.missingFields.includes("etymology"))
+    const steps = []
+    if (missingEtymologyType) steps.push("Choose an origin type when you know the word history.")
+    if (missingEtymologyNote) steps.push("Add a brief word-origin note when you can support it; this field is optional and does not block saving.")
     warningTasks.push({
       field: "vocabulary",
       label: "Etymology extra points",
-      steps: [
-        "Choose an origin type when you know the word history.",
-        "Add a brief word-origin note when you can support it; this field is optional and does not block saving.",
-      ],
-      criterion: "Optional: attempt an etymology type or word-origin note for a vocabulary row.",
+      steps,
+      criterion: "Optional: complete the missing origin type or word-origin note when supported.",
     })
   }
   return {
