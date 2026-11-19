@@ -1,6 +1,6 @@
 {
   "uid": "sis-test-mirror-overview",
-  "title": "SIS Test Mirror Health",
+  "title": "SIS Test Mirror · Environment Health",
   "tags": ["sis", "test-mirror", "operations"],
   "timezone": "browser",
   "schemaVersion": 39,

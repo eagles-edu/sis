@@ -142,7 +142,7 @@ http://127.0.0.1:3030
 
 Do not record the Grafana credential in this document. It is stored in the ignored local monitoring environment file.
 
-### SIS Test Mirror Health
+### SIS Test Mirror · Environment Health
 
 Dashboard source: [test-mirror-overview.json](../ops/monitoring/grafana/dashboards/test-mirror-overview.json)
 
@@ -210,7 +210,7 @@ Expected healthy state:
 Use this procedure to investigate the reported CPU/RAM saturation safely.
 
 1. Confirm the five Prometheus jobs are `UP`.
-2. Open `SIS Test Mirror Health` in Grafana and select `Last 15 minutes` with 5-second refresh.
+2. Open `SIS Test Mirror · Environment Health` in Grafana and select `Last 15 minutes` with 5-second refresh.
 3. Open the test mirror's real admin login page.
 4. Log in through the visible browser flow using an authorized administrator account.
 5. Confirm the authenticated admin page is loaded and the session is cookie-backed.

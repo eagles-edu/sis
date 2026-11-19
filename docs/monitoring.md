@@ -83,10 +83,12 @@ Grafana provisions one dashboard per monitored public domain from `ops/monitorin
 | Domain | Dashboard | Domain-specific layers collected |
 | --- | --- | --- |
 | `eagles.edu.vn` | [Eagles Homepage](http://127.0.0.1:3030/d/domain-eagles-homepage) | Public HTTPS, DNS, TLS, response phases, OpenLiteSpeed and MariaDB service state |
-| `admin.eagles.edu.vn` | [SIS Admin](http://127.0.0.1:3030/d/domain-sis-admin) | Public HTTPS, SIS API route, authentication guard, authenticated PostgreSQL/Redis checks, SIS service state, environment-wide dev workflow freshness/failure signals, and parent-report acknowledgment status/5xx alert |
+| `admin.eagles.edu.vn` | [SIS Admin Mirror · Domain Layers](http://127.0.0.1:3030/d/domain-sis-admin) | Public HTTPS, SIS API route, authentication guard, authenticated PostgreSQL/Redis checks, SIS service state, environment-wide dev workflow freshness/failure signals, and parent-report acknowledgment status/5xx alert |
 | `ltd.eagles.vn` | [LTD ERPNext](http://127.0.0.1:3030/d/domain-ltd-erpnext) | Public HTTPS, Frappe ping, eight ERPNext/Redis container states, authenticated Redis role checks |
 | `ielts.eagles.edu.vn` | [IELTS Portal](http://127.0.0.1:3030/d/domain-ielts-portal) | Public HTTPS, SIS API route, shared SIS API service state |
 | `thuvien.eagles.edu.vn` | [Thuvien Library](http://127.0.0.1:3030/d/domain-thuvien-library) | Public HTTPS, SIS API route, image/audio range requests, shared SIS API and media gateway service states |
+
+The test SIS has a separate [SIS Test Mirror · Environment Health](http://127.0.0.1:3030/d/sis-test-mirror-overview) dashboard. Its title identifies the test environment, while `SIS Admin Mirror · Domain Layers` identifies the live/admin SIS domain dashboard.
 
 Each dashboard combines six status cards (including measured 24-hour public-probe availability alongside its collected-sample count), availability and alert timelines, request-phase and DNS graphs, application latency where configured, current service/dependency tables, service and dependency health-history timelines, and shared-host resource graphs. The ERPNext dashboard also graphs running state for every component and labels Docker healthcheck states as `HEALTHY`, `UNHEALTHY`, or `NO HEALTHCHECK`. Chart legends retain their measured phase/check/component labels. Panels use a non-overlapping grid. Missing application, latency, service, dependency, or container probes render an explicit instrumentation-gap note instead of an empty chart that could be mistaken for healthy status. The coverage map distinguishes measured, partial, and unmeasured layers. Shared host CPU/memory/disk metrics are explicitly labeled as host-wide; they are not attributed to an individual domain. SIS dev workflow signals are labeled environment-wide because their metrics do not carry domain labels.
 
@@ -157,7 +159,7 @@ The provisioned dashboards contain:
 4. Memory usage by Docker container
 5. PostgreSQL container CPU and memory
 
-`SIS Test Mirror Health` adds:
+`SIS Test Mirror · Environment Health` adds:
 
 1. `https://test.eagles.edu.vn/admin` availability and response time
 2. Test API process status, CPU, and memory

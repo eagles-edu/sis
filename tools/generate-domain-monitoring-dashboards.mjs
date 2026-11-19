@@ -25,7 +25,7 @@ const domains = [
   },
   {
     domain: "admin.eagles.edu.vn",
-    name: "SIS Admin",
+    name: "SIS Admin Mirror",
     slug: "sis-admin",
     applicationChecks: ["blackbox-website-api", "blackbox-admin-auth-api"],
     dependencies: true,
