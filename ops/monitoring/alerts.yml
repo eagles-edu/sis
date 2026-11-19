@@ -299,6 +299,15 @@ groups:
         annotations:
           summary: Test engagement workflow monitor has not reported for three minutes
 
+      - alert: TestEngagementSideEffectFailures
+        expr: sis_async_side_effect_failed_jobs_24h{environment="test"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Test async side-effect jobs have terminal failures in the last 24 hours
+          description: "The test engagement monitor reports {{ $value }} terminal failures. Inspect the test job queue; this aggregate contains no job IDs or payloads."
+
       - alert: TestProfileWriteFailure
         expr: sum(increase(sis_admin_student_write_requests_total{environment="test",route=~"POST /api/admin/students|PUT /api/admin/students/:id",status!~"2.."}[5m])) > 0
         for: 1m
@@ -354,6 +363,18 @@ groups:
           severity: warning
         annotations:
           summary: Test notification queue items retain a delivery error
+
+  - name: sis-test-restart-guard
+    rules:
+      - alert: TestServiceRestartFailed
+        expr: node_systemd_unit_state{name=~"^(exercise-mailer-test|sis-web-test|sis-async-side-effects-test)\\.service$",state="failed"} == 1 and on() (up{job="node"} == 1)
+        for: 30s
+        labels:
+          environment: test
+          severity: critical
+        annotations:
+          summary: "Test service {{ $labels.name }} is failed after automatic restart attempts"
+          description: "The unit is in systemd failed state. It has a four-start limit per 15 minutes with a 30-second cooldown; inspect systemctl Result and the unit journal to confirm whether start-limit-hit caused the failure."
 
   - name: sis-parent-profile-workflow
     rules:

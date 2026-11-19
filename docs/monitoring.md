@@ -436,7 +436,20 @@ Only the dev schedules listed above are active for the full synthetic workflow m
 
 `ops/systemd/keepalive-test-restart-guard.conf` defines the bounded systemd policy for the exact test-mirror API, static server, and async worker units: restart only on process failure, wait 30 seconds between attempts, and allow at most four starts (the initial start plus three automatic restarts) in a rolling 15-minute interval. After the limit, systemd leaves the unit failed with `start-limit-hit`; `StartLimitAction=none` prevents a host reboot or other system-wide action. Install and verify the test-only drop-ins with `sudo tools/install-test-restart-guards.sh`. The installer checks each unit's runtime path and test-owned `.env.test` before writing and records any replaced drop-in under `/home/eagles/dockerz/backups/manual-edits/`.
 
-The dev API is launched as an on-demand process rather than a systemd service. It has no automatic restart loop; routine `npm run dev:restart` rebuilds admin assets and runs the dev-owned Prisma generation/migration checks, so it must remain operator initiated and must never be called as automatic recovery. The test-only drop-ins do not modify `exercise-mailer.service` or any production unit. Restart-limit alerting and recovery-notification verification remain separate checklist items.
+The dev API is launched as an on-demand process rather than a systemd service. It has no automatic restart loop; routine `npm run dev:restart` rebuilds admin assets and runs the dev-owned Prisma generation/migration checks, so it must remain operator initiated and must never be called as automatic recovery. The test-only drop-ins do not modify `exercise-mailer.service` or any production unit.
+
+Prometheus raises `TestServiceRestartFailed` when one of the three guarded test units stays in systemd's `failed` state for 30 seconds while node-exporter is available. That state catches a unit that exhausted automatic recovery, including `start-limit-hit`; the node-exporter metric does not identify the precise systemd `Result`, so confirm the cause with `systemctl show <unit> -p Result -p NRestarts` and the unit journal. `DevEngagementSideEffectFailures` and `TestEngagementSideEffectFailures` alert when their environment-owned engagement monitor reports terminal async side-effect jobs in the previous 24 hours. Test engagement checks remain on demand; `TestEngagementMonitorStale` separately warns when that result is older than three minutes. The dev and test signals use aggregate counts and contain no job IDs or payloads. Alerts are routed through the configured Alertmanager channel.
+
+The retry and restart alert rules have deterministic Prometheus rule tests in `ops/monitoring/alerts.test.yml`. Validate both syntax and firing behavior with the same pinned Prometheus tool image used by the monitoring stack:
+
+```bash
+docker run --rm --network none --entrypoint=/bin/promtool \
+  -v "$PWD/ops/monitoring:/monitoring:ro" \
+  prom/prometheus:v3.5.0 check rules /monitoring/alerts.yml
+docker run --rm --network none --entrypoint=/bin/promtool \
+  -v "$PWD/ops/monitoring:/monitoring:ro" \
+  prom/prometheus:v3.5.0 test rules /monitoring/alerts.test.yml
+```
 
 ## Parent profile workflow monitor
 

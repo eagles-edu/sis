@@ -1,0 +1,56 @@
+rule_files:
+  - /monitoring/alerts.yml
+
+evaluation_interval: 30s
+
+tests:
+  - interval: 30s
+    input_series:
+      - series: 'sis_async_side_effect_failed_jobs_24h{environment="test"}'
+        values: '1x5'
+    alert_rule_test:
+      - eval_time: 30s
+        alertname: TestEngagementSideEffectFailures
+        exp_alerts: []
+      - eval_time: 1m
+        alertname: TestEngagementSideEffectFailures
+        exp_alerts:
+          - exp_labels:
+              environment: test
+              severity: warning
+            exp_annotations:
+              summary: Test async side-effect jobs have terminal failures in the last 24 hours
+              description: The test engagement monitor reports 1 terminal failures. Inspect the test job queue; this aggregate contains no job IDs or payloads.
+
+  - interval: 30s
+    input_series:
+      - series: 'node_systemd_unit_state{name="exercise-mailer-test.service",state="failed",type="simple",job="node",instance="node-exporter:9100"}'
+        values: '1x5'
+      - series: 'up{job="node",instance="node-exporter:9100"}'
+        values: '1x5'
+    alert_rule_test:
+      - eval_time: 30s
+        alertname: TestServiceRestartFailed
+        exp_alerts:
+          - exp_labels:
+              environment: test
+              instance: node-exporter:9100
+              job: node
+              name: exercise-mailer-test.service
+              severity: critical
+              state: failed
+              type: simple
+            exp_annotations:
+              summary: Test service exercise-mailer-test.service is failed after automatic restart attempts
+              description: The unit is in systemd failed state. It has a four-start limit per 15 minutes with a 30-second cooldown; inspect systemctl Result and the unit journal to confirm whether start-limit-hit caused the failure.
+
+  - interval: 30s
+    input_series:
+      - series: 'node_systemd_unit_state{name="exercise-mailer-test.service",state="failed",type="simple",job="node",instance="node-exporter:9100"}'
+        values: '0x5'
+      - series: 'up{job="node",instance="node-exporter:9100"}'
+        values: '1x5'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: TestServiceRestartFailed
+        exp_alerts: []
