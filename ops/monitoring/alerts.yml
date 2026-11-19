@@ -1,4 +1,24 @@
 groups:
+  - name: sis-keepalive-check-groups-dev
+    rules:
+      - alert: DevKeepaliveCheckFailed
+        expr: sis_keepalive_check_failure_info{environment="dev",code!="none"} == 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A dev keep-alive check group is failing
+          description: "Logical check group {{ $labels.group }} reports failure code {{ $labels.code }}."
+
+      - alert: DevKeepaliveCheckStale
+        expr: (time() - sis_keepalive_check_last_check_timestamp_seconds{environment="dev"}) > on(environment, group) group_left sis_keepalive_check_stale_after_seconds{environment="dev"} and on(environment, group) sis_keepalive_check_stale_after_seconds{environment="dev"} > 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: A scheduled dev keep-alive check group is stale
+          description: "Logical check group {{ $labels.group }} has not reported within its configured freshness limit."
+
   - name: sis-grade-feeds-dev
     rules:
       - alert: DevGradeFeedMonitorStale

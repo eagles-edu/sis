@@ -4,6 +4,7 @@ import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { closeSharedPrismaClient, getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
 import { resolveStandardStudentCredentials } from "../test/helpers/standard-portal-credentials.mjs"
+import { renderKeepaliveCheckMetrics } from "../src/infra/observability/keepalive-check-metrics.mjs"
 
 const DEV_ORIGIN = "http://127.0.0.1:8788"
 const METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/library-workflow-dev.prom")
@@ -342,9 +343,29 @@ export async function runLibraryWorkflowMonitor({
   const checkedAt = clock() / 1000
   const success = !failure && apiAvailable && databaseAvailable && redisAvailable && cmuDictionaryAvailable && studentAccessAvailable && adminAccessAvailable && saveCheckSuccess && reviewCheckSuccess && definitionSaveCheckSuccess && dictionaryBuilderCheckSuccess && dictionaryBuilderDefinitionProvidersAvailable > 0 && cleanupSuccess
   const lastSuccessTimestamp = success ? checkedAt : readLastSuccessTimestamp(metricsFile)
+  const durationSeconds = (clock() - started) / 1000
+  const studentLibrarySuccess = !failure && apiAvailable && databaseAvailable && redisAvailable && cmuDictionaryAvailable && studentAccessAvailable && adminAccessAvailable && saveCheckSuccess && reviewCheckSuccess && definitionSaveCheckSuccess && cleanupSuccess
+  const dictionaryBuilderSuccess = dictionaryBuilderCheckSuccess && dictionaryBuilderDefinitionProvidersAvailable > 0
+  const groupMetrics = renderKeepaliveCheckMetrics({
+    environment: "dev",
+    checkedAt,
+    previousMetrics: fs.existsSync(metricsFile) ? fs.readFileSync(metricsFile, "utf8") : "",
+    results: {
+      student_library: {
+        success: studentLibrarySuccess,
+        durationSeconds,
+        failureCode: cleanupSuccess ? (apiAvailable && databaseAvailable ? "workflow_failed" : "dependency_unavailable") : "cleanup_failed",
+      },
+      dictionary_builder: {
+        success: dictionaryBuilderSuccess,
+        durationSeconds,
+        failureCode: dictionaryBuilderCheckSuccess ? "workflow_failed" : "dependency_unavailable",
+      },
+    },
+  })
   const metrics = renderLibraryMetrics({
     checkedAt,
-    durationSeconds: (clock() - started) / 1000,
+    durationSeconds,
     success,
     lastSuccessTimestamp,
     apiAvailable,
@@ -364,7 +385,7 @@ export async function runLibraryWorkflowMonitor({
     cleanupSuccess,
     openReviewCount,
     oldestOpenReviewAgeSeconds,
-  })
+  }) + groupMetrics
   writeMetricsAtomically(metricsFile, metrics)
   process.stdout.write(`library_workflow_monitor environment=dev result=${success ? "pass" : "fail"} student_access=${studentAccessAvailable ? "up" : "down"} admin_access=${adminAccessAvailable ? "up" : "down"} save=${saveCheckSuccess ? "pass" : "fail"} definition_save=${definitionSaveCheckSuccess ? "pass" : "fail"} builder_check=${dictionaryBuilderCheckSuccess ? "pass" : "fail"} definition_providers=${dictionaryBuilderDefinitionProvidersAvailable}/${dictionaryBuilderDefinitionProvidersChecked} review=${reviewCheckSuccess ? "pass" : "fail"} cleanup=${cleanupSuccess ? "pass" : "fail"}\n`)
   return success

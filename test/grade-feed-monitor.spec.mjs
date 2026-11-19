@@ -77,6 +77,8 @@ test("grade feed monitor exports fixed aggregate labels and authenticated table 
     assert.match(contents, /sis_attendance_school_setup_valid\{environment="dev"\} 1\.000000/u)
     assert.match(contents, /sis_grade_feed_incoming_unmatched\{environment="dev"\} 4/u)
     assert.match(contents, /sis_grade_feed_incoming_oldest_unmatched_age_seconds\{environment="dev"\} 7200\.000000/u)
+    assert.match(contents, /sis_keepalive_check_success\{environment="dev",group="grade_feeds"\} 1/u)
+    assert.match(contents, /sis_keepalive_check_success\{environment="dev",group="attendance"\} 1/u)
     assert.match(contents, /sis_grade_feed_exercise_submission_rows\{environment="dev",source="moodle"\} 2/u)
     assert.match(contents, /sis_grade_feed_grade_rows\{environment="dev",source="google_forms"\} 3/u)
     assert.match(contents, /sis_grade_feed_exercise_submission_rows\{environment="dev",source="other"\} 1/u)

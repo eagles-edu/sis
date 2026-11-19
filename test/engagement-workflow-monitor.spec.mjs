@@ -1,4 +1,7 @@
 import assert from "node:assert/strict"
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 import test from "node:test"
 import {
   assertDevEnvironment,
@@ -9,8 +12,43 @@ import {
   resolveParentMonitorCredentials,
   resolveMonitorContext,
   renderEngagementMetrics,
+  runEngagementWorkflowMonitor,
 } from "../tools/monitor-engagement-workflows.mjs"
 import { hashScryptPassword } from "../src/modules/admin/users.mjs"
+import { renderKeepaliveCheckMetrics } from "../src/infra/observability/keepalive-check-metrics.mjs"
+
+test("engagement monitor records independent dependency failures and preserves last success", async (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "sis-engagement-group-metrics-"))
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }))
+  const metricsFile = path.join(directory, "engagement.prom")
+  const previousMetrics = renderKeepaliveCheckMetrics({
+    environment: "dev",
+    checkedAt: 100,
+    results: {
+      engagement: { success: true, durationSeconds: 1 },
+      assignment_notifications: { success: true, durationSeconds: 1 },
+      parent_reports: { success: true, durationSeconds: 1 },
+      student_profile_enrollment: { success: true, durationSeconds: 1 },
+    },
+  })
+  fs.writeFileSync(metricsFile, previousMetrics)
+
+  const success = await runEngagementWorkflowMonitor({
+    environment: { NODE_ENV: "development", SIS_ENV_FILE: ".env.dev", DOTENV_CONFIG_PATH: ".env.dev" },
+    metricsFile,
+    workerMetricsFile: path.join(directory, "worker.prom"),
+    prismaClient: { $queryRaw: async () => { throw new Error("private database detail") } },
+    reportApiCheck: async () => true,
+    parentReportApiCheck: async () => ({ authSuccess: true, dashboardSuccess: true }),
+    clock: () => 200000,
+  })
+  const metrics = fs.readFileSync(metricsFile, "utf8")
+  assert.equal(success, false)
+  assert.match(metrics, /sis_keepalive_check_success\{environment="dev",group="engagement"\} 0/u)
+  assert.match(metrics, /sis_keepalive_check_last_success_timestamp_seconds\{environment="dev",group="engagement"\} 100\.000000/u)
+  assert.match(metrics, /sis_keepalive_check_failure_info\{environment="dev",group="student_profile_enrollment",code="dependency_unavailable"\} 1/u)
+  assert.doesNotMatch(metrics, /private database detail/u)
+})
 
 test("engagement monitor is pinned to dev-owned environment variables", () => {
   assertDevEnvironment({

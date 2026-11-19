@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
+import { renderKeepaliveCheckMetrics } from "../src/infra/observability/keepalive-check-metrics.mjs"
 
 const WORKFLOW_TEST = "test/parent-profile-invitation-approval.e2e.playwright.spec.mjs"
 const METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/parent-profile-workflow.prom")
@@ -107,7 +108,20 @@ export function runParentProfileWorkflowMonitor({ environment = process.env, met
   const success = !result.error && result.status === 0 && report.success
   const previousSuccess = readLastSuccessTimestamp(metricsFile)
   const lastSuccessTimestamp = success ? checkedAt : previousSuccess
-  writeMetricsAtomically(metricsFile, renderMonitorMetrics({ success, checkedAt, durationSeconds, lastSuccessTimestamp }))
+  const previousMetrics = fs.existsSync(metricsFile) ? fs.readFileSync(metricsFile, "utf8") : ""
+  const metrics = renderMonitorMetrics({ success, checkedAt, durationSeconds, lastSuccessTimestamp }) + renderKeepaliveCheckMetrics({
+    environment: "dev",
+    checkedAt,
+    previousMetrics,
+    results: {
+      parent_profile: {
+        success,
+        durationSeconds,
+        failureCode: "workflow_failed",
+      },
+    },
+  })
+  writeMetricsAtomically(metricsFile, metrics)
   process.stdout.write(`parent_profile_workflow_monitor environment=dev result=${success ? "pass" : "fail"} duration_seconds=${durationSeconds.toFixed(3)}\n`)
   return success
 }

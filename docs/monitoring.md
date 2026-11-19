@@ -398,7 +398,9 @@ Each checklist subsystem has a fixed logical group ID. A process may run more th
 | Parent site, profiles, performance reports, and notifications | `parent_reports` | `sis_parent_authentication_*`, `sis_parent_report_*`, `sis_parent_report_acknowledgment_*` | Engagement monitor plus acknowledgment route metrics; authenticated parent/dashboard status is separate from acknowledgment-write status |
 | Student profiles, enrollment, and provisioning | `student_profile_enrollment` | `sis_admin_student_write_*`, `sis_enrollment_*`, `sis_moodle_provisioning_*` | Engagement monitor plus authenticated write metrics; profile/enrollment status is separate from Moodle queue state |
 
-The current monitors often share a process and some still expose only one overall result. The group IDs and owned detail families above define the required separation; the following checklist items define operating policy and implement the independent status and freshness series.
+The current monitors may share a process, but the fixed group IDs and owned detail families above retain separate results and freshness series.
+
+Group status is exported as `sis_keepalive_check_success`, `sis_keepalive_check_last_check_timestamp_seconds`, `sis_keepalive_check_last_success_timestamp_seconds`, `sis_keepalive_check_duration_seconds`, `sis_keepalive_check_stale_after_seconds`, and `sis_keepalive_check_failure_info`. Each check computes its own result; shared-process duration records the enclosing run duration. Failed runs preserve that group's last successful timestamp. Failure information uses only `none`, `workflow_failed`, `dependency_unavailable`, `cleanup_failed`, or `configuration_invalid`; raw exception text and account or student data are never label values. The dev alerts report a failed group and compare each last-check timestamp with its configured stale limit. A zero stale limit marks an on-demand group and disables scheduled-staleness alerting. Test metrics use `environment="test"` and zero stale limits until test-owned schedules are installed.
 
 ### Group environment and execution policy
 

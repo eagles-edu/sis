@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url"
 import { closeSharedPrismaClient, getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
 import { validateVocabularyEntry } from "../src/modules/admin/vocabulary-syllabication.mjs"
 import { resolveStandardStudentCredentials } from "../test/helpers/standard-portal-credentials.mjs"
+import { renderKeepaliveCheckMetrics } from "../src/infra/observability/keepalive-check-metrics.mjs"
 
 const DEV_ORIGIN = "http://127.0.0.1:8788"
 const METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/news-workflow-dev.prom")
@@ -290,9 +291,18 @@ export async function runNewsWorkflowMonitor({
 
   const checkedAt = clock() / 1000
   const success = !failure && apiAvailable && databaseAvailable && checkSuccess && languageToolAvailable && dictionaryAvailable && submissionSuccess && cleanupSuccess
+  const durationSeconds = (clock() - started) / 1000
+  const groupMetrics = renderKeepaliveCheckMetrics({
+    environment: "dev",
+    checkedAt,
+    previousMetrics: fs.existsSync(metricsFile) ? fs.readFileSync(metricsFile, "utf8") : "",
+    results: {
+      student_news: { success, durationSeconds, failureCode: cleanupSuccess ? "workflow_failed" : "cleanup_failed" },
+    },
+  })
   const metrics = renderNewsWorkflowMetrics({
     checkedAt,
-    durationSeconds: (clock() - started) / 1000,
+    durationSeconds,
     checkDurationSeconds,
     checkSuccess,
     languageToolAvailable,
@@ -305,7 +315,7 @@ export async function runNewsWorkflowMonitor({
     openReviewCount,
     oldestOpenReviewAgeSeconds,
     lastSuccessTimestamp: success ? checkedAt : readLastSuccessTimestamp(metricsFile),
-  })
+  }) + groupMetrics
   writeNewsMetricsAtomically(metricsFile, metrics)
   process.stdout.write(`news_workflow_monitor environment=dev result=${success ? "pass" : "fail"} check=${checkSuccess ? "pass" : "fail"} language_tool=${languageToolAvailable ? "up" : "down"} dictionary=${dictionaryAvailable ? "up" : "down"} submission=${submissionSuccess ? "pass" : "fail"} submission_status=${submissionHttpStatus} submission_mmr=${submissionMmrPassed ? "pass" : "fail"} submission_date=${submissionDateSatisfied ? "pass" : "fail"} submission_state=${submissionState} submission_failed_fields=${submissionFailedFieldCount} cleanup=${cleanupSuccess ? "pass" : "fail"}\n`)
   return success

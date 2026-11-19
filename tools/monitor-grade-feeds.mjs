@@ -4,6 +4,7 @@ import path from "node:path"
 import { randomUUID } from "node:crypto"
 import { pathToFileURL } from "node:url"
 import { closeSharedPrismaClient, getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
+import { renderKeepaliveCheckMetrics } from "../src/infra/observability/keepalive-check-metrics.mjs"
 
 const DEV_ORIGIN = "http://127.0.0.1:8788"
 const METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/grade-feeds-dev.prom")
@@ -333,8 +334,20 @@ export async function runGradeFeedMonitor({
   }
 
   const checkedAt = clock() / 1000
-  const success = databaseAvailable && tableAvailable && attendanceReportingAvailable && attendanceSchoolSetupValid
+  const gradeFeedSuccess = databaseAvailable && tableAvailable
+  const attendanceSuccess = attendanceReportingAvailable && attendanceSchoolSetupValid
+  const success = gradeFeedSuccess && attendanceSuccess
   const previousSuccess = readLastSuccessTimestamp(metricsFile)
+  const durationSeconds = Math.max(0, clock() - started) / 1000
+  const groupMetrics = renderKeepaliveCheckMetrics({
+    environment: "dev",
+    checkedAt,
+    previousMetrics: fs.existsSync(metricsFile) ? fs.readFileSync(metricsFile, "utf8") : "",
+    results: {
+      grade_feeds: { success: gradeFeedSuccess, durationSeconds },
+      attendance: { success: attendanceSuccess, durationSeconds },
+    },
+  })
   const metrics = renderGradeFeedMetrics({
     checkedAt,
     lastSuccessTimestamp: success ? checkedAt : previousSuccess,
@@ -345,7 +358,7 @@ export async function runGradeFeedMonitor({
     attendanceSchoolSetupValid,
     requestMetricsAvailable: fs.existsSync(requestMetricsFile),
     ...observed,
-  })
+  }) + groupMetrics
   try {
     writeMetricsAtomically(metricsFile, metrics)
   } finally {

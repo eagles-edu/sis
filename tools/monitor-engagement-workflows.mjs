@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto"
 import { pathToFileURL } from "node:url"
 import { getSharedPrismaClient, closeSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
 import { verifyScryptPassword } from "../src/modules/admin/users.mjs"
+import { renderKeepaliveCheckMetrics } from "../src/infra/observability/keepalive-check-metrics.mjs"
 
 const DEV_ORIGIN = "http://127.0.0.1:8788"
 const TEST_ORIGIN = "http://127.0.0.1:8786"
@@ -496,9 +497,37 @@ export async function runEngagementWorkflowMonitor({
       workerLastPollTimestamp > 0 &&
       checkedAt - workerLastPollTimestamp <= WORKER_STALE_AFTER_SECONDS &&
       workerLastPollSuccess === 1
+    const durationSeconds = (clock() - started) / 1000
+    const assignmentSuccess = collected.failedJobCount === 0 &&
+      collected.staleProcessingJobCount === 0 &&
+      collected.announcementOldestQueuedAgeSeconds <= ANNOUNCEMENT_QUEUE_STALE_AFTER_SECONDS &&
+      collected.notificationOldestDueAgeSeconds <= NOTIFICATION_QUEUE_STALE_AFTER_SECONDS &&
+      collected.notificationDeliveryFailureCount === 0 &&
+      collected.staleAssignmentReminderDispatchCount === 0 &&
+      collected.assignmentReminderFailureCount === 0 &&
+      workerLastPollTimestamp > 0 && checkedAt - workerLastPollTimestamp <= WORKER_STALE_AFTER_SECONDS && workerLastPollSuccess === 1
+    const parentReportsSuccess = parentReportCheck.authSuccess && parentReportCheck.dashboardSuccess &&
+      collected.parentReportNotificationOldestDueAgeSeconds <= NOTIFICATION_QUEUE_STALE_AFTER_SECONDS &&
+      collected.parentReportNotificationFailureCount === 0
+    const profileEnrollmentSuccess = collected.multipleActiveEnrollmentCount === 0 &&
+      collected.enrollmentOverlapPairCount === 0 &&
+      collected.moodleProvisioningOldestDueAgeSeconds <= MOODLE_PROVISIONING_QUEUE_STALE_AFTER_SECONDS &&
+      collected.moodleProvisioningOldestProcessingAgeSeconds <= MOODLE_PROVISIONING_PROCESSING_STALE_AFTER_SECONDS &&
+      collected.moodleProvisioningRejectedCount === 0
+    const groupMetrics = renderKeepaliveCheckMetrics({
+      environment: monitorContext.label,
+      checkedAt,
+      previousMetrics: fs.existsSync(outputFile) ? fs.readFileSync(outputFile, "utf8") : "",
+      results: {
+        engagement: { success: reportApiSuccess && collected.webhookOldestUnprocessedAgeSeconds < WEBHOOK_STALE_AFTER_SECONDS, durationSeconds },
+        assignment_notifications: { success: assignmentSuccess, durationSeconds },
+        parent_reports: { success: parentReportsSuccess, durationSeconds },
+        student_profile_enrollment: { success: profileEnrollmentSuccess, durationSeconds },
+      },
+    })
     metrics = renderEngagementMetrics({
       checkedAt,
-      durationSeconds: (clock() - started) / 1000,
+      durationSeconds,
       success,
       lastSuccessTimestamp: success ? checkedAt : previousSuccess,
       reportApiSuccess,
@@ -512,10 +541,30 @@ export async function runEngagementWorkflowMonitor({
       workerLastPollTimestamp,
       workerLastPollSuccess,
       environmentLabel: monitorContext.label,
-    })
+    }) + groupMetrics
     writeMetricsAtomically(outputFile, metrics)
     process.stdout.write(`engagement_workflow_monitor environment=${monitorContext.label} result=${success ? "pass" : "fail"} report_api=${reportApiSuccess ? "up" : "down"} parent_dashboard=${parentReportCheck.dashboardSuccess ? "up" : "down"}\n`)
     return success
+  } catch {
+    const checkedAt = clock() / 1000
+    const durationSeconds = Math.max(0, clock() - started) / 1000
+    const previousMetrics = fs.existsSync(outputFile) ? fs.readFileSync(outputFile, "utf8") : ""
+    const failureMetrics = renderKeepaliveCheckMetrics({
+      environment: monitorContext.label,
+      checkedAt,
+      previousMetrics,
+      results: Object.fromEntries(["engagement", "assignment_notifications", "parent_reports", "student_profile_enrollment"].map((group) => [group, {
+        success: false,
+        durationSeconds,
+        failureCode: "dependency_unavailable",
+      }])),
+    })
+    const previousDetailMetrics = previousMetrics.split(/\r?\n/u).filter((line) =>
+      !/^# (?:HELP|TYPE) sis_keepalive_check_/u.test(line) && !/^sis_keepalive_check_/u.test(line),
+    ).join("\n")
+    writeMetricsAtomically(outputFile, `${previousDetailMetrics}\n${failureMetrics}`)
+    process.stderr.write(`engagement_workflow_monitor environment=${monitorContext.label} result=fail reason=dependency_unavailable\n`)
+    return false
   } finally {
     if (!prismaClient) await closeSharedPrismaClient()
   }
