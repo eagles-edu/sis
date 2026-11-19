@@ -189,6 +189,7 @@ export async function processAsyncSideEffectJob(job = {}) {
  *   claimed: number,
  *   succeeded: number,
  *   failed: number,
+ *   callbackFailed: number,
  *   remaining: number,
  *   processing: number,
  * }>}
@@ -206,25 +207,34 @@ export async function drainAsyncSideEffectJobs({
     jobTypes,
     take,
     workerId,
+    maxAttempts,
   })
   let succeeded = 0
   let failed = 0
+  let callbackFailed = 0
 
   for (let i = 0; i < claimed.length; i += 1) {
     const job = claimed[i]
+    let result
+    let completed
     try {
-      const result = await processAsyncSideEffectJob(job)
-      const completed = await completeAsyncSideEffectJob(job.id, result)
-      if (typeof onJobComplete === "function") {
-        await onJobComplete(job, result, completed)
-      }
-      succeeded += 1
+      result = await processAsyncSideEffectJob(job)
+      completed = await completeAsyncSideEffectJob(job.id, result)
     } catch (error) {
       const updated = await failAsyncSideEffectJob(job.id, error, { maxAttempts, retryDelayMs })
       if (typeof onJobFailed === "function") {
         await onJobFailed(job, error, updated)
       }
       failed += 1
+      continue
+    }
+    succeeded += 1
+    if (typeof onJobComplete === "function") {
+      try {
+        await onJobComplete(job, result, completed)
+      } catch {
+        callbackFailed += 1
+      }
     }
   }
 
@@ -232,6 +242,7 @@ export async function drainAsyncSideEffectJobs({
     claimed: claimed.length,
     succeeded,
     failed,
+    callbackFailed,
     remaining: Math.max(0, claimed.length - succeeded - failed),
     processing: claimed.filter((entry) => entry.status === ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED).length,
   }

@@ -176,6 +176,7 @@ async function updateAnnouncementQueueItem(job, result, failure = null) {
  *   claimed: number,
  *   succeeded: number,
  *   failed: number,
+ *   callbackFailed: number,
  *   remaining: number,
  *   processing: number,
  * }>}
@@ -212,10 +213,10 @@ export async function startAsyncSideEffectsWorker() {
   const run = async () => {
     try {
       const result = await runWorkerOnce()
-      writeWorkerHeartbeat({ success: true })
-      if (result.claimed || result.succeeded || result.failed) {
+      writeWorkerHeartbeat({ success: result.callbackFailed === 0 })
+      if (result.claimed || result.succeeded || result.failed || result.callbackFailed) {
         console.log(
-          `[async-side-effects] claimed=${result.claimed} succeeded=${result.succeeded} failed=${result.failed}`
+          `[async-side-effects] claimed=${result.claimed} succeeded=${result.succeeded} failed=${result.failed} callback_failed=${result.callbackFailed}`
         )
       }
       return result

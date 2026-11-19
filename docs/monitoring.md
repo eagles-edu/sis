@@ -472,6 +472,16 @@ systemctl --user daemon-reload
 systemctl --user enable --now sis-engagement-monitor-dev.timer
 ```
 
+### Async side-effect retry and stale-lock policy
+
+Automatic retries are limited to `report-card-pdf`, a generation operation with no external delivery; when an output path is configured, each attempt rewrites that same path from the persisted job input. The worker makes at most three total attempts with a 30-second delay between retryable failures. The attempt limit is clamped to ten even when a caller supplies a larger value. A stale PDF lock is reclaimed only while attempts remain below that limit.
+
+`announcement-email` and `parent-profile-invitation` are not automatically retried after a failure or stale lock. SMTP provides no durable idempotency contract, and Brevo's idempotency window is time-limited; a worker can also lose its database acknowledgment after a provider accepted a message. These cases are terminally recorded as failed with a bounded failure code for operator review. Do not interpret a failed email job as proof that no message was delivered. A deliberate operator resend is a new delivery decision.
+
+Unknown job types and exhausted PDF jobs are terminally failed on stale recovery. Completion-callback failures are counted separately from job failures and do not change a succeeded job back to queued; they mark the worker poll unhealthy and emit only an aggregate `callback_failed` count.
+
+The `test/async-side-effect-jobs.spec.mjs` memory contracts cover email no-retry, bounded PDF retries, stale recovery policy, and post-completion callback failure. `test/async-side-effect-stale-recovery.db.spec.mjs` verifies the same stale-lock policy against the isolated test database and cleans every synthetic row.
+
 ## Student Library workflow monitor (dev)
 
 Run the authenticated synthetic Library check with:

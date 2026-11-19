@@ -8,23 +8,32 @@ process.env.DOTENV_CONFIG_PATH = ".env.test"
 process.env.NODE_ENV = "test"
 dotenv.config({ path: ".env.test", override: true })
 
-test("database worker reclaims a stale processing job and records the new claim", async (t) => {
+test("database stale recovery reclaims only idempotent PDFs and terminally fails uncertain or exhausted jobs", async (t) => {
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const { claimAsyncSideEffectJobs } = await import("../src/modules/async/side-effect-jobs.mjs")
   const previousTimeout = process.env.ASYNC_SIDE_EFFECT_JOB_LOCK_TIMEOUT_MS
   process.env.ASYNC_SIDE_EFFECT_JOB_LOCK_TIMEOUT_MS = "60000"
 
   let prisma = null
-  const jobId = `ka071-stale-${crypto.randomUUID()}`
-  const jobType = `ka071-stale-recovery-${crypto.randomUUID()}`
-  const workerId = `ka071-recovery-${crypto.randomUUID()}`
+  const jobIds = {
+    pdf: `ka121-stale-pdf-${crypto.randomUUID()}`,
+    email: `ka121-stale-email-${crypto.randomUUID()}`,
+    exhaustedPdf: `ka121-stale-exhausted-${crypto.randomUUID()}`,
+    unknown: `ka121-stale-unknown-${crypto.randomUUID()}`,
+  }
+  const workerId = `ka121-recovery-${crypto.randomUUID()}`
+  const jobTypes = [
+    "report-card-pdf",
+    "announcement-email",
+    "ka121-unknown-recovery",
+  ]
   let created = false
   t.after(async () => {
     let cleanupError = null
     if (prisma) {
       try {
-        if (created) await prisma.asyncSideEffectJob.deleteMany({ where: { id: jobId } })
-        const remaining = await prisma.asyncSideEffectJob.count({ where: { id: jobId } })
+        if (created) await prisma.asyncSideEffectJob.deleteMany({ where: { id: { in: Object.values(jobIds) } } })
+        const remaining = await prisma.asyncSideEffectJob.count({ where: { id: { in: Object.values(jobIds) } } })
         assert.equal(remaining, 0)
       } catch (error) {
         cleanupError = error
@@ -46,32 +55,44 @@ test("database worker reclaims a stale processing job and records the new claim"
 
   const now = new Date()
   const staleLock = new Date(now.valueOf() - 120_000)
-  await prisma.asyncSideEffectJob.create({
-    data: {
-      id: jobId,
-      jobType,
-      status: "processing",
-      dedupeKey: jobId,
-      payloadJson: { probe: "synthetic" },
-      resultJson: {},
-      attempts: 1,
-      availableAt: staleLock,
-      lockedAt: staleLock,
-      lockedBy: "ka071-interrupted-worker",
-    },
+  const makeStaleJob = (id, jobType, attempts = 1) => ({
+    id,
+    jobType,
+    status: "processing",
+    dedupeKey: id,
+    payloadJson: { probe: "synthetic" },
+    resultJson: {},
+    attempts,
+    availableAt: staleLock,
+    lockedAt: staleLock,
+    lockedBy: "ka121-interrupted-worker",
+  })
+  await prisma.asyncSideEffectJob.createMany({
+    data: [
+      makeStaleJob(jobIds.pdf, "report-card-pdf"),
+      makeStaleJob(jobIds.email, "announcement-email"),
+      makeStaleJob(jobIds.exhaustedPdf, "report-card-pdf", 3),
+      makeStaleJob(jobIds.unknown, "ka121-unknown-recovery"),
+    ],
   })
   created = true
 
-  const claimed = await claimAsyncSideEffectJobs({ jobTypes: [jobType], take: 1, workerId })
+  const claimed = await claimAsyncSideEffectJobs({ jobTypes, take: 10, workerId, maxAttempts: 3 })
   assert.equal(claimed.length, 1)
-  assert.equal(claimed[0]?.id, jobId)
+  assert.equal(claimed[0]?.id, jobIds.pdf)
   assert.equal(claimed[0]?.status, "processing")
   assert.equal(claimed[0]?.attempts, 2)
   assert.equal(claimed[0]?.lockedBy, workerId)
   assert.ok(new Date(claimed[0]?.lockedAt || 0).valueOf() >= now.valueOf() - 5_000)
 
-  const persisted = await prisma.asyncSideEffectJob.findUnique({ where: { id: jobId } })
-  assert.equal(persisted?.status, "processing")
-  assert.equal(persisted?.attempts, 2)
-  assert.equal(persisted?.lockedBy, workerId)
+  const persisted = await prisma.asyncSideEffectJob.findMany({ where: { id: { in: Object.values(jobIds) } } })
+  const byId = new Map(persisted.map((job) => [job.id, job]))
+  assert.equal(byId.get(jobIds.pdf)?.status, "processing")
+  assert.equal(byId.get(jobIds.pdf)?.attempts, 2)
+  assert.equal(byId.get(jobIds.pdf)?.lockedBy, workerId)
+  for (const id of [jobIds.email, jobIds.exhaustedPdf, jobIds.unknown]) {
+    assert.equal(byId.get(id)?.status, "failed", `${id} must not be reclaimed`)
+    assert.equal(byId.get(id)?.lastError, "operation_timeout")
+    assert.ok(byId.get(id)?.completedAt)
+  }
 })

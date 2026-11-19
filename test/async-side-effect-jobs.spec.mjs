@@ -10,8 +10,9 @@ const jobsSource = await fs.readFile(new URL("../src/modules/async/side-effect-j
 test("configured mirror runtimes never fall back to volatile side-effect jobs", () => {
   assert.match(jobsSource, /normalizeLower\(process\.env\.NODE_ENV\) === "test" && \["memory", "in-memory"\]\.includes\(backend\)/)
   assert.match(jobsSource, /useVolatileTestStorage\(\) \|\| !hasConfiguredDatabaseUrl\(\)/)
-  assert.match(jobsSource, /status: ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING,[\s\S]*?lockedAt: \{ lte: staleBefore \}/)
-  assert.match(jobsSource, /status: ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED,[\s\S]*?lockedAt: null,[\s\S]*?lockedBy: null/)
+  assert.match(jobsSource, /isRetrySafeAsyncSideEffectJob\(job\.jobType\)/)
+  assert.match(jobsSource, /isRetrySafeAsyncSideEffectJob\(staleJob\.jobType\)/)
+  assert.match(jobsSource, /lastError: "operation_timeout"/)
 })
 
 test("async side effect jobs dedupe, revive, and claim in explicit test memory mode", async () => {
@@ -114,7 +115,7 @@ test("announcement delivery failure listing exposes investigation fields without
   }
 })
 
-test("announcement dispatch retries provider outages and preserves provider idempotency", async () => {
+test("announcement email provider failures are terminal because delivery is not durably idempotent", async () => {
   const envKeys = [
     "NODE_ENV",
     "DATABASE_URL",
@@ -137,34 +138,16 @@ test("announcement dispatch retries provider outages and preserves provider idem
   process.env.BREVO_API_URL = "https://brevo.invalid/v3/smtp/email"
 
   const requests = []
-  let acceptedRequests = 0
-  let releaseOutage
-  let markOutageStarted
-  const outageStarted = new Promise((resolve) => {
-    markOutageStarted = resolve
-  })
-  const outageGate = new Promise((resolve) => {
-    releaseOutage = resolve
-  })
   globalThis.fetch = async (url, options) => {
     requests.push({ url, options })
-    if (requests.length === 1) {
-      markOutageStarted()
-      await outageGate
-      return new Response(JSON.stringify({ message: "temporary provider outage" }), { status: 503 })
-    }
-    if (requests.length === 2) {
-      acceptedRequests += 1
-      return new Response("{}", { status: 201 })
-    }
-    return new Response(JSON.stringify({ code: "duplicate_parameter" }), { status: 400 })
+    return new Response(JSON.stringify({ message: "temporary provider outage" }), { status: 503 })
   }
 
   try {
     const jobs = await import("../src/modules/async/side-effect-jobs.mjs")
     const worker = await import(`../src/modules/async/side-effect-worker.mjs?recovery=${Date.now()}`)
-    const queueId = `ka071-${crypto.randomUUID()}`
-    const recipient = `ka071-${crypto.randomUUID()}@example.invalid`
+    const queueId = `ka121-${crypto.randomUUID()}`
+    const recipient = `ka121-${crypto.randomUUID()}@example.invalid`
     const payload = {
       queueId,
       recipients: [recipient],
@@ -190,78 +173,30 @@ test("announcement dispatch retries provider outages and preserves provider idem
     assert.deepEqual(queuedDuplicates.map((job) => job.id), [first.id, first.id])
     assert.equal(queuedDuplicates[0].payloadJson.announcementPayload.assignmentTitle, "Synthetic retry check")
 
-    let outageRecord = null
-    const firstDrain = worker.drainAsyncSideEffectJobs({
+    const failures = []
+    const failedDrain = await worker.drainAsyncSideEffectJobs({
       jobTypes: [jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL],
       take: 1,
-      workerId: `ka071-worker-${crypto.randomUUID()}`,
+      workerId: `ka121-worker-${crypto.randomUUID()}`,
       maxAttempts: 3,
       retryDelayMs: 10,
-      onJobFailed: (_job, _error, updated) => {
-        outageRecord = updated
-      },
+      onJobFailed: (_job, _error, updated) => failures.push(updated),
     })
-    await outageStarted
-    const processingDuplicate = await jobs.enqueueAsyncSideEffectJob(
-      jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
-      { announcementPayload: payload },
-      { dedupeKey: queueId }
-    )
-    assert.equal(processingDuplicate.id, first.id)
-    assert.equal(processingDuplicate.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING)
-    releaseOutage()
+    assert.deepEqual(failedDrain, { claimed: 1, succeeded: 0, failed: 1, callbackFailed: 0, remaining: 0, processing: 0 })
+    assert.equal(failures[0]?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_FAILED)
+    assert.equal(failures[0]?.attempts, 1)
+    assert.equal(failures[0]?.lastError, "provider_unavailable")
 
-    const firstDrainResult = await firstDrain
-    assert.deepEqual(firstDrainResult, { claimed: 1, succeeded: 0, failed: 1, remaining: 0, processing: 0 })
-    assert.equal(outageRecord?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED)
-    assert.equal(outageRecord?.attempts, 1)
-    assert.equal(outageRecord?.lastError, "provider_unavailable")
-
-    await new Promise((resolve) => setTimeout(resolve, 20))
-    const completions = []
-    const retryFailures = []
-    const retryResult = await worker.drainAsyncSideEffectJobs({
+    const secondDrain = await worker.drainAsyncSideEffectJobs({
       jobTypes: [jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL],
       take: 1,
-      workerId: `ka071-retry-${crypto.randomUUID()}`,
-      maxAttempts: 3,
-      retryDelayMs: 10,
-      onJobComplete: (_job, result, completed) => completions.push({ result, completed }),
-      onJobFailed: (_job, error, updated) => retryFailures.push({ message: error.message, updated }),
+      workerId: `ka121-no-retry-${crypto.randomUUID()}`,
     })
-    assert.deepEqual(
-      retryResult,
-      { claimed: 1, succeeded: 1, failed: 0, remaining: 0, processing: 0 },
-      retryFailures.map((failure) => `${failure.message}; status=${failure.updated?.status}`).join("\n"),
-    )
-    assert.equal(completions[0]?.completed?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_SUCCEEDED)
-    assert.equal(completions[0]?.completed?.attempts, 2)
-    assert.equal(completions[0]?.result?.sent, 1)
-
-    const revived = await jobs.enqueueAsyncSideEffectJob(
-      jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
-      { announcementPayload: payload },
-      { dedupeKey: queueId }
-    )
-    assert.equal(revived.id, first.id)
-    assert.equal(revived.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED)
-    assert.equal(revived.attempts, 0)
-    const duplicateProviderResult = await worker.drainAsyncSideEffectJobs({
-      jobTypes: [jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL],
-      take: 1,
-      workerId: `ka071-provider-dedupe-${crypto.randomUUID()}`,
-      onJobComplete: (_job, result, completed) => completions.push({ result, completed }),
-    })
-    assert.equal(duplicateProviderResult.succeeded, 1)
-    assert.equal(completions[1]?.completed?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_SUCCEEDED)
-    assert.equal(completions[1]?.result?.sent, 1)
-    assert.equal(requests.length, 3)
-    assert.equal(acceptedRequests, 1)
-    const idempotencyKeys = requests.map(({ options }) => JSON.parse(options.body).headers["Idempotency-Key"])
-    assert.deepEqual(idempotencyKeys, [`sis-email-${queueId}`, `sis-email-${queueId}`, `sis-email-${queueId}`])
-    assert.ok(requests.every(({ options }) => JSON.parse(options.body).bcc[0].email.endsWith("@example.invalid")))
+    assert.deepEqual(secondDrain, { claimed: 0, succeeded: 0, failed: 0, callbackFailed: 0, remaining: 0, processing: 0 })
+    assert.equal(requests.length, 1)
+    assert.equal(JSON.parse(requests[0].options.body).headers["Idempotency-Key"], `sis-email-${queueId}`)
+    assert.equal(JSON.parse(requests[0].options.body).bcc[0].email, recipient)
   } finally {
-    releaseOutage?.()
     globalThis.fetch = previousFetch
     for (const [key, value] of previousEnv) {
       if (value === undefined) delete process.env[key]
@@ -270,7 +205,7 @@ test("announcement dispatch retries provider outages and preserves provider idem
   }
 })
 
-test("parent report email provider outage remains retryable and does not expose a recipient", async () => {
+test("parent report email provider outage is not retried automatically", async () => {
   const envKeys = [
     "NODE_ENV",
     "DATABASE_URL",
@@ -295,17 +230,14 @@ test("parent report email provider outage remains retryable and does not expose 
   const requests = []
   globalThis.fetch = async (url, options) => {
     requests.push({ url, options })
-    if (requests.length === 1) {
-      return new Response(JSON.stringify({ message: "temporary provider outage" }), { status: 503 })
-    }
-    return new Response("{}", { status: 201 })
+    return new Response(JSON.stringify({ message: "temporary provider outage" }), { status: 503 })
   }
 
   try {
     const jobs = await import("../src/modules/async/side-effect-jobs.mjs")
     const worker = await import(`../src/modules/async/side-effect-worker.mjs?parent-report-failure=${Date.now()}`)
-    const queueId = `ka097-parent-report-${crypto.randomUUID()}`
-    const recipient = `ka097-parent-${crypto.randomUUID()}@example.invalid`
+    const queueId = `ka121-parent-report-${crypto.randomUUID()}`
+    const recipient = `ka121-parent-${crypto.randomUUID()}@example.invalid`
     const payload = {
       queueId,
       queueType: "parent-report",
@@ -322,39 +254,27 @@ test("parent report email provider outage remains retryable and does not expose 
     const failedDrain = await worker.drainAsyncSideEffectJobs({
       jobTypes: [jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL],
       take: 1,
-      workerId: `ka097-parent-report-fail-${crypto.randomUUID()}`,
+      workerId: `ka121-parent-report-fail-${crypto.randomUUID()}`,
       maxAttempts: 3,
       retryDelayMs: 1,
       onJobFailed: (_job, error, updated) => failures.push({ message: error.message, updated }),
     })
-    assert.deepEqual(failedDrain, { claimed: 1, succeeded: 0, failed: 1, remaining: 0, processing: 0 })
+    assert.deepEqual(failedDrain, { claimed: 1, succeeded: 0, failed: 1, callbackFailed: 0, remaining: 0, processing: 0 })
     assert.equal(failures[0]?.updated?.id, queued.id)
-    assert.equal(failures[0]?.updated?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED)
+    assert.equal(failures[0]?.updated?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_FAILED)
     assert.equal(failures[0]?.updated?.attempts, 1)
     assert.match(failures[0]?.message || "", /Brevo email request failed \(503\)/u)
 
-    await new Promise((resolve) => setTimeout(resolve, 5))
-    const completions = []
     const retryDrain = await worker.drainAsyncSideEffectJobs({
       jobTypes: [jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL],
       take: 1,
-      workerId: `ka097-parent-report-retry-${crypto.randomUUID()}`,
-      maxAttempts: 3,
-      retryDelayMs: 1,
-      onJobComplete: (_job, result, completed) => completions.push({ result, completed }),
+      workerId: `ka121-parent-report-no-retry-${crypto.randomUUID()}`,
     })
-    assert.deepEqual(retryDrain, { claimed: 1, succeeded: 1, failed: 0, remaining: 0, processing: 0 })
-    assert.equal(completions[0]?.completed?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_SUCCEEDED)
-    assert.equal(completions[0]?.completed?.attempts, 2)
-    assert.equal(completions[0]?.result?.sent, 1)
-    assert.equal(requests.length, 2)
+    assert.deepEqual(retryDrain, { claimed: 0, succeeded: 0, failed: 0, callbackFailed: 0, remaining: 0, processing: 0 })
+    assert.equal(requests.length, 1)
     assert.ok(requests.every(({ url }) => url === "https://brevo.invalid/v3/smtp/email"))
-    assert.equal(JSON.parse(requests[1].options.body).to[0].email, recipient)
-    assert.equal(
-      JSON.parse(requests[0].options.body).headers["Idempotency-Key"],
-      JSON.parse(requests[1].options.body).headers["Idempotency-Key"],
-    )
-    assert.ok(requests.every(({ options }) => JSON.stringify(options).includes("@example.invalid")))
+    assert.equal(JSON.parse(requests[0].options.body).to[0].email, recipient)
+    assert.ok(JSON.stringify(requests[0].options).includes("@example.invalid"))
   } finally {
     globalThis.fetch = previousFetch
     for (const [key, value] of previousEnv) {
@@ -364,7 +284,7 @@ test("parent report email provider outage remains retryable and does not expose 
   }
 })
 
-test("test memory backend reclaims stale processing jobs only after the lock timeout", async () => {
+test("stale recovery reclaims only idempotent PDFs and terminally fails uncertain side effects", async () => {
   const previousNodeEnv = process.env.NODE_ENV
   const previousDatabaseUrl = process.env.DATABASE_URL
   const previousBackend = process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND
@@ -377,40 +297,50 @@ test("test memory backend reclaims stale processing jobs only after the lock tim
   try {
     const jobs = await import("../src/modules/async/side-effect-jobs.mjs")
     const now = new Date("2026-11-18T00:00:00.000Z")
-    const job = await jobs.enqueueAsyncSideEffectJob(
-      "ka071-stale-recovery",
-      { probe: "synthetic" },
-      { dedupeKey: `ka071-stale-${crypto.randomUUID()}`, availableAt: now }
-    )
+    const jobTypes = [
+      jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF,
+      jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
+      "ka121-unknown-side-effect",
+    ]
+    const jobsToRecover = await Promise.all(jobTypes.map((jobType) => jobs.enqueueAsyncSideEffectJob(
+      jobType,
+      { probe: "synthetic", queueId: `ka121-${crypto.randomUUID()}` },
+      { dedupeKey: `ka121-stale-${crypto.randomUUID()}`, availableAt: now }
+    )))
     const firstClaim = await jobs.claimAsyncSideEffectJobs({
-      jobTypes: ["ka071-stale-recovery"],
-      take: 1,
-      workerId: "ka071-worker-before-timeout",
+      jobTypes,
+      take: 10,
+      workerId: "ka121-worker-before-timeout",
       now,
     })
-    assert.equal(firstClaim[0]?.id, job.id)
-    assert.equal(firstClaim[0]?.attempts, 1)
+    assert.equal(firstClaim.length, 3)
+    assert.deepEqual(firstClaim.map((job) => job.attempts), [1, 1, 1])
 
     const earlyClaim = await jobs.claimAsyncSideEffectJobs({
-      jobTypes: ["ka071-stale-recovery"],
-      take: 1,
-      workerId: "ka071-worker-too-early",
+      jobTypes,
+      take: 10,
+      workerId: "ka121-worker-too-early",
       now: new Date(now.valueOf() + 59_999),
     })
     assert.deepEqual(earlyClaim, [])
 
     const recoveredClaim = await jobs.claimAsyncSideEffectJobs({
-      jobTypes: ["ka071-stale-recovery"],
-      take: 1,
-      workerId: "ka071-worker-recovered",
+      jobTypes,
+      take: 10,
+      workerId: "ka121-worker-recovered",
       now: new Date(now.valueOf() + 60_000),
     })
-    assert.equal(recoveredClaim[0]?.id, job.id)
+    assert.equal(recoveredClaim.length, 1)
+    assert.equal(recoveredClaim[0]?.id, jobsToRecover[0].id)
     assert.equal(recoveredClaim[0]?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING)
     assert.equal(recoveredClaim[0]?.attempts, 2)
-    assert.equal(recoveredClaim[0]?.lockedBy, "ka071-worker-recovered")
-    const completed = await jobs.completeAsyncSideEffectJob(job.id, { recovered: true })
+    assert.equal(recoveredClaim[0]?.lockedBy, "ka121-worker-recovered")
+    const emailFailures = await jobs.listAnnouncementDeliveryFailures({ take: 10 })
+    assert.ok(emailFailures.some((job) => job.id === jobsToRecover[1].id && job.lastError === "operation_timeout"))
+    const completed = await jobs.completeAsyncSideEffectJob(jobsToRecover[0].id, { recovered: true })
     assert.equal(completed?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_SUCCEEDED)
+    const completedFailure = await jobs.failAsyncSideEffectJob(jobsToRecover[0].id, new Error("late callback error"), { maxAttempts: 3, retryDelayMs: 1 })
+    assert.equal(completedFailure?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_SUCCEEDED)
   } finally {
     if (previousNodeEnv === undefined) delete process.env.NODE_ENV
     else process.env.NODE_ENV = previousNodeEnv
@@ -420,6 +350,101 @@ test("test memory backend reclaims stale processing jobs only after the lock tim
     else process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND = previousBackend
     if (previousTimeout === undefined) delete process.env.ASYNC_SIDE_EFFECT_JOB_LOCK_TIMEOUT_MS
     else process.env.ASYNC_SIDE_EFFECT_JOB_LOCK_TIMEOUT_MS = previousTimeout
+  }
+})
+
+test("PDF retries stop at the configured maximum and callback errors do not requeue completed work", async () => {
+  const previousNodeEnv = process.env.NODE_ENV
+  const previousDatabaseUrl = process.env.DATABASE_URL
+  const previousBackend = process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND
+  process.env.NODE_ENV = "test"
+  process.env.DATABASE_URL = "postgresql://127.0.0.1:5432/sis-test"
+  process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND = "memory"
+
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "sis-pdf-retry-"))
+  const blocker = path.join(tempDir, "file-parent")
+  await fs.writeFile(blocker, "not a directory")
+
+  try {
+    const jobs = await import("../src/modules/async/side-effect-jobs.mjs")
+    const worker = await import(`../src/modules/async/side-effect-worker.mjs?pdf-retry=${Date.now()}`)
+    const job = await jobs.enqueueAsyncSideEffectJob(
+      jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF,
+      {
+        student: {
+          eaglesId: "EA-121",
+          studentNumber: 121,
+          profile: { fullName: "Synthetic Retry Test" },
+          attendanceRecords: [],
+          gradeRecords: [],
+          parentReports: [],
+        },
+        filters: { schoolYear: "2025-2026", quarter: "q1" },
+        outputPath: path.join(blocker, "report-card.pdf"),
+      },
+      { dedupeKey: `ka121-pdf-${crypto.randomUUID()}` },
+    )
+
+    const firstFailures = []
+    const first = await worker.drainAsyncSideEffectJobs({
+      jobTypes: [jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF],
+      take: 1,
+      maxAttempts: 2,
+      retryDelayMs: 1,
+      onJobFailed: (_job, _error, updated) => firstFailures.push(updated),
+    })
+    assert.equal(first.failed, 1)
+    assert.equal(first.callbackFailed, 0)
+    assert.equal(firstFailures[0]?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED)
+
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    const secondFailures = []
+    const second = await worker.drainAsyncSideEffectJobs({
+      jobTypes: [jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF],
+      take: 1,
+      maxAttempts: 2,
+      retryDelayMs: 1,
+      onJobFailed: (_job, _error, updated) => secondFailures.push(updated),
+    })
+    assert.equal(second.failed, 1)
+    assert.equal(secondFailures[0]?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_FAILED)
+    const failures = await jobs.listAnnouncementDeliveryFailures({ take: 10 })
+    assert.equal(failures.some((failure) => failure.id === job.id), false)
+    const third = await worker.drainAsyncSideEffectJobs({ jobTypes: [jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF], take: 1, maxAttempts: 2, retryDelayMs: 1 })
+    assert.equal(third.claimed, 0)
+
+    const successful = await jobs.enqueueAsyncSideEffectJob(
+      jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF,
+      {
+        student: {
+          eaglesId: "EA-121",
+          studentNumber: 121,
+          profile: { fullName: "Synthetic Retry Test" },
+          attendanceRecords: [],
+          gradeRecords: [],
+          parentReports: [],
+        },
+        filters: { schoolYear: "2025-2026", quarter: "q1" },
+      },
+      { dedupeKey: `ka121-pdf-callback-${crypto.randomUUID()}` },
+    )
+    const callbackResult = await worker.drainAsyncSideEffectJobs({
+      jobTypes: [jobs.ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF],
+      take: 1,
+      onJobComplete: async () => { throw new Error("callback failed") },
+    })
+    assert.equal(callbackResult.succeeded, 1)
+    assert.equal(callbackResult.callbackFailed, 1)
+    const persisted = await jobs.completeAsyncSideEffectJob(successful.id, {})
+    assert.equal(persisted?.status, jobs.ASYNC_SIDE_EFFECT_JOB_STATUS_SUCCEEDED)
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true })
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = previousNodeEnv
+    if (previousDatabaseUrl === undefined) delete process.env.DATABASE_URL
+    else process.env.DATABASE_URL = previousDatabaseUrl
+    if (previousBackend === undefined) delete process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND
+    else process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND = previousBackend
   }
 })
 

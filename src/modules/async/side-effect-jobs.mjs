@@ -25,6 +25,7 @@ import { getConfiguredDatabaseUrlSync } from "../admin/sis-config-store.mjs"
  *   take?: unknown,
  *   workerId?: unknown,
  *   now?: unknown,
+ *   maxAttempts?: unknown,
  * }} ClaimJobOptions
  *
  * @typedef {{
@@ -44,6 +45,8 @@ export const ASYNC_SIDE_EFFECT_JOB_STATUS_FAILED = "failed"
 
 const MEMORY_JOBS = []
 const DEFAULT_PROCESSING_LOCK_TIMEOUT_MS = 10 * 60 * 1000
+const DEFAULT_ASYNC_SIDE_EFFECT_MAX_ATTEMPTS = 3
+const MAX_ASYNC_SIDE_EFFECT_ATTEMPTS = 10
 
 function useVolatileTestStorage() {
   const backend = normalizeLower(process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND)
@@ -212,6 +215,16 @@ function normalizeAvailableAt(value) {
 function processingLockTimeoutMs() {
   const configured = Number.parseInt(String(process.env.ASYNC_SIDE_EFFECT_JOB_LOCK_TIMEOUT_MS || DEFAULT_PROCESSING_LOCK_TIMEOUT_MS), 10)
   return Number.isFinite(configured) && configured >= 60 * 1000 ? configured : DEFAULT_PROCESSING_LOCK_TIMEOUT_MS
+}
+
+function normalizeMaxAttempts(value) {
+  const parsed = Number.parseInt(String(value ?? DEFAULT_ASYNC_SIDE_EFFECT_MAX_ATTEMPTS), 10)
+  if (!Number.isFinite(parsed)) return DEFAULT_ASYNC_SIDE_EFFECT_MAX_ATTEMPTS
+  return Math.max(1, Math.min(parsed, MAX_ASYNC_SIDE_EFFECT_ATTEMPTS))
+}
+
+function isRetrySafeAsyncSideEffectJob(jobType) {
+  return normalizeLower(jobType) === ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF
 }
 
 function cloneMemoryJob(job) {
@@ -403,13 +416,14 @@ export async function listAnnouncementDeliveryFailures({ take = 25 } = {}) {
  * @param {ClaimJobOptions} [options]
  * @returns {Promise<Array<ReturnType<typeof mapJobRecord>>>}
  */
-export async function claimAsyncSideEffectJobs({ jobTypes = [], take = 10, workerId = "", now } = {}) {
+export async function claimAsyncSideEffectJobs({ jobTypes = [], take = 10, workerId = "", now, maxAttempts } = {}) {
   const limit = Math.max(1, Math.min(Number.parseInt(String(take || 10), 10) || 10, 100))
   const normalizedJobTypes = Array.from(
     new Set((Array.isArray(jobTypes) ? jobTypes : []).map((entry) => normalizeJobType(entry)).filter(Boolean))
   )
   const normalizedWorkerId = normalizeText(workerId) || `worker-${process.pid}`
   const availableAt = normalizeAvailableAt(now)
+  const boundedMaxAttempts = normalizeMaxAttempts(maxAttempts)
   const prisma = await getJobPrismaClient()
 
   if (!prisma) {
@@ -420,8 +434,12 @@ export async function claimAsyncSideEffectJobs({ jobTypes = [], take = 10, worke
       if (normalizeJobStatus(job.status) !== ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING) return
       const lockedAt = job.lockedAt ? new Date(job.lockedAt) : null
       if (!lockedAt || lockedAt > staleBefore) return
-      job.status = ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED
-      job.availableAt = availableAt
+      const attempts = Number.parseInt(String(job.attempts || 0), 10) || 0
+      const retry = isRetrySafeAsyncSideEffectJob(job.jobType) && attempts < boundedMaxAttempts
+      job.status = retry ? ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED : ASYNC_SIDE_EFFECT_JOB_STATUS_FAILED
+      job.lastError = retry ? job.lastError : "operation_timeout"
+      job.completedAt = retry ? null : availableAt
+      job.availableAt = retry ? availableAt : job.availableAt
       job.lockedAt = null
       job.lockedBy = ""
       job.updatedAt = availableAt
@@ -464,15 +482,31 @@ export async function claimAsyncSideEffectJobs({ jobTypes = [], take = 10, worke
     lockedAt: { lte: staleBefore },
   }
   if (normalizedJobTypes.length) staleWhere.jobType = { in: normalizedJobTypes }
-  await prisma.asyncSideEffectJob.updateMany({
+  const staleJobs = await prisma.asyncSideEffectJob.findMany({
     where: staleWhere,
-    data: {
-      status: ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED,
-      availableAt,
-      lockedAt: null,
-      lockedBy: null,
-    },
+    select: { id: true, jobType: true, attempts: true },
   })
+  for (const staleJob of staleJobs) {
+    const attempts = Number.parseInt(String(staleJob.attempts || 0), 10) || 0
+    const retry = isRetrySafeAsyncSideEffectJob(staleJob.jobType) && attempts < boundedMaxAttempts
+    await prisma.asyncSideEffectJob.updateMany({
+      where: { ...staleWhere, id: staleJob.id },
+      data: retry
+        ? {
+            status: ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED,
+            availableAt,
+            lockedAt: null,
+            lockedBy: null,
+          }
+        : {
+            status: ASYNC_SIDE_EFFECT_JOB_STATUS_FAILED,
+            lastError: "operation_timeout",
+            completedAt: availableAt,
+            lockedAt: null,
+            lockedBy: null,
+          },
+    })
+  }
 
   const candidates = await prisma.asyncSideEffectJob.findMany({
     where,
@@ -563,7 +597,7 @@ export async function completeAsyncSideEffectJob(jobId, resultJson = {}) {
 export async function failAsyncSideEffectJob(jobId, error, options = {}) {
   const id = normalizeText(jobId)
   if (!id) return null
-  const maxAttempts = Math.max(1, Number.parseInt(String(options.maxAttempts || 3), 10) || 3)
+  const maxAttempts = normalizeMaxAttempts(options.maxAttempts)
   const retryDelayMs = Math.max(0, Number.parseInt(String(options.retryDelayMs || 0), 10) || 0)
   const lastError = safeAsyncSideEffectFailureCode(error)
   const retryAt = retryDelayMs ? new Date(Date.now() + retryDelayMs) : null
@@ -574,8 +608,9 @@ export async function failAsyncSideEffectJob(jobId, error, options = {}) {
     const index = MEMORY_JOBS.findIndex((job) => normalizeText(job.id) === id)
     if (index < 0) return null
     const current = MEMORY_JOBS[index]
+    if (normalizeJobStatus(current.status) !== ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING) return cloneMemoryJob(current)
     const currentAttempts = Number.parseInt(String(current.attempts || 0), 10) || 0
-    const shouldRetry = currentAttempts < maxAttempts && Boolean(retryAt)
+    const shouldRetry = isRetrySafeAsyncSideEffectJob(current.jobType) && currentAttempts < maxAttempts && Boolean(retryAt)
     MEMORY_JOBS[index] = {
       ...current,
       status: shouldRetry ? ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED : ASYNC_SIDE_EFFECT_JOB_STATUS_FAILED,
@@ -591,11 +626,12 @@ export async function failAsyncSideEffectJob(jobId, error, options = {}) {
 
   const existing = await prisma.asyncSideEffectJob.findUnique({ where: { id } })
   if (!existing) return null
+  if (normalizeJobStatus(existing.status) !== ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING) return mapJobRecord(existing)
   const currentAttempts = Number.parseInt(String(existing.attempts || 0), 10) || 0
-  const shouldRetry = currentAttempts < maxAttempts && Boolean(retryAt)
+  const shouldRetry = isRetrySafeAsyncSideEffectJob(existing.jobType) && currentAttempts < maxAttempts && Boolean(retryAt)
 
-  const updated = await prisma.asyncSideEffectJob.update({
-    where: { id },
+  await prisma.asyncSideEffectJob.updateMany({
+    where: { id, status: ASYNC_SIDE_EFFECT_JOB_STATUS_PROCESSING },
     data: shouldRetry
       ? {
           status: ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED,
@@ -612,5 +648,6 @@ export async function failAsyncSideEffectJob(jobId, error, options = {}) {
           lockedBy: null,
         },
   })
-  return mapJobRecord(updated)
+  const updated = await prisma.asyncSideEffectJob.findUnique({ where: { id } })
+  return updated ? mapJobRecord(updated) : null
 }
