@@ -54,11 +54,30 @@ test("authenticated manual parent invitation preserves an editable draft across 
 
   t.after(async () => {
     if (browser) await attempt(() => browser.close())
+    if (!studentId) {
+      const syntheticStudent = await prisma.student.findUnique({ where: { externalKey: `keep-alive-parent-profile-${stamp}` }, select: { id: true } }).catch((error) => {
+        cleanupErrors.push(error)
+        return null
+      })
+      if (syntheticStudent?.id) studentId = syntheticStudent.id
+    }
     const syntheticAccount = await prisma.parentPortalAccount.findUnique({ where: { parentsId }, select: { id: true } }).catch((error) => {
       cleanupErrors.push(error)
       return null
     })
     if (syntheticAccount?.id) parentAccountId = syntheticAccount.id
+    const invitationRows = studentId
+      ? await prisma.parentProfileInvitation.findMany({ where: { studentRefId: studentId }, select: { id: true } }).catch((error) => {
+        cleanupErrors.push(error)
+        return []
+      })
+      : []
+    const invitationIds = [...new Set([invitationId, ...invitationRows.map((invitation) => invitation.id)].filter(Boolean))]
+    if (invitationIds.length) {
+      await attempt(() => prisma.asyncSideEffectJob.deleteMany({
+        where: { jobType: "parent-profile-invitation", dedupeKey: { in: invitationIds } },
+      }))
+    }
     for (let pass = 0; pass < 2; pass += 1) {
       if (studentId) {
         await attempt(() => prisma.parentProfileSubmissionQueue.deleteMany({ where: { studentRefId: studentId } }))
@@ -78,6 +97,21 @@ test("authenticated manual parent invitation preserves an editable draft across 
         await attempt(() => prisma.student.deleteMany({ where: { id: studentId } }))
       }
     }
+    const remaining = await Promise.all([
+      prisma.student.count({ where: { externalKey: `keep-alive-parent-profile-${stamp}` } }),
+      studentId ? prisma.studentProfile.count({ where: { studentRefId: studentId } }) : 0,
+      studentId ? prisma.studentEnrollmentPeriod.count({ where: { studentRefId: studentId } }) : 0,
+      studentId ? prisma.parentProfileSubmissionQueue.count({ where: { studentRefId: studentId } }) : 0,
+      studentId ? prisma.parentProfileFieldLock.count({ where: { studentRefId: studentId } }) : 0,
+      studentId ? prisma.parentPortalStudentLink.count({ where: { studentRefId: studentId } }) : 0,
+      studentId ? prisma.parentProfileInvitation.count({ where: { studentRefId: studentId } }) : 0,
+      parentAccountId ? prisma.parentPortalAccount.count({ where: { id: parentAccountId } }) : 0,
+      invitationIds.length ? prisma.asyncSideEffectJob.count({ where: { jobType: "parent-profile-invitation", dedupeKey: { in: invitationIds } } }) : 0,
+    ]).catch((error) => {
+      cleanupErrors.push(error)
+      return [1]
+    })
+    if (remaining.some((count) => count !== 0)) cleanupErrors.push(new Error("Synthetic parent profile records or invitation jobs remain after cleanup"))
     await attempt(() => prisma.$disconnect())
     if (cleanupErrors.length) throw new AggregateError(cleanupErrors, "Synthetic parent profile E2E cleanup failed")
   })
@@ -160,6 +194,9 @@ test("authenticated manual parent invitation preserves an editable draft across 
   assert.equal(invitation?.status, "queued")
   parentAccountId = invitation?.parentAccountId || ""
   assert.ok(parentAccountId, "manual invitation must link the synthetic parent account")
+  if (process.env.SIS_TEST_INTERRUPT_PARENT_PROFILE_AFTER_INVITATION === "1") {
+    throw new Error("Injected parent profile workflow interruption after invitation creation")
+  }
 
   const parentContext = await browser.newContext({ viewport: { width: 1280, height: 900 } })
   const parentPage = await parentContext.newPage()

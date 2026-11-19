@@ -166,3 +166,8 @@ Hardening decisions captured from this incident:
 - Extended the five provisioned domain dashboards with history timelines for each configured host service and authenticated dependency, plus an ERPNext component-running timeline.
 - Dashboard tables now distinguish Docker `HEALTHY`, `UNHEALTHY`, and `NO HEALTHCHECK`; domains without configured service/dependency probes show explicit instrumentation gaps.
 - Dev Grafana provisions the generated dashboards and Prometheus evaluates the newly added layer queries. Production was untouched. Backup: `/home/eagles/dockerz/backups/manual-edits/20261119-domain-layer-visualization/`.
+
+### 2026-11-19: KA-128 interrupted synthetic-probe cleanup
+
+- Exercised post-write interruption paths for the parent invitation, submitted Student News report, and approved Library contribution in dev. The flows cleaned their synthetic records and verified queue/contribution/canonical-entry absence; the parent cleanup also removes any async invitation job keyed to its synthetic invitation IDs.
+- Read-only aggregate checks in `sis_dev` and `sis-test` found no synthetic records or matching queued invitation jobs. The dev API remained healthy and production was untouched. Backup: `/home/eagles/dockerz/backups/manual-edits/20261119-ka128-interrupted-probe-cleanup/`.

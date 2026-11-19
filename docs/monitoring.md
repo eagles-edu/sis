@@ -463,7 +463,7 @@ Run the dev functional monitor with:
 npm run monitor:parent-profile:dev
 ```
 
-It uses the explicit `.env.dev` / `development` environment and pins the browser flow to `http://127.0.0.1:8788`. The check performs the authenticated synthetic invitation, draft save/reload/resave, submission, review, and approval workflow. It uses a manual no-email invitation and UUID-scoped synthetic records; test cleanup removes the records. The monitor treats a skipped E2E test as a failed check and has a 120-second process timeout.
+It uses the explicit `.env.dev` / `development` environment and pins the browser flow to `http://127.0.0.1:8788`. The check performs the authenticated synthetic invitation, draft save/reload/resave, submission, review, and approval workflow. It uses a manual no-email invitation and UUID-scoped synthetic records. The E2E cleanup removes and verifies the student/profile, invitation, parent account, links, locks, submissions, and any side-effect job keyed by those invitation IDs, including after a mid-flow assertion failure. The monitor treats a skipped E2E test as a failed check and has a 120-second process timeout.
 
 The result is atomically written to `runtime-data/prometheus/parent-profile-workflow.prom`, which the existing node-exporter textfile collector scrapes. Its fixed `environment="dev"` label has no student, parent, account, route-parameter, or credential values. The metrics report the latest result, duration, check time, and last successful check time. Prometheus displays `DevParentProfileWorkflowCheckFailed` when the latest result stays failed for 30 seconds.
 
@@ -513,7 +513,7 @@ Run the authenticated synthetic Library check with:
 npm run monitor:library:dev
 ```
 
-The monitor is pinned to `.env.dev` / `development` and `http://127.0.0.1:8788`. It checks the SIS health endpoint, the `sis_dev` database, session Redis, the local CMU pronunciation dictionary, authenticated student and admin Library access, a student submission, admin approval, and the student's canonical result. Merriam-Webster key presence is reported as configuration gauges; provider keys and provider responses are never emitted. It uses the exact configured `mark001` student account and configured dev admin account without printing either credential.
+The monitor is pinned to `.env.dev` / `development` and `http://127.0.0.1:8788`. It checks the SIS health endpoint, the `sis_dev` database, session Redis, the local CMU pronunciation dictionary, authenticated student and admin Library access, a student submission, admin approval, and the student's canonical result. Its `finally` cleanup removes the exact UUID-scoped contribution, revisions, and monitor-created canonical entry, then verifies both contribution and entry absence, even when a request fails after the server has accepted review. Merriam-Webster key presence is reported as configuration gauges; provider keys and provider responses are never emitted. It uses the exact configured `mark001` student account and configured dev admin account without printing either credential.
 
 The submission uses a random lowercase word and source ID. Cleanup removes only the matching contribution and its revisions, then removes its canonical entry only when that contribution was found and the entry's creator matches the configured admin. The check fails if cleanup cannot be verified. Open-review count and oldest pending/legacy review age are measured before the synthetic submission.
 
@@ -536,7 +536,7 @@ Run the authenticated synthetic News check with:
 npm run monitor:news:dev
 ```
 
-The monitor is pinned to `.env.dev` / `development`, verifies `sis_dev`, and uses the exact configured `mark001` student and dev admin accounts. It authenticates to the local dev service, reads the admin News review queue, checks a synthetic report, submits it using the server-issued report ID, and deletes/verifies the synthetic row by its unique UUID-scoped source marker. No student identity, report content, provider response, account, session, credential, or report ID is written to metrics or monitor output.
+The monitor is pinned to `.env.dev` / `development`, verifies `sis_dev`, and uses the exact configured `mark001` student and dev admin accounts. It authenticates to the local dev service, reads the admin News review queue, checks a synthetic report, submits it using the server-issued report ID, and deletes/verifies the synthetic row by its unique UUID-scoped source marker in `finally`, including when the server accepts submission but the monitor then receives a failure. No student identity, report content, provider response, account, session, credential, or report ID is written to metrics or monitor output.
 
 The synthetic Check duration, Check result, LanguageTool result from the completed sentence checks, and Merriam-Webster vocabulary availability are written as fixed `environment="dev"` gauges to `runtime-data/prometheus/news-workflow-dev.prom`. The monitor also records synthetic submission success/failure, cleanup status, open submitted review count, oldest submitted review age, database/API availability, and last-success time. Prometheus alerts on stale monitor output, Check or submission failure, provider unavailability, cleanup failure, and a review older than 24 hours. Firing and resolved notifications route through Alertmanager to `#sis-alert`.
 
