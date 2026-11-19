@@ -17,6 +17,25 @@ services:
       - host.docker.internal:host-gateway
     ports:
       - 127.0.0.1:9090:9090
+  alertmanager:
+    image: prom/alertmanager:v0.35.0
+    container_name: sis-alertmanager
+    restart: unless-stopped
+    user: "1002:1002"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.listen-address=0.0.0.0:9093
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./.env.alertmanager-slack-webhook:/run/secrets/slack_webhook_url:ro
+      - ../../runtime-data/prometheus/alertmanager:/alertmanager
+    ports:
+      - "127.0.0.1:9093:9093"
   grafana:
     image: grafana/grafana:12.1.1
     container_name: sis-grafana

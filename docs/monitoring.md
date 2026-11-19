@@ -2,7 +2,7 @@
 
 ## Current pared profile
 
-The always-on monitoring profile is intentionally limited to Prometheus, node-exporter, and blackbox-exporter. Grafana remains available on loopback for on-demand investigation. cAdvisor, process-exporter, PostgreSQL exporter, Redis exporter, and Alertmanager are not part of the active profile. Container-level inspection is performed with `docker stats --no-stream` during incidents.
+The always-on monitoring profile includes Prometheus, Alertmanager, node-exporter, and blackbox-exporter. Grafana remains available on loopback for on-demand investigation. cAdvisor, process-exporter, PostgreSQL exporter, and Redis exporter are not part of the active profile. Container-level inspection is performed with `docker stats --no-stream` during incidents.
 
 ## Purpose
 
@@ -25,17 +25,10 @@ These files are separate runtime contracts. Never copy credentials or settings b
 ```text
 Host
 ├── node-exporter  ───── host CPU, RAM, disk, filesystem, load, network
-├── cAdvisor        ───── Docker container CPU, RAM, network, processes
-├── process-exporter ──── test API, async-worker, and static-server processes
 ├── blackbox-exporter ─── public test-mirror `/admin` availability and latency
 ├── Prometheus      ───── metric collection and 30-day local retention
+├── Alertmanager    ───── grouped firing and resolved notifications to `#sis-alerts`
 └── Grafana         ───── dashboards and visual investigation
-
-Existing services monitored through cAdvisor:
-├── sis-postgres
-├── redis-stack
-├── sis-languagetool-1
-└── sis-languagetool-2
 ```
 
 The monitoring files are maintained in:
@@ -48,6 +41,7 @@ The monitoring files are maintained in:
 Persistent Docker volumes:
 
 - `monitoring_prometheus-data`
+- `runtime-data/prometheus/alertmanager/` (Alertmanager state; ignored runtime data)
 - `monitoring_grafana-data`
 
 ## Services and local endpoints
@@ -56,6 +50,7 @@ Persistent Docker volumes:
 | --- | ---: | --- |
 | Grafana | `http://127.0.0.1:3030` | Dashboard UI |
 | Prometheus | `http://127.0.0.1:9090` | Query and metric storage |
+| Alertmanager | `http://127.0.0.1:9093` | Local notification and silence status |
 | cAdvisor | `http://127.0.0.1:8089` | Docker metrics |
 | node-exporter | `http://127.0.0.1:9100` | Host metrics |
 | process-exporter | `http://127.0.0.1:9256` | Test-mirror process metrics |
@@ -339,7 +334,7 @@ Add `process-exporter` to track SIS Node independently from the rest of the host
 
 This distinguishes a Node heap leak from a container or browser problem.
 
-### 4. Alertmanager — recommended after exporters
+### 4. Alertmanager and Slack delivery
 
 Prometheus should alert on:
 
@@ -433,7 +428,7 @@ It uses the explicit `.env.dev` / `development` environment and pins the browser
 
 The result is atomically written to `runtime-data/prometheus/parent-profile-workflow.prom`, which the existing node-exporter textfile collector scrapes. Its fixed `environment="dev"` label has no student, parent, account, route-parameter, or credential values. The metrics report the latest result, duration, check time, and last successful check time. Prometheus displays `DevParentProfileWorkflowCheckFailed` when the latest result stays failed for 30 seconds.
 
-This command is a one-shot functional check; this item does not install a timer. Scheduling, stale-result handling, interrupted-run cleanup, retries, and controlled restarts are addressed by the separate monitoring-worker checklist items. The currently active Compose profile has no Alertmanager, so this rule is visible in local Prometheus but does not send an external notification.
+This command is a one-shot functional check; this item does not install a timer. Scheduling, stale-result handling, interrupted-run cleanup, retries, and controlled restarts are addressed by the separate monitoring-worker checklist items. Firing and resolved notifications route through Alertmanager to `#sis-alerts`.
 
 ## Engagement workflow monitor (dev and test)
 
@@ -450,7 +445,7 @@ The test API's `.env.test` sets `SIS_REQUEST_METRICS_FILE` to the test request-c
 
 The same read-only monitor checks enrollment history for multiple active records and overlapping period pairs, and measures the count and age of due pending/retry and processing Moodle provisioning commands plus rejected commands. It fails when enrollment conflicts or rejected provisioning commands exist, due work is older than 30 minutes, or processing work is older than five minutes. Authenticated profile and enrollment writes use the route-template counters in `runtime-data/prometheus/sis-dev-request-metrics.prom`; the enrollment route is recorded only after the shared admin session/role gate succeeds. Node-exporter scrapes both files from the textfile collector directory. Prometheus alerts cover failed profile/enrollment writes, enrollment integrity conflicts, stale or rejected Moodle provisioning commands. These checks expose aggregate counts only.
 
-The dev and test async side-effects workers write separate atomic heartbeats after every completed poll, including poll success. Prometheus rules cover dashboard availability, stale monitor results, unprocessed webhook age, failed jobs, stuck processing jobs, failed worker polls, stale worker heartbeat, announcement and notification queue age, enrollment integrity, profile/enrollment write errors, Moodle provisioning age/rejections, and notification delivery errors. The monitor fails its latest check when an authenticated dashboard is unavailable or any monitored queue, enrollment, or worker condition is stale or failed. Event timestamps and queue counts are available as gauges; idle periods with no new engagement event do not trigger an ingestion alarm. Current Prometheus rules are local-only because the active profile has no Alertmanager receiver. Enable the one-minute dev systemd timer with:
+The dev and test async side-effects workers write separate atomic heartbeats after every completed poll, including poll success. Prometheus rules cover dashboard availability, stale monitor results, unprocessed webhook age, failed jobs, stuck processing jobs, failed worker polls, stale worker heartbeat, announcement and notification queue age, enrollment integrity, profile/enrollment write errors, Moodle provisioning age/rejections, and notification delivery errors. The monitor fails its latest check when an authenticated dashboard is unavailable or any monitored queue, enrollment, or worker condition is stale or failed. Event timestamps and queue counts are available as gauges; idle periods with no new engagement event do not trigger an ingestion alarm. Firing and resolved alerts route through Alertmanager to `#sis-alerts`. Enable the one-minute dev systemd timer with:
 
 ```bash
 install -D -m 0644 ops/monitoring/systemd/sis-engagement-monitor-dev.service "$HOME/.config/systemd/user/sis-engagement-monitor-dev.service"
@@ -471,7 +466,7 @@ The monitor is pinned to `.env.dev` / `development` and `http://127.0.0.1:8788`.
 
 The submission uses a random lowercase word and source ID. Cleanup removes only the matching contribution and its revisions, then removes its canonical entry only when that contribution was found and the entry's creator matches the configured admin. The check fails if cleanup cannot be verified. Open-review count and oldest pending/legacy review age are measured before the synthetic submission.
 
-The monitor atomically writes fixed `environment="dev"` gauges to `runtime-data/prometheus/library-workflow-dev.prom`. It records access checks, submission/review checks, exact synthetic definition persistence, Dictionary Builder preview status, aggregate count of providers returning a definition, queue count and age, API/database/Redis/CMUdict availability, optional Merriam-Webster key configuration, cleanup status, and last success time. The Builder check uses the fixed probe word `monitor`; provider output is inspected only in memory to count definition availability and is never written to metrics or output. The synthetic definition is compared in memory with the canonical database readback; its text is never written to metrics or output. No account, entry, contribution, source, request, cookie, credential, provider name, provider response, or definition value is a metric label or monitor-output field. Prometheus evaluates local alerts for missing monitor reports, access/save/review/definition failures, Builder provider unavailability, queue age over 24 hours, required dependency failures, and cleanup failures. The authenticated Builder preview can take up to four minutes; the systemd service timeout is 270 seconds, and its five-minute timer does not start an overlapping service run. The active pared monitoring profile has no Alertmanager receiver, so alerts are visible locally but are not externally delivered.
+The monitor atomically writes fixed `environment="dev"` gauges to `runtime-data/prometheus/library-workflow-dev.prom`. It records access checks, submission/review checks, exact synthetic definition persistence, Dictionary Builder preview status, aggregate count of providers returning a definition, queue count and age, API/database/Redis/CMUdict availability, optional Merriam-Webster key configuration, cleanup status, and last success time. The Builder check uses the fixed probe word `monitor`; provider output is inspected only in memory to count definition availability and is never written to metrics or output. The synthetic definition is compared in memory with the canonical database readback; its text is never written to metrics or output. No account, entry, contribution, source, request, cookie, credential, provider name, provider response, or definition value is a metric label or monitor-output field. Prometheus evaluates alerts for missing monitor reports, access/save/review/definition failures, Builder provider unavailability, queue age over 24 hours, required dependency failures, and cleanup failures. The authenticated Builder preview can take up to four minutes; the systemd service timeout is 270 seconds, and its five-minute timer does not start an overlapping service run. Firing and resolved notifications route through Alertmanager to `#sis-alerts`.
 
 To schedule the check every five minutes for the current user:
 
@@ -492,7 +487,7 @@ npm run monitor:news:dev
 
 The monitor is pinned to `.env.dev` / `development`, verifies `sis_dev`, and uses the exact configured `mark001` student and dev admin accounts. It authenticates to the local dev service, reads the admin News review queue, checks a synthetic report, submits it using the server-issued report ID, and deletes/verifies the synthetic row by its unique UUID-scoped source marker. No student identity, report content, provider response, account, session, credential, or report ID is written to metrics or monitor output.
 
-The synthetic Check duration, Check result, LanguageTool result from the completed sentence checks, and Merriam-Webster vocabulary availability are written as fixed `environment="dev"` gauges to `runtime-data/prometheus/news-workflow-dev.prom`. The monitor also records synthetic submission success/failure, cleanup status, open submitted review count, oldest submitted review age, database/API availability, and last-success time. Prometheus alerts on stale monitor output, Check or submission failure, provider unavailability, cleanup failure, and a review older than 24 hours. The active monitoring profile has no Alertmanager receiver, so these alerts are visible locally only.
+The synthetic Check duration, Check result, LanguageTool result from the completed sentence checks, and Merriam-Webster vocabulary availability are written as fixed `environment="dev"` gauges to `runtime-data/prometheus/news-workflow-dev.prom`. The monitor also records synthetic submission success/failure, cleanup status, open submitted review count, oldest submitted review age, database/API availability, and last-success time. Prometheus alerts on stale monitor output, Check or submission failure, provider unavailability, cleanup failure, and a review older than 24 hours. Firing and resolved notifications route through Alertmanager to `#sis-alerts`.
 
 Schedule it every five minutes for the current user:
 
@@ -517,7 +512,7 @@ The monitor is pinned to `.env.dev` / `development` and requires `current_databa
 
 The request wrapper records response counts for admin grade create/delete routes after the session and role gate, Moodle exercise submissions after valid HMAC verification, and Google Forms grade submissions after valid HMAC verification. Status labels and route labels are fixed templates; request bodies, student identifiers, names, emails, signatures, nonces, cookies, and provider payloads are never written to metrics. Unauthorized requests are excluded. The dev runtime writes these counters to `runtime-data/prometheus/sis-dev-request-metrics.prom`.
 
-The monitor writes atomic aggregate gauges to `runtime-data/prometheus/grade-feeds-dev.prom`, scraped by the existing node-exporter textfile collector. It does not change student, grade, or feed records. Prometheus alerts on a missing monitor result, failed database or authenticated table checks, missing request instrumentation, an unmatched incoming backlog, and recorded non-2xx authorized grade/feed writes. Feed-age gauges are available for investigation without treating an idle source as a failure. Alerts are local to Prometheus; the active profile has no Alertmanager receiver.
+The monitor writes atomic aggregate gauges to `runtime-data/prometheus/grade-feeds-dev.prom`, scraped by the existing node-exporter textfile collector. It does not change student, grade, or feed records. Prometheus alerts on a missing monitor result, failed database or authenticated table checks, missing request instrumentation, an unmatched incoming backlog, and recorded non-2xx authorized grade/feed writes. Feed-age gauges are available for investigation without treating an idle source as a failure. Firing and resolved alerts route through Alertmanager to `#sis-alerts`.
 
 The same five-minute dev monitor checks `/api/admin/settings/ui` for a valid school setup and `/api/admin/dashboard` for a well-formed `attendanceRiskWeek` summary using an authenticated admin cookie. It inspects only setup status and summary shape; student names, identifiers, and report data remain in memory and are not written to metrics or monitor output. The textfile exports `sis_attendance_school_setup_valid{environment="dev"}` and `sis_attendance_reporting_available{environment="dev"}`. Prometheus alerts when either check fails.
 
@@ -624,7 +619,7 @@ It must not scan keys, export key values, or add key names, client addresses, or
 
 ### 4. Alertmanager and Slack routing
 
-The approved receiver is the dedicated Slack channel `#sis-alerts`, using an Incoming Webhook. The raw webhook URL is stored only in ignored `ops/monitoring/.env.alertmanager-slack-webhook` with mode `0600` and mounted read-only into Alertmanager. Never add the webhook URL to Git, a dashboard, a command history, or this documentation.
+The active receiver is the approved dedicated Slack channel `#sis-alerts`, using an Incoming Webhook. The raw webhook URL is stored only in ignored `ops/monitoring/.env.alertmanager-slack-webhook` with mode `0600`; Alertmanager runs as the owning host UID/GID and reads that file at `/run/secrets/slack_webhook_url` through a read-only mount. Never add the webhook URL to Git, a dashboard, a command history, or this documentation. Alertmanager's web endpoint is bound to `127.0.0.1:9093`; Prometheus sends firing and resolved alerts to `alertmanager:9093` on the private Compose network.
 
 Routing policy:
 
@@ -633,7 +628,7 @@ Routing policy:
 | `critical` | `#sis-alerts` | alert name, instance, job | 30 minutes while firing |
 | `warning` | `#sis-alerts` | alert name, instance, job | 4 hours while firing |
 
-Use a 30-second group wait and five-minute group interval so one incident is grouped without hiding distinct alerts. Resolved notifications remain enabled. Alertmanager will be bound to loopback and Prometheus will send firing/resolved alerts to it locally.
+Use a 30-second group wait and five-minute group interval so one incident is grouped without hiding distinct alerts. Resolved notifications are enabled. Warning notifications repeat every four hours while firing; critical notifications repeat every 30 minutes. Prometheus scrapes Alertmanager's notification success/failure metrics from its private Compose target. Verify receiver health through Prometheus `/api/v1/alertmanagers` and the `alertmanager_notifications_total` / `alertmanager_notifications_failed_total` metrics without printing the webhook URL.
 
 ### 5. Structured SIS request timing logs
 

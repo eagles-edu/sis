@@ -2,6 +2,11 @@ global:
   scrape_interval: 30s
   evaluation_interval: 30s
 
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: [alertmanager:9093]
+
 rule_files:
   - /etc/prometheus/alerts.yml
 
@@ -9,6 +14,10 @@ scrape_configs:
   - job_name: prometheus
     static_configs:
       - targets: [prometheus:9090]
+
+  - job_name: alertmanager
+    static_configs:
+      - targets: [alertmanager:9093]
 
   - job_name: node
     static_configs:

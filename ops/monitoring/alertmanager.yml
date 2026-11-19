@@ -19,8 +19,12 @@ receivers:
       - api_url_file: /run/secrets/slack_webhook_url
         send_resolved: true
         title: "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}"
-        text: >-
-          {{ range .Alerts }}{{ .Annotations.summary }}
+        text: |-
+          {{ range .Alerts -}}
+          - {{ .Annotations.summary }}
+          {{ if .Annotations.description -}}
+            {{ .Annotations.description }}
+          {{ end -}}
           {{ end }}
 
 inhibit_rules:
