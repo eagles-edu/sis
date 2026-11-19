@@ -583,7 +583,7 @@ test("runtime self-heal supports same-root SIS check mode when explicitly enable
   }
 })
 
-test("runtime self-heal syncs admin html on mismatch when enabled", async () => {
+test("runtime mismatch monitoring never syncs admin html automatically", async () => {
   const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
   const sourceRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sis-self-heal-src-"))
   const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sis-self-heal-runtime-"))
@@ -611,18 +611,22 @@ test("runtime self-heal syncs admin html on mismatch when enabled", async () => 
     tmp = await startExerciseMailer({ transporter: makeMockTransport(), port: 0, host: "127.0.0.1" })
     await new Promise((r) => tmp.once("listening", r))
 
-    const synced = fs.readFileSync(runtimeHtmlPath, "utf8")
-    assert.equal(synced, "<html>source-v2</html>\n")
+    await new Promise((resolve) => setTimeout(resolve, 1100))
+    assert.equal(fs.readFileSync(runtimeHtmlPath, "utf8"), "<html>runtime-v1</html>\n")
 
     const tmpPort = tmp.address().port
     const res = await fetch(`http://127.0.0.1:${tmpPort}/healthz`)
     assert.equal(res.status, 200)
     const body = await res.json()
     assert.equal(body.runtimeSelfHeal?.enabled, true)
-    assert.equal(body.runtimeSelfHeal?.lastResult, "synced")
-    assert.ok(Number(body.runtimeSelfHeal?.syncCount) >= 1)
+    assert.equal(body.runtimeSelfHeal?.lastResult, "mismatch")
+    assert.ok(body.runtimeSelfHeal?.lastMismatchAt)
+    assert.equal(body.runtimeSelfHeal?.lastSyncAt, null)
+    assert.equal(Number(body.runtimeSelfHeal?.syncCount), 0)
   } finally {
     if (tmp) await new Promise((done) => tmp.close(done))
+    fs.rmSync(sourceRoot, { recursive: true, force: true })
+    fs.rmSync(runtimeRoot, { recursive: true, force: true })
 
     if (prevEnabled === undefined) delete process.env.SIS_RUNTIME_SELF_HEAL_ENABLED
     else process.env.SIS_RUNTIME_SELF_HEAL_ENABLED = prevEnabled

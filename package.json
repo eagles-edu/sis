@@ -144,6 +144,7 @@
     "postcss-html": "^1.8.1",
     "prettier": "^3.9.6",
     "prisma": "^7.9.1",
+    "serve": "14.2.8",
     "stylelint": "^17.14.1",
     "stylelint-config-standard": "^40.0.0",
     "typescript": "^5.9.3",

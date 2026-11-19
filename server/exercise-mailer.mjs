@@ -897,16 +897,11 @@ function runRuntimeSelfHealCheck(config) {
     }
 
     SELF_HEAL_STATUS.lastMismatchAt = checkedAt
-    fs.mkdirSync(path.dirname(runtimeHtmlPath), { recursive: true })
-    fs.writeFileSync(runtimeHtmlPath, sourceBuffer)
-    SELF_HEAL_STATUS.lastSyncAt = new Date().toISOString()
-    SELF_HEAL_STATUS.syncCount += 1
-    SELF_HEAL_STATUS.lastResult = "synced"
+    SELF_HEAL_STATUS.lastResult = "mismatch"
     SELF_HEAL_STATUS.lastError = ""
-
-    console.log(
-      `[self-heal] synced ${runtimeHtmlPath} from ${sourceHtmlPath}`
-    )
+    if (MAILER_DEBUG) {
+      console.warn("[self-heal] admin HTML differs from source; automatic file repair is disabled")
+    }
   } catch (error) {
     SELF_HEAL_STATUS.lastResult = "error"
     const err = error instanceof Error ? error : new Error(String(error))
