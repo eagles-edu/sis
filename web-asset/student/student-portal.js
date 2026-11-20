@@ -5280,7 +5280,7 @@
         const hasReportDate = Boolean(t(field("reportDate")?.value));
         if (saveBtn instanceof HTMLButtonElement) saveBtn.disabled = !hasReportDate || state.newsAutoSaveBusy || state.newsGrammarCheckBusy;
         if (checkBtn instanceof HTMLButtonElement) {
-          checkBtn.disabled = !hasReportDate || state.newsGrammarCheckBusy;
+          checkBtn.disabled = !hasReportDate || state.newsGrammarCheckBusy || state.newsAutoSaveBusy;
         }
         if (!btn) return;
         const windowInfo = state.window || {};
@@ -5596,7 +5596,7 @@
       }
 
       async function saveNewsDraft({ auto = false } = {}) {
-        if (auto && !state.newsFormDirty) return;
+        if (auto && (!state.newsFormDirty || state.newsGrammarCheckBusy)) return;
         const payload = reportPayload();
         if (!t(payload?.reportDate)) throw new Error("Report date is locked.");
         const mmrWasPassed = state.newsCurrentMmrPassed === true && state.newsFormDirty !== true;

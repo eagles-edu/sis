@@ -482,6 +482,176 @@ test("student News Check revalidates and retries once when its session probe suc
   dom.window.close()
 })
 
+test("student News autosave does not race an in-flight Check", async () => {
+  const report = {
+    id: "news-check-autosave-race-report",
+    reportSequence: 1,
+    reportDate: "2026-04-26",
+    sourceLink: "https://example.com/news/autosave-race",
+    articleTitle: "Synthetic report for autosave race coverage",
+    byline: "BBC",
+    articleDateline: "Published April 26, 2026 at 9:00 AM ICT (GMT+7).",
+    leadSynopsis: "Emergency teams opened a shelter after severe weather damaged several homes.",
+    actionActor: "Emergency teams",
+    actionAffected: "Residents",
+    actionWhere: "Coast City",
+    actionWhat: "Emergency teams opened a shelter for residents after severe weather damaged homes.",
+    actionWhy: "The shelter opened because heavy rain damaged homes and interrupted essential services.",
+    biasAssessment: "The report relies mainly on officials and may omit residents' experiences.",
+    submissionState: "draft",
+    reviewStatus: "draft",
+    vocabulary: ["apple", "banana", "carrot", "dragon", "elephant"].map((english, index) => ({
+      id: `news-check-autosave-word-${index}`,
+      partOfSpeech: "noun",
+      english,
+      vietnamese: `word ${index + 1}`,
+      syllabication: english,
+      definition: `A synthetic definition for ${english}.`,
+    })),
+  }
+  let autosaveTick = null
+  let checkStarted = false
+  let resolveCheck = null
+  let resolveDraftPost = null
+  let draftPostCount = 0
+  const dom = await createStudentPortalDom(
+    async (resource, init = {}) => {
+      const pathname = new URL(toUrlText(resource), "http://preview.invalid").pathname
+      const method = String(init.method || "GET").toUpperCase()
+      if (pathname === "/api/student/dashboard" && method === "GET") {
+        return jsonTextResponse(200, {
+          child: {
+            eaglesId: "flyers01",
+            fullName: "Student One",
+            englishName: "Student One",
+            currentGrade: "Eggs & Chicks",
+            studentNumber: 106,
+            attendance: { total: 1, present: 1, absent: 0, late: 0, excused: 0 },
+            assignments: { pending: 0, overdue: 0, completed: 0 },
+            grades: { averageScorePercent: 92 },
+            performance: { reportCount: 1 },
+          },
+          newsReports: { submittedCount: 0, statusSummary: {} },
+          calendarTracks: { review: [], homework: [] },
+        })
+      }
+      if (pathname === "/api/student/news-reports/calendar" && method === "GET") {
+        return jsonTextResponse(200, {
+          window: {
+            reportDate: report.reportDate,
+            todayDate: report.reportDate,
+            closesAt: "2026-04-27T23:59:00+07:00",
+          },
+          calendar: [],
+          items: [report],
+          openReport: report,
+        })
+      }
+      if (pathname === "/api/student/news-reports/check" && method === "POST") {
+        checkStarted = true
+        return new Promise((resolve) => {
+          resolveCheck = () => resolve(jsonTextResponse(200, {
+            saved: true,
+            mmrPassed: true,
+            complianceFailed: false,
+            message: "Draft saved.",
+            item: {
+              ...report,
+              currentMmrPassed: true,
+              dateSatisfied: true,
+              submissionState: "ready",
+            },
+          }))
+        })
+      }
+      if (pathname === "/api/student/news-reports/draft" && method === "POST") {
+        draftPostCount += 1
+        return new Promise((resolve) => {
+          resolveDraftPost = () => resolve(jsonTextResponse(200, { saved: true, item: report }))
+        })
+      }
+      if (pathname === "/api/student/new-words" && method === "GET") {
+        return jsonTextResponse(200, { items: [] })
+      }
+      return jsonTextResponse(200, {})
+    },
+    "http://127.0.0.1:46145/web-asset/student/student-portal.html",
+    {
+      initialAuthState: {
+        authenticated: true,
+        user: { eaglesId: "flyers01", role: "student" },
+      },
+      beforeParse(window) {
+        const originalSetInterval = window.setInterval.bind(window)
+        window.setInterval = (callback, delay, ...args) => {
+          if (Number(delay) === 80000) {
+            autosaveTick = () => callback(...args)
+            return 1
+          }
+          return originalSetInterval(callback, delay, ...args)
+        }
+        window.SIS_VOCABULARY_ESL = {
+          editorRowHtml(rowUid) {
+            const index = String(rowUid).split("-")[0]
+            return `<div data-news-vocabulary-row="${index}">
+              <select data-vocabulary-field="partOfSpeech"><option value="noun">noun</option></select>
+              <input data-vocabulary-field="english">
+              <input data-vocabulary-field="vietnamese">
+              <input data-vocabulary-field="syllabication">
+              <textarea data-vocabulary-field="definition"></textarea>
+            </div>`
+          },
+          hydrate() {},
+          sync() {},
+          bindLookupButtons() {},
+          canonicalizeSyllabication(value) { return String(value || "") },
+          classification() { return {} },
+          originMetadata() { return {} },
+        }
+      },
+    },
+  )
+
+  try {
+    const document = dom.window.document
+    await waitFor(() => {
+      assert.equal(document.getElementById("appPanel").classList.contains("hidden"), false)
+      assert.equal(document.querySelectorAll('#newsVocabularyRows [data-vocabulary-field="english"]').length, 5)
+      assert.equal(typeof autosaveTick, "function")
+    }, 5000)
+    document.getElementById("newsPageCard")?.classList.remove("hidden")
+    const titleInput = document.getElementById("articleTitle")
+    titleInput.value = "Synthetic report while autosave is running"
+    titleInput.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    autosaveTick()
+    await waitFor(() => assert.equal(draftPostCount, 1), 5000)
+    assert.equal(document.getElementById("checkBtn")?.disabled, true, "Check is locked while an autosave request is running")
+    resolveDraftPost?.()
+    await waitFor(() => assert.equal(document.getElementById("checkBtn")?.disabled, false), 5000)
+
+    titleInput.value = "Synthetic report changed while Check is running"
+    titleInput.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    document.getElementById("checkBtn")?.click()
+    await waitFor(() => assert.equal(checkStarted, true), 5000)
+    assert.equal(document.getElementById("checkBtn")?.disabled, true, "Check remains locked while its request is running")
+
+    autosaveTick()
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 0))
+    assert.equal(draftPostCount, 1, "the periodic autosave does not write during Check")
+
+    resolveCheck?.()
+    await waitFor(() => {
+      assert.equal(document.getElementById("checkBtn")?.disabled, false)
+      assert.equal(document.getElementById("submitBtn")?.disabled, false)
+    }, 5000)
+    assert.equal(document.getElementById("formStatus")?.textContent, "Saved. CHECKS PASSED!")
+  } finally {
+    resolveCheck?.()
+    resolveDraftPost?.()
+    dom.window.close()
+  }
+})
+
 test("student portal grades YTD uses the setup-defined quarter when a stored label is stale", async () => {
   const fixedNow = "2025-11-15T09:00:00.000Z"
   const dom = await createStudentPortalDom(
