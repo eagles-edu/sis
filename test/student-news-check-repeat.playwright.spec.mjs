@@ -5,6 +5,7 @@ import test from "node:test"
 import { parse as parseDotenv } from "dotenv"
 import { chromium } from "playwright"
 import { resolveStandardStudentCredentials } from "./helpers/standard-portal-credentials.mjs"
+import { resolveStudentNewsSubmissionWindow } from "../src/modules/admin/student-news-submissions.mjs"
 import "../tools/assert-prisma-environment.mjs"
 
 const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
@@ -39,13 +40,7 @@ const VOCABULARY = [
 const STUDENT_NEWS_CHECK_RESPONSE_TIMEOUT_MS = 90000
 
 function localDateKey(date = new Date()) {
-  const values = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date).map((part) => [part.type, part.value]))
-  return `${values.year}-${values.month}-${values.day}`
+  return resolveStudentNewsSubmissionWindow(date).reportDate
 }
 
 test("authenticated Student News Check -> Save -> Check keeps the session and enables Submit", { skip: SKIP_REASON }, async (t) => {

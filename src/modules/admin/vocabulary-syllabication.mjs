@@ -248,7 +248,7 @@ function knownPronunciationSyllabicationMatches(word, entered) {
  * @param {{ fetchImpl?: typeof fetch, overrideLookup?: (english: string) => Promise<{syllabication?: string} | null> }} [options]
  */
 export async function validateVocabularyEntry(row = {}, options = {}) {
-  const formatError = vocabularyEntryError(row)
+  const formatError = vocabularyEntryError(row) || vocabularySyllabicationFormatAndSpellingError(row)
   if (formatError) return { message: formatError, warning: "" }
   const english = text(row.english).toLocaleLowerCase("en-US")
   const enteredWords = normalizeSyllabicationText(row.syllabication).split(/\s+/u).filter(Boolean)

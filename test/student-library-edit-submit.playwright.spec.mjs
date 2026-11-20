@@ -31,7 +31,8 @@ test("authenticated Student Library Edit -> Submit persists the canonical contri
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const prisma = await getSharedPrismaClient()
   const stamp = randomUUID()
-  const english = `libraryeditregression${stamp.replaceAll("-", "")}`
+  const english = `library-edit-regression-${stamp.replaceAll("-", "").replace(/[0-9]/gu, (digit) => String.fromCharCode(97 + Number(digit)))}`
+  const syllabication = english
   const sourceId = `student-library-edit-submit-regression-${stamp}`
   let entryId = ""
   let contributionId = ""
@@ -72,8 +73,8 @@ const student = await prisma.student.findUnique({ where: { eaglesId: STUDENT.use
       originPath: null,
       originReferences: [],
       vietnamese: "từ kiểm thử",
-      syllabication: "LI-brary",
-      syllableCount: 2,
+      syllabication,
+      syllableCount: syllabication.split("-").length,
       definition: "Temporary authenticated edit-submit proof.",
       countability: "countable",
       nounType: "common",
@@ -101,7 +102,7 @@ const student = await prisma.student.findUnique({ where: { eaglesId: STUDENT.use
         english,
         partOfSpeech: "noun",
         vietnamese: "từ kiểm thử",
-        syllabication: "LI-brary",
+        syllabication,
         definition: "Temporary authenticated edit-submit proof.\n\n**Etymology**\n1530s, from Latin.\n\n**Works Cited:**\n- Regression source.",
         countability: "countable",
         nounType: "common",

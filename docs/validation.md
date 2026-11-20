@@ -421,3 +421,4 @@ Priority drift to avoid:
 - `server/student-admin-routes.mjs`
 - `web-asset/student/student-portal.html`
 - `test/news-compliance.spec.mjs`
+- `test/news-library-validation-matrix.spec.mjs` (field-by-field News and Library validation, grammar-engine contingencies, and pronunciation-provider contingencies)

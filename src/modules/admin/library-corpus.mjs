@@ -4,7 +4,7 @@ import { buildOriginReference, normalizeDefinitionText, normalizeOriginReference
 import { queueAnnouncementEmail } from "./notification-queue.mjs"
 import { checkVerbFormsTransitivity, getVerbTransitivity } from "./verb-transitivity.mjs"
 import { getVerbForms, getVerbRegularity } from "./verb-regularity.mjs"
-import { normalizeVocabularySyllabication, vocabularyEnglishCapitalizationError } from "./vocabulary-syllabication.mjs"
+import { normalizeVocabularySyllabication, validateVocabularyEntry, vocabularyEnglishCapitalizationError } from "./vocabulary-syllabication.mjs"
 import { engagementRetentionCutoff, isEngagementVisible } from "./engagement-retention.mjs"
 import { previewLdoceLibraryEntry } from "./ldoce-provider.mjs"
 import { previewOxfordLibraryEntry } from "./oxford-provider.mjs"
@@ -297,7 +297,7 @@ function normalizeAudioInputs(value) {
   return result
 }
 
-function normalizeEntry(value = {}, { allowIncomplete = false } = {}) {
+export function normalizeLibraryEntry(value = {}, { allowIncomplete = false } = {}) {
   const english = clamp(value.english)
   const partOfSpeech = lower(value.partOfSpeech)
   const phraseType = normalizeLibraryEnum(value.phraseType)
@@ -457,8 +457,14 @@ export async function submitLibraryContribution(studentRefId, contributorName, p
   if (!entry.english || !POS.has(entry.partOfSpeech)) throw statusError("New Words submissions require English and a supported part of speech")
   const capitalizationError = vocabularyEnglishCapitalizationError(entry)
   if (capitalizationError) throw statusError(capitalizationError)
-  const client = await prisma()
   const studentId = text(studentRefId)
+  let syllabicationWarning = ""
+  if (studentId) {
+    const pronunciation = await validateVocabularyEntry(entry)
+    if (pronunciation.message) throw statusError(pronunciation.message)
+    syllabicationWarning = pronunciation.warning
+  }
+  const client = await prisma()
   const sourceId = clamp(payload.sourceId)
   const existingEntryId = clamp(payload.entryId)
   const contributionId = clamp(payload.contributionId)
@@ -482,6 +488,7 @@ export async function submitLibraryContribution(studentRefId, contributorName, p
       ok: true,
       contribution: mapContribution(refreshed),
       refreshed: true,
+      ...(syllabicationWarning ? { warning: syllabicationWarning } : {}),
       message: isAwaitingLegacyCanonical(existing.status)
         ? "Your contribution is waiting for the legacy canonical review."
         : "Your Library contribution was refreshed.",
@@ -526,7 +533,12 @@ export async function submitLibraryContribution(studentRefId, contributorName, p
     await writeContributionRevision(tx, created, provisional ? "submitted_awaiting_legacy_canonical" : "submitted")
     return created
   })
-  return { ok: true, contribution: mapContribution(contribution), message: provisional ? "Submitted and waiting for the legacy canonical review." : "Submitted to Library for review." }
+  return {
+    ok: true,
+    contribution: mapContribution(contribution),
+    ...(syllabicationWarning ? { warning: syllabicationWarning } : {}),
+    message: provisional ? "Submitted and waiting for the legacy canonical review." : "Submitted to Library for review.",
+  }
 }
 
 export async function refreshStudentLibraryContributions(studentRefId, contributorName, entries = []) {
@@ -573,7 +585,7 @@ async function writeContributionRevision(client, contribution, action) {
 }
 
 async function canonicalEntryForContribution(tx, payload, actor = {}, options = {}) {
-  const data = normalizeEntry(payload, options)
+  const data = normalizeLibraryEntry(payload, options)
   const pair = canonicalPair(data)
   const existing = await tx.libraryEntry.findUnique({ where: { normalizedKey_partOfSpeech: pair } })
   const entry = await tx.libraryEntry.upsert({
@@ -636,7 +648,7 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
     ? contribution
     : await client.libraryContribution.findUnique({ where: { id: canonicalContributionId } })
   if (!canonicalContribution) throw statusError("The selected canonical Library contribution was not found", 404)
-  const submitted = normalizeEntry(payload.entry || canonicalContribution.payloadJson, { allowIncomplete: true })
+  const submitted = normalizeLibraryEntry(payload.entry || canonicalContribution.payloadJson, { allowIncomplete: true })
   const result = await client.$transaction(async (tx) => {
     const pair = canonicalPair(submitted)
     const siblings = await tx.libraryContribution.findMany({ where: { status: { in: ["pending_review", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL] } } })
@@ -675,7 +687,7 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
 
 export async function updateLibraryEntry(id, actor = {}, payload = {}) {
   const client = await prisma()
-  const data = normalizeEntry(payload, { allowIncomplete: true })
+  const data = normalizeLibraryEntry(payload, { allowIncomplete: true })
   const result = await client.$transaction(async (tx) => {
       const updated = await tx.libraryEntry.update({ where: { id }, data: { ...data, reviewStatus: "approved", lastEditedByName: clamp(actor.name) } })
       await writeRevision(tx, updated, "approved_edit", actor.name, actor.role || "admin")
@@ -1503,7 +1515,7 @@ async function applyDictionaryLibraryEntry({ id, actor = {}, payload = {}, fetch
   const mode = dictionaryApplyMode(payload.mode || "fill_missing", provider)
   const selectedFields = dictionarySelectedFields(payload, mode, preview.fields, supportedFields, provider)
   const proposed = dictionaryProposedFields(existing, preview, mode, selectedFields, provider)
-  const normalized = normalizeEntry({ ...existing, ...proposed }, { allowIncomplete: true })
+  const normalized = normalizeLibraryEntry({ ...existing, ...proposed }, { allowIncomplete: true })
   const data = Object.fromEntries([...supportedFields, "dictionaryProvider", "dictionarySourceUrl", "dictionaryMetadata"].filter((field) => Object.hasOwn(normalized, field) && JSON.stringify(activePayloadValue(existing[field], field)) !== JSON.stringify(activePayloadValue(normalized[field], field))).map((field) => [field, normalized[field]]))
   const mediaSelection = dictionaryMediaSelection(payload, preview.entries, mediaDialects)
   const downloads = []
@@ -1658,7 +1670,7 @@ export async function applyDictionaryBuilderSnapshot(id, actor = {}, payload = {
     claims: claimLedger,
     citations: selectedCitations,
   }
-  const normalized = normalizeEntry({ ...existing, ...proposed }, { allowIncomplete: true })
+  const normalized = normalizeLibraryEntry({ ...existing, ...proposed }, { allowIncomplete: true })
   const data = Object.fromEntries(Object.entries(normalized).filter(([field, value]) => Object.hasOwn(proposed, field) && JSON.stringify(activePayloadValue(existing[field], field)) !== JSON.stringify(activePayloadValue(value, field))))
   const capitalizationError = vocabularyEnglishCapitalizationError({ ...existing, ...data })
   if (capitalizationError) throw dictionaryStatusError(capitalizationError)
