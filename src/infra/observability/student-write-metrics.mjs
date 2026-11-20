@@ -8,6 +8,7 @@ import { AsyncLocalStorage } from "node:async_hooks"
 const requestContext = new AsyncLocalStorage()
 const requestMetrics = new Map()
 const parentReportAcknowledgmentMetrics = new Map()
+const studentNewsCheckAuthRejectionMetrics = new Map()
 const phaseMetrics = new Map()
 const gradeFeedMetrics = new Map()
 let writeQueue = Promise.resolve()
@@ -76,6 +77,12 @@ function renderRequestMetrics() {
     const labels = `environment="${metricEnvironment()}",route="POST /api/parent/reports/:reportId/acknowledge",status="${escapeLabel(status)}"`
     lines.push(`sis_parent_report_acknowledgment_request_duration_seconds_sum{${labels}} ${metric.sum}`)
     lines.push(`sis_parent_report_acknowledgment_request_duration_seconds_count{${labels}} ${metric.count}`)
+  }
+  lines.push("# HELP sis_student_news_check_auth_rejections_total Student News Check authentication rejections by bounded cause.")
+  lines.push("# TYPE sis_student_news_check_auth_rejections_total counter")
+  for (const [reason, metric] of studentNewsCheckAuthRejectionMetrics.entries()) {
+    const labels = `environment="${environment}",reason="${escapeLabel(reason)}"`
+    lines.push(`sis_student_news_check_auth_rejections_total{${labels}} ${metric.count}`)
   }
   lines.push("# HELP sis_admin_student_write_phase_duration_seconds Student write phase duration.")
   lines.push("# TYPE sis_admin_student_write_phase_duration_seconds summary")
@@ -206,6 +213,18 @@ export function markStudentWriteRequestAuthenticated() {
  */
 export function initializeStudentWriteMetrics() {
   return scheduleFlush()
+}
+
+/**
+ * Record a bounded Student News Check authentication rejection cause.
+ * Only the fixed reason categories are retained; cookies and session IDs are
+ * never accepted by this API or written to the textfile collector.
+ * @param {"missing_cookie" | "session_not_found"} reason
+ */
+export function recordStudentNewsCheckAuthRejection(reason) {
+  if (reason !== "missing_cookie" && reason !== "session_not_found") return
+  observeMetric(studentNewsCheckAuthRejectionMetrics, reason)
+  void scheduleFlush()
 }
 
 /**

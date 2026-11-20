@@ -46,6 +46,25 @@ test("authorized grade/feed errors use fixed route labels and omit request ident
   assert.doesNotMatch(contents, /private-student-ref|private-attempt/u)
 })
 
+test("News Check authentication rejection metrics accept only bounded reasons", async () => {
+  metrics.recordStudentNewsCheckAuthRejection("missing_cookie")
+  metrics.recordStudentNewsCheckAuthRejection("session_not_found")
+  metrics.recordStudentNewsCheckAuthRejection("private-session-id")
+  await metrics.initializeStudentWriteMetrics()
+
+  const contents = readFileSync(metricsPath, "utf8")
+  assert.match(contents, /sis_student_news_check_auth_rejections_total\{environment="dev",reason="missing_cookie"\} 1/u)
+  assert.match(contents, /sis_student_news_check_auth_rejections_total\{environment="dev",reason="session_not_found"\} 1/u)
+  assert.doesNotMatch(contents, /private-session-id|cookie=|sessionId|studentRefId/u)
+})
+
+test("only News Check opts into missing-cookie and missing-session classifications", () => {
+  const routes = readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
+  assert.match(routes, /options\?\.recordNewsCheckAuthRejection === true\)\s*\{\s*recordStudentNewsCheckAuthRejection\("missing_cookie"\)/u)
+  assert.match(routes, /options\?\.recordNewsCheckAuthRejection === true\)\s*\{\s*recordStudentNewsCheckAuthRejection\("session_not_found"\)/u)
+  assert.match(routes, /recordNewsCheckAuthRejection:\s*pathname === STUDENT_NEWS_REPORTS_CHECK_PATH/u)
+})
+
 test("authorized attendance failures use fixed route labels without student identifiers", async () => {
   const request = {
     method: "POST",

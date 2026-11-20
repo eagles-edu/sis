@@ -244,7 +244,10 @@ import {
   recordAnalyticsOptOutAlert,
 } from "../src/modules/portal/portal-privacy-alerts.mjs"
 import { readPortalAsset, savePortalAsset } from "../src/modules/portal/portal-asset-store.mjs"
-import { markStudentWriteRequestAuthenticated } from "../src/infra/observability/student-write-metrics.mjs"
+import {
+  markStudentWriteRequestAuthenticated,
+  recordStudentNewsCheckAuthRejection,
+} from "../src/infra/observability/student-write-metrics.mjs"
 import { disableMoodleStudent } from "../src/modules/admin/moodle-provisioning.mjs"
 
 const ADMIN_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_ADMIN_PAGE_PATH, "/admin")
@@ -2800,6 +2803,9 @@ async function requireAuthenticatedStudentSession(request, response, options = {
     normalizeText(options?.unauthorizedMessage) || "Unauthorized"
   const sessionId = readStudentSessionIdFromRequest(request)
   if (!sessionId) {
+    if (options?.recordNewsCheckAuthRejection === true) {
+      recordStudentNewsCheckAuthRejection("missing_cookie")
+    }
     const error = new Error(unauthorizedMessage)
     error.statusCode = 401
     throw error
@@ -2807,6 +2813,9 @@ async function requireAuthenticatedStudentSession(request, response, options = {
 
   const session = await STUDENT_SESSION_STORE.touchSession(sessionId)
   if (!session) {
+    if (options?.recordNewsCheckAuthRejection === true) {
+      recordStudentNewsCheckAuthRejection("session_not_found")
+    }
     clearStudentSessionCookie(response)
     const error = new Error(unauthorizedMessage)
     error.statusCode = 401
@@ -9360,6 +9369,7 @@ async function handleStudentApiRequest(request, response, pathname, url) {
   const session = await requireAuthenticatedStudentSession(request, response, {
     unauthorizedMessage:
       pathname === STUDENT_NEWS_REPORTS_CHECK_PATH ? STUDENT_NEWS_CHECK_UNAUTHORIZED_MESSAGE : "",
+    recordNewsCheckAuthRejection: pathname === STUDENT_NEWS_REPORTS_CHECK_PATH,
   })
   const studentRefId = await resolveStudentPortalSessionStudentRefId(session)
   if (!studentRefId) {

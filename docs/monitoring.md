@@ -700,6 +700,22 @@ For each completed authenticated student create/update request, SIS emits one JS
 
 `requestId` is generated per request and is used solely to correlate the local SIS service log with the incident timestamp. The log must contain no request body, student ID, name, email, cookie, session ID, authenticated username, SQL statement, query parameter, or stack trace with user data. Observability failures are isolated so they do not alter normal request handling.
 
+### 6. Student News Check authentication rejection causes
+
+Dev and test runtimes record a counter only for `POST /api/student/news-reports/check` when authentication returns 401. The metric has fixed `environment` and `reason` labels; the metric family name identifies the route:
+
+```text
+sis_student_news_check_auth_rejections_total{environment,reason}
+```
+
+The only reasons are `missing_cookie` and `session_not_found`. A Redis/store operation failure remains a 503 and is not recorded as either 401 cause. The metric never stores a cookie, session ID, student/account identity, request body, URL, or query parameter. It does not change the response, clear-cookie behavior, or session lifetime. This metric is not enabled for production/live.
+
+Useful query for the latest five-minute rate by safe cause:
+
+```promql
+sum by (environment, reason) (rate(sis_student_news_check_auth_rejections_total[5m]))
+```
+
 ## Resource and security considerations
 
 The monitoring stack consumes additional resources. In the initial installation, Grafana used roughly 190 MB, Prometheus roughly 100–130 MB, cAdvisor roughly 65–85 MB, and node-exporter roughly 18 MB. cAdvisor can briefly use noticeable CPU while collecting metrics.
