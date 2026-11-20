@@ -103,9 +103,13 @@ function writeRichSisConfigFixture(filePath, { updatedAt = "2026-05-01T00:00:00.
 
 test("saveSisConfigSnapshot writes config and leaves the legacy mirror untouched", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
+  const priorRedisSessionUrl = process.env.REDIS_SESSION_URL
+  const priorRedisUrl = process.env.REDIS_URL
   process.env.SIS_CONFIG_FILE = sisConfigPath
   process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
   process.env.DATABASE_URL = ""
+  delete process.env.REDIS_SESSION_URL
+  delete process.env.REDIS_URL
 
   try {
     const mod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
@@ -157,6 +161,10 @@ test("saveSisConfigSnapshot writes config and leaves the legacy mirror untouched
     delete process.env.SIS_CONFIG_FILE
     delete process.env.STUDENT_ADMIN_UI_SETTINGS_FILE
     delete process.env.DATABASE_URL
+    if (priorRedisSessionUrl === undefined) delete process.env.REDIS_SESSION_URL
+    else process.env.REDIS_SESSION_URL = priorRedisSessionUrl
+    if (priorRedisUrl === undefined) delete process.env.REDIS_URL
+    else process.env.REDIS_URL = priorRedisUrl
   }
 })
 

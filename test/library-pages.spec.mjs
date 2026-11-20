@@ -66,7 +66,7 @@ test("student Library is a protected physical page with shared chrome and studen
 
 test("student and Library pages bust stale caches for shared vocabulary validation", () => {
   const studentEditorVersion = "20261116.2"
-  const studentPortalScriptVersion = "20261118.3"
+  const studentPortalScriptVersion = "20261120.1"
   const versionedEditor = new RegExp(`vocabulary-esl-editor\\.js\\?v=${studentEditorVersion}`, "u")
   assert.match(student, versionedEditor)
   assert.match(portalScript, versionedEditor)
@@ -1061,7 +1061,7 @@ test("admin Library edits remain approved and use the approved-edit revision act
 })
 
 test("Library saves canonicalize stress after the editor preserves typed capitalization", () => {
-  assert.match(libraryCorpus, /import \{ normalizeVocabularySyllabication, vocabularyEnglishCapitalizationError \} from "\.\/vocabulary-syllabication\.mjs"/)
+  assert.match(libraryCorpus, /import \{[^}]*normalizeVocabularySyllabication[^}]*vocabularyEnglishCapitalizationError[^}]*\} from "\.\/vocabulary-syllabication\.mjs"/)
   assert.match(libraryCorpus, /syllabication: normalizeVocabularySyllabication\(value\.syllabication\)/)
   assert.match(libraryCorpus, /syllabication: normalizeVocabularySyllabication\(rawEntry\.syllabication\)/)
   assert.match(admin, /field === "syllabication"\) value = window\.SIS_VOCABULARY_ESL\.canonicalizeSyllabication\(value\)/)

@@ -101,8 +101,8 @@ test("family dropdown label identifies the oldest child even when profiles arriv
 test("active parent account is authoritative when a profile reused its email across families", () => {
   const result = buildFamilyOptionPayload({
     profileRows: [
-      { familyId: "fam-0149", parentsId: "cmamos001", motherEmail: "shared@example.com" },
-      { familyId: "fam-0007", parentsId: "cmandy001", motherEmail: "shared@example.com" },
+      { familyId: "fam-0149", parentsId: "cmamos001", motherEmail: "shared@example.com", student: { eaglesId: "amos001" } },
+      { familyId: "fam-0007", parentsId: "cmandy001", motherEmail: "shared@example.com", student: { eaglesId: "andy001" } },
     ],
     activeParentAccounts: [{
       parentsId: "cmandy001",

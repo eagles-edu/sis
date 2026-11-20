@@ -1,14 +1,14 @@
 const GROUP_STALE_AFTER_SECONDS = Object.freeze({
-  parent_profile: { dev: 0, test: 0 },
-  engagement: { dev: 180, test: 0 },
+  parent_profile: { dev: 1200, test: 0 },
+  engagement: { dev: 180, test: 180 },
   student_library: { dev: 900, test: 0 },
   student_news: { dev: 900, test: 0 },
   dictionary_builder: { dev: 900, test: 0 },
-  assignment_notifications: { dev: 180, test: 0 },
+  assignment_notifications: { dev: 180, test: 180 },
   grade_feeds: { dev: 900, test: 0 },
   attendance: { dev: 900, test: 0 },
-  parent_reports: { dev: 180, test: 0 },
-  student_profile_enrollment: { dev: 180, test: 0 },
+  parent_reports: { dev: 180, test: 180 },
+  student_profile_enrollment: { dev: 180, test: 180 },
 })
 
 const FAILURE_CODES = new Set([

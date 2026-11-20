@@ -3,8 +3,9 @@ import fs from "node:fs"
 import test from "node:test"
 import { chromium } from "playwright"
 import "../tools/assert-prisma-environment.mjs"
+import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
 
-const ORIGIN = process.env.ADMIN_PERF_ORIGIN || "http://127.0.0.1:8788"
+const ORIGIN = resolvePortalTestOrigin({ overrideName: "ADMIN_PERF_ORIGIN" })
 const ENV_PATH = String(process.env.SIS_ENV_FILE || "").trim()
 
 function readEnv(filePath) {

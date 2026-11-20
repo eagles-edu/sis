@@ -6,6 +6,7 @@ import {
   resolveStandardParentCredentials,
   STANDARD_PARENT_LOGIN,
 } from "./helpers/standard-portal-credentials.mjs"
+import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
 
 let chromium = null
 try {
@@ -21,7 +22,7 @@ const ENV_VALUES = ENV_FILE && fs.existsSync(ENV_FILE)
 const RESOLVED_PARENT_CREDENTIALS = resolveStandardParentCredentials(ENV_VALUES)
 const PARENT_USER = STANDARD_PARENT_LOGIN
 const PARENT_PASSWORD = RESOLVED_PARENT_CREDENTIALS.pass || String(ENV_VALUES.STUDENT_PARENT_PASS || "")
-const ORIGIN = String(process.env.PARENT_ACK_TEST_ORIGIN || "http://127.0.0.1:8788").trim()
+const ORIGIN = resolvePortalTestOrigin({ overrideName: "PARENT_ACK_TEST_ORIGIN" })
 const REPORT_ID = `ka093-parent-ack-retry-${Date.now()}`
 const VIEWPORTS = [
   { name: "desktop", width: 1536, height: 1000 },

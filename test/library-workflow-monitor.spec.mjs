@@ -8,9 +8,12 @@ import {
   cleanupSynthetic,
   readLastSuccessTimestamp,
   renderLibraryMetrics,
+  selectSyntheticVocabularyCandidate,
+  SYNTHETIC_VOCABULARY_CANDIDATES,
   summarizeDictionaryBuilderDefinitionAvailability,
   writeMetricsAtomically,
 } from "../tools/monitor-library-workflow.mjs"
+import { validateVocabularyEntry } from "../src/modules/admin/vocabulary-syllabication.mjs"
 
 function devEnvironment() {
   return { NODE_ENV: "development", SIS_ENV_FILE: ".env.dev", DOTENV_CONFIG_PATH: ".env.dev" }
@@ -85,6 +88,18 @@ test("Dictionary Builder availability summary contains only aggregate provider c
   assert.deepEqual(availability, { providersChecked: 2, providersAvailable: 1 })
   assert.doesNotMatch(JSON.stringify(availability), /sensitive definition|private-provider/u)
   assert.deepEqual(summarizeDictionaryBuilderDefinitionAvailability({ sources: [] }), { providersChecked: 0, providersAvailable: 0 })
+})
+
+test("synthetic Library monitor rotates only to unused CMUdict words with valid syllabication and primary stress", async () => {
+  for (const candidate of SYNTHETIC_VOCABULARY_CANDIDATES) {
+    const result = await validateVocabularyEntry(candidate, { overrideLookup: async () => null })
+    assert.equal(result.message, "", `${candidate.english} must pass the local pronunciation contract`)
+  }
+  assert.deepEqual(selectSyntheticVocabularyCandidate(["monitor", "canopy"], { monitor: "", canopy: "", tomato: "" }, 0), {
+    english: "tomato",
+    syllabication: "to-MA-to",
+  })
+  assert.equal(selectSyntheticVocabularyCandidate(["monitor"], { monitor: "" }, 0), null)
 })
 
 test("Library monitor cleanup verifies exact synthetic contribution and canonical removal", async () => {

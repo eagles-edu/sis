@@ -35,7 +35,7 @@ test("logical check metrics preserve per-group last success and use bounded fail
   }), /bounded vocabulary/u)
 })
 
-test("on-demand group freshness is disabled and environment labels are restricted", () => {
+test("test scheduled groups have independent freshness limits and on-demand groups remain disabled", () => {
   const metrics = renderKeepaliveCheckMetrics({
     environment: "test",
     checkedAt: 100,
@@ -45,6 +45,28 @@ test("on-demand group freshness is disabled and environment labels are restricte
     },
   })
   assert.match(metrics, /environment="test",group="parent_profile"\} 0\.000000/u)
-  assert.match(metrics, /environment="test",group="engagement"\} 0\.000000/u)
+  assert.match(metrics, /environment="test",group="engagement"\} 180\.000000/u)
+  assert.doesNotMatch(metrics, /environment="dev"/u)
+  const scheduledGroups = renderKeepaliveCheckMetrics({
+    environment: "test",
+    checkedAt: 100,
+    results: {
+      assignment_notifications: { success: true, durationSeconds: 1 },
+      parent_reports: { success: true, durationSeconds: 1 },
+      student_profile_enrollment: { success: true, durationSeconds: 1 },
+    },
+  })
+  for (const group of ["assignment_notifications", "parent_reports", "student_profile_enrollment"]) {
+    assert.match(scheduledGroups, new RegExp(`sis_keepalive_check_stale_after_seconds\\{environment="test",group="${group}"\\} 180\\.000000`, "u"))
+  }
   assert.throws(() => renderKeepaliveCheckMetrics({ environment: "production", checkedAt: 100, results: {} }), /controlled environment/u)
+})
+
+test("dev parent profile workflow has a bounded fifteen-minute schedule freshness limit", () => {
+  const metrics = renderKeepaliveCheckMetrics({
+    environment: "dev",
+    checkedAt: 300,
+    results: { parent_profile: { success: true, durationSeconds: 12 } },
+  })
+  assert.match(metrics, /sis_keepalive_check_stale_after_seconds\{environment="dev",group="parent_profile"\} 1200\.000000/u)
 })

@@ -97,28 +97,52 @@ function createMockRedisFactory() {
 }
 
 test("session store uses memory driver when redis is not configured", async () => {
-  const store = createStudentAdminSessionStore({
-    driver: "auto",
-    redisUrl: "",
-    ttlSeconds: 120,
-  })
+  const priorRedisSessionUrl = process.env.REDIS_SESSION_URL
+  const priorRedisUrl = process.env.REDIS_URL
+  delete process.env.REDIS_SESSION_URL
+  delete process.env.REDIS_URL
 
-  assert.equal(store.driver, "memory")
-  const session = await store.createSession({ username: "memory-user", role: "admin" })
-  const loaded = await store.getSession(session.id)
-  assert.equal(loaded?.username, "memory-user")
-  await store.close()
+  try {
+    const store = createStudentAdminSessionStore({
+      driver: "auto",
+      redisUrl: "",
+      ttlSeconds: 120,
+    })
+
+    assert.equal(store.driver, "memory")
+    const session = await store.createSession({ username: "memory-user", role: "admin" })
+    const loaded = await store.getSession(session.id)
+    assert.equal(loaded?.username, "memory-user")
+    await store.close()
+  } finally {
+    if (priorRedisSessionUrl === undefined) delete process.env.REDIS_SESSION_URL
+    else process.env.REDIS_SESSION_URL = priorRedisSessionUrl
+    if (priorRedisUrl === undefined) delete process.env.REDIS_URL
+    else process.env.REDIS_URL = priorRedisUrl
+  }
 })
 
 test("session store throws when redis driver is required without redis url", () => {
-  assert.throws(
-    () =>
-      createStudentAdminSessionStore({
-        driver: "redis",
-        redisUrl: "",
-      }),
-    /requires REDIS_SESSION_URL or REDIS_URL/
-  )
+  const priorRedisSessionUrl = process.env.REDIS_SESSION_URL
+  const priorRedisUrl = process.env.REDIS_URL
+  delete process.env.REDIS_SESSION_URL
+  delete process.env.REDIS_URL
+
+  try {
+    assert.throws(
+      () =>
+        createStudentAdminSessionStore({
+          driver: "redis",
+          redisUrl: "",
+        }),
+      /requires REDIS_SESSION_URL or REDIS_URL/
+    )
+  } finally {
+    if (priorRedisSessionUrl === undefined) delete process.env.REDIS_SESSION_URL
+    else process.env.REDIS_SESSION_URL = priorRedisSessionUrl
+    if (priorRedisUrl === undefined) delete process.env.REDIS_URL
+    else process.env.REDIS_URL = priorRedisUrl
+  }
 })
 
 test("session store falls back to memory when redis auto-connect fails", async () => {

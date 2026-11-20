@@ -5,12 +5,13 @@ import { parse as parseDotenv } from "dotenv"
 import { chromium } from "playwright"
 import { resolveStandardParentCredentials } from "./helpers/standard-portal-credentials.mjs"
 import "../tools/assert-prisma-environment.mjs"
+import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
 
 const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE)
   ? parseDotenv(fs.readFileSync(ENV_FILE))
   : {}
-const ORIGIN = (process.env.PARENT_PORTAL_PERF_ORIGIN || "http://127.0.0.1:8788").replace(/\/$/u, "")
+const ORIGIN = resolvePortalTestOrigin({ overrideName: "PARENT_PORTAL_PERF_ORIGIN" })
 const VIEWPORTS = [
   { name: "desktop", width: 1440, height: 900 },
   { name: "mobile", width: 390, height: 844 },

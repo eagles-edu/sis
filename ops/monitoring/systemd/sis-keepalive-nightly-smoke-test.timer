@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the SIS test-mirror keep-alive smoke suite nightly
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+AccuracySec=1m
+Persistent=true
+Unit=sis-keepalive-nightly-smoke-test.service
+
+[Install]
+WantedBy=timers.target

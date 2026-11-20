@@ -44,6 +44,7 @@
 
 ## Test Status
 
+- The test-mirror keep-alive nightly job completed its first full run on 2026-11-21: all 165 `test/*.spec.mjs` files passed against `sis-test` in 1,011.6 seconds, including applicable authenticated browser checks. The timer is enabled for 04:00 ICT; Prometheus failure/staleness alerts and bounded success metrics are active. Dev has fresh scheduled checks for all ten logical groups; test currently schedules four engagement groups. Six test group monitors and a process-wide no-external-message guarantee remain open; see KA-174–KA-179 in `docs/keep-alive-plan.md` and the coverage matrix in `docs/monitoring.md`.
 - Latest targeted theme verification in this session: pass, including `node --test test/admin-theme-tokens.spec.mjs`, `node --test test/portal-dark-surface-leaks.playwright.spec.mjs`, `node --test test/portal-shell-background.playwright.spec.mjs`, `npm run build:admin-assets:check`, and `npx html-validate web-asset/admin/student-admin.html web-asset/admin/student-points.html web-asset/admin/grades-tabulator.html`.
 - The outbox/worker cutover is now covered by the passing suite; no extra rerun was needed after the last doc-only update.
 - Admin load-path verification passed on the test mirror and dev runtime: the async experiment reached a Lighthouse reference of performance 90, TBT 250 ms, FCP 0.4 s, and LCP 0.6 s, but screenshot traces exposed a FOUC that Lighthouse/CLS did not report. The experiment was rolled back to blocking full CSS. Authenticated theme toggle and reload persistence passed without browser errors.

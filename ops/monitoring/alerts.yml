@@ -291,6 +291,38 @@ groups:
 
   - name: sis-student-records-and-engagement-test
     rules:
+      - alert: TestKeepaliveCheckFailed
+        expr: sis_keepalive_check_failure_info{environment="test",code!="none"} == 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A scheduled SIS test-mirror keep-alive subsystem check failed
+
+      - alert: TestKeepaliveCheckStale
+        expr: (time() - sis_keepalive_check_last_check_timestamp_seconds{environment="test"}) > on(environment, group) group_left sis_keepalive_check_stale_after_seconds{environment="test"} and on(environment, group) sis_keepalive_check_stale_after_seconds{environment="test"} > 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: A scheduled SIS test-mirror keep-alive subsystem check is stale
+
+      - alert: TestKeepaliveNightlySmokeFailed
+        expr: sis_keepalive_nightly_smoke_success{environment="test"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: The full test-mirror nightly smoke suite failed
+
+      - alert: TestKeepaliveNightlySmokeStale
+        expr: absent(sis_keepalive_nightly_smoke_last_check_timestamp_seconds{environment="test"}) or time() - sis_keepalive_nightly_smoke_last_check_timestamp_seconds{environment="test"} > 93600
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: The test-mirror nightly smoke suite has not reported within 26 hours
+
       - alert: TestEngagementMonitorStale
         expr: absent(sis_engagement_workflow_last_check_timestamp_seconds{environment="test"}) or time() - sis_engagement_workflow_last_check_timestamp_seconds{environment="test"} > 180
         for: 30s

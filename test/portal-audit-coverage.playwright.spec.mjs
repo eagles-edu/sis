@@ -10,8 +10,9 @@ import {
   resolveStandardParentCredentials,
   resolveStandardStudentCredentials,
 } from "./helpers/standard-portal-credentials.mjs"
+import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
 
-const ORIGIN = process.env.PORTAL_AUDIT_ORIGIN || "http://127.0.0.1:8788"
+const ORIGIN = resolvePortalTestOrigin({ overrideName: "PORTAL_AUDIT_ORIGIN" })
 const ENV_PATH = String(process.env.SIS_ENV_FILE || "").trim()
 
 function readEnv(filePath) {

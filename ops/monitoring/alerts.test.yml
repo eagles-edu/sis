@@ -6,6 +6,81 @@ evaluation_interval: 30s
 tests:
   - interval: 30s
     input_series:
+      - series: 'sis_keepalive_check_failure_info{environment="test",group="engagement",code="workflow_failed"}'
+        values: '1x5'
+    alert_rule_test:
+      - eval_time: 30s
+        alertname: TestKeepaliveCheckFailed
+        exp_alerts: []
+      - eval_time: 1m
+        alertname: TestKeepaliveCheckFailed
+        exp_alerts:
+          - exp_labels:
+              code: workflow_failed
+              environment: test
+              group: engagement
+              severity: warning
+            exp_annotations:
+              summary: A scheduled SIS test-mirror keep-alive subsystem check failed
+
+  - interval: 30s
+    input_series:
+      - series: 'sis_keepalive_check_last_check_timestamp_seconds{environment="test",group="engagement"}'
+        values: '0 0 0 0 0 0 0 0 0 0 300 300'
+      - series: 'sis_keepalive_check_stale_after_seconds{environment="test",group="engagement"}'
+        values: '180x12'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: TestKeepaliveCheckStale
+        exp_alerts:
+          - exp_labels:
+              environment: test
+              group: engagement
+              severity: warning
+            exp_annotations:
+              summary: A scheduled SIS test-mirror keep-alive subsystem check is stale
+      - eval_time: 5m
+        alertname: TestKeepaliveCheckStale
+        exp_alerts: []
+
+  - interval: 30s
+    input_series:
+      - series: 'sis_keepalive_nightly_smoke_success{environment="test"}'
+        values: '0x5'
+    alert_rule_test:
+      - eval_time: 30s
+        alertname: TestKeepaliveNightlySmokeFailed
+        exp_alerts: []
+      - eval_time: 1m
+        alertname: TestKeepaliveNightlySmokeFailed
+        exp_alerts:
+          - exp_labels:
+              environment: test
+              severity: warning
+            exp_annotations:
+              summary: The full test-mirror nightly smoke suite failed
+
+  - interval: 30s
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: TestKeepaliveNightlySmokeStale
+        exp_alerts:
+          - exp_labels:
+              environment: test
+              severity: warning
+            exp_annotations:
+              summary: The test-mirror nightly smoke suite has not reported within 26 hours
+      - eval_time: 5m
+        alertname: TestKeepaliveNightlySmokeStale
+        exp_alerts:
+          - exp_labels:
+              environment: test
+              severity: warning
+            exp_annotations:
+              summary: The test-mirror nightly smoke suite has not reported within 26 hours
+
+  - interval: 30s
+    input_series:
       - series: 'sis_async_side_effect_failed_jobs_24h{environment="test"}'
         values: '1x5'
     alert_rule_test:

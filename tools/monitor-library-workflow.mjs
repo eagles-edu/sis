@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
+import { dictionary as cmuDictionary } from "cmu-pronouncing-dictionary"
 import { closeSharedPrismaClient, getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
 import { resolveStandardStudentCredentials } from "../test/helpers/standard-portal-credentials.mjs"
 import { renderKeepaliveCheckMetrics } from "../src/infra/observability/keepalive-check-metrics.mjs"
@@ -11,6 +12,31 @@ const METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/library-w
 const CHECK_TIMEOUT_MS = 10000
 const DICTIONARY_BUILDER_TIMEOUT_MS = 240000
 const OPEN_REVIEW_STATUSES = ["pending_review", "legacy_pending_review"]
+export const SYNTHETIC_VOCABULARY_CANDIDATES = Object.freeze([
+  { english: "monitor", syllabication: "MON-i-tor" },
+  { english: "canopy", syllabication: "CAN-o-py" },
+  { english: "tomato", syllabication: "to-MA-to" },
+  { english: "student", syllabication: "STU-dent" },
+  { english: "parent", syllabication: "PAR-ent" },
+  { english: "family", syllabication: "FAM-i-ly" },
+  { english: "window", syllabication: "WIN-dow" },
+  { english: "planet", syllabication: "PLAN-et" },
+  { english: "garden", syllabication: "GAR-den" },
+  { english: "button", syllabication: "BUT-ton" },
+  { english: "pencil", syllabication: "PEN-cil" },
+  { english: "lemon", syllabication: "LEM-on" },
+  { english: "rabbit", syllabication: "RAB-bit" },
+  { english: "ticket", syllabication: "TICK-et" },
+  { english: "minute", syllabication: "MIN-ute" },
+  { english: "market", syllabication: "MAR-ket" },
+  { english: "sunset", syllabication: "SUN-set" },
+  { english: "silver", syllabication: "SIL-ver" },
+  { english: "river", syllabication: "RIV-er" },
+  { english: "yellow", syllabication: "YEL-low" },
+  { english: "flower", syllabication: "FLOW-er" },
+  { english: "pocket", syllabication: "POCK-et" },
+  { english: "basket", syllabication: "BAS-ket" },
+])
 
 export function assertDevEnvironment(environment = process.env) {
   if (
@@ -142,12 +168,24 @@ function sessionCookie(result, name) {
   return match ? `${name}=${match[1]}` : ""
 }
 
-function libraryPayload(english) {
+export function selectSyntheticVocabularyCandidate(existingKeys = [], dictionary = cmuDictionary, offset = 0) {
+  const existing = new Set(existingKeys.map((key) => String(key || "").trim().toLocaleLowerCase("en-US")))
+  const candidates = SYNTHETIC_VOCABULARY_CANDIDATES.filter((candidate) => Object.hasOwn(dictionary, candidate.english))
+  if (!candidates.length) return null
+  const start = Math.abs(Number.isInteger(offset) ? offset : 0) % candidates.length
+  for (let index = 0; index < candidates.length; index += 1) {
+    const candidate = candidates[(start + index) % candidates.length]
+    if (!existing.has(candidate.english)) return candidate
+  }
+  return null
+}
+
+function libraryPayload(english, syllabication) {
   return {
     english,
     partOfSpeech: "noun",
     vietnamese: "monitor sample",
-    syllabication: english,
+    syllabication,
     definition: "Synthetic monitor contribution used to check Library saving and review.",
     countability: "countable",
     nounType: "common",
@@ -220,8 +258,9 @@ export async function runLibraryWorkflowMonitor({
   const adminUsername = String(environment.STUDENT_ADMIN_USER || "").trim()
   const adminPassword = String(environment.STUDENT_ADMIN_PASS || "")
   const stamp = randomUUID().replaceAll("-", "")
-  const english = `librarymonitor${stamp}`
   const sourceId = `library-monitor-${stamp}`
+  let english = ""
+  let syllabication = ""
   let studentRefId = ""
   let apiAvailable = false
   let databaseAvailable = false
@@ -247,11 +286,19 @@ export async function runLibraryWorkflowMonitor({
     const student = await prisma.student.findUnique({ where: { eaglesId: studentCredentials.user }, select: { id: true } })
     if (!student?.id || !studentCredentials.pass) throw new Error("Standard student account unavailable")
     studentRefId = student.id
-    const existingEntry = await prisma.libraryEntry.findUnique({
-      where: { normalizedKey_partOfSpeech: { normalizedKey: english, partOfSpeech: "noun" } },
-      select: { id: true },
+    const candidateWords = SYNTHETIC_VOCABULARY_CANDIDATES.map(({ english: word }) => word)
+    const existingEntries = await prisma.libraryEntry.findMany({
+      where: { normalizedKey: { in: candidateWords }, partOfSpeech: "noun" },
+      select: { normalizedKey: true },
     })
-    if (existingEntry) throw new Error("Synthetic monitor key already exists")
+    const candidate = selectSyntheticVocabularyCandidate(
+      existingEntries.map((entry) => entry.normalizedKey),
+      cmuDictionary,
+      Number.parseInt(stamp.slice(0, 8), 16),
+    )
+    if (!candidate) throw new Error("No unused validated synthetic Library word is available")
+    english = candidate.english
+    syllabication = candidate.syllabication
     const queue = await collectQueueMetrics(prisma, clock())
     openReviewCount = queue.openReviewCount
     oldestOpenReviewAgeSeconds = queue.oldestOpenReviewAgeSeconds
@@ -262,8 +309,7 @@ export async function runLibraryWorkflowMonitor({
       health.payload?.studentAdminRuntime?.sessionRedis?.redisConnected &&
       health.payload?.studentAdminRuntime?.sessionRedis?.redisReady,
     )
-    const dictionaryModule = await import("cmu-pronouncing-dictionary")
-    cmuDictionaryAvailable = Object.keys(dictionaryModule.dictionary || {}).length > 0
+    cmuDictionaryAvailable = Object.keys(cmuDictionary || {}).length > 0
 
     const adminLogin = await requestJson(fetchImpl, "/api/admin/auth/login", {
       method: "POST",
@@ -301,7 +347,7 @@ export async function runLibraryWorkflowMonitor({
       throw new Error("A required Library access dependency is unavailable")
     }
 
-    const payload = libraryPayload(english)
+    const payload = libraryPayload(english, syllabication)
     const saved = await requestJson(fetchImpl, "/api/student/library/submissions", {
       cookie: studentCookie,
       method: "POST",
