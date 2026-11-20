@@ -4,7 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import test from "node:test"
 import {
-  assertDevEnvironment,
+  assertMonitorEnvironment,
   cleanupSynthetic,
   readLastSuccessTimestamp,
   renderLibraryMetrics,
@@ -46,11 +46,11 @@ function monitorMetrics(overrides = {}) {
   })
 }
 
-test("Library workflow monitor requires the explicit dev-owned environment", () => {
-  assert.doesNotThrow(() => assertDevEnvironment(devEnvironment()))
-  assert.throws(() => assertDevEnvironment({ NODE_ENV: "test", SIS_ENV_FILE: ".env.test", DOTENV_CONFIG_PATH: ".env.test" }), /explicit development environment/u)
-  assert.throws(() => assertDevEnvironment({ NODE_ENV: "development", SIS_ENV_FILE: ".env", DOTENV_CONFIG_PATH: ".env" }), /explicit development environment/u)
-  assert.throws(() => assertDevEnvironment({ NODE_ENV: "development", SIS_ENV_FILE: ".env.dev", DOTENV_CONFIG_PATH: ".env.test" }), /explicit development environment/u)
+test("Library workflow monitor accepts only exact owned dev and test tuples", () => {
+  assert.equal(assertMonitorEnvironment(devEnvironment()).label, "dev")
+  assert.equal(assertMonitorEnvironment({ NODE_ENV: "test", SIS_ENV_FILE: ".env.test", DOTENV_CONFIG_PATH: ".env.test" }).label, "test")
+  assert.throws(() => assertMonitorEnvironment({ NODE_ENV: "development", SIS_ENV_FILE: ".env", DOTENV_CONFIG_PATH: ".env" }), /matching explicit dev or test/u)
+  assert.throws(() => assertMonitorEnvironment({ NODE_ENV: "development", SIS_ENV_FILE: ".env.dev", DOTENV_CONFIG_PATH: ".env.test" }), /matching explicit dev or test/u)
 })
 
 test("Library metrics expose access, save, review, queue-age, and dependency results without identity labels", () => {
@@ -74,6 +74,13 @@ test("Library metrics expose access, save, review, queue-age, and dependency res
   assert.doesNotMatch(metrics, /environment="(?:test|production)"|cookie|password|@[a-z0-9.-]+/iu)
   assert.equal(metrics.split("\n").filter((line) => line.startsWith("sis_library_") && !line.includes('{environment="dev"}')).length, 0)
   assert.throws(() => monitorMetrics({ openReviewCount: -1 }), /finite non-negative/u)
+})
+
+test("test Library and Dictionary Builder metrics retain test-only labels", () => {
+  const metrics = monitorMetrics({ environment: "test" })
+  assert.match(metrics, /sis_library_workflow_check_success\{environment="test"\} 1\.000000/u)
+  assert.match(metrics, /sis_library_dictionary_builder_check_success\{environment="test"\} 1\.000000/u)
+  assert.doesNotMatch(metrics, /environment="dev"/u)
 })
 
 test("Dictionary Builder availability summary contains only aggregate provider counts", () => {

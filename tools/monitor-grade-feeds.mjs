@@ -5,10 +5,9 @@ import { randomUUID } from "node:crypto"
 import { pathToFileURL } from "node:url"
 import { closeSharedPrismaClient, getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
 import { renderKeepaliveCheckMetrics } from "../src/infra/observability/keepalive-check-metrics.mjs"
+import { resolveKeepaliveMonitorEnvironment } from "./keepalive-monitor-environment.mjs"
 
-const DEV_ORIGIN = "http://127.0.0.1:8788"
-const METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/grade-feeds-dev.prom")
-const REQUEST_METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/sis-dev-request-metrics.prom")
+const METRICS_DIRECTORY = path.join(process.cwd(), "runtime-data/prometheus")
 const CHECK_TIMEOUT_MS = 10000
 const SOURCE_KEYS = ["moodle", "google_forms", "other"]
 
@@ -44,15 +43,12 @@ function escapeLabel(value) {
   return text(value).replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/"/g, '\\"')
 }
 
-export function assertDevEnvironment(environment = process.env) {
-  if (
-    text(environment.NODE_ENV) !== "development" ||
-    text(environment.SIS_ENV_FILE) !== ".env.dev" ||
-    text(environment.DOTENV_CONFIG_PATH) !== ".env.dev"
-  ) throw new Error("Grade feed monitor requires the explicit development environment")
+export function assertMonitorEnvironment(environment = process.env) {
+  return resolveKeepaliveMonitorEnvironment(environment)
 }
 
 export function renderGradeFeedMetrics({
+  environment = "dev",
   checkedAt,
   lastSuccessTimestamp,
   success,
@@ -70,14 +66,14 @@ export function renderGradeFeedMetrics({
   oldestUnmatchedAgeSeconds,
 }) {
   const values = [
-    ["sis_grade_feed_monitor_success", "Whether the latest development grade and feed monitor completed its database and authenticated table checks.", success ? 1 : 0],
-    ["sis_grade_feed_monitor_last_check_timestamp_seconds", "Unix timestamp of the latest development grade and feed monitor run.", checkedAt],
-    ["sis_grade_feed_monitor_last_success_timestamp_seconds", "Unix timestamp of the latest successful development grade and feed monitor run.", lastSuccessTimestamp],
-    ["sis_grade_feed_database_available", "Whether the development grade and feed database query succeeded against sis_dev.", databaseAvailable ? 1 : 0],
-    ["sis_grade_feed_table_available", "Whether the authenticated development admin student table API returned HTTP success.", tableAvailable ? 1 : 0],
-    ["sis_attendance_reporting_available", "Whether the authenticated development admin dashboard returned its attendance risk summary.", attendanceReportingAvailable ? 1 : 0],
-    ["sis_attendance_school_setup_valid", "Whether the authenticated development SIS config API reports valid attendance school setup.", attendanceSchoolSetupValid ? 1 : 0],
-    ["sis_grade_feed_request_metrics_available", "Whether the development request instrumentation textfile exists.", requestMetricsAvailable ? 1 : 0],
+    ["sis_grade_feed_monitor_success", `Whether the latest ${environment} grade and feed monitor completed its database and authenticated table checks.`, success ? 1 : 0],
+    ["sis_grade_feed_monitor_last_check_timestamp_seconds", `Unix timestamp of the latest ${environment} grade and feed monitor run.`, checkedAt],
+    ["sis_grade_feed_monitor_last_success_timestamp_seconds", `Unix timestamp of the latest successful ${environment} grade and feed monitor run.`, lastSuccessTimestamp],
+    ["sis_grade_feed_database_available", `Whether the ${environment} grade and feed database query succeeded.`, databaseAvailable ? 1 : 0],
+    ["sis_grade_feed_table_available", `Whether the authenticated ${environment} admin student table API returned HTTP success.`, tableAvailable ? 1 : 0],
+    ["sis_attendance_reporting_available", `Whether the authenticated ${environment} admin dashboard returned its attendance risk summary.`, attendanceReportingAvailable ? 1 : 0],
+    ["sis_attendance_school_setup_valid", `Whether the authenticated ${environment} SIS config API reports valid attendance school setup.`, attendanceSchoolSetupValid ? 1 : 0],
+    ["sis_grade_feed_request_metrics_available", `Whether the ${environment} request instrumentation textfile exists.`, requestMetricsAvailable ? 1 : 0],
     ["sis_grade_feed_incoming_unmatched", "Number of unmatched incoming exercise results in active queued or temporary review states.", unmatchedCount],
     ["sis_grade_feed_incoming_queued", "Number of incoming exercise results in queued state.", queuedCount],
     ["sis_grade_feed_incoming_temporary", "Number of incoming exercise results in temporary state.", temporaryCount],
@@ -87,7 +83,7 @@ export function renderGradeFeedMetrics({
   const lines = values.flatMap(([name, help, value]) => [
     `# HELP ${name} ${help}`,
     `# TYPE ${name} gauge`,
-    `${name}{environment="dev"} ${safeMetricNumber(value)}`,
+    `${name}{environment="${environment}"} ${safeMetricNumber(value)}`,
   ])
 
   lines.push(
@@ -109,25 +105,25 @@ export function renderGradeFeedMetrics({
     const exercise = exerciseSources[source] || { count: 0, latestTimestamp: 0 }
     const grades = gradeSources[source] || { count: 0, latestTimestamp: 0 }
     lines.push(
-      `sis_grade_feed_exercise_submission_rows{environment="dev",source="${source}"} ${safeMetricNumber(exercise.count)}`,
-      `sis_grade_feed_exercise_submission_latest_ingested_timestamp_seconds{environment="dev",source="${source}"} ${safeMetricNumber(exercise.latestTimestamp)}`,
-      `sis_grade_feed_grade_rows{environment="dev",source="${source}"} ${safeMetricNumber(grades.count)}`,
-      `sis_grade_feed_grade_latest_updated_timestamp_seconds{environment="dev",source="${source}"} ${safeMetricNumber(grades.latestTimestamp)}`,
+      `sis_grade_feed_exercise_submission_rows{environment="${environment}",source="${source}"} ${safeMetricNumber(exercise.count)}`,
+      `sis_grade_feed_exercise_submission_latest_ingested_timestamp_seconds{environment="${environment}",source="${source}"} ${safeMetricNumber(exercise.latestTimestamp)}`,
+      `sis_grade_feed_grade_rows{environment="${environment}",source="${source}"} ${safeMetricNumber(grades.count)}`,
+      `sis_grade_feed_grade_latest_updated_timestamp_seconds{environment="${environment}",source="${source}"} ${safeMetricNumber(grades.latestTimestamp)}`,
     )
     if (exercise.latestTimestamp > 0) {
-      lines.push(`sis_grade_feed_exercise_submission_latest_age_seconds{environment="dev",source="${source}"} ${safeMetricNumber(Math.max(0, checkedAt - exercise.latestTimestamp))}`)
+      lines.push(`sis_grade_feed_exercise_submission_latest_age_seconds{environment="${environment}",source="${source}"} ${safeMetricNumber(Math.max(0, checkedAt - exercise.latestTimestamp))}`)
     }
     if (grades.latestTimestamp > 0) {
-      lines.push(`sis_grade_feed_grade_latest_age_seconds{environment="dev",source="${source}"} ${safeMetricNumber(Math.max(0, checkedAt - grades.latestTimestamp))}`)
+      lines.push(`sis_grade_feed_grade_latest_age_seconds{environment="${environment}",source="${source}"} ${safeMetricNumber(Math.max(0, checkedAt - grades.latestTimestamp))}`)
     }
   }
   return `${lines.join("\n")}\n`
 }
 
-function readLastSuccessTimestamp(metricsFile) {
+function readLastSuccessTimestamp(metricsFile, environment) {
   if (!fs.existsSync(metricsFile)) return 0
   const contents = fs.readFileSync(metricsFile, "utf8")
-  const match = contents.match(/^sis_grade_feed_monitor_last_success_timestamp_seconds\{environment="dev"\} ([0-9]+(?:\.[0-9]+)?)$/mu)
+  const match = contents.match(new RegExp(`^sis_grade_feed_monitor_last_success_timestamp_seconds\\{environment="${environment}"\\} ([0-9]+(?:\\.[0-9]+)?)$`, "mu"))
   return match ? Number(match[1]) : 0
 }
 
@@ -144,7 +140,7 @@ export function writeMetricsAtomically(metricsFile, contents) {
   }
 }
 
-async function checkAdminTableApi(environment, origin = DEV_ORIGIN) {
+async function checkAdminTableApi(environment, origin) {
   const username = text(environment.STUDENT_ADMIN_USER)
   const password = text(environment.STUDENT_ADMIN_PASS)
   if (!username || !password) return false
@@ -174,7 +170,7 @@ async function checkAdminTableApi(environment, origin = DEV_ORIGIN) {
   }
 }
 
-async function checkAttendanceApi(environment, origin = DEV_ORIGIN) {
+async function checkAttendanceApi(environment, origin) {
   const username = text(environment.STUDENT_ADMIN_USER)
   const password = text(environment.STUDENT_ADMIN_PASS)
   if (!username || !password) return { reportingAvailable: false, schoolSetupValid: false }
@@ -229,9 +225,9 @@ async function checkAttendanceApi(environment, origin = DEV_ORIGIN) {
   }
 }
 
-async function collectDatabaseMetrics(prisma, now) {
+async function collectDatabaseMetrics(prisma, now, context) {
   const database = await prisma.$queryRaw`SELECT current_database() AS name`
-  if (database[0]?.name !== "sis_dev") throw new Error("Grade feed monitor connected to an unexpected database")
+  if (database[0]?.name !== context.databaseName) throw new Error("Grade feed monitor connected to an unexpected database")
 
   const [exerciseRows, gradeRows, unmatchedCount, queuedCount, temporaryCount, failedIncomingCount, oldestUnmatched] = await Promise.all([
     prisma.exerciseSubmission.groupBy({
@@ -289,14 +285,16 @@ async function collectDatabaseMetrics(prisma, now) {
 
 export async function runGradeFeedMonitor({
   environment = process.env,
-  metricsFile = METRICS_FILE,
-  requestMetricsFile = REQUEST_METRICS_FILE,
+  metricsFile = "",
+  requestMetricsFile = "",
   prismaClient = null,
   tableApiCheck = checkAdminTableApi,
   attendanceApiCheck = checkAttendanceApi,
   clock = () => Date.now(),
 } = {}) {
-  assertDevEnvironment(environment)
+  const context = assertMonitorEnvironment(environment)
+  metricsFile ||= path.join(METRICS_DIRECTORY, `grade-feeds-${context.label}.prom`)
+  requestMetricsFile ||= path.join(METRICS_DIRECTORY, `sis-${context.label}-request-metrics.prom`)
   const started = clock()
   const prisma = prismaClient || await getSharedPrismaClient()
   let databaseAvailable = false
@@ -314,18 +312,18 @@ export async function runGradeFeedMonitor({
   }
 
   try {
-    observed = await collectDatabaseMetrics(prisma, clock())
+    observed = await collectDatabaseMetrics(prisma, clock(), context)
     databaseAvailable = true
   } catch {
     databaseAvailable = false
   }
   try {
-    tableAvailable = Boolean(await tableApiCheck(environment))
+    tableAvailable = Boolean(await tableApiCheck(environment, context.origin))
   } catch {
     tableAvailable = false
   }
   try {
-    const attendanceStatus = await attendanceApiCheck(environment)
+    const attendanceStatus = await attendanceApiCheck(environment, context.origin)
     attendanceReportingAvailable = Boolean(attendanceStatus?.reportingAvailable)
     attendanceSchoolSetupValid = Boolean(attendanceStatus?.schoolSetupValid)
   } catch {
@@ -337,10 +335,10 @@ export async function runGradeFeedMonitor({
   const gradeFeedSuccess = databaseAvailable && tableAvailable
   const attendanceSuccess = attendanceReportingAvailable && attendanceSchoolSetupValid
   const success = gradeFeedSuccess && attendanceSuccess
-  const previousSuccess = readLastSuccessTimestamp(metricsFile)
+  const previousSuccess = readLastSuccessTimestamp(metricsFile, context.label)
   const durationSeconds = Math.max(0, clock() - started) / 1000
   const groupMetrics = renderKeepaliveCheckMetrics({
-    environment: "dev",
+    environment: context.label,
     checkedAt,
     previousMetrics: fs.existsSync(metricsFile) ? fs.readFileSync(metricsFile, "utf8") : "",
     results: {
@@ -349,6 +347,7 @@ export async function runGradeFeedMonitor({
     },
   })
   const metrics = renderGradeFeedMetrics({
+    environment: context.label,
     checkedAt,
     lastSuccessTimestamp: success ? checkedAt : previousSuccess,
     success,
@@ -364,7 +363,7 @@ export async function runGradeFeedMonitor({
   } finally {
     if (!prismaClient) await closeSharedPrismaClient()
   }
-  process.stdout.write(`grade_feed_monitor environment=dev result=${success ? "pass" : "fail"} database=${databaseAvailable ? "up" : "down"} table=${tableAvailable ? "up" : "down"} attendance_setup=${attendanceSchoolSetupValid ? "ok" : "invalid"} attendance_reporting=${attendanceReportingAvailable ? "up" : "down"} unmatched=${observed.unmatchedCount} queued=${observed.queuedCount} write_metrics=${fs.existsSync(requestMetricsFile) ? "available" : "missing"} duration_ms=${Math.max(0, clock() - started)}\n`)
+  process.stdout.write(`grade_feed_monitor environment=${context.label} result=${success ? "pass" : "fail"} database=${databaseAvailable ? "up" : "down"} table=${tableAvailable ? "up" : "down"} attendance_setup=${attendanceSchoolSetupValid ? "ok" : "invalid"} attendance_reporting=${attendanceReportingAvailable ? "up" : "down"} unmatched=${observed.unmatchedCount} queued=${observed.queuedCount} write_metrics=${fs.existsSync(requestMetricsFile) ? "available" : "missing"} duration_ms=${Math.max(0, clock() - started)}\n`)
   return success
 }
 
@@ -372,7 +371,7 @@ function main() {
   runGradeFeedMonitor().then((success) => {
     process.exitCode = success ? 0 : 1
   }).catch(() => {
-    process.stderr.write("grade_feed_monitor environment=dev result=fail reason=configuration_or_monitor_error\n")
+    process.stderr.write("grade_feed_monitor result=fail reason=configuration_or_monitor_error\n")
     process.exitCode = 1
   })
 }

@@ -1,0 +1,23 @@
+[Unit]
+Description=Run authenticated SIS test grade, feed, and attendance monitor
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/eagles/dockerz/sis
+Environment=SIS_ENV_FILE=.env.test
+Environment=DOTENV_CONFIG_PATH=.env.test
+Environment=NODE_ENV=test
+Environment=SIS_REQUEST_METRICS_FILE=runtime-data/prometheus/sis-test-request-metrics.prom
+ExecStart=/bin/bash -lc 'cd /home/eagles/dockerz/sis && npm run monitor:grades:test'
+TimeoutStartSec=60s
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/home/eagles/dockerz/sis/runtime-data/prometheus
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6

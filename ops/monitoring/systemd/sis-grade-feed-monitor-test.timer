@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh SIS test grade, feed, and attendance metrics every five minutes
+
+[Timer]
+OnBootSec=90s
+OnUnitActiveSec=5m
+AccuracySec=10s
+Persistent=true
+Unit=sis-grade-feed-monitor-test.service
+
+[Install]
+WantedBy=timers.target

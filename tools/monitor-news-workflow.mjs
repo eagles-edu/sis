@@ -6,18 +6,14 @@ import { closeSharedPrismaClient, getSharedPrismaClient } from "../src/infra/db/
 import { validateVocabularyEntry } from "../src/modules/admin/vocabulary-syllabication.mjs"
 import { resolveStandardStudentCredentials } from "../test/helpers/standard-portal-credentials.mjs"
 import { renderKeepaliveCheckMetrics } from "../src/infra/observability/keepalive-check-metrics.mjs"
+import { assertKeepaliveMonitorDatabase, resolveKeepaliveMonitorEnvironment } from "./keepalive-monitor-environment.mjs"
 
-const DEV_ORIGIN = "http://127.0.0.1:8788"
-const METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/news-workflow-dev.prom")
+const METRICS_DIRECTORY = path.join(process.cwd(), "runtime-data/prometheus")
 const OPEN_REVIEW_STATUSES = ["submitted", "revision-requested"]
 const REQUEST_TIMEOUT_MS = 20000
 
-export function assertNewsMonitorDevEnvironment(environment = process.env) {
-  if (
-    String(environment.NODE_ENV || "").trim() !== "development" ||
-    String(environment.SIS_ENV_FILE || "").trim() !== ".env.dev" ||
-    String(environment.DOTENV_CONFIG_PATH || "").trim() !== ".env.dev"
-  ) throw new Error("News workflow monitor requires the explicit development environment")
+export function assertNewsMonitorEnvironment(environment = process.env) {
+  return resolveKeepaliveMonitorEnvironment(environment)
 }
 
 function metricNumber(value) {
@@ -33,6 +29,7 @@ function timestampSeconds(value) {
 }
 
 export function renderNewsWorkflowMetrics({
+  environment = "dev",
   checkedAt,
   durationSeconds,
   checkDurationSeconds,
@@ -49,34 +46,34 @@ export function renderNewsWorkflowMetrics({
   lastSuccessTimestamp,
 }) {
   const values = [
-    ["sis_news_workflow_check_success", "Whether the latest dev News workflow monitor passed.", checkSuccess ? 1 : 0],
-    ["sis_news_workflow_check_duration_seconds", "Duration of the latest dev News workflow monitor.", durationSeconds],
-    ["sis_news_workflow_last_check_timestamp_seconds", "Unix timestamp of the latest dev News workflow monitor.", checkedAt],
-    ["sis_news_workflow_last_success_timestamp_seconds", "Unix timestamp of the latest successful dev News workflow monitor.", lastSuccessTimestamp],
-    ["sis_news_api_available", "Whether the dev SIS health endpoint is available.", apiAvailable ? 1 : 0],
-    ["sis_news_database_available", "Whether the SIS dev database is available.", databaseAvailable ? 1 : 0],
+    ["sis_news_workflow_check_success", `Whether the latest ${environment} News workflow monitor passed.`, checkSuccess ? 1 : 0],
+    ["sis_news_workflow_check_duration_seconds", `Duration of the latest ${environment} News workflow monitor.`, durationSeconds],
+    ["sis_news_workflow_last_check_timestamp_seconds", `Unix timestamp of the latest ${environment} News workflow monitor.`, checkedAt],
+    ["sis_news_workflow_last_success_timestamp_seconds", `Unix timestamp of the latest successful ${environment} News workflow monitor.`, lastSuccessTimestamp],
+    ["sis_news_api_available", `Whether the ${environment} SIS health endpoint is available.`, apiAvailable ? 1 : 0],
+    ["sis_news_database_available", `Whether the SIS ${environment} database is available.`, databaseAvailable ? 1 : 0],
     ["sis_news_check_success", "Whether the authenticated synthetic Student News Check passed.", checkSuccess ? 1 : 0],
     ["sis_news_check_duration_seconds", "Duration of the authenticated synthetic Student News Check.", checkDurationSeconds],
-    ["sis_news_language_tool_available", "Whether LanguageTool completed during the dev News Check.", languageToolAvailable ? 1 : 0],
-    ["sis_news_dictionary_available", "Whether the Merriam-Webster-backed vocabulary check was reachable in dev.", dictionaryAvailable ? 1 : 0],
+    ["sis_news_language_tool_available", `Whether LanguageTool completed during the ${environment} News Check.`, languageToolAvailable ? 1 : 0],
+    ["sis_news_dictionary_available", `Whether the Merriam-Webster-backed vocabulary check was reachable in ${environment}.`, dictionaryAvailable ? 1 : 0],
     ["sis_news_submission_success", "Whether the authenticated synthetic Student News submission succeeded.", submissionSuccess ? 1 : 0],
     ["sis_news_submission_failure", "Whether the latest authenticated synthetic Student News submission failed.", submissionSuccess ? 0 : 1],
     ["sis_news_submission_http_status", "HTTP status returned by the latest synthetic Student News submission request.", submissionHttpStatus],
-    ["sis_news_cleanup_success", "Whether the synthetic dev Student News report was removed and verified.", cleanupSuccess ? 1 : 0],
-    ["sis_news_open_review_reports", "Number of submitted dev Student News reports awaiting review.", openReviewCount],
-    ["sis_news_oldest_open_review_age_seconds", "Age in seconds of the oldest submitted dev Student News report awaiting review.", oldestOpenReviewAgeSeconds],
+    ["sis_news_cleanup_success", `Whether the synthetic ${environment} Student News report was removed and verified.`, cleanupSuccess ? 1 : 0],
+    ["sis_news_open_review_reports", `Number of submitted ${environment} Student News reports awaiting review.`, openReviewCount],
+    ["sis_news_oldest_open_review_age_seconds", `Age in seconds of the oldest submitted ${environment} Student News report awaiting review.`, oldestOpenReviewAgeSeconds],
   ]
   return values.flatMap(([name, help, value]) => [
     `# HELP ${name} ${help}`,
     `# TYPE ${name} gauge`,
-    `${name}{environment="dev"} ${metricNumber(value)}`,
+    `${name}{environment="${environment}"} ${metricNumber(value)}`,
   ]).concat("").join("\n")
 }
 
-function readLastSuccessTimestamp(metricsFile) {
+function readLastSuccessTimestamp(metricsFile, environment = "dev") {
   if (!fs.existsSync(metricsFile)) return 0
   const contents = fs.readFileSync(metricsFile, "utf8")
-  const match = contents.match(/^sis_news_workflow_last_success_timestamp_seconds\{environment="dev"\} ([0-9]+(?:\.[0-9]+)?)$/mu)
+  const match = contents.match(new RegExp(`^sis_news_workflow_last_success_timestamp_seconds\\{environment="${environment}"\\} ([0-9]+(?:\\.[0-9]+)?)$`, "mu"))
   return match ? Number(match[1]) : 0
 }
 
@@ -93,12 +90,12 @@ export function writeNewsMetricsAtomically(metricsFile, contents) {
   }
 }
 
-async function requestJson(fetchImpl, endpoint, { cookie = "", body } = {}) {
+async function requestJson(fetchImpl, endpoint, { cookie = "", body, origin = "http://127.0.0.1:8788" } = {}) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
   const started = performance.now()
   try {
-    const response = await fetchImpl(`${DEV_ORIGIN}${endpoint}`, {
+    const response = await fetchImpl(`${origin}${endpoint}`, {
       method: body === undefined ? "GET" : "POST",
       headers: {
         ...(cookie ? { cookie } : {}),
@@ -188,12 +185,14 @@ function languageToolSucceeded(payload) {
 
 export async function runNewsWorkflowMonitor({
   environment = process.env,
-  metricsFile = METRICS_FILE,
+  metricsFile = "",
   prismaClient = null,
   fetchImpl = fetch,
   clock = () => Date.now(),
 } = {}) {
-  assertNewsMonitorDevEnvironment(environment)
+  const context = assertNewsMonitorEnvironment(environment)
+  metricsFile ||= path.join(METRICS_DIRECTORY, `news-workflow-${context.label}.prom`)
+  const request = (endpoint, options = {}) => requestJson(fetchImpl, endpoint, { ...options, origin: context.origin })
   const started = clock()
   const prisma = prismaClient || await getSharedPrismaClient()
   const studentCredentials = resolveStandardStudentCredentials(environment)
@@ -222,44 +221,43 @@ export async function runNewsWorkflowMonitor({
   let failure = false
 
   try {
-    const database = await prisma.$queryRaw`SELECT current_database() AS name`
-    databaseAvailable = database[0]?.name === "sis_dev"
-    if (!databaseAvailable) throw new Error("Unexpected database")
+    await assertKeepaliveMonitorDatabase(prisma, context)
+    databaseAvailable = true
     const student = await prisma.student.findUnique({ where: { eaglesId: studentCredentials.user }, select: { id: true } })
-    if (!student?.id || !studentCredentials.pass || !adminUsername || !adminPassword) throw new Error("Configured dev accounts unavailable")
+    if (!student?.id || !studentCredentials.pass || !adminUsername || !adminPassword) throw new Error("Configured monitor accounts unavailable")
     studentRefId = student.id
     const queue = await collectQueueMetrics(prisma, clock())
     openReviewCount = queue.openReviewCount
     oldestOpenReviewAgeSeconds = queue.oldestOpenReviewAgeSeconds
 
-    const health = await requestJson(fetchImpl, "/healthz")
+    const health = await request("/healthz")
     apiAvailable = health.ok && health.payload?.status === "ok"
-    if (!apiAvailable) throw new Error("Dev SIS API unavailable")
+    if (!apiAvailable) throw new Error("SIS API unavailable")
 
     const dictionaryProbe = await validateVocabularyEntry({ english: "computer", syllabication: "com-PUT-er" })
     dictionaryAvailable = !dictionaryProbe.warning
 
-    const adminLogin = await requestJson(fetchImpl, "/api/admin/auth/login", {
+    const adminLogin = await request("/api/admin/auth/login", {
       body: { username: adminUsername, password: adminPassword },
     })
     const adminCookie = sessionCookie(adminLogin, "student_admin_sid")
-    const studentLogin = await requestJson(fetchImpl, "/api/student/auth/login", {
+    const studentLogin = await request("/api/student/auth/login", {
       body: { eaglesId: studentCredentials.user, password: studentCredentials.pass },
     })
     const studentCookie = sessionCookie(studentLogin, "student_portal_sid")
-    if (!adminCookie || !studentCookie) throw new Error("Authenticated dev monitor session unavailable")
-    const adminQueue = await requestJson(fetchImpl, "/api/admin/news-reports?status=all&take=1", { cookie: adminCookie })
-    if (!adminQueue.ok || !Array.isArray(adminQueue.payload?.items)) throw new Error("Authenticated dev News review access unavailable")
+    if (!adminCookie || !studentCookie) throw new Error("Authenticated monitor session unavailable")
+    const adminQueue = await request("/api/admin/news-reports?status=all&take=1", { cookie: adminCookie })
+    if (!adminQueue.ok || !Array.isArray(adminQueue.payload?.items)) throw new Error("Authenticated News review access unavailable")
 
     const report = syntheticReport(localDateKey(new Date(clock())), sourceLink, articleTitle)
-    const checked = await requestJson(fetchImpl, "/api/student/news-reports/check", { cookie: studentCookie, body: report })
+    const checked = await request("/api/student/news-reports/check", { cookie: studentCookie, body: report })
     checkDurationSeconds = checked.durationSeconds
     reportId = String(checked.payload?.item?.id || "").trim()
     checkSuccess = checked.ok && checked.payload?.saved === true && checked.payload?.mmrPassed === true && Boolean(reportId)
     languageToolAvailable = checked.ok && languageToolSucceeded(checked.payload)
     if (!checkSuccess) throw new Error("Synthetic News Check failed")
     report.reportId = reportId
-    const submitted = await requestJson(fetchImpl, "/api/student/news-reports", { cookie: studentCookie, body: report })
+    const submitted = await request("/api/student/news-reports", { cookie: studentCookie, body: report })
     submissionHttpStatus = submitted.status
     submissionMmrPassed = submitted.payload?.mmrPassed === true
     submissionDateSatisfied = submitted.payload?.dateSatisfied === true || submitted.payload?.reportDateLocked === true
@@ -293,7 +291,7 @@ export async function runNewsWorkflowMonitor({
   const success = !failure && apiAvailable && databaseAvailable && checkSuccess && languageToolAvailable && dictionaryAvailable && submissionSuccess && cleanupSuccess
   const durationSeconds = (clock() - started) / 1000
   const groupMetrics = renderKeepaliveCheckMetrics({
-    environment: "dev",
+    environment: context.label,
     checkedAt,
     previousMetrics: fs.existsSync(metricsFile) ? fs.readFileSync(metricsFile, "utf8") : "",
     results: {
@@ -301,6 +299,7 @@ export async function runNewsWorkflowMonitor({
     },
   })
   const metrics = renderNewsWorkflowMetrics({
+    environment: context.label,
     checkedAt,
     durationSeconds,
     checkDurationSeconds,
@@ -314,10 +313,10 @@ export async function runNewsWorkflowMonitor({
     databaseAvailable,
     openReviewCount,
     oldestOpenReviewAgeSeconds,
-    lastSuccessTimestamp: success ? checkedAt : readLastSuccessTimestamp(metricsFile),
+    lastSuccessTimestamp: success ? checkedAt : readLastSuccessTimestamp(metricsFile, context.label),
   }) + groupMetrics
   writeNewsMetricsAtomically(metricsFile, metrics)
-  process.stdout.write(`news_workflow_monitor environment=dev result=${success ? "pass" : "fail"} check=${checkSuccess ? "pass" : "fail"} language_tool=${languageToolAvailable ? "up" : "down"} dictionary=${dictionaryAvailable ? "up" : "down"} submission=${submissionSuccess ? "pass" : "fail"} submission_status=${submissionHttpStatus} submission_mmr=${submissionMmrPassed ? "pass" : "fail"} submission_date=${submissionDateSatisfied ? "pass" : "fail"} submission_state=${submissionState} submission_failed_fields=${submissionFailedFieldCount} cleanup=${cleanupSuccess ? "pass" : "fail"}\n`)
+  process.stdout.write(`news_workflow_monitor environment=${context.label} result=${success ? "pass" : "fail"} check=${checkSuccess ? "pass" : "fail"} language_tool=${languageToolAvailable ? "up" : "down"} dictionary=${dictionaryAvailable ? "up" : "down"} submission=${submissionSuccess ? "pass" : "fail"} submission_status=${submissionHttpStatus} submission_mmr=${submissionMmrPassed ? "pass" : "fail"} submission_date=${submissionDateSatisfied ? "pass" : "fail"} submission_state=${submissionState} submission_failed_fields=${submissionFailedFieldCount} cleanup=${cleanupSuccess ? "pass" : "fail"}\n`)
   return success
 }
 
@@ -325,7 +324,7 @@ async function main() {
   try {
     process.exitCode = await runNewsWorkflowMonitor() ? 0 : 1
   } catch {
-    process.stderr.write("news_workflow_monitor environment=dev result=fail reason=configuration_or_metrics_error\n")
+    process.stderr.write("news_workflow_monitor result=fail reason=configuration_or_metrics_error\n")
     process.exitCode = 1
   }
 }

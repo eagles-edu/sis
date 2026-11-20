@@ -51,11 +51,21 @@ test("test scheduled groups have independent freshness limits and on-demand grou
     environment: "test",
     checkedAt: 100,
     results: {
+      parent_profile: { success: true, durationSeconds: 1 },
+      student_library: { success: true, durationSeconds: 1 },
+      dictionary_builder: { success: true, durationSeconds: 1 },
+      student_news: { success: true, durationSeconds: 1 },
+      grade_feeds: { success: true, durationSeconds: 1 },
+      attendance: { success: true, durationSeconds: 1 },
       assignment_notifications: { success: true, durationSeconds: 1 },
       parent_reports: { success: true, durationSeconds: 1 },
       student_profile_enrollment: { success: true, durationSeconds: 1 },
     },
   })
+  assert.match(scheduledGroups, /sis_keepalive_check_stale_after_seconds\{environment="test",group="parent_profile"\} 1200\.000000/u)
+  for (const group of ["student_library", "dictionary_builder", "student_news", "grade_feeds", "attendance"]) {
+    assert.match(scheduledGroups, new RegExp(`sis_keepalive_check_stale_after_seconds\\{environment="test",group="${group}"\\} 900\\.000000`, "u"))
+  }
   for (const group of ["assignment_notifications", "parent_reports", "student_profile_enrollment"]) {
     assert.match(scheduledGroups, new RegExp(`sis_keepalive_check_stale_after_seconds\\{environment="test",group="${group}"\\} 180\\.000000`, "u"))
   }

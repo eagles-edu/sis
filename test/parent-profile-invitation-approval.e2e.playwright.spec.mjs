@@ -5,18 +5,20 @@ import test from "node:test"
 import { parse as parseDotenv } from "dotenv"
 import { chromium } from "playwright"
 import "../tools/assert-prisma-environment.mjs"
+import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
 
 const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
-const ORIGIN = (process.env.PARENT_PROFILE_E2E_ORIGIN || "http://127.0.0.1:8788").replace(/\/$/u, "")
-const DEV_ONLY = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
+const ORIGIN = resolvePortalTestOrigin({ overrideName: "PARENT_PROFILE_E2E_ORIGIN" })
+const ALLOWED_ENVIRONMENT = (process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev")
+  || (process.env.NODE_ENV === "test" && ENV_FILE === ".env.test")
 const ADMIN = {
   user: String(process.env.STUDENT_ADMIN_USER || ENV_VALUES.STUDENT_ADMIN_USER || "").trim(),
   pass: String(process.env.STUDENT_ADMIN_PASS || ENV_VALUES.STUDENT_ADMIN_PASS || "").trim(),
 }
 const CHROMIUM_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
-const SKIP_REASON = !DEV_ONLY
-  ? "Parent profile invitation E2E is restricted to the explicit dev environment"
+const SKIP_REASON = !ALLOWED_ENVIRONMENT
+  ? "Parent profile invitation E2E requires the explicit dev or test environment"
   : !fs.existsSync(CHROMIUM_PATH)
     ? `${CHROMIUM_PATH} is required`
     : !ADMIN.user || !ADMIN.pass
@@ -31,6 +33,9 @@ test("authenticated manual parent invitation preserves an editable draft across 
   Object.assign(process.env, ENV_VALUES)
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const prisma = await getSharedPrismaClient()
+  const expectedDatabase = ENV_FILE === ".env.test" ? "sis-test" : "sis_dev"
+  const databaseRows = await prisma.$queryRawUnsafe("SELECT current_database() AS name")
+  assert.equal(String(databaseRows?.[0]?.name || ""), expectedDatabase, "parent profile E2E must stay in its owned database")
   const stamp = randomUUID()
   const compactStamp = stamp.replaceAll("-", "")
   const eaglesId = `KA029${compactStamp.slice(0, 8)}`
@@ -41,7 +46,7 @@ test("authenticated manual parent invitation preserves an editable draft across 
     select: { payloadJson: true },
   })
   const schoolYear = String(sisConfig?.payloadJson?.uiSettings?.schoolSetup?.schoolYear || "").trim()
-  assert.ok(schoolYear, "parent invitation E2E requires the active school year from the dev SIS config")
+  assert.ok(schoolYear, "parent invitation E2E requires the active school year from the owned SIS config")
   const email = `parent-${compactStamp}@example.invalid`
   const phone = `+849${compactStamp.slice(0, 8)}`
   const editedPhone = `+848${compactStamp.slice(0, 8)}`

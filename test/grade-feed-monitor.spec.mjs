@@ -4,7 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import test from "node:test"
 import {
-  assertDevEnvironment,
+  assertMonitorEnvironment,
   runGradeFeedMonitor,
 } from "../tools/monitor-grade-feeds.mjs"
 
@@ -16,11 +16,13 @@ const devEnvironment = {
   STUDENT_ADMIN_PASS: "not-used-by-injected-check",
 }
 
-test("grade feed monitor rejects mismatched environment ownership", () => {
-  assert.throws(() => assertDevEnvironment({
+test("grade feed monitor accepts only exact owned dev and test tuples", () => {
+  assert.equal(assertMonitorEnvironment(devEnvironment).label, "dev")
+  assert.equal(assertMonitorEnvironment({ ...devEnvironment, NODE_ENV: "test", SIS_ENV_FILE: ".env.test", DOTENV_CONFIG_PATH: ".env.test" }).label, "test")
+  assert.throws(() => assertMonitorEnvironment({
     ...devEnvironment,
     DOTENV_CONFIG_PATH: ".env.test",
-  }), /explicit development environment/u)
+  }), /matching explicit dev or test/u)
 })
 
 test("grade feed monitor exports fixed aggregate labels and authenticated table availability", async () => {
@@ -114,6 +116,45 @@ test("grade feed monitor reports a failed database check without hiding the API 
     assert.match(contents, /sis_grade_feed_database_available\{environment="dev"\} 0/u)
     assert.match(contents, /sis_grade_feed_table_available\{environment="dev"\} 1/u)
     assert.match(contents, /sis_grade_feed_monitor_success\{environment="dev"\} 0/u)
+  } finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
+})
+
+test("test grade and attendance monitor pins test API, database, and metrics labels", async () => {
+  const directory = mkdtempSync(path.join(os.tmpdir(), "sis-test-grade-feed-monitor-"))
+  const metricsFile = path.join(directory, "grade-feeds-test.prom")
+  const testEnvironment = {
+    ...devEnvironment,
+    NODE_ENV: "test",
+    SIS_ENV_FILE: ".env.test",
+    DOTENV_CONFIG_PATH: ".env.test",
+  }
+  const prisma = {
+    $queryRaw: async () => [{ name: "sis-test" }],
+    exerciseSubmission: { groupBy: async () => [] },
+    studentGradeRecord: { groupBy: async () => [] },
+    incomingExerciseResult: { count: async () => 0, findFirst: async () => null },
+  }
+  try {
+    const success = await runGradeFeedMonitor({
+      environment: testEnvironment,
+      metricsFile,
+      requestMetricsFile: path.join(directory, "sis-test-request-metrics.prom"),
+      prismaClient: prisma,
+      tableApiCheck: async (_environment, origin) => origin === "http://127.0.0.1:8786",
+      attendanceApiCheck: async (_environment, origin) => ({
+        reportingAvailable: origin === "http://127.0.0.1:8786",
+        schoolSetupValid: true,
+      }),
+      clock: () => Date.UTC(2026, 10, 18, 7, 0, 0),
+    })
+    const contents = readFileSync(metricsFile, "utf8")
+    assert.equal(success, true)
+    assert.match(contents, /sis_grade_feed_monitor_success\{environment="test"\} 1\.000000/u)
+    assert.match(contents, /sis_keepalive_check_success\{environment="test",group="grade_feeds"\} 1/u)
+    assert.match(contents, /sis_keepalive_check_success\{environment="test",group="attendance"\} 1/u)
+    assert.doesNotMatch(contents, /environment="dev"/u)
   } finally {
     rmSync(directory, { recursive: true, force: true })
   }

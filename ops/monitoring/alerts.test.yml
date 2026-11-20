@@ -45,6 +45,26 @@ tests:
 
   - interval: 30s
     input_series:
+      - series: 'sis_keepalive_check_last_check_timestamp_seconds{environment="test",group="student_library"}'
+        values: '0x33'
+      - series: 'sis_keepalive_check_stale_after_seconds{environment="test",group="student_library"}'
+        values: '900x33'
+    alert_rule_test:
+      - eval_time: 930s
+        alertname: TestKeepaliveCheckStale
+        exp_alerts: []
+      - eval_time: 960s
+        alertname: TestKeepaliveCheckStale
+        exp_alerts:
+          - exp_labels:
+              environment: test
+              group: student_library
+              severity: warning
+            exp_annotations:
+              summary: A scheduled SIS test-mirror keep-alive subsystem check is stale
+
+  - interval: 30s
+    input_series:
       - series: 'sis_keepalive_nightly_smoke_success{environment="test"}'
         values: '0x5'
     alert_rule_test:

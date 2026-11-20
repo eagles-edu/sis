@@ -6,9 +6,9 @@ import { dictionary as cmuDictionary } from "cmu-pronouncing-dictionary"
 import { closeSharedPrismaClient, getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
 import { resolveStandardStudentCredentials } from "../test/helpers/standard-portal-credentials.mjs"
 import { renderKeepaliveCheckMetrics } from "../src/infra/observability/keepalive-check-metrics.mjs"
+import { assertKeepaliveMonitorDatabase, resolveKeepaliveMonitorEnvironment } from "./keepalive-monitor-environment.mjs"
 
-const DEV_ORIGIN = "http://127.0.0.1:8788"
-const METRICS_FILE = path.join(process.cwd(), "runtime-data/prometheus/library-workflow-dev.prom")
+const METRICS_DIRECTORY = path.join(process.cwd(), "runtime-data/prometheus")
 const CHECK_TIMEOUT_MS = 10000
 const DICTIONARY_BUILDER_TIMEOUT_MS = 240000
 const OPEN_REVIEW_STATUSES = ["pending_review", "legacy_pending_review"]
@@ -38,12 +38,8 @@ export const SYNTHETIC_VOCABULARY_CANDIDATES = Object.freeze([
   { english: "basket", syllabication: "BAS-ket" },
 ])
 
-export function assertDevEnvironment(environment = process.env) {
-  if (
-    String(environment.NODE_ENV || "").trim() !== "development" ||
-    String(environment.SIS_ENV_FILE || "").trim() !== ".env.dev" ||
-    String(environment.DOTENV_CONFIG_PATH || "").trim() !== ".env.dev"
-  ) throw new Error("Library workflow monitor requires the explicit development environment")
+export function assertMonitorEnvironment(environment = process.env) {
+  return resolveKeepaliveMonitorEnvironment(environment)
 }
 
 function metricNumber(value) {
@@ -59,6 +55,7 @@ function timestampSeconds(value) {
 }
 
 export function renderLibraryMetrics({
+  environment = "dev",
   checkedAt,
   durationSeconds,
   success,
@@ -82,39 +79,39 @@ export function renderLibraryMetrics({
   oldestOpenReviewAgeSeconds,
 }) {
   const values = [
-    ["sis_library_workflow_check_success", "Whether the latest dev Library workflow monitor passed.", success ? 1 : 0],
-    ["sis_library_workflow_check_duration_seconds", "Duration of the latest dev Library workflow monitor.", durationSeconds],
-    ["sis_library_workflow_last_check_timestamp_seconds", "Unix timestamp of the latest dev Library workflow monitor.", checkedAt],
-    ["sis_library_workflow_last_success_timestamp_seconds", "Unix timestamp of the latest successful dev Library workflow monitor.", lastSuccessTimestamp],
-    ["sis_library_api_available", "Whether the dev SIS health endpoint is available.", apiAvailable ? 1 : 0],
-    ["sis_library_database_available", "Whether the dev Library database dependency is available.", databaseAvailable ? 1 : 0],
-    ["sis_library_redis_available", "Whether the dev session Redis dependency is ready.", redisAvailable ? 1 : 0],
+    ["sis_library_workflow_check_success", `Whether the latest ${environment} Library workflow monitor passed.`, success ? 1 : 0],
+    ["sis_library_workflow_check_duration_seconds", `Duration of the latest ${environment} Library workflow monitor.`, durationSeconds],
+    ["sis_library_workflow_last_check_timestamp_seconds", `Unix timestamp of the latest ${environment} Library workflow monitor.`, checkedAt],
+    ["sis_library_workflow_last_success_timestamp_seconds", `Unix timestamp of the latest successful ${environment} Library workflow monitor.`, lastSuccessTimestamp],
+    ["sis_library_api_available", `Whether the ${environment} SIS health endpoint is available.`, apiAvailable ? 1 : 0],
+    ["sis_library_database_available", `Whether the ${environment} Library database dependency is available.`, databaseAvailable ? 1 : 0],
+    ["sis_library_redis_available", `Whether the ${environment} session Redis dependency is ready.`, redisAvailable ? 1 : 0],
     ["sis_library_cmu_dictionary_available", "Whether the local CMU pronunciation dictionary is available.", cmuDictionaryAvailable ? 1 : 0],
-    ["sis_library_mw_collegiate_key_configured", "Whether the dev Collegiate dictionary key is configured.", collegiateKeyConfigured ? 1 : 0],
-    ["sis_library_mw_learners_key_configured", "Whether the dev Learners dictionary key is configured.", learnersKeyConfigured ? 1 : 0],
-    ["sis_library_student_access_available", "Whether authenticated dev student Library access succeeded.", studentAccessAvailable ? 1 : 0],
-    ["sis_library_admin_access_available", "Whether authenticated dev admin Library review access succeeded.", adminAccessAvailable ? 1 : 0],
-    ["sis_library_save_check_success", "Whether a synthetic authenticated dev Library submission succeeded.", saveCheckSuccess ? 1 : 0],
-    ["sis_library_review_check_success", "Whether a synthetic dev Library review and student result check succeeded.", reviewCheckSuccess ? 1 : 0],
-    ["sis_library_definition_save_check_success", "Whether a synthetic dev Library definition was saved and matched after database readback.", definitionSaveCheckSuccess ? 1 : 0],
-    ["sis_library_dictionary_builder_check_success", "Whether the authenticated dev Dictionary Builder provider check completed.", dictionaryBuilderCheckSuccess ? 1 : 0],
-    ["sis_library_dictionary_builder_definition_providers_available", "Number of Dictionary Builder providers returning an available definition in dev.", dictionaryBuilderDefinitionProvidersAvailable],
-    ["sis_library_dictionary_builder_definition_providers_checked", "Number of Dictionary Builder providers checked for a definition in dev.", dictionaryBuilderDefinitionProvidersChecked],
-    ["sis_library_cleanup_success", "Whether the latest synthetic dev Library monitor records were removed.", cleanupSuccess ? 1 : 0],
-    ["sis_library_open_review_contributions", "Number of dev Library contributions waiting for review.", openReviewCount],
-    ["sis_library_oldest_open_review_age_seconds", "Age in seconds of the oldest dev Library contribution waiting for review.", oldestOpenReviewAgeSeconds],
+    ["sis_library_mw_collegiate_key_configured", `Whether the ${environment} Collegiate dictionary key is configured.`, collegiateKeyConfigured ? 1 : 0],
+    ["sis_library_mw_learners_key_configured", `Whether the ${environment} Learners dictionary key is configured.`, learnersKeyConfigured ? 1 : 0],
+    ["sis_library_student_access_available", `Whether authenticated ${environment} student Library access succeeded.`, studentAccessAvailable ? 1 : 0],
+    ["sis_library_admin_access_available", `Whether authenticated ${environment} admin Library review access succeeded.`, adminAccessAvailable ? 1 : 0],
+    ["sis_library_save_check_success", `Whether a synthetic authenticated ${environment} Library submission succeeded.`, saveCheckSuccess ? 1 : 0],
+    ["sis_library_review_check_success", `Whether a synthetic ${environment} Library review and student result check succeeded.`, reviewCheckSuccess ? 1 : 0],
+    ["sis_library_definition_save_check_success", `Whether a synthetic ${environment} Library definition was saved and matched after database readback.`, definitionSaveCheckSuccess ? 1 : 0],
+    ["sis_library_dictionary_builder_check_success", `Whether the authenticated ${environment} Dictionary Builder provider check completed.`, dictionaryBuilderCheckSuccess ? 1 : 0],
+    ["sis_library_dictionary_builder_definition_providers_available", `Number of Dictionary Builder providers returning an available definition in ${environment}.`, dictionaryBuilderDefinitionProvidersAvailable],
+    ["sis_library_dictionary_builder_definition_providers_checked", `Number of Dictionary Builder providers checked for a definition in ${environment}.`, dictionaryBuilderDefinitionProvidersChecked],
+    ["sis_library_cleanup_success", `Whether the latest synthetic ${environment} Library monitor records were removed.`, cleanupSuccess ? 1 : 0],
+    ["sis_library_open_review_contributions", `Number of ${environment} Library contributions waiting for review.`, openReviewCount],
+    ["sis_library_oldest_open_review_age_seconds", `Age in seconds of the oldest ${environment} Library contribution waiting for review.`, oldestOpenReviewAgeSeconds],
   ]
   return values.flatMap(([name, help, value]) => [
     `# HELP ${name} ${help}`,
     `# TYPE ${name} gauge`,
-    `${name}{environment="dev"} ${metricNumber(value)}`,
+    `${name}{environment="${environment}"} ${metricNumber(value)}`,
   ]).concat("").join("\n")
 }
 
-export function readLastSuccessTimestamp(metricsFile) {
+export function readLastSuccessTimestamp(metricsFile, environment = "dev") {
   if (!fs.existsSync(metricsFile)) return 0
   const contents = fs.readFileSync(metricsFile, "utf8")
-  const match = contents.match(/^sis_library_workflow_last_success_timestamp_seconds\{environment="dev"\} ([0-9]+(?:\.[0-9]+)?)$/mu)
+  const match = contents.match(new RegExp(`^sis_library_workflow_last_success_timestamp_seconds\\{environment="${environment}"\\} ([0-9]+(?:\\.[0-9]+)?)$`, "mu"))
   return match ? Number(match[1]) : 0
 }
 
@@ -131,11 +128,11 @@ export function writeMetricsAtomically(metricsFile, contents) {
   }
 }
 
-async function requestJson(fetchImpl, endpoint, { cookie = "", method = "GET", body, timeoutMs = CHECK_TIMEOUT_MS } = {}) {
+async function requestJson(fetchImpl, endpoint, { cookie = "", method = "GET", body, timeoutMs = CHECK_TIMEOUT_MS, origin = "http://127.0.0.1:8788" } = {}) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    const response = await fetchImpl(`${DEV_ORIGIN}${endpoint}`, {
+    const response = await fetchImpl(`${origin}${endpoint}`, {
       method,
       headers: {
         ...(cookie ? { cookie } : {}),
@@ -246,12 +243,14 @@ export async function cleanupSynthetic(prisma, { studentRefId, sourceId, english
 
 export async function runLibraryWorkflowMonitor({
   environment = process.env,
-  metricsFile = METRICS_FILE,
+  metricsFile = "",
   prismaClient = null,
   fetchImpl = fetch,
   clock = () => Date.now(),
 } = {}) {
-  assertDevEnvironment(environment)
+  const context = assertMonitorEnvironment(environment)
+  metricsFile ||= path.join(METRICS_DIRECTORY, `library-workflow-${context.label}.prom`)
+  const request = (endpoint, options = {}) => requestJson(fetchImpl, endpoint, { ...options, origin: context.origin })
   const started = clock()
   const prisma = prismaClient || await getSharedPrismaClient()
   const studentCredentials = resolveStandardStudentCredentials(environment)
@@ -280,9 +279,8 @@ export async function runLibraryWorkflowMonitor({
   let failure = false
 
   try {
-    const database = await prisma.$queryRaw`SELECT current_database() AS name`
-    databaseAvailable = database[0]?.name === "sis_dev"
-    if (!databaseAvailable) throw new Error("Unexpected database")
+    await assertKeepaliveMonitorDatabase(prisma, context)
+    databaseAvailable = true
     const student = await prisma.student.findUnique({ where: { eaglesId: studentCredentials.user }, select: { id: true } })
     if (!student?.id || !studentCredentials.pass) throw new Error("Standard student account unavailable")
     studentRefId = student.id
@@ -303,7 +301,7 @@ export async function runLibraryWorkflowMonitor({
     openReviewCount = queue.openReviewCount
     oldestOpenReviewAgeSeconds = queue.oldestOpenReviewAgeSeconds
 
-    const health = await requestJson(fetchImpl, "/healthz")
+    const health = await request("/healthz")
     apiAvailable = health.ok && health.payload?.status === "ok"
     redisAvailable = Boolean(
       health.payload?.studentAdminRuntime?.sessionRedis?.redisConnected &&
@@ -311,19 +309,19 @@ export async function runLibraryWorkflowMonitor({
     )
     cmuDictionaryAvailable = Object.keys(cmuDictionary || {}).length > 0
 
-    const adminLogin = await requestJson(fetchImpl, "/api/admin/auth/login", {
+    const adminLogin = await request("/api/admin/auth/login", {
       method: "POST",
       body: { username: adminUsername, password: adminPassword },
     })
     const adminCookie = sessionCookie(adminLogin, "student_admin_sid")
-    const studentLogin = await requestJson(fetchImpl, "/api/student/auth/login", {
+    const studentLogin = await request("/api/student/auth/login", {
       method: "POST",
       body: { eaglesId: studentCredentials.user, password: studentCredentials.pass },
     })
     const studentCookie = sessionCookie(studentLogin, "student_portal_sid")
 
     const builderPreview = adminCookie
-      ? await requestJson(fetchImpl, "/api/admin/library/entries/new-canonical/dictionary-builder/preview", {
+      ? await request("/api/admin/library/entries/new-canonical/dictionary-builder/preview", {
         cookie: adminCookie,
         method: "POST",
         body: { entry: { english: "monitor", partOfSpeech: "noun" } },
@@ -336,10 +334,10 @@ export async function runLibraryWorkflowMonitor({
     dictionaryBuilderCheckSuccess = builderPreview.ok && Boolean(builderPreview.payload?.id) && builderAvailability.providersChecked > 0
 
     const adminQueue = adminCookie
-      ? await requestJson(fetchImpl, "/api/admin/library/queue?status=open_review", { cookie: adminCookie })
+      ? await request("/api/admin/library/queue?status=open_review", { cookie: adminCookie })
       : { ok: false, payload: {} }
     const studentLibrary = studentCookie
-      ? await requestJson(fetchImpl, `/api/student/library?search=${encodeURIComponent(english)}&myWords=true`, { cookie: studentCookie })
+      ? await request(`/api/student/library?search=${encodeURIComponent(english)}&myWords=true`, { cookie: studentCookie })
       : { ok: false, payload: {} }
     adminAccessAvailable = adminQueue.ok && Array.isArray(adminQueue.payload?.items)
     studentAccessAvailable = studentLibrary.ok && Array.isArray(studentLibrary.payload?.items)
@@ -348,7 +346,7 @@ export async function runLibraryWorkflowMonitor({
     }
 
     const payload = libraryPayload(english, syllabication)
-    const saved = await requestJson(fetchImpl, "/api/student/library/submissions", {
+    const saved = await request("/api/student/library/submissions", {
       cookie: studentCookie,
       method: "POST",
       body: { sourceId, entry: payload },
@@ -357,7 +355,7 @@ export async function runLibraryWorkflowMonitor({
     saveCheckSuccess = saved.status === 201 && Boolean(contributionId) && saved.payload?.contribution?.status === "pending_review"
     if (!saveCheckSuccess) throw new Error("Synthetic Library save failed")
 
-    const reviewed = await requestJson(fetchImpl, `/api/admin/library/contributions/${encodeURIComponent(contributionId)}/review`, {
+    const reviewed = await request(`/api/admin/library/contributions/${encodeURIComponent(contributionId)}/review`, {
       cookie: adminCookie,
       method: "POST",
       body: { approved: true, canonicalContributionId: contributionId, entry: payload },
@@ -368,7 +366,7 @@ export async function runLibraryWorkflowMonitor({
     })
     definitionSaveCheckSuccess = reviewed.ok && reviewed.payload?.ok === true && persistedEntry?.definition === payload.definition
     const result = studentCookie
-      ? await requestJson(fetchImpl, `/api/student/library?search=${encodeURIComponent(english)}&myWords=true`, { cookie: studentCookie })
+      ? await request(`/api/student/library?search=${encodeURIComponent(english)}&myWords=true`, { cookie: studentCookie })
       : { ok: false, payload: {} }
     reviewCheckSuccess = reviewed.ok && reviewed.payload?.ok === true && result.ok && result.payload?.items?.some((item) => item.english === english && item.isContribution !== true)
     if (!reviewCheckSuccess) throw new Error("Synthetic Library review result failed")
@@ -388,12 +386,12 @@ export async function runLibraryWorkflowMonitor({
 
   const checkedAt = clock() / 1000
   const success = !failure && apiAvailable && databaseAvailable && redisAvailable && cmuDictionaryAvailable && studentAccessAvailable && adminAccessAvailable && saveCheckSuccess && reviewCheckSuccess && definitionSaveCheckSuccess && dictionaryBuilderCheckSuccess && dictionaryBuilderDefinitionProvidersAvailable > 0 && cleanupSuccess
-  const lastSuccessTimestamp = success ? checkedAt : readLastSuccessTimestamp(metricsFile)
+  const lastSuccessTimestamp = success ? checkedAt : readLastSuccessTimestamp(metricsFile, context.label)
   const durationSeconds = (clock() - started) / 1000
   const studentLibrarySuccess = !failure && apiAvailable && databaseAvailable && redisAvailable && cmuDictionaryAvailable && studentAccessAvailable && adminAccessAvailable && saveCheckSuccess && reviewCheckSuccess && definitionSaveCheckSuccess && cleanupSuccess
   const dictionaryBuilderSuccess = dictionaryBuilderCheckSuccess && dictionaryBuilderDefinitionProvidersAvailable > 0
   const groupMetrics = renderKeepaliveCheckMetrics({
-    environment: "dev",
+    environment: context.label,
     checkedAt,
     previousMetrics: fs.existsSync(metricsFile) ? fs.readFileSync(metricsFile, "utf8") : "",
     results: {
@@ -410,6 +408,7 @@ export async function runLibraryWorkflowMonitor({
     },
   })
   const metrics = renderLibraryMetrics({
+    environment: context.label,
     checkedAt,
     durationSeconds,
     success,
@@ -433,7 +432,7 @@ export async function runLibraryWorkflowMonitor({
     oldestOpenReviewAgeSeconds,
   }) + groupMetrics
   writeMetricsAtomically(metricsFile, metrics)
-  process.stdout.write(`library_workflow_monitor environment=dev result=${success ? "pass" : "fail"} student_access=${studentAccessAvailable ? "up" : "down"} admin_access=${adminAccessAvailable ? "up" : "down"} save=${saveCheckSuccess ? "pass" : "fail"} definition_save=${definitionSaveCheckSuccess ? "pass" : "fail"} builder_check=${dictionaryBuilderCheckSuccess ? "pass" : "fail"} definition_providers=${dictionaryBuilderDefinitionProvidersAvailable}/${dictionaryBuilderDefinitionProvidersChecked} review=${reviewCheckSuccess ? "pass" : "fail"} cleanup=${cleanupSuccess ? "pass" : "fail"}\n`)
+  process.stdout.write(`library_workflow_monitor environment=${context.label} result=${success ? "pass" : "fail"} student_access=${studentAccessAvailable ? "up" : "down"} admin_access=${adminAccessAvailable ? "up" : "down"} save=${saveCheckSuccess ? "pass" : "fail"} definition_save=${definitionSaveCheckSuccess ? "pass" : "fail"} builder_check=${dictionaryBuilderCheckSuccess ? "pass" : "fail"} definition_providers=${dictionaryBuilderDefinitionProvidersAvailable}/${dictionaryBuilderDefinitionProvidersChecked} review=${reviewCheckSuccess ? "pass" : "fail"} cleanup=${cleanupSuccess ? "pass" : "fail"}\n`)
   return success
 }
 
@@ -441,7 +440,7 @@ async function main() {
   try {
     process.exitCode = await runLibraryWorkflowMonitor() ? 0 : 1
   } catch {
-    process.stderr.write("library_workflow_monitor environment=dev result=fail reason=configuration_or_metrics_error\n")
+    process.stderr.write("library_workflow_monitor result=fail reason=configuration_or_metrics_error\n")
     process.exitCode = 1
   }
 }

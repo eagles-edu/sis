@@ -4,7 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import test from "node:test"
 import {
-  assertNewsMonitorDevEnvironment,
+  assertNewsMonitorEnvironment,
   renderNewsWorkflowMetrics,
   writeNewsMetricsAtomically,
 } from "../tools/monitor-news-workflow.mjs"
@@ -35,11 +35,11 @@ function metrics(overrides = {}) {
   })
 }
 
-test("News workflow monitor requires the explicit dev-owned environment", () => {
-  assert.doesNotThrow(() => assertNewsMonitorDevEnvironment(devEnvironment))
-  assert.throws(() => assertNewsMonitorDevEnvironment({ NODE_ENV: "test", SIS_ENV_FILE: ".env.test", DOTENV_CONFIG_PATH: ".env.test" }), /explicit development environment/u)
-  assert.throws(() => assertNewsMonitorDevEnvironment({ NODE_ENV: "development", SIS_ENV_FILE: ".env", DOTENV_CONFIG_PATH: ".env" }), /explicit development environment/u)
-  assert.throws(() => assertNewsMonitorDevEnvironment({ ...devEnvironment, DOTENV_CONFIG_PATH: ".env.test" }), /explicit development environment/u)
+test("News workflow monitor accepts only exact owned dev and test tuples", () => {
+  assert.equal(assertNewsMonitorEnvironment(devEnvironment).label, "dev")
+  assert.equal(assertNewsMonitorEnvironment({ NODE_ENV: "test", SIS_ENV_FILE: ".env.test", DOTENV_CONFIG_PATH: ".env.test" }).label, "test")
+  assert.throws(() => assertNewsMonitorEnvironment({ NODE_ENV: "development", SIS_ENV_FILE: ".env", DOTENV_CONFIG_PATH: ".env" }), /matching explicit dev or test/u)
+  assert.throws(() => assertNewsMonitorEnvironment({ ...devEnvironment, DOTENV_CONFIG_PATH: ".env.test" }), /matching explicit dev or test/u)
 })
 
 test("News metrics capture Check latency, provider availability, submission failure, and review age without sensitive labels", () => {
@@ -71,4 +71,11 @@ test("News metric values are atomically generated without leaving a temporary fi
   const saved = fs.readFileSync(metricsFile, "utf8")
   assert.match(saved, /sis_news_workflow_check_success\{environment="dev"\} 1\.000000/u)
   assert.deepEqual(fs.readdirSync(directory), ["news-workflow.prom"])
+})
+
+test("test News workflow metrics retain test-only labels", () => {
+  const output = metrics({ environment: "test" })
+  assert.match(output, /sis_news_workflow_check_success\{environment="test"\} 1\.000000/u)
+  assert.match(output, /sis_news_cleanup_success\{environment="test"\} 1\.000000/u)
+  assert.doesNotMatch(output, /environment="dev"/u)
 })
