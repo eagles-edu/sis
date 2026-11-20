@@ -482,12 +482,19 @@ export async function reconcileParentPortalStudentLinks(client, { studentRefId =
     select: { id: true },
   })
   if (targetAccount) {
-    const familyStudents = normalizeText(familyId)
+    const requestedFamilyId = normalizeText(familyId)
+    const familyStudents = requestedFamilyId
       ? await client.studentProfile.findMany({
-          where: { familyId: normalizeText(familyId), parentsId: requestedParentsId },
+          where: { familyId: requestedFamilyId },
           select: { studentRefId: true },
         })
       : []
+    if (requestedFamilyId) {
+      await client.studentProfile.updateMany({
+        where: { familyId: requestedFamilyId },
+        data: { parentsId: requestedParentsId },
+      })
+    }
     const studentRefIds = [...new Set([
       requestedStudentRefId,
       ...familyStudents.map((student) => normalizeText(student.studentRefId)),
@@ -1292,6 +1299,11 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "", op
     canonicalizeCatalogLevel(profilePayload.currentGrade) || null,
     options.updatedByUsername,
   )
+  await reconcileParentPortalStudentLinks(client, {
+    studentRefId: student.id,
+    parentsId: normalizeText(profilePayload.parentsId),
+    familyId: normalizeText(profilePayload.familyId),
+  })
   if (portalPasswordHash) {
     await client.studentPortalAccount.create({
       data: {

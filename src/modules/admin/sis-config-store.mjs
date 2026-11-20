@@ -711,6 +711,7 @@ function buildDefaultSnapshot() {
 
 /** @type {CachedSisConfigSnapshot | null} */
 let cachedSnapshot = null
+let sisConfigLoadInFlight = null
 
 /**
  * @param {CachedSisConfigSnapshot | null | undefined} cached
@@ -903,11 +904,27 @@ async function writeSnapshotFiles(snapshot = {}) {
  * @param {{ refresh?: boolean }} [options]
  * @returns {Promise<CachedSisConfigSnapshot>}
  */
-export async function ensureSisConfigLoaded(options = {}) {
+export function ensureSisConfigLoaded(options = {}) {
+  if (sisConfigLoadInFlight) return sisConfigLoadInFlight
   if (!options.refresh && cachedSnapshot && cachedSnapshotMatchesFiles(cachedSnapshot)) {
-    return cachedSnapshot
+    return Promise.resolve(cachedSnapshot)
   }
 
+  const pending = loadSisConfigSnapshot(options)
+  sisConfigLoadInFlight = pending
+  return pending.then(
+    (snapshot) => {
+      if (sisConfigLoadInFlight === pending) sisConfigLoadInFlight = null
+      return snapshot
+    },
+    (error) => {
+      if (sisConfigLoadInFlight === pending) sisConfigLoadInFlight = null
+      throw error
+    },
+  )
+}
+
+async function loadSisConfigSnapshot(options = {}) {
   const filePath = resolveSisConfigFilePath()
   const fileSnapshot = parseJsonFile(filePath)
   const dbSnapshot = await readMirrorFromDatabase()

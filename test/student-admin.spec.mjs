@@ -64,11 +64,11 @@ test("class and level aliases resolve to one canonical catalog value", () => {
   assert.equal(canonicalizeLevel("  custom   class  "), "custom class")
 })
 
-test("family profile options include every familyId and parentId pair", () => {
+test("family profile options show one family choice linked to the oldest child's parent account", () => {
   const result = buildFamilyOptionPayload({
     profileRows: [
-      { familyId: "fam-0002", parentsId: "parent-b", motherEmail: "b@example.com" },
-      { familyId: "fam-0002", parentsId: "parent-a", motherEmail: "a@example.com" },
+      { familyId: "fam-0002", parentsId: "parent-b", motherEmail: "b@example.com", student: { eaglesId: "eagles002", createdAt: new Date("2024-02-01T00:00:00Z") } },
+      { familyId: "fam-0002", parentsId: "parent-a", motherEmail: "a@example.com", student: { eaglesId: "eagles001", createdAt: new Date("2023-02-01T00:00:00Z") } },
     ],
     generatedFamilies: [{ familyId: "fam-0001" }],
     activeParentAccounts: [{
@@ -80,10 +80,21 @@ test("family profile options include every familyId and parentId pair", () => {
 
   assert.deepEqual(result.familyIds, ["fam-0001", "fam-0002"])
   assert.deepEqual(result.familyOptions, [
-    { familyId: "fam-0001", parentId: "Unassigned", label: "fam-0001 - Unassigned" },
-    { familyId: "fam-0002", parentId: "parent-a", parentEmail: "a@example.com", label: "fam-0002 - parent-a" },
-    { familyId: "fam-0002", parentId: "parent-b", parentEmail: "b@example.com", label: "fam-0002 - parent-b" },
-    { familyId: "fam-0002", parentId: "parent-c", parentEmail: "c@example.com", label: "fam-0002 - parent-c" },
+    { familyId: "fam-0001", parentId: "Unassigned", parentEmail: "", label: "fam-0001 | Unassigned" },
+    { familyId: "fam-0002", parentId: "parent-a", parentEmail: "a@example.com", label: "fam-0002 | eagles001" },
+  ])
+})
+
+test("family dropdown label identifies the oldest child even when profiles arrive out of order", () => {
+  const result = buildFamilyOptionPayload({
+    profileRows: [
+      { familyId: "fam-0032", parentsId: "cmparent32", student: { eaglesId: "eagles099", createdAt: new Date("2025-04-02T00:00:00Z") } },
+      { familyId: "fam-0032", parentsId: "cmparent32", student: { eaglesId: "eagles032", createdAt: new Date("2021-09-10T00:00:00Z") } },
+    ],
+  })
+
+  assert.deepEqual(result.familyOptions, [
+    { familyId: "fam-0032", parentId: "cmparent32", parentEmail: "", label: "fam-0032 | eagles032" },
   ])
 })
 
@@ -147,10 +158,12 @@ test("family options carry parent email for profile assignment", () => {
   assert.match(ADMIN_JS_SOURCE, /option\.dataset\.parentEmail = parentEmail \|\| ""/u)
   assert.match(ADMIN_JS_SOURCE, /document\.getElementById\("f_motherEmail"\)/u)
   assert.match(ADMIN_JS_SOURCE, /parentEmail: normalizeLower\(entry\?\.parentEmail\)/u)
+  assert.match(ADMIN_JS_SOURCE, /option\.textContent = label/u)
 })
 
 test("family options select the current family after async hydration", () => {
   assert.match(ADMIN_JS_SOURCE, /function syncExistingFamilySelection\(\)/u)
+  assert.match(ADMIN_JS_SOURCE, /populateFamilySelectorOptions\(document\.getElementById\("familyIdExisting"\)\);\s*syncExistingFamilySelection\(\);/u)
   assert.match(ADMIN_JS_SOURCE, /state\.familyOptionsLoaded = true;[\s\S]*?syncExistingFamilySelection\(\);/u)
 })
 

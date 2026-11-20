@@ -19495,6 +19495,24 @@
         familySelect.value = matchingOption?.value || "";
       }
 
+      function populateFamilySelectorOptions(familySelect) {
+        if (!familySelect) return;
+        const placeholder = familySelect.options[0] || document.createElement("option");
+        const familyOptions = state.familyOptions.length
+          ? state.familyOptions
+          : state.familyIds.map((familyId) => ({ familyId, label: familyId }));
+        familySelect.replaceChildren(placeholder);
+        familyOptions.forEach(({ familyId, parentId, parentEmail, label }) => {
+          const option = document.createElement("option");
+          option.value = `${familyId}\u0000${parentId || "Unassigned"}`;
+          option.dataset.familyId = familyId;
+          option.dataset.parentId = parentId || "Unassigned";
+          option.dataset.parentEmail = parentEmail || "";
+          option.textContent = label;
+          familySelect.appendChild(option);
+        });
+      }
+
       function syncNewStudentParentsId({ force = false } = {}) {
         if (state.currentStudent?.id) return;
         const familySelect = document.getElementById("familyIdExisting");
@@ -19756,18 +19774,7 @@
           familySelect.id = "familyIdExisting";
           familySelect.dataset.surfaceRole = "card";
           familySelect.innerHTML = '<option value="">New family (auto-generate)</option>';
-          const familyOptions = state.familyOptions.length
-            ? state.familyOptions
-            : state.familyIds.map((familyId) => ({ familyId, label: familyId }));
-          familyOptions.forEach(({ familyId, parentId, parentEmail, label }) => {
-            const option = document.createElement("option");
-            option.value = `${familyId}\u0000${parentId || "Unassigned"}`;
-            option.dataset.familyId = familyId;
-            option.dataset.parentId = parentId || "Unassigned";
-            option.dataset.parentEmail = parentEmail || "";
-            option.textContent = label;
-            familySelect.appendChild(option);
-          });
+          populateFamilySelectorOptions(familySelect);
           const familyInput = document.createElement("input");
           familyInput.id = controlId;
           familyInput.type = "text";
@@ -20523,6 +20530,7 @@
           : [];
         state.familyOptionsLoaded = true;
         if (typeof document !== "object") return;
+        populateFamilySelectorOptions(document.getElementById("familyIdExisting"));
         syncExistingFamilySelection();
         if (state.profileMode === "edit") {
           const profileInputHasValue = Array.from(

@@ -886,6 +886,90 @@ test("config health repair copies the newer development file snapshot to the dat
   }
 })
 
+test("concurrent development config repairs share the newest snapshot and leave both copies synchronized", { skip: !DEV_DATABASE_TESTS_ENABLED }, async () => {
+  const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
+  const priorNodeEnv = process.env.NODE_ENV
+  const priorSisConfigFile = process.env.SIS_CONFIG_FILE
+  const priorDatabaseUrl = process.env.DATABASE_URL
+  const devEnvRaw = fs.readFileSync(path.resolve(process.cwd(), ".env.dev"), "utf8")
+  const devDatabaseUrl = devEnvRaw.match(/^DATABASE_URL=(.*)$/m)?.[1]?.trim() || ""
+  let prisma = null
+  let originalMirror = null
+
+  try {
+    process.env.NODE_ENV = "development"
+    process.env.SIS_CONFIG_FILE = sisConfigPath
+    process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
+    process.env.DATABASE_URL = devDatabaseUrl
+    writeRichSisConfigFixture(sisConfigPath, {
+      updatedAt: "2026-09-06T00:00:00.000Z",
+      updatedBy: "concurrent-repair-regression",
+    })
+    const fileConfig = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))
+    fileConfig.runtime.databaseUrl = devDatabaseUrl
+    fs.writeFileSync(sisConfigPath, JSON.stringify(fileConfig, null, 2), "utf8")
+
+    const prismaModule = await freshImport(path.resolve("src/infra/db/prisma-client.mjs"))
+    prisma = await prismaModule.getSharedPrismaClient()
+    originalMirror = await prisma.sisConfigMirror.findUnique({ where: { id: "sis-config" } })
+    assert.ok(originalMirror)
+
+    const mod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
+    await mod.ensureSisConfigLoaded({ refresh: true })
+    const cachedMirror = await prisma.sisConfigMirror.findUnique({ where: { id: "sis-config" } })
+    await prisma.sisConfigMirror.update({
+      where: { id: "sis-config" },
+      data: {
+        payloadJson: { ...cachedMirror.payloadJson, updatedBy: "concurrent-newer-database" },
+        updatedBy: "concurrent-newer-database",
+      },
+    })
+    await prisma.$executeRaw`
+      UPDATE "SisConfigMirror"
+      SET "updatedAt" = ${new Date("2027-01-01T00:00:00.000Z")}
+      WHERE "id" = 'sis-config'
+    `
+
+    const repairs = await Promise.all(Array.from({ length: 25 }, (_, index) =>
+      index === 0
+        ? mod.ensureSisConfigLoaded({ refresh: true })
+        : mod.ensureSisConfigLoaded(),
+    ))
+    const mirrorHealth = await mod.getSisConfigMirrorHealthSnapshot()
+    const repairedMirror = await prisma.sisConfigMirror.findUnique({ where: { id: "sis-config" } })
+
+    assert.equal(repairs.length, 25)
+    assert.ok(repairs.every((snapshot) => snapshot.updatedBy === "concurrent-newer-database"))
+    assert.equal(mirrorHealth.synced, true)
+    assert.equal(mirrorHealth.state, "ok")
+    assert.equal(repairedMirror.payloadJson.updatedBy, "concurrent-newer-database")
+  } finally {
+    if (prisma && originalMirror) {
+      await prisma.sisConfigMirror.update({
+        where: { id: "sis-config" },
+        data: {
+          payloadJson: originalMirror.payloadJson,
+          updatedBy: originalMirror.updatedBy,
+        },
+      })
+      await prisma.$executeRaw`
+        UPDATE "SisConfigMirror"
+        SET "updatedAt" = ${originalMirror.updatedAt}
+        WHERE "id" = 'sis-config'
+      `
+    }
+    if (prisma) await prisma.$disconnect()
+    fs.rmSync(tempDir, { recursive: true, force: true })
+    if (priorNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = priorNodeEnv
+    if (priorSisConfigFile === undefined) delete process.env.SIS_CONFIG_FILE
+    else process.env.SIS_CONFIG_FILE = priorSisConfigFile
+    if (priorDatabaseUrl === undefined) delete process.env.DATABASE_URL
+    else process.env.DATABASE_URL = priorDatabaseUrl
+    delete process.env.STUDENT_ADMIN_UI_SETTINGS_FILE
+  }
+})
+
 test("development config recovery copies a newer database snapshot to the file", { skip: !DEV_DATABASE_TESTS_ENABLED }, async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   const priorNodeEnv = process.env.NODE_ENV

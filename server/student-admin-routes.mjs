@@ -3428,8 +3428,28 @@ export function buildFamilyOptionPayload({
     ...generatedFamilies.map((row) => normalizeText(row?.familyId)),
     ...profileRows.map((row) => normalizeText(row?.familyId)),
   ].filter(Boolean))
-  const familyParentPairs = new Map()
+  const firstChildByFamily = new Map()
+  profileRows.forEach((row) => {
+    const familyId = normalizeText(row?.familyId)
+    const eaglesId = normalizeText(row?.student?.eaglesId || row?.eaglesId)
+    if (!familyId || !eaglesId) return
+    const createdAt = row?.student?.createdAt instanceof Date
+      ? row.student.createdAt.getTime()
+      : Date.parse(row?.student?.createdAt || row?.createdAt || "")
+    const candidate = {
+      eaglesId,
+      parentsId: normalizeText(row?.parentsId),
+      motherEmail: normalizeLower(row?.motherEmail),
+      createdAt: Number.isFinite(createdAt) ? createdAt : Number.MAX_SAFE_INTEGER,
+    }
+    const current = firstChildByFamily.get(familyId)
+    if (!current || candidate.createdAt < current.createdAt ||
+      (candidate.createdAt === current.createdAt && candidate.eaglesId.localeCompare(current.eaglesId, undefined, { numeric: true }) < 0)) {
+      firstChildByFamily.set(familyId, candidate)
+    }
+  })
   const accountEmailOwners = new Map()
+  const linkedAccountsByFamily = new Map()
   activeParentAccounts.forEach((account) => {
     const parentEmail = normalizeLower(account?.email)
     const parentId = normalizeText(account?.parentsId)
@@ -3437,59 +3457,34 @@ export function buildFamilyOptionPayload({
     const ownerKeys = accountEmailOwners.get(parentEmail) || new Set()
     ;(account?.links || []).forEach((link) => {
       const familyId = normalizeText(link?.student?.profile?.familyId)
-      if (familyId) ownerKeys.add(`${familyId}\u0000${parentId}`)
+      if (!familyId) return
+      ownerKeys.add(`${familyId}\u0000${parentId}`)
+      const familyAccounts = linkedAccountsByFamily.get(familyId) || new Map()
+      familyAccounts.set(parentId, account)
+      linkedAccountsByFamily.set(familyId, familyAccounts)
     })
     accountEmailOwners.set(parentEmail, ownerKeys)
-  })
-  const addFamilyParentPair = (familyId, parentId, parentEmail) => {
-    const normalizedFamilyId = normalizeText(familyId)
-    const normalizedParentId = normalizeText(parentId)
-    const normalizedParentEmail = normalizeLower(parentEmail)
-    if (!normalizedFamilyId) return
-    familyIds.add(normalizedFamilyId)
-    if (!normalizedParentId) return
-    const pairKey = `${normalizedFamilyId}\u0000${normalizedParentId}`
-    const existing = familyParentPairs.get(pairKey)
-    familyParentPairs.set(pairKey, {
-      familyId: normalizedFamilyId,
-      parentId: normalizedParentId,
-      parentEmail: existing?.parentEmail || normalizedParentEmail,
-    })
-  }
-
-  profileRows.forEach((row) => {
-    const familyId = normalizeText(row?.familyId)
-    const parentId = normalizeText(row?.parentsId)
-    const parentEmail = normalizeLower(row?.motherEmail)
-    const accountOwners = accountEmailOwners.get(parentEmail)
-    const pairKey = `${familyId}\u0000${parentId}`
-    addFamilyParentPair(
-      familyId,
-      parentId,
-      accountOwners && !accountOwners.has(pairKey) ? "" : parentEmail,
-    )
-  })
-  activeParentAccounts.forEach((account) => {
-    ;(account?.links || []).forEach((link) => {
-      addFamilyParentPair(link?.student?.profile?.familyId, account?.parentsId, account?.email)
-    })
   })
 
   const sortedFamilyIds = [...familyIds].sort((left, right) =>
     left.localeCompare(right, undefined, { numeric: true }))
-  const familyOptions = sortedFamilyIds.flatMap((familyId) => {
-    const pairs = [...familyParentPairs.values()].filter((entry) => entry.familyId === familyId)
-    if (!pairs.length) {
-      return [{ familyId, parentId: "Unassigned", label: `${familyId} - Unassigned` }]
+  const familyOptions = sortedFamilyIds.map((familyId) => {
+    const firstChild = firstChildByFamily.get(familyId)
+    const linkedAccounts = linkedAccountsByFamily.get(familyId) || new Map()
+    const parentId = firstChild?.parentsId || (linkedAccounts.size === 1 ? [...linkedAccounts.keys()][0] : "Unassigned")
+    const linkedAccount = linkedAccounts.get(parentId)
+    const profileEmail = firstChild?.motherEmail || ""
+    const emailOwners = accountEmailOwners.get(profileEmail)
+    const profileEmailMatchesFamily = !emailOwners || emailOwners.has(`${familyId}\u0000${parentId}`)
+    const parentEmail = linkedAccount?.email
+      ? normalizeLower(linkedAccount.email)
+      : (profileEmailMatchesFamily ? profileEmail : "")
+    return {
+      familyId,
+      parentId: parentId || "Unassigned",
+      parentEmail,
+      label: `${familyId} | ${firstChild?.eaglesId || "Unassigned"}`,
     }
-    return pairs
-      .sort((left, right) => left.parentId.localeCompare(right.parentId, undefined, { numeric: true }))
-      .map(({ parentId, parentEmail }) => ({
-        familyId,
-        parentId,
-        parentEmail,
-        label: `${familyId} - ${parentId}`,
-      }))
   })
   return { familyIds: sortedFamilyIds, familyOptions }
 }
@@ -8434,7 +8429,12 @@ async function handleApiRequest(request, response, pathname, url) {
     const [profileRows, generatedFamilies, activeParentAccounts] = await Promise.all([
       prisma.studentProfile.findMany({
         where: { familyId: { not: null } },
-        select: { familyId: true, parentsId: true, motherEmail: true },
+        select: {
+          familyId: true,
+          parentsId: true,
+          motherEmail: true,
+          student: { select: { eaglesId: true, createdAt: true } },
+        },
       }),
       prisma.family.findMany({ select: { familyId: true }, orderBy: { sequence: "asc" } }),
       prisma.parentPortalAccount.findMany({

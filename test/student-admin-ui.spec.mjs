@@ -8484,6 +8484,12 @@ test("new profile form hydrates next student number and keeps floor at 100+", as
     }
     if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
     if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: ["Main Campus"] })
+    if (url.includes("/api/admin/family-ids")) {
+      return jsonResponse(200, {
+        familyIds: ["fam-0032"],
+        familyOptions: [{ familyId: "fam-0032", parentId: "cmparent32", label: "fam-0032 | eagles032" }],
+      })
+    }
     if (url.includes("/api/admin/students/next-student-number")) {
       nextStudentNumberCalls += 1
       return jsonResponse(200, { startAt: 100, nextStudentNumber: 226 })
@@ -8552,8 +8558,19 @@ test("new profile form hydrates next student number and keeps floor at 100+", as
     assert.equal(dom.window.document.getElementById("f_studentNumber")?.value, "226")
     assert.equal(dom.window.document.getElementById("f_eaglesId")?.value, "")
   })
+  dom.window.document.getElementById("profileCreateInfoBtn")?.click()
+  await waitFor(() => {
+    assert.ok(dom.window.document.getElementById("familyIdExisting"))
+    assert.equal(
+      Array.from(dom.window.document.getElementById("familyIdExisting")?.options || []).some(
+        (option) => option.textContent === "fam-0032 | eagles032",
+      ),
+      true,
+    )
+  })
   assert.ok(nextStudentNumberCalls >= 1)
 
+  await settleDomAsync(dom)
   dom.window.close()
 })
 

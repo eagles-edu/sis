@@ -2,11 +2,12 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { reconcileParentPortalStudentLinks } from "../src/modules/admin/student-write-import.mjs"
 
-test("moving a student into an existing parent family reuses that account link", async () => {
+test("moving a student into an existing family links every child to its single parent account", async () => {
   const calls = []
   const prisma = {
     studentProfile: {
       findMany: async () => [{ studentRefId: "student-misa" }, { studentRefId: "student-sibling" }],
+      updateMany: async (args) => calls.push({ method: "profile.updateMany", args }),
     },
     parentPortalStudentLink: {
       upsert: async (args) => {
@@ -31,24 +32,29 @@ test("moving a student into an existing parent family reuses that account link",
   })
 
   assert.deepEqual(calls.map(({ method }) => method), [
+    "profile.updateMany",
     "link.upsert",
     "link.deleteMany",
     "link.upsert",
     "link.deleteMany",
   ])
-  assert.deepEqual(calls[0].args.create, {
+  assert.deepEqual(calls[0].args, {
+    where: { familyId: "fam-0125" },
+    data: { parentsId: "cmtin001" },
+  })
+  assert.deepEqual(calls[1].args.create, {
     parentAccountId: "account-tin",
     studentRefId: "student-misa",
   })
-  assert.deepEqual(calls[1].args.where, {
+  assert.deepEqual(calls[2].args.where, {
     studentRefId: "student-misa",
     parentAccountId: { not: "account-tin" },
   })
-  assert.deepEqual(calls[2].args.create, {
+  assert.deepEqual(calls[3].args.create, {
     parentAccountId: "account-tin",
     studentRefId: "student-sibling",
   })
-  assert.deepEqual(calls[3].args.where, {
+  assert.deepEqual(calls[4].args.where, {
     studentRefId: "student-sibling",
     parentAccountId: { not: "account-tin" },
   })

@@ -36,6 +36,12 @@ test("authenticated manual parent invitation preserves an editable draft across 
   const eaglesId = `KA029${compactStamp.slice(0, 8)}`
   const parentsId = `KAP${compactStamp.slice(0, 12)}`
   const familyId = `KAF${compactStamp.slice(0, 12)}`
+  const sisConfig = await prisma.sisConfigMirror.findUnique({
+    where: { id: "sis-config" },
+    select: { payloadJson: true },
+  })
+  const schoolYear = String(sisConfig?.payloadJson?.uiSettings?.schoolSetup?.schoolYear || "").trim()
+  assert.ok(schoolYear, "parent invitation E2E requires the active school year from the dev SIS config")
   const email = `parent-${compactStamp}@example.invalid`
   const phone = `+849${compactStamp.slice(0, 8)}`
   const editedPhone = `+848${compactStamp.slice(0, 8)}`
@@ -142,7 +148,7 @@ test("authenticated manual parent invitation preserves an editable draft across 
       },
       enrollmentPeriods: {
         create: {
-          schoolYear: "2026",
+          schoolYear,
           status: "active",
           startedAt: new Date("2026-01-01T00:00:00.000Z"),
         },
@@ -323,6 +329,22 @@ test("authenticated manual parent invitation preserves an editable draft across 
   assert.equal(approvedQueue?.reviewedByUsername, ADMIN.user)
   assert.equal(completedInvitation?.status, "completed")
   assert.ok(completedInvitation?.completedAt)
+
+  const profileEngagementResponse = await adminPage.evaluate(async (expectedParentsId) => {
+    const response = await fetch("/api/admin/profile-engagement?take=2000")
+    const payload = await response.json()
+    return {
+      status: response.status,
+      family: payload.rows?.find((row) => row.parentsId === expectedParentsId) || null,
+    }
+  }, parentsId)
+  assert.equal(profileEngagementResponse.status, 200, "authenticated admin must load customer profile engagement")
+  const familyEngagement = profileEngagementResponse.family
+  assert.ok(familyEngagement, "completed first-time family must appear in Profile Engagement")
+  assert.equal(familyEngagement.invitationStatus, "completed")
+  assert.ok(familyEngagement.invitationCompletedAt)
+  assert.equal(familyEngagement.learnerCount, 1)
+  assert.equal(familyEngagement.eaglesIds, eaglesId)
 
   await parentContext.close()
   await adminContext.close()
