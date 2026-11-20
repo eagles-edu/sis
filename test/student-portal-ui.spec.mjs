@@ -415,6 +415,17 @@ test("student News Check revalidates and retries once when its session probe suc
           saved: true,
           mmrPassed: true,
           complianceFailed: false,
+          failedFields: [],
+          complianceFailedFields: {},
+          validation: {
+            details: {
+              articleDateline: {
+                score: 0.13,
+                threshold: 0.6,
+                relaxedDatelineEquivalent: true,
+              },
+            },
+          },
           message: "Draft saved.",
           item: {
             id: "news-check-transient-session",
@@ -478,6 +489,7 @@ test("student News Check revalidates and retries once when its session probe suc
   assert.equal(document.getElementById("appPanel")?.classList.contains("hidden"), false)
   assert.equal(document.documentElement.getAttribute("data-student-auth-state"), "authenticated")
   assert.equal(document.getElementById("submitBtn")?.disabled, false, "the recovered passing Check enables Submit")
+  assert.equal(document.querySelectorAll("#newsReportFormCard .field-validation-message").length, 0, "an explicit passing Check is not overturned by a below-threshold raw similarity score")
   assert.equal(dom.window.localStorage.getItem("sis.student.newsDraft.v1:flyers01"), null, "successful Check clears the temporary local recovery draft")
   dom.window.close()
 })

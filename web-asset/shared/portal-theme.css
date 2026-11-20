@@ -3046,6 +3046,11 @@ body.parent-portal-page .field-validation-message {
   line-height: 1.35;
   margin: 2px 0 0;
 }
+body.student-portal-page #newsReportFormCard .field-validation-message {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  margin-top: 4px;
+}
 body.student-portal-page .queue-table-wrap table.news-queue-table th,
 body.student-portal-page .queue-table-wrap table.news-queue-table td,
 body.parent-portal-page .queue-table-wrap table.news-queue-table th,

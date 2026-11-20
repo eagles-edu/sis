@@ -405,7 +405,7 @@ body.parent-portal-page .field.is-invalid input,
 body.parent-portal-page .field.is-invalid textarea,body.student-portal-page .field.is-invalid input,
 body.student-portal-page .field.is-invalid textarea,
 body.student-portal-page .news-vocabulary-row [data-vocabulary-field].is-invalid{background:var(--portal-status-bad-bg);border-color:var(--portal-status-bad-border);box-shadow:var(--portal-field-invalid-shadow)}
-body.parent-portal-page .field-validation-message,body.student-portal-page .field-validation-message{color:var(--portal-status-bad-text);font-size:12px;line-height:1.35;margin:2px 0 0}
+body.parent-portal-page .field-validation-message,body.student-portal-page .field-validation-message{color:var(--portal-status-bad-text);font-size:12px;line-height:1.35;margin:2px 0 0}body.student-portal-page #newsReportFormCard .field-validation-message{font-size:.875rem;line-height:1.45;margin-top:4px}
 body.parent-portal-page .queue-table-wrap table.news-queue-table td,
 body.parent-portal-page .queue-table-wrap table.news-queue-table th,
 body.student-portal-page .queue-table-wrap table.news-queue-table td,body.student-portal-page .queue-table-wrap table.news-queue-table th{padding:4px 6px}

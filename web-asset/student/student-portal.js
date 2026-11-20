@@ -445,6 +445,10 @@
         if (Object.keys(direct).length) return direct;
         const compliance = normalizeFailedFieldMap(payloadBody?.complianceFailedFields || {});
         if (Object.keys(compliance).length) return compliance;
+        if (
+          (payloadBody?.mmrPassed === true && payloadBody?.complianceFailed !== true) ||
+          (payloadBody?.item?.currentMmrPassed === true && payloadBody?.item?.complianceFailed !== true)
+        ) return {};
         const failedArray = failedFieldMapFromFieldKeys(payloadBody?.failedFields);
         if (Object.keys(failedArray).length) return failedArray;
         const validationDetails = extractValidationDetailsObject(payloadBody);
@@ -463,10 +467,6 @@
           .map((task) => task?.field),
         );
         if (Object.keys(taskFields).length) return taskFields;
-        if (
-          (payloadBody?.mmrPassed === true && payloadBody?.complianceFailed !== true) ||
-          (payloadBody?.item?.currentMmrPassed === true && payloadBody?.item?.complianceFailed !== true)
-        ) return {};
         return {
           [NEWS_GENERIC_COMPLIANCE_FIELD_ID]: {
             message: "Saved and marked for revision, but field-level details were not returned. Update source, title, byline, dateline, and lead, then submit again.",
