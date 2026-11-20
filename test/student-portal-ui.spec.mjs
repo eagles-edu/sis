@@ -320,6 +320,9 @@ test("student News Check renders a specific session message for a 401 response",
           openReport: report,
         })
       }
+      if (pathname === "/api/student/auth/me" && method === "GET") {
+        return jsonTextResponse(401, { error: "Unauthorized" })
+      }
       if (pathname === "/api/student/news-reports/check" && method === "POST") {
         return jsonTextResponse(401, { error: "Unauthorized" })
       }
@@ -377,6 +380,105 @@ test("student News Check renders a specific session message for a 401 response",
   assert.equal(document.documentElement.getAttribute("data-student-auth-state"), "unauthenticated")
   const localDraft = JSON.parse(dom.window.localStorage.getItem("sis.student.newsDraft.v1:flyers01") || "null")
   assert.equal(localDraft?.payload?.articleTitle, titleInput.value, "the current News work is kept in browser recovery storage")
+  dom.window.close()
+})
+
+test("student News Check revalidates and retries once when its session probe succeeds", async () => {
+  const calls = []
+  let checkCount = 0
+  let sessionProbeCount = 0
+  const dom = await createStudentPortalDom(
+    async (resource, init = {}) => {
+      const pathname = new URL(toUrlText(resource), "http://preview.invalid").pathname
+      const method = String(init.method || "GET").toUpperCase()
+      calls.push(`${method} ${pathname}`)
+      if (pathname === "/api/student/auth/me" && method === "GET") {
+        sessionProbeCount += 1
+        return jsonTextResponse(200, { authenticated: true, user: { eaglesId: "flyers01", role: "student" } })
+      }
+      if (pathname === "/api/student/news-reports/calendar" && method === "GET") {
+        return jsonTextResponse(200, {
+          window: {
+            reportDate: "2026-04-26",
+            todayDate: "2026-04-26",
+            closesAt: "2026-04-27T23:59:00+07:00",
+          },
+          calendar: [],
+          items: [],
+          openReport: null,
+        })
+      }
+      if (pathname === "/api/student/news-reports/check" && method === "POST") {
+        checkCount += 1
+        if (checkCount === 1) return jsonTextResponse(401, { error: "Unauthorized" })
+        return jsonTextResponse(200, {
+          saved: true,
+          mmrPassed: true,
+          complianceFailed: false,
+          message: "Draft saved.",
+          item: {
+            id: "news-check-transient-session",
+            reportDate: "2026-04-26",
+            currentMmrPassed: true,
+            dateSatisfied: true,
+            submissionState: "ready",
+          },
+        })
+      }
+      return jsonTextResponse(200, {})
+    },
+    "http://127.0.0.1:46145/web-asset/student/student-portal.html",
+    {
+      initialAuthState: {
+        authenticated: true,
+        user: { eaglesId: "flyers01", role: "student" },
+      },
+      beforeParse(window) {
+        window.SIS_VOCABULARY_ESL = {
+          editorRowHtml(rowUid) {
+            const index = String(rowUid).split("-")[0]
+            return `<div data-news-vocabulary-row="${index}">
+              <select data-vocabulary-field="partOfSpeech"><option value="noun">noun</option></select>
+              <input data-vocabulary-field="english">
+              <input data-vocabulary-field="vietnamese">
+              <input data-vocabulary-field="syllabication">
+              <textarea data-vocabulary-field="definition"></textarea>
+            </div>`
+          },
+          hydrate() {},
+          sync() {},
+          bindLookupButtons() {},
+          canonicalizeSyllabication(value) { return String(value || "") },
+          classification() { return {} },
+          originMetadata() { return {} },
+        }
+      },
+    },
+  )
+
+  const document = dom.window.document
+  await waitFor(() => {
+    assert.equal(document.getElementById("appPanel").classList.contains("hidden"), false)
+    assert.equal(document.querySelectorAll('#newsVocabularyRows [data-vocabulary-field="english"]').length, 5)
+  }, 5000)
+  document.getElementById("newsPageCard")?.classList.remove("hidden")
+  await waitFor(() => assert.equal(document.getElementById("checkBtn")?.disabled, false), 5000)
+  const titleInput = document.getElementById("articleTitle")
+  titleInput.value = "Synthetic session revalidation test"
+  titleInput.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+  document.getElementById("checkBtn")?.click()
+
+  await waitFor(() => {
+    assert.equal(checkCount, 2)
+    assert.match(document.getElementById("formStatus")?.textContent || "", /CHECKS PASSED/u)
+  }, 5000)
+  assert.equal(sessionProbeCount, 1)
+  assert.deepEqual(calls.filter((call) => call === "POST /api/student/news-reports/check").length, 2)
+  assert.equal(document.getElementById("loginPanel")?.classList.contains("hidden"), true)
+  assert.equal(document.getElementById("appPanel")?.classList.contains("hidden"), false)
+  assert.equal(document.documentElement.getAttribute("data-student-auth-state"), "authenticated")
+  assert.equal(document.getElementById("submitBtn")?.disabled, false, "the recovered passing Check enables Submit")
+  assert.equal(dom.window.localStorage.getItem("sis.student.newsDraft.v1:flyers01"), null, "successful Check clears the temporary local recovery draft")
   dom.window.close()
 })
 

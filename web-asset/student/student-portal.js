@@ -4162,13 +4162,37 @@
           init.headers["Content-Type"] = "application/json";
           init.body = JSON.stringify(options.body);
         }
-        const response = await fetch(resolveApiUrl(path), init);
+        const requestUrl = resolveApiUrl(path);
+        const requestPath = new URL(requestUrl, window.location.href).pathname;
+        let response = await fetch(requestUrl, init);
         if (response.status === 204) return null;
-        const data = await response.json().catch(() => ({}));
-        const requestPath = new URL(resolveApiUrl(path), window.location.href).pathname;
+        let data = await response.json().catch(() => ({}));
         const isStudentApiRequest = requestPath.startsWith(`${STUDENT_API_PREFIX}/`);
         const isStudentLoginRequest = requestPath === `${STUDENT_AUTH_PREFIX}/login`;
         const isStudentLogoutRequest = requestPath === `${STUDENT_AUTH_PREFIX}/logout`;
+        if (response.status === 401 && isStudentApiRequest && !isStudentLoginRequest && !isStudentLogoutRequest) {
+          if (state.newsFormDirty === true) persistNewsDraftLocally();
+          if (requestPath === STUDENT_NEWS_REPORTS_CHECK_PATH) {
+            const sessionResponse = await fetch(resolveApiUrl(`${STUDENT_AUTH_PREFIX}/me`), {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+            }).catch(() => null);
+            const sessionPayload = sessionResponse?.ok
+              ? await sessionResponse.json().catch(() => ({}))
+              : null;
+            if (sessionPayload?.authenticated === true) {
+              response = await fetch(requestUrl, init);
+              if (response.status === 204) return null;
+              data = await response.json().catch(() => ({}));
+            } else if (sessionResponse?.status !== 401) {
+              const err = new Error("News Check could not confirm the student session. Your draft is saved; retry Check.");
+              err.status = sessionResponse?.status || 503;
+              err.payload = data;
+              throw err;
+            }
+          }
+        }
         if (response.status === 401 && isStudentApiRequest && !isStudentLoginRequest && !isStudentLogoutRequest) {
           if (state.newsFormDirty === true) persistNewsDraftLocally();
           setBrevoStudentIdentity(null);
@@ -5556,8 +5580,8 @@
             body: payload,
           });
           hideNewsGrammarCheckWaitForResult();
-          await handleNewsCheckResult(saved, options);
           if (saved?.mmrPassed === true && saved?.complianceFailed !== true) clearNewsDraftLocally();
+          await handleNewsCheckResult(saved, options);
         } catch (error) {
           if (Number(error?.status) === 401) {
             const sessionError = new Error(STUDENT_NEWS_CHECK_UNAUTHORIZED_MESSAGE);
