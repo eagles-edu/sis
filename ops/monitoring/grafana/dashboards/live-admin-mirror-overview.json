@@ -222,7 +222,7 @@
       },
       "targets": [
         {
-          "expr": "count(sis_keepalive_check_success{environment=\"live\"}) or vector(0)",
+          "expr": "(count(probe_success{job=\"blackbox-website-http\",site=\"admin\"}) or vector(0)) + (count(probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"}) or vector(0)) + (count(probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"}) or vector(0)) + (count(node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}) or vector(0)) + (count(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"}) or vector(0)) + (count(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}) or vector(0)) + (count(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"}) or vector(0)) + (count(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}) or vector(0)) + (count(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"}) or vector(0)) + (count(sis_grade_feed_readonly_data_available{environment=\"live\"}) or vector(0))",
           "refId": "A",
           "instant": true
         }
@@ -260,7 +260,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "Live subsystem smoke flows are not scheduled. This page shows read-only live dependency checks and explicitly leaves absent workflow results unreported."
+        "content": "Live runs ten read-only smoke probes: public page, SIS API, auth guard, service, PostgreSQL container/query, three Redis roles, and grade-feed aggregate query. Dependency checks run every 60s; configured vendor health runs every 15m. No customer workflow writes or messages are generated."
       }
     },
     {
@@ -268,15 +268,16 @@
       "type": "table",
       "title": "Subsystem smoke results",
       "gridPos": {
-        "h": 9,
+        "h": 16,
         "w": 12,
         "x": 0,
         "y": 7
       },
       "targets": [
         {
-          "expr": "sis_keepalive_check_success{environment=\"live\"}",
+          "expr": "label_replace(probe_success{job=\"blackbox-website-http\",site=\"admin\"}, \"subsystem\", \"Public admin page\", \"__name__\", \".*\") or label_replace(probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"}, \"subsystem\", \"SIS API route\", \"__name__\", \".*\") or label_replace(probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"}, \"subsystem\", \"Auth guard\", \"__name__\", \".*\") or label_replace(node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}, \"subsystem\", \"SIS API service\", \"__name__\", \".*\") or label_replace(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"}, \"subsystem\", \"PostgreSQL container\", \"__name__\", \".*\") or label_replace(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}, \"subsystem\", \"PostgreSQL SELECT 1\", \"__name__\", \".*\") or label_replace(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"}, \"subsystem\", \"Redis app role\", \"__name__\", \".*\") or label_replace(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}, \"subsystem\", \"Redis sessions role\", \"__name__\", \".*\") or label_replace(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"}, \"subsystem\", \"Redis cache role\", \"__name__\", \".*\") or label_replace(sis_grade_feed_readonly_data_available{environment=\"live\"}, \"subsystem\", \"Grade/feed read-only query\", \"__name__\", \".*\")",
           "refId": "A",
+          "legendFormat": "{{subsystem}}",
           "format": "table",
           "instant": true
         }
@@ -323,14 +324,14 @@
       },
       "targets": [
         {
-          "expr": "time() - sis_keepalive_check_last_check_timestamp_seconds{environment=\"live\"}",
+          "expr": "time() - site_dependency_environment_monitor_last_check_timestamp_seconds{environment=\"live\"}",
           "refId": "A",
-          "legendFormat": "age {{group}}"
+          "legendFormat": "dependency monitor age"
         },
         {
-          "expr": "sis_keepalive_check_stale_after_seconds{environment=\"live\"}",
+          "expr": "time() - sis_external_service_last_check_timestamp_seconds{environment=\"live\"}",
           "refId": "B",
-          "legendFormat": "stale after {{group}}"
+          "legendFormat": "vendor check age"
         }
       ],
       "fieldConfig": {
@@ -363,13 +364,58 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 16
+        "y": 23
       },
       "targets": [
         {
-          "expr": "last_over_time(sis_keepalive_check_success{environment=\"live\"}[10m])",
+          "expr": "last_over_time(probe_success{job=\"blackbox-website-http\",site=\"admin\"}[10m])",
           "refId": "A",
-          "legendFormat": "{{group}}"
+          "legendFormat": "Public admin page"
+        },
+        {
+          "expr": "last_over_time(probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"}[10m])",
+          "refId": "B",
+          "legendFormat": "SIS API route"
+        },
+        {
+          "expr": "last_over_time(probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"}[10m])",
+          "refId": "C",
+          "legendFormat": "Auth guard"
+        },
+        {
+          "expr": "last_over_time(node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}[10m])",
+          "refId": "D",
+          "legendFormat": "SIS API service"
+        },
+        {
+          "expr": "last_over_time(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"}[10m])",
+          "refId": "E",
+          "legendFormat": "PostgreSQL container"
+        },
+        {
+          "expr": "last_over_time(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}[10m])",
+          "refId": "F",
+          "legendFormat": "PostgreSQL SELECT 1"
+        },
+        {
+          "expr": "last_over_time(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"}[10m])",
+          "refId": "G",
+          "legendFormat": "Redis app role"
+        },
+        {
+          "expr": "last_over_time(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}[10m])",
+          "refId": "H",
+          "legendFormat": "Redis sessions role"
+        },
+        {
+          "expr": "last_over_time(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"}[10m])",
+          "refId": "I",
+          "legendFormat": "Redis cache role"
+        },
+        {
+          "expr": "last_over_time(sis_grade_feed_readonly_data_available{environment=\"live\"}[10m])",
+          "refId": "J",
+          "legendFormat": "Grade/feed read-only query"
         }
       ],
       "fieldConfig": {
@@ -402,13 +448,23 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 31
       },
       "targets": [
         {
-          "expr": "sis_keepalive_check_duration_seconds{environment=\"live\"}",
+          "expr": "site_dependency_probe_duration_seconds{environment=\"live\",dependency=~\"sis-(postgres|app|sessions|cache)\"}",
           "refId": "A",
-          "legendFormat": "{{group}}"
+          "legendFormat": "{{dependency}} / {{check}}"
+        },
+        {
+          "expr": "probe_duration_seconds{job=~\"blackbox-website-http|blackbox-website-api|blackbox-admin-auth-api\",site=\"admin\"}",
+          "refId": "B",
+          "legendFormat": "{{check}}"
+        },
+        {
+          "expr": "sis_external_service_check_duration_seconds{environment=\"live\"}",
+          "refId": "C",
+          "legendFormat": "{{service}}"
         }
       ],
       "fieldConfig": {
@@ -441,7 +497,7 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 24
+        "y": 31
       },
       "targets": [
         {
@@ -451,22 +507,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "No request samples"
         },
         "overrides": []
       }
@@ -479,7 +520,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 32
+        "y": 39
       },
       "targets": [
         {
@@ -490,25 +531,11 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "No real student-write samples in the selected range"
         },
         "overrides": []
-      }
+      },
+      "description": "No authenticated student-write samples are present in the selected range. Missing telemetry is not zero latency; both SIS runtimes need real instrumented writes before this chart can plot stages."
     },
     {
       "id": 14,
@@ -518,7 +545,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 32
+        "y": 39
       },
       "targets": [
         {
@@ -562,7 +589,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 40
+        "y": 47
       },
       "targets": [
         {
@@ -601,7 +628,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 40
+        "y": 47
       },
       "targets": [
         {
@@ -645,7 +672,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 48
+        "y": 55
       },
       "targets": [
         {
@@ -672,26 +699,36 @@
           "expr": "sis_library_mw_learners_key_configured{environment=\"live\"}",
           "refId": "E",
           "legendFormat": "MW Learner's configured"
+        },
+        {
+          "expr": "sis_external_service_available{environment=\"live\",service=~\"cmu_pronunciation_dictionary|merriam_webster_.*\"}",
+          "refId": "F",
+          "legendFormat": "{{service}} health"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"live\",service=~\"cmu_pronunciation_dictionary|merriam_webster_.*\"}",
+          "refId": "G",
+          "legendFormat": "{{service}} configured"
+        },
+        {
+          "expr": "sis_external_service_http_status{environment=\"live\",service=~\"merriam_webster_.*\"}",
+          "refId": "H",
+          "legendFormat": "{{service}} HTTP status"
+        },
+        {
+          "expr": "sis_library_dictionary_builder_provider_checked{environment=\"live\"}",
+          "refId": "I",
+          "legendFormat": "{{provider}} checked"
+        },
+        {
+          "expr": "sis_library_dictionary_builder_provider_available{environment=\"live\"}",
+          "refId": "J",
+          "legendFormat": "{{provider}} available"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "Waiting for the 15-minute read-only vendor check"
         },
         "overrides": []
       }
@@ -704,7 +741,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 48
+        "y": 55
       },
       "targets": [
         {
@@ -726,26 +763,21 @@
           "expr": "sis_news_submission_success{environment=\"live\"}",
           "refId": "D",
           "legendFormat": "News submit"
+        },
+        {
+          "expr": "sis_external_service_available{environment=\"shared\",service=~\"languagetool_.*\"}",
+          "refId": "E",
+          "legendFormat": "{{service}}"
+        },
+        {
+          "expr": "sis_external_service_http_status{environment=\"shared\",service=~\"languagetool_.*\"}",
+          "refId": "F",
+          "legendFormat": "{{service}} HTTP status"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "No News workflow sample in this environment"
         },
         "overrides": []
       }
@@ -758,7 +790,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 56
+        "y": 63
       },
       "targets": [
         {
@@ -780,26 +812,46 @@
           "expr": "sis_grade_feed_exercise_submission_rows{environment=\"live\",source=\"google_forms\"}",
           "refId": "D",
           "legendFormat": "Google Forms submissions"
+        },
+        {
+          "expr": "sis_grade_feed_readonly_data_available{environment=\"live\"}",
+          "refId": "E",
+          "legendFormat": "Read-only DB query"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"live\",service=\"google_forms_grade_secret\"}",
+          "refId": "F",
+          "legendFormat": "Grade endpoint secret configured"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"live\",service=\"google_forms_discovery\"}",
+          "refId": "G",
+          "legendFormat": "Forms API discovery configured"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"live\",service=\"moodle_endpoint\"}",
+          "refId": "H",
+          "legendFormat": "Moodle endpoint configured"
+        },
+        {
+          "expr": "sis_external_service_available{environment=\"live\",service=\"google_forms_discovery\"}",
+          "refId": "I",
+          "legendFormat": "Forms API discovery health"
+        },
+        {
+          "expr": "sis_external_service_http_status{environment=\"live\",service=\"google_forms_discovery\"}",
+          "refId": "J",
+          "legendFormat": "Forms API discovery HTTP status"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"live\",service=\"moodle_provisioning_secret\"}",
+          "refId": "K",
+          "legendFormat": "Moodle provisioning secret configured"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "No stored feed rows or configured vendor endpoint"
         },
         "overrides": []
       }
@@ -812,7 +864,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 56
+        "y": 63
       },
       "targets": [
         {
@@ -824,26 +876,31 @@
           "expr": "sis_engagement_webhook_last_received_timestamp_seconds{environment=\"live\"}",
           "refId": "B",
           "legendFormat": "last webhook received"
+        },
+        {
+          "expr": "sis_engagement_webhook_readonly_data_available{environment=\"live\"}",
+          "refId": "C",
+          "legendFormat": "Read-only DB query"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"live\",service=\"brevo_api\"}",
+          "refId": "D",
+          "legendFormat": "Brevo API configured"
+        },
+        {
+          "expr": "sis_external_service_available{environment=\"live\",service=\"brevo_api\"}",
+          "refId": "E",
+          "legendFormat": "Brevo API health"
+        },
+        {
+          "expr": "sis_external_service_http_status{environment=\"live\",service=\"brevo_api\"}",
+          "refId": "F",
+          "legendFormat": "Brevo API HTTP status"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "Brevo API endpoint is not configured"
         },
         "overrides": []
       }
@@ -856,7 +913,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 64
+        "y": 71
       },
       "targets": [
         {
@@ -894,17 +951,87 @@
     },
     {
       "id": 22,
-      "type": "text",
-      "title": "MEGS integration coverage",
+      "type": "stat",
+      "title": "MEGS health endpoint configuration",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 64
+        "y": 71
       },
-      "options": {
-        "mode": "markdown",
-        "content": "MEGS is a separate runtime at `/home/eagles/dockerz/megs`. SIS Prometheus currently has no MEGS-owned health or grade-ingestion series, so this dashboard does not infer MEGS health from SIS grade counts."
+      "targets": [
+        {
+          "expr": "sis_external_service_configured{environment=\"live\",service=\"megs_endpoint\"}",
+          "refId": "A",
+          "legendFormat": "MEGS endpoint configured",
+          "instant": true
+        },
+        {
+          "expr": "sis_external_service_available{environment=\"live\",service=\"megs_endpoint\"}",
+          "refId": "B",
+          "legendFormat": "MEGS endpoint health",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "MEGS endpoint not configured",
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MEGS endpoint configured"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "NOT CONFIGURED",
+                        "color": "gray"
+                      },
+                      "1": {
+                        "text": "CONFIGURED",
+                        "color": "green"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MEGS endpoint health"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "DOWN",
+                        "color": "red"
+                      },
+                      "1": {
+                        "text": "UP",
+                        "color": "green"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -915,7 +1042,7 @@
         "h": 4,
         "w": 6,
         "x": 0,
-        "y": 80
+        "y": 87
       },
       "targets": [
         {
@@ -925,26 +1052,19 @@
         {
           "expr": "sis_keepalive_nightly_smoke_no_external_message_proof{environment=\"live\"}",
           "refId": "B"
+        },
+        {
+          "expr": "sis_keepalive_nightly_smoke_last_check_timestamp_seconds{environment=\"live\"}",
+          "refId": "C"
+        },
+        {
+          "expr": "time() - sis_keepalive_nightly_smoke_last_check_timestamp_seconds{environment=\"live\"}",
+          "refId": "D"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "No live nightly suite is scheduled"
         },
         "overrides": []
       }
@@ -957,7 +1077,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 72
+        "y": 79
       },
       "targets": [
         {
@@ -1001,7 +1121,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 72
+        "y": 79
       },
       "targets": [
         {
@@ -1045,11 +1165,11 @@
         "h": 4,
         "w": 18,
         "x": 6,
-        "y": 80
+        "y": 87
       },
       "options": {
         "mode": "markdown",
-        "content": "Latency panels use measured request/probe durations. Missing series mean the source is not instrumented or no observation exists in the selected range; they are never converted into healthy zeroes. PostgreSQL and Redis resource panels are shared-container Docker samples, not environment-attributed database usage. Redis memory/client totals require a secured exporter and are not currently collected."
+        "content": "Test results are authenticated workflow checks; live results are ten read-only probes and do not imply live workflow writes. Student-save stage charts require real instrumented writes; missing samples are stated, never converted into zero latency. Grade panels show aggregate rows stored by each source, not vendor delivery success. Vendor health is a read-only request every 15m; an unconfigured endpoint is shown as unconfigured. PostgreSQL and Redis CPU/memory are shared-container samples. Redis memory/client totals require a secured exporter and are not collected."
       }
     }
   ]

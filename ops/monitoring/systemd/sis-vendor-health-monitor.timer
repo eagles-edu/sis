@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh SIS vendor API health metrics every fifteen minutes
+
+[Timer]
+OnBootSec=5m
+OnUnitActiveSec=15m
+AccuracySec=30s
+Persistent=true
+Unit=sis-vendor-health-monitor.service
+
+[Install]
+WantedBy=timers.target

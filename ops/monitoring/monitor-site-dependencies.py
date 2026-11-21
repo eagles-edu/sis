@@ -98,6 +98,114 @@ def postgres_query_ready(database_url: str, container_running: bool, expected_da
     return result.returncode == 0 and result.stdout.strip() == f"{expected_database}|1", duration
 
 
+def postgres_readonly_integration_metrics(database_url: str, container_running: bool, expected_database: str) -> tuple[bool, list[tuple[str, str, int, int]]]:
+    if not container_running:
+        return False, []
+    parsed = urlsplit(database_url)
+    if parsed.scheme not in {"postgres", "postgresql"}:
+        return False, []
+    username = unquote(parsed.username or "")
+    password = unquote(parsed.password or "")
+    database = unquote(parsed.path.lstrip("/"))
+    if not username or not password or database != expected_database:
+        return False, []
+    query = (
+        "SELECT 'exercise_submission', COALESCE(\"sourceSystem\", 'other'), COUNT(*)::bigint, "
+        "COALESCE(EXTRACT(EPOCH FROM MAX(\"createdAt\")), 0)::bigint "
+        "FROM public.\"ExerciseSubmission\" GROUP BY \"sourceSystem\" "
+        "UNION ALL "
+        "SELECT 'grade_record', COALESCE(\"sourceSystem\", 'other'), COUNT(*)::bigint, "
+        "COALESCE(EXTRACT(EPOCH FROM MAX(\"updatedAt\")), 0)::bigint "
+        "FROM public.\"StudentGradeRecord\" GROUP BY \"sourceSystem\""
+    )
+    command = (
+        'IFS= read -r PGPASSWORD; export PGPASSWORD; '
+        'exec psql -w -h 127.0.0.1 -p 5432 -U "$PGUSER" -d "$PGDATABASE" '
+        f'-v ON_ERROR_STOP=1 -F "|" -Atq -c {json.dumps(query)}'
+    )
+    result = subprocess.run(
+        [
+            "docker", "exec", "-i", "-e", f"PGUSER={username}", "-e",
+            f"PGDATABASE={database}", POSTGRES_CONTAINER, "sh", "-c", command,
+        ],
+        input=password + "\n",
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=TIMEOUT_SECONDS,
+    )
+    if result.returncode != 0:
+        return False, []
+    exercise: dict[str, tuple[int, int]] = {"moodle": (0, 0), "google_forms": (0, 0), "other": (0, 0)}
+    grades: dict[str, tuple[int, int]] = {"moodle": (0, 0), "google_forms": (0, 0), "other": (0, 0)}
+    for line in result.stdout.splitlines():
+        parts = line.split("|")
+        if len(parts) != 4 or parts[0] not in {"exercise_submission", "grade_record"}:
+            return False, []
+        kind, source_name, raw_count, raw_timestamp = parts
+        normalized_source = source_name.strip().lower().replace("-", "_").replace(" ", "_")
+        if normalized_source not in {"moodle", "google_forms"}:
+            normalized_source = "other"
+        try:
+            row_count = int(raw_count)
+            latest_timestamp = int(raw_timestamp)
+        except ValueError:
+            return False, []
+        target = exercise if kind == "exercise_submission" else grades
+        target[normalized_source] = (
+            target[normalized_source][0] + row_count,
+            max(target[normalized_source][1], latest_timestamp),
+        )
+    return True, [
+        ("exercise_submission", source, values[0], values[1])
+        for source, values in exercise.items()
+    ] + [
+        ("grade_record", source, values[0], values[1])
+        for source, values in grades.items()
+    ]
+
+
+def postgres_readonly_webhook_metrics(database_url: str, container_running: bool, expected_database: str) -> tuple[bool, int, int]:
+    if not container_running:
+        return False, 0, 0
+    parsed = urlsplit(database_url)
+    if parsed.scheme not in {"postgres", "postgresql"}:
+        return False, 0, 0
+    username = unquote(parsed.username or "")
+    password = unquote(parsed.password or "")
+    database = unquote(parsed.path.lstrip("/"))
+    if not username or not password or database != expected_database:
+        return False, 0, 0
+    query = (
+        'SELECT COUNT(*) FILTER (WHERE "processedAt" IS NULL)::bigint, '
+        'COALESCE(EXTRACT(EPOCH FROM MAX("receivedAt")), 0)::bigint '
+        'FROM public."BrevoEmailWebhookEvent"'
+    )
+    command = (
+        'IFS= read -r PGPASSWORD; export PGPASSWORD; '
+        'exec psql -w -h 127.0.0.1 -p 5432 -U "$PGUSER" -d "$PGDATABASE" '
+        f'-v ON_ERROR_STOP=1 -F "|" -Atq -c {json.dumps(query)}'
+    )
+    result = subprocess.run(
+        [
+            "docker", "exec", "-i", "-e", f"PGUSER={username}", "-e",
+            f"PGDATABASE={database}", POSTGRES_CONTAINER, "sh", "-c", command,
+        ],
+        input=password + "\n",
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=TIMEOUT_SECONDS,
+    )
+    if result.returncode != 0:
+        return False, 0, 0
+    try:
+        unprocessed, latest = result.stdout.strip().split("|", 1)
+        return True, int(unprocessed), int(latest)
+    except (ValueError, TypeError):
+        return False, 0, 0
+
+
 def read_redis_line(connection: socket.socket) -> bytes:
     line = bytearray()
     while not line.endswith(b"\r\n"):
@@ -292,6 +400,22 @@ def main() -> int:
         "# TYPE site_dependency_environment_monitor_success gauge",
         "# HELP site_dependency_environment_monitor_last_check_timestamp_seconds Unix time of the latest environment dependency check.",
         "# TYPE site_dependency_environment_monitor_last_check_timestamp_seconds gauge",
+        "# HELP sis_grade_feed_readonly_data_available Whether read-only exercise and grade aggregate queries completed for an environment.",
+        "# TYPE sis_grade_feed_readonly_data_available gauge",
+        "# HELP sis_grade_feed_exercise_submission_rows Number of exercise submissions grouped by fixed source category.",
+        "# TYPE sis_grade_feed_exercise_submission_rows gauge",
+        "# HELP sis_grade_feed_grade_rows Number of grade rows grouped by fixed source category.",
+        "# TYPE sis_grade_feed_grade_rows gauge",
+        "# HELP sis_grade_feed_exercise_submission_latest_ingested_timestamp_seconds Latest exercise submission creation time by fixed source category.",
+        "# TYPE sis_grade_feed_exercise_submission_latest_ingested_timestamp_seconds gauge",
+        "# HELP sis_grade_feed_grade_latest_updated_timestamp_seconds Latest grade update time by fixed source category.",
+        "# TYPE sis_grade_feed_grade_latest_updated_timestamp_seconds gauge",
+        "# HELP sis_engagement_webhook_readonly_data_available Whether the read-only Brevo webhook aggregate query completed for an environment.",
+        "# TYPE sis_engagement_webhook_readonly_data_available gauge",
+        "# HELP sis_engagement_webhook_unprocessed_events Number of email webhook events without a processed timestamp.",
+        "# TYPE sis_engagement_webhook_unprocessed_events gauge",
+        "# HELP sis_engagement_webhook_last_received_timestamp_seconds Unix timestamp of the most recently received email webhook event, or zero when none exists.",
+        "# TYPE sis_engagement_webhook_last_received_timestamp_seconds gauge",
         "# HELP site_dependency_container_metrics_available Whether Docker returned a resource snapshot for the shared dependency container.",
         "# TYPE site_dependency_container_metrics_available gauge",
         "# HELP site_dependency_container_cpu_percent Docker CPU usage percentage for a shared dependency container.",
@@ -321,6 +445,33 @@ def main() -> int:
             add_status(metrics, environment, domain, "sis-postgres", "authenticated-select-1", postgres_ready)
             add_probe_duration(metrics, environment, "sis-postgres", "authenticated-select-1", postgres_duration)
             env_success &= int(postgres_running and postgres_ready)
+
+            grades_available, grade_rows = postgres_readonly_integration_metrics(
+                sis_values["DATABASE_URL"], postgres_running and postgres_ready, expected_database
+            )
+            metrics.append(f'sis_grade_feed_readonly_data_available{{environment="{environment}"}} {int(grades_available)}')
+            if grades_available and environment == "live":
+                for kind, source, row_count, latest_timestamp in grade_rows:
+                    if kind == "exercise_submission":
+                        metrics.extend((
+                            f'sis_grade_feed_exercise_submission_rows{{environment="{environment}",source="{source}"}} {row_count}',
+                            f'sis_grade_feed_exercise_submission_latest_ingested_timestamp_seconds{{environment="{environment}",source="{source}"}} {latest_timestamp}',
+                        ))
+                    else:
+                        metrics.extend((
+                            f'sis_grade_feed_grade_rows{{environment="{environment}",source="{source}"}} {row_count}',
+                            f'sis_grade_feed_grade_latest_updated_timestamp_seconds{{environment="{environment}",source="{source}"}} {latest_timestamp}',
+                        ))
+
+            webhook_available, webhook_unprocessed, webhook_last_received = postgres_readonly_webhook_metrics(
+                sis_values["DATABASE_URL"], postgres_running and postgres_ready, expected_database
+            )
+            metrics.append(f'sis_engagement_webhook_readonly_data_available{{environment="{environment}"}} {int(webhook_available)}')
+            if environment == "live":
+                metrics.extend((
+                    f'sis_engagement_webhook_unprocessed_events{{environment="{environment}"}} {webhook_unprocessed}',
+                    f'sis_engagement_webhook_last_received_timestamp_seconds{{environment="{environment}"}} {webhook_last_received}',
+                ))
 
             redis_running = inspect_running(REDIS_CONTAINER)
             for dependency, key in (

@@ -72,7 +72,7 @@ test("Library metrics expose access, save, review, queue-age, and dependency res
   assert.match(metrics, /sis_library_oldest_open_review_age_seconds\{environment="dev"\} 7200\.000000/u)
   assert.match(metrics, /sis_library_redis_available\{environment="dev"\} 0\.000000/u)
   assert.doesNotMatch(metrics, /environment="(?:test|production)"|cookie|password|@[a-z0-9.-]+/iu)
-  assert.equal(metrics.split("\n").filter((line) => line.startsWith("sis_library_") && !line.includes('{environment="dev"}')).length, 0)
+  assert.equal(metrics.split("\n").filter((line) => line.startsWith("sis_library_") && !line.includes('environment="dev"')).length, 0)
   assert.throws(() => monitorMetrics({ openReviewCount: -1 }), /finite non-negative/u)
 })
 
@@ -83,18 +83,33 @@ test("test Library and Dictionary Builder metrics retain test-only labels", () =
   assert.doesNotMatch(metrics, /environment="dev"/u)
 })
 
-test("Dictionary Builder availability summary contains only aggregate provider counts", () => {
+test("Dictionary Builder availability summary contains bounded source states and aggregate provider counts", () => {
   const availability = summarizeDictionaryBuilderDefinitionAvailability({
     sources: [
-      { provider: "private-provider", definition: "sensitive definition", datumStatus: { definition: { status: "available" } } },
-      { provider: "other", datumStatus: { definition: { status: "not_found" } } },
-      { provider: "not-applicable", datumStatus: { definition: { status: "not_offered" } } },
-      { provider: "missing-status", datumStatus: {} },
+      { provider: "ldoce", definition: "sensitive definition", datumStatus: { definition: { status: "available" } } },
+      { provider: "oxford_ame", datumStatus: { definition: { status: "not_found" } } },
+      { provider: "britannica", datumStatus: { definition: { status: "not_offered" } } },
+      { provider: "private-provider", datumStatus: { definition: { status: "available" } } },
     ],
   })
-  assert.deepEqual(availability, { providersChecked: 2, providersAvailable: 1 })
+  assert.equal(availability.providersChecked, 2)
+  assert.equal(availability.providersAvailable, 1)
+  assert.equal(availability.providerAvailability.length, 12)
+  assert.deepEqual(availability.providerAvailability.find((item) => item.provider === "ldoce"), { provider: "ldoce", checked: 1, available: 1 })
+  assert.deepEqual(availability.providerAvailability.find((item) => item.provider === "oxford_ame"), { provider: "oxford_ame", checked: 1, available: 0 })
+  assert.deepEqual(availability.providerAvailability.find((item) => item.provider === "google_translate"), { provider: "google_translate", checked: 0, available: 0 })
   assert.doesNotMatch(JSON.stringify(availability), /sensitive definition|private-provider/u)
-  assert.deepEqual(summarizeDictionaryBuilderDefinitionAvailability({ sources: [] }), { providersChecked: 0, providersAvailable: 0 })
+  assert.equal(summarizeDictionaryBuilderDefinitionAvailability({ sources: [] }).providerAvailability.length, 12)
+})
+
+test("Dictionary Builder exports exactly twelve allowlisted checked states without marking unchecked sources unavailable", () => {
+  const metrics = monitorMetrics()
+  const checkedLines = metrics.split("\n").filter((line) => line.startsWith("sis_library_dictionary_builder_provider_checked{"))
+  const availableLines = metrics.split("\n").filter((line) => line.startsWith("sis_library_dictionary_builder_provider_available{"))
+  assert.equal(checkedLines.length, 12)
+  assert.equal(availableLines.length, 0)
+  assert.ok(checkedLines.some((line) => line.includes('provider="google_translate"') && line.endsWith(" 0.000000")))
+  assert.doesNotMatch(metrics, /provider="private-provider"/u)
 })
 
 test("synthetic Library monitor rotates only to unused CMUdict words with valid syllabication and primary stress", async () => {

@@ -3,6 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { dictionary as cmuDictionary } from "cmu-pronouncing-dictionary"
+import { DICTIONARY_BUILDER_SCORING_SOURCES } from "../src/modules/admin/dictionary-builder.mjs"
 import { closeSharedPrismaClient, getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
 import { resolveStandardStudentCredentials } from "../test/helpers/standard-portal-credentials.mjs"
 import { renderKeepaliveCheckMetrics } from "../src/infra/observability/keepalive-check-metrics.mjs"
@@ -12,6 +13,7 @@ const METRICS_DIRECTORY = path.join(process.cwd(), "runtime-data/prometheus")
 const CHECK_TIMEOUT_MS = 10000
 const DICTIONARY_BUILDER_TIMEOUT_MS = 240000
 const OPEN_REVIEW_STATUSES = ["pending_review", "legacy_pending_review"]
+const DICTIONARY_BUILDER_PROVIDER_IDS = Object.freeze(DICTIONARY_BUILDER_SCORING_SOURCES.map(({ id }) => id))
 export const SYNTHETIC_VOCABULARY_CANDIDATES = Object.freeze([
   { english: "monitor", syllabication: "MON-i-tor" },
   { english: "canopy", syllabication: "CAN-o-py" },
@@ -74,6 +76,7 @@ export function renderLibraryMetrics({
   dictionaryBuilderCheckSuccess,
   dictionaryBuilderDefinitionProvidersAvailable,
   dictionaryBuilderDefinitionProvidersChecked,
+  dictionaryBuilderProviderAvailability = [],
   cleanupSuccess,
   openReviewCount,
   oldestOpenReviewAgeSeconds,
@@ -101,11 +104,31 @@ export function renderLibraryMetrics({
     ["sis_library_open_review_contributions", "Number of Library contributions waiting for review.", openReviewCount],
     ["sis_library_oldest_open_review_age_seconds", "Age in seconds of the oldest Library contribution waiting for review.", oldestOpenReviewAgeSeconds],
   ]
+  const providerAvailability = new Map(
+    dictionaryBuilderProviderAvailability
+      .filter((item) => DICTIONARY_BUILDER_PROVIDER_IDS.includes(item.provider))
+      .map((item) => [item.provider, item]),
+  )
+  const providerMetricLines = DICTIONARY_BUILDER_PROVIDER_IDS.flatMap((provider) => {
+    const status = providerAvailability.get(provider) || { checked: 0, available: 0 }
+    const labels = `environment="${environment}",provider="${provider}"`
+    return [
+      `sis_library_dictionary_builder_provider_checked{${labels}} ${metricNumber(status.checked)}`,
+      ...(status.checked ? [`sis_library_dictionary_builder_provider_available{${labels}} ${metricNumber(status.available)}`] : []),
+    ]
+  })
   return values.flatMap(([name, help, value]) => [
     `# HELP ${name} ${help}`,
     `# TYPE ${name} gauge`,
     `${name}{environment="${environment}"} ${metricNumber(value)}`,
-  ]).concat("").join("\n")
+  ]).concat(
+    "# HELP sis_library_dictionary_builder_provider_checked Whether a fixed Dictionary Builder source was checked for the definition probe.",
+    "# TYPE sis_library_dictionary_builder_provider_checked gauge",
+    "# HELP sis_library_dictionary_builder_provider_available Whether the fixed Dictionary Builder source returned an available definition.",
+    "# TYPE sis_library_dictionary_builder_provider_available gauge",
+    providerMetricLines,
+    "",
+  ).join("\n")
 }
 
 export function readLastSuccessTimestamp(metricsFile, environment = "dev") {
@@ -150,12 +173,20 @@ async function requestJson(fetchImpl, endpoint, { cookie = "", method = "GET", b
 
 export function summarizeDictionaryBuilderDefinitionAvailability(preview) {
   const sources = Array.isArray(preview?.sources) ? preview.sources : []
-  const statuses = sources
-    .map((source) => source?.datumStatus?.definition?.status)
-    .filter((status) => typeof status === "string" && status.length > 0 && status !== "not_offered")
+  const sourceByProvider = new Map(sources.map((source) => {
+    const provider = String(source?.provider || "").trim()
+    const normalizedProvider = provider === "merriam_webster" ? "merriam_webster_scrape" : provider
+    return [normalizedProvider, source]
+  }))
+  const providerAvailability = DICTIONARY_BUILDER_PROVIDER_IDS.map((provider) => {
+    const status = sourceByProvider.get(provider)?.datumStatus?.definition?.status
+    const checked = typeof status === "string" && status.length > 0 && status !== "not_offered"
+    return { provider, checked: checked ? 1 : 0, available: checked && status === "available" ? 1 : 0 }
+  })
   return {
-    providersChecked: statuses.length,
-    providersAvailable: statuses.filter((status) => status === "available").length,
+    providersChecked: providerAvailability.reduce((total, item) => total + item.checked, 0),
+    providersAvailable: providerAvailability.reduce((total, item) => total + item.available, 0),
+    providerAvailability,
   }
 }
 
@@ -273,6 +304,7 @@ export async function runLibraryWorkflowMonitor({
   let dictionaryBuilderCheckSuccess = false
   let dictionaryBuilderDefinitionProvidersAvailable = 0
   let dictionaryBuilderDefinitionProvidersChecked = 0
+  let dictionaryBuilderProviderAvailability = []
   let cleanupSuccess = true
   let openReviewCount = 0
   let oldestOpenReviewAgeSeconds = 0
@@ -331,6 +363,7 @@ export async function runLibraryWorkflowMonitor({
     const builderAvailability = summarizeDictionaryBuilderDefinitionAvailability(builderPreview.payload)
     dictionaryBuilderDefinitionProvidersAvailable = builderAvailability.providersAvailable
     dictionaryBuilderDefinitionProvidersChecked = builderAvailability.providersChecked
+    dictionaryBuilderProviderAvailability = builderAvailability.providerAvailability
     dictionaryBuilderCheckSuccess = builderPreview.ok && Boolean(builderPreview.payload?.id) && builderAvailability.providersChecked > 0
 
     const adminQueue = adminCookie
@@ -427,6 +460,7 @@ export async function runLibraryWorkflowMonitor({
     dictionaryBuilderCheckSuccess,
     dictionaryBuilderDefinitionProvidersAvailable,
     dictionaryBuilderDefinitionProvidersChecked,
+    dictionaryBuilderProviderAvailability,
     cleanupSuccess,
     openReviewCount,
     oldestOpenReviewAgeSeconds,

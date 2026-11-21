@@ -260,7 +260,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "Test schedules: engagement, assignment notifications, parent reports, and profile/enrollment every 60s; parent profile every 15m; Library, Dictionary Builder, News, grades/feeds, and attendance every 5m; full no-send suite nightly at 04:00 ICT."
+        "content": "Test schedules ten authenticated workflow checks: engagement, assignment notifications, parent reports, and profile/enrollment every 60s; parent profile every 15m; Library, Dictionary Builder, News, grades/feeds, and attendance every 5m; full no-send suite nightly at 04:00 ICT. Read-only vendor health runs every 15m."
       }
     },
     {
@@ -268,15 +268,16 @@
       "type": "table",
       "title": "Subsystem smoke results",
       "gridPos": {
-        "h": 9,
+        "h": 16,
         "w": 12,
         "x": 0,
         "y": 7
       },
       "targets": [
         {
-          "expr": "sis_keepalive_check_success{environment=\"test\"}",
+          "expr": "label_replace(sis_keepalive_check_success{environment=\"test\",group=\"engagement\"}, \"subsystem\", \"engagement\", \"__name__\", \".*\") or label_replace(sis_keepalive_check_success{environment=\"test\",group=\"assignment_notifications\"}, \"subsystem\", \"assignment_notifications\", \"__name__\", \".*\") or label_replace(sis_keepalive_check_success{environment=\"test\",group=\"parent_reports\"}, \"subsystem\", \"parent_reports\", \"__name__\", \".*\") or label_replace(sis_keepalive_check_success{environment=\"test\",group=\"student_profile_enrollment\"}, \"subsystem\", \"student_profile_enrollment\", \"__name__\", \".*\") or label_replace(sis_keepalive_check_success{environment=\"test\",group=\"parent_profile\"}, \"subsystem\", \"parent_profile\", \"__name__\", \".*\") or label_replace(sis_keepalive_check_success{environment=\"test\",group=\"student_library\"}, \"subsystem\", \"student_library\", \"__name__\", \".*\") or label_replace(sis_keepalive_check_success{environment=\"test\",group=\"dictionary_builder\"}, \"subsystem\", \"dictionary_builder\", \"__name__\", \".*\") or label_replace(sis_keepalive_check_success{environment=\"test\",group=\"student_news\"}, \"subsystem\", \"student_news\", \"__name__\", \".*\") or label_replace(sis_keepalive_check_success{environment=\"test\",group=\"grade_feeds\"}, \"subsystem\", \"grade_feeds\", \"__name__\", \".*\") or label_replace(sis_keepalive_check_success{environment=\"test\",group=\"attendance\"}, \"subsystem\", \"attendance\", \"__name__\", \".*\")",
           "refId": "A",
+          "legendFormat": "{{subsystem}}",
           "format": "table",
           "instant": true
         }
@@ -363,13 +364,58 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 16
+        "y": 23
       },
       "targets": [
         {
-          "expr": "last_over_time(sis_keepalive_check_success{environment=\"test\"}[10m])",
+          "expr": "last_over_time(sis_keepalive_check_success{environment=\"test\",group=\"engagement\"}[10m])",
           "refId": "A",
-          "legendFormat": "{{group}}"
+          "legendFormat": "engagement"
+        },
+        {
+          "expr": "last_over_time(sis_keepalive_check_success{environment=\"test\",group=\"assignment_notifications\"}[10m])",
+          "refId": "B",
+          "legendFormat": "assignment_notifications"
+        },
+        {
+          "expr": "last_over_time(sis_keepalive_check_success{environment=\"test\",group=\"parent_reports\"}[10m])",
+          "refId": "C",
+          "legendFormat": "parent_reports"
+        },
+        {
+          "expr": "last_over_time(sis_keepalive_check_success{environment=\"test\",group=\"student_profile_enrollment\"}[10m])",
+          "refId": "D",
+          "legendFormat": "student_profile_enrollment"
+        },
+        {
+          "expr": "last_over_time(sis_keepalive_check_success{environment=\"test\",group=\"parent_profile\"}[10m])",
+          "refId": "E",
+          "legendFormat": "parent_profile"
+        },
+        {
+          "expr": "last_over_time(sis_keepalive_check_success{environment=\"test\",group=\"student_library\"}[10m])",
+          "refId": "F",
+          "legendFormat": "student_library"
+        },
+        {
+          "expr": "last_over_time(sis_keepalive_check_success{environment=\"test\",group=\"dictionary_builder\"}[10m])",
+          "refId": "G",
+          "legendFormat": "dictionary_builder"
+        },
+        {
+          "expr": "last_over_time(sis_keepalive_check_success{environment=\"test\",group=\"student_news\"}[10m])",
+          "refId": "H",
+          "legendFormat": "student_news"
+        },
+        {
+          "expr": "last_over_time(sis_keepalive_check_success{environment=\"test\",group=\"grade_feeds\"}[10m])",
+          "refId": "I",
+          "legendFormat": "grade_feeds"
+        },
+        {
+          "expr": "last_over_time(sis_keepalive_check_success{environment=\"test\",group=\"attendance\"}[10m])",
+          "refId": "J",
+          "legendFormat": "attendance"
         }
       ],
       "fieldConfig": {
@@ -402,13 +448,23 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 31
       },
       "targets": [
         {
           "expr": "sis_keepalive_check_duration_seconds{environment=\"test\"}",
           "refId": "A",
           "legendFormat": "{{group}}"
+        },
+        {
+          "expr": "site_dependency_probe_duration_seconds{environment=\"test\",dependency=~\"sis-(postgres|app|sessions|cache)\"}",
+          "refId": "B",
+          "legendFormat": "{{dependency}} / {{check}}"
+        },
+        {
+          "expr": "sis_external_service_check_duration_seconds{environment=\"test\"}",
+          "refId": "C",
+          "legendFormat": "{{service}}"
         }
       ],
       "fieldConfig": {
@@ -441,7 +497,7 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 24
+        "y": 31
       },
       "targets": [
         {
@@ -451,22 +507,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "No request samples"
         },
         "overrides": []
       }
@@ -479,7 +520,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 32
+        "y": 39
       },
       "targets": [
         {
@@ -490,25 +531,11 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "No real student-write samples in the selected range"
         },
         "overrides": []
-      }
+      },
+      "description": "No authenticated student-write samples are present in the selected range. Missing telemetry is not zero latency; both SIS runtimes need real instrumented writes before this chart can plot stages."
     },
     {
       "id": 14,
@@ -518,7 +545,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 32
+        "y": 39
       },
       "targets": [
         {
@@ -562,7 +589,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 40
+        "y": 47
       },
       "targets": [
         {
@@ -601,7 +628,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 40
+        "y": 47
       },
       "targets": [
         {
@@ -645,7 +672,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 48
+        "y": 55
       },
       "targets": [
         {
@@ -672,26 +699,36 @@
           "expr": "sis_library_mw_learners_key_configured{environment=\"test\"}",
           "refId": "E",
           "legendFormat": "MW Learner's configured"
+        },
+        {
+          "expr": "sis_external_service_available{environment=\"test\",service=~\"cmu_pronunciation_dictionary|merriam_webster_.*\"}",
+          "refId": "F",
+          "legendFormat": "{{service}} health"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"test\",service=~\"cmu_pronunciation_dictionary|merriam_webster_.*\"}",
+          "refId": "G",
+          "legendFormat": "{{service}} configured"
+        },
+        {
+          "expr": "sis_external_service_http_status{environment=\"test\",service=~\"merriam_webster_.*\"}",
+          "refId": "H",
+          "legendFormat": "{{service}} HTTP status"
+        },
+        {
+          "expr": "sis_library_dictionary_builder_provider_checked{environment=\"test\"}",
+          "refId": "I",
+          "legendFormat": "{{provider}} checked"
+        },
+        {
+          "expr": "sis_library_dictionary_builder_provider_available{environment=\"test\"}",
+          "refId": "J",
+          "legendFormat": "{{provider}} available"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "Waiting for the 15-minute read-only vendor check"
         },
         "overrides": []
       }
@@ -704,7 +741,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 48
+        "y": 55
       },
       "targets": [
         {
@@ -726,26 +763,21 @@
           "expr": "sis_news_submission_success{environment=\"test\"}",
           "refId": "D",
           "legendFormat": "News submit"
+        },
+        {
+          "expr": "sis_external_service_available{environment=\"shared\",service=~\"languagetool_.*\"}",
+          "refId": "E",
+          "legendFormat": "{{service}}"
+        },
+        {
+          "expr": "sis_external_service_http_status{environment=\"shared\",service=~\"languagetool_.*\"}",
+          "refId": "F",
+          "legendFormat": "{{service}} HTTP status"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "No News workflow sample in this environment"
         },
         "overrides": []
       }
@@ -758,7 +790,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 56
+        "y": 63
       },
       "targets": [
         {
@@ -780,26 +812,46 @@
           "expr": "sis_grade_feed_exercise_submission_rows{environment=\"test\",source=\"google_forms\"}",
           "refId": "D",
           "legendFormat": "Google Forms submissions"
+        },
+        {
+          "expr": "sis_grade_feed_readonly_data_available{environment=\"test\"}",
+          "refId": "E",
+          "legendFormat": "Read-only DB query"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"test\",service=\"google_forms_grade_secret\"}",
+          "refId": "F",
+          "legendFormat": "Grade endpoint secret configured"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"test\",service=\"google_forms_discovery\"}",
+          "refId": "G",
+          "legendFormat": "Forms API discovery configured"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"test\",service=\"moodle_endpoint\"}",
+          "refId": "H",
+          "legendFormat": "Moodle endpoint configured"
+        },
+        {
+          "expr": "sis_external_service_available{environment=\"test\",service=\"google_forms_discovery\"}",
+          "refId": "I",
+          "legendFormat": "Forms API discovery health"
+        },
+        {
+          "expr": "sis_external_service_http_status{environment=\"test\",service=\"google_forms_discovery\"}",
+          "refId": "J",
+          "legendFormat": "Forms API discovery HTTP status"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"test\",service=\"moodle_provisioning_secret\"}",
+          "refId": "K",
+          "legendFormat": "Moodle provisioning secret configured"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "No stored feed rows or configured vendor endpoint"
         },
         "overrides": []
       }
@@ -812,7 +864,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 56
+        "y": 63
       },
       "targets": [
         {
@@ -824,26 +876,31 @@
           "expr": "sis_engagement_webhook_last_received_timestamp_seconds{environment=\"test\"}",
           "refId": "B",
           "legendFormat": "last webhook received"
+        },
+        {
+          "expr": "sis_engagement_webhook_readonly_data_available{environment=\"test\"}",
+          "refId": "C",
+          "legendFormat": "Read-only DB query"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"test\",service=\"brevo_api\"}",
+          "refId": "D",
+          "legendFormat": "Brevo API configured"
+        },
+        {
+          "expr": "sis_external_service_available{environment=\"test\",service=\"brevo_api\"}",
+          "refId": "E",
+          "legendFormat": "Brevo API health"
+        },
+        {
+          "expr": "sis_external_service_http_status{environment=\"test\",service=\"brevo_api\"}",
+          "refId": "F",
+          "legendFormat": "Brevo API HTTP status"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "Brevo API endpoint is not configured"
         },
         "overrides": []
       }
@@ -856,7 +913,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 64
+        "y": 71
       },
       "targets": [
         {
@@ -894,17 +951,87 @@
     },
     {
       "id": 22,
-      "type": "text",
-      "title": "MEGS integration coverage",
+      "type": "stat",
+      "title": "MEGS health endpoint configuration",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 64
+        "y": 71
       },
-      "options": {
-        "mode": "markdown",
-        "content": "MEGS is a separate runtime at `/home/eagles/dockerz/megs`. SIS Prometheus currently has no MEGS-owned health or grade-ingestion series, so this dashboard does not infer MEGS health from SIS grade counts."
+      "targets": [
+        {
+          "expr": "sis_external_service_configured{environment=\"test\",service=\"megs_endpoint\"}",
+          "refId": "A",
+          "legendFormat": "MEGS endpoint configured",
+          "instant": true
+        },
+        {
+          "expr": "sis_external_service_available{environment=\"test\",service=\"megs_endpoint\"}",
+          "refId": "B",
+          "legendFormat": "MEGS endpoint health",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "MEGS endpoint not configured",
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MEGS endpoint configured"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "NOT CONFIGURED",
+                        "color": "gray"
+                      },
+                      "1": {
+                        "text": "CONFIGURED",
+                        "color": "green"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MEGS endpoint health"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "DOWN",
+                        "color": "red"
+                      },
+                      "1": {
+                        "text": "UP",
+                        "color": "green"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -915,7 +1042,7 @@
         "h": 4,
         "w": 6,
         "x": 0,
-        "y": 80
+        "y": 87
       },
       "targets": [
         {
@@ -925,26 +1052,19 @@
         {
           "expr": "sis_keepalive_nightly_smoke_no_external_message_proof{environment=\"test\"}",
           "refId": "B"
+        },
+        {
+          "expr": "sis_keepalive_nightly_smoke_last_check_timestamp_seconds{environment=\"test\"}",
+          "refId": "C"
+        },
+        {
+          "expr": "time() - sis_keepalive_nightly_smoke_last_check_timestamp_seconds{environment=\"test\"}",
+          "refId": "D"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "DOWN",
-                  "color": "red"
-                },
-                "1": {
-                  "text": "UP",
-                  "color": "green"
-                }
-              }
-            }
-          ]
+          "noValue": "No nightly result has been published"
         },
         "overrides": []
       }
@@ -957,7 +1077,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 72
+        "y": 79
       },
       "targets": [
         {
@@ -1001,7 +1121,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 72
+        "y": 79
       },
       "targets": [
         {
@@ -1045,11 +1165,11 @@
         "h": 4,
         "w": 18,
         "x": 6,
-        "y": 80
+        "y": 87
       },
       "options": {
         "mode": "markdown",
-        "content": "Latency panels use measured request/probe durations. Missing series mean the source is not instrumented or no observation exists in the selected range; they are never converted into healthy zeroes. PostgreSQL and Redis resource panels are shared-container Docker samples, not environment-attributed database usage. Redis memory/client totals require a secured exporter and are not currently collected."
+        "content": "Test results are authenticated workflow checks; live results are ten read-only probes and do not imply live workflow writes. Student-save stage charts require real instrumented writes; missing samples are stated, never converted into zero latency. Grade panels show aggregate rows stored by each source, not vendor delivery success. Vendor health is a read-only request every 15m; an unconfigured endpoint is shown as unconfigured. PostgreSQL and Redis CPU/memory are shared-container samples. Redis memory/client totals require a secured exporter and are not collected."
       }
     }
   ]
