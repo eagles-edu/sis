@@ -78,6 +78,7 @@ function buildDashboard(config) {
   const staleAfter = `sis_keepalive_check_stale_after_seconds{environment="${env}"}`
   const checkDuration = `sis_keepalive_check_duration_seconds{environment="${env}"}`
   const writeEnv = env === "live" ? "production" : "test"
+  const dictionaryBuilderMetricPrefix = env === "live" ? "sis_live_dictionary_builder" : "sis_library_dictionary_builder"
   const liveReadOnlyTargets = [
     target('probe_success{job="blackbox-website-http",site="admin"}', "A", "Public admin page", "table", true),
     target('probe_success{job="blackbox-website-api",site="admin",check="sis-api"}', "B", "SIS API route", "table", true),
@@ -193,19 +194,11 @@ function buildDashboard(config) {
       target(`sis_external_service_available{environment="${env}",service=~"cmu_pronunciation_dictionary|merriam_webster_.*"}`, "A", "{{service}} health"),
       target(`sis_external_service_configured{environment="${env}",service=~"cmu_pronunciation_dictionary|merriam_webster_.*"}`, "B", "{{service}} configured"),
       target(`sis_external_service_http_status{environment="${env}",service=~"merriam_webster_.*"}`, "C", "{{service}} HTTP status"),
-      ...(env === "live" ? [] : [
-        target(`sis_library_dictionary_builder_provider_checked{environment="${env}"}`, "D", "{{provider}} checked"),
-        target(`sis_library_dictionary_builder_provider_available{environment="${env}"}`, "E", "{{provider}} available"),
-        target(`sis_library_dictionary_builder_definition_providers_available{environment="${env}"}`, "F", "definition results available"),
-        target(`sis_library_dictionary_builder_definition_providers_checked{environment="${env}"}`, "G", "definition sources checked"),
-      ]),
-      ...(env === "live" ? [
-        target('sis_external_service_available{environment="shared",service=~"languagetool_.*"}', "D", "{{service}} health"),
-        target('sis_external_service_http_status{environment="shared",service=~"languagetool_.*"}', "E", "{{service}} HTTP status"),
-        target(`sis_external_service_check_duration_seconds{environment="${env}",service=~"merriam_webster_.*"}`, "F", "{{service}} check duration"),
-        target("vector(-1)", "G", "12 Dictionary Builder buttons · not run live"),
-      ] : []),
-    ], "short", { description: env === "live" ? "Live emits read-only CMUdict and Merriam-Webster vendor health. It does not run the synthetic Dictionary Builder button preview against customer data; the twelve per-button series are test-only." : "Test shows all twelve fixed Dictionary Builder source IDs with checked/available status, plus read-only CMUdict and Merriam-Webster vendor health." }),
+      target(`${dictionaryBuilderMetricPrefix}_provider_checked{environment="${env}"}`, "D", "{{provider}} checked"),
+      target(`${dictionaryBuilderMetricPrefix}_provider_available{environment="${env}"}`, "E", "{{provider}} available"),
+      target(`${dictionaryBuilderMetricPrefix}_definition_providers_available{environment="${env}"}`, "F", "definition results available"),
+      target(`${dictionaryBuilderMetricPrefix}_definition_providers_checked{environment="${env}"}`, "G", "definition sources checked"),
+    ], "short", { description: "Both environments emit fixed-ID Dictionary Builder provider checks from the same read-only preview contract. Live uses a fixed sample word and exports only checked/available status; the preview does not write Library or student records." }),
     panel(18, "News grammar and dictionary services", "timeseries", 12, 55, 12, 8, [
       ...(env === "live" ? [] : [
         target(`sis_news_language_tool_available{environment="${env}"}`, "A", "LanguageTool in News workflow"),
@@ -233,17 +226,21 @@ function buildDashboard(config) {
       target(`sis_external_service_configured{environment="${env}",service="google_forms_discovery"}`, "G", "Forms API discovery configured"),
       target(`sis_external_service_configured{environment="${env}",service="moodle_endpoint"}`, "H", "Moodle endpoint configured"),
       target(`(sis_external_service_available{environment="${env}",service="google_forms_discovery"} or (sis_external_service_configured{environment="${env}",service="google_forms_discovery"} - 1))`, "I", "Forms API discovery health / not configured"),
-      target(`sis_external_service_http_status{environment="${env}",service="google_forms_discovery"}`, "J", "Forms API discovery HTTP status"),
+      target(`(sis_external_service_http_status{environment="${env}",service="google_forms_discovery"} or (sis_external_service_configured{environment="${env}",service="google_forms_discovery"} - 1))`, "J", "Forms API status / not configured"),
       target(`sis_external_service_configured{environment="${env}",service="moodle_provisioning_secret"}`, "K", "Moodle provisioning secret configured"),
-    ], "short", { fieldConfig: { defaults: { noValue: "No stored feed rows or configured vendor endpoint" }, overrides: [] } }),
+    ], "short", { fieldConfig: { defaults: { noValue: "No stored feed rows or configured vendor endpoint" }, overrides: [
+      { matcher: { id: "byName", options: "Forms API status / not configured" }, properties: [{ id: "mappings", value: [{ type: "value", options: { "-1": { text: "NOT CONFIGURED", color: "gray" }, "0": { text: "NO HTTP RESPONSE", color: "orange" } } }] }] },
+    ] } }),
     panel(20, "Brevo webhook processing", "timeseries", 12, 63, 12, 8, [
       target(`sis_engagement_webhook_unprocessed_events{environment="${env}"}`, "A", "unprocessed events"),
       target(`sis_engagement_webhook_last_received_timestamp_seconds{environment="${env}"}`, "B", "last webhook received"),
       target(`sis_engagement_webhook_readonly_data_available{environment="${env}"}`, "C", "Read-only DB query"),
       target(`sis_external_service_configured{environment="${env}",service="brevo_api"}`, "D", "Brevo API configured"),
       target(`(sis_external_service_available{environment="${env}",service="brevo_api"} or (sis_external_service_configured{environment="${env}",service="brevo_api"} - 1))`, "E", "Brevo API health / not configured"),
-      target(`sis_external_service_http_status{environment="${env}",service="brevo_api"}`, "F", "Brevo API HTTP status"),
-    ], "short", { fieldConfig: { defaults: { noValue: "Brevo API endpoint is not configured" }, overrides: [] } }),
+      target(`(sis_external_service_http_status{environment="${env}",service="brevo_api"} or (sis_external_service_configured{environment="${env}",service="brevo_api"} - 1))`, "F", "Brevo API status / not configured"),
+    ], "short", { fieldConfig: { defaults: { noValue: "Brevo API endpoint is not configured" }, overrides: [
+      { matcher: { id: "byName", options: "Brevo API status / not configured" }, properties: [{ id: "mappings", value: [{ type: "value", options: { "-1": { text: "NOT CONFIGURED", color: "gray" }, "0": { text: "NO HTTP RESPONSE", color: "orange" } } }] }] },
+    ] } }),
     panel(21, "Thuvien and ESL reading probes", "timeseries", 0, 71, 12, 8, [
       target('probe_success{job="blackbox-website-http",site="thuvien"}', "A", "Thuvien public page"),
       target('probe_success{job="blackbox-thuvien-media"}', "B", "{{check}}"),

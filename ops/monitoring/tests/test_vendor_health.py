@@ -21,6 +21,7 @@ class VendorHealthTests(unittest.TestCase):
             env_path.write_text(
                 'BREVO_API_KEY="private-value"\n'
                 "DATABASE_URL=postgresql://must-not-be-read\n"
+                'STUDENT_ADMIN_PASS="admin-password"\n'
                 "MOODLE_URL='https://moodle.example.test'\n",
                 encoding="utf-8",
             )
@@ -29,6 +30,7 @@ class VendorHealthTests(unittest.TestCase):
         self.assertEqual(values, {
             "BREVO_API_KEY": "private-value",
             "MOODLE_URL": "https://moodle.example.test",
+            "STUDENT_ADMIN_PASS": "admin-password",
         })
 
     def test_unconfigured_vendor_is_not_reported_as_down(self) -> None:
@@ -91,6 +93,77 @@ class VendorHealthTests(unittest.TestCase):
 
         self.assertEqual(result, (1, 0, 0.0, 0))
         request.assert_not_called()
+
+    def test_dictionary_builder_preview_summarizes_fixed_provider_ids_without_payload_data(self) -> None:
+        result = vendor_health.summarize_dictionary_builder_preview({
+            "sources": [
+                None,
+                "unexpected non-object source",
+                {"provider": "merriam_webster", "datumStatus": {"definition": {"status": "available"}}},
+                {"provider": "ldoce", "datumStatus": {"definition": {"status": "unavailable"}}},
+                {"provider": "wiktionary", "datumStatus": {"definition": {"status": "not_offered"}}},
+                {"provider": "unexpected", "datumStatus": {"definition": {"status": "available"}}},
+            ],
+        })
+
+        self.assertEqual(len(result), 12)
+        self.assertEqual(result["merriam_webster_scrape"], {"checked": 1, "available": 1})
+        self.assertEqual(result["ldoce"], {"checked": 1, "available": 0})
+        self.assertEqual(result["wiktionary"], {"checked": 0, "available": 0})
+        self.assertEqual(result["cambridge"], {"checked": 0, "available": 0})
+
+    def test_live_monitor_fails_when_dictionary_builder_preview_fails(self) -> None:
+        checks = [("merriam_webster_collegiate", 1, 1, 0.1, 200)]
+
+        self.assertTrue(vendor_health.live_monitor_success(True, checks, True))
+        self.assertFalse(vendor_health.live_monitor_success(True, checks, False))
+
+    def test_live_dictionary_builder_metrics_emit_all_provider_ids_without_sensitive_payload(self) -> None:
+        availability = {
+            provider: {"checked": int(provider == "ldoce"), "available": int(provider == "ldoce")}
+            for provider in vendor_health.DICTIONARY_BUILDER_PROVIDER_IDS
+        }
+        rendered = vendor_health.render_metrics([], 123, dictionary_builder_probe=(True, 0.5, availability))
+
+        self.assertEqual(rendered.count('sis_live_dictionary_builder_provider_checked{environment="live"'), 12)
+        self.assertIn('sis_live_dictionary_builder_provider_available{environment="live",provider="ldoce"} 1', rendered)
+        self.assertIn('sis_live_dictionary_builder_definition_providers_checked{environment="live"} 1', rendered)
+        self.assertIn('sis_live_dictionary_builder_definition_providers_available{environment="live"} 1', rendered)
+        self.assertIn('sis_live_library_dictionary_builder_check_success{environment="live"} 1', rendered)
+        self.assertNotIn("admin-password", rendered)
+        self.assertNotIn("monitor sample definition", rendered)
+
+    def test_live_dictionary_builder_preview_requires_owned_admin_credentials(self) -> None:
+        with patch.object(vendor_health, "post_json") as request:
+            success, duration, availability = vendor_health.check_live_dictionary_builder_preview({})
+
+        self.assertFalse(success)
+        self.assertGreaterEqual(duration, 0)
+        self.assertEqual(len(availability), 12)
+        self.assertTrue(all(item == {"checked": 0, "available": 0} for item in availability.values()))
+        request.assert_not_called()
+
+    def test_live_dictionary_builder_preview_uses_admin_cookie_flow_and_fixed_word(self) -> None:
+        preview = {
+            "ok": True,
+            "sources": [{"provider": "ldoce", "datumStatus": {"definition": {"status": "available"}}}],
+        }
+        with patch.object(vendor_health, "build_opener", return_value=object()), patch.object(
+            vendor_health,
+            "post_json",
+            side_effect=[(200, {"authenticated": True}), (200, preview)],
+        ) as request:
+            success, duration, availability = vendor_health.check_live_dictionary_builder_preview({
+                "STUDENT_ADMIN_USER": "monitor-admin",
+                "STUDENT_ADMIN_PASS": "private-password",
+            })
+
+        self.assertTrue(success)
+        self.assertGreaterEqual(duration, 0)
+        self.assertEqual(availability["ldoce"], {"checked": 1, "available": 1})
+        self.assertEqual(request.call_count, 2)
+        self.assertTrue(request.call_args_list[0].args[1].endswith("/api/admin/auth/login"))
+        self.assertEqual(request.call_args_list[1].args[2], {"entry": {"english": "monitor", "partOfSpeech": "noun"}})
 
 
 if __name__ == "__main__":

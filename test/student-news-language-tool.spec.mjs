@@ -46,6 +46,41 @@ test("normalizes LanguageTool blocking and advisory matches", async () => {
   }
 })
 
+test("does not reject an article that follows a possessive determiner", async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async (_url, request) => {
+    const text = new URLSearchParams(request.body).get("text") || ""
+    const offset = text.indexOf("diplomatic role")
+    return new Response(JSON.stringify({
+      matches: [{
+        offset,
+        length: "diplomatic role".length,
+        message: "The article might be missing before the noun.",
+        rule: { id: "ARTICLE_MISSING", category: { id: "GRAMMAR" } },
+        replacements: [{ value: "a diplomatic role" }],
+        issueType: "grammar",
+      }],
+    }), { status: 200, headers: { "content-type": "application/json" } })
+  }
+  try {
+    const possessive = await checkTextWithLanguageTool(
+      "The report emphasizes Pakistan's diplomatic role and includes the wider conflict context.",
+      { endpoint: "http://127.0.0.1:8093/v2/check" },
+    )
+    assert.deepEqual(possessive.matches, [])
+    assert.deepEqual(possessive.blockingIssues, [])
+
+    const missingArticle = await checkTextWithLanguageTool(
+      "The report emphasizes diplomatic role and includes the wider conflict context.",
+      { endpoint: "http://127.0.0.1:8093/v2/check" },
+    )
+    assert.equal(missingArticle.blockingIssues.length, 1)
+    assert.equal(missingArticle.blockingIssues[0].ruleId, "ARTICLE_MISSING")
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
 test("malformed LanguageTool responses fail closed", async () => {
   const originalFetch = globalThis.fetch
   globalThis.fetch = async () => new Response(JSON.stringify({ nope: [] }), { status: 200 })

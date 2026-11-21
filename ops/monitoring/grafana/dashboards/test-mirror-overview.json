@@ -814,7 +814,7 @@
         },
         "overrides": []
       },
-      "description": "Test shows all twelve fixed Dictionary Builder source IDs with checked/available status, plus read-only CMUdict and Merriam-Webster vendor health."
+      "description": "Both environments emit fixed-ID Dictionary Builder provider checks from the same read-only preview contract. Live uses a fixed sample word and exports only checked/available status; the preview does not write Library or student records."
     },
     {
       "id": 18,
@@ -943,9 +943,9 @@
           "legendFormat": "Forms API discovery health / not configured"
         },
         {
-          "expr": "sis_external_service_http_status{environment=\"test\",service=\"google_forms_discovery\"}",
+          "expr": "(sis_external_service_http_status{environment=\"test\",service=\"google_forms_discovery\"} or (sis_external_service_configured{environment=\"test\",service=\"google_forms_discovery\"} - 1))",
           "refId": "J",
-          "legendFormat": "Forms API discovery HTTP status"
+          "legendFormat": "Forms API status / not configured"
         },
         {
           "expr": "sis_external_service_configured{environment=\"test\",service=\"moodle_provisioning_secret\"}",
@@ -957,7 +957,34 @@
         "defaults": {
           "noValue": "No stored feed rows or configured vendor endpoint"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Forms API status / not configured"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "NO HTTP RESPONSE",
+                        "color": "orange"
+                      },
+                      "-1": {
+                        "text": "NOT CONFIGURED",
+                        "color": "gray"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -997,16 +1024,43 @@
           "legendFormat": "Brevo API health / not configured"
         },
         {
-          "expr": "sis_external_service_http_status{environment=\"test\",service=\"brevo_api\"}",
+          "expr": "(sis_external_service_http_status{environment=\"test\",service=\"brevo_api\"} or (sis_external_service_configured{environment=\"test\",service=\"brevo_api\"} - 1))",
           "refId": "F",
-          "legendFormat": "Brevo API HTTP status"
+          "legendFormat": "Brevo API status / not configured"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "noValue": "Brevo API endpoint is not configured"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Brevo API status / not configured"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "NO HTTP RESPONSE",
+                        "color": "orange"
+                      },
+                      "-1": {
+                        "text": "NOT CONFIGURED",
+                        "color": "gray"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     },
     {

@@ -338,6 +338,11 @@ Warning-only:
 - fragment only
 - does not make a real evaluative claim
 
+For the `ARTICLE_MISSING` grammar rule, a noun phrase immediately governed by
+a possessive noun or possessive determiner already has its determiner. Do not
+block a sentence such as `Pakistan's diplomatic role` as though it were missing
+an article; retain blocking feedback for other `ARTICLE_MISSING` findings.
+
 ### `vocabulary`
 
 For each completed row, Check validates the part of speech, English, Vietnamese, syllabication, and definition. Local CMUdict is authoritative for spoken syllable count and primary stress. Merriam-Webster Collegiate is queried before Learner's to verify written division; Merriam-Webster headword asterisks mark word-division boundaries, so those marks must not be mistaken for spoken syllable boundaries when a dictionary-supported pronunciation gives a different split.

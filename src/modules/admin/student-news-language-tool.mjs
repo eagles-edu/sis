@@ -35,6 +35,16 @@ function normalizeMatch(match = {}) {
   }
 }
 
+function isPossessiveDeterminerBeforeMatch(text, start) {
+  const offset = Number.isInteger(start) ? start : Number.parseInt(String(start), 10)
+  if (!Number.isInteger(offset) || offset < 0) return false
+  const prefix = String(text == null ? "" : text).slice(0, offset)
+  const previousWord = /([\p{L}\p{N}][\p{L}\p{N}-]*)['’]s?\s*$/iu.exec(prefix)?.[1]
+  if (previousWord) return true
+  const previousDeterminer = /([\p{L}]+)\s*$/iu.exec(prefix)?.[1]
+  return /^(?:my|your|his|her|its|our|their|whose)$/iu.test(previousDeterminer || "")
+}
+
 export async function checkTextWithLanguageTool(text = "", options = {}) {
   const value = String(text == null ? "" : text)
   if (!value.trim()) return { matches: [], blockingIssues: [], advisoryIssues: [] }
@@ -44,11 +54,11 @@ export async function checkTextWithLanguageTool(text = "", options = {}) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
   try {
-  const body = new URLSearchParams({
-    language: normalizeText(options?.language) || DEFAULT_LANGUAGE,
-    text: value,
-    enabledRules: normalizeText(options?.enabledRules) || ESL_ENABLED_RULES,
-  })
+    const body = new URLSearchParams({
+      language: normalizeText(options?.language) || DEFAULT_LANGUAGE,
+      text: value,
+      enabledRules: normalizeText(options?.enabledRules) || ESL_ENABLED_RULES,
+    })
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -58,7 +68,13 @@ export async function checkTextWithLanguageTool(text = "", options = {}) {
     if (!response.ok) throw new Error(`LanguageTool returned HTTP ${response.status}`)
     const payload = await response.json()
     if (!payload || !Array.isArray(payload.matches)) throw new Error("LanguageTool returned an invalid response")
-    const matches = payload.matches.map(normalizeMatch).filter(Boolean)
+    const matches = payload.matches
+      .map(normalizeMatch)
+      .filter(Boolean)
+      .filter((match) => !(
+        match.ruleId === "ARTICLE_MISSING"
+        && isPossessiveDeterminerBeforeMatch(value, match.start)
+      ))
     return {
       matches,
       blockingIssues: matches.filter((match) => match.blocking),

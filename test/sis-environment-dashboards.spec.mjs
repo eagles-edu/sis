@@ -102,6 +102,17 @@ test("both dashboards include real vendor, grade, Redis, and historical measurem
   }
 })
 
+test("optional Google Forms and Brevo HTTP panels show unconfigured and no-response states", () => {
+  for (const dashboard of [live, mirrorTest]) {
+    const grades = dashboard.panels.find((panel) => panel.id === 19)
+    const brevo = dashboard.panels.find((panel) => panel.id === 20)
+    assert.match(grades.targets.find((target) => target.refId === "J").expr, /http_status[\s\S]*configured[\s\S]*- 1/u)
+    assert.ok(grades.fieldConfig.overrides.some((item) => JSON.stringify(item).includes("NOT CONFIGURED")))
+    assert.match(brevo.targets.find((target) => target.refId === "F").expr, /http_status[\s\S]*configured[\s\S]*- 1/u)
+    assert.ok(brevo.fieldConfig.overrides.some((item) => JSON.stringify(item).includes("NO HTTP RESPONSE")))
+  }
+})
+
 test("student-save panels state when actual write samples are absent", () => {
   for (const dashboard of [live, mirrorTest]) {
     const requests = dashboard.panels.find((panel) => panel.title === "Student-save requests in the last 5 minutes")
@@ -113,11 +124,13 @@ test("student-save panels state when actual write samples are absent", () => {
   }
 })
 
-test("live provider and News panels read the live vendor-feed labels instead of test-only workflow series", () => {
+test("live provider and News panels read live vendor and read-only Dictionary Builder feeds", () => {
   const providers = live.panels.find((panel) => panel.id === 17)
   const news = live.panels.find((panel) => panel.id === 18)
   assert.ok(providers.targets.some((target) => target.expr.includes('environment="live"') && target.expr.includes("sis_external_service_available")))
-  assert.ok(!providers.targets.some((target) => target.expr.includes("sis_library_dictionary_builder_provider")))
+  assert.ok(providers.targets.some((target) => target.expr.includes('environment="live"') && target.expr.includes("sis_live_dictionary_builder_provider_checked")))
+  assert.ok(providers.targets.some((target) => target.expr.includes('environment="live"') && target.expr.includes("sis_live_dictionary_builder_definition_providers_checked")))
+  assert.ok(!JSON.stringify(providers).includes("not run live"))
   assert.ok(news.description.includes("News Check and submit are not run on live"))
   assert.ok(!news.targets.some((target) => target.expr.includes("sis_news_check_success")))
 })
