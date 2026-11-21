@@ -1,0 +1,11 @@
+[Unit]
+Description=Run SIS development database health snapshot every fifteen minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+AccuracySec=30s
+Unit=sis-db-health-dev.service
+
+[Install]
+WantedBy=timers.target

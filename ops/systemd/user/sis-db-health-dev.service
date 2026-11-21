@@ -1,0 +1,23 @@
+[Unit]
+Description=SIS development database health snapshot
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/eagles/dockerz/sis
+Environment=NODE_ENV=development
+Environment=SIS_ENV_FILE=.env.dev
+Environment=DOTENV_CONFIG_PATH=.env.dev
+ExecStart=/home/eagles/.nvm/versions/node/v22.22.1/bin/node --import dotenv/config tools/db-health-check.mjs --expected-database sis_dev --backup-latest runtime-data/maintenance/db-backup-latest.dev.json --metrics-output runtime-data/prometheus/db-health-dev.prom --metrics-environment dev
+TimeoutStartSec=90s
+UMask=0022
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=default.target

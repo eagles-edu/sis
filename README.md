@@ -115,6 +115,8 @@ Use these when validating the local dev runtime on port `8788`:
 
 Install the bounded user-service restart guard for the dev API with `npm run dev:install-restart-guard`, then run `npm run dev:restart` to move the current API under that service. Routine source refreshes use `npm run dev:restart`; automatic process restarts do not rebuild assets or run Prisma commands.
 
+Install the dev-owned database health snapshot timer with `npm run dev:install-db-health-timer`. It checks `sis_dev` every 15 minutes, writes an atomic health snapshot and Prometheus textfile, and never reads the live/admin backup registry. Check it with `systemctl --user status sis-db-health-dev.timer sis-db-health-dev.service`.
+
 ## Core surfaces
 
 ### Admin

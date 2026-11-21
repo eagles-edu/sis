@@ -1,4 +1,26 @@
 groups:
+  - name: sis-db-health-dev
+    rules:
+      - alert: DevDatabaseHealthCheckFailed
+        expr: sis_db_health_check_success{environment="dev"} == 0
+        for: 1m
+        labels:
+          environment: dev
+          severity: warning
+        annotations:
+          summary: Dev SIS database health check failed
+          description: The dev database check failed or connected to an unexpected database identity.
+
+      - alert: DevDatabaseHealthCheckStale
+        expr: absent(sis_db_health_check_last_run_timestamp_seconds{environment="dev"}) or time() - sis_db_health_check_last_run_timestamp_seconds{environment="dev"} > 1800
+        for: 1m
+        labels:
+          environment: dev
+          severity: warning
+        annotations:
+          summary: Dev SIS database health snapshot is stale
+          description: The dev-owned database snapshot has not completed within thirty minutes.
+
   - name: sis-keepalive-check-groups-dev
     rules:
       - alert: DevKeepaliveCheckFailed

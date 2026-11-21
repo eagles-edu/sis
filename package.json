@@ -58,6 +58,7 @@
     "playwright:browsers:update": "tools/install-playwright-browsers.sh update",
     "news:validation:audit": "node tools/news-validation-audit.mjs",
     "db:health:check": "node tools/db-health-check.mjs",
+    "dev:install-db-health-timer": "bash tools/install-dev-db-health-timer.sh",
     "ops:incoming:vacuum:cron:check": "tools/install-incoming-vacuum-cron.sh --check-only",
     "ops:maintenance:systemd:check": "tools/install-maintenance-systemd.sh --check-only",
     "ffs-sis-public-root": "ffs-sis-public-root --batch",

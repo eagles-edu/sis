@@ -15,6 +15,7 @@ const DEFAULT_BACKUP_STALE_MINUTES = 26 * 60
 const DEFAULT_MAX_QUERY_LATENCY_MS = 500
 const DEFAULT_MAX_INCOMING_UNMATCHED = 0
 const DEFAULT_MAX_ORPHAN_COUNT = 0
+const DEFAULT_METRICS_ENVIRONMENT = "unknown"
 
 /**
  * @param {unknown} value
@@ -102,6 +103,9 @@ function resolveBackupTimestamp(backupPayload = {}, backupPath = "") {
  *   maxQueryLatencyMs: number,
  *   maxIncomingUnmatched: number,
  *   maxOrphanCount: number,
+ *   expectedDatabase: string,
+ *   metricsOutputPath: string,
+ *   metricsEnvironment: string,
  *   help: boolean,
  * }}
  */
@@ -114,6 +118,9 @@ function parseArgs(argv = []) {
     maxQueryLatencyMs: DEFAULT_MAX_QUERY_LATENCY_MS,
     maxIncomingUnmatched: DEFAULT_MAX_INCOMING_UNMATCHED,
     maxOrphanCount: DEFAULT_MAX_ORPHAN_COUNT,
+    expectedDatabase: "",
+    metricsOutputPath: "",
+    metricsEnvironment: DEFAULT_METRICS_ENVIRONMENT,
     help: false,
   }
 
@@ -155,6 +162,26 @@ function parseArgs(argv = []) {
       args.maxOrphanCount = Math.max(0, normalizeInteger(argv[index], DEFAULT_MAX_ORPHAN_COUNT))
       continue
     }
+    if (token === "--expected-database") {
+      index += 1
+      args.expectedDatabase = normalizeText(argv[index])
+      if (!args.expectedDatabase) throw new Error("--expected-database requires a value")
+      continue
+    }
+    if (token === "--metrics-output") {
+      index += 1
+      args.metricsOutputPath = normalizeText(argv[index])
+      if (!args.metricsOutputPath) throw new Error("--metrics-output requires a value")
+      continue
+    }
+    if (token === "--metrics-environment") {
+      index += 1
+      args.metricsEnvironment = normalizeText(argv[index]) || DEFAULT_METRICS_ENVIRONMENT
+      if (!/^[a-z][a-z0-9_]{0,31}$/u.test(args.metricsEnvironment)) {
+        throw new Error("--metrics-environment must be a lowercase metric label")
+      }
+      continue
+    }
     if (token === "--help" || token === "-h") {
       args.help = true
       continue
@@ -176,6 +203,9 @@ Options:
   --max-query-latency-ms N      max query latency before warning (default: ${DEFAULT_MAX_QUERY_LATENCY_MS})
   --max-incoming-unmatched N    max unmatched incoming rows before warning (default: ${DEFAULT_MAX_INCOMING_UNMATCHED})
   --max-orphan-count N          max orphan rows before error (default: ${DEFAULT_MAX_ORPHAN_COUNT})
+  --expected-database NAME      require PostgreSQL to report this database name
+  --metrics-output PATH         atomically write low-cardinality Prometheus metrics
+  --metrics-environment NAME    environment metric label (default: ${DEFAULT_METRICS_ENVIRONMENT})
   --help, -h                    Show help
 `)
 }
@@ -244,8 +274,61 @@ function readLatestIncomingVacuumSummary(reportDirPath) {
 function writeOutputFile(outputPath, payload) {
   const resolved = path.resolve(process.cwd(), outputPath)
   fs.mkdirSync(path.dirname(resolved), { recursive: true })
-  fs.writeFileSync(resolved, `${JSON.stringify(payload, null, 2)}\n`, "utf8")
+  writeAtomicFile(resolved, `${JSON.stringify(payload, null, 2)}\n`)
   return resolved
+}
+
+/**
+ * @param {string} filePath
+ * @param {string} contents
+ * @returns {void}
+ */
+function writeAtomicFile(filePath, contents) {
+  const temporaryPath = `${filePath}.${process.pid}.${Date.now()}.tmp`
+  try {
+    fs.writeFileSync(temporaryPath, contents, { encoding: "utf8", mode: 0o644, flag: "wx" })
+    fs.renameSync(temporaryPath, filePath)
+  } catch (error) {
+    try { fs.rmSync(temporaryPath, { force: true }) } catch {}
+    throw error
+  }
+}
+
+/**
+ * @param {Record<string, unknown>} payload
+ * @param {string} environment
+ * @returns {string}
+ */
+function formatPrometheusMetrics(payload, environment) {
+  const db = /** @type {Record<string, unknown>} */ (payload.db || {})
+  const backup = /** @type {Record<string, unknown>} */ (payload.backup || {})
+  const incoming = /** @type {Record<string, unknown>} */ (payload.incoming || {})
+  const orphans = /** @type {Record<string, unknown>} */ (payload.orphans || {})
+  const labels = `environment="${environment}"`
+  const checkedAt = Date.parse(String(payload.checkedAt || ""))
+  const lastRun = Number.isFinite(checkedAt) ? checkedAt / 1000 : Date.now() / 1000
+  const successful = payload.status === "error" ? 0 : 1
+  const lines = [
+    "# HELP sis_db_health_check_success Whether the database snapshot passed connection, identity, and orphan-count checks.",
+    "# TYPE sis_db_health_check_success gauge",
+    `sis_db_health_check_success{${labels}} ${successful}`,
+    "# HELP sis_db_health_check_last_run_timestamp_seconds Unix timestamp of the latest database health check.",
+    "# TYPE sis_db_health_check_last_run_timestamp_seconds gauge",
+    `sis_db_health_check_last_run_timestamp_seconds{${labels}} ${lastRun}`,
+    "# HELP sis_db_health_check_query_latency_ms Database health query latency in milliseconds, or -1 when unavailable.",
+    "# TYPE sis_db_health_check_query_latency_ms gauge",
+    `sis_db_health_check_query_latency_ms{${labels}} ${db.queryLatencyMs !== null && db.queryLatencyMs !== undefined && Number.isFinite(Number(db.queryLatencyMs)) ? Number(db.queryLatencyMs) : -1}`,
+    "# HELP sis_db_health_backup_stale Whether the environment-owned backup metadata is missing or stale.",
+    "# TYPE sis_db_health_backup_stale gauge",
+    `sis_db_health_backup_stale{${labels}} ${backup.isStale ? 1 : 0}`,
+    "# HELP sis_db_health_incoming_unmatched_count Number of unmatched incoming exercise results.",
+    "# TYPE sis_db_health_incoming_unmatched_count gauge",
+    `sis_db_health_incoming_unmatched_count{${labels}} ${Number(incoming.unmatchedCount || 0)}`,
+    "# HELP sis_db_health_orphan_count Number of detected orphan database rows.",
+    "# TYPE sis_db_health_orphan_count gauge",
+    `sis_db_health_orphan_count{${labels}} ${Number(orphans.total || 0)}`,
+  ]
+  return `${lines.join("\n")}\n`
 }
 
 /**
@@ -257,13 +340,16 @@ function writeOutputFile(outputPath, payload) {
  *   maxQueryLatencyMs: number,
  *   maxIncomingUnmatched: number,
  *   maxOrphanCount: number,
+ *   expectedDatabase: string,
+ *   metricsOutputPath: string,
+ *   metricsEnvironment: string,
  *   help: boolean,
  * }} args
  * @returns {Promise<Record<string, unknown>>}
  */
 async function runHealthCheck(args) {
-  const prisma = await getSharedPrismaClient()
   const checkedAt = new Date().toISOString()
+  let prisma = null
   const thresholds = {
     backupStaleMinutes: args.backupStaleMinutes,
     maxQueryLatencyMs: args.maxQueryLatencyMs,
@@ -272,7 +358,9 @@ async function runHealthCheck(args) {
   }
 
   let dbConnected = false
+  let checkCompleted = false
   let dbError = ""
+  let databaseName = ""
   let queryLatencyMs = -1
   /** @type {{ queued: number, temporary: number, unmatched: number }} */
   let incomingCounts = {
@@ -288,7 +376,14 @@ async function runHealthCheck(args) {
   }
 
   try {
+    prisma = await getSharedPrismaClient()
     const queryStartedAt = Date.now()
+    const identityRows = await prisma.$queryRaw`SELECT current_database() AS database_name`
+    databaseName = normalizeText(Array.isArray(identityRows) ? identityRows[0]?.database_name : "")
+    if (args.expectedDatabase && databaseName !== args.expectedDatabase) {
+      dbError = "database_identity_mismatch"
+      throw new Error("database_identity_mismatch")
+    }
     await prisma.$queryRaw`SELECT 1 AS ok`
     queryLatencyMs = Date.now() - queryStartedAt
     dbConnected = true
@@ -312,10 +407,15 @@ async function runHealthCheck(args) {
       exerciseSubmissionMissingExercise: normalizeCountRow(orphanSubmissionExercise),
       studentGradeRecordMissingStudent: normalizeCountRow(orphanGradeStudent),
     }
+    checkCompleted = true
   } catch (error) {
-    dbError = error instanceof Error ? normalizeText(error.message) || "db-health-check-failed" : "db-health-check-failed"
+    if (!dbError) dbError = error instanceof Error && error.message === "database_identity_mismatch"
+      ? "database_identity_mismatch"
+      : "database_check_failed"
   } finally {
-    await prisma.$disconnect()
+    if (prisma) {
+      try { await prisma.$disconnect() } catch {}
+    }
   }
 
   const backupLatestPath = path.resolve(process.cwd(), normalizeText(args.backupLatestPath) || DEFAULT_BACKUP_LATEST_PATH)
@@ -330,7 +430,7 @@ async function runHealthCheck(args) {
 
   const latestVacuum = readLatestIncomingVacuumSummary(args.vacuumReportDir)
 
-  const dbStatus = !dbConnected
+  const dbStatus = !checkCompleted
     ? "error"
     : queryLatencyMs > args.maxQueryLatencyMs
       ? "warn"
@@ -353,6 +453,8 @@ async function runHealthCheck(args) {
     db: {
       status: dbStatus,
       connected: dbConnected,
+      checkCompleted,
+      database: databaseName,
       queryLatencyMs: queryLatencyMs >= 0 ? queryLatencyMs : null,
       error: dbError,
     },
@@ -395,7 +497,13 @@ async function run() {
   }
   const payload = await runHealthCheck(args)
   const outputPath = writeOutputFile(args.outputPath, payload)
+  if (args.metricsOutputPath) {
+    const metricsPath = path.resolve(process.cwd(), args.metricsOutputPath)
+    fs.mkdirSync(path.dirname(metricsPath), { recursive: true })
+    writeAtomicFile(metricsPath, formatPrometheusMetrics(payload, args.metricsEnvironment))
+  }
   console.log(JSON.stringify({ ...payload, outputPath }, null, 2))
+  if (payload.status === "error") process.exitCode = 1
 }
 
 const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
@@ -410,4 +518,5 @@ if (isDirectRun) {
 export {
   parseArgs,
   runHealthCheck,
+  formatPrometheusMetrics,
 }
