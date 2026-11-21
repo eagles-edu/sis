@@ -85,6 +85,51 @@ services:
     ports:
       - 127.0.0.1:9115:9115
 
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.60.6
+    container_name: sis-cadvisor
+    restart: unless-stopped
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=30s
+      - --disable_metrics=percpu,sched,tcp,udp,hugetlb,referenced_memory,cpu_topology,resctrl,process
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    ports:
+      - 127.0.0.1:8089:8080
+
+  loki:
+    image: grafana/loki:3.7.8
+    container_name: sis-loki
+    restart: unless-stopped
+    command:
+      - -config.file=/etc/loki/config.yml
+    volumes:
+      - ./loki-config.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+
+  alloy:
+    image: grafana/alloy:v1.21.3
+    container_name: sis-alloy
+    restart: unless-stopped
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./alloy-config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-data:/var/lib/alloy/data
+    ports:
+      - 127.0.0.1:12345:12345
+    depends_on:
+      - loki
+
   # Optional: enable only while investigating host or application process load.
   process-exporter:
     image: ncabatoff/process-exporter:0.8.7
@@ -113,3 +158,5 @@ services:
 volumes:
   prometheus-data:
   grafana-data:
+  loki-data:
+  alloy-data:

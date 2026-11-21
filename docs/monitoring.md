@@ -2,7 +2,7 @@
 
 ## Current pared profile
 
-The monitoring profile includes Prometheus, Alertmanager, node-exporter, blackbox-exporter, and Grafana on loopback. Process-exporter is enabled for SIS process diagnostics. cAdvisor, PostgreSQL exporter, and Redis exporter are not active. The 60-second dependency monitor records shared PostgreSQL and Redis container CPU and memory from `docker stats --no-stream`, plus environment-owned authenticated database and Redis probe status and latency.
+The monitoring profile includes Prometheus, Alertmanager, node-exporter, blackbox-exporter, cAdvisor, Loki, Grafana Alloy, and Grafana on loopback. Process-exporter is enabled for SIS process diagnostics. PostgreSQL exporter and Redis exporter are not active. cAdvisor records Docker resource metrics; Alloy forwards only allowlisted monitoring-container logs to the seven-day local Loki store, with persistent Docker read offsets and stale-backlog filtering. Loki pauses WAL writes at 95% filesystem use; a paired dashboard shows current WAL filesystem pressure, accepted log throughput, and guard events. The 60-second dependency monitor records shared PostgreSQL and Redis container CPU and memory from `docker stats --no-stream`, plus environment-owned authenticated database and Redis probe status and latency.
 
 ## Purpose
 
@@ -26,6 +26,9 @@ These files are separate runtime contracts. Never copy credentials or settings b
 Host
 ├── node-exporter  ───── host CPU, RAM, disk, filesystem, load, network
 ├── blackbox-exporter ─── public test-mirror `/admin` availability and latency
+├── cAdvisor          ─── Docker container CPU and memory
+├── Grafana Alloy     ─── allowlisted monitoring-container logs to Loki
+├── Loki              ─── local logs, seven-day retention
 ├── Prometheus      ───── metric collection and 7-day local retention
 ├── Alertmanager    ───── grouped firing and resolved notifications to `#sis-alert`
 └── Grafana         ───── dashboards and visual investigation
@@ -43,6 +46,8 @@ Persistent Docker volumes:
 - `monitoring_prometheus-data`
 - `runtime-data/prometheus/alertmanager/` (Alertmanager state; ignored runtime data)
 - `monitoring_grafana-data`
+- `monitoring_loki-data` (seven-day local log store)
+- `monitoring_alloy-data` (Docker log read offsets)
 
 ## Services and local endpoints
 
@@ -51,6 +56,8 @@ Persistent Docker volumes:
 | Grafana | `http://127.0.0.1:3030` | Dashboard UI |
 | Prometheus | `http://127.0.0.1:9090` | Query and metric storage |
 | Alertmanager | `http://127.0.0.1:9093` | Local notification and silence status |
+| Grafana Alloy | `http://127.0.0.1:12345` | Collector readiness and metrics; Docker socket access is limited to the monitoring allowlist |
+| Loki | private Compose network, `loki:3100` | Searchable logs; no host-published port |
 | cAdvisor | `http://127.0.0.1:8089` | Docker metrics |
 | node-exporter | `http://127.0.0.1:9100` | Host metrics |
 | process-exporter | `http://127.0.0.1:9256` | Test-mirror process metrics |
@@ -93,7 +100,7 @@ The live/admin and test SIS mirrors now have structurally identical operations d
 - [SIS Live/Admin Mirror · Operations](http://127.0.0.1:3030/d/sis-live-admin-overview)
 - [SIS Test Mirror · Operations](http://127.0.0.1:3030/d/sis-test-mirror-overview)
 
-Both pages use the same 26 panels, time range, refresh, panel order, and per-panel query count; only environment filters and the truthful live/test check sources differ. Current health cards use instant Prometheus queries so low-frequency checks do not disappear at the dashboard time-series sampling interval. The historical smoke timeline carries forward each latest result for ten minutes. The test page shows ten scheduled authenticated workflow groups. The live page shows ten scheduled read-only probes: the public admin page, SIS API route, auth guard, API service, PostgreSQL container and `SELECT 1`, three Redis roles, and aggregate grade/feed query. These are twenty environment outcomes across the two pages, with live probes clearly identified as read-only rather than customer workflow writes. Live synthetic workflow writes and sends are not scheduled. Student-save request and stage panels display an explicit no-sample label when no instrumented write occurred; they never substitute zero latency. The live SIS process does not currently export request-stage samples.
+Both pages use the same 31 panels, time range, refresh, panel order, and per-panel query count; only environment filters and the truthful live/test check sources differ. Current health cards use instant Prometheus queries so low-frequency checks do not disappear at the dashboard time-series sampling interval. The historical subsystem timeline carries forward each latest result for thirty minutes. Each page shows twenty outcomes: the test page has ten authenticated workflow groups plus ten vendor/configuration checks; the live page has ten scheduled read-only probes plus those ten vendor/configuration checks. The live probes cover the public admin page, SIS API route, auth guard, API service, PostgreSQL container and `SELECT 1`, three Redis roles, and aggregate grade/feed query. These are environment outcomes, not a claim that live customer workflow writes run. Live synthetic workflow writes and sends are not scheduled. Student-save request counts show real requests and stage panels display an explicit no-sample label when none occurred; they never substitute zero latency. The live SIS process does not currently export request-stage samples. Both pages also show live Loki logs and the Loki WAL usage/ingestion guard, and all dashboard panels occupy non-overlapping grid cells.
 
 The `site-dependency-monitor.timer` runs every 60 seconds and records separate live (`.env`) and test (`.env.test`) PostgreSQL database-identity/`SELECT 1` and Redis `AUTH`/`SELECT`/`PING` results and elapsed durations. It also samples the shared PostgreSQL and Redis container CPU and memory, exports read-only grade/exercise counts and Brevo webhook aggregates, and records whether those aggregate queries succeeded for each database. Raw grade/webhook detail is never emitted. The test's existing grade and engagement monitor files remain their only source for overlapping detail series; the dependency monitor emits those detail series only for live to prevent node-exporter duplicate-series errors. The PostgreSQL timing includes Docker/`psql` client startup overhead, so compare its trend and container resources with Redis ping latency; do not treat a single probe as pure server query time. The test and live config files are read independently and are never copied between environments. The `SiteDependencyProbeSetIncomplete` alert checks expected cardinalities separately: eight live/admin SIS dependency checks, eight test-mirror SIS dependency checks, and six LTD Redis-role checks.
 
@@ -105,7 +112,7 @@ The Library monitor exports separate `checked` and `available` series for all tw
 
 Dev/test textfile metric families use the same environment-neutral `HELP` text in each owned file; the `environment` label carries the distinction. A stale legacy `parent-profile-workflow.prom` file must not remain beside the current `parent-profile-workflow-dev.prom` and `parent-profile-workflow-test.prom` files, because duplicate series or inconsistent help text causes node-exporter's textfile collector to reject the combined scrape.
 
-Coverage limits remain visible on both dashboards: aggregate grade rows show stored data, not successful source delivery; Google Forms discovery does not validate form permissions or grade submissions. As checked on 2026-11-22, a Google Forms HMAC grade secret is configured in both owned files, but this monitor does not validate the secret or submit grades; Moodle health endpoints are unconfigured in both, the provisioning secret is configured only in live, and MEGS health URLs are unconfigured in both. MEGS is a separate code/runtime tree, and its health is not inferred from SIS grade counts. Live Dictionary Builder button-by-button checks are not run because production does not schedule the synthetic preview; the test preview checks only the sources it returns and leaves other source IDs explicitly unchecked. The deep Redis exporter remains disabled because its authenticated exporter target is not configured; Redis diagnostics use per-role authenticated pings and latency plus shared-container CPU/memory.
+Coverage limits remain visible on both dashboards: aggregate grade rows show stored data, not successful source delivery; Google Forms discovery does not validate form permissions or grade submissions. As checked on 2026-11-22, a Google Forms HMAC grade secret is configured in both owned files, but this monitor does not validate the secret or submit grades; Moodle health endpoints are unconfigured in both, the provisioning secret is configured only in live, and MEGS health URLs are unconfigured in both. MEGS is a separate code/runtime tree, and its health is not inferred from SIS grade counts. Live Dictionary Builder button-by-button checks are not run because production does not schedule the synthetic preview; the test preview checks only the sources it returns and leaves other source IDs explicitly unchecked. Redis diagnostics use authenticated per-role pings and latency plus dependency-monitor and cAdvisor CPU/memory series. The dedicated redis_exporter remains off: the shared Redis server has no persistent ACL file, so provisioning its read-only account requires changing and restarting the shared Redis service. The monitoring feed does not reuse an application owner's credentials. At KA-205, Loki exposed its configured disk guard at 95% because the host filesystem measured 91.7% use; writes are retained while this remains under the guard, and the dashboards now show that shared-filesystem pressure. The Loki read pipeline parses Docker timestamps, drops entries older than 30 minutes, persists read offsets, and was verified with a fresh allowlisted monitoring-container log event.
 
 Each dashboard combines six status cards (including measured 24-hour public-probe availability alongside its collected-sample count), availability and alert timelines, request-phase and DNS graphs, application latency where configured, current service/dependency tables, service and dependency health-history timelines, and shared-host resource graphs. The ERPNext dashboard also graphs running state for every component and labels Docker healthcheck states as `HEALTHY`, `UNHEALTHY`, or `NO HEALTHCHECK`. Chart legends retain their measured phase/check/component labels. Panels use a non-overlapping grid. Missing application, latency, service, dependency, or container probes render an explicit instrumentation-gap note instead of an empty chart that could be mistaken for healthy status. The coverage map distinguishes measured, partial, and unmeasured layers. Shared host CPU/memory/disk metrics are explicitly labeled as host-wide; they are not attributed to an individual domain. SIS dev workflow signals are labeled environment-wide because their metrics do not carry domain labels.
 
@@ -146,7 +153,7 @@ Check Prometheus target health:
 curl -fsS http://127.0.0.1:9090/api/v1/targets
 ```
 
-All six monitoring targets should report `health: up`.
+At KA-205, all 20 active Prometheus targets reported `health: up`, including Loki, Alloy, and cAdvisor. Target counts change as blackbox sites and optional diagnostics are enabled; evaluate every active target returned by the API rather than relying on a fixed count.
 
 ## Accessing Grafana remotely
 
@@ -342,9 +349,11 @@ Add `postgres_exporter` with a least-privilege monitoring database account. Usef
 
 Do not give the exporter the application owner's write privileges. Use a dedicated monitoring role with only the required statistics permissions.
 
-### 2. Redis exporter — high priority
+### 2. Redis exporter — available, deferred pending safe ACL persistence
 
-Add `redis_exporter` to observe:
+The optional `redis-exporter` profile is available but remains stopped. The shared Redis service has no persistent ACL file, so a dedicated read-only monitoring account cannot currently survive a Redis restart without changing and restarting the shared Redis service. Do not reuse an application account. The active dashboard feed already measures authenticated app/session/cache role pings and latency, plus shared Redis CPU and memory from the dependency monitor and cAdvisor. Enable the direct exporter only after a persistent, read-only ACL user is provisioned through the approved shared-Redis change process.
+
+When enabled with that account, `redis_exporter` observes:
 
 - used memory and memory fragmentation;
 - evictions;
@@ -388,9 +397,9 @@ Prometheus should alert on:
 
 Alert delivery should go to an approved channel such as email, Slack, or another operational notification destination. Do not place delivery credentials in this document.
 
-### 5. Loki and Promtail — optional
+### 5. Loki and Alloy — installed monitoring log feed
 
-Use Loki/Promtail if centralized searchable logs are needed. Keep sensitive request bodies, passwords, cookies, session IDs, and student PII out of log labels and log payloads.
+Loki and Grafana Alloy run in the monitoring Compose project. Alloy reads only the explicit monitoring-container allowlist and excludes the SIS app, PostgreSQL, and student/parent request logs. It parses Docker timestamps before dropping backlog entries older than 30 minutes and persists its Docker read offsets in `monitoring_alloy-data`. Loki retains local logs for seven days and has no host-published port. Keep request bodies, passwords, cookies, session IDs, and student PII out of log labels and payloads. The paired SIS dashboards show the Loki stream and its WAL filesystem pressure, accepted log throughput, and disk-guard events.
 
 For this incident, structured SIS request logs with request ID, route, status, duration, and database timing are more valuable than collecting every log line centrally.
 

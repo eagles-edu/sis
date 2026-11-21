@@ -213,7 +213,7 @@
     {
       "id": 6,
       "type": "stat",
-      "title": "Subsystem results reported",
+      "title": "Subsystem checks reported",
       "gridPos": {
         "h": 4,
         "w": 4,
@@ -222,7 +222,7 @@
       },
       "targets": [
         {
-          "expr": "(count(probe_success{job=\"blackbox-website-http\",site=\"admin\"}) or vector(0)) + (count(probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"}) or vector(0)) + (count(probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"}) or vector(0)) + (count(node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}) or vector(0)) + (count(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"}) or vector(0)) + (count(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}) or vector(0)) + (count(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"}) or vector(0)) + (count(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}) or vector(0)) + (count(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"}) or vector(0)) + (count(sis_grade_feed_readonly_data_available{environment=\"live\"}) or vector(0))",
+          "expr": "count(label_replace(max by () (probe_success{job=\"blackbox-website-http\",site=\"admin\"}), \"subsystem\", \"Public admin page\", \"__name__\", \".*\") or label_replace(max by () (probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"}), \"subsystem\", \"SIS API route\", \"__name__\", \".*\") or label_replace(max by () (probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"}), \"subsystem\", \"Auth guard\", \"__name__\", \".*\") or label_replace(max by () (node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}), \"subsystem\", \"SIS API service\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"}), \"subsystem\", \"PostgreSQL container\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}), \"subsystem\", \"PostgreSQL SELECT 1\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis app role\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis sessions role\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis cache role\", \"__name__\", \".*\") or label_replace(max by () (sis_grade_feed_readonly_data_available{environment=\"live\"}), \"subsystem\", \"Grade/feed read-only query\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} or (sis_external_service_configured{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} - 1))), \"subsystem\", \"CMU pronunciation dictionary\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"merriam_webster_collegiate\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_collegiate\"} - 1))), \"subsystem\", \"Merriam-Webster Collegiate\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"merriam_webster_learners\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_learners\"} - 1))), \"subsystem\", \"Merriam-Webster Learner's\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"shared\",service=\"languagetool_1\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_1\"} - 1))), \"subsystem\", \"LanguageTool 1\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"shared\",service=\"languagetool_2\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_2\"} - 1))), \"subsystem\", \"LanguageTool 2\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"brevo_api\"} or (sis_external_service_configured{environment=\"live\",service=\"brevo_api\"} - 1))), \"subsystem\", \"Brevo API\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"google_forms_discovery\"} or (sis_external_service_configured{environment=\"live\",service=\"google_forms_discovery\"} - 1))), \"subsystem\", \"Google Forms discovery\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"moodle_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"moodle_endpoint\"} - 1))), \"subsystem\", \"Moodle health endpoint\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"megs_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"megs_endpoint\"} - 1))), \"subsystem\", \"MEGS health endpoint\", \"__name__\", \".*\") or label_replace(max by () (sis_external_service_monitor_success{environment=\"live\"}), \"subsystem\", \"Vendor monitor\", \"__name__\", \".*\")) or vector(0)",
           "refId": "A",
           "instant": true
         }
@@ -237,8 +237,8 @@
                   "text": "0",
                   "color": "gray"
                 },
-                "1": {
-                  "text": "1",
+                "20": {
+                  "text": "20",
                   "color": "green"
                 }
               }
@@ -260,22 +260,22 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "Live runs ten read-only smoke probes: public page, SIS API, auth guard, service, PostgreSQL container/query, three Redis roles, and grade-feed aggregate query. Dependency checks run every 60s; configured vendor health runs every 15m. No customer workflow writes or messages are generated."
+        "content": "Live: 10 read-only SIS/dependency probes plus 10 vendor/configuration checks. Dependencies run every 60s; vendor checks every 15m. Customer workflow writes stay held."
       }
     },
     {
       "id": 8,
       "type": "table",
-      "title": "Subsystem smoke results",
+      "title": "20 subsystem checks · current results",
       "gridPos": {
-        "h": 16,
+        "h": 24,
         "w": 12,
         "x": 0,
         "y": 7
       },
       "targets": [
         {
-          "expr": "label_replace(probe_success{job=\"blackbox-website-http\",site=\"admin\"}, \"subsystem\", \"Public admin page\", \"__name__\", \".*\") or label_replace(probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"}, \"subsystem\", \"SIS API route\", \"__name__\", \".*\") or label_replace(probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"}, \"subsystem\", \"Auth guard\", \"__name__\", \".*\") or label_replace(node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}, \"subsystem\", \"SIS API service\", \"__name__\", \".*\") or label_replace(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"}, \"subsystem\", \"PostgreSQL container\", \"__name__\", \".*\") or label_replace(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}, \"subsystem\", \"PostgreSQL SELECT 1\", \"__name__\", \".*\") or label_replace(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"}, \"subsystem\", \"Redis app role\", \"__name__\", \".*\") or label_replace(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}, \"subsystem\", \"Redis sessions role\", \"__name__\", \".*\") or label_replace(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"}, \"subsystem\", \"Redis cache role\", \"__name__\", \".*\") or label_replace(sis_grade_feed_readonly_data_available{environment=\"live\"}, \"subsystem\", \"Grade/feed read-only query\", \"__name__\", \".*\")",
+          "expr": "label_replace(max by () (probe_success{job=\"blackbox-website-http\",site=\"admin\"}), \"subsystem\", \"Public admin page\", \"__name__\", \".*\") or label_replace(max by () (probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"}), \"subsystem\", \"SIS API route\", \"__name__\", \".*\") or label_replace(max by () (probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"}), \"subsystem\", \"Auth guard\", \"__name__\", \".*\") or label_replace(max by () (node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}), \"subsystem\", \"SIS API service\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"}), \"subsystem\", \"PostgreSQL container\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}), \"subsystem\", \"PostgreSQL SELECT 1\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis app role\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis sessions role\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis cache role\", \"__name__\", \".*\") or label_replace(max by () (sis_grade_feed_readonly_data_available{environment=\"live\"}), \"subsystem\", \"Grade/feed read-only query\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} or (sis_external_service_configured{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} - 1))), \"subsystem\", \"CMU pronunciation dictionary\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"merriam_webster_collegiate\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_collegiate\"} - 1))), \"subsystem\", \"Merriam-Webster Collegiate\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"merriam_webster_learners\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_learners\"} - 1))), \"subsystem\", \"Merriam-Webster Learner's\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"shared\",service=\"languagetool_1\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_1\"} - 1))), \"subsystem\", \"LanguageTool 1\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"shared\",service=\"languagetool_2\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_2\"} - 1))), \"subsystem\", \"LanguageTool 2\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"brevo_api\"} or (sis_external_service_configured{environment=\"live\",service=\"brevo_api\"} - 1))), \"subsystem\", \"Brevo API\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"google_forms_discovery\"} or (sis_external_service_configured{environment=\"live\",service=\"google_forms_discovery\"} - 1))), \"subsystem\", \"Google Forms discovery\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"moodle_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"moodle_endpoint\"} - 1))), \"subsystem\", \"Moodle health endpoint\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"megs_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"megs_endpoint\"} - 1))), \"subsystem\", \"MEGS health endpoint\", \"__name__\", \".*\") or label_replace(max by () (sis_external_service_monitor_success{environment=\"live\"}), \"subsystem\", \"Vendor monitor\", \"__name__\", \".*\")",
           "refId": "A",
           "legendFormat": "{{subsystem}}",
           "format": "table",
@@ -295,6 +295,10 @@
                 "1": {
                   "text": "PASS",
                   "color": "green"
+                },
+                "-1": {
+                  "text": "NOT CONFIGURED",
+                  "color": "gray"
                 }
               }
             }
@@ -306,11 +310,28 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Result",
             "desc": true
           }
         ]
-      }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "subsystem": 0,
+              "Value": 1
+            },
+            "renameByName": {
+              "Value": "Result"
+            }
+          }
+        }
+      ]
     },
     {
       "id": 9,
@@ -359,63 +380,113 @@
     {
       "id": 10,
       "type": "state-timeline",
-      "title": "Historical smoke pass/fail by subsystem",
+      "title": "Historical subsystem result cadence",
       "gridPos": {
         "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 23
+        "w": 12,
+        "x": 12,
+        "y": 16
       },
       "targets": [
         {
-          "expr": "last_over_time(probe_success{job=\"blackbox-website-http\",site=\"admin\"}[10m])",
+          "expr": "last_over_time((probe_success{job=\"blackbox-website-http\",site=\"admin\"})[30m:30s])",
           "refId": "A",
           "legendFormat": "Public admin page"
         },
         {
-          "expr": "last_over_time(probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"}[10m])",
+          "expr": "last_over_time((probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"})[30m:30s])",
           "refId": "B",
           "legendFormat": "SIS API route"
         },
         {
-          "expr": "last_over_time(probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"}[10m])",
+          "expr": "last_over_time((probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"})[30m:30s])",
           "refId": "C",
           "legendFormat": "Auth guard"
         },
         {
-          "expr": "last_over_time(node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}[10m])",
+          "expr": "last_over_time((node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"})[30m:30s])",
           "refId": "D",
           "legendFormat": "SIS API service"
         },
         {
-          "expr": "last_over_time(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"}[10m])",
+          "expr": "last_over_time((site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"})[30m:30s])",
           "refId": "E",
           "legendFormat": "PostgreSQL container"
         },
         {
-          "expr": "last_over_time(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}[10m])",
+          "expr": "last_over_time((site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"})[30m:30s])",
           "refId": "F",
           "legendFormat": "PostgreSQL SELECT 1"
         },
         {
-          "expr": "last_over_time(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"}[10m])",
+          "expr": "last_over_time((site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"})[30m:30s])",
           "refId": "G",
           "legendFormat": "Redis app role"
         },
         {
-          "expr": "last_over_time(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}[10m])",
+          "expr": "last_over_time((site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"})[30m:30s])",
           "refId": "H",
           "legendFormat": "Redis sessions role"
         },
         {
-          "expr": "last_over_time(site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"}[10m])",
+          "expr": "last_over_time((site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"})[30m:30s])",
           "refId": "I",
           "legendFormat": "Redis cache role"
         },
         {
-          "expr": "last_over_time(sis_grade_feed_readonly_data_available{environment=\"live\"}[10m])",
+          "expr": "last_over_time((sis_grade_feed_readonly_data_available{environment=\"live\"})[30m:30s])",
           "refId": "J",
           "legendFormat": "Grade/feed read-only query"
+        },
+        {
+          "expr": "last_over_time(((sis_external_service_available{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} or (sis_external_service_configured{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} - 1)))[30m:30s])",
+          "refId": "K",
+          "legendFormat": "CMU pronunciation dictionary"
+        },
+        {
+          "expr": "last_over_time(((sis_external_service_available{environment=\"live\",service=\"merriam_webster_collegiate\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_collegiate\"} - 1)))[30m:30s])",
+          "refId": "L",
+          "legendFormat": "Merriam-Webster Collegiate"
+        },
+        {
+          "expr": "last_over_time(((sis_external_service_available{environment=\"live\",service=\"merriam_webster_learners\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_learners\"} - 1)))[30m:30s])",
+          "refId": "M",
+          "legendFormat": "Merriam-Webster Learner's"
+        },
+        {
+          "expr": "last_over_time(((sis_external_service_available{environment=\"shared\",service=\"languagetool_1\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_1\"} - 1)))[30m:30s])",
+          "refId": "N",
+          "legendFormat": "LanguageTool 1"
+        },
+        {
+          "expr": "last_over_time(((sis_external_service_available{environment=\"shared\",service=\"languagetool_2\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_2\"} - 1)))[30m:30s])",
+          "refId": "O",
+          "legendFormat": "LanguageTool 2"
+        },
+        {
+          "expr": "last_over_time(((sis_external_service_available{environment=\"live\",service=\"brevo_api\"} or (sis_external_service_configured{environment=\"live\",service=\"brevo_api\"} - 1)))[30m:30s])",
+          "refId": "P",
+          "legendFormat": "Brevo API"
+        },
+        {
+          "expr": "last_over_time(((sis_external_service_available{environment=\"live\",service=\"google_forms_discovery\"} or (sis_external_service_configured{environment=\"live\",service=\"google_forms_discovery\"} - 1)))[30m:30s])",
+          "refId": "Q",
+          "legendFormat": "Google Forms discovery"
+        },
+        {
+          "expr": "last_over_time(((sis_external_service_available{environment=\"live\",service=\"moodle_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"moodle_endpoint\"} - 1)))[30m:30s])",
+          "refId": "R",
+          "legendFormat": "Moodle health endpoint"
+        },
+        {
+          "expr": "last_over_time(((sis_external_service_available{environment=\"live\",service=\"megs_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"megs_endpoint\"} - 1)))[30m:30s])",
+          "refId": "S",
+          "legendFormat": "MEGS health endpoint"
+        },
+        {
+          "expr": "last_over_time((sis_external_service_monitor_success{environment=\"live\"})[30m:30s])",
+          "refId": "T",
+          "legendFormat": "Vendor monitor"
         }
       ],
       "fieldConfig": {
@@ -495,19 +566,29 @@
       "title": "Student-save requests in the last 5 minutes",
       "gridPos": {
         "h": 8,
-        "w": 6,
+        "w": 12,
         "x": 12,
         "y": 31
       },
       "targets": [
         {
-          "expr": "sum(increase(sis_admin_student_write_requests_total{environment=\"production\"}[5m]))",
+          "expr": "sum(increase(sis_admin_student_write_requests_total{environment=\"production\"}[5m])) or vector(0)",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "No request samples"
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "0 writes",
+                  "color": "gray"
+                }
+              }
+            }
+          ]
         },
         "overrides": []
       }
@@ -524,7 +605,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (phase) (rate(sis_admin_student_write_phase_duration_seconds_sum{environment=\"production\"}[10m])) / sum by (phase) (rate(sis_admin_student_write_phase_duration_seconds_count{environment=\"production\"}[10m]))",
+          "expr": "sum by (phase) (increase(sis_admin_student_write_phase_duration_seconds_sum{environment=\"production\"}[$__range])) / sum by (phase) (increase(sis_admin_student_write_phase_duration_seconds_count{environment=\"production\"}[$__range]))",
           "refId": "A",
           "legendFormat": "mean {{phase}}"
         }
@@ -535,12 +616,12 @@
         },
         "overrides": []
       },
-      "description": "No authenticated student-write samples are present in the selected range. Missing telemetry is not zero latency; both SIS runtimes need real instrumented writes before this chart can plot stages."
+      "description": "Mean phase latency uses real authenticated student-write samples over the selected range. No samples means no measured latency; zero is never substituted."
     },
     {
       "id": 14,
       "type": "timeseries",
-      "title": "PostgreSQL vs Redis probe latency",
+      "title": "PostgreSQL vs Redis probe p95 · sampled",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -549,12 +630,12 @@
       },
       "targets": [
         {
-          "expr": "site_dependency_probe_duration_seconds{environment=\"live\",dependency=\"sis-postgres\"}",
+          "expr": "quantile_over_time(0.95, site_dependency_probe_duration_seconds{environment=\"live\",dependency=\"sis-postgres\"}[1h])",
           "refId": "A",
           "legendFormat": "PostgreSQL SELECT 1"
         },
         {
-          "expr": "site_dependency_probe_duration_seconds{environment=\"live\",dependency=~\"sis-(app|sessions|cache)\"}",
+          "expr": "quantile_over_time(0.95, site_dependency_probe_duration_seconds{environment=\"live\",dependency=~\"sis-(app|sessions|cache)\"}[1h])",
           "refId": "B",
           "legendFormat": "Redis {{dependency}}"
         }
@@ -579,7 +660,8 @@
           ]
         },
         "overrides": []
-      }
+      },
+      "description": "These are sampled dependency probe durations. PostgreSQL includes Docker/psql startup and is not pure server query latency; use PostgreSQL and Redis resource panels to corroborate bottleneck hypotheses."
     },
     {
       "id": 15,
@@ -676,62 +758,63 @@
       },
       "targets": [
         {
-          "expr": "sis_library_cmu_dictionary_available{environment=\"live\"}",
-          "refId": "A",
-          "legendFormat": "CMUdict"
-        },
-        {
-          "expr": "sis_library_dictionary_builder_definition_providers_available{environment=\"live\"}",
-          "refId": "B",
-          "legendFormat": "definitions available"
-        },
-        {
-          "expr": "sis_library_dictionary_builder_definition_providers_checked{environment=\"live\"}",
-          "refId": "C",
-          "legendFormat": "definitions checked"
-        },
-        {
-          "expr": "sis_library_mw_collegiate_key_configured{environment=\"live\"}",
-          "refId": "D",
-          "legendFormat": "MW Collegiate configured"
-        },
-        {
-          "expr": "sis_library_mw_learners_key_configured{environment=\"live\"}",
-          "refId": "E",
-          "legendFormat": "MW Learner's configured"
-        },
-        {
           "expr": "sis_external_service_available{environment=\"live\",service=~\"cmu_pronunciation_dictionary|merriam_webster_.*\"}",
-          "refId": "F",
+          "refId": "A",
           "legendFormat": "{{service}} health"
         },
         {
           "expr": "sis_external_service_configured{environment=\"live\",service=~\"cmu_pronunciation_dictionary|merriam_webster_.*\"}",
-          "refId": "G",
+          "refId": "B",
           "legendFormat": "{{service}} configured"
         },
         {
           "expr": "sis_external_service_http_status{environment=\"live\",service=~\"merriam_webster_.*\"}",
-          "refId": "H",
+          "refId": "C",
           "legendFormat": "{{service}} HTTP status"
         },
         {
-          "expr": "sis_library_dictionary_builder_provider_checked{environment=\"live\"}",
-          "refId": "I",
-          "legendFormat": "{{provider}} checked"
+          "expr": "sis_external_service_available{environment=\"shared\",service=~\"languagetool_.*\"}",
+          "refId": "D",
+          "legendFormat": "{{service}} health"
         },
         {
-          "expr": "sis_library_dictionary_builder_provider_available{environment=\"live\"}",
-          "refId": "J",
-          "legendFormat": "{{provider}} available"
+          "expr": "sis_external_service_http_status{environment=\"shared\",service=~\"languagetool_.*\"}",
+          "refId": "E",
+          "legendFormat": "{{service}} HTTP status"
+        },
+        {
+          "expr": "sis_external_service_check_duration_seconds{environment=\"live\",service=~\"merriam_webster_.*\"}",
+          "refId": "F",
+          "legendFormat": "{{service}} check duration"
+        },
+        {
+          "expr": "vector(-1)",
+          "refId": "G",
+          "legendFormat": "12 Dictionary Builder buttons · not run live"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "Waiting for the 15-minute read-only vendor check"
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
         },
         "overrides": []
-      }
+      },
+      "description": "Live emits read-only CMUdict and Merriam-Webster vendor health. It does not run the synthetic Dictionary Builder button preview against customer data; the twelve per-button series are test-only."
     },
     {
       "id": 18,
@@ -745,26 +828,6 @@
       },
       "targets": [
         {
-          "expr": "sis_news_language_tool_available{environment=\"live\"}",
-          "refId": "A",
-          "legendFormat": "LanguageTool"
-        },
-        {
-          "expr": "sis_news_dictionary_available{environment=\"live\"}",
-          "refId": "B",
-          "legendFormat": "pronunciation dictionary"
-        },
-        {
-          "expr": "sis_news_check_success{environment=\"live\"}",
-          "refId": "C",
-          "legendFormat": "News Check"
-        },
-        {
-          "expr": "sis_news_submission_success{environment=\"live\"}",
-          "refId": "D",
-          "legendFormat": "News submit"
-        },
-        {
           "expr": "sis_external_service_available{environment=\"shared\",service=~\"languagetool_.*\"}",
           "refId": "E",
           "legendFormat": "{{service}}"
@@ -773,14 +836,55 @@
           "expr": "sis_external_service_http_status{environment=\"shared\",service=~\"languagetool_.*\"}",
           "refId": "F",
           "legendFormat": "{{service}} HTTP status"
+        },
+        {
+          "expr": "sis_external_service_available{environment=\"live\",service=\"cmu_pronunciation_dictionary\"}",
+          "refId": "G",
+          "legendFormat": "CMUdict health"
+        },
+        {
+          "expr": "sis_external_service_configured{environment=\"live\",service=\"cmu_pronunciation_dictionary\"}",
+          "refId": "H",
+          "legendFormat": "CMUdict configured"
+        },
+        {
+          "expr": "vector(-1)",
+          "refId": "I",
+          "legendFormat": "News Check · not run live"
+        },
+        {
+          "expr": "vector(-1)",
+          "refId": "J",
+          "legendFormat": "News submit · not run live"
+        },
+        {
+          "expr": "sis_external_service_check_duration_seconds{environment=\"shared\",service=~\"languagetool_.*\"}",
+          "refId": "K",
+          "legendFormat": "{{service}} check duration"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "No News workflow sample in this environment"
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
         },
         "overrides": []
-      }
+      },
+      "description": "Live LanguageTool and CMUdict feeds are read-only vendor checks. News Check and submit are not run on live; customer workflow writes remain held."
     },
     {
       "id": 19,
@@ -834,9 +938,9 @@
           "legendFormat": "Moodle endpoint configured"
         },
         {
-          "expr": "sis_external_service_available{environment=\"live\",service=\"google_forms_discovery\"}",
+          "expr": "(sis_external_service_available{environment=\"live\",service=\"google_forms_discovery\"} or (sis_external_service_configured{environment=\"live\",service=\"google_forms_discovery\"} - 1))",
           "refId": "I",
-          "legendFormat": "Forms API discovery health"
+          "legendFormat": "Forms API discovery health / not configured"
         },
         {
           "expr": "sis_external_service_http_status{environment=\"live\",service=\"google_forms_discovery\"}",
@@ -888,9 +992,9 @@
           "legendFormat": "Brevo API configured"
         },
         {
-          "expr": "sis_external_service_available{environment=\"live\",service=\"brevo_api\"}",
+          "expr": "(sis_external_service_available{environment=\"live\",service=\"brevo_api\"} or (sis_external_service_configured{environment=\"live\",service=\"brevo_api\"} - 1))",
           "refId": "E",
-          "legendFormat": "Brevo API health"
+          "legendFormat": "Brevo API health / not configured"
         },
         {
           "expr": "sis_external_service_http_status{environment=\"live\",service=\"brevo_api\"}",
@@ -967,9 +1071,9 @@
           "instant": true
         },
         {
-          "expr": "sis_external_service_available{environment=\"live\",service=\"megs_endpoint\"}",
+          "expr": "(sis_external_service_available{environment=\"live\",service=\"megs_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"megs_endpoint\"} - 1))",
           "refId": "B",
-          "legendFormat": "MEGS endpoint health",
+          "legendFormat": "MEGS endpoint health / not configured",
           "instant": true
         }
       ],
@@ -1008,7 +1112,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "MEGS endpoint health"
+              "options": "MEGS endpoint health / not configured"
             },
             "properties": [
               {
@@ -1024,6 +1128,10 @@
                       "1": {
                         "text": "UP",
                         "color": "green"
+                      },
+                      "-1": {
+                        "text": "NOT CONFIGURED",
+                        "color": "gray"
                       }
                     }
                   }
@@ -1169,8 +1277,217 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "Test results are authenticated workflow checks; live results are ten read-only probes and do not imply live workflow writes. Student-save stage charts require real instrumented writes; missing samples are stated, never converted into zero latency. Grade panels show aggregate rows stored by each source, not vendor delivery success. Vendor health is a read-only request every 15m; an unconfigured endpoint is shown as unconfigured. PostgreSQL and Redis CPU/memory are shared-container samples. Redis memory/client totals require a secured exporter and are not collected."
+        "content": "The 20-row table combines scheduled environment checks with read-only service/vendor probes; it does not claim live customer workflow writes. Unconfigured vendors display NOT CONFIGURED. News, student-save, and Dictionary Builder live workflows are not synthesized. Student-save latency is the measured mean of real writes only. PostgreSQL probes include client/Docker startup. Redis uses authenticated role probes plus container and cAdvisor resource metrics; its dedicated exporter stays off until persistent read-only ACL support is configured. Loki receives allowlisted monitoring-container logs only."
       }
+    },
+    {
+      "id": 27,
+      "type": "timeseries",
+      "title": "Redis aggregate diagnostics",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 91
+      },
+      "targets": [
+        {
+          "expr": "site_dependency_probe_duration_seconds{environment=\"live\",dependency=~\"sis-(sessions|cache|app)\"}",
+          "refId": "A",
+          "legendFormat": "{{dependency}} probe"
+        },
+        {
+          "expr": "site_dependency_container_cpu_percent{container=\"redis\"}",
+          "refId": "B",
+          "legendFormat": "Redis CPU"
+        },
+        {
+          "expr": "site_dependency_container_memory_used_bytes{container=\"redis\"}",
+          "refId": "C",
+          "legendFormat": "Redis memory"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No Redis dependency telemetry reported"
+        },
+        "overrides": []
+      },
+      "description": "Authenticated Redis role probes, latency, and shared-container resource metrics. A direct exporter requires a persistent read-only ACL account; no application credentials are reused."
+    },
+    {
+      "id": 28,
+      "type": "timeseries",
+      "title": "Container CPU and memory · SIS / PostgreSQL / Redis",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 91
+      },
+      "targets": [
+        {
+          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{name=~\"sis-.*|redis-stack\"}[5m])) * 100",
+          "refId": "A",
+          "legendFormat": "{{name}} CPU %"
+        },
+        {
+          "expr": "container_memory_working_set_bytes{name=~\"sis-.*|redis-stack\"}",
+          "refId": "B",
+          "legendFormat": "{{name}} working set"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "description": "cAdvisor is docker-only and exports resource totals for the named SIS and Redis containers. Values are shared-host measurements."
+    },
+    {
+      "id": 29,
+      "type": "logs",
+      "title": "Monitoring service logs · Loki",
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 99
+      },
+      "targets": [
+        {
+          "expr": "{job=\"monitoring-containers\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "sis-loki"
+      },
+      "description": "Loki receives logs only from the explicit monitoring-container allowlist. SIS application, PostgreSQL, and student/parent request logs are excluded."
+    },
+    {
+      "id": 30,
+      "type": "timeseries",
+      "title": "Loki WAL filesystem use",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 111
+      },
+      "targets": [
+        {
+          "expr": "loki_ingester_wal_disk_usage_percent * 100",
+          "refId": "A",
+          "legendFormat": "WAL filesystem use %",
+          "format": "percent"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "description": "Shared Loki monitoring service. WAL writes pause at 95% filesystem use. This is the measured filesystem-wide pressure on Loki's WAL volume."
+    },
+    {
+      "id": 31,
+      "type": "stat",
+      "title": "Loki ingestion and WAL guard",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 119
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(loki_distributor_lines_received_total[5m]))",
+          "refId": "A",
+          "legendFormat": "Accepted log lines / sec",
+          "instant": true
+        },
+        {
+          "expr": "sum(increase(loki_ingester_wal_disk_full_failures_total[15m])) or vector(0)",
+          "refId": "B",
+          "legendFormat": "WAL guard events / 15m",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Accepted log lines / sec"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ops"
+              }
+            ]
+          }
+        ]
+      },
+      "description": "Current accepted log throughput and disk guard events over fifteen minutes. Loki write guard events are reported by Loki's WAL metrics."
     }
   ]
 }
