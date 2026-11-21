@@ -559,7 +559,7 @@ groups:
           summary: Authenticated synthetic dev Student News Check failed
 
       - alert: DevNewsProviderUnavailable
-        expr: sis_news_language_tool_available{environment="dev"} == 0 or sis_news_dictionary_available{environment="dev"} == 0
+        expr: (sis_news_language_tool_check_performed{environment="dev"} == 1 and sis_news_language_tool_available{environment="dev"} == 0) or sis_news_dictionary_available{environment="dev"} == 0
         for: 1m
         labels:
           severity: warning

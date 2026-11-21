@@ -5,7 +5,9 @@ import path from "node:path"
 import test from "node:test"
 import {
   assertNewsMonitorEnvironment,
+  getLanguageToolCheckState,
   renderNewsWorkflowMetrics,
+  resolveNewsMonitorReportDate,
   writeNewsMetricsAtomically,
 } from "../tools/monitor-news-workflow.mjs"
 
@@ -20,7 +22,9 @@ function metrics(overrides = {}) {
     checkedAt: 200,
     durationSeconds: 15,
     checkDurationSeconds: 6.5,
+    checkHttpStatus: 200,
     checkSuccess: true,
+    languageToolCheckPerformed: true,
     languageToolAvailable: true,
     dictionaryAvailable: true,
     submissionSuccess: true,
@@ -53,6 +57,8 @@ test("News metrics capture Check latency, provider availability, submission fail
     oldestOpenReviewAgeSeconds: 86401,
   })
   assert.match(output, /sis_news_check_duration_seconds\{environment="dev"\} 6\.500000/u)
+  assert.match(output, /sis_news_check_http_status\{environment="dev"\} 200\.000000/u)
+  assert.match(output, /sis_news_language_tool_check_performed\{environment="dev"\} 1\.000000/u)
   assert.match(output, /sis_news_language_tool_available\{environment="dev"\} 0\.000000/u)
   assert.match(output, /sis_news_dictionary_available\{environment="dev"\} 0\.000000/u)
   assert.match(output, /sis_news_submission_failure\{environment="dev"\} 1\.000000/u)
@@ -61,6 +67,19 @@ test("News metrics capture Check latency, provider availability, submission fail
   assert.doesNotMatch(output, /mark001|studentRefId|reportId|cookie|password|@[a-z0-9.-]+/iu)
   assert.equal(output.split("\n").filter((line) => line.startsWith("sis_news_") && !line.includes('{environment="dev"}')).length, 0)
   assert.throws(() => metrics({ openReviewCount: -1 }), /finite non-negative/u)
+})
+
+test("News monitor uses the SIS report date through the two-hour ICT grace window", () => {
+  assert.equal(resolveNewsMonitorReportDate(new Date("2026-11-21T17:29:44.000Z")), "2026-11-21")
+  assert.equal(resolveNewsMonitorReportDate(new Date("2026-11-21T18:59:59.999Z")), "2026-11-21")
+  assert.equal(resolveNewsMonitorReportDate(new Date("2026-11-21T19:00:00.000Z")), "2026-11-22")
+})
+
+test("News monitor distinguishes an unattempted LanguageTool check from provider failure", () => {
+  assert.deepEqual(getLanguageToolCheckState({}), { checked: false, available: false })
+  assert.deepEqual(getLanguageToolCheckState({ validation: { sentenceReports: {} } }), { checked: false, available: false })
+  assert.deepEqual(getLanguageToolCheckState({ validation: { sentenceReports: { leadSynopsis: { languageToolStatus: "completed" } } } }), { checked: true, available: true })
+  assert.deepEqual(getLanguageToolCheckState({ validation: { sentenceReports: { leadSynopsis: { languageToolStatus: "unavailable" } } } }), { checked: true, available: false })
 })
 
 test("News metric values are atomically generated without leaving a temporary file", (t) => {

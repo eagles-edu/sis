@@ -6,6 +6,40 @@ evaluation_interval: 30s
 tests:
   - interval: 30s
     input_series:
+      - series: 'sis_news_language_tool_check_performed{environment="dev"}'
+        values: '0x5'
+      - series: 'sis_news_language_tool_available{environment="dev"}'
+        values: '0x5'
+      - series: 'sis_news_dictionary_available{environment="dev"}'
+        values: '1x5'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: DevNewsProviderUnavailable
+        exp_alerts: []
+
+  - interval: 30s
+    input_series:
+      - series: 'sis_news_language_tool_check_performed{environment="dev"}'
+        values: '1x5'
+      - series: 'sis_news_language_tool_available{environment="dev"}'
+        values: '0x5'
+      - series: 'sis_news_dictionary_available{environment="dev"}'
+        values: '1x5'
+    alert_rule_test:
+      - eval_time: 30s
+        alertname: DevNewsProviderUnavailable
+        exp_alerts: []
+      - eval_time: 1m
+        alertname: DevNewsProviderUnavailable
+        exp_alerts:
+          - exp_labels:
+              environment: dev
+              severity: warning
+            exp_annotations:
+              summary: A required Student News validation provider is unavailable in dev
+
+  - interval: 30s
+    input_series:
       - series: 'sis_db_health_check_success{environment="dev"}'
         values: '0x5'
     alert_rule_test:

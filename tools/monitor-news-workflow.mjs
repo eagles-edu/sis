@@ -4,6 +4,7 @@ import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { closeSharedPrismaClient, getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
 import { validateVocabularyEntry } from "../src/modules/admin/vocabulary-syllabication.mjs"
+import { resolveStudentNewsSubmissionWindow } from "../src/modules/admin/student-news-submissions.mjs"
 import { resolveStandardStudentCredentials } from "../test/helpers/standard-portal-credentials.mjs"
 import { renderKeepaliveCheckMetrics } from "../src/infra/observability/keepalive-check-metrics.mjs"
 import { assertKeepaliveMonitorDatabase, resolveKeepaliveMonitorEnvironment } from "./keepalive-monitor-environment.mjs"
@@ -35,6 +36,8 @@ export function renderNewsWorkflowMetrics({
   checkDurationSeconds,
   checkSuccess,
   languageToolAvailable,
+  languageToolCheckPerformed,
+  checkHttpStatus,
   dictionaryAvailable,
   submissionSuccess,
   submissionHttpStatus,
@@ -54,6 +57,8 @@ export function renderNewsWorkflowMetrics({
     ["sis_news_database_available", `Whether the SIS ${environment} database is available.`, databaseAvailable ? 1 : 0],
     ["sis_news_check_success", "Whether the authenticated synthetic Student News Check passed.", checkSuccess ? 1 : 0],
     ["sis_news_check_duration_seconds", "Duration of the authenticated synthetic Student News Check.", checkDurationSeconds],
+    ["sis_news_check_http_status", "HTTP status returned by the latest synthetic Student News Check request.", checkHttpStatus],
+    ["sis_news_language_tool_check_performed", `Whether LanguageTool was reached during the ${environment} News Check.`, languageToolCheckPerformed ? 1 : 0],
     ["sis_news_language_tool_available", `Whether LanguageTool completed during the ${environment} News Check.`, languageToolAvailable ? 1 : 0],
     ["sis_news_dictionary_available", `Whether the Merriam-Webster-backed vocabulary check was reachable in ${environment}.`, dictionaryAvailable ? 1 : 0],
     ["sis_news_submission_success", "Whether the authenticated synthetic Student News submission succeeded.", submissionSuccess ? 1 : 0],
@@ -123,15 +128,8 @@ function sessionCookie(result, name) {
   return match ? `${name}=${match[1]}` : ""
 }
 
-function localDateKey(date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date)
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
-  return `${values.year}-${values.month}-${values.day}`
+export function resolveNewsMonitorReportDate(now = new Date()) {
+  return resolveStudentNewsSubmissionWindow(now).reportDate
 }
 
 function syntheticReport(reportDate, sourceLink, articleTitle) {
@@ -175,12 +173,15 @@ async function collectQueueMetrics(prisma, now) {
   }
 }
 
-function languageToolSucceeded(payload) {
-  if (!payload || typeof payload !== "object") return false
+export function getLanguageToolCheckState(payload) {
+  if (!payload || typeof payload !== "object") return { checked: false, available: false }
   const reports = payload.validation?.sentenceReports
-  if (!reports || typeof reports !== "object") return false
-  const statuses = Object.values(reports).map((report) => report?.languageToolStatus).filter(Boolean)
-  return statuses.length > 0 && statuses.every((status) => status === "completed" || status === "disabled")
+  if (!reports || typeof reports !== "object" || Object.keys(reports).length === 0) return { checked: false, available: false }
+  const statuses = Object.values(reports).map((report) => report?.languageToolStatus)
+  return {
+    checked: true,
+    available: statuses.length > 0 && statuses.every((status) => status === "completed" || status === "disabled"),
+  }
 }
 
 export async function runNewsWorkflowMonitor({
@@ -207,6 +208,8 @@ export async function runNewsWorkflowMonitor({
   let databaseAvailable = false
   let checkSuccess = false
   let checkDurationSeconds = 0
+  let checkHttpStatus = 0
+  let languageToolCheckPerformed = false
   let languageToolAvailable = false
   let dictionaryAvailable = false
   let submissionSuccess = false
@@ -249,12 +252,15 @@ export async function runNewsWorkflowMonitor({
     const adminQueue = await request("/api/admin/news-reports?status=all&take=1", { cookie: adminCookie })
     if (!adminQueue.ok || !Array.isArray(adminQueue.payload?.items)) throw new Error("Authenticated News review access unavailable")
 
-    const report = syntheticReport(localDateKey(new Date(clock())), sourceLink, articleTitle)
+    const report = syntheticReport(resolveNewsMonitorReportDate(new Date(clock())), sourceLink, articleTitle)
     const checked = await request("/api/student/news-reports/check", { cookie: studentCookie, body: report })
     checkDurationSeconds = checked.durationSeconds
+    checkHttpStatus = checked.status
     reportId = String(checked.payload?.item?.id || "").trim()
     checkSuccess = checked.ok && checked.payload?.saved === true && checked.payload?.mmrPassed === true && Boolean(reportId)
-    languageToolAvailable = checked.ok && languageToolSucceeded(checked.payload)
+    const languageToolState = getLanguageToolCheckState(checked.payload)
+    languageToolCheckPerformed = languageToolState.checked
+    languageToolAvailable = languageToolState.available
     if (!checkSuccess) throw new Error("Synthetic News Check failed")
     report.reportId = reportId
     const submitted = await request("/api/student/news-reports", { cookie: studentCookie, body: report })
@@ -303,7 +309,9 @@ export async function runNewsWorkflowMonitor({
     checkedAt,
     durationSeconds,
     checkDurationSeconds,
+    checkHttpStatus,
     checkSuccess,
+    languageToolCheckPerformed,
     languageToolAvailable,
     dictionaryAvailable,
     submissionSuccess,
@@ -316,7 +324,8 @@ export async function runNewsWorkflowMonitor({
     lastSuccessTimestamp: success ? checkedAt : readLastSuccessTimestamp(metricsFile, context.label),
   }) + groupMetrics
   writeNewsMetricsAtomically(metricsFile, metrics)
-  process.stdout.write(`news_workflow_monitor environment=${context.label} result=${success ? "pass" : "fail"} check=${checkSuccess ? "pass" : "fail"} language_tool=${languageToolAvailable ? "up" : "down"} dictionary=${dictionaryAvailable ? "up" : "down"} submission=${submissionSuccess ? "pass" : "fail"} submission_status=${submissionHttpStatus} submission_mmr=${submissionMmrPassed ? "pass" : "fail"} submission_date=${submissionDateSatisfied ? "pass" : "fail"} submission_state=${submissionState} submission_failed_fields=${submissionFailedFieldCount} cleanup=${cleanupSuccess ? "pass" : "fail"}\n`)
+  const languageToolState = !languageToolCheckPerformed ? "not_checked" : languageToolAvailable ? "up" : "down"
+  process.stdout.write(`news_workflow_monitor environment=${context.label} result=${success ? "pass" : "fail"} check=${checkSuccess ? "pass" : "fail"} check_status=${checkHttpStatus} language_tool=${languageToolState} dictionary=${dictionaryAvailable ? "up" : "down"} submission=${submissionSuccess ? "pass" : "fail"} submission_status=${submissionHttpStatus} submission_mmr=${submissionMmrPassed ? "pass" : "fail"} submission_date=${submissionDateSatisfied ? "pass" : "fail"} submission_state=${submissionState} submission_failed_fields=${submissionFailedFieldCount} cleanup=${cleanupSuccess ? "pass" : "fail"}\n`)
   return success
 }
 
