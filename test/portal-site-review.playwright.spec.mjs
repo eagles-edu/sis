@@ -2,20 +2,21 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import path from "node:path"
 import test from "node:test"
-import { parse as parseDotenv } from "dotenv"
 import {
   resolveStandardParentCredentials,
   resolveStandardStudentCredentials,
 } from "./helpers/standard-portal-credentials.mjs"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
+import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
 
 const ROOT_DIR = process.cwd()
 const ARTIFACTS_DIR = path.resolve(ROOT_DIR, "artifacts")
 const AXE_PATH = path.resolve(ROOT_DIR, "node_modules/axe-core/axe.min.js")
-const TEST_ADMIN_UI_SETTINGS_FILE = `/tmp/sis-admin-ui-settings-${process.pid}.json`
-const REVIEW_ENV_FILE = ".env.dev"
-const REVIEW_ENV_VALUES = fs.existsSync(REVIEW_ENV_FILE)
-  ? parseDotenv(fs.readFileSync(REVIEW_ENV_FILE))
-  : {}
+const RUNTIME = readKeepaliveTestEnvironment()
+const REVIEW_ENV_FILE = RUNTIME?.envFile || String(process.env.SIS_ENV_FILE || "").trim()
+const REVIEW_ENV_VALUES = RUNTIME?.values || {}
+if (RUNTIME) applyKeepaliveTestEnvironment(RUNTIME)
+const REVIEW_ORIGIN = RUNTIME ? resolvePortalTestOrigin() : ""
 
 let chromium = null
 try {
@@ -57,26 +58,6 @@ function resolvePlaywrightSkipReason() {
   if (!chromium) return "playwright package is not installed"
   if (!CHROMIUM_EXECUTABLE_PATH) return "playwright browser executable is not installed"
   return false
-}
-
-function makeMockTransport() {
-  return {
-    verify(cb) {
-      setImmediate(() => cb(null, true))
-    },
-    async sendMail() {
-      return { messageId: "mock-id" }
-    },
-  }
-}
-
-async function closeReviewServer(server) {
-  if (!server.listening) return
-  server.closeAllConnections?.()
-  server.closeIdleConnections?.()
-  await new Promise((resolve) => server.close(resolve))
-  const { closeStudentAdminRuntimeResources } = await import("../server/student-admin-routes.mjs")
-  await closeStudentAdminRuntimeResources()
 }
 
 function themeInitScript(theme = "light") {
@@ -422,40 +403,9 @@ function assertNoFocusAxeIssues(violations, label) {
   )
 }
 
-function setupTestEnv() {
-  process.env.NODE_ENV = "development"
-  process.env.SIS_ENV_FILE = ".env.dev"
-  process.env.EXERCISE_MAILER_ORIGIN = "*"
-  process.env.MAILER_DEBUG = "false"
-  process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = TEST_ADMIN_UI_SETTINGS_FILE
-  process.env.STUDENT_ADMIN_USER = `portal-site-review-${process.pid}`
-  process.env.STUDENT_ADMIN_PASS = `portal-site-review-pass-${process.pid}`
-  delete process.env.STUDENT_ADMIN_PASSWORD_HASH
-  const credentials = resolveReviewCredentials()
-  if (credentials.student.eaglesId && credentials.student.password) {
-    process.env.STUDENT_STUDENT_USER = credentials.student.eaglesId
-    process.env.STUDENT_STUDENT_PASS = credentials.student.password
-  } else {
-    delete process.env.STUDENT_STUDENT_USER
-    delete process.env.STUDENT_STUDENT_PASS
-  }
-  if (credentials.parent.parentsId && credentials.parent.password) {
-    process.env.STUDENT_PARENT_USER = credentials.parent.parentsId
-    process.env.STUDENT_PARENT_PASS = credentials.parent.password
-  } else {
-    delete process.env.STUDENT_PARENT_USER
-    delete process.env.STUDENT_PARENT_PASS
-  }
-  try {
-    fs.rmSync(TEST_ADMIN_UI_SETTINGS_FILE, { force: true })
-  } catch (error) {
-    void error
-  }
-}
-
 function resolveReviewCredentials() {
-  const adminUser = process.env.STUDENT_ADMIN_USER || "admin"
-  const adminPass = process.env.STUDENT_ADMIN_PASS || "3825u2z"
+  const adminUser = String(REVIEW_ENV_VALUES.STUDENT_ADMIN_USER || "").trim()
+  const adminPass = String(REVIEW_ENV_VALUES.STUDENT_ADMIN_PASS || "").trim()
   const studentCredentials = resolveStandardStudentCredentials(REVIEW_ENV_VALUES)
   const parentCredentials = resolveStandardParentCredentials(REVIEW_ENV_VALUES)
   return {
@@ -464,6 +414,18 @@ function resolveReviewCredentials() {
     parent: { parentsId: parentCredentials.user, password: parentCredentials.pass },
   }
 }
+
+const REVIEW_CREDENTIALS = resolveReviewCredentials()
+const REVIEW_SKIP_REASON =
+  (!RUNTIME ? "Portal site review requires the explicit dev or test environment" : false) ||
+  resolvePlaywrightSkipReason() ||
+  (!REVIEW_CREDENTIALS.admin.user || !REVIEW_CREDENTIALS.admin.password
+    ? `admin credentials are required from ${REVIEW_ENV_FILE}`
+    : !REVIEW_CREDENTIALS.student.eaglesId || !REVIEW_CREDENTIALS.student.password
+      ? `student mark001 credentials are required from ${REVIEW_ENV_FILE}`
+      : !REVIEW_CREDENTIALS.parent.parentsId || !REVIEW_CREDENTIALS.parent.password
+        ? `parent cmmark001 credentials are required from ${REVIEW_ENV_FILE}`
+        : false)
 
 function pageState(page) {
   return page.evaluate(() => ({
@@ -514,11 +476,13 @@ async function loginAdmin(page, origin, credentials) {
     },
   ])
 
-  await page.goto(`${origin}/admin`, { waitUntil: "domcontentloaded" })
+  await page.goto(`${origin}/admin?apiOrigin=${encodeURIComponent(origin)}`, { waitUntil: "domcontentloaded" })
   await page.waitForFunction(() => {
     const app = globalThis.document.getElementById("app")
     return Boolean(app && !app.classList.contains("hidden"))
   }, undefined, { timeout: 30000 })
+  const selectedApiOrigin = await page.evaluate(() => new URLSearchParams(globalThis.location.search).get("apiOrigin") || "")
+  assert.equal(selectedApiOrigin, origin, "authenticated admin browser checks must use their selected runtime origin")
 }
 
 async function loginStudent(page, origin, credentials) {
@@ -584,32 +548,21 @@ async function loginParent(page, origin, credentials) {
 
 test(
   "admin performance-data stacks header and footer cleanly at 320px width",
-  { skip: resolvePlaywrightSkipReason() },
+  { skip: REVIEW_SKIP_REASON },
   async () => {
-    const credentials = resolveReviewCredentials()
-    const { startExerciseMailer } = await import("../server/exercise-mailer.mjs")
-    const server = await startExerciseMailer({ transporter: makeMockTransport(), port: 0 })
-    await new Promise((resolve) => server.once("listening", resolve))
-    const address = server.address()
-    const port = typeof address === "object" && address ? address.port : 0
-    const origin = `http://127.0.0.1:${port}`
+    const credentials = REVIEW_CREDENTIALS
+    const origin = REVIEW_ORIGIN
     const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
 
     try {
       const context = await browser.newContext({ viewport: { width: 320, height: 844 } })
       const page = await context.newPage()
       let loginError = null
-      for (const candidate of [
-        credentials.admin,
-        { user: "admin", password: "admin-pass-123" },
-      ]) {
-        try {
-          await loginAdmin(page, origin, candidate)
-          loginError = null
-          break
-        } catch (error) {
-          loginError = error
-        }
+      try {
+        await loginAdmin(page, origin, credentials.admin)
+        loginError = null
+      } catch (error) {
+        loginError = error
       }
       if (loginError) throw loginError
       await page.goto(`${origin}/admin/performance-data?apiOrigin=${encodeURIComponent(origin)}`, {
@@ -666,7 +619,6 @@ test(
       await context.close()
     } finally {
       await browser.close().catch(() => {})
-      await closeReviewServer(server)
     }
   },
 )
@@ -703,7 +655,7 @@ async function reviewHub(page, origin, theme, coverage) {
 async function reviewAdmin(page, origin, theme, coverage, credentials) {
   await loginAdmin(page, origin, credentials.admin)
 
-  await page.goto(`${origin}/admin`, { waitUntil: "domcontentloaded" })
+  await page.goto(`${origin}/admin?apiOrigin=${encodeURIComponent(origin)}`, { waitUntil: "domcontentloaded" })
   const bootState = await page.evaluate(() => ({
     authPanelHidden: Boolean(globalThis.document.getElementById("authPanel")?.classList.contains("hidden")),
     appHidden: Boolean(globalThis.document.getElementById("app")?.classList.contains("hidden")),
@@ -723,16 +675,19 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
 
   const routeStates = []
   for (const link of links) {
-    traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> goto`)
+    const routeUrl = new URL(link.href, origin)
+    assert.equal(routeUrl.origin, origin, "admin route links must remain on the selected runtime origin")
+    assert.equal(routeUrl.searchParams.get("apiOrigin"), origin, "admin route links must preserve the selected API origin")
+    traceReviewStage(`theme ${theme} admin route ${routeUrl.pathname}${routeUrl.search} -> goto`)
     if (link.pageLink) {
-      await page.goto(new URL(link.href, origin).toString(), {
+      await page.goto(routeUrl.toString(), {
         waitUntil: "commit",
         timeout: ADMIN_ROUTE_NAV_TIMEOUT_MS,
       })
     } else {
-      await page.goto(new URL(link.href, origin).toString(), { waitUntil: "domcontentloaded" })
+      await page.goto(routeUrl.toString(), { waitUntil: "domcontentloaded" })
     }
-    traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> settled`)
+    traceReviewStage(`theme ${theme} admin route ${routeUrl.pathname}${routeUrl.search} -> settled`)
     await page.waitForTimeout(650)
     traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> state`)
     const state = await pageState(page)
@@ -786,7 +741,7 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
     routeStates.push({ link, state, surfaces, axe })
   }
 
-  await page.goto(`${origin}/admin/news-reports`, { waitUntil: "domcontentloaded" })
+  await page.goto(`${origin}/admin/news-reports?apiOrigin=${encodeURIComponent(origin)}`, { waitUntil: "domcontentloaded" })
   await page.waitForTimeout(1000)
   traceReviewStage(`theme ${theme} admin news modal`)
   const openBtn = page.locator("button[data-news-review-open-week-set]").first()
@@ -826,7 +781,7 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
     routeStates.push({ link: { href: "/admin/news-reports", text: "News Reports" }, modalSurfaces, modalAxe, viewerBlock })
   }
 
-  await page.goto(`${origin}/admin/grades-data`, { waitUntil: "domcontentloaded" })
+  await page.goto(`${origin}/admin/grades-data?apiOrigin=${encodeURIComponent(origin)}`, { waitUntil: "domcontentloaded" })
   await page.waitForTimeout(900)
   traceReviewStage(`theme ${theme} admin grades-data`)
   const gradeChartEmpty = await page.locator(".grade-chart-empty").first().evaluate((node) => {
@@ -1129,7 +1084,7 @@ async function reviewParent(page, origin, theme, coverage, credentials) {
 
 async function reviewAdminUtilities(page, origin, theme, coverage) {
   traceReviewStage(`theme ${theme} admin utilities points-management -> goto`)
-  await page.goto(`${origin}/admin/points-management`, { waitUntil: "domcontentloaded" })
+  await page.goto(`${origin}/admin/points-management?apiOrigin=${encodeURIComponent(origin)}`, { waitUntil: "domcontentloaded" })
   traceReviewStage(`theme ${theme} admin utilities points-management -> loaded`)
   await page.waitForTimeout(900)
   traceReviewStage(`theme ${theme} admin utilities points-management -> snapshot`)
@@ -1148,7 +1103,7 @@ async function reviewAdminUtilities(page, origin, theme, coverage) {
   assertNoFocusAxeIssues(pointsAxe, `admin points management (${theme})`)
 
   traceReviewStage(`theme ${theme} admin utilities grades-tabulator -> goto`)
-  await page.goto(`${origin}/web-asset/admin/grades-tabulator.html`, { waitUntil: "domcontentloaded" })
+  await page.goto(`${origin}/web-asset/admin/grades-tabulator.html?apiOrigin=${encodeURIComponent(origin)}`, { waitUntil: "domcontentloaded" })
   traceReviewStage(`theme ${theme} admin utilities grades-tabulator -> loaded`)
   await page.waitForTimeout(900)
   traceReviewStage(`theme ${theme} admin utilities grades-tabulator -> snapshot`)
@@ -1181,32 +1136,17 @@ async function reviewAdminUtilities(page, origin, theme, coverage) {
   coverage.push({ theme, role: "admin-utilities", pointsState, pointsSurfaces, pointsAxe, gradesState, gradesSurfaces, gradesAxe, reloadButton })
 }
 
-setupTestEnv()
-const reviewCredentials = resolveReviewCredentials()
-const skipReason =
-  resolvePlaywrightSkipReason() ||
-  (!reviewCredentials.student.eaglesId || !reviewCredentials.student.password
-    ? `student mark001 credentials are required from ${REVIEW_ENV_FILE}`
-    : !reviewCredentials.parent.parentsId || !reviewCredentials.parent.password
-      ? `parent cmmark001 credentials are required from ${REVIEW_ENV_FILE}`
-      : false)
-
 function traceReviewStage(stage) {
   process.stderr.write(`[portal-site-review] ${stage}\n`)
 }
 
 test(
   "portal site review sweeps light and dark portal views, link targets, modals, and text contrast",
-  { skip: skipReason },
+  { skip: REVIEW_SKIP_REASON },
   async () => {
     ensureArtifactsDir()
-    const credentials = resolveReviewCredentials()
-    const { startExerciseMailer } = await import("../server/exercise-mailer.mjs")
-    const server = await startExerciseMailer({ transporter: makeMockTransport(), port: 0 })
-    await new Promise((resolve) => server.once("listening", resolve))
-    const address = server.address()
-    const port = typeof address === "object" && address ? address.port : 0
-    const origin = `http://127.0.0.1:${port}`
+    const credentials = REVIEW_CREDENTIALS
+    const origin = REVIEW_ORIGIN
     const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
     const coverage = []
 
@@ -1239,7 +1179,6 @@ test(
       }
     } finally {
       await browser.close().catch(() => {})
-      await closeReviewServer(server)
     }
 
     fs.writeFileSync(

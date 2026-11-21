@@ -1,12 +1,9 @@
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
-import dotenv from "dotenv"
 import test from "node:test"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
-dotenv.config({ path: ".env.dev", override: true })
-process.env.NODE_ENV = "development"
-process.env.SIS_ENV_FILE = ".env.dev"
-process.env.DOTENV_CONFIG_PATH = ".env.dev"
+const RUNTIME = readKeepaliveTestEnvironment()
 
 import "../tools/assert-prisma-environment.mjs"
 
@@ -26,7 +23,8 @@ function mockTransporter() {
   }
 }
 
-test("report engagement enforces account scope and records one acknowledgement with privacy-safe IP", async () => {
+test("report engagement enforces account scope and records one acknowledgement with privacy-safe IP", { skip: !RUNTIME }, async () => {
+  applyKeepaliveTestEnvironment(RUNTIME)
   const { getSharedPrismaClient, closeSharedPrismaClient } = await import(
     "../src/infra/db/prisma-client.mjs"
   )
@@ -64,7 +62,7 @@ test("report engagement enforces account scope and records one acknowledgement w
 
   try {
     const database = await prisma.$queryRaw`SELECT current_database() AS name`
-    assert.equal(database[0]?.name, "sis_dev")
+    assert.equal(database[0]?.name, RUNTIME.databaseName, "engagement isolation writes must stay in the selected non-production database")
     targetStudent = await prisma.student.create({
       data: {
         externalKey: `ka-engagement-${stamp}-target`,

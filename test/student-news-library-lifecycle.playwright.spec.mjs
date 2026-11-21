@@ -8,13 +8,14 @@ import { resolveStandardStudentCredentials } from "./helpers/standard-portal-cre
 import { listStudentNewsReportsForReview } from "../src/modules/admin/student-news-review.mjs"
 import "../tools/assert-prisma-environment.mjs"
 import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
 const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
+const RUNTIME = readKeepaliveTestEnvironment()
 const ORIGIN = resolvePortalTestOrigin({ overrideName: "STUDENT_NEWS_LIBRARY_ORIGIN" })
 const EXECUTABLE_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
-const IS_SUPPORTED_RUN = (process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev")
-  || (process.env.NODE_ENV === "test" && ENV_FILE === ".env.test")
+const IS_SUPPORTED_RUN = Boolean(RUNTIME)
 
 function studentCredentials() {
   return resolveStandardStudentCredentials(ENV_VALUES)
@@ -37,12 +38,12 @@ const NEWS_WORDS = [
   { partOfSpeech: "adverb", english: "step-by-step", vietnamese: "từng bước", syllabication: "step-by-step", definition: "Progressing one stage at a time.", esl: { grammarClassification: { grammarSubtype: "manner" } } },
 ]
 
-function libraryPayload(english, definition) {
+function libraryPayload(english, definition, syllabication = english) {
   return {
     english,
     partOfSpeech: "noun",
     vietnamese: "từ kiểm thử",
-    syllabication: english,
+    syllabication,
     definition,
     countability: "countable",
     nounType: "common",
@@ -67,6 +68,14 @@ async function loginStudent(page) {
     await consentPanel.locator('[data-sis-consent-action="acknowledge"]').click()
     await consentPanel.waitFor({ state: "hidden", timeout: 10000 })
   }
+}
+
+async function newsVocabularySyllabicationField(page, english) {
+  const rowIndex = await page.locator("#newsVocabularyRows [data-news-vocabulary-row]").evaluateAll((rows, targetEnglish) => (
+    rows.findIndex((row) => row.querySelector('[data-vocabulary-field="english"]')?.value === targetEnglish)
+  ), english)
+  assert.notEqual(rowIndex, -1, `the News form retains the ${english} vocabulary row`)
+  return page.locator("#newsVocabularyRows [data-news-vocabulary-row]").nth(rowIndex).locator('[data-vocabulary-field="syllabication"]')
 }
 
 async function createNewsFixture(prisma, studentRefId, stamp, vocabularyWords = NEWS_WORDS) {
@@ -107,27 +116,26 @@ async function createLibraryLifecycleFixtures(prisma, studentRefId, stamp) {
     expired: "Canonicalized contribution beyond its fifteen-day edit window.",
   }
   const cases = [
-    ["pending", "pending_review", "approved", null],
-    ["legacy", "legacy_pending_review", "legacy_pending_review", null],
-    ["awaiting", "awaiting_legacy_canonical", "legacy_pending_review", null],
-    ["active", "canonicalized", "approved", new Date(now + 14 * 86400000)],
-    ["expired", "canonicalized", "approved", new Date(now - 86400000)],
+    ["pending", "elephant window", "EL-e-phant WIN-dow", "pending_review", "approved", null],
+    ["legacy", "teacher family", "TEACH-er FAM-i-ly", "legacy_pending_review", "legacy_pending_review", null],
+    ["awaiting", "garden student", "GAR-den STU-dent", "awaiting_legacy_canonical", "legacy_pending_review", null],
+    ["active", "beautiful orange", "BEAU-ti-ful OR-ange", "canonicalized", "approved", new Date(now + 14 * 86400000)],
+    ["expired", "water happy", "WA-ter HAP-py", "canonicalized", "approved", new Date(now - 86400000)],
   ]
   const fixtures = []
-  for (const [label, status, reviewStatus, dueAt] of cases) {
-    const english = `lifecycle${label}${stamp}`
+  for (const [label, english, syllabication, status, reviewStatus, dueAt] of cases) {
     const entryId = `student-news-library-lifecycle-entry-${stamp}-${label}`
     const contributionId = `student-news-library-lifecycle-contribution-${stamp}-${label}`
-    const payload = libraryPayload(english, definitions[label])
+    const payload = libraryPayload(english, definitions[label], syllabication)
     const entry = await prisma.libraryEntry.create({
       data: {
         id: entryId,
-        normalizedKey: english,
+        normalizedKey: english.toLocaleLowerCase("en-US"),
         english,
         partOfSpeech: "noun",
         vietnamese: payload.vietnamese,
         syllabication: payload.syllabication,
-        syllableCount: 1,
+        syllableCount: syllabication.split(/[\s-]+/u).filter(Boolean).length,
         definition: payload.definition,
         countability: "countable",
         nounType: "common",
@@ -163,7 +171,7 @@ async function createLibraryLifecycleFixtures(prisma, studentRefId, stamp) {
 }
 
 test("authenticated student News and New Words saves, Library visibility, week-set modal, and contribution lifecycle", { skip: SKIP_REASON }, async (t) => {
-  Object.assign(process.env, ENV_VALUES)
+  applyKeepaliveTestEnvironment(RUNTIME)
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const prisma = await getSharedPrismaClient()
   const stamp = randomUUID()
@@ -224,10 +232,10 @@ test("authenticated student News and New Words saves, Library visibility, week-s
         await attempt(() => prisma.libraryContribution.deleteMany({ where: { id: { in: contributionIds } } }))
       }
 
-      const lifecycleEntryKeys = ["pending", "legacy", "awaiting", "active", "expired"]
-        .map((label) => `lifecycle${label}${stamp}`)
+      const lifecycleEntryIds = ["pending", "legacy", "awaiting", "active", "expired"]
+        .map((label) => `student-news-library-lifecycle-entry-${stamp}-${label}`)
       const lifecycleEntries = await prisma.libraryEntry.findMany({
-        where: { normalizedKey: { in: lifecycleEntryKeys } },
+        where: { id: { in: lifecycleEntryIds } },
         select: { id: true },
       }).catch((error) => {
         cleanupErrors.push(error)
@@ -281,7 +289,8 @@ test("authenticated student News and New Words saves, Library visibility, week-s
       select: { id: true },
     })
     newWordsFixtureIds.push(invalidLegacyWord.id)
-    const refreshOrderEnglish = `libraryrefreshorder${alphaStamp}`
+    const refreshOrderEnglish = "elephant window"
+    const refreshOrderSyllabication = "EL-e-phant WIN-dow"
     const refreshOrderWord = await prisma.studentNewWord.create({
       data: {
         studentRefId,
@@ -289,7 +298,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
         partOfSpeech: "noun",
         english: refreshOrderEnglish,
         vietnamese: "từ kiểm thử",
-        syllabication: refreshOrderEnglish,
+        syllabication: refreshOrderSyllabication,
         definition: "Synthetic word for failed-save contribution isolation.",
       },
       select: { id: true },
@@ -301,7 +310,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
         contributorName: STUDENT.user,
         sourceKind: "student_new_words",
         sourceId: refreshOrderWord.id,
-        payloadJson: libraryPayload(refreshOrderEnglish, "Synthetic word for failed-save contribution isolation."),
+        payloadJson: libraryPayload(refreshOrderEnglish, "Synthetic word for failed-save contribution isolation.", refreshOrderSyllabication),
         status: "pending_review",
       },
       select: { id: true },
@@ -343,7 +352,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     }, refreshOrderWord.id)
     assert.equal(rejectedDraftSave.status, 400, "authoritative validation rejects the invalid New Words draft")
     const unchangedPendingContribution = await prisma.libraryContribution.findUnique({ where: { id: refreshOrderContribution.id }, select: { payloadJson: true } })
-    assert.equal(unchangedPendingContribution?.payloadJson?.syllabication, refreshOrderEnglish, "a rejected New Words save does not refresh its pending Library contribution")
+    assert.equal(unchangedPendingContribution?.payloadJson?.syllabication, refreshOrderSyllabication, "a rejected New Words save does not refresh its pending Library contribution")
     const validRetry = await page.evaluate(async (wordId) => {
       const currentResponse = await fetch("/api/student/new-words", { credentials: "include" })
       const current = await currentResponse.json()
@@ -424,9 +433,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     await draftCalendarEvent.waitFor({ state: "visible", timeout: 10000 })
     assert.match(await draftCalendarEvent.getAttribute("title") || "", /Draft saved; not submitted for review\./u)
 
-    const computerRowIndex = await page.locator("#newsVocabularyRows [data-news-vocabulary-row]").evaluateAll((rows) => rows.findIndex((row) => row.querySelector('[data-vocabulary-field="english"]')?.value === "computer"))
-    assert.notEqual(computerRowIndex, -1, "the News form retains the computer vocabulary row")
-    const computerSyllabication = page.locator("#newsVocabularyRows [data-news-vocabulary-row]").nth(computerRowIndex).locator('[data-vocabulary-field="syllabication"]')
+    const computerSyllabication = await newsVocabularySyllabicationField(page, "computer")
     await computerSyllabication.fill("com-PU-ter")
     const invalidDivisionResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check", { timeout: 30000 })
     await page.click("#checkBtn")
@@ -448,9 +455,11 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     const savedInvalidDivision = await prisma.studentNewsReport.findUnique({ where: { id: reportId }, select: { vocabularyJson: true, submissionState: true } })
     assert.equal(savedInvalidDivision?.submissionState, "draft")
     assert.equal(savedInvalidDivision?.vocabularyJson?.find((entry) => entry.english === "computer")?.syllabication, "com-pú-ter", "the submitted division remains available for student correction")
+    await page.waitForFunction(() => document.querySelector("#checkBtn")?.disabled === false, null, { timeout: 30000 })
     const invalidDivisionModal = page.locator("#newsComplianceModalCloseActionBtn")
     if (await invalidDivisionModal.isVisible().catch(() => false)) await invalidDivisionModal.click()
-    await computerSyllabication.fill("com-PUT-er")
+    await (await newsVocabularySyllabicationField(page, "computer")).fill("com-PUT-er")
+    assert.equal(await (await newsVocabularySyllabicationField(page, "computer")).inputValue(), "com-PUT-er", "the corrected division remains in the computer row after the first Check rerenders News")
 
     const checkResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check", { timeout: 30000 })
     await page.click("#checkBtn")
@@ -461,7 +470,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     })
     const checkBody = await checkResult.json()
     assert.equal(checkResult.status(), 200, "News Check returns HTTP 200")
-    assert.equal(checkBody.mmrPassed, true, `five-word News Check must pass MMR: ${JSON.stringify(checkBody)}`)
+    assert.equal(checkBody.mmrPassed, true, "five-word News Check passes after the exact vocabulary row is corrected")
     await page.waitForFunction(() => /CHECKS PASSED|Minimum requirements met|Saved\./iu.test(document.getElementById("formStatus")?.textContent || ""), null, { timeout: 30000 })
     await page.locator("#newsGrammarCheckWait").waitFor({ state: "hidden", timeout: 30000 })
     const complianceClose = page.locator("#newsComplianceModalCloseActionBtn")

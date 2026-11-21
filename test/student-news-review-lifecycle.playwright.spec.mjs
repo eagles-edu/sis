@@ -7,13 +7,14 @@ import { chromium } from "playwright"
 import { resolveStandardStudentCredentials } from "./helpers/standard-portal-credentials.mjs"
 import "../tools/assert-prisma-environment.mjs"
 import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
 const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
+const RUNTIME = readKeepaliveTestEnvironment()
 const ORIGIN = resolvePortalTestOrigin({ overrideName: "STUDENT_NEWS_REVIEW_ORIGIN" })
 const CHROMIUM_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
-const SUPPORTED_ENVIRONMENT = (process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev")
-  || (process.env.NODE_ENV === "test" && ENV_FILE === ".env.test")
+const SUPPORTED_ENVIRONMENT = Boolean(RUNTIME)
 const STUDENT = resolveStandardStudentCredentials(ENV_VALUES)
 const ADMIN = {
   user: String(ENV_VALUES.STUDENT_ADMIN_USER || "").trim(),
@@ -77,8 +78,19 @@ async function loginAdmin(page) {
   await page.locator("#loginPass").fill(ADMIN.pass)
   await page.locator('#loginForm button[type="submit"], #loginBtn').first().click()
   assert.equal((await loginResponse).status(), 200, "visible admin login succeeds")
+  await page.locator("#app").waitFor({ state: "visible", timeout: 30000 })
+  const settingsResponse = page.waitForResponse(
+    (response) => response.request().method() === "GET" && new URL(response.url()).pathname === "/api/admin/settings/ui",
+    { timeout: 30000 },
+  )
+  const settingsResult = await settingsResponse
+  assert.equal(settingsResult.status(), 200, "admin settings load during the authenticated boot")
+  const settingsBody = await settingsResult.json()
+  assert.equal(settingsBody?.meta?.schoolSetupState, "ok", "test mirror school setup is valid before opening News review")
+  assert.equal(settingsBody?.uiSettings?.schoolSetup?.quarters?.length, 4, "all four school quarters are available")
   await page.reload({ waitUntil: "domcontentloaded" })
   await page.locator("#app").waitFor({ state: "visible", timeout: 30000 })
+  await page.locator("#schoolSetupWarningModal").waitFor({ state: "hidden", timeout: 10000 })
   await page.locator('#menuToggleBtn, #floatingMenuBtn').first().click().catch(() => {})
   await page.locator('[data-menu-toggle="tracking"]').click()
   await page.locator('[data-page-link="news-reports"]').click()
@@ -92,8 +104,35 @@ async function openStudentNews(page) {
   await page.locator("#newsPageCard").waitFor({ state: "visible", timeout: 30000 })
 }
 
+async function openStudentNewsReport(page, articleTitle) {
+  const weekSetButtons = page.locator("#newsPageQueueBody button[data-open-news-week-set]")
+  await weekSetButtons.first().waitFor({ state: "visible", timeout: 30000 })
+  const weekSetCount = await weekSetButtons.count()
+  for (let weekSetIndex = 0; weekSetIndex < weekSetCount; weekSetIndex += 1) {
+    await weekSetButtons.nth(weekSetIndex).click()
+    await page.locator("#newsWeekSetModal").waitFor({ state: "visible", timeout: 10000 })
+    const indexLabel = page.locator("#newsWeekSetModalIndex")
+    const [, totalText] = (await indexLabel.innerText()).split("/")
+    const total = Number.parseInt(totalText, 10)
+    assert.ok(Number.isInteger(total) && total > 0, "week set viewer contains at least one report")
+    for (let reportIndex = 0; reportIndex < total; reportIndex += 1) {
+      if (await page.locator("#newsViewerArticleTitle").inputValue() === articleTitle) return
+      if (reportIndex + 1 < total) {
+        await page.locator("#newsWeekSetModalNextBtn").click()
+        await page.waitForFunction(
+          (expected) => document.getElementById("newsWeekSetModalIndex")?.textContent?.trim() === expected,
+          `${reportIndex + 2} / ${total}`,
+        )
+      }
+    }
+    await page.locator("#newsWeekSetModalCloseActionBtn").click()
+    await page.locator("#newsWeekSetModal").waitFor({ state: "hidden", timeout: 10000 })
+  }
+  throw new Error(`Student News week sets did not open the expected report: ${articleTitle}`)
+}
+
 test("authenticated News review, revision feedback, repeat submission, failure recovery, and cleanup", { skip: SKIP_REASON }, async (t) => {
-  Object.assign(process.env, ENV_VALUES)
+  applyKeepaliveTestEnvironment(RUNTIME)
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const prisma = await getSharedPrismaClient()
   const stamp = randomUUID()
@@ -182,9 +221,7 @@ test("authenticated News review, revision feedback, repeat submission, failure r
 
   await loginStudent(studentPage)
   await openStudentNews(studentPage)
-  const studentWeekSetButton = studentPage.locator("#newsPageQueueBody button[data-open-news-week-set]").first()
-  await studentWeekSetButton.waitFor({ state: "visible", timeout: 30000 })
-  await studentWeekSetButton.click()
+  await openStudentNewsReport(studentPage, `Synthetic news review lifecycle ${stamp}`)
   await studentPage.locator("#newsWeekSetModal").waitFor({ state: "visible", timeout: 10000 })
   assert.equal(await studentPage.locator("#newsViewerReviewStatusChip").innerText(), "Submitted")
   await studentPage.locator("#newsWeekSetModalCloseActionBtn").click()
@@ -214,9 +251,7 @@ test("authenticated News review, revision feedback, repeat submission, failure r
   assert.equal(revisionState?.lastSubmittedAt?.toISOString(), submittedAt.toISOString())
 
   await openStudentNews(studentPage)
-  const revisedWeekSetButton = studentPage.locator("#newsPageQueueBody button[data-open-news-week-set]").first()
-  await revisedWeekSetButton.waitFor({ state: "visible", timeout: 30000 })
-  await revisedWeekSetButton.click()
+  await openStudentNewsReport(studentPage, `Synthetic news review lifecycle ${stamp}`)
   await studentPage.locator("#newsWeekSetModal").waitFor({ state: "visible", timeout: 10000 })
   assert.equal(await studentPage.locator("#newsViewerReviewStatusChip").innerText(), "Revise")
   assert.equal(await studentPage.locator("#newsWeekSetModalTeacherNote").innerText(), reviewNote)
@@ -224,9 +259,10 @@ test("authenticated News review, revision feedback, repeat submission, failure r
     const response = await fetch("/api/student/news-reports?days=30", { credentials: "include" })
     const body = await response.json()
     const item = (Array.isArray(body.items) ? body.items : []).find((entry) => entry.id === id)
-    return { status: response.status, vocabularyCount: Array.isArray(item?.vocabulary) ? item.vocabulary.length : -1 }
+    return { status: response.status, id: item?.id || "", vocabularyCount: Array.isArray(item?.vocabulary) ? item.vocabulary.length : -1 }
   }, reportId)
   assert.equal(studentReportPayload.status, 200)
+  assert.equal(studentReportPayload.id, reportId, "student report API resolves the exact synthetic report")
   assert.equal(studentReportPayload.vocabularyCount, VOCABULARY.length, "student report API retains all saved vocabulary during revision")
   const renderedVocabulary = await studentPage.locator("#newsWeekSetModalVocabularyRows [data-news-vocabulary-row]").evaluateAll((rows) => rows.map((row) => row.querySelector('[data-vocabulary-field="english"]')?.value || ""))
   assert.deepEqual(renderedVocabulary, VOCABULARY.map((row) => row.english), "revision viewer renders the saved vocabulary rows for resubmission")

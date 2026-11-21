@@ -1,12 +1,13 @@
 import assert from "node:assert/strict"
 import crypto from "node:crypto"
-import dotenv from "dotenv"
 import test from "node:test"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
 process.env.SIS_ENV_FILE = ".env.test"
 process.env.DOTENV_CONFIG_PATH = ".env.test"
 process.env.NODE_ENV = "test"
-dotenv.config({ path: ".env.test", override: true })
+const RUNTIME = readKeepaliveTestEnvironment()
+applyKeepaliveTestEnvironment(RUNTIME)
 
 test("database stale recovery reclaims only idempotent PDFs and terminally fails uncertain or exhausted jobs", async (t) => {
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")

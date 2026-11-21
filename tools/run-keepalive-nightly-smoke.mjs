@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url"
 const ROOT = process.cwd()
 const METRICS_FILE = path.join(ROOT, "runtime-data/prometheus/keepalive-nightly-smoke-test.prom")
 const SUITE_TIMEOUT_MS = 5 * 60 * 60 * 1000
-const OUTBOUND_MESSAGE_ENV_KEYS = [
+export const OUTBOUND_MESSAGE_ENV_KEYS = Object.freeze([
   "EMAIL_PROVIDER",
   "BREVO_API_KEY",
   "BREVO_API_URL",
@@ -21,7 +21,7 @@ const OUTBOUND_MESSAGE_ENV_KEYS = [
   "SMTP_FROM",
   "SMTP_USER",
   "SMTP_PASS",
-]
+])
 
 export function assertTestEnvironment(environment = process.env) {
   if (

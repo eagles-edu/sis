@@ -587,6 +587,61 @@ test("admin ui warns on login when school setup is unset and links to school set
   dom.window.close()
 })
 
+test("admin ui waits for authoritative school setup before showing a warning", async () => {
+  const rolePolicy = schoolSetupAdminRolePolicy()
+  let releaseSettings
+  let markSettingsRequested
+  const settingsGate = new Promise((resolve) => { releaseSettings = resolve })
+  const settingsRequested = new Promise((resolve) => { markSettingsRequested = resolve })
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const url = String(resource)
+    const method = init.method || "GET"
+    if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+    if (url.includes("/api/admin/auth/login")) {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+    if (url.includes("/api/admin/permissions")) {
+      return jsonResponse(200, { roles: { admin: rolePolicy } })
+    }
+    if (url.includes("/api/admin/settings/ui")) {
+      markSettingsRequested()
+      await settingsGate
+      return jsonResponse(200, {
+        uiSettings: defaultSchoolSetupFixture(),
+        meta: {
+          schoolSetupStoredQuarterCount: 4,
+          schoolSetupStoredQuartersPresent: true,
+          schoolSetupStoredQuartersMissing: false,
+          schoolSetupState: "ok",
+          schoolSetupHasIssues: false,
+        },
+      })
+    }
+    if (url.includes("/api/admin/users") && method === "GET") return jsonResponse(200, { items: [] })
+    if (url.includes("/api/admin/assignment-templates")) return jsonResponse(200, { items: [] })
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+  await settingsRequested
+  await settleDomAsync(dom, 2, 10)
+  const modal = dom.window.document.getElementById("schoolSetupWarningModal")
+  assert.equal(modal.classList.contains("hidden"), true, "default client state must not claim the server setup is missing")
+
+  releaseSettings()
+  await waitFor(() => {
+    assert.match(dom.window.document.getElementById("settingsStatus")?.textContent || "", /school year: 2026-2027/u)
+    assert.equal(modal.classList.contains("hidden"), true, "valid authoritative settings keep the warning modal closed")
+  })
+  dom.window.close()
+})
+
 test("admin quarter and school-year helpers fail closed without setup", async () => {
   const rolePolicy = schoolSetupAdminRolePolicy()
   const dom = await createAdminUiDom(

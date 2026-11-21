@@ -3,15 +3,11 @@ import { randomUUID } from "node:crypto"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { parse as parseDotenv } from "dotenv"
 import test from "node:test"
 import "../tools/assert-prisma-environment.mjs"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
-const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
-const IS_DEV_RUN = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
-const ENV_VALUES = IS_DEV_RUN && fs.existsSync(ENV_FILE)
-  ? parseDotenv(fs.readFileSync(ENV_FILE))
-  : {}
+const RUNTIME = readKeepaliveTestEnvironment()
 
 function syntheticStudentNumber(stamp) {
   return 800000 + (Number.parseInt(stamp.replaceAll("-", "").slice(0, 8), 16) % 100000)
@@ -28,11 +24,11 @@ function mockTransporter() {
   }
 }
 
-test("dev attendance persists, repeats idempotently, handles concurrent saves, reports failures, and enforces auth", { skip: !IS_DEV_RUN }, async (t) => {
-  Object.assign(process.env, ENV_VALUES)
-  process.env.SIS_ENV_FILE = ".env.dev"
-  process.env.DOTENV_CONFIG_PATH = ".env.dev"
-  process.env.NODE_ENV = "development"
+test("attendance persists, repeats idempotently, handles concurrent saves, reports failures, and enforces auth", { skip: !RUNTIME }, async (t) => {
+  applyKeepaliveTestEnvironment(RUNTIME)
+  process.env.SIS_ENV_FILE = RUNTIME.envFile
+  process.env.DOTENV_CONFIG_PATH = RUNTIME.envFile
+  process.env.NODE_ENV = RUNTIME.nodeEnv
   process.env.STUDENT_ADMIN_STORE_ENABLED = "true"
   const originalRequestMetricsFile = process.env.SIS_REQUEST_METRICS_FILE
   const requestMetricsDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "sis-ka089-attendance-metrics-"))
@@ -45,7 +41,11 @@ test("dev attendance persists, repeats idempotently, handles concurrent saves, r
   const { initializeStudentWriteMetrics } = await import("../src/infra/observability/student-write-metrics.mjs")
   const prisma = await getSharedPrismaClient()
   const database = await prisma.$queryRaw`SELECT current_database() AS name`
-  assert.equal(database[0]?.name, "sis_dev", "synthetic attendance writes are restricted to the dev database")
+  assert.equal(database[0]?.name, RUNTIME.databaseName, "synthetic attendance writes must stay in the selected non-production database")
+  if (RUNTIME.noExternalMessagesEnforced) {
+    assert.equal(Boolean(process.env.BREVO_API_KEY), false, "test no-send isolation must not retain the Brevo credential")
+    assert.equal(Boolean(process.env.SMTP_PASS), false, "test no-send isolation must not retain the SMTP credential")
+  }
 
   const stamp = randomUUID()
   const eaglesId = `KA087-${stamp}`
@@ -142,7 +142,7 @@ test("dev attendance persists, repeats idempotently, handles concurrent saves, r
 
   const username = String(process.env.STUDENT_ADMIN_USER || "").trim()
   const password = String(process.env.STUDENT_ADMIN_PASS || "").trim()
-  assert.ok(username && password, "the dev admin account must be configured for this authenticated regression")
+  assert.ok(username && password, "the selected environment admin account must be configured for this authenticated regression")
   const login = await fetch(`${origin}/api/admin/auth/login`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -212,7 +212,7 @@ test("dev attendance persists, repeats idempotently, handles concurrent saves, r
   assert.match((await invalidContextResponse.json()).error, /quarter does not match attendanceDate's configured SIS quarter/)
   await initializeStudentWriteMetrics()
   const requestMetrics = fs.readFileSync(requestMetricsFile, "utf8")
-  assert.match(requestMetrics, /sis_admin_student_write_requests_total\{environment="dev",route="POST \/api\/admin\/students\/:id\/attendance",status="422"\} 1/u)
+  assert.match(requestMetrics, new RegExp(`sis_admin_student_write_requests_total\\{environment="${RUNTIME.environment}",route="POST \/api\/admin\/students\/:id\/attendance",status="422"\\} 1`, "u"))
   assert.doesNotMatch(requestMetrics, new RegExp(studentRefId, "u"))
   assert.equal(await prisma.studentAttendance.count({ where: { studentRefId } }), 1)
 

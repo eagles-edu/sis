@@ -8753,6 +8753,7 @@
           const meta = result?.meta && typeof result.meta === "object" ?
             result.meta :
             uiSettingsMetaFromSource(candidate);
+          schoolSetupSettingsLoaded = true;
           const settings = persistUiSettings(candidate, meta);
           persistSisConfig(sisConfigCandidate || DEFAULT_SIS_CONFIG, result?.sisConfigMeta || null);
           applySisConfigToForm(state.sisConfig);
@@ -9371,19 +9372,7 @@
       }
 
       let schoolSetupWarningAcknowledged = false;
-      let schoolSetupWarningCheckReady = false;
-      let schoolSetupWarningCheckScheduled = false;
-      let schoolSetupWarningCheckTimer = null;
-      let latestSchoolSetupWarningSetup = null;
-
-      function scheduleSchoolSetupWarningCheck() {
-        if (schoolSetupWarningCheckScheduled) return;
-        schoolSetupWarningCheckScheduled = true;
-        schoolSetupWarningCheckTimer = window.setTimeout(() => {
-          schoolSetupWarningCheckReady = true;
-          renderSchoolSetupAccessWarning(latestSchoolSetupWarningSetup || schoolSetupState());
-        }, /\bjsdom\b/i.test(String(window.navigator?.userAgent || "")) ? 0 : 10000);
-      }
+      let schoolSetupSettingsLoaded = false;
 
       function closeSchoolSetupWarningModal(acknowledge = true) {
         const modal = document.getElementById("schoolSetupWarningModal");
@@ -9434,8 +9423,10 @@
       }
 
       function renderSchoolSetupAccessWarning(setup = schoolSetupState()) {
-        scheduleSchoolSetupWarningCheck();
-        latestSchoolSetupWarningSetup = normalizeSchoolSetup(setup);
+        if (!schoolSetupSettingsLoaded) {
+          closeSchoolSetupWarningModal(false);
+          return;
+        }
         const warningHtml = schoolSetupAccessWarningHtml(setup);
         document
           .querySelectorAll("[data-school-setup-access-warning]")
@@ -9449,7 +9440,7 @@
           closeSchoolSetupWarningModal(false);
           return;
         }
-        if (schoolSetupWarningCheckReady && state.authUser && !schoolSetupWarningAcknowledged) {
+        if (state.authUser && !schoolSetupWarningAcknowledged) {
           openSchoolSetupWarningModal(setup);
         }
       }

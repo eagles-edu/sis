@@ -1,21 +1,22 @@
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
-import fs from "node:fs"
 import test from "node:test"
-import { parse as parseDotenv } from "dotenv"
 import "../tools/assert-prisma-environment.mjs"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
-const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
-const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
-const IS_DEV_RUN = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
+const RUNTIME = readKeepaliveTestEnvironment()
 
-test("dev Library review persists rejection, duplicate canonicalization, and legacy replacement outcomes", { skip: !IS_DEV_RUN }, async (t) => {
-  Object.assign(process.env, ENV_VALUES)
+test("Library review persists rejection, duplicate canonicalization, and legacy replacement outcomes", { skip: !RUNTIME }, async (t) => {
+  applyKeepaliveTestEnvironment(RUNTIME)
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const { listLibraryReviewQueue, reviewLibraryContribution } = await import("../src/modules/admin/library-corpus.mjs")
   const prisma = await getSharedPrismaClient()
   const database = await prisma.$queryRawUnsafe("SELECT current_database() AS name")
-  assert.equal(database[0]?.name, "sis_dev", "the integration regression must use the development database")
+  assert.equal(database[0]?.name, RUNTIME.databaseName, "the integration regression must use the selected non-production database")
+  if (RUNTIME.noExternalMessagesEnforced) {
+    assert.equal(Boolean(process.env.BREVO_API_KEY), false, "test no-send isolation must not retain the Brevo credential")
+    assert.equal(Boolean(process.env.SMTP_PASS), false, "test no-send isolation must not retain the SMTP credential")
+  }
 
   const stamp = randomUUID().replaceAll("-", "")
   const rejectEnglish = `ka045reject${stamp}`

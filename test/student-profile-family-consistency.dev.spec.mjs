@@ -3,19 +3,17 @@ import { randomUUID } from "node:crypto"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { parse as parseDotenv } from "dotenv"
 import test from "node:test"
 import "../tools/assert-prisma-environment.mjs"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
-const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
-const DEV_ONLY = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
-const ENV_VALUES = DEV_ONLY && fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
+const RUNTIME = readKeepaliveTestEnvironment()
 
-test("dev profile edits persist family moves and stay consistent across student and parent portals", { skip: !DEV_ONLY }, async (t) => {
-  Object.assign(process.env, ENV_VALUES, {
-    SIS_ENV_FILE: ".env.dev",
-    DOTENV_CONFIG_PATH: ".env.dev",
-    NODE_ENV: "development",
+test("authenticated profile edits persist family moves across student and parent portals", { skip: !RUNTIME }, async (t) => {
+  applyKeepaliveTestEnvironment(RUNTIME, {
+    SIS_ENV_FILE: RUNTIME.envFile,
+    DOTENV_CONFIG_PATH: RUNTIME.envFile,
+    NODE_ENV: RUNTIME.nodeEnv,
     STUDENT_ADMIN_STORE_ENABLED: "true",
   })
   const originalProfileBackupDir = process.env.SIS_PROFILE_BACKUP_DIR
@@ -27,7 +25,11 @@ test("dev profile edits persist family moves and stay consistent across student 
   const { closeStudentAdminRuntimeResources } = await import("../server/student-admin-routes.mjs")
   const prisma = await getSharedPrismaClient()
   const database = await prisma.$queryRaw`SELECT current_database() AS name`
-  assert.equal(database[0]?.name, "sis_dev", "synthetic profile writes are restricted to the dev database")
+  assert.equal(database[0]?.name, RUNTIME.databaseName, "synthetic profile writes must stay in the selected non-production database")
+  if (RUNTIME.noExternalMessagesEnforced) {
+    assert.equal(Boolean(process.env.BREVO_API_KEY), false, "test no-send isolation must not retain the Brevo credential")
+    assert.equal(Boolean(process.env.SMTP_PASS), false, "test no-send isolation must not retain the SMTP credential")
+  }
 
   const stamp = randomUUID()
   const compactStamp = stamp.replaceAll("-", "")
@@ -179,7 +181,7 @@ test("dev profile edits persist family moves and stay consistent across student 
     username: String(process.env.STUDENT_ADMIN_USER || "").trim(),
     password: String(process.env.STUDENT_ADMIN_PASS || "").trim(),
   })
-  assert.equal(adminLogin.status, 200, "the exact configured dev admin must authenticate")
+  assert.equal(adminLogin.status, 200, "the configured environment admin must authenticate")
   const adminCookie = (adminLogin.headers.get("set-cookie") || "").split(";")[0]
   assert.match(adminCookie, /student_admin_sid=/u)
 

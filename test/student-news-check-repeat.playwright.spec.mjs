@@ -8,14 +8,14 @@ import { resolveStandardStudentCredentials } from "./helpers/standard-portal-cre
 import { resolveStudentNewsSubmissionWindow } from "../src/modules/admin/student-news-submissions.mjs"
 import "../tools/assert-prisma-environment.mjs"
 import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
 const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
-const TEST_ENV = process.env.NODE_ENV === "test" && ENV_FILE === ".env.test"
-const DEVELOPMENT_ENV = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
+const RUNTIME = readKeepaliveTestEnvironment()
 const ORIGIN = resolvePortalTestOrigin({ overrideName: "STUDENT_NEWS_CHECK_REPEAT_ORIGIN" })
 const CHROMIUM_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
-const ALLOWED_ENVIRONMENT = DEVELOPMENT_ENV || TEST_ENV
+const ALLOWED_ENVIRONMENT = Boolean(RUNTIME)
 const STUDENT = resolveStandardStudentCredentials(ENV_VALUES)
 const ADMIN = {
   user: String(ENV_VALUES.STUDENT_ADMIN_USER || "").trim(),
@@ -45,7 +45,7 @@ function localDateKey(date = new Date()) {
 }
 
 test("authenticated Student News Check -> Save -> Check keeps the session and enables Submit", { skip: SKIP_REASON }, async (t) => {
-  Object.assign(process.env, ENV_VALUES)
+  applyKeepaliveTestEnvironment(RUNTIME)
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const prisma = await getSharedPrismaClient()
   const stamp = randomUUID()

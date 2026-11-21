@@ -1,12 +1,13 @@
 import assert from "node:assert/strict"
 import { createHash, randomUUID } from "node:crypto"
-import dotenv from "dotenv"
 import test from "node:test"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
-dotenv.config({ path: ".env.test", override: true })
 process.env.NODE_ENV = "test"
 process.env.SIS_ENV_FILE = ".env.test"
 process.env.DOTENV_CONFIG_PATH = ".env.test"
+const RUNTIME = readKeepaliveTestEnvironment()
+applyKeepaliveTestEnvironment(RUNTIME)
 process.env.STUDENT_ADMIN_NOTIFY_QUEUE_BACKEND = "memory"
 process.env.ASYNC_SIDE_EFFECT_JOB_BACKEND = "memory"
 

@@ -1,19 +1,16 @@
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
-import fs from "node:fs"
 import test from "node:test"
-import { parse as parseDotenv } from "dotenv"
 import "../tools/assert-prisma-environment.mjs"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
-const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
-const DEV_ONLY = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
-const ENV_VALUES = DEV_ONLY && fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
+const RUNTIME = readKeepaliveTestEnvironment()
 
-test("authenticated student creation remains successful when invitation setup fails after commit", { skip: !DEV_ONLY }, async (t) => {
-  Object.assign(process.env, ENV_VALUES, {
-    SIS_ENV_FILE: ".env.dev",
-    DOTENV_CONFIG_PATH: ".env.dev",
-    NODE_ENV: "development",
+test("authenticated student creation remains successful when invitation setup fails after commit", { skip: !RUNTIME }, async (t) => {
+  applyKeepaliveTestEnvironment(RUNTIME, {
+    SIS_ENV_FILE: RUNTIME.envFile,
+    DOTENV_CONFIG_PATH: RUNTIME.envFile,
+    NODE_ENV: RUNTIME.nodeEnv,
     STUDENT_ADMIN_STORE_ENABLED: "true",
   })
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
@@ -21,7 +18,11 @@ test("authenticated student creation remains successful when invitation setup fa
   const { closeStudentAdminRuntimeResources } = await import("../server/student-admin-routes.mjs")
   const prisma = await getSharedPrismaClient()
   const database = await prisma.$queryRaw`SELECT current_database() AS name`
-  assert.equal(database[0]?.name, "sis_dev", "synthetic student writes are restricted to the dev database")
+  assert.equal(database[0]?.name, RUNTIME.databaseName, "synthetic student writes must stay in the selected non-production database")
+  if (RUNTIME.noExternalMessagesEnforced) {
+    assert.equal(Boolean(process.env.BREVO_API_KEY), false, "test no-send isolation must not retain the Brevo credential")
+    assert.equal(Boolean(process.env.SMTP_PASS), false, "test no-send isolation must not retain the SMTP credential")
+  }
 
   const stamp = randomUUID()
   const compactStamp = stamp.replaceAll("-", "")
@@ -112,7 +113,7 @@ test("authenticated student creation remains successful when invitation setup fa
       password: String(process.env.STUDENT_ADMIN_PASS || "").trim(),
     }),
   })
-  assert.equal(login.status, 200, "the configured dev admin must authenticate")
+  assert.equal(login.status, 200, "the configured environment admin must authenticate")
   const cookie = (login.headers.get("set-cookie") || "").split(";")[0]
   assert.match(cookie, /student_admin_sid=/u)
 

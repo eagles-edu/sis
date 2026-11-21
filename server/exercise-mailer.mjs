@@ -71,6 +71,27 @@ function loadEnvironmentFile() {
   if (loadResult?.error && loadResult.error.code !== "ENOENT") {
     throw loadResult.error
   }
+  if (
+    normalizeEnvText(process.env.NODE_ENV) === "test" &&
+    normalizeEnvText(process.env.SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES) === "1"
+  ) {
+    for (const key of [
+      "BREVO_API_KEY",
+      "BREVO_FROM_EMAIL",
+      "BREVO_FROM_NAME",
+      "SMTP_AUTH",
+      "SMTP_USER",
+      "SMTP_PASS",
+    ]) delete process.env[key]
+    process.env.EMAIL_PROVIDER = "smtp"
+    process.env.BREVO_API_URL = "http://127.0.0.1:1/v3/smtp/email"
+    process.env.BREVO_API_BASE_URL = "http://127.0.0.1:1/v3"
+    process.env.SMTP_HOST = "127.0.0.1"
+    process.env.SMTP_PORT = "1"
+    process.env.SMTP_SECURE = "false"
+    process.env.SMTP_AUTH_MODE = "none"
+    process.env.SMTP_FROM = "nightly-no-send@example.invalid"
+  }
   return envFilePath
 }
 

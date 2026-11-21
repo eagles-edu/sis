@@ -2,9 +2,9 @@ import assert from "node:assert/strict"
 import crypto from "node:crypto"
 import { randomUUID } from "node:crypto"
 import fs from "node:fs"
-import { parse as parseDotenv } from "dotenv"
 import test from "node:test"
 import "../tools/assert-prisma-environment.mjs"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
 const COMMAND_PROCESSOR = fs.readFileSync(new URL("../integrations/moodle/enrol/sis/classes/local/command_processor.php", import.meta.url), "utf8")
 const MOODLE_SETTINGS = fs.readFileSync(new URL("../integrations/moodle/enrol/sis/settings.php", import.meta.url), "utf8")
@@ -26,21 +26,19 @@ test("Moodle provisioning and roster import default to fail-closed dry run", () 
   assert.match(MOODLE_ROSTER_IMPORTER, /\(bool\)get_config\('enrol_sis', 'dryrun'\)/u)
 })
 
-const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
-const DEV_ONLY = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
-const ENV_VALUES = DEV_ONLY && fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
+const RUNTIME = readKeepaliveTestEnvironment()
 const TEST_SECRET = "KA106-local-signed-outbox-test-secret"
 const TEST_PASSWORD = "KA106-Synthetic-Portal-Password!"
 
-test("dev Moodle outbox is student-scoped and accepts only signed, replay-protected commands and receipts", { skip: !DEV_ONLY }, async (t) => {
+test("Moodle outbox is student-scoped and accepts only signed, replay-protected commands and receipts", { skip: !RUNTIME }, async (t) => {
   const previousEnvironment = Object.fromEntries([
     "MOODLE_SIS_PROVISIONING_ENABLED",
     "MOODLE_SIS_PROVISIONING_SECRET",
   ].map((key) => [key, process.env[key]]))
-  Object.assign(process.env, ENV_VALUES, {
-    SIS_ENV_FILE: ".env.dev",
-    DOTENV_CONFIG_PATH: ".env.dev",
-    NODE_ENV: "development",
+  applyKeepaliveTestEnvironment(RUNTIME, {
+    SIS_ENV_FILE: RUNTIME.envFile,
+    DOTENV_CONFIG_PATH: RUNTIME.envFile,
+    NODE_ENV: RUNTIME.nodeEnv,
     MOODLE_SIS_PROVISIONING_ENABLED: "true",
     MOODLE_SIS_PROVISIONING_SECRET: TEST_SECRET,
   })
@@ -52,7 +50,11 @@ test("dev Moodle outbox is student-scoped and accepts only signed, replay-protec
   const { closeStudentAdminRuntimeResources } = await import("../server/student-admin-routes.mjs")
   const prisma = await getSharedPrismaClient()
   const database = await prisma.$queryRaw`SELECT current_database() AS name`
-  assert.equal(database[0]?.name, "sis_dev", "synthetic Moodle provisioning is restricted to the dev database")
+  assert.equal(database[0]?.name, RUNTIME.databaseName, "synthetic Moodle provisioning must stay in the selected non-production database")
+  if (RUNTIME.noExternalMessagesEnforced) {
+    assert.equal(Boolean(process.env.BREVO_API_KEY), false, "test no-send isolation must not retain the Brevo credential")
+    assert.equal(Boolean(process.env.SMTP_PASS), false, "test no-send isolation must not retain the SMTP credential")
+  }
   const outstandingBefore = await prisma.moodleProvisioningCommand.count({ where: { status: { in: ["pending", "retry", "processing"] } } })
   assert.equal(outstandingBefore, 0, "the test poll must not encounter unrelated Moodle outbox commands")
 

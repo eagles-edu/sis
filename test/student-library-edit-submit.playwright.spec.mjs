@@ -7,13 +7,14 @@ import { chromium } from "playwright"
 import { resolveStandardStudentCredentials } from "./helpers/standard-portal-credentials.mjs"
 import "../tools/assert-prisma-environment.mjs"
 import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
 const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
+const RUNTIME = readKeepaliveTestEnvironment()
 const ORIGIN = resolvePortalTestOrigin({ overrideName: "STUDENT_LIBRARY_EDIT_ORIGIN" })
 const EXECUTABLE_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
-const IS_SUPPORTED_RUN = (process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev")
-  || (process.env.NODE_ENV === "test" && ENV_FILE === ".env.test")
+const IS_SUPPORTED_RUN = Boolean(RUNTIME)
 
 function studentCredentials() {
   return resolveStandardStudentCredentials(ENV_VALUES)
@@ -29,7 +30,7 @@ const SKIP_REASON = !IS_SUPPORTED_RUN
       : false
 
 test("authenticated Student Library Edit -> Submit persists the canonical contribution", { skip: SKIP_REASON }, async (t) => {
-  Object.assign(process.env, ENV_VALUES)
+  applyKeepaliveTestEnvironment(RUNTIME)
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const prisma = await getSharedPrismaClient()
   const stamp = randomUUID()

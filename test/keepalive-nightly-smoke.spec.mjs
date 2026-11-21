@@ -9,6 +9,10 @@ import {
   renderNightlySmokeMetrics,
   writeMetricsAtomically,
 } from "../tools/run-keepalive-nightly-smoke.mjs"
+import {
+  applyKeepaliveTestEnvironment,
+  buildKeepaliveTestContext,
+} from "../tools/keepalive-test-environment.mjs"
 
 const TEST_ENVIRONMENT = {
   NODE_ENV: "test",
@@ -52,6 +56,64 @@ test("nightly child environment preserves test access while removing external me
   }
   assert.equal(childEnvironment.STUDENT_STUDENT_USER, "mark001")
   assert.equal(childEnvironment.DATABASE_URL, "postgresql://test-only")
+})
+
+test("authenticated subsystem test context keeps environment ownership and test no-send isolation", () => {
+  const context = buildKeepaliveTestContext({
+    ...TEST_ENVIRONMENT,
+    BREVO_API_KEY: "inherited-brevo-sentinel",
+    SMTP_PASS: "inherited-smtp-sentinel",
+  }, {
+    DATABASE_URL: "postgresql://sis-test-only",
+    BREVO_API_KEY: "dotenv-brevo-sentinel",
+    SMTP_PASS: "dotenv-smtp-sentinel",
+    STUDENT_ADMIN_USER: "configured-test-admin",
+    STUDENT_ADMIN_PASS: "configured-test-password",
+  })
+  assert.equal(context?.databaseName, "sis-test")
+  assert.equal(context?.noExternalMessagesEnforced, true)
+  assert.equal(context?.values.SIS_ENV_FILE, ".env.test")
+  assert.equal(context?.values.DOTENV_CONFIG_PATH, ".env.test")
+  assert.equal(context?.values.NODE_ENV, "test")
+  assert.equal(context?.values.DATABASE_URL, "postgresql://sis-test-only")
+  assert.equal(context?.values.STUDENT_ADMIN_USER, "configured-test-admin")
+  assert.equal(context?.values.SMTP_HOST, "127.0.0.1")
+  assert.equal(context?.values.SMTP_PORT, "1")
+  assert.equal(context?.values.BREVO_API_URL, "http://127.0.0.1:1/v3/smtp/email")
+  for (const key of ["BREVO_API_KEY", "SMTP_PASS"]) {
+    assert.equal(Object.hasOwn(context?.values || {}, key), false, `${key} must not be restored from an environment file`)
+  }
+
+  const devContext = buildKeepaliveTestContext({ NODE_ENV: "development", SIS_ENV_FILE: ".env.dev", DOTENV_CONFIG_PATH: ".env.dev" }, {})
+  assert.equal(devContext?.databaseName, "sis_dev")
+  assert.equal(devContext?.noExternalMessagesEnforced, false)
+  assert.equal(buildKeepaliveTestContext({ NODE_ENV: "test", SIS_ENV_FILE: ".env.dev", DOTENV_CONFIG_PATH: ".env.dev" }, {}), null)
+  assert.equal(buildKeepaliveTestContext({ NODE_ENV: "test", SIS_ENV_FILE: ".env.test", DOTENV_CONFIG_PATH: ".env" }, {}), null)
+  assert.equal(buildKeepaliveTestContext({ NODE_ENV: "production", SIS_ENV_FILE: ".env", DOTENV_CONFIG_PATH: ".env" }, {}), null)
+})
+
+test("applying test subsystem context deletes inherited delivery secrets before merging its safe values", () => {
+  const keys = ["BREVO_API_KEY", "SMTP_PASS"]
+  const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]))
+  try {
+    process.env.BREVO_API_KEY = "inherited-brevo-sentinel"
+    process.env.SMTP_PASS = "inherited-smtp-sentinel"
+    const context = buildKeepaliveTestContext(TEST_ENVIRONMENT, {
+      DATABASE_URL: "postgresql://sis-test-only",
+      BREVO_API_KEY: "dotenv-brevo-sentinel",
+      SMTP_PASS: "dotenv-smtp-sentinel",
+    })
+    assert.equal(applyKeepaliveTestEnvironment(context), true)
+    assert.equal(Boolean(process.env.BREVO_API_KEY), false)
+    assert.equal(Boolean(process.env.SMTP_PASS), false)
+    assert.equal(process.env.SMTP_HOST, "127.0.0.1")
+    assert.equal(process.env.BREVO_API_URL, "http://127.0.0.1:1/v3/smtp/email")
+  } finally {
+    for (const key of keys) {
+      if (previous[key] === undefined) delete process.env[key]
+      else process.env[key] = previous[key]
+    }
+  }
 })
 
 test("nightly smoke exports bounded status and retains the last successful time after failure", () => {

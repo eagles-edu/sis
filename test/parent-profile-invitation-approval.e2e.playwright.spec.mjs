@@ -6,12 +6,13 @@ import { parse as parseDotenv } from "dotenv"
 import { chromium } from "playwright"
 import "../tools/assert-prisma-environment.mjs"
 import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
+import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
 
 const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
+const RUNTIME = readKeepaliveTestEnvironment()
 const ORIGIN = resolvePortalTestOrigin({ overrideName: "PARENT_PROFILE_E2E_ORIGIN" })
-const ALLOWED_ENVIRONMENT = (process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev")
-  || (process.env.NODE_ENV === "test" && ENV_FILE === ".env.test")
+const ALLOWED_ENVIRONMENT = Boolean(RUNTIME)
 const ADMIN = {
   user: String(process.env.STUDENT_ADMIN_USER || ENV_VALUES.STUDENT_ADMIN_USER || "").trim(),
   pass: String(process.env.STUDENT_ADMIN_PASS || ENV_VALUES.STUDENT_ADMIN_PASS || "").trim(),
@@ -30,10 +31,10 @@ function syntheticStudentNumber(stamp) {
 }
 
 test("authenticated manual parent invitation preserves an editable draft across reload and approval", { skip: SKIP_REASON }, async (t) => {
-  Object.assign(process.env, ENV_VALUES)
+  applyKeepaliveTestEnvironment(RUNTIME)
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const prisma = await getSharedPrismaClient()
-  const expectedDatabase = ENV_FILE === ".env.test" ? "sis-test" : "sis_dev"
+  const expectedDatabase = RUNTIME.databaseName
   const databaseRows = await prisma.$queryRawUnsafe("SELECT current_database() AS name")
   assert.equal(String(databaseRows?.[0]?.name || ""), expectedDatabase, "parent profile E2E must stay in its owned database")
   const stamp = randomUUID()
