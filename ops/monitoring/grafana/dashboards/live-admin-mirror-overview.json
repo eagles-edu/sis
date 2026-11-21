@@ -1,0 +1,1056 @@
+{
+  "uid": "sis-live-admin-overview",
+  "title": "SIS Live/Admin Mirror · Operations",
+  "tags": [
+    "sis",
+    "operations",
+    "live-mirror"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Public SIS page",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "probe_success{job=\"blackbox-website-http\",site=\"admin\"}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "SIS API service",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "PostgreSQL authenticated probe",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Redis session probe",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Dependency monitor",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "site_dependency_environment_monitor_success{environment=\"live\"}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Subsystem results reported",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "count(sis_keepalive_check_success{environment=\"live\"}) or vector(0)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "0",
+                  "color": "gray"
+                },
+                "1": {
+                  "text": "1",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "type": "text",
+      "title": "Monitoring schedule",
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Live subsystem smoke flows are not scheduled. This page shows read-only live dependency checks and explicitly leaves absent workflow results unreported."
+      }
+    },
+    {
+      "id": 8,
+      "type": "table",
+      "title": "Subsystem smoke results",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "targets": [
+        {
+          "expr": "sis_keepalive_check_success{environment=\"live\"}",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "FAIL",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "PASS",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Value",
+            "desc": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Check freshness and stale threshold",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "targets": [
+        {
+          "expr": "time() - sis_keepalive_check_last_check_timestamp_seconds{environment=\"live\"}",
+          "refId": "A",
+          "legendFormat": "age {{group}}"
+        },
+        {
+          "expr": "sis_keepalive_check_stale_after_seconds{environment=\"live\"}",
+          "refId": "B",
+          "legendFormat": "stale after {{group}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 10,
+      "type": "state-timeline",
+      "title": "Historical smoke pass/fail by subsystem",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "last_over_time(sis_keepalive_check_success{environment=\"live\"}[10m])",
+          "refId": "A",
+          "legendFormat": "{{group}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Historical subsystem check duration",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "sis_keepalive_check_duration_seconds{environment=\"live\"}",
+          "refId": "A",
+          "legendFormat": "{{group}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Student-save requests in the last 5 minutes",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(sis_admin_student_write_requests_total{environment=\"production\"}[5m]))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Student-save mean latency by stage",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "targets": [
+        {
+          "expr": "sum by (phase) (rate(sis_admin_student_write_phase_duration_seconds_sum{environment=\"production\"}[10m])) / sum by (phase) (rate(sis_admin_student_write_phase_duration_seconds_count{environment=\"production\"}[10m]))",
+          "refId": "A",
+          "legendFormat": "mean {{phase}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "PostgreSQL vs Redis probe latency",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "targets": [
+        {
+          "expr": "site_dependency_probe_duration_seconds{environment=\"live\",dependency=\"sis-postgres\"}",
+          "refId": "A",
+          "legendFormat": "PostgreSQL SELECT 1"
+        },
+        {
+          "expr": "site_dependency_probe_duration_seconds{environment=\"live\",dependency=~\"sis-(app|sessions|cache)\"}",
+          "refId": "B",
+          "legendFormat": "Redis {{dependency}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "SIS API and worker memory",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "targets": [
+        {
+          "expr": "namedprocess_namegroup_memory_bytes{job=\"process-diagnostics\",groupname=~\"sis_live_.*\",memtype=\"resident\"}",
+          "refId": "A",
+          "legendFormat": "{{groupname}} RSS"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Redis diagnostics by role",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "targets": [
+        {
+          "expr": "site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=~\"sis-(app|sessions|cache)\",check=\"authenticated-ping\"}",
+          "refId": "A",
+          "legendFormat": "{{dependency}} ping"
+        },
+        {
+          "expr": "site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=~\"sis-(app|sessions|cache)\",check=\"container-running\"}",
+          "refId": "B",
+          "legendFormat": "{{dependency}} container"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "Pronunciation and definition providers",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 48
+      },
+      "targets": [
+        {
+          "expr": "sis_library_cmu_dictionary_available{environment=\"live\"}",
+          "refId": "A",
+          "legendFormat": "CMUdict"
+        },
+        {
+          "expr": "sis_library_dictionary_builder_definition_providers_available{environment=\"live\"}",
+          "refId": "B",
+          "legendFormat": "definitions available"
+        },
+        {
+          "expr": "sis_library_dictionary_builder_definition_providers_checked{environment=\"live\"}",
+          "refId": "C",
+          "legendFormat": "definitions checked"
+        },
+        {
+          "expr": "sis_library_mw_collegiate_key_configured{environment=\"live\"}",
+          "refId": "D",
+          "legendFormat": "MW Collegiate configured"
+        },
+        {
+          "expr": "sis_library_mw_learners_key_configured{environment=\"live\"}",
+          "refId": "E",
+          "legendFormat": "MW Learner's configured"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "News grammar and dictionary services",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 48
+      },
+      "targets": [
+        {
+          "expr": "sis_news_language_tool_available{environment=\"live\"}",
+          "refId": "A",
+          "legendFormat": "LanguageTool"
+        },
+        {
+          "expr": "sis_news_dictionary_available{environment=\"live\"}",
+          "refId": "B",
+          "legendFormat": "pronunciation dictionary"
+        },
+        {
+          "expr": "sis_news_check_success{environment=\"live\"}",
+          "refId": "C",
+          "legendFormat": "News Check"
+        },
+        {
+          "expr": "sis_news_submission_success{environment=\"live\"}",
+          "refId": "D",
+          "legendFormat": "News submit"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "Grade connections · Moodle and Google Forms",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 56
+      },
+      "targets": [
+        {
+          "expr": "sis_grade_feed_grade_rows{environment=\"live\",source=\"moodle\"}",
+          "refId": "A",
+          "legendFormat": "Moodle grades"
+        },
+        {
+          "expr": "sis_grade_feed_grade_rows{environment=\"live\",source=\"google_forms\"}",
+          "refId": "B",
+          "legendFormat": "Google Forms grades"
+        },
+        {
+          "expr": "sis_grade_feed_exercise_submission_rows{environment=\"live\",source=\"moodle\"}",
+          "refId": "C",
+          "legendFormat": "Moodle submissions"
+        },
+        {
+          "expr": "sis_grade_feed_exercise_submission_rows{environment=\"live\",source=\"google_forms\"}",
+          "refId": "D",
+          "legendFormat": "Google Forms submissions"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "Brevo webhook processing",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 56
+      },
+      "targets": [
+        {
+          "expr": "sis_engagement_webhook_unprocessed_events{environment=\"live\"}",
+          "refId": "A",
+          "legendFormat": "unprocessed events"
+        },
+        {
+          "expr": "sis_engagement_webhook_last_received_timestamp_seconds{environment=\"live\"}",
+          "refId": "B",
+          "legendFormat": "last webhook received"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Thuvien and ESL reading probes",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 64
+      },
+      "targets": [
+        {
+          "expr": "probe_success{job=\"blackbox-website-http\",site=\"thuvien\"}",
+          "refId": "A",
+          "legendFormat": "Thuvien public page"
+        },
+        {
+          "expr": "probe_success{job=\"blackbox-thuvien-media\"}",
+          "refId": "B",
+          "legendFormat": "{{check}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 22,
+      "type": "text",
+      "title": "MEGS integration coverage",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 64
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "MEGS is a separate runtime at `/home/eagles/dockerz/megs`. SIS Prometheus currently has no MEGS-owned health or grade-ingestion series, so this dashboard does not infer MEGS health from SIS grade counts."
+      }
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Nightly no-send proof",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 80
+      },
+      "targets": [
+        {
+          "expr": "sis_keepalive_nightly_smoke_success{environment=\"live\"}",
+          "refId": "A"
+        },
+        {
+          "expr": "sis_keepalive_nightly_smoke_no_external_message_proof{environment=\"live\"}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 25,
+      "type": "timeseries",
+      "title": "PostgreSQL vs Redis CPU",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 72
+      },
+      "targets": [
+        {
+          "expr": "site_dependency_container_cpu_percent{container=\"postgres\"}",
+          "refId": "A",
+          "legendFormat": "PostgreSQL"
+        },
+        {
+          "expr": "site_dependency_container_cpu_percent{container=\"redis\"}",
+          "refId": "B",
+          "legendFormat": "Redis"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 26,
+      "type": "timeseries",
+      "title": "PostgreSQL vs Redis memory",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 72
+      },
+      "targets": [
+        {
+          "expr": "site_dependency_container_memory_used_bytes{container=\"postgres\"}",
+          "refId": "A",
+          "legendFormat": "PostgreSQL used"
+        },
+        {
+          "expr": "site_dependency_container_memory_used_bytes{container=\"redis\"}",
+          "refId": "B",
+          "legendFormat": "Redis used"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 24,
+      "type": "text",
+      "title": "Measurement notes",
+      "gridPos": {
+        "h": 4,
+        "w": 18,
+        "x": 6,
+        "y": 80
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Latency panels use measured request/probe durations. Missing series mean the source is not instrumented or no observation exists in the selected range; they are never converted into healthy zeroes. PostgreSQL and Redis resource panels are shared-container Docker samples, not environment-attributed database usage. Redis memory/client totals require a secured exporter and are not currently collected."
+      }
+    }
+  ]
+}

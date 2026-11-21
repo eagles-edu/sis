@@ -66,21 +66,22 @@ def inspect_running(container: str) -> bool:
     return result.returncode == 0 and result.stdout.strip() == "true"
 
 
-def postgres_query_ready(database_url: str, container_running: bool) -> bool:
+def postgres_query_ready(database_url: str, container_running: bool, expected_database: str) -> tuple[bool, float]:
+    started_at = time.monotonic()
     if not container_running:
-        return False
+        return False, 0.0
     parsed = urlsplit(database_url)
     if parsed.scheme not in {"postgres", "postgresql"}:
-        return False
+        return False, 0.0
     username = unquote(parsed.username or "")
     password = unquote(parsed.password or "")
     database = unquote(parsed.path.lstrip("/"))
-    if not username or not password or not database:
-        return False
+    if not username or not password or database != expected_database:
+        return False, 0.0
     command = (
         'IFS= read -r PGPASSWORD; export PGPASSWORD; '
         'exec psql -w -h 127.0.0.1 -p 5432 -U "$PGUSER" -d "$PGDATABASE" '
-        '-v ON_ERROR_STOP=1 -Atq -c "SELECT 1"'
+        '-v ON_ERROR_STOP=1 -Atq -c "SELECT current_database(), 1"'
     )
     result = subprocess.run(
         [
@@ -93,7 +94,8 @@ def postgres_query_ready(database_url: str, container_running: bool) -> bool:
         text=True,
         timeout=TIMEOUT_SECONDS,
     )
-    return result.returncode == 0 and result.stdout.strip() == "1"
+    duration = time.monotonic() - started_at
+    return result.returncode == 0 and result.stdout.strip() == f"{expected_database}|1", duration
 
 
 def read_redis_line(connection: socket.socket) -> bytes:
@@ -117,17 +119,18 @@ def redis_command(connection: socket.socket, *arguments: str) -> bytes:
     return read_redis_line(connection)
 
 
-def redis_database_ready(redis_url: str) -> bool:
+def redis_database_ready(redis_url: str) -> tuple[bool, float]:
+    started_at = time.monotonic()
     parsed = urlsplit(redis_url)
     if parsed.scheme not in {"redis", "rediss"}:
-        return False
+        return False, 0.0
     host = parsed.hostname or ""
     port = parsed.port or (6380 if parsed.scheme == "rediss" else 6379)
     database = parsed.path.lstrip("/") or "0"
     password = unquote(parsed.password or "")
     username = unquote(parsed.username or "")
     if not host or not password or not database.isdigit() or parsed.scheme == "rediss":
-        return False
+        return False, 0.0
     with socket.create_connection((host, port), timeout=TIMEOUT_SECONDS) as connection:
         connection.settimeout(TIMEOUT_SECONDS)
         auth_response = (
@@ -136,10 +139,11 @@ def redis_database_ready(redis_url: str) -> bool:
             else redis_command(connection, "AUTH", password)
         )
         if not auth_response.startswith(b"+OK\r\n"):
-            return False
+            return False, time.monotonic() - started_at
         if not redis_command(connection, "SELECT", database).startswith(b"+OK\r\n"):
-            return False
-        return redis_command(connection, "PING").startswith(b"+PONG\r\n")
+            return False, time.monotonic() - started_at
+        ready = redis_command(connection, "PING").startswith(b"+PONG\r\n")
+        return ready, time.monotonic() - started_at
 
 
 def read_container_environment(container: str, required_keys: set[str]) -> dict[str, str]:
@@ -187,11 +191,90 @@ def erpnext_redis_urls(container_environment: dict[str, str]) -> dict[str, str]:
     return urls
 
 
-def add_status(metrics: list[str], domain: str, dependency: str, check: str, ready: bool) -> None:
+def add_status(
+    metrics: list[str],
+    environment: str,
+    domain: str,
+    dependency: str,
+    check: str,
+    ready: bool,
+) -> None:
     metrics.append(
-        f'site_dependency_status{{domain="{domain}",dependency="{dependency}",check="{check}"}} '
+        f'site_dependency_status{{environment="{environment}",domain="{domain}",dependency="{dependency}",check="{check}"}} '
         f"{1 if ready else 0}"
     )
+
+
+def add_probe_duration(
+    metrics: list[str], environment: str, dependency: str, check: str, duration_seconds: float
+) -> None:
+    metrics.append(
+        f'site_dependency_probe_duration_seconds{{environment="{environment}",dependency="{dependency}",check="{check}"}} '
+        f"{max(0.0, duration_seconds):.6f}"
+    )
+
+
+def parse_container_size(value: str) -> float:
+    match = re.fullmatch(r"\s*([0-9]+(?:\.[0-9]+)?)\s*(B|kB|MB|GB|TB|KiB|MiB|GiB|TiB)\s*", value)
+    if not match:
+        raise ValueError("docker stats returned an unsupported memory unit")
+    multipliers = {
+        "B": 1,
+        "kB": 1000,
+        "MB": 1000**2,
+        "GB": 1000**3,
+        "TB": 1000**4,
+        "KiB": 1024,
+        "MiB": 1024**2,
+        "GiB": 1024**3,
+        "TiB": 1024**4,
+    }
+    return float(match.group(1)) * multipliers[match.group(2)]
+
+
+def add_database_container_stats(metrics: list[str]) -> None:
+    containers = {"sis-postgres": "postgres", "redis-stack": "redis"}
+    result = subprocess.run(
+        [
+            "docker", "stats", "--no-stream", "--format",
+            "{{.Name}}|{{.CPUPerc}}|{{.MemUsage}}", *containers,
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=TIMEOUT_SECONDS,
+    )
+    observed: set[str] = set()
+    if result.returncode == 0:
+        for line in result.stdout.splitlines():
+            name, separator, values = line.partition("|")
+            if not separator or name not in containers:
+                continue
+            cpu_text, separator, memory_text = values.partition("|")
+            if not separator or not cpu_text.strip().endswith("%"):
+                continue
+            memory_used, separator, memory_limit = memory_text.partition("/")
+            if not separator:
+                continue
+            try:
+                cpu_percent = float(cpu_text.strip().removesuffix("%"))
+                memory_used_bytes = parse_container_size(memory_used)
+                memory_limit_bytes = parse_container_size(memory_limit)
+            except ValueError:
+                continue
+            container = containers[name]
+            metrics.extend(
+                (
+                    f'site_dependency_container_metrics_available{{container="{container}"}} 1',
+                    f'site_dependency_container_cpu_percent{{container="{container}"}} {cpu_percent:.6f}',
+                    f'site_dependency_container_memory_used_bytes{{container="{container}"}} {memory_used_bytes:.0f}',
+                    f'site_dependency_container_memory_limit_bytes{{container="{container}"}} {memory_limit_bytes:.0f}',
+                )
+            )
+            observed.add(container)
+    for container in containers.values():
+        if container not in observed:
+            metrics.append(f'site_dependency_container_metrics_available{{container="{container}"}} 0')
 
 
 def main() -> int:
@@ -203,41 +286,89 @@ def main() -> int:
         "# TYPE site_dependency_monitor_last_check_success gauge",
         "# HELP site_dependency_monitor_last_check_timestamp_seconds Unix time of the latest dependency check.",
         "# TYPE site_dependency_monitor_last_check_timestamp_seconds gauge",
+        "# HELP site_dependency_probe_duration_seconds Wall-clock duration of an authenticated read-only dependency probe.",
+        "# TYPE site_dependency_probe_duration_seconds gauge",
+        "# HELP site_dependency_environment_monitor_success Whether the latest database and Redis checks passed for an environment.",
+        "# TYPE site_dependency_environment_monitor_success gauge",
+        "# HELP site_dependency_environment_monitor_last_check_timestamp_seconds Unix time of the latest environment dependency check.",
+        "# TYPE site_dependency_environment_monitor_last_check_timestamp_seconds gauge",
+        "# HELP site_dependency_container_metrics_available Whether Docker returned a resource snapshot for the shared dependency container.",
+        "# TYPE site_dependency_container_metrics_available gauge",
+        "# HELP site_dependency_container_cpu_percent Docker CPU usage percentage for a shared dependency container.",
+        "# TYPE site_dependency_container_cpu_percent gauge",
+        "# HELP site_dependency_container_memory_used_bytes Docker memory working set for a shared dependency container.",
+        "# TYPE site_dependency_container_memory_used_bytes gauge",
+        "# HELP site_dependency_container_memory_limit_bytes Docker memory limit for a shared dependency container.",
+        "# TYPE site_dependency_container_memory_limit_bytes gauge",
     ]
     check_success = 1
-    try:
-        sis_values = read_env_file(
-            SIS_ENV_FILE, {"DATABASE_URL", "REDIS_URL", "REDIS_SESSION_URL", "REDIS_CACHE_URL"}
-        )
-        postgres_running = inspect_running(POSTGRES_CONTAINER)
-        add_status(metrics, "admin.eagles.edu.vn", "sis-postgres", "container-running", postgres_running)
-        add_status(
-            metrics, "admin.eagles.edu.vn", "sis-postgres", "authenticated-select-1",
-            postgres_query_ready(sis_values["DATABASE_URL"], postgres_running),
-        )
-
-        redis_running = inspect_running(REDIS_CONTAINER)
-        for dependency, key in (
-            ("sis-app", "REDIS_URL"),
-            ("sis-sessions", "REDIS_SESSION_URL"),
-            ("sis-cache", "REDIS_CACHE_URL"),
-        ):
-            add_status(metrics, "admin.eagles.edu.vn", dependency, "container-running", redis_running)
-            add_status(
-                metrics, "admin.eagles.edu.vn", dependency, "authenticated-ping",
-                redis_running and redis_database_ready(sis_values[key]),
+    for environment, env_file in (("live", SIS_ENV_FILE), ("test", ROOT / ".env.test")):
+        env_success = 1
+        try:
+            sis_values = read_env_file(
+                env_file, {"DATABASE_URL", "REDIS_URL", "REDIS_SESSION_URL", "REDIS_CACHE_URL"}
             )
+            domain = "admin.eagles.edu.vn" if environment == "live" else "test.eagles.edu.vn"
+            postgres_running = inspect_running(POSTGRES_CONTAINER)
+            add_status(metrics, environment, domain, "sis-postgres", "container-running", postgres_running)
+            expected_database = "sis" if environment == "live" else "sis-test"
+            try:
+                postgres_ready, postgres_duration = postgres_query_ready(
+                    sis_values["DATABASE_URL"], postgres_running, expected_database
+                )
+            except (OSError, subprocess.SubprocessError, TimeoutError, ConnectionError):
+                postgres_ready, postgres_duration = False, 0.0
+            add_status(metrics, environment, domain, "sis-postgres", "authenticated-select-1", postgres_ready)
+            add_probe_duration(metrics, environment, "sis-postgres", "authenticated-select-1", postgres_duration)
+            env_success &= int(postgres_running and postgres_ready)
 
+            redis_running = inspect_running(REDIS_CONTAINER)
+            for dependency, key in (
+                ("sis-app", "REDIS_URL"),
+                ("sis-sessions", "REDIS_SESSION_URL"),
+                ("sis-cache", "REDIS_CACHE_URL"),
+            ):
+                add_status(metrics, environment, domain, dependency, "container-running", redis_running)
+                try:
+                    redis_ready, redis_duration = redis_database_ready(sis_values[key])
+                except (OSError, TimeoutError, ConnectionError, ValueError):
+                    redis_ready, redis_duration = False, 0.0
+                add_status(metrics, environment, domain, dependency, "authenticated-ping", redis_running and redis_ready)
+                add_probe_duration(metrics, environment, dependency, "authenticated-ping", redis_duration)
+                env_success &= int(redis_running and redis_ready)
+        except (KeyError, OSError, ValueError, subprocess.SubprocessError, TimeoutError, ConnectionError):
+            env_success = 0
+        metrics.append(f'site_dependency_environment_monitor_success{{environment="{environment}"}} {env_success}')
+        metrics.append(f'site_dependency_environment_monitor_last_check_timestamp_seconds{{environment="{environment}"}} {int(time.time())}')
+        if not env_success:
+            check_success = 0
+
+    try:
+        add_database_container_stats(metrics)
+    except (OSError, subprocess.SubprocessError, TimeoutError):
+        metrics.extend(
+            (
+                'site_dependency_container_metrics_available{container="postgres"} 0',
+                'site_dependency_container_metrics_available{container="redis"} 0',
+            )
+        )
+
+    try:
         erp_environment = read_container_environment(
             ERPNEXT_QUEUE_CONTAINER, {"FRAPPE_REDIS_CACHE", "FRAPPE_REDIS_QUEUE"}
         )
         for role, redis_url in erpnext_redis_urls(erp_environment).items():
             dependency = f"erpnext-redis-{role}"
-            add_status(metrics, "ltd.eagles.vn", dependency, "container-running", redis_running)
-            add_status(
-                metrics, "ltd.eagles.vn", dependency, "authenticated-ping",
-                redis_running and redis_database_ready(redis_url),
-            )
+            redis_running = inspect_running(REDIS_CONTAINER)
+            add_status(metrics, "live", "ltd.eagles.vn", dependency, "container-running", redis_running)
+            try:
+                redis_ready, redis_duration = redis_database_ready(redis_url)
+            except (OSError, TimeoutError, ConnectionError, ValueError):
+                redis_ready, redis_duration = False, 0.0
+            add_status(metrics, "live", "ltd.eagles.vn", dependency, "authenticated-ping", redis_running and redis_ready)
+            add_probe_duration(metrics, "live", dependency, "authenticated-ping", redis_duration)
+            if not (redis_running and redis_ready):
+                check_success = 0
     except (KeyError, OSError, ValueError, subprocess.SubprocessError, TimeoutError, ConnectionError):
         check_success = 0
 

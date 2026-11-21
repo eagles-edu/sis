@@ -1099,7 +1099,7 @@
       },
       "targets": [
         {
-          "expr": "ALERTS{alertname=~\"PublicWebsite.*|LTDERPNext.*|SiteDependency.*\",alertstate=~\"pending|firing\",domain=\"ltd.eagles.vn\"}",
+          "expr": "sum by (alertname, severity) (ALERTS{alertname=~\"PublicWebsite.*|LTDERPNext.*|SiteDependency.*\",alertstate=~\"pending|firing\",domain=\"ltd.eagles.vn\"}) or vector(0)",
           "refId": "A",
           "legendFormat": "{{alertname}} / {{severity}}"
         }

@@ -757,7 +757,7 @@
       },
       "targets": [
         {
-          "expr": "max by (name) (node_systemd_unit_state{name=~\"(nginx\\\\.service|lshttpd\\\\.service|exercise-mailer\\\\.service)\",state=\"active\"})",
+          "expr": "max by (name) (node_systemd_unit_state{name=~\"(nginx[.]service|lshttpd[.]service|exercise-mailer[.]service)\",state=\"active\"})",
           "refId": "A",
           "legendFormat": "{{name}}",
           "instant": true
@@ -920,7 +920,7 @@
       },
       "targets": [
         {
-          "expr": "max by (name) (node_systemd_unit_state{name=~\"(nginx\\\\.service|lshttpd\\\\.service|exercise-mailer\\\\.service)\",state=\"active\"})",
+          "expr": "max by (name) (node_systemd_unit_state{name=~\"(nginx[.]service|lshttpd[.]service|exercise-mailer[.]service)\",state=\"active\"})",
           "refId": "A",
           "legendFormat": "{{name}}"
         }
@@ -1052,12 +1052,12 @@
       },
       "targets": [
         {
-          "expr": "ALERTS{alertname=~\"PublicWebsite.*|AdminAuthentication.*|SiteSISAPI.*|SiteDependency.*|SISLiveApiServiceDown\",alertstate=~\"pending|firing\",domain=\"admin.eagles.edu.vn\"}",
+          "expr": "sum by (alertname, severity) (ALERTS{alertname=~\"PublicWebsite.*|AdminAuthentication.*|SiteSISAPI.*|SiteDependency.*|SISLiveApiServiceDown\",alertstate=~\"pending|firing\",domain=\"admin.eagles.edu.vn\"}) or vector(0)",
           "refId": "A",
           "legendFormat": "{{alertname}} / {{severity}}"
         },
         {
-          "expr": "ALERTS{alertname=\"DevParentReportAcknowledgmentServerFailure\",environment=\"dev\",alertstate=~\"pending|firing\"}",
+          "expr": "count(ALERTS{alertname=\"DevParentReportAcknowledgmentServerFailure\",environment=\"dev\",alertstate=~\"pending|firing\"}) or vector(0)",
           "refId": "B",
           "legendFormat": "SIS parent acknowledgment 5xx"
         }
@@ -1138,12 +1138,12 @@
       },
       "targets": [
         {
-          "expr": "sum by(status) (increase(sis_parent_report_acknowledgment_requests_total{environment=\"dev\",route=\"POST /api/parent/reports/:reportId/acknowledge\"}[1h]))",
+          "expr": "sum by(status) (increase(sis_parent_report_acknowledgment_requests_total{environment=\"dev\",route=\"POST /api/parent/reports/:reportId/acknowledge\"}[1h])) or vector(0)",
           "refId": "A",
           "legendFormat": "HTTP {{status}}"
         },
         {
-          "expr": "ALERTS{alertname=\"DevParentReportAcknowledgmentServerFailure\",environment=\"dev\",alertstate=~\"pending|firing\"}",
+          "expr": "count(ALERTS{alertname=\"DevParentReportAcknowledgmentServerFailure\",environment=\"dev\",alertstate=~\"pending|firing\"}) or vector(0)",
           "refId": "B",
           "legendFormat": "5xx alert"
         }

@@ -1,6 +1,6 @@
 # SIS Test Mirror Monitoring Suite
 
-> Current runtime note: this document describes the superseded full exporter topology. The active pared profile retains Prometheus, node-exporter, blackbox-exporter, and on-demand Grafana only. cAdvisor and the process/database/Redis exporters have been removed to reduce host overhead.
+> Current runtime note: cAdvisor and PostgreSQL/Redis exporters are not active. Process-exporter is enabled for SIS process metrics. The minute dependency monitor records environment-owned PostgreSQL and Redis probe status/latency and samples shared-container CPU/memory with `docker stats`.
 
 ## Scope
 
@@ -45,12 +45,9 @@ Grafana :3030  <---->  Prometheus :9090
           +-------------------+-------------------+
           |                   |                   |
           v                   v                   v
- node-exporter :9100    cAdvisor :8089     process-exporter :9256
- host resources          Docker resources    test host processes
-                                                    |
-                                                    +-- test API
-                                                    +-- test async worker
-                                                    +-- test static web chain
+ node-exporter :9100    process-exporter :9256
+ host resources          SIS process resources
+                         test API and async worker
 
                               |
                               v
@@ -64,11 +61,11 @@ Grafana :3030  <---->  Prometheus :9090
 
 | Component | Container | Local port | Test-mirror responsibility |
 | --- | --- | ---: | --- |
-| Prometheus | `sis-prometheus` | 9090 | Scrapes, stores, evaluates test-mirror metrics every 5 seconds. Retains metrics for 30 days. |
+| Prometheus | `sis-prometheus` | 9090 | Scrapes and evaluates metrics every 30 seconds, with seven-day local retention. |
 | Grafana | `sis-grafana` | 3030 | Displays dashboards and graphs. |
 | node-exporter | `sis-node-exporter` | 9100 | Host CPU, RAM, swap, disk, network, load, filesystem pressure. |
-| cAdvisor | `sis-cadvisor` | 8089 | Docker CPU, memory, network, process-count and restart evidence for PostgreSQL, Redis, LanguageTool, Prometheus, and monitoring containers. |
-| process-exporter | `sis-process-exporter` | 9256 | CPU, memory, thread/process count for the test API, async worker, and static web server chain. |
+| cAdvisor | not active | — | Container metrics are not scraped from cAdvisor. PostgreSQL and Redis CPU/memory are sampled by the 60-second dependency monitor. |
+| process-exporter | `sis-process-exporter` | 9256 | CPU, memory, thread/process count for live/test SIS API and async worker processes. |
 | blackbox-exporter | `sis-blackbox-exporter` | 9115 | Probes the real HTTPS test-mirror admin page and records availability plus response duration. |
 
 All ports are bound to `127.0.0.1`. No monitoring service is intentionally Internet-facing.
@@ -93,9 +90,9 @@ Prometheus uses a 5-second scrape and evaluation interval. Configuration is stor
 | --- | --- | --- |
 | `prometheus` | `prometheus:9090` | Prometheus itself is healthy. |
 | `node` | `node-exporter:9100` | Host metrics are available. |
-| `cadvisor` | `cadvisor:8080` | Docker/container metrics are available. |
-| `process` | `process-exporter:9256` | Test process metrics are available. |
+| `process-diagnostics` | `process-exporter:9256` | Live/test SIS process metrics are available. |
 | `blackbox-test-mirror` | `https://test.eagles.edu.vn/admin` through blackbox exporter | The public test-mirror admin page is reachable and responds with `200`. |
+| `blackbox-website-http`, `blackbox-website-api`, `blackbox-admin-auth-api`, `blackbox-thuvien-media`, `blackbox-website-app` | public application, auth-guard, media, and Frappe routes | The monitored public pages, APIs, and media endpoints respond as expected. |
 
 Target health is visible at:
 
@@ -103,7 +100,7 @@ Target health is visible at:
 http://127.0.0.1:9090/targets
 ```
 
-All five jobs must show `UP` before an incident reproduction begins.
+All configured targets must show `UP` before interpreting a missing metric as an application failure. `redis-diagnostics` is intentionally absent until an authenticated Redis exporter target is configured.
 
 ## Test-mirror process matching
 
@@ -142,11 +139,11 @@ http://127.0.0.1:3030
 
 Do not record the Grafana credential in this document. It is stored in the ignored local monitoring environment file.
 
-### SIS Test Mirror · Environment Health
+### SIS Test Mirror · Operations
 
 Dashboard source: [test-mirror-overview.json](../ops/monitoring/grafana/dashboards/test-mirror-overview.json)
 
-This dashboard contains:
+This dashboard is structurally identical to **SIS Live/Admin Mirror · Operations** and contains:
 
 1. Public admin probe status (`UP`/`DOWN`)
 2. Public admin response time
@@ -155,7 +152,12 @@ This dashboard contains:
 5. Test API, worker, and static-service CPU usage
 6. Test API, worker, and static-service memory usage
 7. Host CPU and memory pressure
-8. PostgreSQL and Redis container CPU and memory
+8. PostgreSQL and Redis authenticated-probe latency and shared-container CPU/memory history
+9. Ten scheduled logical workflow results, freshness, cadence, and duration history
+10. Student-save mean latency by stage after an authenticated write is observed
+11. CMUdict, LanguageTool, Dictionary Builder aggregate-provider, News, Moodle, Google Forms, Brevo webhook, Thuvien image, and reading-audio signals
+
+Test's owned `.env.test` is checked independently from the live `.env`. The 60-second site-dependency monitor writes read-only PostgreSQL database-identity/`SELECT 1` and Redis `PING` status/duration metrics for each environment, plus shared-container CPU/memory samples. The PostgreSQL timing includes Docker/`psql` startup overhead and is not pure server execution time. Workflow smoke groups are scheduled for test and dev; live workflow smoke is not scheduled.
 
 Use a 15-minute range for a controlled test. Use a 60-minute range when correlating a user-reported incident with service or database logs.
 

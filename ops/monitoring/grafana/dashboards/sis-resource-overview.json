@@ -42,13 +42,22 @@
     {
       "id": 5,
       "type": "timeseries",
-      "title": "SIS student-save path",
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+      "title": "Student-write request rate",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
       "targets": [
-        {"expr": "sum(rate(sis_admin_student_write_requests_total[5m]))", "legendFormat": "writes/s", "refId": "A"},
-        {"expr": "histogram_quantile(0.95, sum by (le) (rate(sis_admin_student_write_duration_seconds_bucket[10m])))", "legendFormat": "p95 latency", "refId": "B"}
+        {"expr": "sum by (environment) (rate(sis_admin_student_write_requests_total[5m])) or vector(0)", "legendFormat": "{{environment}} writes/s", "refId": "A"}
       ],
-      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
+      "fieldConfig": {"defaults": {"unit": "ops", "noValue": "No instrumented writes in this range"}, "overrides": []}
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Student-save mean latency by stage",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+      "targets": [
+        {"expr": "sum by (environment,phase) (rate(sis_admin_student_write_phase_duration_seconds_sum[10m])) / sum by (environment,phase) (rate(sis_admin_student_write_phase_duration_seconds_count[10m]))", "legendFormat": "{{environment}} · {{phase}}", "refId": "A"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "s", "noValue": "No authenticated saves in this range"}, "overrides": []}
     }
   ]
 }

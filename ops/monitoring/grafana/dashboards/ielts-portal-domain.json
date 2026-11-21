@@ -757,7 +757,7 @@
       },
       "targets": [
         {
-          "expr": "max by (name) (node_systemd_unit_state{name=~\"(exercise-mailer\\\\.service)\",state=\"active\"})",
+          "expr": "max by (name) (node_systemd_unit_state{name=~\"(exercise-mailer[.]service)\",state=\"active\"})",
           "refId": "A",
           "legendFormat": "{{name}}",
           "instant": true
@@ -883,7 +883,7 @@
       },
       "targets": [
         {
-          "expr": "max by (name) (node_systemd_unit_state{name=~\"(exercise-mailer\\\\.service)\",state=\"active\"})",
+          "expr": "max by (name) (node_systemd_unit_state{name=~\"(exercise-mailer[.]service)\",state=\"active\"})",
           "refId": "A",
           "legendFormat": "{{name}}"
         }
@@ -974,7 +974,7 @@
       },
       "targets": [
         {
-          "expr": "ALERTS{alertname=~\"PublicWebsite.*|SiteSISAPI.*|SISLiveApiServiceDown\",alertstate=~\"pending|firing\",domain=\"ielts.eagles.edu.vn\"}",
+          "expr": "sum by (alertname, severity) (ALERTS{alertname=~\"PublicWebsite.*|SiteSISAPI.*|SISLiveApiServiceDown\",alertstate=~\"pending|firing\",domain=\"ielts.eagles.edu.vn\"}) or vector(0)",
           "refId": "A",
           "legendFormat": "{{alertname}} / {{severity}}"
         }
