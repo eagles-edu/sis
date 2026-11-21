@@ -1,0 +1,28 @@
+[Unit]
+Description=SIS Development API
+After=network.target
+StartLimitIntervalSec=15min
+StartLimitBurst=4
+StartLimitAction=none
+
+[Service]
+Type=simple
+WorkingDirectory=/home/eagles/dockerz/sis
+Environment=NODE_ENV=development
+Environment=SIS_ENV_FILE=.env.dev
+Environment=DOTENV_CONFIG_PATH=.env.dev
+Environment=SIS_REQUEST_METRICS_FILE=runtime-data/prometheus/sis-dev-request-metrics.prom
+ExecStart=/home/eagles/.nvm/versions/node/v22.22.1/bin/node server/exercise-mailer.mjs
+Restart=on-failure
+RestartSec=30s
+UMask=0022
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=default.target

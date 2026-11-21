@@ -25,6 +25,7 @@
     "start": "SIS_ENV_FILE=.env DOTENV_CONFIG_PATH=.env NODE_ENV=production node server/exercise-mailer.mjs",
     "dev": "SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development SIS_REQUEST_METRICS_FILE=runtime-data/prometheus/sis-dev-request-metrics.prom node server/exercise-mailer.mjs",
     "dev:restart": "tools/restart-dev-runtime.sh",
+    "dev:install-restart-guard": "tools/install-dev-api-restart-guard.sh",
     "lint": "npm run lint:html && npm run lint:js && npm run lint:css",
     "db:generate": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",

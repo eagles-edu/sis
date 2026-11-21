@@ -113,6 +113,8 @@ Use these when validating the local dev runtime on port `8788`:
 - `http://127.0.0.1:8788/parent?apiOrigin=http://127.0.0.1:8788`
 - `http://127.0.0.1:8788/student?apiOrigin=http://127.0.0.1:8788`
 
+Install the bounded user-service restart guard for the dev API with `npm run dev:install-restart-guard`, then run `npm run dev:restart` to move the current API under that service. Routine source refreshes use `npm run dev:restart`; automatic process restarts do not rebuild assets or run Prisma commands.
+
 ## Core surfaces
 
 ### Admin
