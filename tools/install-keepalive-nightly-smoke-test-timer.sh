@@ -19,6 +19,7 @@ grep -Fxq 'Environment=SIS_ENV_FILE=.env.test' "$SOURCE_DIR/$SERVICE_NAME"
 grep -Fxq 'Environment=DOTENV_CONFIG_PATH=.env.test' "$SOURCE_DIR/$SERVICE_NAME"
 grep -Fxq 'Environment=NODE_ENV=test' "$SOURCE_DIR/$SERVICE_NAME"
 grep -Fxq 'Environment=SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES=1' "$SOURCE_DIR/$SERVICE_NAME"
+grep -Fxq 'Environment=PATH=/home/eagles/.nvm/versions/node/v22.22.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' "$SOURCE_DIR/$SERVICE_NAME"
 grep -Fxq 'Unit=sis-keepalive-nightly-smoke-test.service' "$SOURCE_DIR/$TIMER_NAME"
 
 if [[ -S "$EAGLES_RUNTIME_DIR/bus" ]] && runuser -u eagles -- env \

@@ -11,6 +11,7 @@ Environment=SIS_ENV_FILE=.env.test
 Environment=DOTENV_CONFIG_PATH=.env.test
 Environment=NODE_ENV=test
 Environment=SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES=1
+Environment=PATH=/home/eagles/.nvm/versions/node/v22.22.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart=/home/eagles/.nvm/versions/node/v22.22.1/bin/node --env-file=.env.test tools/run-keepalive-nightly-smoke.mjs
 TimeoutStartSec=5h
 TimeoutStopSec=30s

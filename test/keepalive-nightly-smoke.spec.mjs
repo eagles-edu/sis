@@ -152,6 +152,7 @@ test("nightly systemd service pins the test environment and does not block requi
   const servicePath = path.resolve("ops/monitoring/systemd/sis-keepalive-nightly-smoke-test.service")
   const service = fs.readFileSync(servicePath, "utf8")
   assert.match(service, /^Environment=SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES=1$/mu)
+  assert.match(service, /^Environment=PATH=\/home\/eagles\/\.nvm\/versions\/node\/v22\.22\.1\/bin:/mu)
   assert.match(service, /^User=eagles$/mu)
   assert.match(service, /^Group=eagles$/mu)
   assert.doesNotMatch(service, /^IPAddressDeny=/mu)

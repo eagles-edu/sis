@@ -6,6 +6,15 @@ import test from "node:test"
 const config = fs.readFileSync("prisma.config.ts", "utf8")
 const agents = fs.readFileSync("AGENTS.md", "utf8")
 const sop = fs.readFileSync("docs/sop.md", "utf8")
+const prismaCli = fs.realpathSync("node_modules/.bin/prisma")
+
+function runPrisma(args, env) {
+  return spawnSync(process.execPath, [prismaCli, ...args], {
+    cwd: process.cwd(),
+    env,
+    encoding: "utf8",
+  })
+}
 
 test("Prisma environment loading is explicit and fail-closed", () => {
   assert.doesNotMatch(config, /dotenv\/config/u)
@@ -23,12 +32,12 @@ test("Prisma refuses absent or mismatched environment selectors", () => {
   delete missing.SIS_ENV_FILE
   delete missing.DOTENV_CONFIG_PATH
   delete missing.NODE_ENV
-  const missingResult = spawnSync("npx", ["prisma", "migrate", "status"], { cwd: process.cwd(), env: missing, encoding: "utf8" })
+  const missingResult = runPrisma(["migrate", "status"], missing)
   assert.notEqual(missingResult.status, 0)
   assert.match(`${missingResult.stdout}${missingResult.stderr}`, /Prisma environment is fail-closed/u)
 
   const mismatched = { ...process.env, SIS_ENV_FILE: ".env.dev", DOTENV_CONFIG_PATH: ".env.test", NODE_ENV: "test" }
-  const mismatchedResult = spawnSync("npx", ["prisma", "migrate", "status"], { cwd: process.cwd(), env: mismatched, encoding: "utf8" })
+  const mismatchedResult = runPrisma(["migrate", "status"], mismatched)
   assert.notEqual(mismatchedResult.status, 0)
   assert.match(`${mismatchedResult.stdout}${mismatchedResult.stderr}`, /Prisma environment mismatch/u)
 })
