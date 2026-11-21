@@ -57,12 +57,13 @@ async function stopChild(child) {
 }
 
 test("SMTP relay mode starts without SMTP auth credentials", async () => {
-  const child = spawn("node", ["server/exercise-mailer.mjs"], {
+  const child = spawn(process.execPath, ["server/exercise-mailer.mjs"], {
     cwd: process.cwd(),
     env: {
       ...process.env,
-      NODE_ENV: "test",
-      SIS_ENV_FILE: ".env.dev",
+      NODE_ENV: process.env.NODE_ENV || "development",
+      SIS_ENV_FILE: process.env.SIS_ENV_FILE || ".env.dev",
+      DOTENV_CONFIG_PATH: process.env.DOTENV_CONFIG_PATH || process.env.SIS_ENV_FILE || ".env.dev",
       EXERCISE_MAILER_HOST: "127.0.0.1",
       EXERCISE_MAILER_PORT: "8794",
       SMTP_HOST: "127.0.0.1",

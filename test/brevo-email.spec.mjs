@@ -5,10 +5,12 @@ import { sendBrevoEmail } from "../src/modules/email/brevo.mjs"
 test("Brevo sender posts the normalized SMTP payload and encodes attachments", async () => {
   const previousKey = process.env.BREVO_API_KEY
   const previousFrom = process.env.BREVO_FROM_EMAIL
+  const previousUrl = process.env.BREVO_API_URL
   const previousFetch = globalThis.fetch
   const requests = []
   process.env.BREVO_API_KEY = "test-key"
   process.env.BREVO_FROM_EMAIL = "admin@example.test"
+  process.env.BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
   globalThis.fetch = async (url, options) => {
     requests.push({ url, options })
     return new Response(JSON.stringify({ messageId: "<brevo-test-id>" }), { status: 201 })
@@ -40,15 +42,19 @@ test("Brevo sender posts the normalized SMTP payload and encodes attachments", a
     else process.env.BREVO_API_KEY = previousKey
     if (previousFrom === undefined) delete process.env.BREVO_FROM_EMAIL
     else process.env.BREVO_FROM_EMAIL = previousFrom
+    if (previousUrl === undefined) delete process.env.BREVO_API_URL
+    else process.env.BREVO_API_URL = previousUrl
   }
 })
 
 test("Brevo sender treats a repeated idempotency key as already processed", async () => {
   const previousKey = process.env.BREVO_API_KEY
   const previousFrom = process.env.BREVO_FROM_EMAIL
+  const previousUrl = process.env.BREVO_API_URL
   const previousFetch = globalThis.fetch
   process.env.BREVO_API_KEY = "test-key"
   process.env.BREVO_FROM_EMAIL = "admin@example.test"
+  process.env.BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
   globalThis.fetch = async () => new Response(JSON.stringify({ code: "duplicate_parameter" }), { status: 400 })
 
   try {
@@ -65,5 +71,7 @@ test("Brevo sender treats a repeated idempotency key as already processed", asyn
     else process.env.BREVO_API_KEY = previousKey
     if (previousFrom === undefined) delete process.env.BREVO_FROM_EMAIL
     else process.env.BREVO_FROM_EMAIL = previousFrom
+    if (previousUrl === undefined) delete process.env.BREVO_API_URL
+    else process.env.BREVO_API_URL = previousUrl
   }
 })

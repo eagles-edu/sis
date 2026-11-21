@@ -6,13 +6,50 @@ import { pathToFileURL } from "node:url"
 const ROOT = process.cwd()
 const METRICS_FILE = path.join(ROOT, "runtime-data/prometheus/keepalive-nightly-smoke-test.prom")
 const SUITE_TIMEOUT_MS = 5 * 60 * 60 * 1000
+const OUTBOUND_MESSAGE_ENV_KEYS = [
+  "EMAIL_PROVIDER",
+  "BREVO_API_KEY",
+  "BREVO_API_URL",
+  "BREVO_API_BASE_URL",
+  "BREVO_FROM_EMAIL",
+  "BREVO_FROM_NAME",
+  "SMTP_HOST",
+  "SMTP_PORT",
+  "SMTP_SECURE",
+  "SMTP_AUTH",
+  "SMTP_AUTH_MODE",
+  "SMTP_FROM",
+  "SMTP_USER",
+  "SMTP_PASS",
+]
 
 export function assertTestEnvironment(environment = process.env) {
   if (
     String(environment.NODE_ENV || "").trim() !== "test" ||
     String(environment.SIS_ENV_FILE || "").trim() !== ".env.test" ||
-    String(environment.DOTENV_CONFIG_PATH || "").trim() !== ".env.test"
+    String(environment.DOTENV_CONFIG_PATH || "").trim() !== ".env.test" ||
+    String(environment.SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES || "").trim() !== "1"
   ) throw new Error("Keep-alive nightly smoke requires the explicit test environment")
+}
+
+export function buildNoExternalMessageTestEnvironment(environment = process.env) {
+  const result = { ...environment }
+  for (const key of OUTBOUND_MESSAGE_ENV_KEYS) delete result[key]
+  return {
+    ...result,
+    SIS_ENV_FILE: ".env.test",
+    DOTENV_CONFIG_PATH: ".env.test",
+    NODE_ENV: "test",
+    SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES: "1",
+    EMAIL_PROVIDER: "smtp",
+    BREVO_API_URL: "http://127.0.0.1:1/v3/smtp/email",
+    BREVO_API_BASE_URL: "http://127.0.0.1:1/v3",
+    SMTP_HOST: "127.0.0.1",
+    SMTP_PORT: "1",
+    SMTP_SECURE: "false",
+    SMTP_AUTH_MODE: "none",
+    SMTP_FROM: "nightly-no-send@example.invalid",
+  }
 }
 
 function metricNumber(value) {
@@ -28,9 +65,9 @@ function previousLastSuccess(metricsFile) {
   return match ? Number(match[1]) : 0
 }
 
-export function renderNightlySmokeMetrics({ checkedAt, durationSeconds, success, lastSuccessTimestamp, failureCode, failedFile = "" }) {
+export function renderNightlySmokeMetrics({ checkedAt, durationSeconds, success, lastSuccessTimestamp, failureCode, failedFile = "", noExternalMessagesVerified = false }) {
   const normalizedFailureCode = success ? "none" : String(failureCode || "suite_failed")
-  if (!new Set(["none", "suite_failed", "dependency_unavailable", "configuration_invalid", "timeout"]).has(normalizedFailureCode)) {
+  if (!new Set(["none", "suite_failed", "dependency_unavailable", "configuration_invalid", "message_state_changed", "timeout"]).has(normalizedFailureCode)) {
     throw new TypeError("Nightly smoke failure code is not in the bounded vocabulary")
   }
   const failedFileName = String(failedFile || "")
@@ -43,6 +80,9 @@ export function renderNightlySmokeMetrics({ checkedAt, durationSeconds, success,
     "# HELP sis_keepalive_nightly_smoke_success Whether the latest full test-mirror smoke suite passed.",
     "# TYPE sis_keepalive_nightly_smoke_success gauge",
     `sis_keepalive_nightly_smoke_success{${labels}} ${success ? 1 : 0}`,
+    "# HELP sis_keepalive_nightly_smoke_no_external_message_proof Whether outbound email credentials were removed, SMTP/Brevo endpoints were pinned to loopback, and message-delivery state remained unchanged.",
+    "# TYPE sis_keepalive_nightly_smoke_no_external_message_proof gauge",
+    `sis_keepalive_nightly_smoke_no_external_message_proof{${labels}} ${noExternalMessagesVerified ? 1 : 0}`,
     "# HELP sis_keepalive_nightly_smoke_last_check_timestamp_seconds Unix timestamp of the latest full test-mirror smoke suite.",
     "# TYPE sis_keepalive_nightly_smoke_last_check_timestamp_seconds gauge",
     `sis_keepalive_nightly_smoke_last_check_timestamp_seconds{${labels}} ${metricNumber(checkedAt)}`,
@@ -81,20 +121,39 @@ async function assertTestDatabase() {
   try {
     const rows = await prisma.$queryRawUnsafe("SELECT current_database() AS name")
     if (String(rows?.[0]?.name || "") !== "sis-test") throw new Error("Nightly smoke database identity mismatch")
+    const [jobs, queues, deliveries] = await Promise.all([
+      prisma.$queryRawUnsafe(`
+        SELECT "jobType", "status", count(*)::int AS count
+        FROM "AsyncSideEffectJob"
+        WHERE "jobType" IN ('announcement-email', 'parent-profile-invitation')
+        GROUP BY "jobType", "status"
+        ORDER BY "jobType", "status"
+      `),
+      prisma.$queryRawUnsafe(`
+        SELECT "queueType", "status", count(*)::int AS count
+        FROM "AdminNotificationQueue"
+        GROUP BY "queueType", "status"
+        ORDER BY "queueType", "status"
+      `),
+      prisma.$queryRawUnsafe(`
+        SELECT "status", count(*)::int AS count, max("sentAt") AS latest_sent_at
+        FROM "BrevoEmailDelivery"
+        GROUP BY "status"
+        ORDER BY "status"
+      `),
+    ])
+    return JSON.stringify({ jobs, queues, deliveries })
   } finally {
     await prisma.$disconnect()
   }
 }
 
-function runSuite() {
+function runSuite(environment = process.env) {
   return new Promise((resolve) => {
     const child = spawn(process.execPath, [path.join(ROOT, "tools/test-suite.mjs"), "all", "--summary"], {
       cwd: ROOT,
       env: {
-        ...process.env,
-        SIS_ENV_FILE: ".env.test",
-        DOTENV_CONFIG_PATH: ".env.test",
-        NODE_ENV: "test",
+        ...buildNoExternalMessageTestEnvironment(environment),
         CI: "1",
         NO_COLOR: "1",
       },
@@ -150,10 +209,17 @@ export async function runNightlySmoke({ environment = process.env, metricsFile =
   const checkedAt = now() / 1000
   let result
   try {
-    await assertTestDatabase()
-    result = await runSuite()
+    const deliveryStateBefore = await assertTestDatabase()
+    result = await runSuite(environment)
+    const deliveryStateAfter = await assertTestDatabase()
+    const noExternalMessagesVerified = deliveryStateBefore === deliveryStateAfter
+    if (!noExternalMessagesVerified) {
+      result = { ...result, success: false, failureCode: "message_state_changed", noExternalMessagesVerified }
+    } else {
+      result = { ...result, noExternalMessagesVerified }
+    }
   } catch {
-    result = { success: false, failureCode: "dependency_unavailable" }
+    result = { success: false, failureCode: "dependency_unavailable", noExternalMessagesVerified: false }
   }
   const durationSeconds = Math.max(0, (performance.now() - startedAt) / 1000)
   const lastSuccessTimestamp = result.success ? checkedAt : previousLastSuccess(metricsFile)
@@ -164,8 +230,9 @@ export async function runNightlySmoke({ environment = process.env, metricsFile =
     lastSuccessTimestamp,
     failureCode: result.failureCode,
     failedFile: result.failedFile,
+    noExternalMessagesVerified: result.noExternalMessagesVerified,
   }))
-  process.stdout.write(`test-mirror nightly smoke ${result.success ? "passed" : `failed (${result.failureCode}${result.failedFile ? ` at ${result.failedFile}` : ""})`} in ${durationSeconds.toFixed(1)}s\n`)
+  process.stdout.write(`test-mirror nightly smoke ${result.success ? "passed" : `failed (${result.failureCode}${result.failedFile ? ` at ${result.failedFile}` : ""})`}; no-external-message-proof=${result.noExternalMessagesVerified ? "verified" : "failed"} in ${durationSeconds.toFixed(1)}s\n`)
   return result.success
 }
 

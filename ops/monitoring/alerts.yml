@@ -315,6 +315,14 @@ groups:
         annotations:
           summary: The full test-mirror nightly smoke suite failed
 
+      - alert: TestKeepaliveNightlyMessageIsolationUnverified
+        expr: sis_keepalive_nightly_smoke_no_external_message_proof{environment="test"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: The full test-mirror nightly suite did not verify message isolation
+
       - alert: TestKeepaliveNightlySmokeStale
         expr: absent(sis_keepalive_nightly_smoke_last_check_timestamp_seconds{environment="test"}) or time() - sis_keepalive_nightly_smoke_last_check_timestamp_seconds{environment="test"} > 93600
         for: 1m

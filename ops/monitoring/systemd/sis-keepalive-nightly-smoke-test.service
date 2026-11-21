@@ -4,11 +4,14 @@ After=network.target
 
 [Service]
 Type=oneshot
+User=eagles
+Group=eagles
 WorkingDirectory=/home/eagles/dockerz/sis
 Environment=SIS_ENV_FILE=.env.test
 Environment=DOTENV_CONFIG_PATH=.env.test
 Environment=NODE_ENV=test
-ExecStart=/bin/bash -lc 'cd /home/eagles/dockerz/sis && node --env-file=.env.test tools/run-keepalive-nightly-smoke.mjs'
+Environment=SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES=1
+ExecStart=/home/eagles/.nvm/versions/node/v22.22.1/bin/node --env-file=.env.test tools/run-keepalive-nightly-smoke.mjs
 TimeoutStartSec=5h
 TimeoutStopSec=30s
 Nice=10

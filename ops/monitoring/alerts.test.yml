@@ -67,6 +67,8 @@ tests:
     input_series:
       - series: 'sis_keepalive_nightly_smoke_success{environment="test"}'
         values: '0x5'
+      - series: 'sis_keepalive_nightly_smoke_no_external_message_proof{environment="test"}'
+        values: '0x5'
     alert_rule_test:
       - eval_time: 30s
         alertname: TestKeepaliveNightlySmokeFailed
@@ -79,6 +81,17 @@ tests:
               severity: warning
             exp_annotations:
               summary: The full test-mirror nightly smoke suite failed
+      - eval_time: 30s
+        alertname: TestKeepaliveNightlyMessageIsolationUnverified
+        exp_alerts: []
+      - eval_time: 1m
+        alertname: TestKeepaliveNightlyMessageIsolationUnverified
+        exp_alerts:
+          - exp_labels:
+              environment: test
+              severity: critical
+            exp_annotations:
+              summary: The full test-mirror nightly suite did not verify message isolation
 
   - interval: 30s
     alert_rule_test:
