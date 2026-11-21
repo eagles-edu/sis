@@ -8,8 +8,9 @@ WorkingDirectory=/home/eagles/dockerz/sis
 Environment=SIS_ENV_FILE=.env.dev
 Environment=DOTENV_CONFIG_PATH=.env.dev
 Environment=NODE_ENV=development
+ExecStartPre=/home/eagles/.nvm/versions/node/v22.22.1/bin/node tools/wait-for-dev-api-listener.mjs
 ExecStart=/bin/bash -lc 'cd /home/eagles/dockerz/sis && npm run monitor:parent-profile:dev'
-TimeoutStartSec=120s
+TimeoutStartSec=180s
 UMask=0027
 NoNewPrivileges=true
 PrivateTmp=true

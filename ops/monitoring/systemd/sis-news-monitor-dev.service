@@ -5,8 +5,9 @@ After=network.target
 [Service]
 Type=oneshot
 WorkingDirectory=/home/eagles/dockerz/sis
+ExecStartPre=/home/eagles/.nvm/versions/node/v22.22.1/bin/node tools/wait-for-dev-api-listener.mjs
 ExecStart=/bin/bash -lc 'cd /home/eagles/dockerz/sis && npm run monitor:news:dev'
-TimeoutStartSec=90s
+TimeoutStartSec=150s
 UMask=0022
 NoNewPrivileges=true
 PrivateTmp=true

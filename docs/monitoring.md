@@ -419,6 +419,8 @@ Group status is exported as `sis_keepalive_check_success`, `sis_keepalive_check_
 
 The rows below define the target policy for each logical group. `dev` means `.env.dev` / `NODE_ENV=development` / `sis_dev`; `test` means `.env.test` / `NODE_ENV=test` / `sis-test`. Every database-backed run must verify its database identity. No new live/admin check is authorized here; any future live check is read-only unless an explicitly isolated synthetic flow is approved. A test cadence or timeout marked as a target is not active until its test-owned runner or service enforces it.
 
+The five dev API-backed monitor services run `tools/wait-for-dev-api-listener.mjs` as `ExecStartPre`. It polls only the local TCP listener at `127.0.0.1:8788`, without an HTTP request, database access, or configuration repair, and waits for at most 60 seconds. This lets scheduled monitors survive an operator-started API restart without converting the expected startup window into failed workflow results. After the listener opens, each monitor still runs its normal authenticated workflow and dependency checks; provider, database, session, or cleanup failures remain visible. The unit start deadlines include the 60-second preflight bound. Test monitor services are unchanged.
+
 | Group | Environment and cadence | Maximum run time | Dependencies | Owner | Safe data lifecycle |
 | --- | --- | --- | --- | --- | --- |
 | `parent_profile` | Dev and test every 15m | 120s process timeout | Environment-owned API, PostgreSQL, Redis-backed sessions, exact environment-owned admin and parent credentials, Playwright | `tools/monitor-parent-profile-workflow.mjs` | UUID-scoped invitation and profile workflow; manual no-email invitation; delete synthetic rows and verify cleanup; no live writes |
