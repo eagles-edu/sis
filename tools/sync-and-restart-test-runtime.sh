@@ -84,6 +84,9 @@ log() {
 
 backup_test_state() {
   local timestamp
+  local previous_umask
+  previous_umask="$(umask)"
+  umask 077
   timestamp="$(date +%Y%m%d-%H%M%S)"
   local bundle_dir="${TEST_BACKUP_ROOT}/test-sync-${timestamp}"
   local runtime_snapshot_dir="${bundle_dir}/runtime"
@@ -134,6 +137,18 @@ backup_test_state() {
   "mirrorPurgeLeavesDatabaseUntouched": true
 }
 EOF
+
+  find "${bundle_dir}" -type d -exec chmod 0700 {} +
+  find "${bundle_dir}" -type f -exec chmod 0600 {} +
+  if find "${bundle_dir}" -type d ! -perm 0700 -print -quit | grep -q .; then
+    echo "test backup bundle contains a directory without mode 0700: ${bundle_dir}" >&2
+    return 1
+  fi
+  if find "${bundle_dir}" -type f ! -perm 0600 -print -quit | grep -q .; then
+    echo "test backup bundle contains a file without mode 0600: ${bundle_dir}" >&2
+    return 1
+  fi
+  umask "${previous_umask}"
 
   log "test backup bundle ready: ${bundle_dir}"
 }

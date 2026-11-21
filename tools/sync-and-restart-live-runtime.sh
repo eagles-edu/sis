@@ -796,6 +796,9 @@ verify_live_preserved_runtime_files() {
 
 backup_live_state() {
   local timestamp
+  local previous_umask
+  previous_umask="$(umask)"
+  umask 077
   timestamp="$(date +%Y%m%d-%H%M%S)"
   local bundle_dir="${BACKUP_ROOT}/live-admin-${timestamp}"
   local runtime_snapshot_dir="${bundle_dir}/runtime"
@@ -849,6 +852,7 @@ backup_live_state() {
     fi
 
     mkdir -p "${db_snapshot_dir}" "${db_backup_dir}"
+    chmod 0700 "${db_backup_dir}"
     log "backing up postgres into ${db_backup_dir}"
     node "${REPO_ROOT}/tools/db-backup-failsafe.mjs" --output-dir "${db_backup_dir}" --database-url "${database_url}"
 
@@ -909,6 +913,19 @@ EOF
   "postgresMetadataPath": "${bundle_metadata_path}"
 }
 EOF
+
+  find "${db_backup_dir}" -maxdepth 1 -type f -exec chmod 0600 {} +
+  find "${bundle_dir}" -type d -exec chmod 0700 {} +
+  find "${bundle_dir}" -type f -exec chmod 0600 {} +
+  if find "${bundle_dir}" -type d ! -perm 0700 -print -quit | grep -q .; then
+    echo "live backup bundle contains a directory without mode 0700: ${bundle_dir}" >&2
+    return 1
+  fi
+  if find "${bundle_dir}" -type f ! -perm 0600 -print -quit | grep -q .; then
+    echo "live backup bundle contains a file without mode 0600: ${bundle_dir}" >&2
+    return 1
+  fi
+  umask "${previous_umask}"
 
   log "backup bundle ready: ${bundle_dir}"
 }
