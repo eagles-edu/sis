@@ -13,15 +13,16 @@ const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
 const ORIGIN = resolvePortalTestOrigin({ overrideName: "STUDENT_NEWS_LIBRARY_ORIGIN" })
 const EXECUTABLE_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
-const IS_DEV_RUN = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
+const IS_SUPPORTED_RUN = (process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev")
+  || (process.env.NODE_ENV === "test" && ENV_FILE === ".env.test")
 
 function studentCredentials() {
   return resolveStandardStudentCredentials(ENV_VALUES)
 }
 
 const STUDENT = studentCredentials()
-const SKIP_REASON = !IS_DEV_RUN
-  ? "Authenticated News/Library lifecycle proof is restricted to the explicit dev environment"
+const SKIP_REASON = !IS_SUPPORTED_RUN
+  ? "Authenticated News/Library lifecycle proof requires the explicit dev or test environment"
   : !fs.existsSync(EXECUTABLE_PATH)
     ? `${EXECUTABLE_PATH} is required`
     : !STUDENT.user || !STUDENT.pass
@@ -171,7 +172,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
   let reportId = ""
   let studentRefId = ""
   const newsContributionIds = []
-  const newsContributionIdsByWord = new Map()
+  const newsLibraryRowIdsByWord = new Map()
   const lifecycleFixtures = []
   const newWordsFixtureIds = []
   let savedNewWordEnglish = ""
@@ -263,8 +264,8 @@ test("authenticated student News and New Words saves, Library visibility, week-s
       select: { englishKey: true },
     })).map((word) => word.englishKey))
     const expectedSeedWords = NEWS_WORDS.filter((word) => !preexistingNewsWordKeys.has(word.english.toLocaleLowerCase("en-US")))
-    const pastedWord = expectedSeedWords.find((word) => word.english !== "computer")
-    assert.ok(pastedWord, "at least one submittable News fixture word is new for the configured student")
+    const pastedWord = NEWS_WORDS.find((word) => word.english !== "computer")
+    assert.ok(pastedWord, "the News fixture includes a word for the formatting round trip")
     const reportWords = [pastedWord, ...NEWS_WORDS.filter((word) => word !== pastedWord)]
     const pastedWordEnglish = pastedWord.english
     const invalidLegacyWord = await prisma.studentNewWord.create({
@@ -423,11 +424,21 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     await draftCalendarEvent.waitFor({ state: "visible", timeout: 10000 })
     assert.match(await draftCalendarEvent.getAttribute("title") || "", /Draft saved; not submitted for review\./u)
 
-    const computerSyllabication = page.locator('#newsVocabularyRows [data-news-vocabulary-row="2"] [data-vocabulary-field="syllabication"]')
+    const computerRowIndex = await page.locator("#newsVocabularyRows [data-news-vocabulary-row]").evaluateAll((rows) => rows.findIndex((row) => row.querySelector('[data-vocabulary-field="english"]')?.value === "computer"))
+    assert.notEqual(computerRowIndex, -1, "the News form retains the computer vocabulary row")
+    const computerSyllabication = page.locator("#newsVocabularyRows [data-news-vocabulary-row]").nth(computerRowIndex).locator('[data-vocabulary-field="syllabication"]')
     await computerSyllabication.fill("com-PU-ter")
     const invalidDivisionResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check", { timeout: 30000 })
     await page.click("#checkBtn")
-    const invalidDivisionResult = await invalidDivisionResponse
+    const invalidDivisionResult = await invalidDivisionResponse.catch(async (error) => {
+      const state = await page.evaluate(() => ({
+        formStatus: document.getElementById("formStatus")?.textContent || "",
+        checkDisabled: document.getElementById("checkBtn")?.disabled ?? null,
+        checkVisible: Boolean(document.getElementById("checkBtn")?.getClientRects().length),
+        activeNewsRows: document.querySelectorAll("#newsVocabularyRows [data-news-vocabulary-row]").length,
+      }))
+      throw new Error(`${error.message}; Check state=${JSON.stringify(state)}`)
+    })
     const invalidDivisionBody = await invalidDivisionResult.json()
     assert.equal(invalidDivisionResult.status(), 200, "an invalid authoritative division is saved with validation guidance")
     assert.equal(invalidDivisionBody.saved, true)
@@ -478,7 +489,8 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     assert.deepEqual(words.map((word) => word.english).sort(), expectedSeedWords.map((word) => word.english).sort(), "every new real word is seeded from the checked News report without duplicating an existing student word")
     const newsPastedDefinition = savedDraft.vocabularyJson.find((entry) => entry.english === pastedWordEnglish)?.definition
     const seededPastedWord = words.find((word) => word.english === pastedWordEnglish)
-    assert.equal(seededPastedWord?.definition, newsPastedDefinition, "News to New Words preserves the exact formatted definition text")
+    assert.equal((wordData.body.items || []).filter((word) => word.english?.toLocaleLowerCase("en-US") === pastedWordEnglish.toLocaleLowerCase("en-US")).length, 1, "the News word appears exactly once in New Words whether it was newly seeded or already existed")
+    if (seededPastedWord) assert.equal(seededPastedWord.definition, newsPastedDefinition, "News to New Words preserves the exact formatted definition text")
     for (const word of words.filter((entry) => entry.english !== "computer")) {
       const submitted = await page.evaluate(async (entry) => {
         const response = await fetch("/api/student/library/submissions", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sourceId: entry.id, entry }) })
@@ -487,11 +499,27 @@ test("authenticated student News and New Words saves, Library visibility, week-s
       assert.equal(submitted.status, 201, `Library submission succeeds for ${word.english}`)
       assert.equal(submitted.body.ok, true)
       newsContributionIds.push(submitted.body.contribution.id)
-      newsContributionIdsByWord.set(word.english, submitted.body.contribution.id)
+      newsLibraryRowIdsByWord.set(word.english, submitted.body.contribution.entryId || submitted.body.contribution.id)
       if (word.english === pastedWordEnglish) {
         const savedContribution = await prisma.libraryContribution.findUnique({ where: { id: submitted.body.contribution.id }, select: { payloadJson: true } })
         assert.equal(savedContribution?.payloadJson?.definition, newsPastedDefinition, "New Words to Library preserves the exact formatted definition text")
       }
+    }
+    if (!newsLibraryRowIdsByWord.has(pastedWordEnglish)) {
+      const reportWord = savedDraft.vocabularyJson.find((entry) => entry.english === pastedWordEnglish)
+        ? { ...savedDraft.vocabularyJson.find((entry) => entry.english === pastedWordEnglish), id: `news-library-word-${stamp}-${pastedWordEnglish}` }
+        : null
+      assert.ok(reportWord?.id, "the saved News vocabulary row is available for the Library handoff")
+      const submitted = await page.evaluate(async (entry) => {
+        const response = await fetch("/api/student/library/submissions", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sourceId: entry.id, entry }) })
+        return { status: response.status, body: await response.json() }
+      }, reportWord)
+      assert.equal(submitted.status, 201, `Library submission succeeds for the existing News word ${pastedWordEnglish}`)
+      assert.equal(submitted.body.ok, true)
+      newsContributionIds.push(submitted.body.contribution.id)
+      newsLibraryRowIdsByWord.set(pastedWordEnglish, submitted.body.contribution.entryId || submitted.body.contribution.id)
+      const savedContribution = await prisma.libraryContribution.findUnique({ where: { id: submitted.body.contribution.id }, select: { payloadJson: true } })
+      assert.equal(savedContribution?.payloadJson?.definition, newsPastedDefinition, "the existing News word definition is preserved in its Library contribution")
     }
 
     const weekSetButtons = page.locator('#newsPageQueueBody button[data-open-news-week-set]')
@@ -556,15 +584,18 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     for (const word of words.filter((entry) => entry.english !== "computer")) {
       await page.locator("#librarySearch").fill(word.english)
       await page.locator('#libraryFilters button[type="submit"]').click()
-      const matchingContribution = newsContributionIdsByWord.get(word.english)
-      await page.locator(`[data-entry-id="${matchingContribution}"]`).waitFor({ state: "visible", timeout: 30000 })
-      assert.equal(await page.locator(`[data-entry-id="${matchingContribution}"]`).innerText(), "Edit", `Student Library exposes Edit for ${word.english}`)
+      const matchingLibraryRow = newsLibraryRowIdsByWord.get(word.english)
+      await page.locator(`[data-entry-id="${matchingLibraryRow}"]`).waitFor({ state: "visible", timeout: 30000 })
+      assert.equal(await page.locator(`[data-entry-id="${matchingLibraryRow}"]`).innerText(), "Edit", `Student Library exposes Edit for ${word.english}`)
     }
-    const pastedContributionId = newsContributionIdsByWord.get(pastedWordEnglish)
-    assert.ok(pastedContributionId, "the pasted News word is submitted for Library review")
+    const pastedLibraryRowId = newsLibraryRowIdsByWord.get(pastedWordEnglish)
+    assert.ok(pastedLibraryRowId, "the pasted News word is submitted for Library review")
+    await page.locator("#libraryMyWords").check()
     await page.locator("#librarySearch").fill(pastedWordEnglish)
     await page.locator('#libraryFilters button[type="submit"]').click()
-    await page.locator(`[data-entry-id="${pastedContributionId}"]`).click()
+    const pastedContributionButton = page.locator(`[data-entry-id="${pastedLibraryRowId}"]`)
+    await pastedContributionButton.waitFor({ state: "visible", timeout: 30000 })
+    await pastedContributionButton.click()
     const newsEditDialog = page.locator("dialog.library-edit-dialog")
     await newsEditDialog.waitFor({ state: "visible", timeout: 10000 })
     const libraryDefinition = await newsEditDialog.locator('[data-vocabulary-field="definition"]').inputValue()

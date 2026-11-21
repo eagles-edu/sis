@@ -12,14 +12,15 @@ const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
 const ORIGIN = resolvePortalTestOrigin({ overrideName: "STUDENT_NEWS_REVIEW_ORIGIN" })
 const CHROMIUM_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
-const DEV_ONLY = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
+const SUPPORTED_ENVIRONMENT = (process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev")
+  || (process.env.NODE_ENV === "test" && ENV_FILE === ".env.test")
 const STUDENT = resolveStandardStudentCredentials(ENV_VALUES)
 const ADMIN = {
   user: String(ENV_VALUES.STUDENT_ADMIN_USER || "").trim(),
   pass: String(ENV_VALUES.STUDENT_ADMIN_PASS || "").trim(),
 }
-const SKIP_REASON = !DEV_ONLY
-  ? "Authenticated Student News review E2E is restricted to the explicit dev environment"
+const SKIP_REASON = !SUPPORTED_ENVIRONMENT
+  ? "Authenticated Student News review E2E requires the explicit dev or test environment"
   : !fs.existsSync(CHROMIUM_PATH)
     ? `${CHROMIUM_PATH} is required`
     : !STUDENT.user || !STUDENT.pass

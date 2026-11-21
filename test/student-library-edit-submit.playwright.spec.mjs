@@ -12,15 +12,16 @@ const ENV_FILE = String(process.env.SIS_ENV_FILE || "").trim()
 const ENV_VALUES = fs.existsSync(ENV_FILE) ? parseDotenv(fs.readFileSync(ENV_FILE)) : {}
 const ORIGIN = resolvePortalTestOrigin({ overrideName: "STUDENT_LIBRARY_EDIT_ORIGIN" })
 const EXECUTABLE_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
-const IS_DEV_RUN = process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev"
+const IS_SUPPORTED_RUN = (process.env.NODE_ENV === "development" && ENV_FILE === ".env.dev")
+  || (process.env.NODE_ENV === "test" && ENV_FILE === ".env.test")
 
 function studentCredentials() {
   return resolveStandardStudentCredentials(ENV_VALUES)
 }
 
 const STUDENT = studentCredentials()
-const SKIP_REASON = !IS_DEV_RUN
-  ? "Student Library persistence proof is restricted to the explicit dev environment"
+const SKIP_REASON = !IS_SUPPORTED_RUN
+  ? "Student Library persistence proof requires the explicit dev or test environment"
   : !fs.existsSync(EXECUTABLE_PATH)
     ? `${EXECUTABLE_PATH} is required`
     : !STUDENT.user || !STUDENT.pass
@@ -134,6 +135,7 @@ const student = await prisma.student.findUnique({ where: { eaglesId: STUDENT.use
   assert.equal((await loginResponse).status(), 200, "visible student login succeeds")
   await page.locator("#appPanel").waitFor({ state: "visible", timeout: 30000 })
   await page.goto(`${ORIGIN}/student/library.html?myWords=true`, { waitUntil: "domcontentloaded" })
+  await page.locator("#librarySearch").fill(english)
 
   const editButton = page.locator(`[data-entry-id="${entryId}"]`).first()
   await editButton.waitFor({ state: "visible", timeout: 30000 })
