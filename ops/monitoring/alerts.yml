@@ -909,10 +909,10 @@ groups:
           description: "The authenticated PostgreSQL and Redis checks have not completed successfully within three minutes."
 
       - alert: SiteDependencyProbeSetIncomplete
-        expr: absent(site_dependency_status) or count(site_dependency_status) != 14
+        expr: (count(site_dependency_status{domain="admin.eagles.edu.vn"}) or vector(0)) != 8 or (count(site_dependency_status{domain="test.eagles.edu.vn"}) or vector(0)) != 8 or (count(site_dependency_status{domain="ltd.eagles.vn"}) or vector(0)) != 6
         for: 2m
         labels:
           severity: critical
         annotations:
-          summary: "Live-site database and Redis coverage is incomplete"
-          description: "Prometheus is missing one or more of the 14 authenticated database, Redis-role, or container checks."
+          summary: "Configured site dependency coverage is incomplete"
+          description: "Expected 8 SIS live/admin checks, 8 SIS test-mirror checks, and 6 LTD Redis-role checks; one or more are missing."
