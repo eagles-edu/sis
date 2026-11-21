@@ -545,7 +545,7 @@ function createRedisBackedStore({
   async function touchSession(sessionId) {
     const id = normalizeText(sessionId)
     if (!id) return null
-    return executeRedisOperation(
+    const session = await executeRedisOperation(
       "touchSession",
       async (client) => {
         const raw = await client.get(keyFor(id))
@@ -562,6 +562,13 @@ function createRedisBackedStore({
       },
       () => fallbackStore.touchSession(id),
     )
+    if (!required && usingFallback && !session) {
+      throw createRedisUnavailableError(
+        new Error("session is not present in the memory fallback"),
+        "touchSession",
+      )
+    }
+    return session
   }
 
   async function deleteSession(sessionId) {

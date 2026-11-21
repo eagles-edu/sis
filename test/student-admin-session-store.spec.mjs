@@ -165,6 +165,49 @@ test("session store falls back to memory when redis auto-connect fails", async (
   await store.close()
 })
 
+test("auto session fallback reports Redis-owned session loss as unavailable and keeps fallback sessions usable", async () => {
+  const cache = new Map()
+  let createClientCalls = 0
+  let redisClient = null
+  const store = createStudentAdminSessionStore({
+    driver: "auto",
+    redisUrl: "redis://mock.local:6379/0",
+    ttlSeconds: 120,
+    keyPrefix: "test:auto-session-fallback:",
+    createRedisClient: async () => {
+      createClientCalls += 1
+      if (createClientCalls > 1) {
+        const error = new Error("connect ECONNREFUSED during controlled reconnect")
+        error.code = "ECONNREFUSED"
+        throw error
+      }
+      redisClient = createMockRedisClient(cache)
+      return redisClient
+    },
+  })
+
+  try {
+    const redisSession = await store.createSession({ username: "redis-owned-user", role: "student" })
+    redisClient.forceDisconnect()
+
+    await assert.rejects(
+      store.touchSession(redisSession.id),
+      (error) => {
+        assert.equal(error?.statusCode, 503)
+        return true
+      }
+    )
+
+    assert.equal(store.driver, "memory")
+    const fallbackSession = await store.createSession({ username: "memory-fallback-user", role: "student" })
+    const touchedFallbackSession = await store.touchSession(fallbackSession.id)
+    assert.equal(touchedFallbackSession?.id, fallbackSession.id)
+    assert.equal(touchedFallbackSession?.username, "memory-fallback-user")
+  } finally {
+    await store.close()
+  }
+})
+
 test("session store falls back to memory when redis auth fails and disconnects client", async () => {
   const listeners = new Map()
   let connected = false

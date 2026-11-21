@@ -712,7 +712,7 @@ Dev and test runtimes record a counter only for `POST /api/student/news-reports/
 sis_student_news_check_auth_rejections_total{environment,reason}
 ```
 
-The only reasons are `missing_cookie` and `session_not_found`. A Redis/store operation failure remains a 503 and is not recorded as either 401 cause. The metric never stores a cookie, session ID, student/account identity, request body, URL, or query parameter. It does not change the response, clear-cookie behavior, or session lifetime. This metric is not enabled for production/live.
+The only reasons are `missing_cookie` and `session_not_found`. Required Redis-store failures return 503 and are not recorded as either 401 cause. In `auto` mode, if Redis becomes unavailable after issuing a Redis-backed session, `touchSession` returns 503 when that ID is absent from the in-memory fallback; it must not turn an unavailable Redis lookup into a false 401 or clear the student's cookie. Sessions created in the memory fallback remain usable there. The metric never stores a cookie, session ID, student/account identity, request body, URL, or query parameter. It does not change cookie handling or session lifetime. This metric is not enabled for production/live.
 
 Useful query for the latest five-minute rate by safe cause:
 
