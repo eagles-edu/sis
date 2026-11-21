@@ -35,7 +35,7 @@ grep -Fq 'Environment=NODE_ENV=development' "${SERVICE_SOURCE}" || fail "service
 grep -Fq 'Environment=SIS_ENV_FILE=.env.dev' "${SERVICE_SOURCE}" || fail "service does not select .env.dev"
 grep -Fq 'Environment=DOTENV_CONFIG_PATH=.env.dev' "${SERVICE_SOURCE}" || fail "service does not select matching dotenv config"
 grep -Fq 'node --import dotenv/config tools/db-health-check.mjs --expected-database sis_dev' "${SERVICE_SOURCE}" || fail "service does not load and verify the dev database"
-grep -Fq 'runtime-data/maintenance/db-backup-latest.dev.json' "${SERVICE_SOURCE}" || fail "service does not use isolated dev backup metadata"
+grep -Fq '/home/eagles/dockerz/backups/postgres-dev/latest.json' "${SERVICE_SOURCE}" || fail "service does not use isolated dev backup metadata"
 grep -Fq 'runtime-data/prometheus/db-health-dev.prom --metrics-environment dev' "${SERVICE_SOURCE}" || fail "service does not write dev-labeled metrics"
 grep -Fq "Unit=${SERVICE_NAME}" "${TIMER_SOURCE}" || fail "timer does not invoke the dev health service"
 

@@ -21,6 +21,16 @@ groups:
           summary: Dev SIS database health snapshot is stale
           description: The dev-owned database snapshot has not completed within thirty minutes.
 
+      - alert: DevDatabaseBackupStale
+        expr: sis_db_health_backup_stale{environment="dev"} == 1
+        for: 1m
+        labels:
+          environment: dev
+          severity: warning
+        annotations:
+          summary: Dev SIS database backup is missing or stale
+          description: The latest verified dev database backup is missing or older than its configured freshness limit.
+
   - name: sis-keepalive-check-groups-dev
     rules:
       - alert: DevKeepaliveCheckFailed

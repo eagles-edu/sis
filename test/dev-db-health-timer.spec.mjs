@@ -14,7 +14,7 @@ test("dev database health service is isolated to development and verifies sis_de
   assert.match(service, /^Environment=SIS_ENV_FILE=\.env\.dev$/mu)
   assert.match(service, /^Environment=DOTENV_CONFIG_PATH=\.env\.dev$/mu)
   assert.match(service, /--import dotenv\/config .*--expected-database sis_dev/u)
-  assert.match(service, /db-backup-latest\.dev\.json/u)
+  assert.ok(service.includes("--backup-latest /home/eagles/dockerz/backups/postgres-dev/latest.json"))
   assert.match(service, /db-health-dev\.prom --metrics-environment dev/u)
   assert.match(service, /^Type=oneshot$/mu)
   assert.doesNotMatch(service, /\/home\/(?:admin|test)\.eagles\.edu\.vn|prisma|migration|sync-and-restart/u)

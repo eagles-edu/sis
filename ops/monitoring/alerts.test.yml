@@ -45,6 +45,24 @@ tests:
 
   - interval: 30s
     input_series:
+      - series: 'sis_db_health_backup_stale{environment="dev"}'
+        values: '1x5'
+    alert_rule_test:
+      - eval_time: 30s
+        alertname: DevDatabaseBackupStale
+        exp_alerts: []
+      - eval_time: 1m
+        alertname: DevDatabaseBackupStale
+        exp_alerts:
+          - exp_labels:
+              environment: dev
+              severity: warning
+            exp_annotations:
+              summary: Dev SIS database backup is missing or stale
+              description: The latest verified dev database backup is missing or older than its configured freshness limit.
+
+  - interval: 30s
+    input_series:
       - series: 'sis_keepalive_check_failure_info{environment="test",group="engagement",code="workflow_failed"}'
         values: '1x5'
     alert_rule_test:
