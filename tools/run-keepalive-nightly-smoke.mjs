@@ -2,6 +2,11 @@ import { spawn } from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
+import { parse as parseDotenv } from "dotenv"
+import {
+  resolveStandardParentCredentials,
+  resolveStandardStudentCredentials,
+} from "../test/helpers/standard-portal-credentials.mjs"
 
 const ROOT = process.cwd()
 const METRICS_FILE = path.join(ROOT, "runtime-data/prometheus/keepalive-nightly-smoke-test.prom")
@@ -30,6 +35,52 @@ export function assertTestEnvironment(environment = process.env) {
     String(environment.DOTENV_CONFIG_PATH || "").trim() !== ".env.test" ||
     String(environment.SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES || "").trim() !== "1"
   ) throw new Error("Keep-alive nightly smoke requires the explicit test environment")
+}
+
+function isExecutableFile(filePath) {
+  if (!filePath) return false
+  try {
+    fs.accessSync(filePath, fs.constants.X_OK)
+    return fs.statSync(filePath).isFile()
+  } catch {
+    return false
+  }
+}
+
+export function assertAuthenticatedSmokePrerequisites(environment = process.env, options = {}) {
+  const envFile = String(environment.SIS_ENV_FILE || "").trim()
+  let fileValues = options.environmentFileValues
+  if (!fileValues) {
+    try {
+      fileValues = parseDotenv(fs.readFileSync(envFile, "utf8"))
+    } catch {
+      fileValues = {}
+    }
+  }
+  const values = { ...fileValues, ...environment }
+  const student = resolveStandardStudentCredentials(values)
+  const parent = resolveStandardParentCredentials(values)
+  const adminConfigured = Boolean(
+    String(values.STUDENT_ADMIN_USER || "").trim() && String(values.STUDENT_ADMIN_PASS || "").trim(),
+  )
+  const chromiumCandidates = options.chromiumCandidates || [
+    values.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
+    values.CHROME_PATH,
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/chromium",
+  ]
+  const chromiumAvailable = typeof options.chromiumAvailable === "boolean"
+    ? options.chromiumAvailable
+    : chromiumCandidates.some(isExecutableFile)
+  if (!student.user || !student.pass || !parent.user || !parent.pass || !adminConfigured || !chromiumAvailable) {
+    throw Object.assign(
+      new Error("Nightly authenticated smoke prerequisites are incomplete"),
+      { failureCode: "configuration_invalid" },
+    )
+  }
+  return true
 }
 
 export function buildNoExternalMessageTestEnvironment(environment = process.env) {
@@ -209,6 +260,7 @@ export async function runNightlySmoke({ environment = process.env, metricsFile =
   const checkedAt = now() / 1000
   let result
   try {
+    assertAuthenticatedSmokePrerequisites(environment)
     const deliveryStateBefore = await assertTestDatabase()
     result = await runSuite(environment)
     const deliveryStateAfter = await assertTestDatabase()
@@ -218,8 +270,9 @@ export async function runNightlySmoke({ environment = process.env, metricsFile =
     } else {
       result = { ...result, noExternalMessagesVerified }
     }
-  } catch {
-    result = { success: false, failureCode: "dependency_unavailable", noExternalMessagesVerified: false }
+  } catch (error) {
+    const failureCode = error?.failureCode === "configuration_invalid" ? "configuration_invalid" : "dependency_unavailable"
+    result = { success: false, failureCode, noExternalMessagesVerified: false }
   }
   const durationSeconds = Math.max(0, (performance.now() - startedAt) / 1000)
   const lastSuccessTimestamp = result.success ? checkedAt : previousLastSuccess(metricsFile)

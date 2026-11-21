@@ -4,6 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import test from "node:test"
 import {
+  assertAuthenticatedSmokePrerequisites,
   assertTestEnvironment,
   buildNoExternalMessageTestEnvironment,
   renderNightlySmokeMetrics,
@@ -27,6 +28,38 @@ test("nightly smoke requires the exact test environment tuple", () => {
   assert.throws(() => assertTestEnvironment({ ...TEST_ENVIRONMENT, DOTENV_CONFIG_PATH: ".env" }), /explicit test environment/u)
   assert.throws(() => assertTestEnvironment({ ...TEST_ENVIRONMENT, NODE_ENV: "production" }), /explicit test environment/u)
   assert.throws(() => assertTestEnvironment({ ...TEST_ENVIRONMENT, SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES: "0" }), /explicit test environment/u)
+})
+
+test("nightly authenticated smoke requires exact test accounts and an executable Chromium browser", () => {
+  const credentials = {
+    STUDENT_STUDENT_USER: "mark001",
+    STUDENT_STUDENT_PASS: "student-test-password",
+    STUDENT_PARENT_USER: "cmmark001",
+    STUDENT_PARENT_PASS: "parent-test-password",
+    STUDENT_ADMIN_USER: "test-admin",
+    STUDENT_ADMIN_PASS: "admin-test-password",
+  }
+  const options = {
+    environmentFileValues: credentials,
+    chromiumAvailable: true,
+  }
+  assert.doesNotThrow(() => assertAuthenticatedSmokePrerequisites(TEST_ENVIRONMENT, options))
+  assert.throws(() => assertAuthenticatedSmokePrerequisites(TEST_ENVIRONMENT, {
+    ...options,
+    environmentFileValues: { ...credentials, STUDENT_STUDENT_USER: "another-student" },
+  }), /prerequisites are incomplete/u)
+  assert.throws(() => assertAuthenticatedSmokePrerequisites(TEST_ENVIRONMENT, {
+    ...options,
+    environmentFileValues: { ...credentials, STUDENT_PARENT_USER: "another-parent" },
+  }), /prerequisites are incomplete/u)
+  assert.throws(() => assertAuthenticatedSmokePrerequisites(TEST_ENVIRONMENT, {
+    ...options,
+    environmentFileValues: { ...credentials, STUDENT_ADMIN_PASS: "" },
+  }), /prerequisites are incomplete/u)
+  assert.throws(() => assertAuthenticatedSmokePrerequisites(TEST_ENVIRONMENT, {
+    ...options,
+    chromiumAvailable: false,
+  }), /prerequisites are incomplete/u)
 })
 
 test("nightly child environment preserves test access while removing external message credentials", () => {
