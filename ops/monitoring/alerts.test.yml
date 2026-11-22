@@ -156,6 +156,25 @@ tests:
 
   - interval: 30s
     input_series:
+      - series: 'sis_library_oldest_open_review_age_seconds{environment="test"}'
+        values: '90000x12'
+      - series: 'sis_library_oldest_open_review_age_seconds{environment="dev"}'
+        values: '90000x12'
+    alert_rule_test:
+      - eval_time: 4m30s
+        alertname: TestLibraryOldReviewQueue
+        exp_alerts: []
+      - eval_time: 5m
+        alertname: TestLibraryOldReviewQueue
+        exp_alerts:
+          - exp_labels:
+              environment: test
+              severity: warning
+            exp_annotations:
+              summary: A test-mirror Library contribution has waited for review for more than 24 hours
+
+  - interval: 30s
+    input_series:
       - series: 'sis_keepalive_nightly_smoke_success{environment="test"}'
         values: '0x5'
       - series: 'sis_keepalive_nightly_smoke_no_external_message_proof{environment="test"}'

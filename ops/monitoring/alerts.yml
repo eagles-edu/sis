@@ -540,6 +540,16 @@ groups:
         annotations:
           summary: Dev Library workflow monitor could not clean up its synthetic record
 
+  - name: sis-library-workflow-test
+    rules:
+      - alert: TestLibraryOldReviewQueue
+        expr: sis_library_oldest_open_review_age_seconds{environment="test"} > 86400
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: A test-mirror Library contribution has waited for review for more than 24 hours
+
   - name: sis-news-workflow-dev
     rules:
       - alert: DevNewsWorkflowMonitorStale
