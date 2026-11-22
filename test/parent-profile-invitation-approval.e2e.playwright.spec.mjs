@@ -40,6 +40,7 @@ test("authenticated manual parent invitation preserves an editable draft across 
   const stamp = randomUUID()
   const compactStamp = stamp.replaceAll("-", "")
   const eaglesId = `KA029${compactStamp.slice(0, 8)}`
+  const siblingEaglesId = `KA030${compactStamp.slice(0, 8)}`
   const parentsId = `KAP${compactStamp.slice(0, 12)}`
   const familyId = `KAF${compactStamp.slice(0, 12)}`
   const sisConfig = await prisma.sisConfigMirror.findUnique({
@@ -52,6 +53,7 @@ test("authenticated manual parent invitation preserves an editable draft across 
   const phone = `+849${compactStamp.slice(0, 8)}`
   const editedPhone = `+848${compactStamp.slice(0, 8)}`
   let studentId = ""
+  let siblingStudentId = ""
   let invitationId = ""
   let parentAccountId = ""
   let browser
@@ -72,6 +74,13 @@ test("authenticated manual parent invitation preserves an editable draft across 
         return null
       })
       if (syntheticStudent?.id) studentId = syntheticStudent.id
+    }
+    if (!siblingStudentId) {
+      const syntheticSibling = await prisma.student.findUnique({ where: { eaglesId: siblingEaglesId }, select: { id: true } }).catch((error) => {
+        cleanupErrors.push(error)
+        return null
+      })
+      if (syntheticSibling?.id) siblingStudentId = syntheticSibling.id
     }
     const syntheticAccount = await prisma.parentPortalAccount.findUnique({ where: { parentsId }, select: { id: true } }).catch((error) => {
       cleanupErrors.push(error)
@@ -97,6 +106,13 @@ test("authenticated manual parent invitation preserves an editable draft across 
         await attempt(() => prisma.parentPortalStudentLink.deleteMany({ where: { studentRefId: studentId } }))
         await attempt(() => prisma.parentProfileInvitation.deleteMany({ where: { studentRefId: studentId } }))
       }
+      if (siblingStudentId) {
+        await attempt(() => prisma.parentPortalStudentLink.deleteMany({ where: { studentRefId: siblingStudentId } }))
+        await attempt(() => prisma.studentPortalAccount.deleteMany({ where: { studentRefId: siblingStudentId } }))
+        await attempt(() => prisma.studentEnrollmentPeriod.deleteMany({ where: { studentRefId: siblingStudentId } }))
+        await attempt(() => prisma.studentProfile.deleteMany({ where: { studentRefId: siblingStudentId } }))
+        await attempt(() => prisma.student.deleteMany({ where: { id: siblingStudentId } }))
+      }
       if (parentAccountId) {
         await attempt(() => prisma.parentPortalStudentLink.deleteMany({ where: { parentAccountId: parentAccountId } }))
         await attempt(() => prisma.parentProfileSubmissionQueue.deleteMany({ where: { parentAccountId: parentAccountId } }))
@@ -111,11 +127,16 @@ test("authenticated manual parent invitation preserves an editable draft across 
     }
     const remaining = await Promise.all([
       prisma.student.count({ where: { externalKey: `keep-alive-parent-profile-${stamp}` } }),
+      prisma.student.count({ where: { eaglesId: siblingEaglesId } }),
       studentId ? prisma.studentProfile.count({ where: { studentRefId: studentId } }) : 0,
+      siblingStudentId ? prisma.studentProfile.count({ where: { studentRefId: siblingStudentId } }) : 0,
       studentId ? prisma.studentEnrollmentPeriod.count({ where: { studentRefId: studentId } }) : 0,
+      siblingStudentId ? prisma.studentEnrollmentPeriod.count({ where: { studentRefId: siblingStudentId } }) : 0,
       studentId ? prisma.parentProfileSubmissionQueue.count({ where: { studentRefId: studentId } }) : 0,
       studentId ? prisma.parentProfileFieldLock.count({ where: { studentRefId: studentId } }) : 0,
       studentId ? prisma.parentPortalStudentLink.count({ where: { studentRefId: studentId } }) : 0,
+      siblingStudentId ? prisma.parentPortalStudentLink.count({ where: { studentRefId: siblingStudentId } }) : 0,
+      siblingStudentId ? prisma.studentPortalAccount.count({ where: { studentRefId: siblingStudentId } }) : 0,
       studentId ? prisma.parentProfileInvitation.count({ where: { studentRefId: studentId } }) : 0,
       parentAccountId ? prisma.parentPortalAccount.count({ where: { id: parentAccountId } }) : 0,
       invitationIds.length ? prisma.asyncSideEffectJob.count({ where: { jobType: "parent-profile-invitation", dedupeKey: { in: invitationIds } } }) : 0,
@@ -240,6 +261,90 @@ test("authenticated manual parent invitation preserves an editable draft across 
   await parentPage.locator("#confirmParentPassword").fill("KeepAlive-Parent-27!")
   await parentPage.locator("#saveParentPasswordBtn").click()
   await parentPage.locator("#profileFields").waitFor({ state: "visible", timeout: 30000 })
+
+  const siblingPayload = {
+    eaglesId: siblingEaglesId,
+    email: `sibling-${compactStamp}@example.invalid`,
+    level: "A1 Movers",
+    password: `Sibling-${compactStamp.slice(0, 12)}!a`,
+    profile: {
+      fullName: "Synthetic Family Sibling",
+      englishName: "Synthetic Family Sibling",
+      currentGrade: "A1 Movers",
+      familyId,
+      parentsId,
+      motherName: "Synthetic Parent",
+      motherEmail: email,
+      motherPhone: "+84900000002",
+      genderSelections: [],
+      languagesAtHome: [],
+      learningDisorders: [],
+      covidShotHistory: [],
+      feverMedicineAllowed: [],
+    },
+  }
+  const siblingCreate = await adminPage.evaluate(async (payload) => {
+    const response = await fetch("/api/admin/students", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+    return { status: response.status, body: await response.json() }
+  }, siblingPayload)
+  assert.equal(siblingCreate.status, 200, "authenticated enrollment adds the second child to the existing family")
+  assert.equal(siblingCreate.body.action, "created")
+  siblingStudentId = String(siblingCreate.body.student?.id || "")
+  assert.ok(siblingStudentId, "second child has a persisted student identity")
+  const [siblingCount, siblingAccounts, siblingPeriods, siblingLinks] = await Promise.all([
+    prisma.student.count({ where: { id: siblingStudentId, eaglesId: siblingEaglesId } }),
+    prisma.studentPortalAccount.count({ where: { studentRefId: siblingStudentId } }),
+    prisma.studentEnrollmentPeriod.count({ where: { studentRefId: siblingStudentId, status: "active" } }),
+    prisma.parentPortalStudentLink.count({ where: { studentRefId: siblingStudentId, parentAccountId } }),
+  ])
+  assert.deepEqual([siblingCount, siblingAccounts, siblingPeriods, siblingLinks], [1, 1, 1, 1], "second enrollment creates one access account, active period, and link to the existing parent")
+
+  const duplicateSibling = await adminPage.evaluate(async (payload) => {
+    const response = await fetch("/api/admin/students", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+    return { status: response.status, body: await response.json() }
+  }, siblingPayload)
+  assert.equal(duplicateSibling.status, 409, "retrying sibling creation cannot create another student")
+  const siblingRetry = await adminPage.evaluate(async ({ studentId, payload, studentNumber }) => {
+    const response = await fetch(`/api/admin/students/${encodeURIComponent(studentId)}`, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...payload, studentNumber }),
+    })
+    return { status: response.status, body: await response.json() }
+  }, { studentId: siblingStudentId, payload: siblingPayload, studentNumber: siblingCreate.body.student.studentNumber })
+  assert.equal(siblingRetry.status, 200, "repeating the same family enrollment update succeeds")
+  const [siblingsAfterRetry, siblingAccountsAfterRetry, siblingPeriodsAfterRetry, siblingLinksAfterRetry] = await Promise.all([
+    prisma.student.count({ where: { id: siblingStudentId, eaglesId: siblingEaglesId } }),
+    prisma.studentPortalAccount.count({ where: { studentRefId: siblingStudentId } }),
+    prisma.studentEnrollmentPeriod.count({ where: { studentRefId: siblingStudentId } }),
+    prisma.parentPortalStudentLink.count({ where: { studentRefId: siblingStudentId, parentAccountId } }),
+  ])
+  assert.deepEqual([siblingsAfterRetry, siblingAccountsAfterRetry, siblingPeriodsAfterRetry, siblingLinksAfterRetry], [1, 1, 1, 1], "retry preserves exactly one family membership and access record")
+
+  await parentPage.reload({ waitUntil: "domcontentloaded" })
+  await parentPage.locator("#openChildPageBtn").waitFor({ state: "visible", timeout: 30000 })
+  await parentPage.waitForFunction(() => document.querySelectorAll("#childSelect option").length === 2, null, { timeout: 30000 })
+  const familyOptions = await parentPage.locator("#childSelect option").evaluateAll((options) => options.map((option) => ({ value: option.value, label: option.textContent.trim() })))
+  assert.deepEqual(new Set(familyOptions.map((option) => option.value)), new Set([eaglesId, siblingEaglesId]), "one parent account sees both child records")
+  assert.ok(familyOptions.every((option) => option.label.includes(option.value)), "each selectable child label identifies its Eagles ID")
+  await parentPage.locator("#childSelect").selectOption(siblingEaglesId)
+  await parentPage.locator("#openChildPageBtn").click()
+  await parentPage.waitForFunction((expected) => document.getElementById("studentEaglesIdValue")?.textContent?.trim() === expected, siblingEaglesId, { timeout: 30000 })
+  await parentPage.waitForFunction(() => document.getElementById("studentNameValue")?.textContent?.trim() === "Synthetic Family Sibling", null, { timeout: 30000 })
+  await parentPage.locator("#childSelect").selectOption(eaglesId)
+  await parentPage.waitForFunction((expected) => document.getElementById("studentEaglesIdValue")?.textContent?.trim() === expected, eaglesId, { timeout: 30000 })
+
   await parentPage.locator("#pf_studentPhone").fill(phone)
   await parentPage.locator("#pf_signatureFullName").fill("Synthetic Parent")
   await parentPage.locator("#pf_signatureEmail").fill(email)
@@ -258,6 +363,8 @@ test("authenticated manual parent invitation preserves an editable draft across 
 
   await parentPage.reload({ waitUntil: "domcontentloaded" })
   await parentPage.locator("#openChildPageBtn").waitFor({ state: "visible", timeout: 30000 })
+  await parentPage.locator("#childSelect").selectOption(eaglesId)
+  await parentPage.waitForFunction((expected) => document.getElementById("studentEaglesIdValue")?.textContent?.trim() === expected, eaglesId, { timeout: 30000 })
   await parentPage.locator("#openChildPageBtn").click()
   await parentPage.locator("#pf_studentPhone").waitFor({ state: "visible", timeout: 30000 })
   await parentPage.waitForFunction((expected) => document.getElementById("pf_studentPhone")?.value === expected, phone, { timeout: 30000 })
@@ -313,6 +420,8 @@ test("authenticated manual parent invitation preserves an editable draft across 
   await reviewCard.locator('[data-profile-review="approve"]').click()
   await parentPage.reload({ waitUntil: "domcontentloaded" })
   await parentPage.locator("#openChildPageBtn").waitFor({ state: "visible", timeout: 30000 })
+  await parentPage.locator("#childSelect").selectOption(eaglesId)
+  await parentPage.waitForFunction((expected) => document.getElementById("studentEaglesIdValue")?.textContent?.trim() === expected, eaglesId, { timeout: 30000 })
   await parentPage.locator("#openChildPageBtn").click()
   await parentPage.locator("#pf_studentPhone").waitFor({ state: "visible", timeout: 30000 })
   await parentPage.waitForFunction((expected) => document.getElementById("pf_studentPhone")?.value === expected, editedPhone, { timeout: 30000 })
