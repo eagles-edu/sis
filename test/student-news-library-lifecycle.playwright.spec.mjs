@@ -170,6 +170,38 @@ async function createLibraryLifecycleFixtures(prisma, studentRefId, stamp) {
   return fixtures
 }
 
+async function clickWithPointerDiagnostics(locator, page) {
+  try {
+    await locator.click()
+  } catch (error) {
+    let diagnostics = []
+    try {
+      const point = await locator.evaluate((element) => {
+        const rect = element.getBoundingClientRect()
+        return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }
+      })
+      diagnostics = await page.evaluate(({ x, y }) => document.elementsFromPoint(x, y).slice(0, 8).map((element) => {
+        const style = getComputedStyle(element)
+        return {
+          tag: element.tagName.toLowerCase(),
+          id: element.id || "",
+          className: typeof element.className === "string" ? element.className : "",
+          position: style.position,
+          zIndex: style.zIndex,
+          pointerEvents: style.pointerEvents,
+          display: style.display,
+          visibility: style.visibility,
+          open: element instanceof HTMLDialogElement ? element.open : undefined,
+          ariaModal: element.getAttribute("aria-modal") || "",
+        }
+      }), point)
+    } catch {
+      diagnostics = [{ diagnostic: "pointer stack unavailable after failed click" }]
+    }
+    throw new Error(`${error.message}\nLibrary edit pointer stack: ${JSON.stringify(diagnostics)}`, { cause: error })
+  }
+}
+
 test("authenticated student News and New Words saves, Library visibility, week-set modal, and contribution lifecycle", { skip: SKIP_REASON }, async (t) => {
   applyKeepaliveTestEnvironment(RUNTIME)
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
@@ -604,7 +636,7 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     await page.locator('#libraryFilters button[type="submit"]').click()
     const pastedContributionButton = page.locator(`[data-entry-id="${pastedLibraryRowId}"]`)
     await pastedContributionButton.waitFor({ state: "visible", timeout: 30000 })
-    await pastedContributionButton.click()
+    await clickWithPointerDiagnostics(pastedContributionButton, page)
     const newsEditDialog = page.locator("dialog.library-edit-dialog")
     await newsEditDialog.waitFor({ state: "visible", timeout: 10000 })
     const libraryDefinition = await newsEditDialog.locator('[data-vocabulary-field="definition"]').inputValue()
