@@ -687,6 +687,9 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
     } else {
       await page.goto(routeUrl.toString(), { waitUntil: "domcontentloaded" })
     }
+    await page.waitForFunction(() => globalThis.document.body !== null, null, {
+      timeout: ADMIN_ROUTE_NAV_TIMEOUT_MS,
+    })
     traceReviewStage(`theme ${theme} admin route ${routeUrl.pathname}${routeUrl.search} -> settled`)
     await page.waitForTimeout(650)
     traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> state`)
