@@ -120,6 +120,10 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | POST | `/api/student/auth/login` | No | None | student credential verify + session issue |
 | POST | `/api/student/auth/logout` | No | None | student logout + cookie clear |
 | GET | `/api/student/auth/me` | Yes (student session) | student session | student session identity payload |
+| GET | `/api/student/news-reports/calendar` | Yes (student session) | linked student record | Student News report calendar |
+| POST | `/api/student/news-reports` | Yes (student session) | linked student record | save and submit; validation failures persist with revision guidance |
+| POST | `/api/student/news-reports/draft` | Yes (student session) | linked student record | save a draft without running Check |
+| POST | `/api/student/news-reports/check` | Yes (student session) | linked student record | save and validate a draft; on session-store miss, preserve the cookie for `/auth/me` confirmation before sign-out |
 | POST | `/api/student/news-reports/vocabulary-help` | Yes (student session) | linked student record | Submit an idempotent in-app vocabulary help request to Queue Hub |
 | POST | `/api/student/reports/{reportId}/acknowledge` | Yes (student session) | report must be published and linked to this student account | `getAuthorizedReportRecordForViewer` then idempotent `acknowledgeParentClassReportReview` |
 

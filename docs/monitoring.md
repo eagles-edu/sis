@@ -743,7 +743,9 @@ Dev and test runtimes record a counter only for `POST /api/student/news-reports/
 sis_student_news_check_auth_rejections_total{environment,reason}
 ```
 
-The only reasons are `missing_cookie` and `session_not_found`. Required Redis-store failures return 503 and are not recorded as either 401 cause. In `auto` mode, if Redis becomes unavailable after issuing a Redis-backed session, `touchSession` returns 503 when that ID is absent from the in-memory fallback; it must not turn an unavailable Redis lookup into a false 401 or clear the student's cookie. Sessions created in the memory fallback remain usable there. The metric never stores a cookie, session ID, student/account identity, request body, URL, or query parameter. It does not change cookie handling or session lifetime. This metric is not enabled for production/live.
+The only reasons are `missing_cookie` and `session_not_found`. Required Redis-store failures return 503 and are not recorded as either 401 cause. In `auto` mode, if Redis becomes unavailable after issuing a Redis-backed session, `touchSession` returns 503 when that ID is absent from the in-memory fallback; it must not turn an unavailable Redis lookup into a false 401 or clear the student's cookie. Sessions created in the memory fallback remain usable there. The metric never stores a cookie, session ID, student/account identity, request body, URL, or query parameter. It does not change session lifetime. This metric is not enabled for production/live.
+
+For a `session_not_found` response on News Check, the first Check 401 preserves the browser cookie so the client can call `/api/student/auth/me` with the same session identifier. A successful confirmation permits one bounded Check retry. If `/auth/me` also returns 401, that endpoint expires the cookie and the client returns to sign-in; Redis availability errors remain 503 and do not sign the student out. A missing-cookie Check remains unauthorized and cannot be retried as an authenticated request.
 
 Useful query for the latest five-minute rate by safe cause:
 

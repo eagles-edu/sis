@@ -44,7 +44,7 @@ function localDateKey(date = new Date()) {
   return resolveStudentNewsSubmissionWindow(date).reportDate
 }
 
-test("authenticated Student News Check -> Save -> Check keeps the session and enables Submit", { skip: SKIP_REASON }, async (t) => {
+test("authenticated Student News Check retries a transient 401, then Save -> Check enables Submit", { skip: SKIP_REASON }, async (t) => {
   applyKeepaliveTestEnvironment(RUNTIME)
   const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
   const prisma = await getSharedPrismaClient()
@@ -134,6 +134,7 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
   const studentApiResponses = []
   const studentApiRequestFailures = []
   let checkRouteState = { stage: "idle" }
+  let transientUnauthorizedInjected = false
   page.on("request", (request) => {
     const pathname = new URL(request.url()).pathname
     if (pathname.startsWith("/api/student/")) studentApiRequests.push({ method: request.method(), pathname })
@@ -149,6 +150,16 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
     }
   })
   await page.route("**/api/student/news-reports/check", async (route) => {
+    if (!transientUnauthorizedInjected) {
+      transientUnauthorizedInjected = true
+      checkRouteState = { stage: "transient-401-injected" }
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "News Check requires an active student session. Sign in again, then retry Check." }),
+      })
+      return
+    }
     checkRouteState = { stage: "server-fetch-pending" }
     try {
       const response = await route.fetch()
@@ -199,7 +210,7 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
     await row.locator('[data-vocabulary-field="syllabication"]').fill(index === 0 ? "de-MO-li-tion" : word.syllabication)
     await row.locator('[data-vocabulary-field="definition"]').fill(index === 0 ? "The act of destroying a structure." : word.definition)
   }
-  const rejectedCheckResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check", { timeout: STUDENT_NEWS_CHECK_RESPONSE_TIMEOUT_MS }).catch(async (error) => {
+  const rejectedCheckResponse = page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/student/news-reports/check" && response.status() === 200, { timeout: STUDENT_NEWS_CHECK_RESPONSE_TIMEOUT_MS }).catch(async (error) => {
     const uiState = await page.evaluate(() => ({
       authState: document.documentElement.dataset.studentAuthState || "",
       appVisible: Boolean(document.querySelector("#appPanel")?.getClientRects().length),
@@ -213,6 +224,20 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
   const rejectedCheck = await rejectedCheckResponse
   const rejectedPayload = await rejectedCheck.json()
   assert.equal(rejectedCheck.status(), 200)
+  const transient401Index = studentApiResponses.findIndex((response) =>
+    response.method === "POST" && response.pathname === "/api/student/news-reports/check" && response.status === 401)
+  assert.ok(transient401Index >= 0, "the first Check receives the controlled transient 401")
+  assert.deepEqual(
+    studentApiResponses.slice(transient401Index, transient401Index + 3).map(({ method, pathname, status }) => ({ method, pathname, status })),
+    [
+      { method: "POST", pathname: "/api/student/news-reports/check", status: 401 },
+      { method: "GET", pathname: "/api/student/auth/me", status: 200 },
+      { method: "POST", pathname: "/api/student/news-reports/check", status: 200 },
+    ],
+    "a confirmed active session retries Check once without signing out",
+  )
+  assert.equal(await page.locator("#appPanel").isVisible(), true)
+  assert.equal(await page.locator("#loginPanel").isVisible(), false)
   assert.equal(rejectedPayload.mmrPassed, false)
   assert.equal(rejectedPayload.failedFields.vocabulary.score, VOCABULARY.length, JSON.stringify(rejectedPayload.failedFields.vocabulary))
   assert.equal(rejectedPayload.failedFields.vocabulary.threshold, 5)
@@ -403,7 +428,7 @@ test("authenticated Student News Check -> Save -> Check keeps the session and en
     }
   }
 
-  assert.deepEqual(studentApiResponses.filter((response) => response.status === 401), [], `Check -> Save -> Check has no 401 response: ${JSON.stringify(studentApiResponses)}`)
+  assert.equal(studentApiResponses.filter((response) => response.status === 401).length, 1, `the only 401 is the injected transient Check response: ${JSON.stringify(studentApiResponses)}`)
   const reportAfterSecondCheck = await prisma.studentNewsReport.findUnique({ where: { id: reportId }, select: { submissionState: true, mmrPassedAt: true, dateSatisfiedAt: true, firstSubmittedAt: true } })
   assert.equal(await page.locator("#submitBtn").isDisabled(), false, `Submit becomes active after the second passing Check: ${JSON.stringify(await page.evaluate(() => ({
     disabled: document.querySelector("#submitBtn")?.disabled,

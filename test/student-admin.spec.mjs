@@ -3420,6 +3420,26 @@ test("POST /api/student/news-reports/check explains the missing student session"
   )
 })
 
+test("News Check preserves a stale cookie until /auth/me confirms the session is missing", async () => {
+  const cookieName = String(process.env.STUDENT_STUDENT_SESSION_COOKIE_NAME || "student_portal_sid").trim()
+  const staleCookie = `${cookieName}=ka-stale-news-session`
+  const checkRes = await fetchLocal(port, "/api/student/news-reports/check", {
+    method: "POST",
+    headers: { Cookie: staleCookie, "content-type": "application/json" },
+    body: JSON.stringify({ reportDate: "2026-03-11" }),
+  })
+  assert.equal(checkRes.status, 401)
+  assert.equal(checkRes.headers.get("set-cookie"), null, "Check leaves the cookie available for session confirmation")
+
+  const sessionRes = await fetchLocal(port, "/api/student/auth/me", {
+    headers: { Cookie: staleCookie },
+  })
+  assert.equal(sessionRes.status, 401)
+  const clearedCookie = sessionRes.headers.get("set-cookie") || ""
+  assert.match(clearedCookie, new RegExp(`^${cookieName}=;`))
+  assert.match(clearedCookie, /Max-Age=0/i)
+})
+
 test("GET /api/student/dashboard requires auth", async () => {
   const res = await fetchLocal(port, "/api/student/dashboard")
   assert.equal(res.status, 401)

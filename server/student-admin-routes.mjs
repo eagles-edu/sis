@@ -2816,7 +2816,9 @@ async function requireAuthenticatedStudentSession(request, response, options = {
     if (options?.recordNewsCheckAuthRejection === true) {
       recordStudentNewsCheckAuthRejection("session_not_found")
     }
-    clearStudentSessionCookie(response)
+    if (options?.preserveCookieOnSessionMiss !== true) {
+      clearStudentSessionCookie(response)
+    }
     const error = new Error(unauthorizedMessage)
     error.statusCode = 401
     throw error
@@ -9370,6 +9372,7 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     unauthorizedMessage:
       pathname === STUDENT_NEWS_REPORTS_CHECK_PATH ? STUDENT_NEWS_CHECK_UNAUTHORIZED_MESSAGE : "",
     recordNewsCheckAuthRejection: pathname === STUDENT_NEWS_REPORTS_CHECK_PATH,
+    preserveCookieOnSessionMiss: pathname === STUDENT_NEWS_REPORTS_CHECK_PATH,
   })
   const studentRefId = await resolveStudentPortalSessionStudentRefId(session)
   if (!studentRefId) {
