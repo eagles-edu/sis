@@ -58,6 +58,7 @@ test("authenticated Student News Check retries a transient 401, then Save -> Che
   let page
   let adminContext
   let adminPage
+  let helpRequestId = ""
   const cleanupErrors = []
   let overrideCreated = false
   const attempt = async (operation) => {
@@ -289,6 +290,8 @@ test("authenticated Student News Check retries a transient 401, then Save -> Che
   assert.equal(submittedHelpResponse.status(), 201)
   helpSubmissionKey = submittedHelpResponse.request().postDataJSON().submissionKey
   const helpRequest = await prisma.studentNewsVocabularyHelpRequest.findUnique({ where: { submissionKey: helpSubmissionKey } })
+  assert.ok(helpRequest?.id, "the submitted synthetic help request is persisted")
+  helpRequestId = helpRequest.id
   assert.equal(helpRequest?.studentRefId, student.id)
   assert.equal(helpRequest?.word, "demolition")
   assert.equal(helpRequest?.syllabication, "de-mó-li-tion")
@@ -327,17 +330,20 @@ test("authenticated Student News Check retries a transient 401, then Save -> Che
   await helpQueuePanel.getByText("demolition", { exact: true }).waitFor({ state: "visible", timeout: 30000 })
   const panelOrder = await adminPage.locator(".queue-hub-panel").evaluateAll((panels) => panels.map((panel) => panel.getAttribute("data-queue-hub-panel-id")))
   assert.equal(panelOrder.indexOf("student-news-vocabulary-help") + 1, panelOrder.indexOf("news-report-review"), "vocabulary help is immediately above News Week Sets")
+  const overrideInput = helpQueuePanel.locator(`[data-vocabulary-override-for="${helpRequestId}"]`)
+  await overrideInput.waitFor({ state: "visible", timeout: 30000 })
   for (const width of [320, 390]) {
     await adminPage.setViewportSize({ width, height: width === 320 ? 740 : 844 })
-    await helpQueuePanel.locator("[data-vocabulary-override-for]").evaluate((input) => {
+    await overrideInput.evaluate((input) => {
       const tableWrap = input.closest(".table-scroll-wrap")
       if (tableWrap) tableWrap.scrollLeft = tableWrap.scrollWidth - tableWrap.clientWidth
+      input.scrollIntoView({ block: "nearest", inline: "nearest" })
     })
-    const mobileQueueGeometry = await adminPage.evaluate(() => ({
+    const mobileQueueGeometry = await adminPage.evaluate((target) => ({
       viewport: innerWidth,
       documentWidth: document.documentElement.scrollWidth,
-      input: (() => { const box = document.querySelector('[data-vocabulary-override-for]')?.getBoundingClientRect(); return box ? { left: box.left, right: box.right } : null })(),
-    }))
+      input: (() => { const box = target.getBoundingClientRect(); return { left: box.left, right: box.right } })(),
+    }), await overrideInput.elementHandle())
     assert.equal(mobileQueueGeometry.viewport, width, JSON.stringify(mobileQueueGeometry))
     assert.ok(mobileQueueGeometry.documentWidth <= mobileQueueGeometry.viewport, JSON.stringify(mobileQueueGeometry))
     assert.ok(mobileQueueGeometry.input?.left >= 0 && mobileQueueGeometry.input?.right <= width, JSON.stringify(mobileQueueGeometry))
@@ -345,7 +351,6 @@ test("authenticated Student News Check retries a transient 401, then Save -> Che
   await adminPage.setViewportSize({ width: 1440, height: 1000 })
   const queuedHelpRequest = await prisma.studentNewsVocabularyHelpRequest.findUnique({ where: { submissionKey: helpSubmissionKey } })
   assert.ok(queuedHelpRequest?.id)
-  const overrideInput = helpQueuePanel.locator(`[data-vocabulary-override-for="${queuedHelpRequest.id}"]`)
   await overrideInput.fill("dem-o-LI-tion")
   assert.equal(await overrideInput.inputValue(), "dem-o-LI-tion")
   const overrideResponse = adminPage.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === `/api/admin/news-vocabulary-help/${queuedHelpRequest.id}/approve-override`, { timeout: 30000 })
