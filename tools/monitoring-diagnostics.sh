@@ -19,6 +19,7 @@ write_targets() {
   local temporary_file
   temporary_file="$(mktemp "${target_file}.XXXXXX")"
   printf '%s\n' "$payload" >"$temporary_file"
+  chmod 0644 "$temporary_file"
   mv "$temporary_file" "$target_file"
 }
 

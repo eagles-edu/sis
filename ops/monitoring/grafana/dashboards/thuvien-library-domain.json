@@ -288,9 +288,9 @@
       },
       "targets": [
         {
-          "expr": "count(ALERTS{alertname=~\"PublicWebsite.*|SiteSISAPI.*|Thuvien.*|SISLiveApiServiceDown\",alertstate=~\"pending|firing\",domain=\"thuvien.eagles.edu.vn\"}) or vector(0)",
+          "expr": "(count(ALERTS{alertname=~\"PublicWebsite.*|SiteSISAPI.*|Thuvien.*|SISLiveApiServiceDown\",alertstate=~\"pending|firing\",domain=\"thuvien.eagles.edu.vn\"}) or vector(0)) + (count(ALERTS{alertname=\"NginxConfigurationInvalid\",scope=\"shared_host\",alertstate=~\"pending|firing\"}) or vector(0))",
           "refId": "A",
-          "legendFormat": "alerts",
+          "legendFormat": "domain and shared-host alerts",
           "instant": true
         }
       ],
@@ -737,14 +737,14 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "| Layer | Coverage | Signals |\n| --- | --- | --- |\n| Public edge | **Measured** | HTTPS availability, HTTP status, DNS, TLS, and response phases. |\n| Application/API | **Measured** | SIS exercise-submission route; shared SIS service state is not domain-attributed. |\n| Media delivery | **Measured** | One-byte HTTP range checks for a Flip image and reading audio. |\n| Host services | **Measured** | Shared SIS API plus image and audio gateway systemd states. |\n| Data dependencies | **Not measured** | No Thuvien-domain database or object-store dependency probe is exported. |"
+        "content": "| Layer | Coverage | Signals |\n| --- | --- | --- |\n| Public edge | **Measured** | HTTPS availability, HTTP status, DNS, TLS, and response phases. |\n| Application/API | **Measured** | SIS exercise-submission route; shared SIS service state is not domain-attributed. |\n| Media delivery | **Measured** | One-byte HTTP range checks for a Flip image and reading audio. |\n| Host services | **Measured** | Shared Nginx configuration, SIS API, image, and audio gateway systemd states. |\n| Data dependencies | **Not measured** | No Thuvien-domain database or object-store dependency probe is exported. |"
       }
     },
     {
       "id": 12,
       "type": "table",
       "title": "Host service state",
-      "description": "Shared host systemd active state. A configured service with active=0 is down; missing series mean no matching systemd unit is exported.",
+      "description": "Shared host systemd active state and a full host-wide nginx -t result. The configuration check covers all loaded vhosts and is not a per-domain test.",
       "gridPos": {
         "x": 0,
         "y": 37,
@@ -757,9 +757,15 @@
       },
       "targets": [
         {
-          "expr": "max by (name) (node_systemd_unit_state{name=~\"(exercise-mailer[.]service|thuvien-r2-flip-image[.]service|thuvien-read-audio[.]service)\",state=\"active\"})",
+          "expr": "max by (name) (node_systemd_unit_state{name=~\"(nginx[.]service|exercise-mailer[.]service|thuvien-r2-flip-image[.]service|thuvien-read-audio[.]service)\",state=\"active\"})",
           "refId": "A",
           "legendFormat": "{{name}}",
+          "instant": true
+        },
+        {
+          "expr": "site_dependency_nginx_config_valid{scope=\"shared_host\"}",
+          "refId": "B",
+          "legendFormat": "Nginx config test",
           "instant": true
         }
       ],
@@ -870,7 +876,7 @@
       "id": 20,
       "type": "state-timeline",
       "title": "Host service health history · shared host",
-      "description": "Active state for each configured systemd service over time. These are shared-host services, not domain-isolated processes.",
+      "description": "Systemd state for configured services and full host-wide Nginx configuration validation over time. These are shared-host signals, not domain-isolated processes.",
       "gridPos": {
         "x": 0,
         "y": 46,
@@ -883,9 +889,14 @@
       },
       "targets": [
         {
-          "expr": "max by (name) (node_systemd_unit_state{name=~\"(exercise-mailer[.]service|thuvien-r2-flip-image[.]service|thuvien-read-audio[.]service)\",state=\"active\"})",
+          "expr": "max by (name) (node_systemd_unit_state{name=~\"(nginx[.]service|exercise-mailer[.]service|thuvien-r2-flip-image[.]service|thuvien-read-audio[.]service)\",state=\"active\"})",
           "refId": "A",
           "legendFormat": "{{name}}"
+        },
+        {
+          "expr": "site_dependency_nginx_config_valid{scope=\"shared_host\"}",
+          "refId": "B",
+          "legendFormat": "Nginx config test"
         }
       ],
       "fieldConfig": {
@@ -977,6 +988,11 @@
           "expr": "sum by (alertname, severity) (ALERTS{alertname=~\"PublicWebsite.*|SiteSISAPI.*|Thuvien.*|SISLiveApiServiceDown\",alertstate=~\"pending|firing\",domain=\"thuvien.eagles.edu.vn\"}) or vector(0)",
           "refId": "A",
           "legendFormat": "{{alertname}} / {{severity}}"
+        },
+        {
+          "expr": "sum by (alertname, severity) (ALERTS{alertname=\"NginxConfigurationInvalid\",scope=\"shared_host\",alertstate=~\"pending|firing\"}) or vector(0)",
+          "refId": "C",
+          "legendFormat": "{{alertname}} / {{severity}} · shared host"
         }
       ],
       "fieldConfig": {

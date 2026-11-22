@@ -15,6 +15,32 @@ SPEC.loader.exec_module(site_dependencies)
 
 
 class SiteDependencyMetricsTests(unittest.TestCase):
+    def test_nginx_configuration_check_passes_only_on_zero_exit_and_discards_output(self) -> None:
+        result = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="nginx config is ok",
+            stderr="sensitive local path should not be exported",
+        )
+        with patch.object(site_dependencies.subprocess, "run", return_value=result) as run:
+            valid, duration = site_dependencies.nginx_configuration_check()
+
+        self.assertTrue(valid)
+        self.assertGreaterEqual(duration, 0)
+        self.assertEqual(run.call_args.args[0], ["/usr/sbin/nginx", "-t", "-q"])
+        self.assertTrue(run.call_args.kwargs["capture_output"])
+        self.assertTrue(run.call_args.kwargs["check"] is False)
+
+    def test_nginx_configuration_check_fails_closed_on_invalid_config_or_unavailable_binary(self) -> None:
+        invalid = subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="private config path")
+        with patch.object(site_dependencies.subprocess, "run", return_value=invalid):
+            valid, _ = site_dependencies.nginx_configuration_check()
+        self.assertFalse(valid)
+
+        with patch.object(site_dependencies.subprocess, "run", side_effect=FileNotFoundError):
+            valid, _ = site_dependencies.nginx_configuration_check()
+        self.assertFalse(valid)
+
     def test_grade_queries_are_read_only_and_aggregate_fixed_source_categories(self) -> None:
         result = subprocess.CompletedProcess(
             args=[],

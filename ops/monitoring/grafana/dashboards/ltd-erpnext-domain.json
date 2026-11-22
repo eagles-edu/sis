@@ -288,9 +288,9 @@
       },
       "targets": [
         {
-          "expr": "count(ALERTS{alertname=~\"PublicWebsite.*|LTDERPNext.*|SiteDependency.*\",alertstate=~\"pending|firing\",domain=\"ltd.eagles.vn\"}) or vector(0)",
+          "expr": "(count(ALERTS{alertname=~\"PublicWebsite.*|LTDERPNext.*|SiteDependency.*\",alertstate=~\"pending|firing\",domain=\"ltd.eagles.vn\"}) or vector(0))",
           "refId": "A",
-          "legendFormat": "alerts",
+          "legendFormat": "domain alerts",
           "instant": true
         }
       ],

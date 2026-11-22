@@ -7,11 +7,12 @@ import { fileURLToPath } from "node:url"
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const DASHBOARD_DIR = path.join(ROOT, "ops/monitoring/grafana/dashboards")
 const expectations = new Map([
-  ["eagles-homepage-domain.json", { domain: "eagles.edu.vn", checks: ["probe_success", "probe_http_duration_seconds", "node_systemd_unit_state"], hasGap: true }],
-  ["sis-admin-domain.json", { title: "SIS Admin Mirror · Domain Layers", domain: "admin.eagles.edu.vn", checks: ["blackbox-admin-auth-api", "site_dependency_status", "sis_keepalive_check_failure_info", "sis_parent_report_acknowledgment_requests_total", "DevParentReportAcknowledgmentServerFailure"], hasGap: false }],
-  ["ltd-erpnext-domain.json", { domain: "ltd.eagles.vn", checks: ["blackbox-website-app", "erpnext_container_running", "site_dependency_status"], hasGap: false }],
-  ["ielts-portal-domain.json", { domain: "ielts.eagles.edu.vn", checks: ["blackbox-website-api", "node_systemd_unit_state"], hasGap: true }],
-  ["thuvien-library-domain.json", { domain: "thuvien.eagles.edu.vn", checks: ["blackbox-thuvien-media", "thuvien-r2-flip-image", "thuvien-read-audio"], hasGap: true }],
+  ["eagles-homepage-domain.json", { domain: "eagles.edu.vn", checks: ["probe_success", "probe_http_duration_seconds", "node_systemd_unit_state", "site_dependency_nginx_config_valid"], hasGap: true }],
+  ["sis-admin-domain.json", { title: "SIS Admin Mirror · Domain Layers", domain: "admin.eagles.edu.vn", checks: ["blackbox-admin-auth-api", "site_dependency_status", "site_dependency_nginx_config_valid", "sis_keepalive_check_failure_info", "sis_parent_report_acknowledgment_requests_total", "DevParentReportAcknowledgmentServerFailure"], hasGap: false }],
+  ["ltd-erpnext-domain.json", { domain: "ltd.eagles.vn", checks: ["blackbox-website-app", "erpnext_container_running"], excludedChecks: ["site_dependency_nginx_config_valid"], hasGap: false }],
+  ["ielts-portal-domain.json", { domain: "ielts.eagles.edu.vn", checks: ["blackbox-website-api", "node_systemd_unit_state", "site_dependency_nginx_config_valid"], hasGap: true }],
+  ["thuvien-library-domain.json", { domain: "thuvien.eagles.edu.vn", checks: ["blackbox-thuvien-media", "thuvien-r2-flip-image", "thuvien-read-audio", "site_dependency_nginx_config_valid"], hasGap: true }],
+  ["moodle-portal-domain.json", { title: "Moodle Portal · Domain Layers", domain: "moodle.eagles.edu.vn", checks: ["probe_success", "php8[.]2-fpm[.]service", "mariadb[.]service", "site_dependency_nginx_config_valid"], hasGap: true }],
 ])
 
 test("each monitored domain has a layered Grafana dashboard with explicit measured and missing coverage", () => {
@@ -27,6 +28,7 @@ test("each monitored domain has a layered Grafana dashboard with explicit measur
     const serialized = JSON.stringify(dashboard)
     assert.ok(serialized.includes(expected.domain), `${filename} must filter to its configured domain`)
     for (const check of expected.checks) assert.ok(serialized.includes(check), `${filename} must include ${check}`)
+    for (const check of expected.excludedChecks || []) assert.ok(!serialized.includes(check), `${filename} must not attribute ${check} to this domain`)
     assert.ok(serialized.includes("Layer coverage and attribution"), `${filename} must include an explicit layer coverage map`)
     if (expected.hasGap) assert.ok(serialized.includes("Not measured") || serialized.includes("Partial"), `${filename} must call out missing instrumentation`)
     assert.ok(dashboard.panels.some((panel) => panel.type === "state-timeline"), `${filename} must show state history`)

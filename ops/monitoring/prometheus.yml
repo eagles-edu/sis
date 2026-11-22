@@ -85,6 +85,11 @@ scrape_configs:
           domain: thuvien.eagles.edu.vn
           site: thuvien
           check: main
+      - targets: [https://moodle.eagles.edu.vn/]
+        labels:
+          domain: moodle.eagles.edu.vn
+          site: moodle
+          check: main
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target

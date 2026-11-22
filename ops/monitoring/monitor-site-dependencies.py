@@ -21,6 +21,8 @@ POSTGRES_CONTAINER = "sis-postgres"
 REDIS_CONTAINER = "redis-stack"
 ERPNEXT_QUEUE_CONTAINER = "erpnext-queue-short-1"
 TIMEOUT_SECONDS = 8
+NGINX_BINARY = "/usr/sbin/nginx"
+NGINX_CHECK_TIMEOUT_SECONDS = 15
 
 
 def read_env_file(path: Path, required_keys: set[str]) -> dict[str, str]:
@@ -64,6 +66,21 @@ def inspect_running(container: str) -> bool:
         timeout=TIMEOUT_SECONDS,
     )
     return result.returncode == 0 and result.stdout.strip() == "true"
+
+
+def nginx_configuration_check() -> tuple[bool, float]:
+    started_at = time.monotonic()
+    try:
+        result = subprocess.run(
+            [NGINX_BINARY, "-t", "-q"],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=NGINX_CHECK_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.SubprocessError, TimeoutError):
+        return False, time.monotonic() - started_at
+    return result.returncode == 0, time.monotonic() - started_at
 
 
 def postgres_query_ready(database_url: str, container_running: bool, expected_database: str) -> tuple[bool, float]:
@@ -424,7 +441,20 @@ def main() -> int:
         "# TYPE site_dependency_container_memory_used_bytes gauge",
         "# HELP site_dependency_container_memory_limit_bytes Docker memory limit for a shared dependency container.",
         "# TYPE site_dependency_container_memory_limit_bytes gauge",
+        "# HELP site_dependency_nginx_config_valid Whether the full host Nginx configuration passes nginx -t.",
+        "# TYPE site_dependency_nginx_config_valid gauge",
+        "# HELP site_dependency_nginx_config_test_duration_seconds Wall-clock duration of the host Nginx configuration test.",
+        "# TYPE site_dependency_nginx_config_test_duration_seconds gauge",
+        "# HELP site_dependency_nginx_config_test_timestamp_seconds Unix time of the latest host Nginx configuration test.",
+        "# TYPE site_dependency_nginx_config_test_timestamp_seconds gauge",
     ]
+    nginx_valid, nginx_duration = nginx_configuration_check()
+    nginx_test_timestamp = int(time.time())
+    metrics.extend((
+        f'site_dependency_nginx_config_valid{{scope="shared_host"}} {int(nginx_valid)}',
+        f'site_dependency_nginx_config_test_duration_seconds{{scope="shared_host"}} {nginx_duration:.6f}',
+        f'site_dependency_nginx_config_test_timestamp_seconds{{scope="shared_host"}} {nginx_test_timestamp}',
+    ))
     check_success = 1
     for environment, env_file in (("live", SIS_ENV_FILE), ("test", ROOT / ".env.test")):
         env_success = 1

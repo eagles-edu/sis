@@ -270,3 +270,39 @@ tests:
       - eval_time: 5m
         alertname: TestEngagementMonitorStale
         exp_alerts: []
+
+  - interval: 30s
+    input_series:
+      - series: 'site_dependency_nginx_config_valid{scope="shared_host"}'
+        values: '0x5'
+    alert_rule_test:
+      - eval_time: 30s
+        alertname: NginxConfigurationInvalid
+        exp_alerts: []
+      - eval_time: 1m
+        alertname: NginxConfigurationInvalid
+        exp_alerts:
+          - exp_labels:
+              scope: shared_host
+              severity: warning
+            exp_annotations:
+              summary: The shared Nginx configuration fails validation
+              description: Nginx may still serve its last loaded configuration, but a reload will fail. Inspect the host configuration and do not reload until nginx -t passes.
+
+  - interval: 30s
+    input_series:
+      - series: 'site_dependency_nginx_config_valid{scope="shared_host"}'
+        values: '1x5'
+    alert_rule_test:
+      - eval_time: 1m30s
+        alertname: NginxConfigurationInvalid
+        exp_alerts: []
+
+  - interval: 30s
+    input_series:
+      - series: 'probe_success{job="blackbox-website-http",domain="moodle.eagles.edu.vn",site="moodle",check="main"}'
+        values: '1x5'
+    alert_rule_test:
+      - eval_time: 2m30s
+        alertname: PublicWebsiteProbeTargetMissingMoodle
+        exp_alerts: []

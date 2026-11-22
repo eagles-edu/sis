@@ -677,6 +677,26 @@ groups:
           summary: "The thuvien.eagles.edu.vn public probe is missing"
           description: "Prometheus no longer has the expected Thuvien-site probe series."
 
+      - alert: PublicWebsiteProbeTargetMissingMoodle
+        expr: absent(probe_success{job="blackbox-website-http",domain="moodle.eagles.edu.vn",check="main"})
+        for: 2m
+        labels:
+          domain: moodle.eagles.edu.vn
+          severity: critical
+        annotations:
+          summary: "The Moodle public probe is missing"
+          description: "Prometheus no longer has the expected Moodle public-site probe series."
+
+      - alert: NginxConfigurationInvalid
+        expr: site_dependency_nginx_config_valid{scope="shared_host"} == 0
+        for: 1m
+        labels:
+          scope: shared_host
+          severity: warning
+        annotations:
+          summary: "The shared Nginx configuration fails validation"
+          description: "Nginx may still serve its last loaded configuration, but a reload will fail. Inspect the host configuration and do not reload until nginx -t passes."
+
       - alert: PublicWebsiteProbeScrapeFailed
         expr: up{job=~"blackbox-website-http|blackbox-website-app|blackbox-website-api|blackbox-admin-auth-api|blackbox-thuvien-media"} == 0
         for: 2m
