@@ -55,6 +55,6 @@ test("each monitored domain has a layered Grafana dashboard with explicit measur
 
 test("the SIS test dashboard names its environment explicitly", () => {
   const dashboard = JSON.parse(fs.readFileSync(path.join(DASHBOARD_DIR, "test-mirror-overview.json"), "utf8"))
-  assert.equal(dashboard.title, "SIS Test Mirror · Environment Health")
+  assert.equal(dashboard.title, "SIS Test Mirror · Operations")
   assert.ok(dashboard.tags.includes("test-mirror"))
 })
