@@ -103,6 +103,16 @@ test("Library review persists rejection, duplicate canonicalization, and legacy 
   assert.ok(rejectedRow?.reviewedAt)
   assert.equal(await prisma.libraryEntry.findUnique({ where: { normalizedKey_partOfSpeech: { normalizedKey: rejectEnglish, partOfSpeech: "noun" } } }), null, "rejection does not create a canonical Library entry")
   assert.equal(await prisma.libraryContributionRevision.count({ where: { contributionId: fixtureIds.reject, action: "rejected" } }), 1, "rejection records one immutable contribution revision")
+  const rejectionRetry = await reviewLibraryContribution(fixtureIds.reject, { name: "KA-045 reviewer", role: "admin" }, { approved: false })
+  assert.deepEqual(rejectionRetry, { ok: true, status: "rejected" }, "retrying the same rejection returns its established outcome")
+  const rejectedAfterRetry = await prisma.libraryContribution.findUnique({ where: { id: fixtureIds.reject } })
+  assert.equal(rejectedAfterRetry?.reviewedAt?.getTime(), rejectedRow?.reviewedAt?.getTime(), "rejection retry preserves the original review time")
+  assert.equal(await prisma.libraryContributionRevision.count({ where: { contributionId: fixtureIds.reject, action: "rejected" } }), 1, "rejection retry does not append another revision")
+  await assert.rejects(
+    () => reviewLibraryContribution(fixtureIds.reject, { name: "KA-045 reviewer", role: "admin" }, { approved: true }),
+    (error) => error.statusCode === 409,
+    "a conflicting approval cannot replace a recorded rejection",
+  )
 
   const duplicateApproved = await reviewLibraryContribution(fixtureIds.duplicateA, { name: "KA-045 reviewer", role: "admin" }, {
     approved: true,
@@ -116,6 +126,21 @@ test("Library review persists rejection, duplicate canonicalization, and legacy 
   assert.equal(duplicateApproved.entry.id, duplicateRows[0].entryId)
   assert.equal(duplicateApproved.entry.definition, "Canonical duplicate definition.")
   assert.equal(await prisma.libraryContributionRevision.count({ where: { contributionId: { in: [fixtureIds.duplicateA, fixtureIds.duplicateB] }, action: "canonicalized" } }), 2, "duplicate review records both contribution decisions")
+  const canonicalRevisionCount = await prisma.libraryContributionRevision.count({ where: { contributionId: { in: [fixtureIds.duplicateA, fixtureIds.duplicateB] } } })
+  const entryRevisionCount = await prisma.libraryEntryRevision.count({ where: { entryId: duplicateApproved.entry.id } })
+  const duplicateRetry = await reviewLibraryContribution(fixtureIds.duplicateA, { name: "KA-045 reviewer", role: "admin" }, {
+    approved: true,
+    canonicalContributionId: fixtureIds.duplicateA,
+    entry: payload(duplicateEnglish, "Canonical duplicate definition."),
+  })
+  assert.equal(duplicateRetry.entry.id, duplicateApproved.entry.id, "approval retry returns the original canonical entry")
+  assert.equal(await prisma.libraryContributionRevision.count({ where: { contributionId: { in: [fixtureIds.duplicateA, fixtureIds.duplicateB] } } }), canonicalRevisionCount, "duplicate approval retry does not append contribution revisions")
+  assert.equal(await prisma.libraryEntryRevision.count({ where: { entryId: duplicateApproved.entry.id } }), entryRevisionCount, "duplicate approval retry does not append entry revisions")
+  await assert.rejects(
+    () => reviewLibraryContribution(fixtureIds.duplicateA, { name: "KA-045 reviewer", role: "admin" }, { approved: false }),
+    (error) => error.statusCode === 409,
+    "a conflicting rejection cannot replace an approved contribution",
+  )
 
   const legacyApproved = await reviewLibraryContribution(fixtureIds.legacy, { name: "KA-045 reviewer", role: "admin" }, {
     approved: true,

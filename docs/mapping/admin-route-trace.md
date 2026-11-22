@@ -42,6 +42,7 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | POST | `/api/admin/runtime/service-control` | Yes | `canManageUsers` | No | `restartExerciseMailerServiceControl` |
 | POST | `/api/admin/assignment-announcements/volatile` | Yes | write role | No | `createAssignmentAnnouncementPreview` |
 | GET | `/api/admin/dashboard` | Yes | any readable role | Yes | `getAdminDashboardSummary` (`src/modules/admin/dashboard-summary.mjs`, `currentAssignmentMeta`, `enrollmentOnlyLevels`, + queue snippet for managers) |
+| POST | `/api/admin/library/contributions/{contributionId}/review` | Yes | admin write role | Yes | `reviewLibraryContribution`; repeated same decisions are idempotent, conflicting decisions return 409 |
 | GET | `/api/admin/news-reports` | Yes | any readable role | Yes | `listStudentNewsReportsForReview` (`src/modules/admin/student-news-review.mjs`) |
 | POST | `/api/admin/news-reports/{reportId}` | Yes | `canManageUsers` | Yes | `reviewStudentNewsReport` (`src/modules/admin/student-news-review.mjs`) |
 | GET | `/api/admin/assignment-templates` | Yes | any readable role | Yes | `listAssignmentTemplates` |

@@ -635,21 +635,32 @@ export async function reconcileLibraryLifecycle(now = new Date()) {
 
 export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
   const client = await prisma()
-  const contribution = await client.libraryContribution.findUnique({ where: { id } })
-  if (!contribution) throw statusError("Library contribution was not found", 404)
   const approved = Boolean(payload.approved)
-  if (!approved) {
-    const rejected = await client.libraryContribution.update({ where: { id }, data: { status: "rejected", reviewedAt: new Date(), reviewedByName: clamp(actor.name) } })
-    await writeContributionRevision(client, rejected, "rejected")
-    return { ok: true, status: "rejected" }
-  }
   const canonicalContributionId = clamp(payload.canonicalContributionId) || id
-  const canonicalContribution = canonicalContributionId === id
-    ? contribution
-    : await client.libraryContribution.findUnique({ where: { id: canonicalContributionId } })
-  if (!canonicalContribution) throw statusError("The selected canonical Library contribution was not found", 404)
-  const submitted = normalizeLibraryEntry(payload.entry || canonicalContribution.payloadJson, { allowIncomplete: true })
   const result = await client.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "library"."LibraryContribution" WHERE "id" = ${id} FOR UPDATE`
+    const contribution = await tx.libraryContribution.findUnique({ where: { id } })
+    if (!contribution) throw statusError("Library contribution was not found", 404)
+    if (contribution.status === "rejected") {
+      if (!approved) return { status: "rejected" }
+      throw statusError("A rejected Library contribution cannot be approved", 409)
+    }
+    if (["approved", "canonicalized"].includes(contribution.status) && contribution.entryId) {
+      if (!approved) throw statusError("An approved Library contribution cannot be rejected", 409)
+      const entry = await tx.libraryEntry.findUnique({ where: { id: contribution.entryId } })
+      if (!entry) throw statusError("The canonical Library entry for this contribution was not found", 409)
+      return { entry }
+    }
+    if (!approved) {
+      const rejected = await tx.libraryContribution.update({ where: { id }, data: { status: "rejected", reviewedAt: new Date(), reviewedByName: clamp(actor.name) } })
+      await writeContributionRevision(tx, rejected, "rejected")
+      return { status: "rejected" }
+    }
+    const canonicalContribution = canonicalContributionId === id
+      ? contribution
+      : await tx.libraryContribution.findUnique({ where: { id: canonicalContributionId } })
+    if (!canonicalContribution) throw statusError("The selected canonical Library contribution was not found", 404)
+    const submitted = normalizeLibraryEntry(payload.entry || canonicalContribution.payloadJson, { allowIncomplete: true })
     const pair = canonicalPair(submitted)
     const siblings = await tx.libraryContribution.findMany({ where: { status: { in: ["pending_review", LEGACY_PENDING_REVIEW, AWAITING_LEGACY_CANONICAL] } } })
     const sourceEntryIds = new Set([contribution.entryId, canonicalContribution.entryId].map(text).filter(Boolean))
@@ -680,9 +691,10 @@ export async function reviewLibraryContribution(id, actor = {}, payload = {}) {
         await writeContributionRevision(tx, updated, "legacy_canonical_declared")
       }
     }
-    return entry
+    return { entry }
   })
-  return { ok: true, entry: mapEntry(result) }
+  if (result.status) return { ok: true, status: result.status }
+  return { ok: true, entry: mapEntry(result.entry) }
 }
 
 export async function updateLibraryEntry(id, actor = {}, payload = {}) {
