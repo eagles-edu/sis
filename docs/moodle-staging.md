@@ -87,6 +87,58 @@ promote --apply changes production code and database schema and must only be
 run for an explicitly authorized release. This document and the dry-run do
 not authorize production execution.
 
+## Test-mirror SIS provisioning route and verification
+
+The Moodle staging plugin must reach the SIS test mirror through the test-only
+Nginx vhost. The tracked location fragment targets the API on `127.0.0.1:8786`;
+the installer changes only the test-mirror vhost and verifies that a request
+reaches the SIS JSON handler instead of a static-page fallback:
+
+```bash
+sudo tools/install-test-moodle-provisioning-proxy.sh --dry-run
+sudo tools/install-test-moodle-provisioning-proxy.sh --apply
+```
+
+The probe sends an invalid HMAC and expects the test API's JSON 401 response,
+or JSON 503 when the test provisioning key is unset. HTTP 200 HTML is a route
+failure. The scheduled Moodle task remains disabled during routine staging
+setup. Production Nginx and production SIS are outside this installer.
+
+For an explicitly authorized, one-off integration rehearsal:
+
+1. Back up the SIS test database and isolated Moodle staging database. Confirm
+   the exact test SIS database and ensure the selected poll batch contains only
+   the rehearsal's synthetic command IDs. Do not poll unrelated pending,
+   retry, or processing commands.
+2. Keep the scheduled task disabled. Configure staging's `enrol_sis` base URL
+   to `https://test.eagles.edu.vn`, set its provisioning secret to the
+   test-runtime-owned `.env.test` key, temporarily set Dry run off, and limit
+   the batch to the isolated commands. Never copy the secret into Git, docs,
+   shell history, or logs.
+3. Execute the task once from the staging Moodle root, using Moodle's writable
+   staging temp directory if the shell's inherited `TMPDIR` is unavailable:
+
+   ```bash
+   sudo -u stage8567 env TMPDIR=/home/staged.eagles.edu.vn/moodledata/temp \
+     /usr/local/lsws/lsphp83/bin/php \
+     /home/staged.eagles.edu.vn/app/admin/cli/scheduled_task.php \
+     --execute='\enrol_sis\task\sync'
+   ```
+
+   Verify signed polling and receipts, one Moodle account, the expected course
+   enrollment and cohort memberships, and an active SIS/Moodle user link.
+   Replay only the same command IDs and confirm the Moodle idempotency records
+   prevent duplicate users, enrollments, or memberships.
+4. Remove only the rehearsal's synthetic SIS and Moodle records. Restore the
+   staging SIS URL and secret to unset, Dry run on, the original batch size,
+   mail disabled, and the scheduled task disabled; purge staging caches. Restore
+   the test `.env.test` backup and restart the test SIS service if its
+   provisioning key was enabled for the rehearsal. Verify staging and test
+   health, the JSON unconfigured response, and the retained Basic Auth login.
+
+These steps do not authorize production changes. Do not use production learner
+data for writes, provisioning polls, or external sends.
+
 ## Optional staging data refresh
 
 Use this only when staging needs a current copy of production data for a

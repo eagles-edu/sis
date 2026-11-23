@@ -70,6 +70,9 @@ docs/mapping/out/*
 **/.sync.ffs_db
 .playwright-cli/
 nginx
+!config/nginx/
+config/nginx/*
+!config/nginx/test-moodle-provisioning.location.conf
 !deploy/nginx/
 deploy/nginx/*
 !deploy/nginx/languagetool.internal.conf
