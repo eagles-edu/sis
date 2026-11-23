@@ -28,7 +28,26 @@ const portalPages = [
 const faviconFiles = ["favicon.ico", "favicon.png", "favicon.svg"]
 const faviconUrls = faviconFiles.map((file) => `/web-asset/images/${file}?=v2`)
 const mobileWidths = [320, 360, 375, 390, 430, 639]
+const chromiumExecutableCandidates = [
+  process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
+  process.env.CHROME_PATH,
+  "/usr/bin/google-chrome-stable",
+  "/usr/bin/google-chrome",
+  "/usr/bin/chromium-browser",
+  "/usr/bin/chromium",
+].filter(Boolean)
 const failures = []
+
+function resolveChromiumExecutablePath() {
+  return chromiumExecutableCandidates.find((candidatePath) => {
+    try {
+      fs.accessSync(candidatePath, fs.constants.X_OK)
+      return fs.statSync(candidatePath).isFile()
+    } catch {
+      return false
+    }
+  }) || ""
+}
 
 function isExpectedTelemetryFailure(url) {
   try {
@@ -69,7 +88,14 @@ if (publicRoot) {
 
 if (origin) {
   const { chromium } = await import("playwright")
-  const browser = await chromium.launch({ headless: true })
+  const executablePath = resolveChromiumExecutablePath()
+  if (!executablePath) {
+    throw new Error("Set PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH or install Chrome/Chromium to run browser checks")
+  }
+  const browser = await chromium.launch({
+    headless: true,
+    executablePath,
+  })
   try {
     for (const route of ["/", "/admin", "/parent", "/student"]) {
       for (const width of mobileWidths) {

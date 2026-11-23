@@ -47,6 +47,18 @@ function isExecutableFile(filePath) {
   }
 }
 
+export function resolveChromiumExecutablePath(environment = process.env) {
+  const candidates = [
+    environment.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
+    environment.CHROME_PATH,
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/chromium",
+  ]
+  return candidates.find(isExecutableFile) || ""
+}
+
 export function assertAuthenticatedSmokePrerequisites(environment = process.env, options = {}) {
   const envFile = String(environment.SIS_ENV_FILE || "").trim()
   let fileValues = options.environmentFileValues
@@ -63,17 +75,12 @@ export function assertAuthenticatedSmokePrerequisites(environment = process.env,
   const adminConfigured = Boolean(
     String(values.STUDENT_ADMIN_USER || "").trim() && String(values.STUDENT_ADMIN_PASS || "").trim(),
   )
-  const chromiumCandidates = options.chromiumCandidates || [
-    values.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
-    values.CHROME_PATH,
-    "/usr/bin/google-chrome-stable",
-    "/usr/bin/google-chrome",
-    "/usr/bin/chromium-browser",
-    "/usr/bin/chromium",
-  ]
+  const chromiumPath = options.chromiumCandidates
+    ? options.chromiumCandidates.find(isExecutableFile) || ""
+    : resolveChromiumExecutablePath(values)
   const chromiumAvailable = typeof options.chromiumAvailable === "boolean"
     ? options.chromiumAvailable
-    : chromiumCandidates.some(isExecutableFile)
+    : Boolean(chromiumPath)
   if (!student.user || !student.pass || !parent.user || !parent.pass || !adminConfigured || !chromiumAvailable) {
     throw Object.assign(
       new Error("Nightly authenticated smoke prerequisites are incomplete"),
@@ -86,6 +93,8 @@ export function assertAuthenticatedSmokePrerequisites(environment = process.env,
 export function buildNoExternalMessageTestEnvironment(environment = process.env) {
   const result = { ...environment }
   for (const key of OUTBOUND_MESSAGE_ENV_KEYS) delete result[key]
+  const chromiumPath = resolveChromiumExecutablePath(environment)
+  if (chromiumPath) result.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = chromiumPath
   return {
     ...result,
     SIS_ENV_FILE: ".env.test",

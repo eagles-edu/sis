@@ -8,7 +8,7 @@ const liveScript = fs.readFileSync(path.join(rootDir, "tools/sync-and-restart-li
 const testScript = fs.readFileSync(path.join(rootDir, "tools/sync-and-restart-test-runtime.sh"), "utf8")
 const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, "package.json"), "utf8"))
 const liveLinksDoc = fs.readFileSync(path.join(rootDir, "docs/Live portal links.md"), "utf8")
-const liveNginxConf = fs.readFileSync(path.join(rootDir, "deploy/nginx/admin.eagles.edu.vn.conf"), "utf8")
+const testRouteContract = JSON.parse(fs.readFileSync(path.join(rootDir, "config/test-route-contract.json"), "utf8"))
 const TEST_ONLY_SYNC_SOURCES = new Set()
 
 function extractMapSources(script, mapName) {
@@ -140,10 +140,15 @@ test("test and live sync provision service-writable Library media roots", () => 
   }
 })
 
-test("live nginx config mirrors the test parent route shape", () => {
-  assert.match(liveNginxConf, /location = \/parent \{/)
-  assert.match(liveNginxConf, /proxy_pass http:\/\/sis_api_upstream\/parent;/)
-  assert.match(liveNginxConf, /location = \/parent\/portal \{\s+return 308 \/parent;/s)
+test("test and live route contracts preserve the canonical parent path and legacy redirect", () => {
+  assert.equal(testRouteContract.parentPortalPagePath, "/parent")
+  assert.equal(testRouteContract.parentLegacyPagePath, "/parent/portal")
+  const parentRoute = testRouteContract.checks.find((route) => route.path === "/parent")
+  const parentLegacyRoute = testRouteContract.checks.find((route) => route.path === "/parent/portal")
+  assert.deepEqual(parentRoute, { path: "/parent", status: 200, needle: "dành cho phụ huynh" })
+  assert.deepEqual(parentLegacyRoute, { path: "/parent/portal", status: 308, location: "/parent" })
+  assert.match(liveScript, /https:\/\/admin\.eagles\.edu\.vn\/parent\|200\|dành cho phụ huynh\|/)
+  assert.match(liveScript, /https:\/\/admin\.eagles\.edu\.vn\/parent\/portal\|308\|\|\/parent/)
 })
 
 test("test and live sync wrappers share the same strict whitelist sources except test-only assets", () => {

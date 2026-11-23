@@ -327,11 +327,11 @@ test("authenticated Student News Check retries a transient 401, then Save -> Che
     }))
     throw new Error(`${error.message}; queue state=${JSON.stringify(queueDebug)}; api=${JSON.stringify(adminApiResponses)}`, { cause: error })
   }
-  await helpQueuePanel.getByText("demolition", { exact: true }).waitFor({ state: "visible", timeout: 30000 })
-  const panelOrder = await adminPage.locator(".queue-hub-panel").evaluateAll((panels) => panels.map((panel) => panel.getAttribute("data-queue-hub-panel-id")))
-  assert.equal(panelOrder.indexOf("student-news-vocabulary-help") + 1, panelOrder.indexOf("news-report-review"), "vocabulary help is immediately above News Week Sets")
   const overrideInput = helpQueuePanel.locator(`[data-vocabulary-override-for="${helpRequestId}"]`)
   await overrideInput.waitFor({ state: "visible", timeout: 30000 })
+  assert.equal(await overrideInput.count(), 1, "the help queue shows one row for this synthetic request")
+  const panelOrder = await adminPage.locator(".queue-hub-panel").evaluateAll((panels) => panels.map((panel) => panel.getAttribute("data-queue-hub-panel-id")))
+  assert.equal(panelOrder.indexOf("student-news-vocabulary-help") + 1, panelOrder.indexOf("news-report-review"), "vocabulary help is immediately above News Week Sets")
   for (const width of [320, 390]) {
     await adminPage.setViewportSize({ width, height: width === 320 ? 740 : 844 })
     await overrideInput.evaluate((input) => {

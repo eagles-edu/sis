@@ -147,7 +147,7 @@
       document.querySelectorAll("[data-copyright-year]").forEach((element) => { element.textContent = String(new Date().getFullYear()); });
       const zoom = (delta) => { const current = Number.parseInt(document.documentElement.dataset.portalTextZoom || "100", 10) || 100; document.documentElement.dataset.portalTextZoom = String(Math.max(85, Math.min(130, current + delta))); document.documentElement.style.fontSize = `${document.documentElement.dataset.portalTextZoom}%`; };
       document.getElementById("studentTextZoomDownBtn")?.addEventListener("click", () => zoom(-5)); document.getElementById("studentTextZoomUpBtn")?.addEventListener("click", () => zoom(5)); document.getElementById("studentTextZoomResetBtn")?.addEventListener("click", () => { document.documentElement.dataset.portalTextZoom = "100"; document.documentElement.style.fontSize = ""; });
-      const libraryApi = `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library`; const studentNewWordsApi = window.__SIS_STUDENT_NEW_WORDS_PATH || "/api/student/new-words"; const libraryPageSize = 25; let libraryPage = 1; let libraryTotal = 0; let libraryItems = new Map(); let studentNewWords = []; let studentNewWordsLoadPromise = null; let libraryNewWordSequence = 0;
+      const libraryApi = `${window.__SIS_STUDENT_API_PREFIX || "/api/student"}/library`; const studentNewWordsApi = window.__SIS_STUDENT_NEW_WORDS_PATH || "/api/student/new-words"; const libraryPageSize = 25; let libraryPage = 1; let libraryTotal = 0; let libraryItems = new Map(); let studentNewWords = []; let studentNewWordsLoadPromise = null; let libraryNewWordSequence = 0; let libraryLoadSequence = 0;
       const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
       const text = (value) => String(value == null ? "" : value).trim();
       const studentLibraryNewWordsRows = document.getElementById("studentLibraryNewWordsRows");
@@ -222,12 +222,14 @@
         }
       }
       async function loadLibrary() {
+        const loadSequence = ++libraryLoadSequence;
         const status = document.getElementById("libraryStatus");
         const query = new URLSearchParams({ page: String(libraryPage), pageSize: String(libraryPageSize), search: document.getElementById("librarySearch").value, partOfSpeech: document.getElementById("libraryPos").value, sortBy: document.getElementById("librarySort").value, myWords: document.getElementById("libraryMyWords").checked ? "true" : "" });
         try {
           status.textContent = "Loading Library…";
           const response = await fetch(`${libraryApi}?${query}`, { credentials: "include" });
           const data = await response.json();
+          if (loadSequence !== libraryLoadSequence) return;
           if (!response.ok) throw new Error(data.error || "Unable to load Library");
           libraryTotal = Number(data.total) || 0;
           libraryItems = new Map((data.items || []).map((entry) => [entry.id, entry]));
@@ -242,7 +244,7 @@
           document.getElementById("libraryPrevious").disabled = libraryPage <= 1;
           document.getElementById("libraryNext").disabled = libraryPage * libraryPageSize >= libraryTotal;
         } catch (error) {
-          status.textContent = error.message;
+          if (loadSequence === libraryLoadSequence) status.textContent = error.message;
         }
       }
       function openLibraryEdit(entry) {

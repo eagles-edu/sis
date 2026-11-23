@@ -52,6 +52,11 @@
       font-weight: 900;
   }
 
+    html[data-theme="dark"] body.student-portal-page .news-compliance-success,
+    html[data-theme="dark"] body.student-portal-page .news-feedback-empty-success {
+      color: var(--portal-status-good-text);
+  }
+
     .news-grammar-check-wait {
       inset: 0;
       isolation: isolate;

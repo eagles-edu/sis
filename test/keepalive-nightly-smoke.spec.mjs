@@ -62,9 +62,15 @@ test("nightly authenticated smoke requires exact test accounts and an executable
   }), /prerequisites are incomplete/u)
 })
 
-test("nightly child environment preserves test access while removing external message credentials", () => {
+test("nightly child environment preserves test access while removing external message credentials", (t) => {
+  const browserDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "sis-keepalive-chromium-"))
+  t.after(() => fs.rmSync(browserDirectory, { recursive: true, force: true }))
+  const browserPath = path.join(browserDirectory, "chromium")
+  fs.writeFileSync(browserPath, "", { mode: 0o700 })
+
   const childEnvironment = buildNoExternalMessageTestEnvironment({
     ...TEST_ENVIRONMENT,
+    PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH: browserPath,
     BREVO_API_KEY: "brevo-secret-sentinel",
     BREVO_API_URL: "https://api.brevo.com/v3/smtp/email",
     BREVO_API_BASE_URL: "https://api.brevo.com/v3",
@@ -84,6 +90,7 @@ test("nightly child environment preserves test access while removing external me
   assert.equal(childEnvironment.SMTP_PORT, "1")
   assert.equal(childEnvironment.SMTP_AUTH_MODE, "none")
   assert.equal(childEnvironment.SMTP_FROM, "nightly-no-send@example.invalid")
+  assert.equal(childEnvironment.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, browserPath)
   for (const key of ["BREVO_API_KEY", "BREVO_FROM_EMAIL", "SMTP_USER", "SMTP_PASS"]) {
     assert.equal(Object.hasOwn(childEnvironment, key), false, `${key} must not reach the suite`)
   }

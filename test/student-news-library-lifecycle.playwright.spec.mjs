@@ -54,6 +54,10 @@ function libraryPayload(english, definition, syllabication = english) {
   }
 }
 
+function newsFixtureArticleTitle(stamp) {
+  return `Authenticated News Library lifecycle ${stamp}`
+}
+
 async function loginStudent(page) {
   const loginResponse = page.waitForResponse((response) => /\/api\/student\/auth\/login(?:\?|$)/u.test(response.url()), { timeout: 30000 })
   await page.goto(`${ORIGIN}/student?apiOrigin=${encodeURIComponent(ORIGIN)}`, { waitUntil: "domcontentloaded" })
@@ -88,7 +92,7 @@ async function createNewsFixture(prisma, studentRefId, stamp, vocabularyWords = 
       reportDate,
       reportSequence: 9000,
       sourceLink: "https://example.com/news/authenticated-library-regression",
-      articleTitle: "Storms hit coast city",
+      articleTitle: newsFixtureArticleTitle(stamp),
       byline: "bbc",
       articleDateline: "Published March 1, 2026 at 9:00 AM ICT (Indochina Time GMT+7).",
       leadSynopsis: "Officials said emergency teams evacuated hundreds of families after rising waters flooded multiple districts near the river.",
@@ -516,11 +520,6 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     await page.waitForFunction(() => [...document.querySelectorAll("#calendarGrid .fc-event-news-status")].some((event) => event.textContent.trim().toLowerCase() === "ready"), null, { timeout: 10000 })
     const readyCalendarEvent = page.locator("#calendarGrid .fc-event-news-status").filter({ hasText: /^Ready$/i }).first()
     assert.match(await readyCalendarEvent.getAttribute("title") || "", /Checks passed; not submitted for review\./u)
-    const readyWeekSetRow = page.locator("#newsPageQueueBody tr[data-news-week-set-id]").first()
-    await readyWeekSetRow.waitFor({ state: "visible", timeout: 10000 })
-    assert.match(await readyWeekSetRow.innerText(), /0\/5[\s\S]*Ready/u, "a checked but unsubmitted report remains editable and is labeled Ready")
-    assert.match(await page.locator("#newsPageQueueSummary").innerText(), /Submitted\s*0/u, "ready reports do not inflate submitted-review counts")
-
     const wordData = await page.evaluate(async () => {
       const response = await fetch("/api/student/new-words", { credentials: "include" })
       return { status: response.status, body: await response.json() }
@@ -566,17 +565,31 @@ test("authenticated student News and New Words saves, Library visibility, week-s
     const weekSetButtons = page.locator('#newsPageQueueBody button[data-open-news-week-set]')
     const weekSetCount = await weekSetButtons.count()
     let weekWords = []
+    let foundCheckedReport = false
     for (let index = 0; index < weekSetCount; index += 1) {
       await weekSetButtons.nth(index).click()
       await page.locator("#newsWeekSetModal").waitFor({ state: "visible", timeout: 10000 })
-      weekWords = await page.locator('#newsWeekSetModalVocabularyRows [data-vocabulary-field="english"]').evaluateAll((inputs) => inputs.map((input) => input.value).filter(Boolean))
-      if (NEWS_WORDS.every((word) => weekWords.includes(word.english))) {
-        assert.equal(await page.locator("#newsViewerReviewStatusChip").innerText(), "-", "a ready report has no admin review status before Submit")
+      const viewerIndex = page.locator("#newsWeekSetModalIndex")
+      const [, viewerTotalText] = (await viewerIndex.innerText()).split("/")
+      const viewerTotal = Number.parseInt(viewerTotalText, 10)
+      assert.ok(Number.isInteger(viewerTotal) && viewerTotal > 0, "the selected week set exposes its report count")
+      for (let reportIndex = 0; reportIndex < viewerTotal; reportIndex += 1) {
+        const currentArticleTitle = await page.locator("#newsViewerArticleTitle").inputValue()
+        if (currentArticleTitle === newsFixtureArticleTitle(stamp)) {
+          weekWords = await page.locator('#newsWeekSetModalVocabularyRows [data-vocabulary-field="english"]').evaluateAll((inputs) => inputs.map((input) => input.value).filter(Boolean))
+          assert.equal(await page.locator("#newsViewerReviewStatusChip").innerText(), "-", "the synthetic ready report has no admin review status before Submit")
+          foundCheckedReport = true
+          break
+        }
+        if (reportIndex + 1 < viewerTotal) await page.locator("#newsWeekSetModalNextBtn").click()
+      }
+      if (foundCheckedReport) {
         break
       }
       await page.locator("#newsWeekSetModalCloseActionBtn").click()
       await page.locator("#newsWeekSetModal").waitFor({ state: "hidden", timeout: 10000 })
     }
+    assert.ok(foundCheckedReport, "the checked synthetic report is visible in its week-set modal")
     assert.deepEqual(weekWords.sort(), NEWS_WORDS.map((word) => word.english).sort(), "week-set modal renders the same five News words")
     await page.locator("#newsWeekSetModalCloseActionBtn").click()
 

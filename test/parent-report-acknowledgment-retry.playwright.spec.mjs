@@ -6,6 +6,7 @@ import {
   resolveStandardParentCredentials,
   STANDARD_PARENT_LOGIN,
 } from "./helpers/standard-portal-credentials.mjs"
+import { resolveChromiumExecutablePath } from "../tools/run-keepalive-nightly-smoke.mjs"
 import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
 
 let chromium = null
@@ -23,6 +24,7 @@ const RESOLVED_PARENT_CREDENTIALS = resolveStandardParentCredentials(ENV_VALUES)
 const PARENT_USER = STANDARD_PARENT_LOGIN
 const PARENT_PASSWORD = RESOLVED_PARENT_CREDENTIALS.pass || String(ENV_VALUES.STUDENT_PARENT_PASS || "")
 const ORIGIN = resolvePortalTestOrigin({ overrideName: "PARENT_ACK_TEST_ORIGIN" })
+const CHROMIUM_EXECUTABLE_PATH = resolveChromiumExecutablePath()
 const REPORT_ID = `ka093-parent-ack-retry-${Date.now()}`
 const VIEWPORTS = [
   { name: "desktop", width: 1536, height: 1000 },
@@ -30,6 +32,8 @@ const VIEWPORTS = [
 ]
 const skipReason = !chromium
   ? "playwright package is not installed"
+  : !CHROMIUM_EXECUTABLE_PATH
+    ? "Set PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH or install Chrome/Chromium"
   : !PARENT_PASSWORD
     ? `parent ${STANDARD_PARENT_LOGIN} credentials are required from ${ENV_FILE || ".env.dev"}`
     : false
@@ -38,7 +42,10 @@ test(
   "authenticated parent acknowledgment stays pending after API failure and succeeds on retry",
   { skip: skipReason },
   async () => {
-    const browser = await chromium.launch({ headless: true })
+    const browser = await chromium.launch({
+      headless: true,
+      executablePath: CHROMIUM_EXECUTABLE_PATH,
+    })
     try {
       for (const viewport of VIEWPORTS) {
         const reportId = `${REPORT_ID}-${viewport.name}`

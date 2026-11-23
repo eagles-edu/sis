@@ -3,10 +3,12 @@ import fs from "node:fs"
 import test from "node:test"
 import { chromium } from "playwright"
 import "../tools/assert-prisma-environment.mjs"
+import { resolveChromiumExecutablePath } from "../tools/run-keepalive-nightly-smoke.mjs"
 import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
 
 const ORIGIN = resolvePortalTestOrigin({ overrideName: "ADMIN_PERF_ORIGIN" })
 const ENV_PATH = String(process.env.SIS_ENV_FILE || "").trim()
+const CHROMIUM_EXECUTABLE_PATH = resolveChromiumExecutablePath()
 
 function readEnv(filePath) {
   const values = {}
@@ -63,7 +65,11 @@ async function login(page) {
 }
 
 test("authenticated admin overview preserves desktop/mobile critical performance", async (t) => {
-  const browser = await chromium.launch({ headless: true })
+  assert.ok(CHROMIUM_EXECUTABLE_PATH, "Set PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH or install Chrome/Chromium")
+  const browser = await chromium.launch({
+    headless: true,
+    executablePath: CHROMIUM_EXECUTABLE_PATH,
+  })
   t.after(() => browser.close())
 
   for (const viewport of [

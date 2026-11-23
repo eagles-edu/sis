@@ -10,10 +10,12 @@ import {
   resolveStandardParentCredentials,
   resolveStandardStudentCredentials,
 } from "./helpers/standard-portal-credentials.mjs"
+import { resolveChromiumExecutablePath } from "../tools/run-keepalive-nightly-smoke.mjs"
 import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
 
 const ORIGIN = resolvePortalTestOrigin({ overrideName: "PORTAL_AUDIT_ORIGIN" })
 const ENV_PATH = String(process.env.SIS_ENV_FILE || "").trim()
+const CHROMIUM_EXECUTABLE_PATH = resolveChromiumExecutablePath()
 
 function readEnv(filePath) {
   return fs.existsSync(filePath) ? parseDotenv(fs.readFileSync(filePath)) : {}
@@ -53,15 +55,20 @@ function assertAuditHealthy(result, { allowAuth401 = false } = {}) {
 }
 
 const PORTAL_CREDENTIALS = credentials()
-const CREDENTIAL_SKIP_REASON = !PORTAL_CREDENTIALS.student.user || !PORTAL_CREDENTIALS.student.pass
-  ? `student mark001 credentials are required from ${ENV_PATH}`
-  : !PORTAL_CREDENTIALS.parent.user || !PORTAL_CREDENTIALS.parent.pass
-    ? `parent cmmark001 credentials are required from ${ENV_PATH}`
-    : false
+const CREDENTIAL_SKIP_REASON = !CHROMIUM_EXECUTABLE_PATH
+  ? "Set PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH or install Chrome/Chromium"
+  : !PORTAL_CREDENTIALS.student.user || !PORTAL_CREDENTIALS.student.pass
+    ? `student mark001 credentials are required from ${ENV_PATH}`
+    : !PORTAL_CREDENTIALS.parent.user || !PORTAL_CREDENTIALS.parent.pass
+      ? `parent cmmark001 credentials are required from ${ENV_PATH}`
+      : false
 
 test("portal audit coverage captures CLS, accessibility, overflow, and auth reload states", { skip: CREDENTIAL_SKIP_REASON }, async (t) => {
   await ensureArtifactsDir()
-  const browser = await chromium.launch({ headless: true })
+  const browser = await chromium.launch({
+    headless: true,
+    executablePath: CHROMIUM_EXECUTABLE_PATH,
+  })
   t.after(() => browser.close())
   const account = PORTAL_CREDENTIALS
   const audits = []
