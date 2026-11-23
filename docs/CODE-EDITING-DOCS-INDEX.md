@@ -45,6 +45,7 @@ listed gap preserved and checked against executable source.
 | [`docs/sop.md`](sop.md) | Before every code, route, UI, sync, or runtime edit | Prompt/document ownership; communication; canonical workspace; environment ownership; sync order; immutable runtime config; portal theme contract; accessibility/layout; browser and test gates; failure diagnosis |
 | [`docs/history.md`](history.md) | When a change follows an incident or creates a durable milestone | Major milestones; theme consolidation; generated-asset incidents; critical-CSS decisions; runtime/config repair; incident evidence; parity and rollback rationale |
 | [`docs/security-and-backup-policy.md`](security-and-backup-policy.md) | Any destructive, auth, secret, backup, restore, or mirror operation | Backup-first rules; protected data; restore and rollback boundaries; secret handling; operational evidence |
+| [`docs/moodle-staging.md`](moodle-staging.md) | Moodle PHP parity, staging isolation, refresh, snapshot restore, and staging SIS safety settings | Runtime parity; staging isolation; status and dry-run; refresh; restore; remaining authenticated integration checks |
 | [`docs/validation.md`](validation.md) | Student News validation, normalization, save, or response changes | Primary rule; save contract; validation categories; allowed sources; normalization; every field’s length/required/warning/preferred shape; response contract; revision guidance; drift watch |
 
 ### Shared visual system and interaction semantics

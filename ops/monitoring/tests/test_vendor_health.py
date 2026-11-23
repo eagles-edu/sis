@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import tempfile
 import unittest
+import smtplib
 from pathlib import Path
 from unittest.mock import patch
 
@@ -20,16 +21,22 @@ class VendorHealthTests(unittest.TestCase):
             env_path = Path(directory) / ".env"
             env_path.write_text(
                 'BREVO_API_KEY="private-value"\n'
+                'EMAIL_PROVIDER="brevo"\n'
+                'SMTP_HOST="smtp.example.test"\n'
+                'SMTP_PORT="465"\n'
                 "DATABASE_URL=postgresql://must-not-be-read\n"
                 'STUDENT_ADMIN_PASS="admin-password"\n'
-                "MOODLE_URL='https://moodle.example.test'\n",
+                "MEGS_HEALTH_URL='https://megs.example.test/healthz'\n",
                 encoding="utf-8",
             )
             values = vendor_health.read_environment(env_path)
 
         self.assertEqual(values, {
             "BREVO_API_KEY": "private-value",
-            "MOODLE_URL": "https://moodle.example.test",
+            "EMAIL_PROVIDER": "brevo",
+            "SMTP_HOST": "smtp.example.test",
+            "SMTP_PORT": "465",
+            "MEGS_HEALTH_URL": "https://megs.example.test/healthz",
             "STUDENT_ADMIN_PASS": "admin-password",
         })
 
@@ -77,12 +84,74 @@ class VendorHealthTests(unittest.TestCase):
             {"api-key": "private-value"},
         )
 
-    def test_unconfigured_google_forms_returns_a_complete_unconfigured_result(self) -> None:
-        with patch.object(vendor_health, "http_get") as request:
-            result = vendor_health.check_google_forms({})
+    def test_google_forms_vendor_state_is_the_sis_endpoint_key_not_public_discovery(self) -> None:
+        with patch.object(vendor_health, "check_moodle_endpoint", return_value=(1, 1, 0.1, 200)), patch.object(
+            vendor_health,
+            "check_optional_endpoint",
+            return_value=(0, 0, 0.0, 0),
+        ):
+            checks = vendor_health.vendor_checks(
+                "test",
+                {"GOOGLE_FORMS_GRADES_SECRET": "configured-without-reading-value"},
+                Path("/nonexistent/test-runtime"),
+            )
 
-        self.assertEqual(result, (0, 0, 0.0, 0))
-        request.assert_not_called()
+        services = {service for service, *_ in checks}
+        self.assertIn("google_forms_grade_secret", services)
+        self.assertNotIn("google_forms_discovery", services)
+        self.assertEqual(
+            next(check for check in checks if check[0] == "google_forms_grade_secret"),
+            ("google_forms_grade_secret", 1, 0, 0.0, 0),
+        )
+
+    def test_moodle_health_probe_accepts_the_staging_basic_auth_gate(self) -> None:
+        with patch.object(vendor_health, "http_get", return_value=(False, 0.1, 401)) as request:
+            result = vendor_health.check_moodle_endpoint("test")
+
+        self.assertEqual(result, (1, 1, 0.1, 401))
+        request.assert_called_once_with("https://staged.eagles.edu.vn/")
+
+    def test_live_moodle_health_probe_requires_a_success_response(self) -> None:
+        with patch.object(vendor_health, "http_get", return_value=(False, 0.1, 403)) as request:
+            result = vendor_health.check_moodle_endpoint("live")
+
+        self.assertEqual(result, (1, 0, 0.1, 403))
+        request.assert_called_once_with("https://moodle.eagles.edu.vn/")
+
+    def test_smtp_relay_probe_connects_without_authentication_or_message_delivery(self) -> None:
+        class SmtpProbe:
+            def __init__(self, host, port, timeout):
+                self.args = (host, port, timeout)
+                self.logged_in = False
+                self.sent = False
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                return False
+
+            def ehlo(self):
+                return 250, b"ready"
+
+            def has_extn(self, _):
+                return False
+
+            def noop(self):
+                return 250, b"ok"
+
+            def login(self, *_):
+                self.logged_in = True
+
+            def sendmail(self, *_):
+                self.sent = True
+
+        with patch.object(vendor_health.smtplib, "SMTP_SSL", side_effect=lambda *args, **kwargs: SmtpProbe(*args, **kwargs)) as connect:
+            result = vendor_health.check_smtp_relay({"SMTP_HOST": "smtp.example.test", "SMTP_PORT": "465"})
+
+        self.assertEqual(result[:2], (1, 1))
+        self.assertEqual(result[3], 250)
+        connect.assert_called_once_with("smtp.example.test", 465, timeout=vendor_health.REQUEST_TIMEOUT_SECONDS)
 
     def test_optional_endpoint_fails_closed_for_plain_http(self) -> None:
         with patch.object(vendor_health, "http_get") as request:

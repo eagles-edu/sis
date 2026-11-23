@@ -34,6 +34,7 @@ grep -Fq "WorkingDirectory=${ROOT}" "${SERVICE_SOURCE}" || fail "service is not 
 grep -Fq 'Environment=NODE_ENV=development' "${SERVICE_SOURCE}" || fail "service does not select development mode"
 grep -Fq 'Environment=SIS_ENV_FILE=.env.dev' "${SERVICE_SOURCE}" || fail "service does not select .env.dev"
 grep -Fq 'Environment=DOTENV_CONFIG_PATH=.env.dev' "${SERVICE_SOURCE}" || fail "service does not select matching dotenv config"
+grep -Fq 'ExecStartPre=-/home/eagles/.nvm/versions/node/v22.22.1/bin/node --import dotenv/config tools/dev-db-backup-if-stale.mjs' "${SERVICE_SOURCE}" || fail "service does not refresh stale dev backups before health checks"
 grep -Fq 'node --import dotenv/config tools/db-health-check.mjs --expected-database sis_dev' "${SERVICE_SOURCE}" || fail "service does not load and verify the dev database"
 grep -Fq '/home/eagles/dockerz/backups/postgres-dev/latest.json' "${SERVICE_SOURCE}" || fail "service does not use isolated dev backup metadata"
 grep -Fq 'runtime-data/prometheus/db-health-dev.prom --metrics-environment dev' "${SERVICE_SOURCE}" || fail "service does not write dev-labeled metrics"
@@ -56,12 +57,13 @@ done
 systemctl --user daemon-reload
 systemctl --user enable --now "${TIMER_NAME}"
 
-service_properties="$(systemctl --user show "${SERVICE_NAME}" --property=Id --property=FragmentPath --property=WorkingDirectory --property=ExecStart --property=Type --property=TimeoutStartUSec)"
+service_properties="$(systemctl --user show "${SERVICE_NAME}" --property=Id --property=FragmentPath --property=WorkingDirectory --property=ExecStartPre --property=ExecStart --property=Type --property=TimeoutStartUSec)"
 timer_properties="$(systemctl --user show "${TIMER_NAME}" --property=Id --property=FragmentPath --property=Unit --property=ActiveState --property=TimersCalendar)"
 grep -Fq "Id=${SERVICE_NAME}" <<<"${service_properties}" || fail "loaded service identity mismatch"
 grep -Fq "WorkingDirectory=${ROOT}" <<<"${service_properties}" || fail "loaded service is not bound to the dev workspace"
 grep -Fq 'Type=oneshot' <<<"${service_properties}" || fail "loaded service is not oneshot"
 grep -Fq 'sis-db-health-dev.service' <<<"${service_properties}" || fail "loaded service does not run the expected health check"
+grep -Fq 'dev-db-backup-if-stale.mjs' <<<"${service_properties}" || fail "loaded dev service is missing the backup freshness guard"
 grep -Fq "Id=${TIMER_NAME}" <<<"${timer_properties}" || fail "loaded timer identity mismatch"
 grep -Fq 'Unit=sis-db-health-dev.service' <<<"${timer_properties}" || fail "timer does not invoke the dev health service"
 grep -Fq 'ActiveState=active' <<<"${timer_properties}" || fail "dev health timer is not active"
@@ -69,4 +71,4 @@ if grep -Eq '/home/admin\.eagles\.edu\.vn|/home/test\.eagles\.edu\.vn|Environmen
   fail "loaded dev units contain a mirror path or mutating deployment/database action"
 fi
 
-printf '[dev-db-health-timer] installed and enabled a 15-minute dev-only snapshot timer; it does not run the health service during installation; backup=%s\n' "${BACKUP_DIR}"
+printf '[dev-db-health-timer] installed and enabled the 15-minute dev-only health timer with a stale-backup preflight; it does not run the health service during installation; backup=%s\n' "${BACKUP_DIR}"

@@ -6,6 +6,16 @@
     "operations",
     "live-mirror"
   ],
+  "links": [
+    {
+      "title": "Nightly subsystem report",
+      "type": "link",
+      "icon": "graph-bar",
+      "url": "/d/sis-live-nightly-report/sis-live-c2b7-nightly-subsystem-report",
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -222,7 +232,7 @@
       },
       "targets": [
         {
-          "expr": "count(label_replace(max by () (probe_success{job=\"blackbox-website-http\",site=\"admin\"}), \"subsystem\", \"Public admin page\", \"__name__\", \".*\") or label_replace(max by () (probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"}), \"subsystem\", \"SIS API route\", \"__name__\", \".*\") or label_replace(max by () (probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"}), \"subsystem\", \"Auth guard\", \"__name__\", \".*\") or label_replace(max by () (node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}), \"subsystem\", \"SIS API service\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"}), \"subsystem\", \"PostgreSQL container\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}), \"subsystem\", \"PostgreSQL SELECT 1\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis app role\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis sessions role\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis cache role\", \"__name__\", \".*\") or label_replace(max by () (sis_grade_feed_readonly_data_available{environment=\"live\"}), \"subsystem\", \"Grade/feed read-only query\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} or (sis_external_service_configured{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} - 1))), \"subsystem\", \"CMU pronunciation dictionary\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"merriam_webster_collegiate\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_collegiate\"} - 1))), \"subsystem\", \"Merriam-Webster Collegiate\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"merriam_webster_learners\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_learners\"} - 1))), \"subsystem\", \"Merriam-Webster Learner's\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"shared\",service=\"languagetool_1\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_1\"} - 1))), \"subsystem\", \"LanguageTool 1\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"shared\",service=\"languagetool_2\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_2\"} - 1))), \"subsystem\", \"LanguageTool 2\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"brevo_api\"} or (sis_external_service_configured{environment=\"live\",service=\"brevo_api\"} - 1))), \"subsystem\", \"Brevo API\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"google_forms_discovery\"} or (sis_external_service_configured{environment=\"live\",service=\"google_forms_discovery\"} - 1))), \"subsystem\", \"Google Forms discovery\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"moodle_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"moodle_endpoint\"} - 1))), \"subsystem\", \"Moodle health endpoint\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"megs_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"megs_endpoint\"} - 1))), \"subsystem\", \"MEGS health endpoint\", \"__name__\", \".*\") or label_replace(max by () (sis_external_service_monitor_success{environment=\"live\"}), \"subsystem\", \"Vendor monitor\", \"__name__\", \".*\")) or vector(0)",
+          "expr": "count(label_replace(max by () (probe_success{job=\"blackbox-website-http\",site=\"admin\"}), \"subsystem\", \"Public admin page\", \"__name__\", \".*\") or label_replace(max by () (probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"}), \"subsystem\", \"SIS API route\", \"__name__\", \".*\") or label_replace(max by () (probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"}), \"subsystem\", \"Auth guard\", \"__name__\", \".*\") or label_replace(max by () (node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}), \"subsystem\", \"SIS API service\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"}), \"subsystem\", \"PostgreSQL container\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}), \"subsystem\", \"PostgreSQL SELECT 1\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis app role\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis sessions role\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis cache role\", \"__name__\", \".*\") or label_replace(max by () (sis_grade_feed_readonly_data_available{environment=\"live\"}), \"subsystem\", \"Grade/feed read-only query\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} or (sis_external_service_configured{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} - 1))), \"subsystem\", \"CMU pronunciation dictionary\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"merriam_webster_collegiate\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_collegiate\"} - 1))), \"subsystem\", \"Merriam-Webster Collegiate\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"merriam_webster_learners\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_learners\"} - 1))), \"subsystem\", \"Merriam-Webster Learner's\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"shared\",service=\"languagetool_1\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_1\"} - 1))), \"subsystem\", \"LanguageTool 1\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"shared\",service=\"languagetool_2\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_2\"} - 1))), \"subsystem\", \"LanguageTool 2\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"smtp_email_relay\"} or (sis_external_service_configured{environment=\"live\",service=\"smtp_email_relay\"} - 1))), \"subsystem\", \"SMTP email relay\", \"__name__\", \".*\") or label_replace(max by () (sis_external_service_configured{environment=\"live\",service=\"google_forms_grade_secret\"}), \"subsystem\", \"Google Forms grade endpoint key\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"moodle_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"moodle_endpoint\"} - 1))), \"subsystem\", \"Moodle health endpoint\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"megs_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"megs_endpoint\"} - 1))), \"subsystem\", \"MEGS health endpoint\", \"__name__\", \".*\") or label_replace(max by () (sis_external_service_monitor_success{environment=\"live\"}), \"subsystem\", \"Vendor monitor\", \"__name__\", \".*\")) or vector(0)",
           "refId": "A",
           "instant": true
         }
@@ -275,7 +285,7 @@
       },
       "targets": [
         {
-          "expr": "label_replace(max by () (probe_success{job=\"blackbox-website-http\",site=\"admin\"}), \"subsystem\", \"Public admin page\", \"__name__\", \".*\") or label_replace(max by () (probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"}), \"subsystem\", \"SIS API route\", \"__name__\", \".*\") or label_replace(max by () (probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"}), \"subsystem\", \"Auth guard\", \"__name__\", \".*\") or label_replace(max by () (node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}), \"subsystem\", \"SIS API service\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"}), \"subsystem\", \"PostgreSQL container\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}), \"subsystem\", \"PostgreSQL SELECT 1\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis app role\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis sessions role\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis cache role\", \"__name__\", \".*\") or label_replace(max by () (sis_grade_feed_readonly_data_available{environment=\"live\"}), \"subsystem\", \"Grade/feed read-only query\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} or (sis_external_service_configured{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} - 1))), \"subsystem\", \"CMU pronunciation dictionary\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"merriam_webster_collegiate\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_collegiate\"} - 1))), \"subsystem\", \"Merriam-Webster Collegiate\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"merriam_webster_learners\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_learners\"} - 1))), \"subsystem\", \"Merriam-Webster Learner's\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"shared\",service=\"languagetool_1\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_1\"} - 1))), \"subsystem\", \"LanguageTool 1\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"shared\",service=\"languagetool_2\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_2\"} - 1))), \"subsystem\", \"LanguageTool 2\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"brevo_api\"} or (sis_external_service_configured{environment=\"live\",service=\"brevo_api\"} - 1))), \"subsystem\", \"Brevo API\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"google_forms_discovery\"} or (sis_external_service_configured{environment=\"live\",service=\"google_forms_discovery\"} - 1))), \"subsystem\", \"Google Forms discovery\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"moodle_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"moodle_endpoint\"} - 1))), \"subsystem\", \"Moodle health endpoint\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"megs_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"megs_endpoint\"} - 1))), \"subsystem\", \"MEGS health endpoint\", \"__name__\", \".*\") or label_replace(max by () (sis_external_service_monitor_success{environment=\"live\"}), \"subsystem\", \"Vendor monitor\", \"__name__\", \".*\")",
+          "expr": "label_replace(max by () (probe_success{job=\"blackbox-website-http\",site=\"admin\"}), \"subsystem\", \"Public admin page\", \"__name__\", \".*\") or label_replace(max by () (probe_success{job=\"blackbox-website-api\",site=\"admin\",check=\"sis-api\"}), \"subsystem\", \"SIS API route\", \"__name__\", \".*\") or label_replace(max by () (probe_success{job=\"blackbox-admin-auth-api\",site=\"admin\"}), \"subsystem\", \"Auth guard\", \"__name__\", \".*\") or label_replace(max by () (node_systemd_unit_state{name=\"exercise-mailer.service\",state=\"active\"}), \"subsystem\", \"SIS API service\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"container-running\"}), \"subsystem\", \"PostgreSQL container\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-postgres\",check=\"authenticated-select-1\"}), \"subsystem\", \"PostgreSQL SELECT 1\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-app\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis app role\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-sessions\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis sessions role\", \"__name__\", \".*\") or label_replace(max by () (site_dependency_status{environment=\"live\",domain=\"admin.eagles.edu.vn\",dependency=\"sis-cache\",check=\"authenticated-ping\"}), \"subsystem\", \"Redis cache role\", \"__name__\", \".*\") or label_replace(max by () (sis_grade_feed_readonly_data_available{environment=\"live\"}), \"subsystem\", \"Grade/feed read-only query\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} or (sis_external_service_configured{environment=\"live\",service=\"cmu_pronunciation_dictionary\"} - 1))), \"subsystem\", \"CMU pronunciation dictionary\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"merriam_webster_collegiate\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_collegiate\"} - 1))), \"subsystem\", \"Merriam-Webster Collegiate\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"merriam_webster_learners\"} or (sis_external_service_configured{environment=\"live\",service=\"merriam_webster_learners\"} - 1))), \"subsystem\", \"Merriam-Webster Learner's\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"shared\",service=\"languagetool_1\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_1\"} - 1))), \"subsystem\", \"LanguageTool 1\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"shared\",service=\"languagetool_2\"} or (sis_external_service_configured{environment=\"shared\",service=\"languagetool_2\"} - 1))), \"subsystem\", \"LanguageTool 2\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"smtp_email_relay\"} or (sis_external_service_configured{environment=\"live\",service=\"smtp_email_relay\"} - 1))), \"subsystem\", \"SMTP email relay\", \"__name__\", \".*\") or label_replace(max by () (sis_external_service_configured{environment=\"live\",service=\"google_forms_grade_secret\"}), \"subsystem\", \"Google Forms grade endpoint key\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"moodle_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"moodle_endpoint\"} - 1))), \"subsystem\", \"Moodle health endpoint\", \"__name__\", \".*\") or label_replace(max by () ((sis_external_service_available{environment=\"live\",service=\"megs_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"megs_endpoint\"} - 1))), \"subsystem\", \"MEGS health endpoint\", \"__name__\", \".*\") or label_replace(max by () (sis_external_service_monitor_success{environment=\"live\"}), \"subsystem\", \"Vendor monitor\", \"__name__\", \".*\")",
           "refId": "A",
           "legendFormat": "{{subsystem}}",
           "format": "table",
@@ -464,14 +474,14 @@
           "legendFormat": "LanguageTool 2"
         },
         {
-          "expr": "last_over_time(((sis_external_service_available{environment=\"live\",service=\"brevo_api\"} or (sis_external_service_configured{environment=\"live\",service=\"brevo_api\"} - 1)))[30m:30s])",
+          "expr": "last_over_time(((sis_external_service_available{environment=\"live\",service=\"smtp_email_relay\"} or (sis_external_service_configured{environment=\"live\",service=\"smtp_email_relay\"} - 1)))[30m:30s])",
           "refId": "P",
-          "legendFormat": "Brevo API"
+          "legendFormat": "SMTP email relay"
         },
         {
-          "expr": "last_over_time(((sis_external_service_available{environment=\"live\",service=\"google_forms_discovery\"} or (sis_external_service_configured{environment=\"live\",service=\"google_forms_discovery\"} - 1)))[30m:30s])",
+          "expr": "last_over_time((sis_external_service_configured{environment=\"live\",service=\"google_forms_grade_secret\"})[30m:30s])",
           "refId": "Q",
-          "legendFormat": "Google Forms discovery"
+          "legendFormat": "Google Forms grade endpoint key"
         },
         {
           "expr": "last_over_time(((sis_external_service_available{environment=\"live\",service=\"moodle_endpoint\"} or (sis_external_service_configured{environment=\"live\",service=\"moodle_endpoint\"} - 1)))[30m:30s])",
@@ -889,7 +899,7 @@
     {
       "id": 19,
       "type": "timeseries",
-      "title": "Grade connections · Moodle and Google Forms",
+      "title": "Grade connections · Google Forms → SIS and Moodle",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -905,7 +915,7 @@
         {
           "expr": "sis_grade_feed_grade_rows{environment=\"live\",source=\"google_forms\"}",
           "refId": "B",
-          "legendFormat": "Google Forms grades"
+          "legendFormat": "Google Forms grades in SIS"
         },
         {
           "expr": "sis_grade_feed_exercise_submission_rows{environment=\"live\",source=\"moodle\"}",
@@ -913,55 +923,56 @@
           "legendFormat": "Moodle submissions"
         },
         {
-          "expr": "sis_grade_feed_exercise_submission_rows{environment=\"live\",source=\"google_forms\"}",
-          "refId": "D",
-          "legendFormat": "Google Forms submissions"
-        },
-        {
           "expr": "sis_grade_feed_readonly_data_available{environment=\"live\"}",
-          "refId": "E",
-          "legendFormat": "Read-only DB query"
+          "refId": "D",
+          "legendFormat": "Grade database read available"
         },
         {
           "expr": "sis_external_service_configured{environment=\"live\",service=\"google_forms_grade_secret\"}",
-          "refId": "F",
-          "legendFormat": "Grade endpoint secret configured"
-        },
-        {
-          "expr": "sis_external_service_configured{environment=\"live\",service=\"google_forms_discovery\"}",
-          "refId": "G",
-          "legendFormat": "Forms API discovery configured"
+          "refId": "E",
+          "legendFormat": "Google Forms SIS endpoint key configured"
         },
         {
           "expr": "sis_external_service_configured{environment=\"live\",service=\"moodle_endpoint\"}",
-          "refId": "H",
+          "refId": "F",
           "legendFormat": "Moodle endpoint configured"
         },
         {
-          "expr": "(sis_external_service_available{environment=\"live\",service=\"google_forms_discovery\"} or (sis_external_service_configured{environment=\"live\",service=\"google_forms_discovery\"} - 1))",
-          "refId": "I",
-          "legendFormat": "Forms API discovery health / not configured"
-        },
-        {
-          "expr": "(sis_external_service_http_status{environment=\"live\",service=\"google_forms_discovery\"} or (sis_external_service_configured{environment=\"live\",service=\"google_forms_discovery\"} - 1))",
-          "refId": "J",
-          "legendFormat": "Forms API status / not configured"
-        },
-        {
           "expr": "sis_external_service_configured{environment=\"live\",service=\"moodle_provisioning_secret\"}",
-          "refId": "K",
+          "refId": "G",
           "legendFormat": "Moodle provisioning secret configured"
+        },
+        {
+          "expr": "(time() - max by () (sis_grade_feed_grade_latest_updated_timestamp_seconds{environment=\"live\",source=\"google_forms\"} > 0)) or vector(-1)",
+          "refId": "H",
+          "legendFormat": "Age of latest Google Forms grade in SIS",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "(sum(increase(sis_grade_feed_write_requests_total{environment=\"production\",route=\"POST /api/integrations/google-forms/grades\",status=~\"2..\"}[24h])) or vector(-1))",
+          "refId": "I",
+          "legendFormat": "Signed Google Forms grade requests accepted · 24h",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "(sum(increase(sis_grade_feed_write_requests_total{environment=\"production\",route=\"POST /api/integrations/google-forms/grades\",status=~\"[45]..\"}[24h])) or vector(-1))",
+          "refId": "J",
+          "legendFormat": "Signed Google Forms grade requests failed · 24h",
+          "format": "table",
+          "instant": true
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "No stored feed rows or configured vendor endpoint"
+          "noValue": "No stored Google Forms grade or signed-request sample"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "Forms API status / not configured"
+              "options": "Age of latest Google Forms grade in SIS"
             },
             "properties": [
               {
@@ -970,13 +981,53 @@
                   {
                     "type": "value",
                     "options": {
-                      "0": {
-                        "text": "NO HTTP RESPONSE",
-                        "color": "orange"
-                      },
                       "-1": {
-                        "text": "NOT CONFIGURED",
+                        "text": "NO GOOGLE FORMS GRADE YET",
                         "color": "gray"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Signed Google Forms grade requests accepted · 24h"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "-1": {
+                        "text": "NO OBSERVED REQUESTS",
+                        "color": "orange"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Signed Google Forms grade requests failed · 24h"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "-1": {
+                        "text": "NO OBSERVED REQUESTS",
+                        "color": "orange"
                       }
                     }
                   }
@@ -985,12 +1036,13 @@
             ]
           }
         ]
-      }
+      },
+      "description": "Google Forms grades flow from the form to its response sheet, the Apps Script submit trigger, and the signed SIS grade endpoint. Grade counts and latest-update age are read from SIS aggregates; request counters include only requests that passed HMAC authentication. The endpoint-key card reports only SIS-side configuration. These signals do not prove the external trigger or matching Apps Script properties, and the monitor never submits a grade."
     },
     {
       "id": 20,
       "type": "timeseries",
-      "title": "Brevo webhook processing",
+      "title": "Email transport and webhook processing",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -1014,30 +1066,30 @@
           "legendFormat": "Read-only DB query"
         },
         {
-          "expr": "sis_external_service_configured{environment=\"live\",service=\"brevo_api\"}",
+          "expr": "sis_external_service_configured{environment=\"live\",service=\"smtp_email_relay\"}",
           "refId": "D",
-          "legendFormat": "Brevo API configured"
+          "legendFormat": "SMTP email relay configured"
         },
         {
-          "expr": "(sis_external_service_available{environment=\"live\",service=\"brevo_api\"} or (sis_external_service_configured{environment=\"live\",service=\"brevo_api\"} - 1))",
+          "expr": "(sis_external_service_available{environment=\"live\",service=\"smtp_email_relay\"} or (sis_external_service_configured{environment=\"live\",service=\"smtp_email_relay\"} - 1))",
           "refId": "E",
-          "legendFormat": "Brevo API health / not configured"
+          "legendFormat": "SMTP email relay health / not configured"
         },
         {
-          "expr": "(sis_external_service_http_status{environment=\"live\",service=\"brevo_api\"} or (sis_external_service_configured{environment=\"live\",service=\"brevo_api\"} - 1))",
+          "expr": "(sis_external_service_http_status{environment=\"live\",service=\"smtp_email_relay\"} or (sis_external_service_configured{environment=\"live\",service=\"smtp_email_relay\"} - 1))",
           "refId": "F",
-          "legendFormat": "Brevo API status / not configured"
+          "legendFormat": "SMTP email relay status / not configured"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "Brevo API endpoint is not configured"
+          "noValue": "SMTP email relay endpoint is not configured"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "Brevo API status / not configured"
+              "options": "SMTP email relay status / not configured"
             },
             "properties": [
               {

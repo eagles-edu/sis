@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import os
+import smtplib
+import ssl
 import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -24,6 +26,10 @@ REQUEST_TIMEOUT_SECONDS = 8
 DICTIONARY_BUILDER_TIMEOUT_SECONDS = 240
 USER_AGENT = "SIS-read-only-health-monitor/1.0"
 CONFIGURATION_ONLY_SERVICES = frozenset({"google_forms_grade_secret", "moodle_provisioning_secret"})
+MOODLE_ENDPOINTS = {
+    "live": "https://moodle.eagles.edu.vn/",
+    "test": "https://staged.eagles.edu.vn/",
+}
 DICTIONARY_BUILDER_PROVIDER_IDS = (
     "ldoce",
     "oxford_ame",
@@ -55,11 +61,13 @@ def read_environment(path: Path) -> dict[str, str]:
             key = key.strip()
             if key not in {
                 "BREVO_API_KEY",
+                "EMAIL_PROVIDER",
+                "SMTP_HOST",
+                "SMTP_PORT",
+                "SMTP_SECURE",
                 "MERRIAM_WEBSTER_COLLEGIATE_API_KEY",
                 "MERRIAM_WEBSTER_LEARNERS_API_KEY",
-                "GOOGLE_API_KEY",
                 "GOOGLE_FORMS_GRADES_SECRET",
-                "MOODLE_URL",
                 "MOODLE_SIS_PROVISIONING_SECRET",
                 "MEGS_HEALTH_URL",
                 "STUDENT_ADMIN_USER",
@@ -125,16 +133,43 @@ def check_merriam_webster(environment: dict[str, str], source: str, key_name: st
     return 1, int(available), duration, status
 
 
-def check_google_forms(environment: dict[str, str]) -> tuple[int, int, float, int]:
-    key = environment.get("GOOGLE_API_KEY", "").strip()
-    if not key:
+def check_smtp_relay(environment: dict[str, str]) -> tuple[int, int, float, int]:
+    host = environment.get("SMTP_HOST", "").strip()
+    port_text = environment.get("SMTP_PORT", "").strip()
+    try:
+        port = int(port_text)
+    except ValueError:
         return 0, 0, 0.0, 0
-    return check_configured_http(
-        environment,
-        "GOOGLE_API_KEY",
-        "https://forms.googleapis.com/$discovery/rest?version=v1",
-        {"X-Goog-Api-Key": key},
-    )
+    if not host or not 1 <= port <= 65535:
+        return 0, 0, 0.0, 0
+
+    started = time.monotonic()
+    secure = port == 465 or environment.get("SMTP_SECURE", "").strip().lower() == "true"
+    client_type = smtplib.SMTP_SSL if secure else smtplib.SMTP
+    try:
+        with client_type(host, port, timeout=REQUEST_TIMEOUT_SECONDS) as client:
+            code, _ = client.ehlo()
+            if code >= 400:
+                return 1, 0, time.monotonic() - started, code
+            if not secure and client.has_extn("starttls"):
+                client.starttls(context=ssl.create_default_context())
+                code, _ = client.ehlo()
+                if code >= 400:
+                    return 1, 0, time.monotonic() - started, code
+            code, _ = client.noop()
+            return 1, int(code == 250), time.monotonic() - started, code
+    except (OSError, smtplib.SMTPException, ValueError):
+        return 1, 0, time.monotonic() - started, 0
+
+
+def check_moodle_endpoint(environment_name: str) -> tuple[int, int, float, int]:
+    endpoint = MOODLE_ENDPOINTS.get(environment_name)
+    if not endpoint:
+        return 0, 0, 0.0, 0
+    _, duration, status = http_get(endpoint)
+    expected_auth_challenge = environment_name == "test" and status == 401
+    available = 200 <= status < 300 or expected_auth_challenge
+    return 1, int(available), duration, status
 
 
 def check_optional_endpoint(environment: dict[str, str], key: str) -> tuple[int, int, float, int]:
@@ -220,12 +255,16 @@ def local_checks(runtime_root: Path) -> list[tuple[str, int, int, float, int]]:
 
 
 def vendor_checks(environment_name: str, values: dict[str, str], runtime_root: Path) -> list[tuple[str, int, int, float, int]]:
+    email_provider = values.get("EMAIL_PROVIDER", "").strip().lower()
+    if email_provider == "brevo" or (not email_provider and values.get("BREVO_API_KEY", "").strip()):
+        email_check = ("brevo_api", check_brevo, (values,))
+    else:
+        email_check = ("smtp_email_relay", check_smtp_relay, (values,))
     configured_checks = [
-        ("brevo_api", check_brevo, (values,)),
+        email_check,
         ("merriam_webster_collegiate", check_merriam_webster, (values, "collegiate", "MERRIAM_WEBSTER_COLLEGIATE_API_KEY")),
         ("merriam_webster_learners", check_merriam_webster, (values, "learners", "MERRIAM_WEBSTER_LEARNERS_API_KEY")),
-        ("google_forms_discovery", check_google_forms, (values,)),
-        ("moodle_endpoint", check_optional_endpoint, (values, "MOODLE_URL")),
+        ("moodle_endpoint", check_moodle_endpoint, (environment_name,)),
         ("megs_endpoint", check_optional_endpoint, (values, "MEGS_HEALTH_URL")),
     ]
     output: list[tuple[str, int, int, float, int]] = []

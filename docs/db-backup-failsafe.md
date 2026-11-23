@@ -144,3 +144,23 @@ Re-sync that folder back to runtime and restart the service.
 - `--yes` is mandatory for real restore actions.
 - Keep backup labels meaningful (for example `before-user-credential-change`).
 - Prefer full snapshot restore for disaster recovery; use DB-only restore for data correction workflows.
+
+## Dev-only backup freshness
+
+The live/admin nightly backup remains owned by the system-level `sis-db-backup.timer`. Dev backup freshness is maintained independently through the existing `sis-db-health-dev.timer`; it does not add a second nightly timer or change the live/admin job. The service runs `tools/dev-db-backup-if-stale.mjs` before its read-only health check every 15 minutes. The guard uses only `.env.dev`, verifies `current_database() = sis_dev`, and creates a restorable dump when the latest verified dev dump is missing, invalid, or older than 24 hours. Dumps go only to `/home/eagles/dockerz/backups/postgres-dev`, with 30-day retention and at least 14 retained dumps. The guard sets the directory to `0700` and files to `0600`. If the backup attempt fails, systemd continues to the health check so `DevDatabaseBackupStale` can report the condition.
+
+Install the dev health timer and its backup freshness guard as the `eagles` user:
+
+```bash
+npm run dev:install-db-health-timer
+systemctl --user status sis-db-health-dev.timer sis-db-health-dev.service
+```
+
+A manual dev-only refresh, if needed, must pin the owning environment and output directory:
+
+```bash
+SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development \
+  /home/eagles/.nvm/versions/node/v22.22.1/bin/node --import dotenv/config \
+  tools/db-backup-failsafe.mjs --output-dir /home/eagles/dockerz/backups/postgres-dev \
+  --retention-days 30 --keep-min 14
+```

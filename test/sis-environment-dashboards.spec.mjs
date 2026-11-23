@@ -8,6 +8,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const DASHBOARD_DIR = path.join(ROOT, "ops/monitoring/grafana/dashboards")
 const live = JSON.parse(fs.readFileSync(path.join(DASHBOARD_DIR, "live-admin-mirror-overview.json"), "utf8"))
 const mirrorTest = JSON.parse(fs.readFileSync(path.join(DASHBOARD_DIR, "test-mirror-overview.json"), "utf8"))
+const liveReport = JSON.parse(fs.readFileSync(path.join(DASHBOARD_DIR, "live-nightly-subsystem-report.json"), "utf8"))
+const testReport = JSON.parse(fs.readFileSync(path.join(DASHBOARD_DIR, "test-nightly-subsystem-report.json"), "utf8"))
 const monitoringCompose = fs.readFileSync(path.join(ROOT, "ops/monitoring/docker-compose.yml"), "utf8")
 const alloyConfig = fs.readFileSync(path.join(ROOT, "ops/monitoring/alloy-config.alloy"), "utf8")
 const lokiConfig = fs.readFileSync(path.join(ROOT, "ops/monitoring/loki-config.yml"), "utf8")
@@ -44,6 +46,28 @@ test("live and test operations dashboards keep identical page structure", () => 
   }
 })
 
+test("live and test nightly reports keep identical panel structure and complete target sets", () => {
+  assert.equal(liveReport.panels.length, testReport.panels.length)
+  assert.equal(liveReport.refresh, testReport.refresh)
+  assert.deepEqual(liveReport.time, testReport.time)
+  assert.equal(liveReport.panels.length, 61)
+  for (const [index, panel] of liveReport.panels.entries()) {
+    const paired = testReport.panels[index]
+    assert.equal(panel.id, paired.id)
+    assert.equal(panel.type, paired.type)
+    assert.deepEqual(panel.gridPos, paired.gridPos)
+    assert.equal(panel.targets?.length || 0, paired.targets?.length || 0)
+  }
+  for (const [name, dashboard] of [["live", liveReport], ["test", testReport]]) {
+    const targets = dashboard.panels.flatMap((panel) => panel.targets || [])
+    assert.equal(targets.length, 100, `${name} report must query all configured checks`)
+    const statusCards = dashboard.panels.filter((panel) => panel.title === "STATUS")
+    assert.equal(statusCards.length, 20)
+    assert.ok(targets.some((target) => target.expr.includes('service="google_forms_grade_secret"')))
+    assert.ok(!JSON.stringify(dashboard).includes("google_forms_discovery"))
+  }
+})
+
 test("live dashboard reports ten read-only probes and ten vendor outcomes", () => {
   const serialized = JSON.stringify(live)
   const results = live.panels.find((panel) => panel.title === "20 subsystem checks · current results")
@@ -60,7 +84,8 @@ test("test dashboard reports ten authenticated workflows and ten vendor outcomes
   assert.equal((smoke.targets[0].expr.match(/label_replace\(/g) || []).length, 20)
   assert.ok(smoke.targets[0].expr.includes('group="student_news"'))
   assert.ok(smoke.targets[0].expr.includes('service="brevo_api"'))
-  assert.ok(smoke.targets[0].expr.includes('service="google_forms_discovery"'))
+  assert.ok(smoke.targets[0].expr.includes('service="google_forms_grade_secret"'))
+  assert.ok(!smoke.targets[0].expr.includes("google_forms_discovery"))
   assert.ok(smoke.fieldConfig.defaults.mappings[0].options["-1"])
   for (const target of history.targets) {
     assert.match(target.expr, /^last_over_time\(\(.+\)\[30m:30s\]\)$/)
@@ -102,12 +127,17 @@ test("both dashboards include real vendor, grade, Redis, and historical measurem
   }
 })
 
-test("optional Google Forms and Brevo HTTP panels show unconfigured and no-response states", () => {
+test("Google Forms grade connections observe the signed SIS path and Brevo shows endpoint state", () => {
   for (const dashboard of [live, mirrorTest]) {
     const grades = dashboard.panels.find((panel) => panel.id === 19)
     const brevo = dashboard.panels.find((panel) => panel.id === 20)
-    assert.match(grades.targets.find((target) => target.refId === "J").expr, /http_status[\s\S]*configured[\s\S]*- 1/u)
-    assert.ok(grades.fieldConfig.overrides.some((item) => JSON.stringify(item).includes("NOT CONFIGURED")))
+    assert.equal(grades.title, "Grade connections · Google Forms → SIS and Moodle")
+    assert.ok(grades.targets.some((target) => target.expr.includes('source="google_forms"') && target.expr.includes("grade_rows")))
+    assert.ok(grades.targets.some((target) => target.expr.includes('route="POST /api/integrations/google-forms/grades"') && target.expr.includes('status=~"2.."')))
+    assert.ok(grades.targets.some((target) => target.expr.includes("sis_grade_feed_grade_latest_updated_timestamp_seconds")))
+    assert.match(grades.description, /do not prove the external trigger/u)
+    assert.ok(!JSON.stringify(grades).includes("google_forms_discovery"))
+    assert.ok(grades.fieldConfig.overrides.some((item) => JSON.stringify(item).includes("NO OBSERVED REQUESTS")))
     assert.match(brevo.targets.find((target) => target.refId === "F").expr, /http_status[\s\S]*configured[\s\S]*- 1/u)
     assert.ok(brevo.fieldConfig.overrides.some((item) => JSON.stringify(item).includes("NO HTTP RESPONSE")))
   }

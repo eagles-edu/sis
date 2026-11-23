@@ -1,0 +1,5626 @@
+{
+  "uid": "sis-test-nightly-report",
+  "title": "SIS Test · Nightly Subsystem Report",
+  "description": "Twenty environment-specific checks with bounded latest-run messages, semantic status indicators, and daily result history. The bar chart covers a rolling 28-day window.",
+  "tags": [
+    "sis",
+    "nightly",
+    "subsystems",
+    "test-mirror"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1m",
+  "time": {
+    "from": "now-28d",
+    "to": "now"
+  },
+  "links": [
+    {
+      "title": "Operations overview",
+      "type": "link",
+      "icon": "dashboard",
+      "url": "/d/sis-test-mirror-overview/sis-test-mirror-c2b7-operations",
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "How to read this report",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Green = passed; red = failed; amber = stale, missing, or not configured. Bars show each day's latest result, with today on the right. Prometheus retains 28 days; older history was not kept and will fill over time.\n\nTest: 10 authenticated workflows plus 10 vendor/configuration checks. Core groups run every 60s, parent profile every 15m, five workflows every 5m, and the no-send suite nightly at 04:00 ICT."
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Engagement",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "targets": [
+        {
+          "expr": "label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"engagement\",code=\"none\"} == 1), \"run_message\", \"LAST RUN PASSED\", \"code\", \".*\") or label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"engagement\",code!=\"none\"} == 1), \"run_message\", \"LAST RUN FAILED · $1\", \"code\", \"(.+)\")",
+          "refId": "A",
+          "legendFormat": "{{run_message}}",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_keepalive_check_success{environment=\"test\",group=\"engagement\"}) and on () (time() - max by () (sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"engagement\"}) <= max by () (sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"engagement\"}))) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Engagement · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "targets": [
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"engagement\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"engagement\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"engagement\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"engagement\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"engagement\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"engagement\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"engagement\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"engagement\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"engagement\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Assignment notifications",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "targets": [
+        {
+          "expr": "label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"assignment_notifications\",code=\"none\"} == 1), \"run_message\", \"LAST RUN PASSED\", \"code\", \".*\") or label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"assignment_notifications\",code!=\"none\"} == 1), \"run_message\", \"LAST RUN FAILED · $1\", \"code\", \"(.+)\")",
+          "refId": "A",
+          "legendFormat": "{{run_message}}",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_keepalive_check_success{environment=\"test\",group=\"assignment_notifications\"}) and on () (time() - max by () (sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"assignment_notifications\"}) <= max by () (sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"assignment_notifications\"}))) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Assignment notifications · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "targets": [
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"assignment_notifications\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"assignment_notifications\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"assignment_notifications\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"assignment_notifications\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"assignment_notifications\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"assignment_notifications\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"assignment_notifications\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"assignment_notifications\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"assignment_notifications\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Parent reports",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 14
+      },
+      "targets": [
+        {
+          "expr": "label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"parent_reports\",code=\"none\"} == 1), \"run_message\", \"LAST RUN PASSED\", \"code\", \".*\") or label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"parent_reports\",code!=\"none\"} == 1), \"run_message\", \"LAST RUN FAILED · $1\", \"code\", \"(.+)\")",
+          "refId": "A",
+          "legendFormat": "{{run_message}}",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 14
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_keepalive_check_success{environment=\"test\",group=\"parent_reports\"}) and on () (time() - max by () (sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"parent_reports\"}) <= max by () (sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"parent_reports\"}))) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Parent reports · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "targets": [
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"parent_reports\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"parent_reports\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"parent_reports\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"parent_reports\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"parent_reports\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"parent_reports\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"parent_reports\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"parent_reports\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"parent_reports\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Profile + enrollment",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 14
+      },
+      "targets": [
+        {
+          "expr": "label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"student_profile_enrollment\",code=\"none\"} == 1), \"run_message\", \"LAST RUN PASSED\", \"code\", \".*\") or label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"student_profile_enrollment\",code!=\"none\"} == 1), \"run_message\", \"LAST RUN FAILED · $1\", \"code\", \"(.+)\")",
+          "refId": "A",
+          "legendFormat": "{{run_message}}",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 14
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_keepalive_check_success{environment=\"test\",group=\"student_profile_enrollment\"}) and on () (time() - max by () (sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"student_profile_enrollment\"}) <= max by () (sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"student_profile_enrollment\"}))) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Student profile and enrollment · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "targets": [
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"student_profile_enrollment\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"student_profile_enrollment\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"student_profile_enrollment\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"student_profile_enrollment\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"student_profile_enrollment\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"student_profile_enrollment\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"student_profile_enrollment\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"student_profile_enrollment\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"student_profile_enrollment\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 14,
+      "type": "stat",
+      "title": "Parent profile",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"parent_profile\",code=\"none\"} == 1), \"run_message\", \"LAST RUN PASSED\", \"code\", \".*\") or label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"parent_profile\",code!=\"none\"} == 1), \"run_message\", \"LAST RUN FAILED · $1\", \"code\", \"(.+)\")",
+          "refId": "A",
+          "legendFormat": "{{run_message}}",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 15,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_keepalive_check_success{environment=\"test\",group=\"parent_profile\"}) and on () (time() - max by () (sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"parent_profile\"}) <= max by () (sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"parent_profile\"}))) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Parent profile · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 27
+      },
+      "targets": [
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"parent_profile\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"parent_profile\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"parent_profile\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"parent_profile\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"parent_profile\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"parent_profile\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"parent_profile\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"parent_profile\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"parent_profile\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 17,
+      "type": "stat",
+      "title": "Student Library",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"student_library\",code=\"none\"} == 1), \"run_message\", \"LAST RUN PASSED\", \"code\", \".*\") or label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"student_library\",code!=\"none\"} == 1), \"run_message\", \"LAST RUN FAILED · $1\", \"code\", \"(.+)\")",
+          "refId": "A",
+          "legendFormat": "{{run_message}}",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 18,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_keepalive_check_success{environment=\"test\",group=\"student_library\"}) and on () (time() - max by () (sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"student_library\"}) <= max by () (sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"student_library\"}))) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "Student Library · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 27
+      },
+      "targets": [
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"student_library\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"student_library\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"student_library\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"student_library\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"student_library\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"student_library\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"student_library\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"student_library\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"student_library\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "Dictionary Builder",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 34
+      },
+      "targets": [
+        {
+          "expr": "label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"dictionary_builder\",code=\"none\"} == 1), \"run_message\", \"LAST RUN PASSED\", \"code\", \".*\") or label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"dictionary_builder\",code!=\"none\"} == 1), \"run_message\", \"LAST RUN FAILED · $1\", \"code\", \"(.+)\")",
+          "refId": "A",
+          "legendFormat": "{{run_message}}",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 34
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_keepalive_check_success{environment=\"test\",group=\"dictionary_builder\"}) and on () (time() - max by () (sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"dictionary_builder\"}) <= max by () (sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"dictionary_builder\"}))) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Dictionary Builder · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 37
+      },
+      "targets": [
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"dictionary_builder\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"dictionary_builder\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"dictionary_builder\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"dictionary_builder\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"dictionary_builder\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"dictionary_builder\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"dictionary_builder\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"dictionary_builder\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"dictionary_builder\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Student News",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 34
+      },
+      "targets": [
+        {
+          "expr": "label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"student_news\",code=\"none\"} == 1), \"run_message\", \"LAST RUN PASSED\", \"code\", \".*\") or label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"student_news\",code!=\"none\"} == 1), \"run_message\", \"LAST RUN FAILED · $1\", \"code\", \"(.+)\")",
+          "refId": "A",
+          "legendFormat": "{{run_message}}",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 24,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 34
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_keepalive_check_success{environment=\"test\",group=\"student_news\"}) and on () (time() - max by () (sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"student_news\"}) <= max by () (sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"student_news\"}))) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 25,
+      "type": "timeseries",
+      "title": "Student News · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 37
+      },
+      "targets": [
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"student_news\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"student_news\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"student_news\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"student_news\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"student_news\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"student_news\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"student_news\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"student_news\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"student_news\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 26,
+      "type": "stat",
+      "title": "Grade feeds",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 44
+      },
+      "targets": [
+        {
+          "expr": "label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"grade_feeds\",code=\"none\"} == 1), \"run_message\", \"LAST RUN PASSED\", \"code\", \".*\") or label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"grade_feeds\",code!=\"none\"} == 1), \"run_message\", \"LAST RUN FAILED · $1\", \"code\", \"(.+)\")",
+          "refId": "A",
+          "legendFormat": "{{run_message}}",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 27,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 44
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_keepalive_check_success{environment=\"test\",group=\"grade_feeds\"}) and on () (time() - max by () (sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"grade_feeds\"}) <= max by () (sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"grade_feeds\"}))) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 28,
+      "type": "timeseries",
+      "title": "Grade feeds · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 47
+      },
+      "targets": [
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"grade_feeds\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"grade_feeds\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"grade_feeds\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"grade_feeds\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"grade_feeds\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"grade_feeds\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"grade_feeds\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"grade_feeds\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"grade_feeds\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 29,
+      "type": "stat",
+      "title": "Attendance",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 44
+      },
+      "targets": [
+        {
+          "expr": "label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"attendance\",code=\"none\"} == 1), \"run_message\", \"LAST RUN PASSED\", \"code\", \".*\") or label_replace(max by (code) (sis_keepalive_check_failure_info{environment=\"test\",group=\"attendance\",code!=\"none\"} == 1), \"run_message\", \"LAST RUN FAILED · $1\", \"code\", \"(.+)\")",
+          "refId": "A",
+          "legendFormat": "{{run_message}}",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 30,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 44
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_keepalive_check_success{environment=\"test\",group=\"attendance\"}) and on () (time() - max by () (sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"attendance\"}) <= max by () (sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"attendance\"}))) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 31,
+      "type": "timeseries",
+      "title": "Attendance · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 47
+      },
+      "targets": [
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"attendance\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"attendance\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"attendance\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"attendance\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"attendance\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"attendance\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_keepalive_check_success{environment=\"test\",group=\"attendance\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_keepalive_check_last_check_timestamp_seconds{environment=\"test\",group=\"attendance\"})[1d:1m])) <= max by () (last_over_time((sis_keepalive_check_stale_after_seconds{environment=\"test\",group=\"attendance\"})[1d:1m])))) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 32,
+      "type": "stat",
+      "title": "CMU pronunciation dictionary",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 54
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"test\",service=\"cmu_pronunciation_dictionary\"}) or (max by () (sis_external_service_configured{environment=\"test\",service=\"cmu_pronunciation_dictionary\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"cmu_pronunciation_dictionary\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "legendFormat": "Last run message",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 33,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 54
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"test\",service=\"cmu_pronunciation_dictionary\"}) or (max by () (sis_external_service_configured{environment=\"test\",service=\"cmu_pronunciation_dictionary\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"cmu_pronunciation_dictionary\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 34,
+      "type": "timeseries",
+      "title": "CMU pronunciation dictionary · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 57
+      },
+      "targets": [
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"cmu_pronunciation_dictionary\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"cmu_pronunciation_dictionary\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"cmu_pronunciation_dictionary\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"cmu_pronunciation_dictionary\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"cmu_pronunciation_dictionary\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"cmu_pronunciation_dictionary\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"cmu_pronunciation_dictionary\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"cmu_pronunciation_dictionary\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"cmu_pronunciation_dictionary\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 35,
+      "type": "stat",
+      "title": "MW Collegiate",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 54
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"test\",service=\"merriam_webster_collegiate\"}) or (max by () (sis_external_service_configured{environment=\"test\",service=\"merriam_webster_collegiate\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"merriam_webster_collegiate\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "legendFormat": "Last run message",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 36,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 54
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"test\",service=\"merriam_webster_collegiate\"}) or (max by () (sis_external_service_configured{environment=\"test\",service=\"merriam_webster_collegiate\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"merriam_webster_collegiate\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 37,
+      "type": "timeseries",
+      "title": "Merriam-Webster Collegiate · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 57
+      },
+      "targets": [
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"merriam_webster_collegiate\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"merriam_webster_collegiate\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"merriam_webster_collegiate\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"merriam_webster_collegiate\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"merriam_webster_collegiate\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"merriam_webster_collegiate\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"merriam_webster_collegiate\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"merriam_webster_collegiate\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"merriam_webster_collegiate\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 38,
+      "type": "stat",
+      "title": "MW Learner's",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 64
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"test\",service=\"merriam_webster_learners\"}) or (max by () (sis_external_service_configured{environment=\"test\",service=\"merriam_webster_learners\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"merriam_webster_learners\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "legendFormat": "Last run message",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 39,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 64
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"test\",service=\"merriam_webster_learners\"}) or (max by () (sis_external_service_configured{environment=\"test\",service=\"merriam_webster_learners\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"merriam_webster_learners\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 40,
+      "type": "timeseries",
+      "title": "Merriam-Webster Learner's · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 67
+      },
+      "targets": [
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"merriam_webster_learners\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"merriam_webster_learners\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"merriam_webster_learners\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"merriam_webster_learners\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"merriam_webster_learners\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"merriam_webster_learners\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"merriam_webster_learners\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"merriam_webster_learners\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"merriam_webster_learners\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 41,
+      "type": "stat",
+      "title": "LanguageTool 1",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 64
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"shared\",service=\"languagetool_1\"}) or (max by () (sis_external_service_configured{environment=\"shared\",service=\"languagetool_1\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"shared\",service=\"languagetool_1\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "legendFormat": "Last run message",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 42,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 64
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"shared\",service=\"languagetool_1\"}) or (max by () (sis_external_service_configured{environment=\"shared\",service=\"languagetool_1\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"shared\",service=\"languagetool_1\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 43,
+      "type": "timeseries",
+      "title": "LanguageTool 1 · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 67
+      },
+      "targets": [
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"shared\",service=\"languagetool_1\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"shared\",service=\"languagetool_1\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"shared\",service=\"languagetool_1\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"shared\",service=\"languagetool_1\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"shared\",service=\"languagetool_1\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"shared\",service=\"languagetool_1\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"shared\",service=\"languagetool_1\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"shared\",service=\"languagetool_1\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"shared\",service=\"languagetool_1\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 44,
+      "type": "stat",
+      "title": "LanguageTool 2",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 74
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"shared\",service=\"languagetool_2\"}) or (max by () (sis_external_service_configured{environment=\"shared\",service=\"languagetool_2\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"shared\",service=\"languagetool_2\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "legendFormat": "Last run message",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 45,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 74
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"shared\",service=\"languagetool_2\"}) or (max by () (sis_external_service_configured{environment=\"shared\",service=\"languagetool_2\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"shared\",service=\"languagetool_2\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 46,
+      "type": "timeseries",
+      "title": "LanguageTool 2 · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 77
+      },
+      "targets": [
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"shared\",service=\"languagetool_2\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"shared\",service=\"languagetool_2\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"shared\",service=\"languagetool_2\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"shared\",service=\"languagetool_2\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"shared\",service=\"languagetool_2\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"shared\",service=\"languagetool_2\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"shared\",service=\"languagetool_2\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"shared\",service=\"languagetool_2\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"shared\",service=\"languagetool_2\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 47,
+      "type": "stat",
+      "title": "Email transport",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 74
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"test\",service=\"brevo_api\"}) or (max by () (sis_external_service_configured{environment=\"test\",service=\"brevo_api\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"brevo_api\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "legendFormat": "Last run message",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 48,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 74
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"test\",service=\"brevo_api\"}) or (max by () (sis_external_service_configured{environment=\"test\",service=\"brevo_api\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"brevo_api\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 49,
+      "type": "timeseries",
+      "title": "Email transport · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 77
+      },
+      "targets": [
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"brevo_api\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"brevo_api\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"brevo_api\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"brevo_api\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"brevo_api\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"brevo_api\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"brevo_api\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"brevo_api\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"brevo_api\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 50,
+      "type": "stat",
+      "title": "Google Forms grade endpoint key",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 84
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_external_service_configured{environment=\"test\",service=\"google_forms_grade_secret\"}) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"google_forms_grade_secret\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "legendFormat": "Last run message",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows whether the SIS-side Google Forms grade endpoint key is configured. This does not verify the external Apps Script trigger, its Script Properties, or a submitted grade."
+    },
+    {
+      "id": 51,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 84
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_external_service_configured{environment=\"test\",service=\"google_forms_grade_secret\"}) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"google_forms_grade_secret\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 52,
+      "type": "timeseries",
+      "title": "Google Forms grade endpoint key · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 87
+      },
+      "targets": [
+        {
+          "expr": "(((max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"google_forms_grade_secret\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"google_forms_grade_secret\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"google_forms_grade_secret\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"google_forms_grade_secret\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"google_forms_grade_secret\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"google_forms_grade_secret\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 53,
+      "type": "stat",
+      "title": "Moodle health endpoint",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 84
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"test\",service=\"moodle_endpoint\"}) or (max by () (sis_external_service_configured{environment=\"test\",service=\"moodle_endpoint\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"moodle_endpoint\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "legendFormat": "Last run message",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 54,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 84
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"test\",service=\"moodle_endpoint\"}) or (max by () (sis_external_service_configured{environment=\"test\",service=\"moodle_endpoint\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"moodle_endpoint\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 55,
+      "type": "timeseries",
+      "title": "Moodle health endpoint · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 87
+      },
+      "targets": [
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"moodle_endpoint\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"moodle_endpoint\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"moodle_endpoint\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"moodle_endpoint\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"moodle_endpoint\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"moodle_endpoint\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"moodle_endpoint\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"moodle_endpoint\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"moodle_endpoint\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 56,
+      "type": "stat",
+      "title": "MEGS health endpoint",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 94
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"test\",service=\"megs_endpoint\"}) or (max by () (sis_external_service_configured{environment=\"test\",service=\"megs_endpoint\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"megs_endpoint\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "legendFormat": "Last run message",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 57,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 94
+      },
+      "targets": [
+        {
+          "expr": "((max by () (sis_external_service_available{environment=\"test\",service=\"megs_endpoint\"}) or (max by () (sis_external_service_configured{environment=\"test\",service=\"megs_endpoint\"}) - 1)) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"megs_endpoint\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 58,
+      "type": "timeseries",
+      "title": "MEGS health endpoint · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 97
+      },
+      "targets": [
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"megs_endpoint\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"megs_endpoint\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"megs_endpoint\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"megs_endpoint\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"megs_endpoint\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"megs_endpoint\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "((((max by () (last_over_time((sis_external_service_available{environment=\"test\",service=\"megs_endpoint\"})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{environment=\"test\",service=\"megs_endpoint\"})[1d:1m])) - 1)) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\",service=\"megs_endpoint\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    },
+    {
+      "id": 59,
+      "type": "stat",
+      "title": "Vendor monitor",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 94
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_external_service_monitor_success{environment=\"test\"}) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "legendFormat": "Last run message",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "LAST RUN FAILED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "LAST RUN PASSED",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "NO DATA / STALE / NOT CONFIGURED",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "No recent run message"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      },
+      "description": "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result."
+    },
+    {
+      "id": 60,
+      "type": "stat",
+      "title": "STATUS",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 94
+      },
+      "targets": [
+        {
+          "expr": "(max by () (sis_external_service_monitor_success{environment=\"test\"}) and on () (time() - max by () (sis_external_service_last_check_timestamp_seconds{environment=\"test\"}) <= 1800)) or on () vector(-1)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "■",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "■",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "■",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "noValue": "■"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 44
+        }
+      },
+      "description": "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured."
+    },
+    {
+      "id": 61,
+      "type": "timeseries",
+      "title": "Vendor monitor · daily result trend",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 97
+      },
+      "targets": [
+        {
+          "expr": "(((max by () (last_over_time((sis_external_service_monitor_success{environment=\"test\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 1",
+          "refId": "A",
+          "legendFormat": "NO DATA",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_external_service_monitor_success{environment=\"test\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 2",
+          "refId": "B",
+          "legendFormat": "FAIL",
+          "interval": "1d"
+        },
+        {
+          "expr": "(((max by () (last_over_time((sis_external_service_monitor_success{environment=\"test\"})[1d:1m])) and on () (time() - max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{environment=\"test\"})[1d:1m])) <= 1800)) or on () vector(-1)) + 2) == bool 3",
+          "refId": "C",
+          "legendFormat": "PASS",
+          "interval": "1d"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "stepAfter",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "lineWidth": 0,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "left",
+            "axisLabel": "Observed",
+            "axisColorMode": "text",
+            "axisCenteredZero": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No daily result"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NO DATA"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FAIL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PASS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes."
+    }
+  ]
+}

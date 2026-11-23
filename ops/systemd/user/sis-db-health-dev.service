@@ -8,8 +8,9 @@ WorkingDirectory=/home/eagles/dockerz/sis
 Environment=NODE_ENV=development
 Environment=SIS_ENV_FILE=.env.dev
 Environment=DOTENV_CONFIG_PATH=.env.dev
+ExecStartPre=-/home/eagles/.nvm/versions/node/v22.22.1/bin/node --import dotenv/config tools/dev-db-backup-if-stale.mjs
 ExecStart=/home/eagles/.nvm/versions/node/v22.22.1/bin/node --import dotenv/config tools/db-health-check.mjs --expected-database sis_dev --backup-latest /home/eagles/dockerz/backups/postgres-dev/latest.json --metrics-output runtime-data/prometheus/db-health-dev.prom --metrics-environment dev
-TimeoutStartSec=90s
+TimeoutStartSec=300s
 UMask=0022
 NoNewPrivileges=true
 PrivateTmp=true

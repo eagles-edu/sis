@@ -77,6 +77,7 @@ Recent improvements now reflected in the system:
 - Staff admin handbook: [`docs/admin-staff-user-manual.md`](docs/admin-staff-user-manual.md)
 - Vietnamese parent/student manual: [`docs/parent-student-user-manual.vi.md`](docs/parent-student-user-manual.vi.md)
 - Operating SOP: [`docs/sop.md`](docs/sop.md)
+- Moodle staging workflow: [`docs/moodle-staging.md`](docs/moodle-staging.md)
 - Authenticated portal performance SOP: [`docs/authenticated-portal-performance-sop.md`](docs/authenticated-portal-performance-sop.md)
 - Backup and restore workflows: [`docs/db-backup-failsafe.md`](docs/db-backup-failsafe.md)
 
@@ -115,7 +116,7 @@ Use these when validating the local dev runtime on port `8788`:
 
 Install the bounded user-service restart guard for the dev API with `npm run dev:install-restart-guard`, then run `npm run dev:restart` to move the current API under that service. Routine source refreshes use `npm run dev:restart`; automatic process restarts do not rebuild assets or run Prisma commands.
 
-Install the dev-owned database health snapshot timer with `npm run dev:install-db-health-timer`. It checks `sis_dev` every 15 minutes, writes an atomic health snapshot and Prometheus textfile, and reads only `/home/eagles/dockerz/backups/postgres-dev/latest.json` for backup freshness. Development and live/admin backup metadata are isolated. The current single nightly backup scheduler remains live/admin-owned; without a recurring dev backup integrated into that scheduler, the dev freshness check will warn and alert after its 26-hour limit. Check the health timer with `systemctl --user status sis-db-health-dev.timer sis-db-health-dev.service`.
+Install the dev-owned database health snapshot timer with `npm run dev:install-db-health-timer`. It checks `sis_dev` every 15 minutes, writes an atomic health snapshot and Prometheus textfile, and reads only `/home/eagles/dockerz/backups/postgres-dev/latest.json` for backup freshness. Development and live/admin backup metadata are isolated. The existing 15-minute dev health service now runs a dev-only backup preflight: it creates and verifies a dump in `/home/eagles/dockerz/backups/postgres-dev` when the latest verified `sis_dev` dump is missing, invalid, or older than 24 hours, and enforces directory/file modes `0700`/`0600`. The system-level 02:30 live/admin backup timer is unchanged and remains the only nightly backup scheduler. Check the health timer with `systemctl --user status sis-db-health-dev.timer sis-db-health-dev.service`.
 
 ## Core surfaces
 

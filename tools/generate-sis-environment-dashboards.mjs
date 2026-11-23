@@ -67,8 +67,328 @@ function textPanel(id, title, content, x, y, w, h) {
   }
 }
 
+const nightlyWorkflowGroups = [
+  { name: "Engagement", group: "engagement" },
+  { name: "Assignment notifications", group: "assignment_notifications" },
+  { name: "Parent reports", group: "parent_reports" },
+  { name: "Student profile and enrollment", cardName: "Profile + enrollment", group: "student_profile_enrollment" },
+  { name: "Parent profile", group: "parent_profile" },
+  { name: "Student Library", group: "student_library" },
+  { name: "Dictionary Builder", group: "dictionary_builder" },
+  { name: "Student News", group: "student_news" },
+  { name: "Grade feeds", group: "grade_feeds" },
+  { name: "Attendance", group: "attendance" },
+]
+
+const liveProbeChecks = (config) => {
+  const dependency = (name, check) =>
+    `site_dependency_status{environment="live",domain="${config.domain}",dependency="${name}",check="${check}"}`
+  return [
+    { name: "Public admin page", expr: 'probe_success{job="blackbox-website-http",site="admin"}' },
+    { name: "SIS API route", expr: 'probe_success{job="blackbox-website-api",site="admin",check="sis-api"}' },
+    { name: "Admin auth guard", expr: 'probe_success{job="blackbox-admin-auth-api",site="admin"}' },
+    { name: "SIS API service", expr: 'node_systemd_unit_state{name="exercise-mailer.service",state="active"}' },
+    { name: "PostgreSQL container", expr: dependency("sis-postgres", "container-running") },
+    { name: "PostgreSQL authenticated query", expr: dependency("sis-postgres", "authenticated-select-1") },
+    { name: "Redis app role", expr: dependency("sis-app", "authenticated-ping") },
+    { name: "Redis sessions role", expr: dependency("sis-sessions", "authenticated-ping") },
+    { name: "Redis cache role", expr: dependency("sis-cache", "authenticated-ping") },
+    { name: "Grade feed read-only query", expr: 'sis_grade_feed_readonly_data_available{environment="live"}' },
+  ]
+}
+
+function externalServiceChecks(environment) {
+  return [
+    { name: "CMU pronunciation dictionary", service: "cmu_pronunciation_dictionary", serviceEnvironment: environment },
+    { name: "Merriam-Webster Collegiate", cardName: "MW Collegiate", service: "merriam_webster_collegiate", serviceEnvironment: environment },
+    { name: "Merriam-Webster Learner's", cardName: "MW Learner's", service: "merriam_webster_learners", serviceEnvironment: environment },
+    { name: "LanguageTool 1", service: "languagetool_1", serviceEnvironment: "shared" },
+    { name: "LanguageTool 2", service: "languagetool_2", serviceEnvironment: "shared" },
+    {
+      name: "Email transport",
+      service: environment === "live" ? "smtp_email_relay" : "brevo_api",
+      serviceEnvironment: environment,
+    },
+    { name: "Google Forms grade endpoint key", service: "google_forms_grade_secret", serviceEnvironment: environment, configOnly: true },
+    { name: "Moodle health endpoint", service: "moodle_endpoint", serviceEnvironment: environment },
+    { name: "MEGS health endpoint", service: "megs_endpoint", serviceEnvironment: environment },
+    { name: "Vendor monitor", serviceEnvironment: environment, aggregate: true },
+  ]
+}
+
+function resultMappings({ indicator = false } = {}) {
+  return [
+    {
+      type: "value",
+      options: indicator
+        ? {
+            "-1": { text: "■", color: "orange" },
+            "0": { text: "■", color: "red" },
+            "1": { text: "■", color: "green" },
+          }
+        : {
+            "-1": { text: "NO DATA / STALE / NOT CONFIGURED", color: "orange" },
+            "0": { text: "LAST RUN FAILED", color: "red" },
+            "1": { text: "LAST RUN PASSED", color: "green" },
+          },
+    },
+  ]
+}
+
+function currentStatusExpression(check) {
+  if (check.kind === "workflow") {
+    const success = `sis_keepalive_check_success{environment="test",group="${check.group}"}`
+    const checked = `sis_keepalive_check_last_check_timestamp_seconds{environment="test",group="${check.group}"}`
+    const staleAfter = `sis_keepalive_check_stale_after_seconds{environment="test",group="${check.group}"}`
+    return `(max by () (${success}) and on () (time() - max by () (${checked}) <= max by () (${staleAfter}))) or on () vector(-1)`
+  }
+
+  if (check.kind === "vendor") {
+    const labels = check.aggregate
+      ? `environment="${check.serviceEnvironment}"`
+      : `environment="${check.serviceEnvironment}",service="${check.service}"`
+    const value = check.aggregate
+      ? `max by () (sis_external_service_monitor_success{${labels}})`
+      : check.configOnly
+        ? `max by () (sis_external_service_configured{${labels}})`
+        : `(max by () (sis_external_service_available{${labels}}) or (max by () (sis_external_service_configured{${labels}}) - 1))`
+    const checked = `max by () (sis_external_service_last_check_timestamp_seconds{${labels}})`
+    return `(${value} and on () (time() - ${checked} <= 1800)) or on () vector(-1)`
+  }
+
+  const latest = `max by () (last_over_time((${check.expr})[5m:15s]))`
+  const fresh = `max by () (present_over_time((${check.expr})[5m:15s]))`
+  return `(${latest} and on () ${fresh}) or on () vector(-1)`
+}
+
+function dailyStatusExpression(check) {
+  if (check.kind === "workflow") {
+    const success = `sis_keepalive_check_success{environment="test",group="${check.group}"}`
+    const checked = `sis_keepalive_check_last_check_timestamp_seconds{environment="test",group="${check.group}"}`
+    const staleAfter = `sis_keepalive_check_stale_after_seconds{environment="test",group="${check.group}"}`
+    const latest = `max by () (last_over_time((${success})[1d:1m]))`
+    const latestChecked = `max by () (last_over_time((${checked})[1d:1m]))`
+    const latestStaleAfter = `max by () (last_over_time((${staleAfter})[1d:1m]))`
+    return `(${latest} and on () (time() - ${latestChecked} <= ${latestStaleAfter})) or on () vector(-1)`
+  }
+
+  if (check.kind === "vendor") {
+    const labels = check.aggregate
+      ? `environment="${check.serviceEnvironment}"`
+      : `environment="${check.serviceEnvironment}",service="${check.service}"`
+    const value = check.aggregate
+      ? `max by () (last_over_time((sis_external_service_monitor_success{${labels}})[1d:1m]))`
+      : check.configOnly
+        ? `max by () (last_over_time((sis_external_service_configured{${labels}})[1d:1m]))`
+        : `(max by () (last_over_time((sis_external_service_available{${labels}})[1d:1m])) or (max by () (last_over_time((sis_external_service_configured{${labels}})[1d:1m])) - 1))`
+    const checked = `max by () (last_over_time((sis_external_service_last_check_timestamp_seconds{${labels}})[1d:1m]))`
+    return `(${value} and on () (time() - ${checked} <= 1800)) or on () vector(-1)`
+  }
+
+  const latest = `max by () (last_over_time((${check.expr})[1d:1m]))`
+  const present = `max by () (present_over_time((${check.expr})[1d:1m]))`
+  return `(${latest} and on () ${present}) or on () vector(-1)`
+}
+
+function messageTarget(check) {
+  if (check.kind === "workflow") {
+    const passing = `sis_keepalive_check_failure_info{environment="test",group="${check.group}",code="none"} == 1`
+    const failing = `sis_keepalive_check_failure_info{environment="test",group="${check.group}",code!="none"} == 1`
+    const expression = `label_replace(max by (code) (${passing}), "run_message", "LAST RUN PASSED", "code", ".*") or label_replace(max by (code) (${failing}), "run_message", "LAST RUN FAILED · $1", "code", "(.+)")`
+    return target(expression, "A", "{{run_message}}", undefined, true)
+  }
+  return target(currentStatusExpression(check), "A", "Last run message", undefined, true)
+}
+
+function reportPanel(id, title, type, x, y, w, h, targetSpec, fieldConfig, options, extra = {}) {
+  return {
+    id,
+    type,
+    title,
+    gridPos: { h, w, x, y },
+    targets: Array.isArray(targetSpec) ? targetSpec : [targetSpec],
+    datasource: { type: "prometheus", uid: "sis-prometheus" },
+    fieldConfig,
+    options,
+    ...extra,
+  }
+}
+
+function buildSubsystemReport(config) {
+  const checks = config.environment === "live"
+    ? liveProbeChecks(config).map((check) => ({ ...check, kind: "probe" }))
+    : nightlyWorkflowGroups.map((check) => ({ ...check, kind: "workflow" }))
+  checks.push(...externalServiceChecks(config.environment).map((check) => ({ ...check, kind: "vendor" })))
+
+  const panels = [
+    textPanel(
+      1,
+      "How to read this report",
+      `Green = passed; red = failed; amber = stale, missing, or not configured. Bars show each day's latest result, with today on the right. Prometheus retains 28 days; older history was not kept and will fill over time.\n\n${config.notice}`,
+      0,
+      0,
+      24,
+      4,
+    ),
+  ]
+
+  for (const [index, check] of checks.entries()) {
+    const cardX = index % 2 === 0 ? 0 : 12
+    const cardY = 4 + Math.floor(index / 2) * 10
+    const firstId = index * 3 + 2
+    const current = currentStatusExpression(check)
+    const history = `(${dailyStatusExpression(check)}) + 2`
+    const statusMap = resultMappings()
+    const indicatorMap = resultMappings({ indicator: true })
+
+    panels.push(reportPanel(
+      firstId,
+      check.cardName ?? check.name,
+      "stat",
+      cardX,
+      cardY,
+      6,
+      3,
+      messageTarget(check),
+      {
+        defaults: {
+          unit: "short",
+          color: { mode: "fixed", fixedColor: "text" },
+          mappings: statusMap,
+          noValue: "No recent run message",
+        },
+        overrides: [],
+      },
+      {
+        reduceOptions: { calcs: ["lastNotNull"], fields: "", values: false },
+        orientation: "horizontal",
+        textMode: check.kind === "workflow" ? "name" : "value",
+        colorMode: "none",
+        graphMode: "none",
+        justifyMode: "center",
+        wideLayout: true,
+        text: { titleSize: 12, valueSize: 16 },
+      },
+      { description: check.configOnly
+        ? "Shows whether the SIS-side Google Forms grade endpoint key is configured. This does not verify the external Apps Script trigger, its Script Properties, or a submitted grade."
+        : "Shows the latest bounded monitor outcome. Workflow messages use the monitor's bounded failure category; vendor and live probe messages show the current semantic result." },
+    ))
+
+    panels.push(reportPanel(
+      firstId + 1,
+      "STATUS",
+      "stat",
+      cardX + 6,
+      cardY,
+      6,
+      3,
+      target(current, "A", undefined, undefined, true),
+      {
+        defaults: {
+          unit: "short",
+          color: { mode: "thresholds" },
+          mappings: indicatorMap,
+          noValue: "■",
+        },
+        overrides: [],
+      },
+      {
+        reduceOptions: { calcs: ["lastNotNull"], fields: "", values: false },
+        orientation: "horizontal",
+        textMode: "value",
+        colorMode: "value",
+        graphMode: "none",
+        justifyMode: "center",
+        wideLayout: true,
+        text: { titleSize: 12, valueSize: 44 },
+      },
+      { description: "Green is a fresh pass, red is a fresh failure, and amber means stale, missing, or unconfigured." },
+    ))
+
+    panels.push(reportPanel(
+      firstId + 2,
+      `${check.name} · daily result trend`,
+      "timeseries",
+      cardX,
+      cardY + 3,
+      12,
+      6,
+      [
+        target(`(${history}) == bool 1`, "A", "NO DATA"),
+        target(`(${history}) == bool 2`, "B", "FAIL"),
+        target(`(${history}) == bool 3`, "C", "PASS"),
+      ].map((query) => ({ ...query, interval: "1d" })),
+      {
+        defaults: {
+          unit: "short",
+          min: 0,
+          max: 1,
+          color: { mode: "fixed", fixedColor: "green" },
+          custom: {
+            drawStyle: "bars",
+            lineInterpolation: "stepAfter",
+            barAlignment: 0,
+            barWidthFactor: 0.8,
+            lineWidth: 0,
+            fillOpacity: 100,
+            gradientMode: "none",
+            showPoints: "never",
+            spanNulls: false,
+            stacking: { mode: "none", group: "A" },
+            axisPlacement: "left",
+            axisLabel: "Observed",
+            axisColorMode: "text",
+            axisCenteredZero: false,
+            scaleDistribution: { type: "linear" },
+            thresholdsStyle: { mode: "off" },
+            hideFrom: { tooltip: false, viz: false, legend: false },
+          },
+          mappings: [],
+          noValue: "No daily result",
+        },
+        overrides: [
+          { matcher: { id: "byName", options: "NO DATA" }, properties: [{ id: "color", value: { mode: "fixed", fixedColor: "orange" } }] },
+          { matcher: { id: "byName", options: "FAIL" }, properties: [{ id: "color", value: { mode: "fixed", fixedColor: "red" } }] },
+          { matcher: { id: "byName", options: "PASS" }, properties: [{ id: "color", value: { mode: "fixed", fixedColor: "green" } }] },
+        ],
+      },
+      {
+        tooltip: { mode: "single", sort: "none" },
+        legend: { showLegend: false },
+      },
+      { description: "One daily last-result sample over the selected rolling 28-day window; the rightmost bar is today. Amber covers stale, missing, and unconfigured outcomes." },
+    ))
+  }
+
+  const slug = config.environment === "live" ? "live-nightly-subsystem-report" : "test-nightly-subsystem-report"
+  return {
+    uid: config.environment === "live" ? "sis-live-nightly-report" : "sis-test-nightly-report",
+    title: config.environment === "live" ? "SIS Live · Nightly Subsystem Report" : "SIS Test · Nightly Subsystem Report",
+    description: "Twenty environment-specific checks with bounded latest-run messages, semantic status indicators, and daily result history. The bar chart covers a rolling 28-day window.",
+    tags: ["sis", "nightly", "subsystems", `${config.environment}-mirror`],
+    timezone: "browser",
+    schemaVersion: 39,
+    version: 1,
+    refresh: "1m",
+    time: { from: "now-28d", to: "now" },
+    links: [{
+      title: "Operations overview",
+      type: "link",
+      icon: "dashboard",
+      url: config.environment === "live"
+        ? "/d/sis-live-admin-overview/sis-live-admin-mirror-c2b7-operations"
+        : "/d/sis-test-mirror-overview/sis-test-mirror-c2b7-operations",
+      keepTime: true,
+      targetBlank: false,
+    }],
+    panels,
+  }
+}
+
 function buildDashboard(config) {
   const env = config.environment
+  const emailService = env === "live" ? "smtp_email_relay" : "brevo_api"
+  const emailServiceName = env === "live" ? "SMTP email relay" : "Brevo API"
   const siteDependency = (dependency, check) =>
     `site_dependency_status{environment="${env}",domain="${config.domain}",dependency="${dependency}",check="${check}"}`
   const monitorSuccess = `site_dependency_environment_monitor_success{environment="${env}"}`
@@ -109,15 +429,15 @@ function buildDashboard(config) {
     { name: "Merriam-Webster Learner's", service: "merriam_webster_learners", serviceEnvironment: env },
     { name: "LanguageTool 1", service: "languagetool_1", serviceEnvironment: "shared" },
     { name: "LanguageTool 2", service: "languagetool_2", serviceEnvironment: "shared" },
-    { name: "Brevo API", service: "brevo_api", serviceEnvironment: env },
-    { name: "Google Forms discovery", service: "google_forms_discovery", serviceEnvironment: env },
+    { name: emailServiceName, service: emailService, serviceEnvironment: env },
+    { name: "Google Forms grade endpoint key", service: "google_forms_grade_secret", serviceEnvironment: env, configOnly: true },
     { name: "Moodle health endpoint", service: "moodle_endpoint", serviceEnvironment: env },
     { name: "MEGS health endpoint", service: "megs_endpoint", serviceEnvironment: env },
-  ].map(({ name, service, serviceEnvironment }, index) => {
+  ].map(({ name, service, serviceEnvironment, configOnly }, index) => {
     const labels = `environment="${serviceEnvironment}",service="${service}"`
     const configured = `sis_external_service_configured{${labels}}`
     const available = `sis_external_service_available{${labels}}`
-    return target(`(${available} or (${configured} - 1))`, String.fromCharCode(75 + index), name, "table", true)
+    return target(configOnly ? configured : `(${available} or (${configured} - 1))`, String.fromCharCode(75 + index), name, "table", true)
   })
   vendorServices.push(target(`sis_external_service_monitor_success{environment="${env}"}`, "T", "Vendor monitor", "table", true))
   const subsystemTableTarget = (targets) => target(
@@ -216,30 +536,31 @@ function buildDashboard(config) {
         target('sis_external_service_check_duration_seconds{environment="shared",service=~"languagetool_.*"}', "K", "{{service}} check duration"),
       ] : []),
     ], "short", { description: env === "live" ? "Live LanguageTool and CMUdict feeds are read-only vendor checks. News Check and submit are not run on live; customer workflow writes remain held." : "News Check, submit, LanguageTool, and pronunciation-dictionary results come from the scheduled authenticated test workflow, with separate shared vendor-health samples." }),
-    panel(19, "Grade connections · Moodle and Google Forms", "timeseries", 0, 63, 12, 8, [
+    panel(19, "Grade connections · Google Forms → SIS and Moodle", "timeseries", 0, 63, 12, 8, [
       target(`sis_grade_feed_grade_rows{environment="${env}",source="moodle"}`, "A", "Moodle grades"),
-      target(`sis_grade_feed_grade_rows{environment="${env}",source="google_forms"}`, "B", "Google Forms grades"),
+      target(`sis_grade_feed_grade_rows{environment="${env}",source="google_forms"}`, "B", "Google Forms grades in SIS"),
       target(`sis_grade_feed_exercise_submission_rows{environment="${env}",source="moodle"}`, "C", "Moodle submissions"),
-      target(`sis_grade_feed_exercise_submission_rows{environment="${env}",source="google_forms"}`, "D", "Google Forms submissions"),
-      target(`sis_grade_feed_readonly_data_available{environment="${env}"}`, "E", "Read-only DB query"),
-      target(`sis_external_service_configured{environment="${env}",service="google_forms_grade_secret"}`, "F", "Grade endpoint secret configured"),
-      target(`sis_external_service_configured{environment="${env}",service="google_forms_discovery"}`, "G", "Forms API discovery configured"),
-      target(`sis_external_service_configured{environment="${env}",service="moodle_endpoint"}`, "H", "Moodle endpoint configured"),
-      target(`(sis_external_service_available{environment="${env}",service="google_forms_discovery"} or (sis_external_service_configured{environment="${env}",service="google_forms_discovery"} - 1))`, "I", "Forms API discovery health / not configured"),
-      target(`(sis_external_service_http_status{environment="${env}",service="google_forms_discovery"} or (sis_external_service_configured{environment="${env}",service="google_forms_discovery"} - 1))`, "J", "Forms API status / not configured"),
-      target(`sis_external_service_configured{environment="${env}",service="moodle_provisioning_secret"}`, "K", "Moodle provisioning secret configured"),
-    ], "short", { fieldConfig: { defaults: { noValue: "No stored feed rows or configured vendor endpoint" }, overrides: [
-      { matcher: { id: "byName", options: "Forms API status / not configured" }, properties: [{ id: "mappings", value: [{ type: "value", options: { "-1": { text: "NOT CONFIGURED", color: "gray" }, "0": { text: "NO HTTP RESPONSE", color: "orange" } } }] }] },
+      target(`sis_grade_feed_readonly_data_available{environment="${env}"}`, "D", "Grade database read available"),
+      target(`sis_external_service_configured{environment="${env}",service="google_forms_grade_secret"}`, "E", "Google Forms SIS endpoint key configured"),
+      target(`sis_external_service_configured{environment="${env}",service="moodle_endpoint"}`, "F", "Moodle endpoint configured"),
+      target(`sis_external_service_configured{environment="${env}",service="moodle_provisioning_secret"}`, "G", "Moodle provisioning secret configured"),
+      target(`(time() - max by () (sis_grade_feed_grade_latest_updated_timestamp_seconds{environment="${env}",source="google_forms"} > 0)) or vector(-1)`, "H", "Age of latest Google Forms grade in SIS", "table", true),
+      target(`(sum(increase(sis_grade_feed_write_requests_total{environment="${writeEnv}",route="POST /api/integrations/google-forms/grades",status=~"2.."}[24h])) or vector(-1))`, "I", "Signed Google Forms grade requests accepted · 24h", "table", true),
+      target(`(sum(increase(sis_grade_feed_write_requests_total{environment="${writeEnv}",route="POST /api/integrations/google-forms/grades",status=~"[45].."}[24h])) or vector(-1))`, "J", "Signed Google Forms grade requests failed · 24h", "table", true),
+    ], "short", { description: "Google Forms grades flow from the form to its response sheet, the Apps Script submit trigger, and the signed SIS grade endpoint. Grade counts and latest-update age are read from SIS aggregates; request counters include only requests that passed HMAC authentication. The endpoint-key card reports only SIS-side configuration. These signals do not prove the external trigger or matching Apps Script properties, and the monitor never submits a grade.", fieldConfig: { defaults: { noValue: "No stored Google Forms grade or signed-request sample" }, overrides: [
+      { matcher: { id: "byName", options: "Age of latest Google Forms grade in SIS" }, properties: [{ id: "mappings", value: [{ type: "value", options: { "-1": { text: "NO GOOGLE FORMS GRADE YET", color: "gray" } } }] }] },
+      { matcher: { id: "byName", options: "Signed Google Forms grade requests accepted · 24h" }, properties: [{ id: "mappings", value: [{ type: "value", options: { "-1": { text: "NO OBSERVED REQUESTS", color: "orange" } } }] }] },
+      { matcher: { id: "byName", options: "Signed Google Forms grade requests failed · 24h" }, properties: [{ id: "mappings", value: [{ type: "value", options: { "-1": { text: "NO OBSERVED REQUESTS", color: "orange" } } }] }] },
     ] } }),
-    panel(20, "Brevo webhook processing", "timeseries", 12, 63, 12, 8, [
+    panel(20, "Email transport and webhook processing", "timeseries", 12, 63, 12, 8, [
       target(`sis_engagement_webhook_unprocessed_events{environment="${env}"}`, "A", "unprocessed events"),
       target(`sis_engagement_webhook_last_received_timestamp_seconds{environment="${env}"}`, "B", "last webhook received"),
       target(`sis_engagement_webhook_readonly_data_available{environment="${env}"}`, "C", "Read-only DB query"),
-      target(`sis_external_service_configured{environment="${env}",service="brevo_api"}`, "D", "Brevo API configured"),
-      target(`(sis_external_service_available{environment="${env}",service="brevo_api"} or (sis_external_service_configured{environment="${env}",service="brevo_api"} - 1))`, "E", "Brevo API health / not configured"),
-      target(`(sis_external_service_http_status{environment="${env}",service="brevo_api"} or (sis_external_service_configured{environment="${env}",service="brevo_api"} - 1))`, "F", "Brevo API status / not configured"),
-    ], "short", { fieldConfig: { defaults: { noValue: "Brevo API endpoint is not configured" }, overrides: [
-      { matcher: { id: "byName", options: "Brevo API status / not configured" }, properties: [{ id: "mappings", value: [{ type: "value", options: { "-1": { text: "NOT CONFIGURED", color: "gray" }, "0": { text: "NO HTTP RESPONSE", color: "orange" } } }] }] },
+      target(`sis_external_service_configured{environment="${env}",service="${emailService}"}`, "D", `${emailServiceName} configured`),
+      target(`(sis_external_service_available{environment="${env}",service="${emailService}"} or (sis_external_service_configured{environment="${env}",service="${emailService}"} - 1))`, "E", `${emailServiceName} health / not configured`),
+      target(`(sis_external_service_http_status{environment="${env}",service="${emailService}"} or (sis_external_service_configured{environment="${env}",service="${emailService}"} - 1))`, "F", `${emailServiceName} status / not configured`),
+    ], "short", { fieldConfig: { defaults: { noValue: `${emailServiceName} endpoint is not configured` }, overrides: [
+      { matcher: { id: "byName", options: `${emailServiceName} status / not configured` }, properties: [{ id: "mappings", value: [{ type: "value", options: { "-1": { text: "NOT CONFIGURED", color: "gray" }, "0": { text: "NO HTTP RESPONSE", color: "orange" } } }] }] },
     ] } }),
     panel(21, "Thuvien and ESL reading probes", "timeseries", 0, 71, 12, 8, [
       target('probe_success{job="blackbox-website-http",site="thuvien"}', "A", "Thuvien public page"),
@@ -301,6 +622,16 @@ function buildDashboard(config) {
     uid: config.uid,
     title: config.title,
     tags: ["sis", "operations", `${env}-mirror`],
+    links: [{
+      title: "Nightly subsystem report",
+      type: "link",
+      icon: "graph-bar",
+      url: env === "live"
+        ? "/d/sis-live-nightly-report/sis-live-c2b7-nightly-subsystem-report"
+        : "/d/sis-test-nightly-report/sis-test-c2b7-nightly-subsystem-report",
+      keepTime: true,
+      targetBlank: false,
+    }],
     timezone: "browser",
     schemaVersion: 39,
     version: 1,
@@ -314,4 +645,8 @@ for (const config of environments) {
   const filename = config.environment === "test" ? "test-mirror-overview.json" : "live-admin-mirror-overview.json"
   const outputPath = path.join(dashboardsRoot, filename)
   await fs.writeFile(outputPath, `${JSON.stringify(buildDashboard(config), null, 2)}\n`, "utf8")
+
+  const reportFilename = config.environment === "test" ? "test-nightly-subsystem-report.json" : "live-nightly-subsystem-report.json"
+  const reportPath = path.join(dashboardsRoot, reportFilename)
+  await fs.writeFile(reportPath, `${JSON.stringify(buildSubsystemReport(config), null, 2)}\n`, "utf8")
 }
