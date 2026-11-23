@@ -26,10 +26,29 @@ refresh must retain these guards.
    Run Moodle core/plugin checks and idempotency tests, review the diff, then
    merge the reviewed commit to eagles-edu/staged:main. Keep SIS changes in
    the SIS repository.
-2. Deploy that exact pushed Moodle commit to the staging Moodle runtime.
-   Record its commit SHA and deployment result with the release record. The
-   deployed Moodle roots do not carry Git metadata, so do not infer the
-   deployed commit from a local branch name.
+2. Deploy the current pushed Moodle commit to staging by its full SHA:
+
+    sudo tools/moodle-staging-workflow.sh deploy-stage FULL_MAIN_SHA --dry-run
+    sudo tools/moodle-staging-workflow.sh deploy-stage FULL_MAIN_SHA --apply
+    sudo tools/moodle-staging-workflow.sh status
+
+   The helper rejects a SHA unless it is the current staged.git/main head,
+   downloads and validates that immutable source archive, checks Moodle's
+   version does not move backwards, and reports changed source files plus disk
+   capacity. Apply first snapshots staging application, moodledata, and database
+   under /home/eagles/dockerz/backups/moodle-staging/; it preserves staging
+   config.php and staging-only files, runs the Moodle upgrade, re-enforces
+   no-mail, unset SIS endpoint/secret, Dry run, and disabled SIS task, then
+   records the commit and archive checksum in the private
+   /home/staged.eagles.edu.vn/.moodle-release marker. status displays the
+   recorded SHA. The roots do not carry Git metadata, so do not infer the
+   deployed commit from a local branch name. A deployment is not authenticated
+   workflow proof; continue to step 3.
+
+   If dry-run reports zero changed repository files, apply rechecks the staging
+   SIS safety settings and records the commit/checksum marker without copying
+   files, snapshotting the database/data, or running the Moodle upgrade. The
+   dry-run has already compared the exact release source to the installed tree.
 3. Test the staged site through its authenticated browser flow. Cover the
    changed plugin/core behavior, repeated operations, upgrade path, scheduled
    task behavior, and the staging safety settings. Do not use production
@@ -123,6 +142,18 @@ only promotion snapshots in the configured backup root. Do not restore
 staging data into production.
 
 ## Current evidence and open gates
+
+On 2026-11-24, deploy-stage dry-run and apply targeted staged.git/main at
+c9b99195480ab9dc95379c84d71215a977f88aee. The complete repository source tree
+comparison found zero changed source files. The helper recorded the commit and
+archive SHA-256 in /home/staged.eagles.edu.vn/.moodle-release with mode 0600;
+no application file, staging database, or moodledata changed, so no additional
+snapshot or Moodle upgrade was needed. Existing staging-only files remain
+preserved. Status still confirms mail disabled, SIS target/secret unset, Dry run
+on, and the scheduled task disabled. The external login remains protected by
+HTTP Basic Auth; authenticated release verification and signed test-SIS polling
+remain open. Production was not changed.
+
 
 On 2026-11-23, both Moodle vhosts were moved to PHP 8.3 FPM. The staging
 database and data refresh completed from production, and its pre-refresh

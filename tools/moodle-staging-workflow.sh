@@ -9,6 +9,7 @@ STAGE_APP=${STAGE_HOME}/app
 STAGE_DATA=${STAGE_HOME}/moodledata
 BACKUP_ROOT=/home/eagles/dockerz/backups/moodle-staging
 PHP=/usr/bin/php8.3
+STAGED_REPO=https://github.com/eagles-edu/staged.git
 TASK='\enrol_sis\task\sync'
 STAGING_TEMP_DIR=
 
@@ -21,6 +22,8 @@ usage() {
   cat <<'EOF'
 Usage:
   sudo tools/moodle-staging-workflow.sh status
+  sudo tools/moodle-staging-workflow.sh deploy-stage MAIN_COMMIT --dry-run
+  sudo tools/moodle-staging-workflow.sh deploy-stage MAIN_COMMIT --apply
   sudo tools/moodle-staging-workflow.sh refresh-data --dry-run
   sudo tools/moodle-staging-workflow.sh refresh-data --apply
   sudo tools/moodle-staging-workflow.sh promote --dry-run
@@ -30,10 +33,13 @@ Usage:
   sudo tools/moodle-staging-workflow.sh restore SNAPSHOT --dry-run
   sudo tools/moodle-staging-workflow.sh restore SNAPSHOT --apply
 
-Refresh copies production database and file data into staging while preserving
-staging code and config.php. Promotion copies staged code into production while
-preserving production config.php, database, and moodledata. Every apply saves a
-private snapshot before changing its target; promotion enables maintenance mode.
+Stage deployment fetches one exact current-main commit and preserves staging
+config.php plus staging-only files. Code-changing applies save a private
+snapshot before changing their target; an identical-source deployment records
+only the release marker. Refresh copies production database and file data into
+staging while preserving staging code. Promotion copies staged code into
+production while preserving production config.php, database, and moodledata.
+Promotion enables maintenance mode.
 EOF
 }
 
@@ -43,7 +49,7 @@ need_root() {
 
 need_commands() {
   local command_name
-  for command_name in "$PHP" mariadb mariadb-dump rsync gzip nginx tar curl stat; do
+  for command_name in "$PHP" mariadb mariadb-dump rsync gzip nginx tar curl stat git sha256sum; do
     command -v "$command_name" >/dev/null 2>&1 || fail "required command is missing: ${command_name}"
   done
   [[ -x "$PHP" ]] || fail "PHP 8.3 CLI is unavailable at ${PHP}"
@@ -207,6 +213,105 @@ refresh() {
   printf '[moodle-stage] refresh complete; backup=%s; SIS target is unset; Dry run=1; SIS scheduled task disabled\n' "$snapshot"
 }
 
+stage_main_commit() {
+  local result
+  result=$(git ls-remote "$STAGED_REPO" refs/heads/main | awk 'NR == 1 {print $1}')
+  [[ "$result" =~ ^[a-f0-9]{40}$ ]] || fail "could not resolve staged.git/main"
+  printf '%s\n' "$result"
+}
+
+deploy_stage() {
+  local commit=$1 mode=$2 current_commit temp_dir archive extract_dir release_root archive_sha
+  local stage_config stage_db stage_cnf stage_version release_version stage_bytes stage_db_bytes
+  local release_bytes free_bytes required_bytes snapshot changed_files base_url secret dryrun task_status
+  local root root_count
+  [[ "$commit" =~ ^[A-Fa-f0-9]{40}$ ]] || fail "deploy-stage requires a full 40-character commit SHA"
+  [[ "$mode" == --apply || "$mode" == --dry-run ]] || fail "deploy-stage requires --dry-run or --apply"
+  commit=$(tr '[:upper:]' '[:lower:]' <<<"$commit")
+  validate_paths
+  validate_stage
+  current_commit=$(stage_main_commit)
+  [[ "$commit" == "$current_commit" ]] || fail "commit must equal the current eagles-edu/staged main head ($current_commit)"
+  STAGING_TEMP_DIR=$(mktemp -d /tmp/moodle-stage-deploy.XXXXXX)
+  temp_dir=$STAGING_TEMP_DIR
+  chmod 0700 "$temp_dir"
+  trap cleanup_temp_dir EXIT
+  archive="$temp_dir/staged-$commit.tar.gz"
+  extract_dir="$temp_dir/release"
+  mkdir -m 0700 "$extract_dir"
+  curl --fail --location --silent --show-error \
+    "https://codeload.github.com/eagles-edu/staged/tar.gz/$commit" --output "$archive"
+  gzip -t "$archive" || fail "staged release archive failed gzip verification"
+  tar -tzf "$archive" | grep -Eq '(^/|(^|/)\.\.(/|$))' && fail "staged release archive contains an unsafe path"
+  if tar -tvzf "$archive" | awk '$1 ~ /^l/ && ($NF ~ /^\// || $NF ~ /(^|\/)\.\.($|\/)/) { unsafe = 1 } END { exit unsafe ? 0 : 1 }'; then
+    fail "staged release archive contains an unsafe symbolic link"
+  fi
+  root_count=$(tar -tzf "$archive" | awk -F/ 'NF {print $1}' | sort -u | wc -l)
+  [[ "$root_count" -eq 1 ]] || fail "staged release archive has an unexpected root layout"
+  root=$(tar -tzf "$archive" | awk -F/ 'NF && root == "" {root = $1} END {print root}')
+  tar -xzf "$archive" -C "$extract_dir"
+  release_root="$extract_dir/$root"
+  [[ -f "$release_root/version.php" && -f "$release_root/config-dist.php" && -f "$release_root/admin/cli/upgrade.php" ]] || fail "staged release archive is not a complete Moodle source tree"
+  stage_version=$(moodle_version "$STAGE_APP/version.php")
+  release_version=$(moodle_version "$release_root/version.php")
+  [[ "$stage_version" =~ ^[0-9]+$ && "$release_version" =~ ^[0-9]+$ ]] || fail "could not read staging or release Moodle version"
+  (( release_version >= stage_version )) || fail "staged Moodle release is older than the installed staging version"
+  changed_files=$(rsync -rcni --exclude=/config.php "$release_root/" "$STAGE_APP/" | wc -l)
+  archive_sha=$(sha256sum "$archive" | awk '{print $1}')
+  stage_config=$(read_site_config "$STAGE_APP/config.php")
+  stage_db=$(sed -n '2p' <<<"$stage_config")
+  stage_bytes=$(du -sb "$STAGE_APP" "$STAGE_DATA" | awk '{sum += $1} END {print sum}')
+  stage_db_bytes=$(database_size "$STAGE_APP/config.php")
+  release_bytes=$(du -sb "$release_root" | awk '{print $1}')
+  free_bytes=$(df -PB1 "$STAGE_HOME" | awk 'NR==2 {print $4}')
+  required_bytes=$((stage_bytes + stage_db_bytes + release_bytes * 2 + 1073741824))
+  printf 'status=ready\ncommit=%s\nmain_commit=%s\narchive_sha256=%s\nstaging_moodle_version=%s\nrelease_moodle_version=%s\nchanged_repository_files=%s\nstaging_app_data_bytes=%s\nstaging_database_bytes=%s\nrelease_source_bytes=%s\nfree_bytes=%s\nrequired_free_bytes=%s\nconfig_php=preserved\nstaging_only_files=preserved\ntarget=https://staged.eagles.edu.vn\n' \
+    "$commit" "$current_commit" "$archive_sha" "$stage_version" "$release_version" "$changed_files" \
+    "$stage_bytes" "$stage_db_bytes" "$release_bytes" "$free_bytes" "$required_bytes"
+  (( free_bytes >= required_bytes )) || fail "insufficient disk space for staging snapshot and release source"
+  [[ "$mode" == --apply ]] || return 0
+  current_commit=$(stage_main_commit)
+  [[ "$commit" == "$current_commit" ]] || fail "staged.git/main moved during preflight; rerun against its new head"
+  if [[ "$changed_files" == 0 ]]; then
+    base_url=$("$PHP" "$STAGE_APP/admin/cli/cfg.php" --component=enrol_sis --name=sisbaseurl 2>/dev/null || true)
+    secret=$("$PHP" "$STAGE_APP/admin/cli/cfg.php" --component=enrol_sis --name=provisioningsecret 2>/dev/null || true)
+    dryrun=$("$PHP" "$STAGE_APP/admin/cli/cfg.php" --component=enrol_sis --name=dryrun 2>/dev/null || true)
+    task_status=$("$PHP" "$STAGE_APP/admin/cli/scheduled_task.php" --list 2>/dev/null | grep -F -- "$TASK" || true)
+    [[ -z "$base_url" && -z "$secret" && "$dryrun" == 1 ]] || fail "staging safety settings are not enabled; no release marker was written"
+    grep -Fq 'Task disabled' <<<"$task_status" || fail "staging SIS scheduled task is not disabled; no release marker was written"
+    printf 'commit=%s\narchive_sha256=%s\ndeployed_at=%s\nmoodle_version=%s\nbackup=none-no-runtime-change\n' \
+      "$commit" "$archive_sha" "$(date -Is)" "$release_version" > "$STAGE_HOME/.moodle-release.tmp"
+    chmod 0600 "$STAGE_HOME/.moodle-release.tmp"
+    mv -f "$STAGE_HOME/.moodle-release.tmp" "$STAGE_HOME/.moodle-release"
+    chmod 0600 "$STAGE_HOME/.moodle-release"
+    printf '[moodle-stage] staged repository files already match commit=%s; SHA recorded without copying files, snapshotting, or running Moodle upgrade\n' "$commit"
+    return 0
+  fi
+  write_db_options "$STAGE_APP/config.php" "$temp_dir/stage.cnf"
+  stage_cnf="$temp_dir/stage.cnf"
+  make_private_dir "$BACKUP_ROOT"
+  snapshot="$BACKUP_ROOT/stage-before-deploy-$commit-$(date -u +%Y%m%dT%H%M%SZ)"
+  [[ ! -e "$snapshot" ]] || fail "staging deployment snapshot path already exists"
+  make_private_dir "$snapshot"
+  snapshot_current_stage "$snapshot" "$stage_db" "$stage_cnf"
+  rsync -a --numeric-ids --chown=stage8567:stage8567www --exclude=/config.php "$release_root/" "$STAGE_APP/"
+  "$PHP" "$STAGE_APP/admin/cli/upgrade.php" --non-interactive
+  sanitize_staging
+  chown -R stage8567:stage8567www "$STAGE_APP" "$STAGE_DATA"
+  base_url=$("$PHP" "$STAGE_APP/admin/cli/cfg.php" --component=enrol_sis --name=sisbaseurl 2>/dev/null || true)
+  secret=$("$PHP" "$STAGE_APP/admin/cli/cfg.php" --component=enrol_sis --name=provisioningsecret 2>/dev/null || true)
+  dryrun=$("$PHP" "$STAGE_APP/admin/cli/cfg.php" --component=enrol_sis --name=dryrun 2>/dev/null || true)
+  task_status=$("$PHP" "$STAGE_APP/admin/cli/scheduled_task.php" --list 2>/dev/null | grep -F -- "$TASK" || true)
+  [[ -z "$base_url" && -z "$secret" && "$dryrun" == 1 ]] || fail "staging safety settings did not remain enabled after deployment; snapshot=$snapshot"
+  grep -Fq 'Task disabled' <<<"$task_status" || fail "staging SIS scheduled task is not disabled after deployment; snapshot=$snapshot"
+  printf 'commit=%s\narchive_sha256=%s\ndeployed_at=%s\nmoodle_version=%s\nbackup=%s\n' \
+    "$commit" "$archive_sha" "$(date -Is)" "$release_version" "$snapshot" > "$STAGE_HOME/.moodle-release.tmp"
+  chmod 0600 "$STAGE_HOME/.moodle-release.tmp"
+  mv -f "$STAGE_HOME/.moodle-release.tmp" "$STAGE_HOME/.moodle-release"
+  chmod 0600 "$STAGE_HOME/.moodle-release"
+  printf '[moodle-stage] deployment complete; commit=%s; staging-only files and config.php preserved; snapshot=%s\n' "$commit" "$snapshot"
+}
+
 promote_preflight() {
   validate_paths
   validate_stage
@@ -333,17 +438,19 @@ restore_snapshot() {
 status() {
   validate_paths
   validate_stage
-  local base_url secret dryrun task_status
+  local base_url secret dryrun task_status deployed_commit
   base_url=$("$PHP" "${STAGE_APP}/admin/cli/cfg.php" --component=enrol_sis --name=sisbaseurl 2>/dev/null || true)
   secret=$("$PHP" "${STAGE_APP}/admin/cli/cfg.php" --component=enrol_sis --name=provisioningsecret 2>/dev/null || true)
   dryrun=$("$PHP" "${STAGE_APP}/admin/cli/cfg.php" --component=enrol_sis --name=dryrun 2>/dev/null || true)
   task_status=$("$PHP" "${STAGE_APP}/admin/cli/scheduled_task.php" --list 2>/dev/null | grep -F -- "$TASK" || true)
   [[ -n "$task_status" ]] || task_status=task_not_listed
+  deployed_commit=$(sed -n 's/^commit=//p' "$STAGE_HOME/.moodle-release" 2>/dev/null | head -n 1 || true)
+  [[ -n "$deployed_commit" ]] || deployed_commit=unrecorded
   printf 'live_database=%s\nstage_database=%s\nstage_noemailever=1\nstage_php_version=8.3\nstage_sis_url_configured=%s\nstage_sis_secret_configured=%s\nstage_dryrun=%s\n' \
     "$(sed -n '2p' < <(read_site_config "${SOURCE_APP}/config.php"))" \
     "$(sed -n '2p' < <(read_site_config "${STAGE_APP}/config.php"))" \
     "$([[ -n "$base_url" ]] && echo yes || echo no)" "$([[ -n "$secret" ]] && echo yes || echo no)" "$dryrun"
-  printf 'sis_task=%s\n' "$(sed -E 's/[[:space:]]+/ /g' <<<"$task_status")"
+  printf 'sis_task=%s\nrecorded_staged_commit=%s\n' "$(sed -E 's/[[:space:]]+/ /g' <<<"$task_status")" "$deployed_commit"
 }
 
 main() {
@@ -354,6 +461,10 @@ main() {
     status)
       [[ $# -eq 1 ]] || fail "status takes no extra arguments"
       status
+      ;;
+    deploy-stage)
+      [[ $# -eq 3 ]] || fail "deploy-stage needs a full main commit SHA and --dry-run or --apply"
+      deploy_stage "$2" "$3"
       ;;
     refresh-data)
       [[ $# -eq 2 ]] || fail "refresh-data needs --dry-run or --apply"
