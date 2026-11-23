@@ -202,9 +202,11 @@ archive SHA-256 in /home/staged.eagles.edu.vn/.moodle-release with mode 0600;
 no application file, staging database, or moodledata changed, so no additional
 snapshot or Moodle upgrade was needed. Existing staging-only files remain
 preserved. Status still confirms mail disabled, SIS target/secret unset, Dry run
-on, and the scheduled task disabled. The external login remains protected by
-HTTP Basic Auth; authenticated release verification and signed test-SIS polling
-remain open. Production was not changed.
+on, and the scheduled task disabled. KA-241/242 completed the authenticated
+staging login, signed test-SIS poll, receipt, idempotency replay, and exact-SHA
+release gates against this recorded commit. The test provisioning queue was
+cleaned and the staging safety settings restored afterward. Production was not
+changed or promoted.
 
 
 On 2026-11-23, both Moodle vhosts were moved to PHP 8.3 FPM. The staging
@@ -214,8 +216,8 @@ The archive passed gzip -t; staging status showed distinct mood_test51 and
 moodle_stage8567 databases, no staging SIS URL or secret, Dry run 1, and the
 SIS scheduled task disabled. This refresh did not promote staged code to
 production. The signed test-SIS provisioning poll and authenticated external
-staging walkthrough remain open. Production promotion has not been run by
-this workflow.
+staging walkthrough were later completed under KA-241/242. Production promotion
+has not been run by this workflow.
 
 ## References
 
