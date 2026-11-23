@@ -10,8 +10,8 @@
 
 ## Current open acceptance items
 
-- [ ] Verify the external SIS-to-Moodle provisioning lifecycle against the isolated staging Moodle, including an authenticated staging walkthrough and signed test-mirror poll. [KA-158; staging safety settings are confirmed, but test provisioning and the authenticated external workflow remain unverified.]
-- [ ] Deploy a recorded commit from `eagles-edu/staged:main` to staging, run the authenticated/idempotency release gates against that exact commit, and record its SHA before any production promotion. [KA-235; the promotion workflow is scripted, but the deployed staging commit has not been identified or verified.]
+- [ ] Verify the external SIS-to-Moodle provisioning lifecycle against the isolated staging Moodle, including an authenticated staging walkthrough and signed test-mirror poll. [KA-158; staging safety settings are confirmed, but test provisioning and the authenticated external workflow remain unverified. KA-236 read-only gate: `.env.test` contains no Moodle configuration variables; no values were read or copied.]
+- [ ] Deploy a recorded commit from `eagles-edu/staged:main` to staging, run the authenticated/idempotency release gates against that exact commit, and record its SHA before any production promotion. [KA-235; the promotion workflow is scripted. KA-236 read-only gate: `staged.git/main` is at `c9b99195480ab9dc95379c84d71215a977f88aee`, but the deployed staging root has no Git metadata/release SHA evidence, so its code cannot yet be tied to that commit. No deployment or production change was performed.]
 
 ## Preparation and environment boundaries
 
