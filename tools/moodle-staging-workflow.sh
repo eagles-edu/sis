@@ -21,15 +21,19 @@ usage() {
   cat <<'EOF'
 Usage:
   sudo tools/moodle-staging-workflow.sh status
-  sudo tools/moodle-staging-workflow.sh refresh --dry-run
-  sudo tools/moodle-staging-workflow.sh refresh --apply
+  sudo tools/moodle-staging-workflow.sh refresh-data --dry-run
+  sudo tools/moodle-staging-workflow.sh refresh-data --apply
+  sudo tools/moodle-staging-workflow.sh promote --dry-run
+  sudo tools/moodle-staging-workflow.sh promote --apply
+  sudo tools/moodle-staging-workflow.sh rollback-production SNAPSHOT --dry-run
+  sudo tools/moodle-staging-workflow.sh rollback-production SNAPSHOT --apply
   sudo tools/moodle-staging-workflow.sh restore SNAPSHOT --dry-run
   sudo tools/moodle-staging-workflow.sh restore SNAPSHOT --apply
 
-Refresh copies the live Moodle application, database, and file data into the
-isolated staging site. It preserves staging config.php, disables email and the
-SIS scheduled task, clears the copied SIS URL/secret, and leaves Dry run on.
-Every refresh first saves a private, restorable staging snapshot.
+Refresh copies production database and file data into staging while preserving
+staging code and config.php. Promotion copies staged code into production while
+preserving production config.php, database, and moodledata. Every apply saves a
+private snapshot before changing its target; promotion enables maintenance mode.
 EOF
 }
 
@@ -39,7 +43,7 @@ need_root() {
 
 need_commands() {
   local command_name
-  for command_name in "$PHP" mariadb mariadb-dump rsync gzip nginx; do
+  for command_name in "$PHP" mariadb mariadb-dump rsync gzip nginx tar curl stat; do
     command -v "$command_name" >/dev/null 2>&1 || fail "required command is missing: ${command_name}"
   done
   [[ -x "$PHP" ]] || fail "PHP 8.3 CLI is unavailable at ${PHP}"
@@ -86,6 +90,10 @@ database_size() {
     global $DB;
     echo (int)$DB->get_field_sql("SELECT COALESCE(SUM(data_length + index_length), 0) FROM information_schema.tables WHERE table_schema = DATABASE()"), "\n";
   ' "$1"
+}
+
+moodle_version() {
+  sed -nE 's/^\$version[[:space:]]*=[[:space:]]*([0-9]+)(\.[0-9]+)?;.*/\1/p' "$1"
 }
 
 validate_stage() {
@@ -189,14 +197,107 @@ refresh() {
   source_dump="$temp_dir/source-database.sql.gz"
   mariadb-dump --defaults-extra-file="$source_cnf" --single-transaction --quick --hex-blob --add-drop-table "$source_db" | gzip -1 > "$source_dump"
   gzip -t "$source_dump" || fail "live database export failed verification"
-  rsync -a --delete --numeric-ids --chown=stage8567:stage8567www --exclude='/config.php' "${SOURCE_APP}/" "${STAGE_APP}/"
   rsync -a --delete --delete-excluded --numeric-ids --chown=stage8567:stage8567www \
     --exclude='/sessions/***' --exclude='/cache/***' --exclude='/localcache/***' --exclude='/temp/***' --exclude='/muc/***' --exclude='/trashdir/***' \
     --exclude='/antivirus_quarantine/***' "${SOURCE_DATA}/" "${STAGE_DATA}/"
   gzip -dc "$source_dump" | mariadb --defaults-extra-file="$stage_cnf" "$stage_db"
+  "$PHP" "${STAGE_APP}/admin/cli/upgrade.php" --non-interactive
   sanitize_staging
   chown -R stage8567:stage8567www "$STAGE_APP" "$STAGE_DATA"
   printf '[moodle-stage] refresh complete; backup=%s; SIS target is unset; Dry run=1; SIS scheduled task disabled\n' "$snapshot"
+}
+
+promote_preflight() {
+  validate_paths
+  validate_stage
+  local stage_version production_version stage_bytes production_bytes production_db_bytes free_bytes needed_bytes
+  stage_version=$(moodle_version "$STAGE_APP/version.php")
+  production_version=$(moodle_version "$SOURCE_APP/version.php")
+  [[ "$stage_version" =~ ^[0-9]+$ && "$production_version" =~ ^[0-9]+$ ]] || fail "could not read Moodle release versions"
+  (( stage_version >= production_version )) || fail "staging Moodle core version is older than production"
+  production_db_bytes=$(database_size "$SOURCE_APP/config.php")
+  stage_bytes=$(du -sb "$STAGE_APP" | awk '{print $1}')
+  production_bytes=$(du -sb "$SOURCE_APP" | awk '{print $1}')
+  free_bytes=$(df -PB1 "$(dirname "$BACKUP_ROOT")" | awk 'NR==2 {print $4}')
+  needed_bytes=$((production_bytes + stage_bytes + production_db_bytes + 1073741824))
+  printf 'status=ready\nstaging_moodle_version=%s\nproduction_moodle_version=%s\nproduction_database_bytes=%s\nstaging_app_bytes=%s\nproduction_app_bytes=%s\nfree_bytes=%s\nrequired_free_bytes=%s\nproduction_target=https://moodle.eagles.edu.vn\n' \
+    "$stage_version" "$production_version" "$production_db_bytes" "$stage_bytes" "$production_bytes" "$free_bytes" "$needed_bytes"
+  (( free_bytes >= needed_bytes )) || fail "insufficient disk space for production code and database rollback snapshot"
+}
+
+promote() {
+  local mode=$1 temp_dir production_config stage_config production_db production_cnf snapshot owner_group
+  [[ "$mode" == --apply || "$mode" == --dry-run ]] || fail "promote requires --dry-run or --apply"
+  promote_preflight
+  [[ "$mode" == --apply ]] || return 0
+  STAGING_TEMP_DIR=$(mktemp -d /tmp/moodle-stage-promote.XXXXXX)
+  temp_dir=$STAGING_TEMP_DIR
+  chmod 0700 "$temp_dir"
+  trap cleanup_temp_dir EXIT
+  production_config=$(read_site_config "$SOURCE_APP/config.php")
+  stage_config=$(read_site_config "$STAGE_APP/config.php")
+  production_db=$(sed -n '2p' <<<"$production_config")
+  [[ "$production_db" != "$(sed -n '2p' <<<"$stage_config")" ]] || fail "production and staging databases are not isolated"
+  write_db_options "$SOURCE_APP/config.php" "$temp_dir/production.cnf"
+  production_cnf="$temp_dir/production.cnf"
+  make_private_dir "$BACKUP_ROOT"
+  snapshot="$BACKUP_ROOT/production-before-promote-$(date -u +%Y%m%dT%H%M%SZ)"
+  [[ ! -e "$snapshot" ]] || fail "production snapshot path already exists"
+  make_private_dir "$snapshot"
+  tar -czf "$snapshot/application.tar.gz" -C "$SOURCE_APP" .
+  mariadb-dump --defaults-extra-file="$production_cnf" --single-transaction --quick --hex-blob --add-drop-table "$production_db" | gzip -1 > "$snapshot/database.sql.gz"
+  tar -tzf "$snapshot/application.tar.gz" >/dev/null || fail "production application snapshot failed verification"
+  gzip -t "$snapshot/database.sql.gz" || fail "production database snapshot failed verification"
+  printf 'snapshot_time=%s\nsource=https://staged.eagles.edu.vn\ntarget=https://moodle.eagles.edu.vn\nstaging_release=%s\nproduction_release=%s\nproduction_database=%s\nproduction_config=%s/config.php\n' \
+    "$(date -Is)" "$(moodle_version "$STAGE_APP/version.php")" "$(moodle_version "$SOURCE_APP/version.php")" "$production_db" "$SOURCE_APP" > "$snapshot/manifest.txt"
+  chmod 0600 "$snapshot/application.tar.gz" "$snapshot/database.sql.gz" "$snapshot/manifest.txt"
+  owner_group=$(stat -c '%U:%G' "$SOURCE_APP")
+  "$PHP" "$SOURCE_APP/admin/cli/maintenance.php" --enable
+  rsync -a --delete --numeric-ids --chown="$owner_group" --exclude='/config.php' "$STAGE_APP/" "$SOURCE_APP/"
+  "$PHP" "$SOURCE_APP/admin/cli/upgrade.php" --non-interactive
+  "$PHP" "$SOURCE_APP/admin/cli/purge_caches.php"
+  "$PHP" "$SOURCE_APP/admin/cli/maintenance.php" --disable
+  curl --fail --silent --show-error --output /dev/null --write-out 'production_http=%{http_code}\n' https://moodle.eagles.edu.vn/
+  printf '[moodle-stage] promotion complete; production database and moodledata were preserved; rollback snapshot=%s\n' "$snapshot"
+}
+
+rollback_production() {
+  local snapshot=$1 mode=$2 resolved temp_dir config database cnf owner_group rollback_snapshot
+  [[ "$mode" == --apply || "$mode" == --dry-run ]] || fail "rollback-production requires --dry-run or --apply"
+  resolved=$(realpath -e "$snapshot") || fail "production snapshot path does not exist"
+  [[ "$resolved" == "$BACKUP_ROOT"/production-before-promote-* ]] || fail "snapshot is not a production promotion snapshot"
+  [[ -f "$resolved/manifest.txt" && -f "$resolved/application.tar.gz" && -f "$resolved/database.sql.gz" ]] || fail "production snapshot is incomplete"
+  grep -Fxq 'target=https://moodle.eagles.edu.vn' "$resolved/manifest.txt" || fail "snapshot manifest does not identify production"
+  tar -tzf "$resolved/application.tar.gz" | grep -Eq '(^/|(^|/)\.\.(/|$))' && fail "production application archive has unsafe paths"
+  gzip -t "$resolved/database.sql.gz" || fail "production database archive failed verification"
+  validate_paths
+  config=$(read_site_config "$SOURCE_APP/config.php")
+  database=$(sed -n '2p' <<<"$config")
+  printf 'rollback_snapshot=%s\nrollback_target=https://moodle.eagles.edu.vn\nproduction_database=%s\n' "$resolved" "$database"
+  [[ "$mode" == --apply ]] || return 0
+  STAGING_TEMP_DIR=$(mktemp -d /tmp/moodle-production-rollback.XXXXXX)
+  temp_dir=$STAGING_TEMP_DIR
+  chmod 0700 "$temp_dir"
+  trap cleanup_temp_dir EXIT
+  write_db_options "$SOURCE_APP/config.php" "$temp_dir/production.cnf"
+  cnf="$temp_dir/production.cnf"
+  rollback_snapshot="$BACKUP_ROOT/production-before-rollback-$(date -u +%Y%m%dT%H%M%SZ)"
+  make_private_dir "$rollback_snapshot"
+  tar -czf "$rollback_snapshot/application.tar.gz" -C "$SOURCE_APP" .
+  mariadb-dump --defaults-extra-file="$cnf" --single-transaction --quick --hex-blob --add-drop-table "$database" | gzip -1 > "$rollback_snapshot/database.sql.gz"
+  tar -tzf "$rollback_snapshot/application.tar.gz" >/dev/null || fail "current production application snapshot failed verification"
+  gzip -t "$rollback_snapshot/database.sql.gz" || fail "current production database snapshot failed verification"
+  printf 'snapshot_time=%s\ntarget=https://moodle.eagles.edu.vn\nproduction_database=%s\n' "$(date -Is)" "$database" > "$rollback_snapshot/manifest.txt"
+  chmod 0600 "$rollback_snapshot/application.tar.gz" "$rollback_snapshot/database.sql.gz" "$rollback_snapshot/manifest.txt"
+  owner_group=$(stat -c '%U:%G' "$SOURCE_APP")
+  mkdir "$temp_dir/restored-app"
+  tar -xzf "$resolved/application.tar.gz" -C "$temp_dir/restored-app"
+  "$PHP" "$SOURCE_APP/admin/cli/maintenance.php" --enable
+  rsync -a --delete --numeric-ids --chown="$owner_group" "$temp_dir/restored-app/" "$SOURCE_APP/"
+  gzip -dc "$resolved/database.sql.gz" | mariadb --defaults-extra-file="$cnf" "$database"
+  "$PHP" "$SOURCE_APP/admin/cli/maintenance.php" --disable
+  curl --fail --silent --show-error --output /dev/null --write-out 'production_http=%{http_code}\n' https://moodle.eagles.edu.vn/
+  printf '[moodle-stage] production rollback complete; pre-rollback snapshot=%s\n' "$rollback_snapshot"
 }
 
 restore_snapshot() {
@@ -254,9 +355,17 @@ main() {
       [[ $# -eq 1 ]] || fail "status takes no extra arguments"
       status
       ;;
-    refresh)
-      [[ $# -eq 2 ]] || fail "refresh needs --dry-run or --apply"
+    refresh-data)
+      [[ $# -eq 2 ]] || fail "refresh-data needs --dry-run or --apply"
       refresh "$2"
+      ;;
+    promote)
+      [[ $# -eq 2 ]] || fail "promote needs --dry-run or --apply"
+      promote "$2"
+      ;;
+    rollback-production)
+      [[ $# -eq 3 ]] || fail "rollback-production needs a snapshot path and --dry-run or --apply"
+      rollback_production "$2" "$3"
       ;;
     restore)
       [[ $# -eq 3 ]] || fail "restore needs a snapshot path and --dry-run or --apply"
