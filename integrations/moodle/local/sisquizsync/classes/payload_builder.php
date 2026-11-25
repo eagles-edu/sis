@@ -44,22 +44,22 @@ class payload_builder {
             }
 
             $fraction = (float) $questionattempt->get_fraction();
-            if ($fraction > 0) {
+            if ($fraction >= 1.0) {
                 $correctcount += 1;
             } else {
                 $incorrectcount += 1;
             }
         }
 
-        $sumgrades = (float) $attempt->get_sum_marks();
-        $maxgrades = (float) $attempt->get_quiz()->sumgrades;
-        $scorepercent = $maxgrades > 0 ? round(($sumgrades / $maxgrades) * 100, 2) : 0.0;
+        $scorepercent = $totalquestions > 0 ? round(($correctcount / $totalquestions) * 100, 2) : 0.0;
+        $startedat = (int) ($attemptrecord->timestart ?? 0);
         $completedat = (int) ($attemptrecord->timefinish ?: $attemptrecord->timemodified ?: time());
 
         return [
             'eaglesId' => (string) $user->username,
             'email' => isset($user->email) ? trim((string) $user->email) : '',
             'pageTitle' => (string) $attempt->get_quiz_name(),
+            'startedAt' => $startedat > 0 ? gmdate('c', $startedat) : '',
             'completedAt' => gmdate('c', $completedat),
             'totalQuestions' => $totalquestions,
             'correctCount' => $correctcount,

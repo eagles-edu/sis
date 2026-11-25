@@ -3,6 +3,7 @@
 
 import fs from "node:fs"
 import path from "node:path"
+import { createHash } from "node:crypto"
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { getConfiguredDatabaseUrlSync, getSisConfigSnapshotSync } from "../admin/sis-config-store.mjs"
@@ -83,6 +84,10 @@ function normalizeString(value) {
 
 function normalizeLower(value) {
   return normalizeString(value).toLowerCase()
+}
+
+function isEmailLike(value) {
+  return typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value.trim())
 }
 
 function normalizeQuarterCode(value) {
@@ -204,6 +209,15 @@ function parseCompletedAt(value) {
     if (!Number.isNaN(parsed.valueOf())) return parsed
   }
   return new Date()
+}
+
+function parseOptionalDate(value) {
+  if (value instanceof Date && !Number.isNaN(value.valueOf())) return value
+  if (typeof value === "string" && value.trim()) {
+    const parsed = new Date(value)
+    if (!Number.isNaN(parsed.valueOf())) return parsed
+  }
+  return null
 }
 
 function shiftToFixedTimeZone(value) {
@@ -585,7 +599,9 @@ function normalizeSubmissionPayload(payload = {}) {
   }
   const submittedEaglesId = parseRequiredString(payload?.eaglesId, "eaglesId")
   const submittedEmail = normalizeLower(payload?.email) || null
-  const pageTitle = canonicalizeExercisePageTitle(parseRequiredString(payload?.pageTitle, "pageTitle")) || "Untitled exercise"
+  const sourceTitle = parseRequiredString(payload?.sourceTitle || payload?.pageTitle, "pageTitle")
+  const pageTitle = canonicalizeExercisePageTitle(sourceTitle) || "Untitled exercise"
+  const startedAt = parseOptionalDate(payload?.startedAt)
   const completedAt = parseRequiredCompletedAt(payload?.completedAt)
   const summary = buildSubmissionSummaryFromPayload(payload)
   const recipientsJson = normalizeRecipients(payload?.recipients)
@@ -611,6 +627,8 @@ function normalizeSubmissionPayload(payload = {}) {
     submittedEaglesId,
     submittedEmail,
     pageTitle,
+    sourceTitle,
+    startedAt,
     completedAt,
     recipientsJson,
     summary,
@@ -817,6 +835,8 @@ function buildExerciseSubmissionRecordData(studentRefId, exerciseRefId, submissi
     sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),
     sourceOriginLabel: normalizeSourceOriginLabel(submission.sourceOriginLabel),
     sourceOriginHost: normalizeSourceOriginHost(submission.sourceOriginHost),
+    sourceTitle: normalizeString(submission.sourceTitle) || submission.pageTitle,
+    startedAt: parseOptionalDate(submission.startedAt),
     completedAt: submission.completedAt,
     weekNumber,
     totalQuestions: summary.totalQuestions,
@@ -921,7 +941,10 @@ function buildExerciseGradeRecordData(student, submission, summary) {
     level: gradeLevel || null,
     schoolYear,
     quarter: quarterFromDate(completedAt, schoolYear),
-    assignmentName: className,
+    assignmentName: normalizeSourceSystem(submission.sourceSystem) === "moodle"
+      ? normalizeString(submission.sourceTitle) || className
+      : className,
+    startedAt: parseOptionalDate(submission.startedAt),
     dueAt,
     weekNumber,
     submittedAt,
@@ -952,6 +975,8 @@ function buildIncomingQueueRecordData(submission, summary, options = {}) {
     sourceSystem: normalizeSourceSystem(submission.sourceSystem),
     sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),
     pageTitle: submission.pageTitle,
+    sourceTitle: normalizeString(submission.sourceTitle) || submission.pageTitle,
+    startedAt: parseOptionalDate(submission.startedAt),
     completedAt: submission.completedAt,
     weekNumber,
     totalQuestions: summary.totalQuestions,
@@ -966,6 +991,123 @@ function buildIncomingQueueRecordData(submission, summary, options = {}) {
     reviewedByUsername: normalizeString(options.reviewedByUsername) || null,
     matchedStudentRefId: null,
     resolvedAt: null,
+  }
+}
+
+function incompleteSubmissionQueueData(payload = {}) {
+  const missing = []
+  const submittedEaglesId = normalizeString(payload?.eaglesId)
+  const submittedEmail = normalizeString(payload?.email)
+  const sourceSystem = normalizeLower(payload?.sourceSystem) || "unknown-source"
+  const providedAttemptId = normalizeString(payload?.sourceAttemptId)
+  const sourceTitle = normalizeString(payload?.sourceTitle || payload?.pageTitle)
+  const pageTitle = canonicalizeExercisePageTitle(sourceTitle) || "[Missing quiz title]"
+  const startedAt = parseOptionalDate(payload?.startedAt)
+  const completedAtValue = normalizeString(payload?.completedAt)
+  const completedAtParsed = completedAtValue ? new Date(completedAtValue) : null
+  const completedAt = completedAtParsed && !Number.isNaN(completedAtParsed.valueOf())
+    ? completedAtParsed
+    : new Date()
+
+  if (!submittedEaglesId) missing.push("eaglesId")
+  if (!isEmailLike(submittedEmail)) missing.push("email")
+  if (!normalizeLower(payload?.sourceSystem)) missing.push("sourceSystem")
+  if (!providedAttemptId) missing.push("sourceAttemptId")
+  if (!normalizeString(payload?.pageTitle)) missing.push("pageTitle")
+  if (!completedAtValue || !completedAtParsed || Number.isNaN(completedAtParsed.valueOf())) missing.push("completedAt")
+
+  const metricNames = ["totalQuestions", "correctCount", "pendingCount", "incorrectCount"]
+  const metrics = Object.fromEntries(metricNames.map((name) => {
+    const value = payload?.[name]
+    const parsed = typeof value === "number" ? value : Number(String(value ?? ""))
+    return [name, Number.isInteger(parsed) && parsed >= 0 ? parsed : null]
+  }))
+  for (const name of metricNames) {
+    if (metrics[name] === null) missing.push(name)
+  }
+  const rawPercent = typeof payload?.scorePercent === "number" ? payload.scorePercent : Number(String(payload?.scorePercent ?? ""))
+  const scorePercentValid = Number.isFinite(rawPercent) && rawPercent >= 0 && rawPercent <= 100
+  if (!scorePercentValid) missing.push("scorePercent")
+
+  const summaryValid = metricNames.every((name) => metrics[name] !== null)
+    && metrics.totalQuestions === metrics.correctCount + metrics.pendingCount + metrics.incorrectCount
+    && scorePercentValid
+    && Math.abs(Number(rawPercent.toFixed(2)) - expectedScorePercent(metrics.correctCount, metrics.totalQuestions)) <= 0.01
+  if (!summaryValid && !missing.some((name) => metricNames.includes(name) || name === "scorePercent")) {
+    missing.push("consistent question score metrics")
+  }
+
+  const summary = summaryValid
+    ? {
+        totalQuestions: metrics.totalQuestions,
+        correctCount: metrics.correctCount,
+        pendingCount: metrics.pendingCount,
+        incorrectCount: metrics.incorrectCount,
+        scorePercent: Number(rawPercent.toFixed(2)),
+      }
+    : { totalQuestions: 0, correctCount: 0, pendingCount: 0, incorrectCount: 0, scorePercent: 0 }
+  const rawJson = JSON.stringify(payload)
+  const sourceAttemptId = providedAttemptId || `missing-${createHash("sha256").update(rawJson).digest("hex")}`
+  const { sourceOriginLabel, sourceOriginHost } = resolveSubmissionOrigin(payload)
+
+  return {
+    missing: [...new Set(missing)],
+    sourceSystem,
+    sourceAttemptId,
+    record: {
+      status: INCOMING_EXERCISE_RESULT_STATUS_QUEUED,
+      submittedEaglesId: submittedEaglesId || "[Missing EaglesID]",
+      submittedEmail: isEmailLike(submittedEmail) ? normalizeLower(submittedEmail) : null,
+      sourceSystem,
+      sourceAttemptId,
+      pageTitle,
+      sourceOriginLabel,
+      sourceOriginHost,
+      sourceTitle: sourceTitle || null,
+      startedAt,
+      completedAt,
+      totalQuestions: summary.totalQuestions,
+      correctCount: summary.correctCount,
+      pendingCount: summary.pendingCount,
+      incorrectCount: summary.incorrectCount,
+      scorePercent: summary.scorePercent,
+      recipientsJson: normalizeRecipients(payload?.recipients),
+      payloadJson: payload,
+      notes: `Source exercise submission requires review. Missing or invalid fields: ${[...new Set(missing)].join(", ") || "question score metrics"}. Original payload retained for review.`,
+      matchedStudentRefId: null,
+      resolvedAt: null,
+    },
+  }
+}
+
+/**
+ * Save an incomplete exercise submission in Queue Hub without matching or grading it.
+ * A stable digest supplies an idempotency key when the sender omitted its attempt ID.
+ * @param {Record<string, unknown>} payload
+ * @param {ExerciseStoreOptions} [options]
+ */
+export async function queueIncompleteExerciseSubmission(payload, options = {}) {
+  const prisma = await getPrismaClient(options)
+  if (!prisma) return { saved: false, reason: "disabled" }
+
+  const normalized = incompleteSubmissionQueueData(payload)
+  const existing = await prisma.incomingExerciseResult.findUnique({
+    where: {
+      sourceSystem_sourceAttemptId: {
+        sourceSystem: normalized.sourceSystem,
+        sourceAttemptId: normalized.sourceAttemptId,
+      },
+    },
+  })
+  const row = existing || await prisma.incomingExerciseResult.create({ data: normalized.record })
+
+  return {
+    saved: true,
+    queued: true,
+    deduplicated: Boolean(existing),
+    incomingResultId: row.id,
+    sourceAttemptId: normalized.sourceAttemptId,
+    missingFields: normalized.missing,
   }
 }
 
@@ -997,6 +1139,8 @@ function buildIncomingDuplicateUpdateData(submission, summary, options = {}) {
     sourceSystem: normalizeSourceSystem(submission.sourceSystem),
     sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),
     pageTitle: submission.pageTitle,
+    sourceTitle: normalizeString(submission.sourceTitle) || submission.pageTitle,
+    startedAt: parseOptionalDate(submission.startedAt),
     completedAt: submission.completedAt,
     weekNumber: courseWeekNumberForSchoolSetupDate(
       completedAt?.toISOString?.()?.slice(0, 10),
@@ -1124,6 +1268,8 @@ function mapIncomingExerciseResult(item) {
     sourceOriginLabel: normalizeString(item.sourceOriginLabel),
     sourceOriginHost: normalizeString(item.sourceOriginHost),
     pageTitle: normalizeString(item.pageTitle),
+    sourceTitle: normalizeString(item.sourceTitle),
+    startedAt: item.startedAt ? new Date(item.startedAt).toISOString() : "",
     completedAt: item.completedAt ? new Date(item.completedAt).toISOString() : "",
     weekNumber: Number.isInteger(Number(item.weekNumber)) ? Number(item.weekNumber) : null,
     totalQuestions: Number.parseInt(String(item.totalQuestions || 0), 10) || 0,
@@ -1238,13 +1384,26 @@ export async function persistExerciseSubmission(payload, options = {}) {
           || existingSourceIdentity.sourceAttemptId !== sourceIdentity.sourceAttemptId
           || isSubmissionQualityBetter(incomingQuality, existingQuality)
         : isSubmissionQualityBetter(incomingQuality, existingQuality)
+      const sourceTitle = normalizeString(submission.sourceTitle) || submission.pageTitle
+      const startedAt = parseOptionalDate(submission.startedAt)
+      const sourceMetadataChanged = Boolean(sourceIdentity)
+        && (normalizeString(existingSubmission.sourceTitle) !== sourceTitle
+          || (startedAt && new Date(existingSubmission.startedAt || 0).valueOf() !== startedAt.valueOf()))
 
       const submissionRecord = shouldReplaceExisting
         ? await tx.exerciseSubmission.update({
             where: { id: existingSubmission.id },
             data: buildExerciseSubmissionRecordData(matchedStudent.id, exercise.id, submission, summary),
           })
-        : existingSubmission
+        : sourceMetadataChanged
+          ? await tx.exerciseSubmission.update({
+              where: { id: existingSubmission.id },
+              data: {
+                sourceTitle,
+                ...(startedAt ? { startedAt } : {}),
+              },
+            })
+          : existingSubmission
 
       const existingGradeRecord = await findMatchedGradeDuplicate(
         tx,
@@ -1260,7 +1419,17 @@ export async function persistExerciseSubmission(payload, options = {}) {
               where: { id: existingGradeRecord.id },
               data: buildExerciseGradeRecordData(matchedStudent, submission, summary),
             })
-          : existingGradeRecord
+          : sourceMetadataChanged
+            ? await tx.studentGradeRecord.update({
+                where: { id: existingGradeRecord.id },
+                data: {
+                  ...(normalizeSourceSystem(submission.sourceSystem) === "moodle"
+                    ? { assignmentName: sourceTitle }
+                    : {}),
+                  ...(startedAt ? { startedAt } : {}),
+                },
+              })
+            : existingGradeRecord
         : await tx.studentGradeRecord.create({
             data: buildExerciseGradeRecordData(matchedStudent, submission, summary),
           })
@@ -1269,7 +1438,7 @@ export async function persistExerciseSubmission(payload, options = {}) {
         submissionRecord,
         gradeRecord,
         deduplicated: true,
-        updatedExisting: shouldReplaceExisting,
+        updatedExisting: shouldReplaceExisting || sourceMetadataChanged,
         shouldNotify: false,
         summary: shouldReplaceExisting ? summary : existingSummary,
       }
@@ -1485,6 +1654,8 @@ function incomingResultToSubmissionPayload(row) {
     sourceOriginLabel: normalizeSourceOriginLabel(row.sourceOriginLabel),
     sourceOriginHost: normalizeSourceOriginHost(row.sourceOriginHost),
     pageTitle: normalizeString(row.pageTitle) || "Untitled exercise",
+    sourceTitle: normalizeString(row.sourceTitle) || normalizeString(row.pageTitle) || "Untitled exercise",
+    startedAt: row.startedAt ? new Date(row.startedAt) : null,
     completedAt: row.completedAt ? new Date(row.completedAt) : new Date(),
     recipientsJson: Array.isArray(row.recipientsJson) ? row.recipientsJson : null,
   }

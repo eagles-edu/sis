@@ -61,6 +61,8 @@ model ExerciseSubmission {
   sourceAttemptId    String?
   sourceOriginLabel  String?
   sourceOriginHost   String?
+  sourceTitle        String?
+  startedAt          DateTime?
   completedAt        DateTime
   weekNumber         Int?
   totalQuestions     Int
@@ -88,6 +90,8 @@ model IncomingExerciseResult {
   pageTitle          String
   sourceOriginLabel  String?
   sourceOriginHost   String?
+  sourceTitle        String?
+  startedAt          DateTime?
   completedAt        DateTime
   weekNumber         Int?
   totalQuestions     Int
@@ -392,6 +396,7 @@ model StudentGradeRecord {
   schoolYear        String
   quarter           SchoolQuarter
   assignmentName    String
+  startedAt         DateTime?
   dueAt             DateTime?
   weekNumber        Int?
   submittedAt       DateTime?

@@ -89,6 +89,8 @@ test("POST /api/exercise-submission succeeds (204) and dispatches notifications"
     eaglesId: "abc123",
     pageTitle: "Test Page",
     completedAt: "2026-03-01T07:34:04.862Z",
+    sourceSystem: "test-exercise-page",
+    sourceAttemptId: "test-page-attempt-001",
     correctCount: 9,
     pendingCount: 0,
     incorrectCount: 1,
@@ -133,6 +135,8 @@ test("POST /api/exercise-submission normalizes dotted numeric sections in pageTi
     eaglesId: "sec111",
     pageTitle: "1.1.1 Common Nouns",
     completedAt: "2026-03-01T07:35:04.862Z",
+    sourceSystem: "test-exercise-page",
+    sourceAttemptId: "common-nouns-attempt-001",
     correctCount: 10,
     pendingCount: 0,
     incorrectCount: 0,
@@ -163,6 +167,8 @@ test("POST /api/exercise-submission suppresses duplicate notifications for same 
     eaglesId: "once001",
     pageTitle: "Notify Once",
     completedAt: "2026-03-01T07:42:57.670Z",
+    sourceSystem: "test-exercise-page",
+    sourceAttemptId: "notify-once-attempt-001",
     correctCount: 8,
     pendingCount: 0,
     incorrectCount: 2,
@@ -198,6 +204,8 @@ test("POST /api/exercise-submission sends learner-only receipt for browser sourc
     eaglesId: "browser001",
     pageTitle: "Browser Cloze",
     completedAt: "2026-03-01T07:45:00.000Z",
+    sourceSystem: "cloze-web",
+    sourceAttemptId: "browser-cloze-attempt-001",
     correctCount: 10,
     pendingCount: 0,
     incorrectCount: 0,
@@ -234,6 +242,8 @@ test("POST /api/exercise-submission decodes obfuscated recipients", async () => 
     eaglesId: "def456",
     pageTitle: "Decode Test",
     completedAt: "2026-03-01T07:59:21.000Z",
+    sourceSystem: "test-exercise-page",
+    sourceAttemptId: "decode-test-attempt-001",
     correctCount: 7,
     pendingCount: 1,
     incorrectCount: 2,
@@ -262,12 +272,13 @@ test("POST /api/exercise-submission decodes obfuscated recipients", async () => 
   assert.equal(learnerMail.to[0], "student2@example.com")
 })
 
-test("POST /api/exercise-submission accepts signed Moodle-origin payloads without sending mail", async () => {
+test("POST /api/exercise-submission accepts signed complete Moodle-origin payloads without sending mail", async () => {
   const beforeCount = transport.calls.sendMail
   const payload = {
-    email: "",
+    email: "moodle-user-9@example.com",
     eaglesId: "moodle-user-9",
     pageTitle: "Moodle Quiz",
+    startedAt: "2026-03-01T07:45:00.000Z",
     completedAt: "2026-03-01T08:10:00.000Z",
     correctCount: 8,
     pendingCount: 1,
@@ -298,6 +309,58 @@ test("POST /api/exercise-submission accepts signed Moodle-origin payloads withou
   })
 
   assert.equal(res.status, 204)
+  assert.equal(transport.calls.sendMail, beforeCount)
+})
+
+test("test runtime no-external-messages mode suppresses exercise emails", async () => {
+  const beforeCount = transport.calls.sendMail
+  const previousMode = process.env.SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES
+  process.env.SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES = "1"
+  try {
+    const payload = {
+      eaglesId: "test-no-mail-1",
+      email: "test-no-mail@example.invalid",
+      pageTitle: "No email test exercise",
+      completedAt: "2026-03-01T08:10:00.000Z",
+      correctCount: 1,
+      pendingCount: 0,
+      incorrectCount: 0,
+      totalQuestions: 1,
+      scorePercent: 100,
+      recipients: ["teacher@example.invalid"],
+      sourceSystem: "comprehension-web",
+      sourceAttemptId: "attempt-no-mail-1",
+    }
+    const res = await fetchLocal(basePort, "/api/exercise-submission", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+    assert.equal(res.status, 204)
+    assert.equal(transport.calls.sendMail, beforeCount)
+  } finally {
+    if (previousMode === undefined) delete process.env.SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES
+    else process.env.SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES = previousMode
+  }
+})
+
+test("POST /api/exercise-submission rejects invalid Moodle signatures before Queue Hub handling", async () => {
+  const beforeCount = transport.calls.sendMail
+  const payload = JSON.stringify({ sourceAttemptId: "attempt-invalid-signature" })
+  const timestamp = String(Math.floor(Date.now() / 1000))
+  const res = await fetchLocal(basePort, "/api/exercise-submission", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      [MOODLE_REQUEST_HEADER_SOURCE]: MOODLE_INTEGRATION_SOURCE,
+      [MOODLE_REQUEST_HEADER_TIMESTAMP]: timestamp,
+      [MOODLE_REQUEST_HEADER_SIGNATURE]: "invalid-signature",
+    },
+    body: payload,
+  })
+
+  assert.equal(res.status, 403)
+  assert.match((await res.json()).error, /signature is invalid/i)
   assert.equal(transport.calls.sendMail, beforeCount)
 })
 
@@ -347,7 +410,7 @@ test("POST /api/exercise-submission rejects unsupported studentId field", async 
   assert.match(body.error, /Unsupported field: studentId/i)
 })
 
-test("POST /api/exercise-submission rejects inconsistent metrics", async () => {
+test("POST /api/exercise-submission routes inconsistent metrics to Queue Hub and fails visibly if queue storage is unavailable", async () => {
   const bad = {
     eaglesId: "x003",
     email: "x3@example.com",
@@ -364,9 +427,9 @@ test("POST /api/exercise-submission rejects inconsistent metrics", async () => {
     headers: { "content-type": "application/json" },
     body: JSON.stringify(bad),
   })
-  assert.equal(res.status, 400)
+  assert.equal(res.status, 503)
   const body = await res.json()
-  assert.match(body.error, /totalQuestions must equal correctCount \+ pendingCount \+ incorrectCount/i)
+  assert.match(body.error, /Queue Hub storage is unavailable/i)
 })
 
 test("POST /api/student-intake-submission accepts intake payload and does not send email", async () => {

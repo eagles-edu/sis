@@ -7,6 +7,7 @@ import path from "node:path"
 import {
   INCOMING_EXERCISE_RESULT_STATUS_QUEUED,
   persistExerciseSubmission,
+  queueIncompleteExerciseSubmission,
   resolveIncomingExerciseResultToStudent,
 } from "../src/modules/exercises/exercise-store.mjs"
 
@@ -225,6 +226,61 @@ function makePersistPrisma({
 
   return prisma
 }
+
+test("queueIncompleteExerciseSubmission retains incomplete source data and is idempotent", async () => {
+  const rows = []
+  const prisma = {
+    incomingExerciseResult: {
+      async findUnique(args) {
+        const identity = args?.where?.sourceSystem_sourceAttemptId
+        return rows.find((row) => row.sourceSystem === identity?.sourceSystem && row.sourceAttemptId === identity?.sourceAttemptId) || null
+      },
+      async create(args) {
+        const row = { id: "incomplete-1", ...args.data }
+        rows.push(row)
+        return row
+      },
+    },
+  }
+  const payload = {
+    eaglesId: "",
+    email: "not-an-email",
+    pageTitle: "",
+    completedAt: "invalid-date",
+    sourceSystem: "moodle",
+    totalQuestions: 10,
+    correctCount: 8,
+    pendingCount: 0,
+    incorrectCount: 1,
+    scorePercent: 80,
+  }
+
+  const first = await queueIncompleteExerciseSubmission(payload, { prisma })
+  const replay = await queueIncompleteExerciseSubmission(payload, { prisma })
+
+  assert.equal(first.saved, true)
+  assert.equal(first.queued, true)
+  assert.equal(first.deduplicated, false)
+  assert.equal(replay.incomingResultId, first.incomingResultId)
+  assert.equal(replay.deduplicated, true)
+  assert.equal(rows.length, 1)
+  assert.deepEqual(first.missingFields, [
+    "eaglesId",
+    "email",
+    "sourceAttemptId",
+    "pageTitle",
+    "completedAt",
+    "consistent question score metrics",
+  ])
+  assert.equal(rows[0].status, INCOMING_EXERCISE_RESULT_STATUS_QUEUED)
+  assert.equal(rows[0].submittedEaglesId, "[Missing EaglesID]")
+  assert.equal(rows[0].sourceSystem, "moodle")
+  assert.match(rows[0].sourceAttemptId, /^missing-[a-f0-9]{64}$/u)
+  assert.deepEqual(rows[0].payloadJson, payload)
+  assert.match(rows[0].notes, /consistent question score metrics/u)
+  assert.equal(rows[0].totalQuestions, 0)
+  assert.equal(rows[0].scorePercent, 0)
+})
 
 function nativeExercisePayload(overrides = {}) {
   return {
@@ -715,8 +771,9 @@ test("persistExerciseSubmission de-duplicates Moodle source identity records wit
     nativeExercisePayload({
       eaglesId: "moodle-user-1",
       email: "",
-      pageTitle: "Moodle Quiz",
+      pageTitle: "Do you like ____? with Animals",
       completedAt: "2026-03-01T07:34:05.100Z",
+      startedAt: "2026-03-01T07:00:00.000Z",
       correctCount: 9,
       pendingCount: 0,
       incorrectCount: 1,
@@ -737,6 +794,90 @@ test("persistExerciseSubmission de-duplicates Moodle source identity records wit
   assert.equal(result.gradeRecordId, "grade-moodle-existing")
   assert.equal(prisma.state.submissionUpdateCalls.length, 1)
   assert.equal(prisma.state.gradeRecordUpdateCalls.length, 1)
+  assert.equal(prisma.state.submissionUpdateCalls[0]?.data?.sourceTitle, "Do you like ____? with Animals")
+  assert.equal(prisma.state.submissionUpdateCalls[0]?.data?.startedAt?.toISOString(), "2026-03-01T07:00:00.000Z")
+  assert.equal(prisma.state.gradeRecordUpdateCalls[0]?.data?.assignmentName, "Do you like ____? with Animals")
+  assert.equal(prisma.state.gradeRecordUpdateCalls[0]?.data?.startedAt?.toISOString(), "2026-03-01T07:00:00.000Z")
+})
+
+test("persistExerciseSubmission replay backfills Moodle source metadata without lowering an existing grade", async () => {
+  const prisma = makePersistPrisma({
+    matchedStudent: {
+      id: "student-1",
+      eaglesId: "moodle-user-1",
+      email: "student@example.com",
+      profile: { currentGrade: "A2 Flyers" },
+    },
+    matchedSubmissionRows: [
+      {
+        id: "submission-moodle-replay",
+        studentRefId: "student-1",
+        exerciseRefId: "exercise-1",
+        submittedEaglesId: "moodle-user-1",
+        submittedEmail: "student@example.com",
+        sourceSystem: "moodle",
+        sourceAttemptId: "attempt-replay",
+        sourceTitle: null,
+        startedAt: null,
+        completedAt: new Date("2026-03-01T07:34:04.862Z"),
+        totalQuestions: 10,
+        correctCount: 9,
+        pendingCount: 0,
+        incorrectCount: 1,
+        scorePercent: 90,
+        recipientsJson: [],
+        createdAt: new Date("2026-02-01T07:34:04.862Z"),
+      },
+    ],
+    matchedGradeRows: [
+      {
+        id: "grade-moodle-replay",
+        studentRefId: "student-1",
+        className: "Do you like",
+        assignmentName: "Do you like",
+        dueAt: new Date("2026-03-01T07:34:04.862Z"),
+        submittedAt: new Date("2026-03-01T07:34:04.862Z"),
+        startedAt: null,
+        score: 90,
+        maxScore: 100,
+        homeworkCompleted: true,
+        homeworkOnTime: true,
+        comments: "Auto-imported exercise score.",
+        sourceSystem: "moodle",
+        sourceAttemptId: "attempt-replay",
+        createdAt: new Date("2026-02-01T07:34:04.862Z"),
+      },
+    ],
+  })
+
+  const result = await persistExerciseSubmission(
+    nativeExercisePayload({
+      eaglesId: "moodle-user-1",
+      email: "student@example.com",
+      pageTitle: "Do you like ____? with Animals",
+      completedAt: "2026-03-01T07:34:04.862Z",
+      startedAt: "2026-03-01T07:00:00.000Z",
+      correctCount: 5,
+      pendingCount: 0,
+      incorrectCount: 5,
+      totalQuestions: 10,
+      scorePercent: 50,
+      sourceSystem: "moodle",
+      sourceAttemptId: "attempt-replay",
+    }),
+    { prisma }
+  )
+
+  assert.equal(result.deduplicated, true)
+  assert.equal(result.updatedExisting, true)
+  assert.equal(prisma.state.submissionCreateCalls.length, 0)
+  assert.equal(prisma.state.gradeRecordCreateCalls.length, 0)
+  assert.equal(prisma.state.submissionUpdateCalls[0]?.data?.sourceTitle, "Do you like ____? with Animals")
+  assert.equal(prisma.state.submissionUpdateCalls[0]?.data?.startedAt?.toISOString(), "2026-03-01T07:00:00.000Z")
+  assert.equal(prisma.state.submissionUpdateCalls[0]?.data?.scorePercent, undefined)
+  assert.equal(prisma.state.gradeRecordUpdateCalls[0]?.data?.assignmentName, "Do you like ____? with Animals")
+  assert.equal(prisma.state.gradeRecordUpdateCalls[0]?.data?.startedAt?.toISOString(), "2026-03-01T07:00:00.000Z")
+  assert.equal(prisma.state.gradeRecordUpdateCalls[0]?.data?.score, undefined)
 })
 
 test("persistExerciseSubmission de-duplicates matched records using canonical fingerprint despite submitted identity mismatch and stale createdAt", async () => {

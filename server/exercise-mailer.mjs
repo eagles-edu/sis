@@ -247,6 +247,7 @@ const { startStudentNewsAutoApprovalLoop } = await import("../src/modules/admin/
 const {
   isExerciseStoreRequired,
   persistExerciseSubmission,
+  queueIncompleteExerciseSubmission,
 } = await import("../src/modules/exercises/exercise-store.mjs")
 const {
   MOODLE_INTEGRATION_SOURCE,
@@ -1353,6 +1354,8 @@ function validatePayload(payload, options = {}) {
   if (!allowMissingEmail && !isEmailLike(email)) throw createBadRequestError("Invalid email")
   const sourceSystem = normalizeString(payload?.sourceSystem)
   const sourceAttemptId = normalizeString(payload?.sourceAttemptId)
+  if (!sourceSystem) throw createBadRequestError("Missing sourceSystem")
+  if (!sourceAttemptId) throw createBadRequestError("Missing sourceAttemptId")
   const sourceFormId = normalizeString(payload?.sourceFormId)
   const sourceUrl = normalizeString(payload?.sourceUrl)
   const sourcePageUrl = normalizeString(payload?.sourcePageUrl)
@@ -1375,6 +1378,10 @@ function validatePayload(payload, options = {}) {
   const rawPageTitle = normalizeString(payload?.pageTitle)
   if (!rawPageTitle) throw createBadRequestError("Missing pageTitle")
   const pageTitle = normalizeExerciseSectionNotation(rawPageTitle)
+  const startedAt = normalizeString(payload?.startedAt)
+  if (startedAt && Number.isNaN(Date.parse(startedAt))) {
+    throw createBadRequestError("Invalid startedAt")
+  }
 
   const completedAt = normalizeString(payload?.completedAt)
   if (!completedAt || Number.isNaN(Date.parse(completedAt))) {
@@ -1418,6 +1425,8 @@ function validatePayload(payload, options = {}) {
     dueAt,
     level,
     pageTitle,
+    sourceTitle: rawPageTitle,
+    startedAt,
     completedAt,
     recipients: decodeRecipients(Array.isArray(payload.recipients) ? payload.recipients : []),
     correctCount,
@@ -1810,22 +1819,48 @@ async function handleRequest(request, response, transporter, provider) {
     }
 
     const normalizedPayload = moodleRequest ? normalizeMoodlePayload(payload) : payload
-    const validated = validatePayload(normalizedPayload, {
-      allowMissingEmail: moodleRequest,
-    })
+    let validated
+    try {
+      validated = validatePayload(normalizedPayload)
+    } catch (validationError) {
+      const error = validationError instanceof Error ? validationError : new Error(String(validationError))
+      if (error.statusCode !== 400 || /Unsupported field:/u.test(error.message)) throw error
+
+      const queued = await queueIncompleteExerciseSubmission(normalizedPayload)
+      if (!queued.saved || !queued.incomingResultId) {
+        allowCors(request, response)
+        response.writeHead(503, { "Content-Type": "application/json" })
+        response.end(JSON.stringify({ error: "Submission is incomplete and Queue Hub storage is unavailable" }))
+        return
+      }
+
+      allowCors(request, response)
+      response.writeHead(422, { "Content-Type": "application/json" })
+      response.end(JSON.stringify({
+        error: "Submission requires review in SIS Queue Hub",
+        queued: true,
+        incomingResultId: queued.incomingResultId,
+        sourceAttemptId: queued.sourceAttemptId,
+        missingFields: queued.missingFields,
+        deduplicated: queued.deduplicated,
+      }))
+      return
+    }
     const browserExerciseSource = isBrowserExerciseSource(validated.sourceSystem)
     const submissionActorKey = buildSubmissionActorKey(validated)
+    const suppressNotifications = moodleRequest || (
+      normalizeEnvText(process.env.NODE_ENV) === "test" &&
+      normalizeEnvText(process.env.SIS_KEEPALIVE_NO_EXTERNAL_MESSAGES) === "1"
+    )
 
     await withSubmissionLock(submissionActorKey, async () => {
       /** @type {ExerciseStoreResult | null} */
       let storeResult = null
-      let shouldSendTeacherNotification = !moodleRequest && !browserExerciseSource
-      let shouldSendLearnerNotification = !moodleRequest && Boolean(normalizeEnvText(validated.email))
+      let shouldSendTeacherNotification = !suppressNotifications && !browserExerciseSource
+      let shouldSendLearnerNotification = !suppressNotifications && Boolean(normalizeEnvText(validated.email))
 
       try {
-        storeResult = await persistExerciseSubmission(validated, {
-          suppressNotifications: moodleRequest,
-        })
+        storeResult = await persistExerciseSubmission(validated, { suppressNotifications })
         if (storeResult?.saved) {
           STATUS.lastStoreOk = true
           STATUS.lastStoreAt = new Date().toISOString()
@@ -1937,10 +1972,10 @@ async function handleRequest(request, response, transporter, provider) {
     STATUS.lastSendAt = new Date().toISOString()
     const err = error instanceof Error ? error : new Error(String(error))
     STATUS.lastError = String(err.message || error)
-    const status =
-      ((/** @type {StatusError} */ (err)).statusCode === 400) ||
-      err.message === "Missing intake form fields" ||
-      err.message === "Invalid intake payload"
+    const configuredStatus = Number((/** @type {StatusError} */ (err)).statusCode)
+    const status = Number.isInteger(configuredStatus) && configuredStatus >= 400 && configuredStatus <= 599
+      ? configuredStatus
+      : err.message === "Missing intake form fields" || err.message === "Invalid intake payload"
         ? 400
         : 500
     if (MAILER_DEBUG) console.error("❌ Send failed:", STATUS.lastError)
