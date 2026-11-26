@@ -116,6 +116,23 @@ test("Google Forms grade feed rejects malformed or unmatched submissions and ret
     assert.equal(anonymous.status, 401)
 
     const firstPayload = { eaglesId, title: assignmentName, score: 8, maxScore: 10, correctCount: 8, totalQuestions: 10, startedAt, submittedAt, sourceEmail, sourceAttemptId }
+    const invalidSignatureRequest = signedRequest(firstPayload, secret)
+    nonceValues.add(invalidSignatureRequest.nonce)
+    const validSignature = invalidSignatureRequest.init.headers["x-sis-signature"]
+    invalidSignatureRequest.init.headers["x-sis-signature"] = `${validSignature[0] === "0" ? "1" : "0"}${validSignature.slice(1)}`
+    const invalidSignature = await fetch(endpoint, invalidSignatureRequest.init)
+    assert.equal(invalidSignature.status, 401, "a request with a valid-shaped but incorrect HMAC is rejected")
+    assert.equal(
+      await prisma.studentGradeRecord.count({ where: { sourceSystem: "google-forms", sourceAttemptId } }),
+      0,
+      "invalid signatures cannot create a grade record",
+    )
+    assert.equal(
+      await prisma.moodleProvisioningNonce.count({ where: { source: "google-forms-grades", nonce: invalidSignatureRequest.nonce } }),
+      0,
+      "invalid signatures do not consume a valid nonce",
+    )
+
     const firstRequest = signedRequest(firstPayload, secret)
     nonceValues.add(firstRequest.nonce)
     const first = await fetch(endpoint, firstRequest.init)
