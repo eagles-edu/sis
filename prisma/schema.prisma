@@ -402,6 +402,8 @@ model StudentGradeRecord {
   submittedAt       DateTime?
   score             Float?
   maxScore          Float?
+  correctCount      Int?
+  totalQuestions    Int?
   homeworkCompleted Boolean?
   homeworkOnTime    Boolean?
   behaviorScore     Int?
@@ -410,6 +412,7 @@ model StudentGradeRecord {
   comments          String?
   sourceSystem      String?
   sourceAttemptId   String?
+  sourceEmail       String?
   sourceOriginLabel String?
   sourceOriginHost  String?
   assignmentBundleJson Json?

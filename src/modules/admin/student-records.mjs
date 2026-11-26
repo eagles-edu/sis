@@ -317,8 +317,10 @@ function inferGradeRecordSource(record = {}) {
  */
 export function mapGradeRecordForApi(record = {}) {
   if (!record || typeof record !== "object") return record
+  const safeRecord = { ...record }
+  delete safeRecord.sourceEmail
   return {
-    ...record,
+    ...safeRecord,
     className: canonicalizeLevel(record?.className),
     level: canonicalizeLevel(record?.level),
     source: inferGradeRecordSource(record),
@@ -569,6 +571,8 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
     submittedAt: normalizeDate(payload.submittedAt),
     score: normalizeFloat(payload.score),
     maxScore: normalizeFloat(payload.maxScore),
+    ...(Object.hasOwn(payload, "correctCount") ? { correctCount: normalizeInteger(payload.correctCount) } : {}),
+    ...(Object.hasOwn(payload, "totalQuestions") ? { totalQuestions: normalizeInteger(payload.totalQuestions) } : {}),
     homeworkCompleted: normalizeBoolean(payload.homeworkCompleted),
     homeworkOnTime: normalizeBoolean(payload.homeworkOnTime),
     behaviorScore: normalizeInteger(payload.behaviorScore),
@@ -577,6 +581,7 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
     comments: normalizeNullableText(payload.comments),
     sourceSystem: normalizeNullableText(payload.sourceSystem),
     sourceAttemptId: normalizeNullableText(payload.sourceAttemptId),
+    ...(Object.hasOwn(payload, "sourceEmail") ? { sourceEmail: normalizeNullableText(payload.sourceEmail) } : {}),
     sourceOriginLabel: normalizeNullableText(payload.sourceOriginLabel),
     sourceOriginHost: normalizeNullableText(payload.sourceOriginHost),
     assignmentBundleJson:

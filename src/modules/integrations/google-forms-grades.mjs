@@ -15,6 +15,10 @@ const ALLOWED_FIELDS = new Set([
   "title",
   "score",
   "maxScore",
+  "correctCount",
+  "totalQuestions",
+  "submittedAt",
+  "sourceEmail",
   "sourceAttemptId",
 ])
 
@@ -147,6 +151,21 @@ function assertValidPayload(payload) {
   if (!Number.isFinite(Number(payload.maxScore)) || Number(payload.maxScore) <= 0) {
     fail(400, "maxScore must be a positive number")
   }
+  if (!Number.isInteger(payload.correctCount) || payload.correctCount < 0) {
+    fail(400, "correctCount must be a non-negative integer")
+  }
+  if (!Number.isInteger(payload.totalQuestions) || payload.totalQuestions <= 0 || payload.correctCount > payload.totalQuestions) {
+    fail(400, "totalQuestions must be positive and at least correctCount")
+  }
+  if (Number(payload.maxScore) !== payload.totalQuestions || Number(payload.score) !== payload.correctCount) {
+    fail(400, "Google Forms score must be one point per question so correctCount is exact")
+  }
+  if (!text(payload.sourceEmail) || text(payload.sourceEmail).length > 320 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(text(payload.sourceEmail))) {
+    fail(400, "sourceEmail must contain a valid response email")
+  }
+  if (!text(payload.submittedAt) || Number.isNaN(Date.parse(text(payload.submittedAt)))) {
+    fail(400, "submittedAt must contain the Google Forms response timestamp")
+  }
   if (typeof payload.sourceAttemptId !== "string" || !text(payload.sourceAttemptId)) {
     fail(400, "sourceAttemptId is required")
   }
@@ -201,9 +220,9 @@ export async function processGoogleFormsGradeSubmission(request) {
   assertValidPayload(payload)
 
   const prisma = await getSharedPrismaClient()
-  const submittedAt = new Date().toISOString()
+  const receivedAt = new Date().toISOString()
   const schoolSetup = getSisConfigSnapshotSync()?.uiSettings?.schoolSetup || null
-  const { schoolYear, quarter } = resolveSchoolQuarter(submittedAt, schoolSetup)
+  const { schoolYear, quarter } = resolveSchoolQuarter(receivedAt, schoolSetup)
   const student = await prisma.student.findUnique({
     where: { eaglesId: text(payload.eaglesId) },
     select: {
@@ -235,10 +254,13 @@ export async function processGoogleFormsGradeSubmission(request) {
     quarter,
     enrollmentPeriodId: enrollmentPeriods[0].id,
     assignmentName: text(payload.title),
-    submittedAt,
+    submittedAt: new Date(payload.submittedAt).toISOString(),
     score: Number(payload.score),
-    maxScore: payload.maxScore === undefined || payload.maxScore === null || payload.maxScore === "" ? null : Number(payload.maxScore),
+    maxScore: Number(payload.maxScore),
+    correctCount: payload.correctCount,
+    totalQuestions: payload.totalQuestions,
     sourceAttemptId: text(payload.sourceAttemptId),
+    sourceEmail: text(payload.sourceEmail),
     sourceSystem: "google-forms",
     sourceOriginLabel: "Google Forms",
     sourceOriginHost: null,

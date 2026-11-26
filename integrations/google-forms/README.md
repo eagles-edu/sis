@@ -15,15 +15,18 @@ The SIS grade values required from each form are:
 - `EaglesID` — resolves the student
 - `Score` — accepts a `score / maximum` value, or a number paired with that quiz's configured `maxScore`
 - `maxScore` — required by SIS to calculate the percentage; Apps Script reads it from `Score` or the quiz configuration
+- `correctCount` and `totalQuestions` — Apps Script requires a configured question count and one point per question so SIS receives exact counts instead of guessing from a weighted score
+- `submittedAt` — the Google Forms response timestamp, saved as the grade submission time
+- `sourceEmail` — the `Email Address` response value, saved privately with the grade record
 - the form title — saved as the grade assignment title
 
 The grade is recorded in the school year and quarter current when SIS receives it. SIS derives that period from its authoritative school setup and derives class from the student's single active enrollment for that school year. The form's response timestamp does not select the grade period. SIS rejects submissions when school setup is invalid or the student has no single active enrollment with a level. Class, school year, and quarter are not form fields or Script Properties.
 
-The response sheets also contain `Timestamp`, `Email Address`, `Name`, and quiz-question columns. The sender ignores those columns. The Apps Script calculates a stable attempt ID from the response sheet and row so retries update the same grade record. SIS requires this non-empty `sourceAttemptId`; it rejects requests without one because a server receipt-time fallback cannot distinguish a retry from a new attempt.
+The response sheets contain `Timestamp` and `Email Address`; both are required by the sender. Google Forms does not record when a learner started the quiz, so `startedAt` remains unavailable. The Apps Script calculates a stable attempt ID from the response sheet and row so retries update the same grade record. SIS requires this non-empty `sourceAttemptId`; it rejects requests without one because a server receipt-time fallback cannot distinguish a retry from a new attempt. A row without a timestamp, email, or reliable one-point-per-question count fails in Apps Script and appears in that trigger's execution details.
 
 ## Configure one Apps Script for many quizzes
 
-Use one spreadsheet with a separate response worksheet for each quiz, plus one standalone Apps Script project for all those quizzes. Each quiz entry points to the workbook and its worksheet ID (`gid` in the worksheet URL), then supplies the grade title. The forms must be linked to that same spreadsheet. An optional `maxScore` is used when that worksheet's `Score` cell has no denominator.
+Use one spreadsheet with a separate response worksheet for each quiz, plus one standalone Apps Script project for all those quizzes. Each quiz entry points to the workbook and its worksheet ID (`gid` in the worksheet URL), then supplies the grade title and exact `questionCount`. The forms must be linked to that same spreadsheet. An optional `maxScore` is used when that worksheet's `Score` cell has no denominator; it must equal `questionCount`.
 
 1. Link each Google Form to the same response spreadsheet, choosing the option to select an existing spreadsheet. Google Forms creates a separate response worksheet for each form. Create one standalone Apps Script project and add the contents of `grades.gs`.
 2. In **Project Settings → Script Properties**, set `SIS_GRADES_BASE_URL`, `SIS_GRADES_SECRET`, and `SIS_GRADES_QUIZZES_JSON`. The JSON property is an array, for example:
@@ -33,18 +36,21 @@ Use one spreadsheet with a separate response worksheet for each quiz, plus one s
   {
     "spreadsheetId": "1HKHHbfa3UMyaAbf5XhR9B7NcorelL23Xpdx7A1rB3-o",
     "sheetId": 527690905,
-    "title": "Australian Artist Margaret Preston — Mixed Answer Version"
+    "title": "Australian Artist Margaret Preston — Mixed Answer Version",
+    "questionCount": 67
   },
   {
     "spreadsheetId": "1HKHHbfa3UMyaAbf5XhR9B7NcorelL23Xpdx7A1rB3-o",
     "sheetId": 660086055,
-    "title": "The Ecological Importance of Bees — Mixed Answer Version"
+    "title": "The Ecological Importance of Bees — Mixed Answer Version",
+    "questionCount": 56
   },
   {
     "spreadsheetId": "1HKHHbfa3UMyaAbf5XhR9B7NcorelL23Xpdx7A1rB3-o",
     "sheetId": 2116696939,
     "title": "Nature works Polylactic acid",
-    "maxScore": 50
+    "maxScore": 50,
+    "questionCount": 50
   }
 ]
 ```

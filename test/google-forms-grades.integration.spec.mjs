@@ -61,6 +61,8 @@ test("Google Forms grade feed rejects malformed or unmatched submissions and ret
   const eaglesId = `KA080-GF-${stamp}`
   const assignmentName = `KA080 Google Forms retry ${stamp}`
   const sourceAttemptId = `google_forms_${stamp.replaceAll("-", "")}`
+  const submittedAt = "2026-11-26T04:00:00.000Z"
+  const sourceEmail = `ka080-google-forms-${stamp}@example.invalid`
   const nonceValues = new Set()
   let studentId = ""
   let enrollmentPeriodId = ""
@@ -108,11 +110,11 @@ test("Google Forms grade feed rejects malformed or unmatched submissions and ret
     const anonymous = await fetch(endpoint, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ eaglesId, title: assignmentName, score: 8, maxScore: 10, sourceAttemptId }),
+      body: JSON.stringify({ eaglesId, title: assignmentName, score: 8, maxScore: 10, correctCount: 8, totalQuestions: 10, submittedAt, sourceEmail, sourceAttemptId }),
     })
     assert.equal(anonymous.status, 401)
 
-    const firstPayload = { eaglesId, title: assignmentName, score: 8, maxScore: 10, sourceAttemptId }
+    const firstPayload = { eaglesId, title: assignmentName, score: 8, maxScore: 10, correctCount: 8, totalQuestions: 10, submittedAt, sourceEmail, sourceAttemptId }
     const firstRequest = signedRequest(firstPayload, secret)
     nonceValues.add(firstRequest.nonce)
     const first = await fetch(endpoint, firstRequest.init)
@@ -123,40 +125,84 @@ test("Google Forms grade feed rejects malformed or unmatched submissions and ret
     const replay = await fetch(endpoint, firstRequest.init)
     assert.equal(replay.status, 409, "a consumed nonce cannot be replayed")
 
-    const retry = await send({ ...firstPayload, score: 10 }, randomUUID().replaceAll("-", ""))
+    const retry = await send({ ...firstPayload, score: 10, correctCount: 10 }, randomUUID().replaceAll("-", ""))
     assert.equal(retry.status, 200)
     const retryResult = await retry.json()
     assert.equal(retryResult.recordId, firstResult.recordId, "the same response-sheet row updates its original grade")
 
     const savedRows = await prisma.studentGradeRecord.findMany({
       where: { studentRefId: studentId, sourceSystem: "google-forms", sourceAttemptId },
-      select: { id: true, score: true, maxScore: true, assignmentName: true },
+      select: { id: true, score: true, maxScore: true, correctCount: true, totalQuestions: true, submittedAt: true, sourceEmail: true, assignmentName: true, className: true, schoolYear: true, quarter: true },
     })
     assert.equal(savedRows.length, 1)
     assert.equal(savedRows[0]?.id, firstResult.recordId)
     assert.equal(savedRows[0]?.score, 10)
     assert.equal(savedRows[0]?.maxScore, 10)
+    assert.equal(savedRows[0]?.correctCount, 10)
+    assert.equal(savedRows[0]?.totalQuestions, 10)
+    assert.equal(savedRows[0]?.submittedAt?.toISOString(), submittedAt)
+    assert.equal(savedRows[0]?.sourceEmail, sourceEmail)
+    const { mapGradeRecordForApi } = await import("../src/modules/admin/student-records.mjs")
+    assert.equal(mapGradeRecordForApi(savedRows[0])?.sourceEmail, undefined, "source email remains private from grade API responses")
+    const { saveGradeRecord } = await import("../src/modules/admin/student-records.mjs")
+    await saveGradeRecord(studentId, {
+      id: savedRows[0].id,
+      className: savedRows[0].className,
+      schoolYear: savedRows[0].schoolYear,
+      quarter: savedRows[0].quarter,
+      assignmentName,
+      submittedAt,
+      score: 10,
+      maxScore: 10,
+      sourceSystem: "google-forms",
+      sourceAttemptId,
+    })
+    const afterManualEdit = await prisma.studentGradeRecord.findUnique({
+      where: { id: savedRows[0].id },
+      select: { correctCount: true, totalQuestions: true, sourceEmail: true },
+    })
+    assert.equal(afterManualEdit?.correctCount, 10)
+    assert.equal(afterManualEdit?.totalQuestions, 10)
+    assert.equal(afterManualEdit?.sourceEmail, sourceEmail, "grade edits that omit source metadata preserve it")
+
+    const incorrectQuestionCount = await send(
+      { ...firstPayload, correctCount: 7, sourceAttemptId: `wrong-count-${stamp}` },
+      randomUUID().replaceAll("-", ""),
+    )
+    assert.equal(incorrectQuestionCount.status, 400, "a points/count mismatch cannot be presented as a correct-answer count")
+
+    const missingSourceEmail = await send(
+      { ...firstPayload, sourceEmail: "", sourceAttemptId: `missing-email-${stamp}` },
+      randomUUID().replaceAll("-", ""),
+    )
+    assert.equal(missingSourceEmail.status, 400, "missing source email is rejected visibly")
+
+    const missingSubmittedAt = await send(
+      { ...firstPayload, submittedAt: "", sourceAttemptId: `missing-time-${stamp}` },
+      randomUUID().replaceAll("-", ""),
+    )
+    assert.equal(missingSubmittedAt.status, 400, "missing source submission time is rejected visibly")
 
     const missingAttemptId = await send(
-      { eaglesId, title: `${assignmentName} missing id`, score: 8, maxScore: 10 },
+      { eaglesId, title: `${assignmentName} missing id`, score: 8, maxScore: 10, correctCount: 8, totalQuestions: 10, submittedAt, sourceEmail },
       randomUUID().replaceAll("-", ""),
     )
     assert.equal(missingAttemptId.status, 400)
 
     const emptyAttemptId = await send(
-      { eaglesId, title: `${assignmentName} empty id`, score: 8, maxScore: 10, sourceAttemptId: " " },
+      { eaglesId, title: `${assignmentName} empty id`, score: 8, maxScore: 10, correctCount: 8, totalQuestions: 10, submittedAt, sourceEmail, sourceAttemptId: " " },
       randomUUID().replaceAll("-", ""),
     )
     assert.equal(emptyAttemptId.status, 400)
 
     const nonStringAttemptId = await send(
-      { eaglesId, title: `${assignmentName} non-string id`, score: 8, maxScore: 10, sourceAttemptId: 42 },
+      { eaglesId, title: `${assignmentName} non-string id`, score: 8, maxScore: 10, correctCount: 8, totalQuestions: 10, submittedAt, sourceEmail, sourceAttemptId: 42 },
       randomUUID().replaceAll("-", ""),
     )
     assert.equal(nonStringAttemptId.status, 400)
 
     const oversizedAttemptId = await send(
-      { eaglesId, title: `${assignmentName} oversized id`, score: 8, maxScore: 10, sourceAttemptId: "a".repeat(256) },
+      { eaglesId, title: `${assignmentName} oversized id`, score: 8, maxScore: 10, correctCount: 8, totalQuestions: 10, submittedAt, sourceEmail, sourceAttemptId: "a".repeat(256) },
       randomUUID().replaceAll("-", ""),
     )
     assert.equal(oversizedAttemptId.status, 400)
@@ -165,20 +211,20 @@ test("Google Forms grade feed rejects malformed or unmatched submissions and ret
     assert.equal(malformedJson.status, 400)
 
     const unsupportedField = await send(
-      { eaglesId, title: `${assignmentName} extra field`, score: 8, maxScore: 10, sourceAttemptId: `extra-${stamp}`, studentId: "unexpected" },
+      { eaglesId, title: `${assignmentName} extra field`, score: 8, maxScore: 10, correctCount: 8, totalQuestions: 10, submittedAt, sourceEmail, sourceAttemptId: `extra-${stamp}`, studentId: "unexpected" },
       randomUUID().replaceAll("-", ""),
     )
     assert.equal(unsupportedField.status, 400)
 
     const invalidScore = await send(
-      { eaglesId, title: `${assignmentName} invalid score`, score: "eight", maxScore: 10, sourceAttemptId: `invalid-${stamp}` },
+      { eaglesId, title: `${assignmentName} invalid score`, score: "eight", maxScore: 10, correctCount: 8, totalQuestions: 10, submittedAt, sourceEmail, sourceAttemptId: `invalid-${stamp}` },
       randomUUID().replaceAll("-", ""),
     )
     assert.equal(invalidScore.status, 400)
 
     const unmatchedId = `KA080-MISSING-${stamp}`
     const unmatched = await send(
-      { eaglesId: unmatchedId, title: `${assignmentName} unmatched`, score: 8, maxScore: 10, sourceAttemptId: `unmatched-${stamp}` },
+      { eaglesId: unmatchedId, title: `${assignmentName} unmatched`, score: 8, maxScore: 10, correctCount: 8, totalQuestions: 10, submittedAt, sourceEmail, sourceAttemptId: `unmatched-${stamp}` },
       randomUUID().replaceAll("-", ""),
     )
     assert.equal(unmatched.status, 404)

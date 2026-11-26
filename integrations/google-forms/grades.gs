@@ -78,11 +78,23 @@ function submitGoogleFormsGrade(event) {
   if (!eaglesId) throw new Error("Required response is empty: EaglesID");
 
   const score = parseGoogleFormsScore_(answers.Score, quiz.maxScore);
+  const questionCount = Number(quiz.questionCount);
+  if (!Number.isInteger(questionCount) || questionCount <= 0 || score.maxScore !== questionCount || !Number.isInteger(score.score)) {
+    throw new Error("Quiz must have a configured questionCount equal to its one-point-per-question maximum score.");
+  }
+  const submittedAt = answers.Timestamp instanceof Date ? answers.Timestamp.toISOString() : "";
+  if (!submittedAt) throw new Error("Required response is empty or invalid: Timestamp");
+  const sourceEmail = gradeCellValue_(answers["Email Address"]);
+  if (!sourceEmail) throw new Error("Required response is empty: Email Address");
   const payload = {
     eaglesId,
     title: quiz.title,
     score: score.score,
     maxScore: score.maxScore,
+    correctCount: score.score,
+    totalQuestions: questionCount,
+    submittedAt,
+    sourceEmail,
     sourceAttemptId: "google_forms_" + gradeSha256Hex_(
       [spreadsheetId, sheet.getSheetId(), rowNumber].join(":"),
     ),
@@ -142,6 +154,8 @@ function getGoogleFormsGradeQuizzes_() {
     const title = String(quiz && quiz.title || "").trim();
     const maxScoreText = String(quiz && quiz.maxScore !== undefined ? quiz.maxScore : "").trim();
     const maxScore = maxScoreText ? Number(maxScoreText) : null;
+    const questionCountText = String(quiz && quiz.questionCount !== undefined ? quiz.questionCount : "").trim();
+    const questionCount = questionCountText ? Number(questionCountText) : null;
     if (!spreadsheetId || !title) {
       throw new Error("Each quiz configuration needs spreadsheetId and title (entry " + (index + 1) + ").");
     }
@@ -151,12 +165,15 @@ function getGoogleFormsGradeQuizzes_() {
     if (maxScoreText && (!Number.isFinite(maxScore) || maxScore <= 0)) {
       throw new Error("Quiz maxScore must be a positive number (entry " + (index + 1) + ").");
     }
+    if (!Number.isInteger(questionCount) || questionCount <= 0 || (maxScore !== null && maxScore !== questionCount)) {
+      throw new Error("Quiz questionCount must be a positive integer equal to maxScore (entry " + (index + 1) + ").");
+    }
     const quizKey = spreadsheetId + ":" + (sheetId === null ? "*" : sheetId);
     if (seenQuizKeys.has(quizKey)) {
       throw new Error("A spreadsheet and worksheet pair appears more than once in SIS_GRADES_QUIZZES_JSON.");
     }
     seenQuizKeys.add(quizKey);
-    return { spreadsheetId, sheetId, title, maxScore };
+    return { spreadsheetId, sheetId, title, maxScore, questionCount };
   });
   const spreadsheetMatchCounts = new Map();
   parsedQuizzes.forEach((quiz) => {
