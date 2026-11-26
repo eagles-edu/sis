@@ -17,6 +17,7 @@ const ALLOWED_FIELDS = new Set([
   "maxScore",
   "correctCount",
   "totalQuestions",
+  "startedAt",
   "submittedAt",
   "sourceEmail",
   "sourceAttemptId",
@@ -166,6 +167,9 @@ function assertValidPayload(payload) {
   if (!text(payload.submittedAt) || Number.isNaN(Date.parse(text(payload.submittedAt)))) {
     fail(400, "submittedAt must contain the Google Forms response timestamp")
   }
+  if (text(payload.startedAt) && Number.isNaN(Date.parse(text(payload.startedAt)))) {
+    fail(400, "startedAt must contain a valid source start timestamp when provided")
+  }
   if (typeof payload.sourceAttemptId !== "string" || !text(payload.sourceAttemptId)) {
     fail(400, "sourceAttemptId is required")
   }
@@ -254,6 +258,7 @@ export async function processGoogleFormsGradeSubmission(request) {
     quarter,
     enrollmentPeriodId: enrollmentPeriods[0].id,
     assignmentName: text(payload.title),
+    ...(text(payload.startedAt) ? { startedAt: new Date(payload.startedAt).toISOString() } : {}),
     submittedAt: new Date(payload.submittedAt).toISOString(),
     score: Number(payload.score),
     maxScore: Number(payload.maxScore),

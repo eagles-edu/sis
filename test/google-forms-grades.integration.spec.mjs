@@ -61,6 +61,7 @@ test("Google Forms grade feed rejects malformed or unmatched submissions and ret
   const eaglesId = `KA080-GF-${stamp}`
   const assignmentName = `KA080 Google Forms retry ${stamp}`
   const sourceAttemptId = `google_forms_${stamp.replaceAll("-", "")}`
+  const startedAt = "2026-11-26T03:59:00.000Z"
   const submittedAt = "2026-11-26T04:00:00.000Z"
   const sourceEmail = `ka080-google-forms-${stamp}@example.invalid`
   const nonceValues = new Set()
@@ -114,7 +115,7 @@ test("Google Forms grade feed rejects malformed or unmatched submissions and ret
     })
     assert.equal(anonymous.status, 401)
 
-    const firstPayload = { eaglesId, title: assignmentName, score: 8, maxScore: 10, correctCount: 8, totalQuestions: 10, submittedAt, sourceEmail, sourceAttemptId }
+    const firstPayload = { eaglesId, title: assignmentName, score: 8, maxScore: 10, correctCount: 8, totalQuestions: 10, startedAt, submittedAt, sourceEmail, sourceAttemptId }
     const firstRequest = signedRequest(firstPayload, secret)
     nonceValues.add(firstRequest.nonce)
     const first = await fetch(endpoint, firstRequest.init)
@@ -132,7 +133,7 @@ test("Google Forms grade feed rejects malformed or unmatched submissions and ret
 
     const savedRows = await prisma.studentGradeRecord.findMany({
       where: { studentRefId: studentId, sourceSystem: "google-forms", sourceAttemptId },
-      select: { id: true, score: true, maxScore: true, correctCount: true, totalQuestions: true, submittedAt: true, sourceEmail: true, assignmentName: true, className: true, schoolYear: true, quarter: true },
+      select: { id: true, score: true, maxScore: true, correctCount: true, totalQuestions: true, startedAt: true, submittedAt: true, sourceEmail: true, assignmentName: true, className: true, schoolYear: true, quarter: true },
     })
     assert.equal(savedRows.length, 1)
     assert.equal(savedRows[0]?.id, firstResult.recordId)
@@ -140,6 +141,7 @@ test("Google Forms grade feed rejects malformed or unmatched submissions and ret
     assert.equal(savedRows[0]?.maxScore, 10)
     assert.equal(savedRows[0]?.correctCount, 10)
     assert.equal(savedRows[0]?.totalQuestions, 10)
+    assert.equal(savedRows[0]?.startedAt?.toISOString(), startedAt)
     assert.equal(savedRows[0]?.submittedAt?.toISOString(), submittedAt)
     assert.equal(savedRows[0]?.sourceEmail, sourceEmail)
     const { mapGradeRecordForApi } = await import("../src/modules/admin/student-records.mjs")
@@ -159,11 +161,18 @@ test("Google Forms grade feed rejects malformed or unmatched submissions and ret
     })
     const afterManualEdit = await prisma.studentGradeRecord.findUnique({
       where: { id: savedRows[0].id },
-      select: { correctCount: true, totalQuestions: true, sourceEmail: true },
+      select: { correctCount: true, totalQuestions: true, startedAt: true, sourceEmail: true },
     })
     assert.equal(afterManualEdit?.correctCount, 10)
     assert.equal(afterManualEdit?.totalQuestions, 10)
+    assert.equal(afterManualEdit?.startedAt?.toISOString(), startedAt, "grade edits that omit source timestamps preserve them")
     assert.equal(afterManualEdit?.sourceEmail, sourceEmail, "grade edits that omit source metadata preserve it")
+
+    const invalidStartedAt = await send(
+      { ...firstPayload, startedAt: "not-a-date", sourceAttemptId: `invalid-start-${stamp}` },
+      randomUUID().replaceAll("-", ""),
+    )
+    assert.equal(invalidStartedAt.status, 400, "a provided start timestamp must be valid")
 
     const incorrectQuestionCount = await send(
       { ...firstPayload, correctCount: 7, sourceAttemptId: `wrong-count-${stamp}` },

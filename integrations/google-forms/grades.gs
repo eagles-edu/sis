@@ -84,6 +84,15 @@ function submitGoogleFormsGrade(event) {
   }
   const submittedAt = answers.Timestamp instanceof Date ? answers.Timestamp.toISOString() : "";
   if (!submittedAt) throw new Error("Required response is empty or invalid: Timestamp");
+  const startedAtValue = gradeCellValue_(answers["Started At"]);
+  let startedAt = "";
+  if (startedAtValue) {
+    const parsedStartedAt = new Date(startedAtValue);
+    if (Number.isNaN(parsedStartedAt.valueOf())) {
+      throw new Error("Optional Started At response is not a valid timestamp.");
+    }
+    startedAt = parsedStartedAt.toISOString();
+  }
   const sourceEmail = gradeCellValue_(answers["Email Address"]);
   if (!sourceEmail) throw new Error("Required response is empty: Email Address");
   const payload = {
@@ -93,6 +102,7 @@ function submitGoogleFormsGrade(event) {
     maxScore: score.maxScore,
     correctCount: score.score,
     totalQuestions: questionCount,
+    ...(startedAt ? { startedAt } : {}),
     submittedAt,
     sourceEmail,
     sourceAttemptId: "google_forms_" + gradeSha256Hex_(

@@ -16,13 +16,14 @@ The SIS grade values required from each form are:
 - `Score` — accepts a `score / maximum` value, or a number paired with that quiz's configured `maxScore`
 - `maxScore` — required by SIS to calculate the percentage; Apps Script reads it from `Score` or the quiz configuration
 - `correctCount` and `totalQuestions` — Apps Script requires a configured question count and one point per question so SIS receives exact counts instead of guessing from a weighted score
+- `startedAt` — optional; when a response sheet includes a genuine `Started At` timestamp, Apps Script sends it and SIS stores it. Without that source value, SIS leaves the field empty rather than estimating it.
 - `submittedAt` — the Google Forms response timestamp, saved as the grade submission time
 - `sourceEmail` — the `Email Address` response value, saved privately with the grade record
 - the form title — saved as the grade assignment title
 
 The grade is recorded in the school year and quarter current when SIS receives it. SIS derives that period from its authoritative school setup and derives class from the student's single active enrollment for that school year. The form's response timestamp does not select the grade period. SIS rejects submissions when school setup is invalid or the student has no single active enrollment with a level. Class, school year, and quarter are not form fields or Script Properties.
 
-The response sheets contain `Timestamp` and `Email Address`; both are required by the sender. Google Forms does not record when a learner started the quiz, so `startedAt` remains unavailable. The Apps Script calculates a stable attempt ID from the response sheet and row so retries update the same grade record. SIS requires this non-empty `sourceAttemptId`; it rejects requests without one because a server receipt-time fallback cannot distinguish a retry from a new attempt. A row without a timestamp, email, or reliable one-point-per-question count fails in Apps Script and appears in that trigger's execution details.
+The response sheets contain `Timestamp` and `Email Address`; both are required by the sender. Standard Google Forms response sheets do not provide a start timestamp. If a source workflow supplies a genuine `Started At` column, the sender includes it; otherwise `startedAt` remains empty rather than being estimated. The Apps Script calculates a stable attempt ID from the response sheet and row so retries update the same grade record. SIS requires this non-empty `sourceAttemptId`; it rejects requests without one because a server receipt-time fallback cannot distinguish a retry from a new attempt. A row without a timestamp, email, or reliable one-point-per-question count fails in Apps Script and appears in that trigger's execution details.
 
 ## Configure one Apps Script for many quizzes
 
