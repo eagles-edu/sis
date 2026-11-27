@@ -101,43 +101,48 @@ sudo tools/install-test-moodle-provisioning-proxy.sh --apply
 
 The probe sends an invalid HMAC and expects the test API's JSON 401 response,
 or JSON 503 when the test provisioning key is unset. HTTP 200 HTML is a route
-failure. The scheduled Moodle task remains disabled during routine staging
-setup. Production Nginx and production SIS are outside this installer.
+failure. Production Nginx and production SIS are outside this installer.
 
-For an explicitly authorized, one-off integration rehearsal:
+## Active SIS user provisioning (test only)
 
-1. Back up the SIS test database and isolated Moodle staging database. Confirm
-   the exact test SIS database and ensure the selected poll batch contains only
-   the rehearsal's synthetic command IDs. Do not poll unrelated pending,
-   retry, or processing commands.
-2. Keep the scheduled task disabled. Configure staging's `enrol_sis` base URL
-   to `https://test.eagles.edu.vn`, set its provisioning secret to the
-   test-runtime-owned `.env.test` key, temporarily set Dry run off, and limit
-   the batch to the isolated commands. Never copy the secret into Git, docs,
-   shell history, or logs.
-3. Execute the task once from the staging Moodle root, using Moodle's writable
-   staging temp directory if the shell's inherited `TMPDIR` is unavailable:
+As of 2026-11-27, staging's `enrol_sis` base URL is
+`https://test.eagles.edu.vn`; its shared secret matches the test-owned
+`MOODLE_SIS_PROVISIONING_SECRET` in `.env.test`; Dry run is off; and the
+`\enrol_sis\task\sync` task is enabled. Moodle staging keeps `noemailever=1`.
+The enabled systemd timer `moodle-staging-cron.timer` runs only that scheduled
+task every minute as `stage8567` with Moodle's PHP 8.3 CLI. It does not invoke
+general Moodle cron or enable tasks unrelated to SIS provisioning.
 
-   ```bash
-   sudo -u stage8567 env TMPDIR=/home/staged.eagles.edu.vn/moodledata/temp \
-     /usr/local/lsws/lsphp83/bin/php \
-     /home/staged.eagles.edu.vn/app/admin/cli/scheduled_task.php \
-     --execute='\enrol_sis\task\sync'
-   ```
+The test SIS service and worker read only `/home/test.eagles.edu.vn/sis/.env.test`;
+the development workspace `.env.test` carries the same test-owned key for
+environment-pinned tooling. Do not copy the secret into Git, documentation,
+shell history, command output, or another environment. Moodle course
+`idnumber` values must uniquely match SIS canonical levels. The current staging
+course for `A1 Movers` uses `idnumber=A1 Movers`.
 
-   Verify signed polling and receipts, one Moodle account, the expected course
-   enrollment and cohort memberships, and an active SIS/Moodle user link.
-   Replay only the same command IDs and confirm the Moodle idempotency records
-   prevent duplicate users, enrollments, or memberships.
-4. Remove only the rehearsal's synthetic SIS and Moodle records. Restore the
-   staging SIS URL and secret to unset, Dry run on, the original batch size,
-   mail disabled, and the scheduled task disabled; purge staging caches. Restore
-   the test `.env.test` backup and restart the test SIS service if its
-   provisioning key was enabled for the rehearsal. Verify staging and test
-   health, the JSON unconfigured response, and the retained Basic Auth login.
+The 2026-11-27 synthetic verification completed account creation, encrypted
+password application, Eagles Club cohort membership, and level course
+enrollment. Duplicate command receipt replay was idempotent, an invalid HMAC
+was rejected with HTTP 401, and SIS due/processing/rejected queue counts were
+all zero. A prior synthetic batch was encrypted with an unavailable test key;
+its exact database state was backed up and its redacted command audit preserved
+before removing only that synthetic batch. No production Moodle, admin/live
+SIS, or external email was used.
 
-These steps do not authorize production changes. Do not use production learner
-data for writes, provisioning polls, or external sends.
+To pause staging user provisioning, disable `moodle-staging-cron.timer`, enable
+Moodle Dry run, and disable the SIS scheduled task. Keep the test SIS target and
+secret test-owned; never redirect staging to live/admin SIS. Do not use
+production learner data for test writes, provisioning polls, or external sends.
+
+## Recovery and isolated rehearsals
+
+Before a destructive staging recovery, back up both `sis-test` and the isolated
+Moodle staging database. For a bounded rehearsal, use only synthetic test-owned
+commands, verify the selected batch contains no unrelated learner commands,
+and preserve the active timer/task settings after the run. For rollback, first
+pause the systemd timer, then restore the exact test and staging backups using
+the guarded restore procedures below. Do not restore a test snapshot over
+production or copy production learner data into SIS test.
 
 ## Optional staging data refresh
 
