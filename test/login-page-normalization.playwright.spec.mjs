@@ -242,10 +242,30 @@ test(
       )
       assert.equal(await page.locator("#authPanel .login-link").nth(1).getAttribute("href"), "tel:0937667818")
       assert.equal(await page.locator("#authPanel .login-link").count(), 2)
+      assert.equal(
+        await page.locator("#studentPortalLoginLink").getAttribute("href"),
+        "https://admin.eagles.edu.vn/student",
+        "dev/static login page should keep the admin student portal URL",
+      )
       assert.ok(
         (await page.locator("#authPanel input").first().evaluate((node) => getComputedStyle(node).minHeight)) >= "48px",
         "admin login: inputs should be beefier"
       )
+
+      const testRuntimeContext = await browser.newContext()
+      const testRuntimePage = await testRuntimeContext.newPage()
+      await testRuntimePage.addInitScript(() => {
+        window.__SIS_RUNTIME_ENV = "test"
+      })
+      await testRuntimePage.goto(`http://127.0.0.1:${port}/web-asset/admin/student-admin.html`, {
+        waitUntil: "domcontentloaded",
+      })
+      assert.equal(
+        await testRuntimePage.locator("#studentPortalLoginLink").getAttribute("href"),
+        "https://test.eagles.edu.vn/student",
+        "test login page should keep the test student portal URL",
+      )
+      await testRuntimeContext.close()
 
       await page.evaluate(() => {
         localStorage.setItem("sis-theme", "dark")

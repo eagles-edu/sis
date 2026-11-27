@@ -16,7 +16,7 @@
     {
       "path": "/admin",
       "status": 200,
-      "needle": "Student Admin Login"
+      "needle": "Administration Login"
     },
     {
       "path": "/admin/enrollment",

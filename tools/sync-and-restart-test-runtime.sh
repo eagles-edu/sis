@@ -51,7 +51,7 @@ const studentPortalPagePath = contract.studentPortalPagePath || "/student"
 const entries = [
   [`http://127.0.0.1:${port}/`, 200, `window.__SIS_RUNTIME_ENV=${JSON.stringify(runtimeEnv)}`, ""],
   [`http://127.0.0.1:${port}/llms.txt`, 200, "#  The Eagles American English Club, Ltd.", ""],
-  [`http://127.0.0.1:${port}${adminPagePath}`, 200, "Student Admin Login", ""],
+  [`http://127.0.0.1:${port}${adminPagePath}`, 200, "Administration Login", ""],
   [`http://127.0.0.1:${port}${adminPagePath}/llms.txt`, 200, "# The Eagles American English Club, Ltd., Admin Portal", ""],
   [`http://127.0.0.1:${port}${adminEnrollmentPagePath}`, 200, "The Eagles Club Student Enrollment", ""],
   [`http://127.0.0.1:${port}${parentPortalPagePath}`, 200, "dành cho phụ huynh", ""],

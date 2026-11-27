@@ -960,11 +960,26 @@ body#top.menu-open #menuBackdrop.menu-backdrop {
           <p>
             Student Portal
             <a
+              id="studentPortalLoginLink"
               href="https://admin.eagles.edu.vn/student"
               target="_self"
               rel="noreferrer"
             >Login is HERE</a>.
           </p>
+          <script>
+            (() => {
+              const isTestEnvironment =
+                window.__SIS_RUNTIME_ENV === "test" ||
+                window.location.hostname === "test.eagles.edu.vn";
+              const studentPortalOrigin = isTestEnvironment
+                ? "https://test.eagles.edu.vn"
+                : "https://admin.eagles.edu.vn";
+              const studentPortalLoginLink = document.getElementById("studentPortalLoginLink");
+              if (studentPortalLoginLink) {
+                studentPortalLoginLink.href = `${studentPortalOrigin}/student`;
+              }
+            })();
+          </script>
           <form id="loginForm" class="login-form" novalidate>
             <div class="form-row">
               <label for="loginUser">Username</label>

@@ -373,7 +373,7 @@ LIVE_PUBLIC_WEBFILE_MAP=(
 
 LIVE_ROUTE_MATRIX=(
   "https://admin.eagles.edu.vn/|200|Cổng Thông Tin Sinh Viên|"
-  "https://admin.eagles.edu.vn/admin|200|Student Admin Login|"
+  "https://admin.eagles.edu.vn/admin|200|Administration Login|"
   "https://admin.eagles.edu.vn/admin/enrollment|200|The Eagles Club Student Enrollment|"
   "https://admin.eagles.edu.vn/parent|200|dành cho phụ huynh|"
   "https://admin.eagles.edu.vn/student|200|Student Portal|"
@@ -1322,8 +1322,8 @@ try {
     const titleText = await page.title()
     const acceptsLoginGate =
       probeUrl.endsWith("/admin/enrollment") &&
-      (String(bodyText || "").includes("Student Admin Login") ||
-        String(titleText || "").includes("Student Admin Login"))
+      (String(bodyText || "").includes("Administration Login") ||
+        String(titleText || "").includes("Administration Login"))
     assert.ok(
       String(bodyText || "").includes(expectedNeedle) ||
         String(titleText || "").includes(expectedNeedle) ||
