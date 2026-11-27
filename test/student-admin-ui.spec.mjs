@@ -8294,6 +8294,7 @@ test("student creation shows a saved-profile warning when optional parent invita
   document.getElementById("f_motherName").value = "Synthetic Parent"
   document.getElementById("f_motherEmail").value = "parent@example.invalid"
   document.getElementById("f_motherPhone").value = "+84900000000"
+  assert.equal(document.getElementById("sendParentCompletionEmail").checked, false)
   document.getElementById("sendParentCompletionEmail").checked = true
   document.getElementById("saveBtn").click()
 

@@ -16,9 +16,11 @@ back to production: production owns live learner activity.
 
 Staging is https://staged.eagles.edu.vn; production is
 https://moodle.eagles.edu.vn. Both currently use PHP 8.3. Staging keeps mail
-disabled, its SIS endpoint and secret unset, enrol_sis Dry run enabled, its
-SIS sync task disabled, and its HTTP Basic Authentication barrier. A staging
-refresh must retain these guards.
+disabled and retains its HTTP Basic Authentication barrier. Its SIS
+user-provisioning task is a test-only exception to the otherwise disabled SIS
+integration defaults; the active target, task, and poller are documented
+below. Staging does not target production or run unrelated Moodle cron tasks.
+A staging refresh must restore the documented safety defaults.
 
 ## Release loop
 

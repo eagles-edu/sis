@@ -19843,7 +19843,7 @@
           const inviteInput = document.createElement("input");
           inviteInput.type = "checkbox";
           inviteInput.id = "sendParentCompletionEmail";
-          inviteInput.checked = previousInvitationCheckbox ? previousInvitationCheckbox.checked : true;
+          inviteInput.checked = previousInvitationCheckbox ? previousInvitationCheckbox.checked : false;
           inviteLabel.appendChild(inviteInput);
           inviteLabel.appendChild(document.createTextNode(" Send profile-completion email"));
           wrapper.appendChild(inviteLabel);
