@@ -52,6 +52,10 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox-exporter:9115
+      - target_label: site
+        replacement: test
+      - target_label: check
+        replacement: main
 
   - job_name: blackbox-website-http
     scrape_interval: 60s
