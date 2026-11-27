@@ -950,6 +950,9 @@ function buildExerciseGradeRecordData(student, submission, summary) {
     submittedAt,
     score: scorePercent,
     maxScore: 100,
+    correctCount: summary.correctCount,
+    totalQuestions: summary.totalQuestions,
+    sourceEmail: normalizeLower(submission.submittedEmail) || null,
     homeworkCompleted: true,
     homeworkOnTime: !dueAt || submittedAt <= dueAt,
     comments,
@@ -959,6 +962,21 @@ function buildExerciseGradeRecordData(student, submission, summary) {
     sourceOriginHost: normalizeSourceOriginHost(submission.sourceOriginHost),
     assignmentBundleJson,
   }
+}
+
+function buildExerciseGradeMetadataUpdateData(existingGradeRecord, submission, summary) {
+  const data = {}
+  if (existingGradeRecord.correctCount !== summary.correctCount) {
+    data.correctCount = summary.correctCount
+  }
+  if (existingGradeRecord.totalQuestions !== summary.totalQuestions) {
+    data.totalQuestions = summary.totalQuestions
+  }
+  const submittedEmail = normalizeLower(submission.submittedEmail)
+  if (submittedEmail && normalizeLower(existingGradeRecord.sourceEmail) !== submittedEmail) {
+    data.sourceEmail = submittedEmail
+  }
+  return data
 }
 
 function buildIncomingQueueRecordData(submission, summary, options = {}) {
@@ -1412,6 +1430,14 @@ export async function persistExerciseSubmission(payload, options = {}) {
         submission.completedAt,
         submission
       )
+      const gradeSourceSubmission = normalizeString(existingSubmission.submittedEmail)
+        ? { ...submission, submittedEmail: existingSubmission.submittedEmail }
+        : submission
+      const gradeSourceSummary = shouldReplaceExisting ? summary : existingSummary
+      const gradeMetadataUpdateData = existingGradeRecord
+        ? buildExerciseGradeMetadataUpdateData(existingGradeRecord, gradeSourceSubmission, gradeSourceSummary)
+        : {}
+      const gradeMetadataChanged = Object.keys(gradeMetadataUpdateData).length > 0
 
       const gradeRecord = existingGradeRecord
         ? shouldReplaceExisting
@@ -1419,10 +1445,11 @@ export async function persistExerciseSubmission(payload, options = {}) {
               where: { id: existingGradeRecord.id },
               data: buildExerciseGradeRecordData(matchedStudent, submission, summary),
             })
-          : sourceMetadataChanged
+          : sourceMetadataChanged || gradeMetadataChanged
             ? await tx.studentGradeRecord.update({
                 where: { id: existingGradeRecord.id },
                 data: {
+                  ...gradeMetadataUpdateData,
                   ...(normalizeSourceSystem(submission.sourceSystem) === "moodle"
                     ? { assignmentName: sourceTitle }
                     : {}),
@@ -1438,7 +1465,7 @@ export async function persistExerciseSubmission(payload, options = {}) {
         submissionRecord,
         gradeRecord,
         deduplicated: true,
-        updatedExisting: shouldReplaceExisting || sourceMetadataChanged,
+        updatedExisting: shouldReplaceExisting || sourceMetadataChanged || gradeMetadataChanged,
         shouldNotify: false,
         summary: shouldReplaceExisting ? summary : existingSummary,
       }

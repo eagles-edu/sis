@@ -449,6 +449,9 @@ test("persistExerciseSubmission records directly when student account is matched
   assert.equal(prisma.state.queueCreateCalls.length, 0)
   assert.equal(prisma.state.submissionCreateCalls.length, 1)
   assert.equal(prisma.state.gradeRecordCreateCalls.length, 1)
+  assert.equal(prisma.state.gradeRecordCreateCalls[0]?.data?.correctCount, 10)
+  assert.equal(prisma.state.gradeRecordCreateCalls[0]?.data?.totalQuestions, 10)
+  assert.equal(prisma.state.gradeRecordCreateCalls[0]?.data?.sourceEmail, "student@example.com")
 })
 
 test("exercise grading preserves the assignment deadline and records the submitted exercise item", async () => {
@@ -878,6 +881,9 @@ test("persistExerciseSubmission replay backfills Moodle source metadata without 
   assert.equal(prisma.state.gradeRecordUpdateCalls[0]?.data?.assignmentName, "Do you like ____? with Animals")
   assert.equal(prisma.state.gradeRecordUpdateCalls[0]?.data?.startedAt?.toISOString(), "2026-03-01T07:00:00.000Z")
   assert.equal(prisma.state.gradeRecordUpdateCalls[0]?.data?.score, undefined)
+  assert.equal(prisma.state.gradeRecordUpdateCalls[0]?.data?.correctCount, 9)
+  assert.equal(prisma.state.gradeRecordUpdateCalls[0]?.data?.totalQuestions, 10)
+  assert.equal(prisma.state.gradeRecordUpdateCalls[0]?.data?.sourceEmail, "student@example.com")
 })
 
 test("persistExerciseSubmission de-duplicates matched records using canonical fingerprint despite submitted identity mismatch and stale createdAt", async () => {
