@@ -20,6 +20,10 @@ function text(value) {
   return value === undefined || value === null ? "" : String(value).trim()
 }
 
+function normalizeMoodleEaglesId(value) {
+  return text(value).toLowerCase()
+}
+
 function idempotencyKey() {
   return crypto.randomUUID()
 }
@@ -46,7 +50,7 @@ export async function queueMoodleCommand(tx, { studentRefId = null, action, payl
   if (studentId && payload && typeof payload === "object" && !Array.isArray(payload)) {
     const identity = await tx.student.findUnique({ where: { id: studentId }, select: { eaglesId: true, studentNumber: true } })
     if (!identity) throw Object.assign(new Error("Student not found for Moodle command"), { statusCode: 404 })
-    commandPayload = { ...payload, eaglesId: identity.eaglesId, studentNumber: identity.studentNumber }
+    commandPayload = { ...payload, eaglesId: normalizeMoodleEaglesId(identity.eaglesId), studentNumber: identity.studentNumber }
   }
   return tx.moodleProvisioningCommand.create({
     data: {
@@ -60,7 +64,7 @@ export async function queueMoodleCommand(tx, { studentRefId = null, action, payl
 }
 
 export async function queueStudentProvisioning(tx, { student, profile, password = "", previousLevel = "", isNew = false }) {
-  const eaglesId = text(student?.eaglesId)
+  const eaglesId = normalizeMoodleEaglesId(student?.eaglesId)
   const studentNumber = Number(student?.studentNumber)
   const englishName = text(profile?.englishName)
   const fullName = text(profile?.fullName)
@@ -162,8 +166,8 @@ export async function disableMoodleStudent(studentRefId) {
     if (!student) throw Object.assign(new Error("Student not found"), { statusCode: 404 })
     await tx.moodleUserLink.upsert({
       where: { studentRefId: id },
-      update: { status: "disabling", lastErrorCode: null },
-      create: { studentRefId: id, eaglesId: student.eaglesId, studentNumber: student.studentNumber, status: "disabling" },
+      update: { eaglesId: normalizeMoodleEaglesId(student.eaglesId), status: "disabling", lastErrorCode: null },
+      create: { studentRefId: id, eaglesId: normalizeMoodleEaglesId(student.eaglesId), studentNumber: student.studentNumber, status: "disabling" },
     })
     await tx.studentPortalAccount.updateMany({ where: { studentRefId: id }, data: { status: "disabled" } })
     const command = await queueMoodleCommand(tx, {
