@@ -4,6 +4,7 @@ import fs from "node:fs"
 import test from "node:test"
 import { parse as parseDotenv } from "dotenv"
 import { chromium } from "playwright"
+import { hashScryptPassword } from "../src/modules/admin/users.mjs"
 import "../tools/assert-prisma-environment.mjs"
 import { resolvePortalTestOrigin } from "./helpers/portal-test-origin.mjs"
 import { applyKeepaliveTestEnvironment, readKeepaliveTestEnvironment } from "../tools/keepalive-test-environment.mjs"
@@ -107,6 +108,7 @@ test("authenticated manual parent invitation preserves an editable draft across 
         await attempt(() => prisma.parentProfileInvitation.deleteMany({ where: { studentRefId: studentId } }))
       }
       if (siblingStudentId) {
+        await attempt(() => prisma.moodleUserLink.deleteMany({ where: { studentRefId: siblingStudentId } }))
         await attempt(() => prisma.parentPortalStudentLink.deleteMany({ where: { studentRefId: siblingStudentId } }))
         await attempt(() => prisma.studentPortalAccount.deleteMany({ where: { studentRefId: siblingStudentId } }))
         await attempt(() => prisma.studentEnrollmentPeriod.deleteMany({ where: { studentRefId: siblingStudentId } }))
@@ -120,6 +122,7 @@ test("authenticated manual parent invitation preserves an editable draft across 
         await attempt(() => prisma.parentPortalAccount.deleteMany({ where: { id: parentAccountId } }))
       }
       if (studentId) {
+        await attempt(() => prisma.moodleUserLink.deleteMany({ where: { studentRefId: studentId } }))
         await attempt(() => prisma.studentEnrollmentPeriod.deleteMany({ where: { studentRefId: studentId } }))
         await attempt(() => prisma.studentProfile.deleteMany({ where: { studentRefId: studentId } }))
         await attempt(() => prisma.student.deleteMany({ where: { id: studentId } }))
@@ -262,39 +265,55 @@ test("authenticated manual parent invitation preserves an editable draft across 
   await parentPage.locator("#saveParentPasswordBtn").click()
   await parentPage.locator("#profileFields").waitFor({ state: "visible", timeout: 30000 })
 
-  const siblingPayload = {
-    eaglesId: siblingEaglesId,
-    email: `sibling-${compactStamp}@example.invalid`,
-    level: "A1 Movers",
-    password: `Sibling-${compactStamp.slice(0, 12)}!a`,
-    profile: {
-      fullName: "Synthetic Family Sibling",
-      englishName: "Synthetic Family Sibling",
-      currentGrade: "A1 Movers",
-      familyId,
-      parentsId,
-      motherName: "Synthetic Parent",
-      motherEmail: email,
-      motherPhone: "+84900000002",
-      genderSelections: [],
-      languagesAtHome: [],
-      learningDisorders: [],
-      covidShotHistory: [],
-      feverMedicineAllowed: [],
+  const siblingPassword = `Sibling-${compactStamp.slice(0, 12)}!a`
+  // Keep the family fixture out of the separately polled Moodle provisioning flow.
+  const sibling = await prisma.student.create({
+    data: {
+      externalKey: `keep-alive-parent-profile-sibling-${stamp}`,
+      studentNumber: syntheticStudentNumber(compactStamp.slice(8)),
+      eaglesId: siblingEaglesId,
+      profile: {
+        create: {
+          sourceFormId: "keep-alive-parent-profile-e2e-sibling",
+          fullName: "Synthetic Family Sibling",
+          englishName: "Synthetic Family Sibling",
+          currentGrade: "A1 Movers",
+          parentsId,
+          familyId,
+          motherName: "Synthetic Parent",
+          motherEmail: email,
+          motherPhone: "+84900000002",
+          genderSelections: [],
+          languagesAtHome: [],
+          learningDisorders: [],
+          covidShotHistory: [],
+          feverMedicineAllowed: [],
+          rawFormPayload: {},
+          normalizedFormPayload: {},
+        },
+      },
+      enrollmentPeriods: {
+        create: {
+          schoolYear,
+          level: "A1 Movers",
+          status: "active",
+          startedAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+      },
+      studentPortalAccount: {
+        create: {
+          eaglesId: siblingEaglesId,
+          passwordHash: hashScryptPassword(siblingPassword),
+          status: "active",
+        },
+      },
+      parentPortalLinks: {
+        create: { parentAccountId },
+      },
     },
-  }
-  const siblingCreate = await adminPage.evaluate(async (payload) => {
-    const response = await fetch("/api/admin/students", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-    return { status: response.status, body: await response.json() }
-  }, siblingPayload)
-  assert.equal(siblingCreate.status, 200, "authenticated enrollment adds the second child to the existing family")
-  assert.equal(siblingCreate.body.action, "created")
-  siblingStudentId = String(siblingCreate.body.student?.id || "")
+    select: { id: true },
+  })
+  siblingStudentId = sibling.id
   assert.ok(siblingStudentId, "second child has a persisted student identity")
   const [siblingCount, siblingAccounts, siblingPeriods, siblingLinks] = await Promise.all([
     prisma.student.count({ where: { id: siblingStudentId, eaglesId: siblingEaglesId } }),
@@ -302,35 +321,7 @@ test("authenticated manual parent invitation preserves an editable draft across 
     prisma.studentEnrollmentPeriod.count({ where: { studentRefId: siblingStudentId, status: "active" } }),
     prisma.parentPortalStudentLink.count({ where: { studentRefId: siblingStudentId, parentAccountId } }),
   ])
-  assert.deepEqual([siblingCount, siblingAccounts, siblingPeriods, siblingLinks], [1, 1, 1, 1], "second enrollment creates one access account, active period, and link to the existing parent")
-
-  const duplicateSibling = await adminPage.evaluate(async (payload) => {
-    const response = await fetch("/api/admin/students", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-    return { status: response.status, body: await response.json() }
-  }, siblingPayload)
-  assert.equal(duplicateSibling.status, 409, "retrying sibling creation cannot create another student")
-  const siblingRetry = await adminPage.evaluate(async ({ studentId, payload, studentNumber }) => {
-    const response = await fetch(`/api/admin/students/${encodeURIComponent(studentId)}`, {
-      method: "PUT",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...payload, studentNumber }),
-    })
-    return { status: response.status, body: await response.json() }
-  }, { studentId: siblingStudentId, payload: siblingPayload, studentNumber: siblingCreate.body.student.studentNumber })
-  assert.equal(siblingRetry.status, 200, "repeating the same family enrollment update succeeds")
-  const [siblingsAfterRetry, siblingAccountsAfterRetry, siblingPeriodsAfterRetry, siblingLinksAfterRetry] = await Promise.all([
-    prisma.student.count({ where: { id: siblingStudentId, eaglesId: siblingEaglesId } }),
-    prisma.studentPortalAccount.count({ where: { studentRefId: siblingStudentId } }),
-    prisma.studentEnrollmentPeriod.count({ where: { studentRefId: siblingStudentId } }),
-    prisma.parentPortalStudentLink.count({ where: { studentRefId: siblingStudentId, parentAccountId } }),
-  ])
-  assert.deepEqual([siblingsAfterRetry, siblingAccountsAfterRetry, siblingPeriodsAfterRetry, siblingLinksAfterRetry], [1, 1, 1, 1], "retry preserves exactly one family membership and access record")
+  assert.deepEqual([siblingCount, siblingAccounts, siblingPeriods, siblingLinks], [1, 1, 1, 1], "synthetic sibling has one access account, active period, and link to the existing parent")
 
   await parentPage.reload({ waitUntil: "domcontentloaded" })
   await parentPage.locator("#openChildPageBtn").waitFor({ state: "visible", timeout: 30000 })
