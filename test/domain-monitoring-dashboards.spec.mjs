@@ -24,7 +24,7 @@ test("each monitored domain has a layered Grafana dashboard with explicit measur
     assert.equal(dashboard.uid.startsWith("domain-"), true, filename)
     if (expected.title) assert.equal(dashboard.title, expected.title, filename)
     assert.equal(dashboard.refresh, "30s", filename)
-    assert.ok(dashboard.panels.length >= 15, `${filename} should expose the measured layers`)
+    assert.ok(dashboard.panels.length >= 17, `${filename} should expose the measured layers and independent public checks`)
     const serialized = JSON.stringify(dashboard)
     assert.ok(serialized.includes(expected.domain), `${filename} must filter to its configured domain`)
     for (const check of expected.checks) assert.ok(serialized.includes(check), `${filename} must include ${check}`)
@@ -40,6 +40,14 @@ test("each monitored domain has a layered Grafana dashboard with explicit measur
     assert.ok(dashboard.panels.some((panel) => panel.title === "Layer coverage and attribution" && panel.type === "text"), `${filename} must label measured and missing layers`)
     const requestPhases = dashboard.panels.find((panel) => panel.title === "Request phases")
     assert.equal(requestPhases.targets[0].legendFormat, "{{phase}}", `${filename} must distinguish each measured request phase`)
+    const externalStatus = dashboard.panels.find((panel) => panel.title === "Independent public availability")
+    const externalHistory = dashboard.panels.find((panel) => panel.title === "Independent public region history")
+    assert.ok(externalStatus, `${filename} must show independent public status`)
+    assert.ok(externalHistory, `${filename} must show independent public region history`)
+    assert.ok(externalStatus.targets.every((target) => target.expr.includes(`domain="${expected.domain}"`)), `${filename} external status must be attributed to its domain`)
+    assert.ok(externalStatus.targets[0].expr.includes("eagles_external_public_site_state"), `${filename} must distinguish inconclusive checks from confirmed outages`)
+    assert.ok(JSON.stringify(externalStatus.fieldConfig).includes("UNVERIFIED"), `${filename} must label inconclusive checks as unverified`)
+    assert.ok(externalHistory.targets[0].expr.includes(`domain="${expected.domain}"`), `${filename} external region history must be attributed to its domain`)
 
     for (const [index, panel] of dashboard.panels.entries()) {
       assert.ok(panel.gridPos && panel.gridPos.x >= 0 && panel.gridPos.y >= 0, `${filename} panel ${panel.title} must have a grid position`)

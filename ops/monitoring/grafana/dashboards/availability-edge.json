@@ -1,10 +1,272 @@
 {
-  "uid":"availability-edge","title":"Availability and Edge","tags":["availability","blackbox","litespeed","cyberpanel"],"timezone":"browser","schemaVersion":39,"refresh":"30s","time":{"from":"now-24h","to":"now"},
-  "panels":[
-    {"id":1,"type":"state-timeline","title":"SIS public availability","gridPos":{"h":7,"w":24,"x":0,"y":0},"targets":[{"expr":"probe_success","legendFormat":"{{job}} / {{instance}}","refId":"A"}],"fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}}}]},"overrides":[]}},
-    {"id":2,"type":"timeseries","title":"HTTP total response time","gridPos":{"h":8,"w":12,"x":0,"y":7},"targets":[{"expr":"probe_duration_seconds","legendFormat":"{{instance}}","refId":"A"}],"fieldConfig":{"defaults":{"unit":"s"},"overrides":[]}},
-    {"id":3,"type":"timeseries","title":"HTTP phase breakdown","gridPos":{"h":8,"w":12,"x":12,"y":7},"targets":[{"expr":"probe_http_duration_seconds","legendFormat":"{{phase}} / {{instance}}","refId":"A"}],"fieldConfig":{"defaults":{"unit":"s"},"overrides":[]}},
-    {"id":4,"type":"timeseries","title":"OpenLiteSpeed traffic (enable exporter when needed)","gridPos":{"h":8,"w":24,"x":0,"y":15},"targets":[{"expr":"rate(litespeed_bps_in_total[5m])","legendFormat":"in {{instance}}","refId":"A"},{"expr":"rate(litespeed_bps_out_total[5m])","legendFormat":"out {{instance}}","refId":"B"},{"expr":"litespeed_plainconn","legendFormat":"plain connections","refId":"C"},{"expr":"litespeed_sslconn","legendFormat":"SSL connections","refId":"D"}],"fieldConfig":{"defaults":{"unit":"Bps"},"overrides":[]}},
-    {"id":5,"type":"table","title":"CyberPanel and OpenLiteSpeed service state","gridPos":{"h":8,"w":24,"x":0,"y":23},"targets":[{"expr":"node_systemd_unit_state{name=~\"(lshttpd|lscpd|lsmcd)\\.service\",state=\"active\"}","format":"table","refId":"A"}],"transformations":[{"id":"reduce","options":{"reducers":["lastNotNull"]}}]}
+  "uid": "availability-edge",
+  "title": "Availability and Edge",
+  "tags": [
+    "availability",
+    "blackbox",
+    "litespeed",
+    "cyberpanel"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "state-timeline",
+      "title": "SIS public availability",
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "probe_success",
+          "legendFormat": "{{job}} / {{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "HTTP total response time",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "targets": [
+        {
+          "expr": "probe_duration_seconds",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "HTTP phase breakdown",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "targets": [
+        {
+          "expr": "probe_http_duration_seconds",
+          "legendFormat": "{{phase}} / {{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "OpenLiteSpeed traffic (enable exporter when needed)",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "targets": [
+        {
+          "expr": "rate(litespeed_bps_in_total[5m])",
+          "legendFormat": "in {{instance}}",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(litespeed_bps_out_total[5m])",
+          "legendFormat": "out {{instance}}",
+          "refId": "B"
+        },
+        {
+          "expr": "litespeed_plainconn",
+          "legendFormat": "plain connections",
+          "refId": "C"
+        },
+        {
+          "expr": "litespeed_sslconn",
+          "legendFormat": "SSL connections",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "CyberPanel and OpenLiteSpeed service state",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "targets": [
+        {
+          "expr": "node_systemd_unit_state{name=~\"(lshttpd|lscpd|lsmcd)\\.service\",state=\"active\"}",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Independent public site status",
+      "description": "Five-minute Globalping probes from VN, US, and GB. At least two locations must return HTTP 2xx/3xx. Incomplete checks show UNVERIFIED, not DOWN.",
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "targets": [
+        {
+          "expr": "eagles_external_public_site_state{provider=\"globalping\"}",
+          "legendFormat": "{{domain}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "UNVERIFIED",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "type": "state-timeline",
+      "title": "Independent public region history",
+      "description": "Per-domain public HTTP state by VN, US, and GB. Waiting results are distinct from completed failures.",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "targets": [
+        {
+          "expr": "eagles_external_public_probe_state{provider=\"globalping\"}",
+          "legendFormat": "{{domain}} / {{country}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "WAITING",
+                  "color": "gray"
+                },
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    }
   ]
 }

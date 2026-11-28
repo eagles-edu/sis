@@ -17,7 +17,7 @@ const domains = [
     services: ["nginx.service", "lshttpd.service", "mariadb.service"],
     alerts: "PublicWebsite.*|EaglesHomepageDatabaseDown|OpenLiteSpeed.*",
     coverage: [
-      ["Public edge", "Measured", "HTTPS availability, HTTP status, DNS, TLS, and response phases."],
+      ["Public edge", "Measured", "Host-origin HTTPS details plus independent public checks from Vietnam, the United States, and the United Kingdom."],
       ["Host services", "Measured", "Nginx and OpenLiteSpeed systemd active state, plus shared-host Nginx configuration validation and MariaDB state."],
       ["Application/API", "Not measured", "No domain-specific application/API probe is configured."],
       ["Database dependency", "Partial", "MariaDB service state only; no site-authenticated database query is exported."],
@@ -33,7 +33,7 @@ const domains = [
     services: ["nginx.service", "lshttpd.service", "exercise-mailer.service"],
     alerts: "PublicWebsite.*|AdminAuthentication.*|SiteSISAPI.*|SiteDependency.*|SISLiveApiServiceDown",
     coverage: [
-      ["Public edge", "Measured", "HTTPS availability, HTTP status, DNS, TLS, and response phases."],
+      ["Public edge", "Measured", "Host-origin HTTPS details plus independent public checks from Vietnam, the United States, and the United Kingdom."],
       ["Application/API", "Measured", "SIS route response and unauthenticated session guard."],
       ["Data dependencies", "Measured", "Authenticated PostgreSQL SELECT 1 and SIS app/session/cache Redis PING checks."],
       ["Host services", "Measured", "Nginx and OpenLiteSpeed state, shared-host Nginx configuration validation, SIS API service, and shared host resources."],
@@ -50,7 +50,7 @@ const domains = [
     services: [],
     alerts: "PublicWebsite.*|LTDERPNext.*|SiteDependency.*",
     coverage: [
-      ["Public edge", "Measured", "HTTPS availability, HTTP status, DNS, TLS, and response phases."],
+      ["Public edge", "Measured", "Host-origin HTTPS details plus independent public checks from Vietnam, the United States, and the United Kingdom."],
       ["Application/API", "Measured", "Public Frappe ping endpoint."],
       ["Containers", "Measured", "Eight ERPNext and Redis containers, running and Docker health state."],
       ["Data dependencies", "Measured", "Authenticated Redis PING checks for ERPNext cache, queue, and socketio roles."],
@@ -67,7 +67,7 @@ const domains = [
     services: ["nginx.service", "exercise-mailer.service"],
     alerts: "PublicWebsite.*|SiteSISAPI.*|SISLiveApiServiceDown",
     coverage: [
-      ["Public edge", "Measured", "HTTPS availability, HTTP status, DNS, TLS, and response phases."],
+      ["Public edge", "Measured", "Host-origin HTTPS details plus independent public checks from Vietnam, the United States, and the United Kingdom."],
       ["Application/API", "Measured", "SIS exercise-submission route; the SIS service metric is shared across domains."],
       ["Host services", "Measured", "Shared Nginx configuration and SIS API systemd state; host resources are shared."],
       ["Data dependencies", "Not measured", "No IELTS-domain database or Redis dependency series is exported."],
@@ -83,7 +83,7 @@ const domains = [
     services: ["nginx.service", "exercise-mailer.service", "thuvien-r2-flip-image.service", "thuvien-read-audio.service"],
     alerts: "PublicWebsite.*|SiteSISAPI.*|Thuvien.*|SISLiveApiServiceDown",
     coverage: [
-      ["Public edge", "Measured", "HTTPS availability, HTTP status, DNS, TLS, and response phases."],
+      ["Public edge", "Measured", "Host-origin HTTPS details plus independent public checks from Vietnam, the United States, and the United Kingdom."],
       ["Application/API", "Measured", "SIS exercise-submission route; shared SIS service state is not domain-attributed."],
       ["Media delivery", "Measured", "One-byte HTTP range checks for a Flip image and reading audio."],
       ["Host services", "Measured", "Shared Nginx configuration, SIS API, image, and audio gateway systemd states."],
@@ -100,7 +100,7 @@ const domains = [
     services: ["nginx.service", "php8.2-fpm.service", "mariadb.service"],
     alerts: "PublicWebsite.*|NginxConfigurationInvalid",
     coverage: [
-      ["Public edge", "Measured", "Public HTTPS status, DNS, TLS, response phases, and one-minute uptime samples from the monitoring host."],
+      ["Public edge", "Measured", "Host-origin HTTPS details plus independent public checks from Vietnam, the United States, and the United Kingdom."],
       ["Application", "Partial", "Public Moodle page availability is measured; authenticated Moodle actions are not exercised by this probe."],
       ["Host services", "Measured", "Shared Nginx configuration and the PHP-FPM/MariaDB systemd states."],
       ["Data dependencies", "Partial", "MariaDB service state only; no Moodle-authenticated database query is exported."],
@@ -199,6 +199,14 @@ function dashboardFor(config) {
   panels.push(config.dependencies
     ? panel(21, "Dependency health history", "state-timeline", [target(`site_dependency_status{${selector}}`, "A", "{{dependency}} · {{check}}")], { x: 12, y: 46, w: 12, h: 9 }, { description: "Authenticated database/cache and container dependency check results over time. Only the fixed dependency and check labels are shown.", fieldConfig: statusField(), options: { mergeValues: true, showValue: "auto", alignValue: "center", rowHeight: 0.9, tooltip: { mode: "single", sort: "none" } } })
     : explicitGapPanel(21, "Dependency health history", 12, 46, "No authenticated domain-specific database or cache dependency history is configured. This is an instrumentation gap, not a healthy result."))
+
+  panels.push(panel(23, "Independent public availability", "stat", [
+    target(`eagles_external_public_site_state{domain="${domain}",provider="globalping"}`, "A", "Public site state", true),
+    target(`time() - eagles_external_public_site_last_check_timestamp_seconds{domain="${domain}",provider="globalping"}`, "B", "Check age seconds", true),
+  ], { x: 0, y: 90, w: 8, h: 6 }, { description: "Independent checks run every five minutes from Globalping probes in Vietnam, the United States, and the United Kingdom. A pass requires at least two HTTP 2xx/3xx responses; incomplete checks are UNVERIFIED.", fieldConfig: { defaults: { mappings: [{ type: "value", options: { "-1": { text: "UNVERIFIED", color: "gray" }, "0": { text: "DOWN", color: "red" }, "1": { text: "UP", color: "green" } } }], thresholds: { mode: "absolute", steps: [{ color: "red", value: null }, { color: "green", value: 1 }] } }, overrides: [] }, options: statOptions() }))
+  panels.push(panel(24, "Independent public region history", "state-timeline", [
+    target(`eagles_external_public_probe_state{domain="${domain}",provider="globalping"}`, "A", "{{country}}"),
+  ], { x: 8, y: 90, w: 16, h: 8 }, { description: "Per-region public HTTP result. Completed failures and pending/inconclusive locations remain distinct; check age above distinguishes stale collection.", fieldConfig: { defaults: { mappings: [{ type: "value", options: { "-1": { text: "WAITING", color: "gray" }, "0": { text: "DOWN", color: "red" }, "1": { text: "UP", color: "green" } } }] }, overrides: [] }, options: { mergeValues: true, showValue: "auto", alignValue: "center", rowHeight: 0.9, tooltip: { mode: "single", sort: "none" } } }))
 
   if (config.containers) {
     panels.push(panel(14, "ERPNext component health", "table", [

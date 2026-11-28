@@ -628,6 +628,42 @@ groups:
 
   - name: public-website-availability
     rules:
+      - alert: ExternalPublicWebsiteDown
+        expr: (eagles_external_public_site_success == 0) and (eagles_external_public_site_state == 0)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.domain }} failed independent public probes"
+          description: "Globalping probes from Vietnam, the United States, and the United Kingdom did not get the required two HTTP 2xx/3xx responses."
+
+      - alert: ExternalPublicWebsiteProbeInconclusive
+        expr: eagles_external_public_site_state < 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Independent public check for {{ $labels.domain }} is inconclusive"
+          description: "The external check did not complete enough locations to establish public availability. Inspect Globalping/provider reachability."
+
+      - alert: ExternalPublicWebsiteProbeStale
+        expr: time() - eagles_external_public_site_last_check_timestamp_seconds > 720
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Independent public check is stale for {{ $labels.domain }}"
+          description: "No recent Globalping public check result was published for this domain."
+
+      - alert: ExternalPublicWebsiteMetricsMissing
+        expr: absent(eagles_external_public_site_success{domain="eagles.edu.vn"}) or absent(eagles_external_public_site_success{domain="admin.eagles.edu.vn"}) or absent(eagles_external_public_site_success{domain="test.eagles.edu.vn"}) or absent(eagles_external_public_site_success{domain="ltd.eagles.vn"}) or absent(eagles_external_public_site_success{domain="ielts.eagles.edu.vn"}) or absent(eagles_external_public_site_success{domain="thuvien.eagles.edu.vn"}) or absent(eagles_external_public_site_success{domain="moodle.eagles.edu.vn"})
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Independent public availability metrics are missing"
+          description: "One or more expected public domain check series are missing from Prometheus."
+
       - alert: PublicWebsiteDown
         expr: probe_success{job="blackbox-website-http",check="main"} == 0
         for: 2m

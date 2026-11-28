@@ -1,0 +1,22 @@
+[Unit]
+Description=Check public websites from independent Globalping locations for Prometheus
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=eagles
+Group=eagles
+WorkingDirectory=/home/eagles/dockerz/sis
+ExecStart=/usr/bin/python3 /home/eagles/dockerz/sis/ops/monitoring/monitor-public-availability.py
+TimeoutStartSec=180s
+UMask=0022
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/home/eagles/dockerz/sis/runtime-data/prometheus
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6

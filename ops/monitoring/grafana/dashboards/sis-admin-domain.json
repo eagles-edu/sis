@@ -737,7 +737,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "| Layer | Coverage | Signals |\n| --- | --- | --- |\n| Public edge | **Measured** | HTTPS availability, HTTP status, DNS, TLS, and response phases. |\n| Application/API | **Measured** | SIS route response and unauthenticated session guard. |\n| Data dependencies | **Measured** | Authenticated PostgreSQL SELECT 1 and SIS app/session/cache Redis PING checks. |\n| Host services | **Measured** | Nginx and OpenLiteSpeed state, shared-host Nginx configuration validation, SIS API service, and shared host resources. |\n| SIS workflows | **Measured** | Dev keep-alive groups are environment-wide signals, not admin-domain-attributed checks. |"
+        "content": "| Layer | Coverage | Signals |\n| --- | --- | --- |\n| Public edge | **Measured** | Host-origin HTTPS details plus independent public checks from Vietnam, the United States, and the United Kingdom. |\n| Application/API | **Measured** | SIS route response and unauthenticated session guard. |\n| Data dependencies | **Measured** | Authenticated PostgreSQL SELECT 1 and SIS app/session/cache Redis PING checks. |\n| Host services | **Measured** | Nginx and OpenLiteSpeed state, shared-host Nginx configuration validation, SIS API service, and shared host resources. |\n| SIS workflows | **Measured** | Dev keep-alive groups are environment-wide signals, not admin-domain-attributed checks. |"
       }
     },
     {
@@ -1032,6 +1032,144 @@
               }
             ]
           }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mergeValues": true,
+        "showValue": "auto",
+        "alignValue": "center",
+        "rowHeight": 0.9,
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Independent public availability",
+      "description": "Independent checks run every five minutes from Globalping probes in Vietnam, the United States, and the United Kingdom. A pass requires at least two HTTP 2xx/3xx responses; incomplete checks are UNVERIFIED.",
+      "gridPos": {
+        "x": 0,
+        "y": 90,
+        "w": 8,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "eagles_external_public_site_state{domain=\"admin.eagles.edu.vn\",provider=\"globalping\"}",
+          "refId": "A",
+          "legendFormat": "Public site state",
+          "instant": true
+        },
+        {
+          "expr": "time() - eagles_external_public_site_last_check_timestamp_seconds{domain=\"admin.eagles.edu.vn\",provider=\"globalping\"}",
+          "refId": "B",
+          "legendFormat": "Check age seconds",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "UNVERIFIED",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 24,
+      "type": "state-timeline",
+      "title": "Independent public region history",
+      "description": "Per-region public HTTP result. Completed failures and pending/inconclusive locations remain distinct; check age above distinguishes stale collection.",
+      "gridPos": {
+        "x": 8,
+        "y": 90,
+        "w": 16,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sis-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "eagles_external_public_probe_state{domain=\"admin.eagles.edu.vn\",provider=\"globalping\"}",
+          "refId": "A",
+          "legendFormat": "{{country}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                },
+                "-1": {
+                  "text": "WAITING",
+                  "color": "gray"
+                }
+              }
+            }
+          ]
         },
         "overrides": []
       },
